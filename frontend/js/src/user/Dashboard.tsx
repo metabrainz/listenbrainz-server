@@ -19,6 +19,7 @@ import { io } from "socket.io-client";
 import { Link, useLocation, useParams, useSearchParams } from "react-router";
 import { Helmet } from "react-helmet";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSetAtom } from "jotai";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import AddListenModal from "./components/AddListenModal";
@@ -38,9 +39,9 @@ import {
 } from "../utils/utils";
 import FollowButton from "./components/follow/FollowButton";
 import { RouteQuery } from "../utils/Loader";
-import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ReportUserButton from "../report-user/ReportUser";
 import SyndicationFeedModal from "../components/SyndicationFeedModal";
+import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -72,7 +73,6 @@ export default function Listen() {
     queryFn,
     staleTime: isTimeNavigation ? 1000 * 60 * 5 : 0,
   });
-  const dispatch = useBrainzPlayerDispatch();
 
   const {
     listens = [],
@@ -142,6 +142,7 @@ export default function Listen() {
       let newPlayingNow = receivedPlayingNow;
       try {
         const response = await APIService.lookupRecordingMetadata(
+          currentUser?.auth_token || "",
           newPlayingNow.track_metadata.track_name,
           newPlayingNow.track_metadata.artist_name,
           true
@@ -185,7 +186,7 @@ export default function Listen() {
       }
       return newPlayingNow;
     },
-    [APIService]
+    [APIService, currentUser?.auth_token]
   );
 
   const getFollowing = React.useCallback(async () => {
@@ -442,11 +443,10 @@ export default function Listen() {
     allListenables = [listenablePin, ...listens];
   }
 
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
+
   React.useEffect(() => {
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: allListenables,
-    });
+    setAmbientQueue(allListenables);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allListenables]);
 
@@ -478,16 +478,20 @@ export default function Listen() {
                 updateFollowingList={updateFollowingList}
               />
             )}
-            <Link
-              to={`https://musicbrainz.org/user/${user?.name}`}
-              className="btn btn-info musicbrainz-profile-button"
-            >
-              <img
-                src="/static/img/musicbrainz-16.svg"
-                alt="MusicBrainz Logo"
-              />{" "}
-              MusicBrainz
-            </Link>
+            {user && (
+              <Link
+                to={`https://musicbrainz.org/user/${encodeURIComponent(
+                  user.name
+                )}`}
+                className="btn btn-info musicbrainz-profile-button"
+              >
+                <img
+                  src="/static/img/musicbrainz-16.svg"
+                  alt="MusicBrainz Logo"
+                />{" "}
+                MusicBrainz
+              </Link>
+            )}
             {user && !isCurrentUsersPage && (
               <ReportUserButton
                 user={user}
@@ -650,9 +654,11 @@ export default function Listen() {
                       ],
                     },
                   ],
-                  baseUrl: `${getBaseUrl()}/syndication-feed/user/${
-                    user?.name
-                  }/listens`,
+                  baseUrl: user?.name
+                    ? `${getBaseUrl()}/syndication-feed/user/${encodeURIComponent(
+                        user.name
+                      )}/listens`
+                    : "",
                 });
               }}
             >

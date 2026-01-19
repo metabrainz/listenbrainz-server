@@ -58,7 +58,7 @@ DEFAULT_LISTEN_EVENT_WINDOW_NEW = timedelta(days=7)
 user_timeline_event_api_bp = Blueprint('user_timeline_event_api_bp', __name__)
 
 
-@user_timeline_event_api_bp.post('/user/<user_name>/timeline-event/create/recording')
+@user_timeline_event_api_bp.post('/user/<mb_username:user_name>/timeline-event/create/recording')
 @crossdomain
 @ratelimit()
 def create_user_recording_recommendation_event(user_name):
@@ -114,7 +114,7 @@ def create_user_recording_recommendation_event(user_name):
     return jsonify(event_data)
 
 
-@user_timeline_event_api_bp.post('/user/<user_name>/timeline-event/create/notification')
+@user_timeline_event_api_bp.post('/user/<mb_username:user_name>/timeline-event/create/notification')
 @crossdomain
 @ratelimit()
 def create_user_notification_event(user_name):
@@ -173,7 +173,7 @@ def create_user_notification_event(user_name):
     return jsonify(event_data)
 
 
-@user_timeline_event_api_bp.post('/user/<user_name>/timeline-event/create/review')
+@user_timeline_event_api_bp.post('/user/<mb_username:user_name>/timeline-event/create/review')
 @crossdomain
 @ratelimit()
 def create_user_cb_review_event(user_name):
@@ -242,7 +242,7 @@ def create_user_cb_review_event(user_name):
     return jsonify(event_data)
 
 
-@user_timeline_event_api_bp.get('/user/<user_name>/feed/events')
+@user_timeline_event_api_bp.get('/user/<mb_username:user_name>/feed/events')
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -343,7 +343,7 @@ def user_feed_event(user_name: str, event_id: int):
     }})
 
 
-@user_timeline_event_api_bp.get('/user/<user_name>/feed/events/listens/following')
+@user_timeline_event_api_bp.get('/user/<mb_username:user_name>/feed/events/listens/following')
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -392,7 +392,7 @@ def user_feed_listens_following(user_name: str):
     }})
 
 
-@user_timeline_event_api_bp.get('/user/<user_name>/feed/events/listens/similar')
+@user_timeline_event_api_bp.get('/user/<mb_username:user_name>/feed/events/listens/similar')
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -451,7 +451,7 @@ def user_feed_listens_similar(user_name: str):
     })
 
 
-@user_timeline_event_api_bp.post("/user/<user_name>/feed/events/delete")
+@user_timeline_event_api_bp.post("/user/<mb_username:user_name>/feed/events/delete")
 @crossdomain
 @ratelimit()
 def delete_feed_events(user_name):
@@ -514,7 +514,7 @@ def delete_feed_events(user_name):
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
 
-@user_timeline_event_api_bp.post("/user/<user_name>/feed/events/hide")
+@user_timeline_event_api_bp.post("/user/<mb_username:user_name>/feed/events/hide")
 @crossdomain
 @ratelimit()
 def hide_user_timeline_event(user_name):
@@ -588,7 +588,7 @@ def hide_user_timeline_event(user_name):
         raise APIUnauthorized("You cannot hide events of this user")
 
 
-@user_timeline_event_api_bp.post("/user/<user_name>/feed/events/unhide")
+@user_timeline_event_api_bp.post("/user/<mb_username:user_name>/feed/events/unhide")
 @crossdomain
 @ratelimit()
 def unhide_user_timeline_event(user_name):
@@ -633,7 +633,7 @@ def unhide_user_timeline_event(user_name):
     return jsonify({"status": "ok"})
 
 
-@user_timeline_event_api_bp.post('/user/<user_name>/timeline-event/create/recommend-personal')
+@user_timeline_event_api_bp.post('/user/<mb_username:user_name>/timeline-event/create/recommend-personal')
 @crossdomain
 @ratelimit()
 def create_personal_recommendation_event(user_name):
@@ -704,7 +704,7 @@ def create_personal_recommendation_event(user_name):
     return jsonify(event_data)
 
 
-@user_timeline_event_api_bp.post('/user/<user_name>/timeline-event/create/thanks')
+@user_timeline_event_api_bp.post('/user/<mb_username:user_name>/timeline-event/create/thanks')
 @crossdomain
 @ratelimit()
 def create_thanks_event(user_name):

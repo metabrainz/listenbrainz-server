@@ -7,15 +7,16 @@ import {
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Palette } from "@vibrant/color";
 import { chain, flatten, isEmpty, isUndefined, merge } from "lodash";
 import { Vibrant } from "node-vibrant/browser";
 import { Helmet } from "react-helmet";
 import { Link, useLocation, useParams } from "react-router";
 import { toast } from "react-toastify";
+import { useSetAtom } from "jotai";
+import humanizeDuration from "humanize-duration";
 import CBReview from "../cb-review/CBReview";
-import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ListenCard from "../common/listens/ListenCard";
 import Username from "../common/Username";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
@@ -32,6 +33,7 @@ import {
   ListeningStats,
   popularRecordingToListen,
 } from "./utils";
+import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
 
 // not the same format of tracks as what we get in the ArtistPage props
 type AlbumRecording = {
@@ -90,7 +92,7 @@ export default function AlbumPage(): JSX.Element {
   } = listening_stats || {};
 
   const [metadata, setMetadata] = React.useState(initialReleaseGroupMetadata);
-  const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
+  const queryClient = useQueryClient();
 
   const { tag, release_group: album, artist, release } = (metadata ||
     {}) as ReleaseGroupMetadataLookup;
@@ -117,6 +119,36 @@ export default function AlbumPage(): JSX.Element {
       .catch(console.error);
   }, []);
 
+  // Fetch reviews using React Query
+  const { data: reviewsData, isError: reviewsError } = useQuery<{
+    reviews: CritiqueBrainzReviewAPI[];
+  }>({
+    queryKey: ["critiquebrainz-reviews", release_group_mbid, "release_group"],
+    queryFn: async () => {
+      if (!release_group_mbid) {
+        return { reviews: [] };
+      }
+      const response = await fetch(
+        `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${release_group_mbid}&entity_type=release_group`
+      );
+      const body = await response.json();
+      if (!response.ok) {
+        throw new Error(body?.message ?? response.statusText);
+      }
+      return body;
+    },
+    enabled: Boolean(release_group_mbid),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const reviews = reviewsData?.reviews ?? [];
+
+  React.useEffect(() => {
+    if (reviewsError) {
+      toast.error("Failed to load reviews from CritiqueBrainz");
+    }
+  }, [reviewsError]);
+
   React.useEffect(() => {
     async function fetchCoverArt() {
       if (!release_group_mbid) {
@@ -134,24 +166,9 @@ export default function AlbumPage(): JSX.Element {
         console.error(error);
       }
     }
-    async function fetchReviews() {
-      try {
-        const response = await fetch(
-          `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${release_group_mbid}&entity_type=release_group`
-        );
-        const body = await response.json();
-        if (!response.ok) {
-          throw body?.message ?? response.statusText;
-        }
-        setReviews(body.reviews);
-      } catch (error) {
-        toast.error(error);
-      }
-    }
     if (!caa_id || !caa_release_mbid) {
       fetchCoverArt();
     }
-    fetchReviews();
   }, [APIService, release_group_mbid, caa_id, caa_release_mbid]);
 
   const artistName = artist?.name ?? "";
@@ -183,13 +200,10 @@ export default function AlbumPage(): JSX.Element {
     listensFromAlbumRecordings
   );
 
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
 
   React.useEffect(() => {
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: listensFromAlbumsRecordingsFlattened,
-    });
+    setAmbientQueue(listensFromAlbumsRecordingsFlattened);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listensFromAlbumsRecordingsFlattened]);
 
@@ -202,6 +216,25 @@ export default function AlbumPage(): JSX.Element {
     notation: "compact",
   });
   const showMediumTitle = (mediums?.length ?? 0) > 1;
+  const allTracks = flatten(
+    mediums?.map((medium) => medium.tracks ?? []) ?? []
+  );
+
+  const totalAlbumDurationMs = allTracks
+    .map((track) => track.length)
+    .filter((length): length is number => Number.isFinite(length))
+    .reduce((sum, length) => sum + length, 0);
+
+  const trackCount = allTracks.length;
+  const trackUnit = trackCount === 1 ? "track" : "tracks";
+
+  const durationStr = humanizeDuration(totalAlbumDurationMs, {
+    round: true,
+    units: ["h", "m", "s"],
+    delimiter: " ",
+    spacer: " ",
+    language: "en",
+  });
 
   if (isError) {
     return (
@@ -281,17 +314,23 @@ export default function AlbumPage(): JSX.Element {
         </div>
         <div className="artist-info">
           <h1>{album?.name}</h1>
+
           <div className="details h4">
             <div>
-              {artist.artists.map((ar) => {
-                return (
-                  <span key={ar.artist_mbid}>
-                    <Link to={`/artist/${ar.artist_mbid}/`}>{ar?.name}</Link>
-                    {ar.join_phrase}
-                  </span>
-                );
-              })}
+              {artist.artists.map((ar) => (
+                <span key={ar.artist_mbid}>
+                  <Link to={`/artist/${ar.artist_mbid}/`}>{ar?.name}</Link>
+                  {ar.join_phrase}
+                </span>
+              ))}
             </div>
+
+            {totalAlbumDurationMs > 0 && (
+              <small className="form-text text-muted">
+                {trackCount} {trackUnit} - {durationStr}
+              </small>
+            )}
+
             <small className="form-text">
               {type}
               {type && album?.date ? " - " : ""}
@@ -299,6 +338,7 @@ export default function AlbumPage(): JSX.Element {
             </small>
           </div>
         </div>
+
         <div className="right-side gap-1">
           <div className="entity-rels">
             {!isEmpty(artist?.artists?.[0]?.rels) &&
@@ -505,6 +545,16 @@ export default function AlbumPage(): JSX.Element {
                   type: "release_group",
                   mbid: albumMBID,
                   name: album.name,
+                }}
+                onReviewSubmitted={() => {
+                  // Refetch reviews when a review is submitted
+                  queryClient.invalidateQueries({
+                    queryKey: [
+                      "critiquebrainz-reviews",
+                      release_group_mbid,
+                      "release_group",
+                    ],
+                  });
                 }}
               />
             </div>

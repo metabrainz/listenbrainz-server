@@ -31,8 +31,6 @@ class CoverArtGenerator:
     """ Main engine for generating dynamic cover art. Given a design and data (e.g. stats) generate
         cover art from cover art images or text using the SVG format. """
 
-    CAA_MISSING_IMAGE = "https://listenbrainz.org/static/img/cover-art-placeholder.jpg"
-
     # This grid tile designs (layouts?) are expressed as a dict with they key as dimension.
     # The value of the dict defines one design, with each cell being able to specify one or
     # more number of cells. Each string is a list of cells that will be used to define
@@ -75,20 +73,67 @@ class CoverArtGenerator:
         "this_year": "this year"
     }
 
+    @staticmethod
+    def get_layout_options(image_count):
+        """
+        Given the number of available images, return all valid dimension and layout combinations.
+        Returns a list of dicts, each with 'dimension' and 'layout' keys.
+        Returns empty list if no valid options exist.
+        """
+        if image_count == 0:
+            return []
+
+        options = []
+        for dimension, designs in CoverArtGenerator.GRID_TILE_DESIGNS.items():
+            for layout_idx, design in enumerate(designs):
+                required_images = len(design)
+                if image_count >= required_images:
+                    options.append({
+                        "dimension": dimension,
+                        "layout": layout_idx
+                    })
+
+        return options
+
+    @staticmethod
+    def select_best_layout(image_count):
+        """
+        Given the number of available images, return the best dimension and layout.
+        Returns a dict with 'dimension' and 'layout' keys, or None if no images.
+
+        Prioritizes larger dimensions and simpler layouts (lower layout index).
+        """
+        options = CoverArtGenerator.get_layout_options(image_count)
+
+        if not options:
+            return None
+
+        # Sort by dimension (desc), then layout (asc)
+        sorted_options = sorted(
+            options,
+            key=lambda x: (-x["dimension"], x["layout"])
+        )
+
+        return sorted_options[0]
+
     def __init__(self,
                  mb_db_connection_str,
                  dimension,
                  image_size,
                  background="#FFFFFF",
                  skip_missing=True,
-                 show_caa_image_for_missing_covers=True):
+                 show_caa_image_for_missing_covers=True,
+                 show_caption=True,
+                 server_root_url="https://listenbrainz.org"):
         self.mb_db_connection_str = mb_db_connection_str
         self.dimension = dimension
         self.image_size = image_size
         self.background = background
         self.skip_missing = skip_missing
         self.show_caa_image_for_missing_covers = show_caa_image_for_missing_covers
+        self.show_caption = show_caption
         self.tile_size = image_size // dimension  # This will likely need more cafeful thought due to round off errors
+        self.placeholder_image_url = f'{server_root_url}/static/img/cover-art-placeholder-grid.png'
 
     def parse_color_code(self, color_code):
         """ Parse an HTML color code that starts with # and return a tuple(red, green, blue) """
@@ -131,6 +176,9 @@ class CoverArtGenerator:
 
         if not isinstance(self.show_caa_image_for_missing_covers, bool):
             return f"option show-caa must be of type boolean."
+
+        if not isinstance(self.show_caption, bool):
+            return f"option caption must be of type boolean."
 
         return None
 
@@ -270,7 +318,7 @@ class CoverArtGenerator:
                             url = None
                             continue
                         elif self.show_caa_image_for_missing_covers:
-                            url = self.CAA_MISSING_IMAGE
+                            url = self.placeholder_image_url
                         else:
                             url = None
                     else:
@@ -279,7 +327,7 @@ class CoverArtGenerator:
                     break
                 except IndexError:
                     if self.show_caa_image_for_missing_covers:
-                        url = self.CAA_MISSING_IMAGE
+                        url = self.placeholder_image_url
                     else:
                         url = None
                     break

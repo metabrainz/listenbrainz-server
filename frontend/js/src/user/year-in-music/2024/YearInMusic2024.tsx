@@ -8,6 +8,7 @@ import {
   EffectCube,
 } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css/bundle";
 /* eslint-enable import/no-unresolved */
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import { ResponsiveTreeMap } from "@nivo/treemap";
@@ -36,6 +37,7 @@ import tinycolor from "tinycolor2";
 import humanizeDuration from "humanize-duration";
 import { Link, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useSetAtom } from "jotai";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 import {
@@ -45,17 +47,20 @@ import {
   getStatsArtistLink,
 } from "../../../utils/utils";
 import { getEntityLink } from "../../stats/utils";
-import ImageShareButtons from "../2023/components/ImageShareButtons";
+import ImageShareButtons from "../components/ImageShareButtons";
 import ListenCard from "../../../common/listens/ListenCard";
 import UserListModalEntry from "../../components/follow/UserListModalEntry";
 import { JSPFTrackToListen } from "../../../playlists/utils";
 import CustomChoropleth from "../../stats/components/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
 import FollowButton from "../../components/follow/FollowButton";
-import SEO, { YIMYearMetaTags } from "../SEO";
+import {
+  LegacyYIMSEO as SEO,
+  LegacyYIMYearMetaTags as YIMYearMetaTags,
+} from "../SEO";
 import { RouteQuery } from "../../../utils/Loader";
-import { useBrainzPlayerDispatch } from "../../../common/brainzplayer/BrainzPlayerContext";
 import { YearInMusicProps } from "../2023/YearInMusic2023";
+import { setAmbientQueueAtom } from "../../../common/brainzplayer/BrainzPlayerAtoms";
 
 type Node = {
   id: string;
@@ -266,12 +271,13 @@ export default class YearInMusic extends React.Component<
     const { selectedSeasonName } = this.state;
     const selectedSeason = YIM2024Seasons[selectedSeasonName];
     const { user } = this.props;
+    const encodedUsername = encodeURIComponent(user.name);
     return (
       <div className="card content-card mb-3" id={`${coverArtKey}`}>
         <div className="center-p heading">
           <object
             className="img-header"
-            data={`${APIService.APIBaseURI}/art/year-in-music/2024/${user.name}?image=${coverArtKey}&branding=False&season=${selectedSeasonName}`}
+            data={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=${coverArtKey}&branding=False&season=${selectedSeasonName}&legacy=true`}
           >{`SVG of cover art for ${topLevelPlaylist.title}`}</object>
           <h3>
             <a
@@ -331,8 +337,8 @@ export default class YearInMusic extends React.Component<
         </div>
         <div className="yim-share-button-container">
           <ImageShareButtons
-            svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${user.name}?image=${coverArtKey}&season=${selectedSeasonName}`}
-            shareUrl={`https://listenbrainz.org/user/${user.name}/year-in-music/2024#top-albums`}
+            svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=${coverArtKey}&season=${selectedSeasonName}&legacy=true`}
+            shareUrl={`https://listenbrainz.org/user/${encodedUsername}/year-in-music/2024#top-albums`}
             // shareText="Check out my"
             shareTitle="My 2024 ListenBrainz playlists"
             fileName={`${user.name}-${coverArtKey}-2024`}
@@ -430,6 +436,7 @@ export default class YearInMusic extends React.Component<
     const youOrUsername = isCurrentUser ? "you" : `${user.name}`;
     const yourOrUsersName = isCurrentUser ? "your" : `${user.name}'s`;
     const hasOrHave = isCurrentUser ? "have" : "has";
+    const encodedUsername = encodeURIComponent(user.name);
 
     /* Most listened years */
     let mostListenedYearDataForGraph;
@@ -499,20 +506,20 @@ export default class YearInMusic extends React.Component<
         .filter(Boolean);
     }
 
-    const linkToUserProfile = `https://listenbrainz.org/user/${user.name}`;
-    const linkToThisPage = `${linkToUserProfile}/year-in-music/2024`;
+    const linkToUserProfile = `https://listenbrainz.org/user/${encodedUsername}`;
+    const linkToThisPage = `${linkToUserProfile}/year-in-music/legacy/2024`;
     const imageShareCustomStyles = `.background {\nfill: ${backgroundColor};\n}\n`;
     const buddiesImages = [
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-01.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-02.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-03.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-04.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-05.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-06.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-07.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-08.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-09.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-10.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-01.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-02.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-03.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-04.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-05.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-06.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-07.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-08.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-09.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-10.png`,
     ];
 
     let newArtistsDiscovered: number | string =
@@ -539,7 +546,7 @@ export default class YearInMusic extends React.Component<
             />
           )}
           <Link
-            to={`/user/${user.name}/`}
+            to={`/user/${encodedUsername}/`}
             role="button"
             className="btn btn-info"
           >
@@ -574,7 +581,7 @@ export default class YearInMusic extends React.Component<
     );
     return (
       <div
-        id="year-in-music"
+        id="legacy-year-in-music"
         className="yim-2024"
         role="main"
         style={{
@@ -584,7 +591,7 @@ export default class YearInMusic extends React.Component<
         }}
       >
         <SEO year={2024} userName={user?.name} />
-        <YIMYearMetaTags year={2024} backgroundColor={backgroundColor} />
+        <YIMYearMetaTags year={2024} />
         <div id="main-header">
           <div className="color-picker">
             <div>Choose a season</div>
@@ -601,7 +608,7 @@ export default class YearInMusic extends React.Component<
                     data-season={name}
                   >
                     <img
-                      src={`/static/img/year-in-music-24/icon-${name}.svg`}
+                      src={`/static/img/legacy-year-in-music/year-in-music-24/icon-${name}.svg`}
                       alt={name}
                       height={40}
                     />
@@ -613,36 +620,21 @@ export default class YearInMusic extends React.Component<
           {hasSomeData ? (
             <img
               className="img-fluid header-image"
-              src="/static/img/year-in-music-24/yim24-header.png"
+              src="/static/img/legacy-year-in-music/year-in-music-24/yim24-header.png"
               alt="Your year in music 2024"
             />
           ) : (
-            <>
-              <span
-                className="masked-image"
-                style={{
-                  WebkitMaskImage:
-                    "url('/static/img/year-in-music-24/flower.png')",
-                  marginTop: "6vh",
-                }}
-              >
-                <img
-                  src="/static/img/year-in-music-24/flower.png"
-                  alt="Your year in music 2024"
-                />
-              </span>
-              <div className="no-yim-message">
-                <p className="center-p">Oh no!</p>
-                <p className="center-p">
-                  We don&apos;t have enough 2024 statistics for {user.name}.
-                </p>
-                <p className="center-p">
-                  <Link to="/settings/music-services/details/">Submit</Link>{" "}
-                  enough listens before the end of December to generate your
-                  #yearinmusic next year.
-                </p>
-              </div>
-            </>
+            <div className="no-yim-message">
+              <p className="center-p">Oh no!</p>
+              <p className="center-p">
+                We don&apos;t have enough 2024 statistics for {user.name}.
+              </p>
+              <p className="center-p">
+                <Link to="/settings/music-services/details/">Submit</Link>{" "}
+                enough listens before the end of December to generate your
+                #yearinmusic next year.
+              </p>
+            </div>
           )}
           <div className="user-name">{user.name}</div>
           <div className="arrow-down" />
@@ -665,14 +657,14 @@ export default class YearInMusic extends React.Component<
                 <div className="d-flex justify-content-center">
                   <object
                     className="card"
-                    data={`${APIService.APIBaseURI}/art/year-in-music/2024/${user.name}?image=overview&season=${selectedSeasonName}`}
+                    data={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=overview&season=${selectedSeasonName}&legacy=true`}
                   >
                     Overview
                   </object>
                 </div>
                 <div className="yim-share-button-container">
                   <ImageShareButtons
-                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${user.name}?image=overview&season=${selectedSeasonName}`}
+                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=overview&season=${selectedSeasonName}&legacy=true`}
                     shareUrl={linkToThisPage}
                     shareText="Check out my ListenBrainz stats for 2024"
                     shareTitle="My year in music"
@@ -729,19 +721,16 @@ export default class YearInMusic extends React.Component<
                           );
                           return (
                             <SwiperSlide
-                              lazy
                               key={`coverflow-${release_group.release_group_name}`}
                             >
                               <img
-                                data-src={
+                                src={
                                   coverArt ??
                                   "/static/img/cover-art-placeholder.jpg"
                                 }
                                 alt={release_group.release_group_name}
-                                className="swiper-lazy"
                                 loading="lazy"
                               />
-                              <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
                               <div title={release_group.release_group_name}>
                                 {getEntityLink(
                                   "release-group",
@@ -763,7 +752,7 @@ export default class YearInMusic extends React.Component<
                   </div>
                   <div className="yim-share-button-container">
                     <ImageShareButtons
-                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${user.name}?image=albums&season=${selectedSeasonName}`}
+                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=albums&season=${selectedSeasonName}&legacy=true`}
                       shareUrl={`${linkToThisPage}#top-albums`}
                       // shareText="Check out my"
                       shareTitle="My top albums of 2024"
@@ -788,7 +777,7 @@ export default class YearInMusic extends React.Component<
                     <div className="heading">
                       <img
                         className="img-header"
-                        src={`/static/img/year-in-music-24/${selectedSeasonName}/yim24-01.png`}
+                        src={`/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/yim24-01.png`}
                         alt="Top songs of 2024"
                       />
                       <h3>Top songs of 2024</h3>
@@ -832,7 +821,7 @@ export default class YearInMusic extends React.Component<
                     </div>
                     <div className="yim-share-button-container">
                       <ImageShareButtons
-                        svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${user.name}?image=tracks&season=${selectedSeasonName}`}
+                        svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=tracks&season=${selectedSeasonName}&legacy=true`}
                         shareUrl={`${linkToThisPage}#top-tracks`}
                         // shareText="Check out my"
                         shareTitle="My top tracks of 2024"
@@ -847,7 +836,7 @@ export default class YearInMusic extends React.Component<
                     <div className="heading">
                       <img
                         className="img-header"
-                        src={`/static/img/year-in-music-24/${selectedSeasonName}/yim24-02.png`}
+                        src={`/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/yim24-02.png`}
                         alt="Top artists of 2024"
                       />
                       <h3>Top artists of 2024</h3>
@@ -896,7 +885,7 @@ export default class YearInMusic extends React.Component<
                     </div>
                     <div className="yim-share-button-container">
                       <ImageShareButtons
-                        svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${user.name}?image=artists&season=${selectedSeasonName}`}
+                        svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=artists&season=${selectedSeasonName}&legacy=true`}
                         shareUrl={`${linkToThisPage}#top-artists`}
                         // shareText="Check out my"
                         shareTitle="My top artists of 2024"
@@ -1195,7 +1184,7 @@ export default class YearInMusic extends React.Component<
                 )}
                 <div className="yim-share-button-container">
                   <ImageShareButtons
-                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${user.name}?image=stats&season=${selectedSeasonName}`}
+                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=stats&season=${selectedSeasonName}&legacy=true`}
                     shareUrl={`${linkToThisPage}#stats`}
                     shareTitle="My music listening in 2024"
                     fileName={`${user.name}-stats-2024`}
@@ -1248,7 +1237,7 @@ export default class YearInMusic extends React.Component<
                     <div className="heading">
                       <img
                         className="img-header"
-                        src={`/static/img/year-in-music-24/${selectedSeasonName}/yim24-03.png`}
+                        src={`/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/yim24-03.png`}
                         alt={`New albums from ${yourOrUsersName} top artists`}
                       />
                       <h3>
@@ -1337,7 +1326,7 @@ export default class YearInMusic extends React.Component<
                     <div className="heading">
                       <img
                         className="img-header"
-                        src={`/static/img/year-in-music-24/${selectedSeasonName}/yim24-04.png`}
+                        src={`/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/yim24-04.png`}
                         alt="Music buddies"
                       />
                       <h3>
@@ -1422,7 +1411,9 @@ export default class YearInMusic extends React.Component<
                     <Link
                       key={`follow-user-${followedUser}`}
                       className="buddy content-card card"
-                      to={`/user/${followedUser}/year-in-music/2024/`}
+                      to={`/user/${encodeURIComponent(
+                        followedUser
+                      )}/year-in-music/legacy/2024/`}
                     >
                       <div className="img-container">
                         <img
@@ -1471,10 +1462,7 @@ export default class YearInMusic extends React.Component<
               {mosaics?.map((mosaicImage) => {
                 const imageLink = `https://static.metabrainz.org/LB/year-in-music/2024/${mosaicImage.release_mbid}.png`;
                 return (
-                  <SwiperSlide
-                    key={`coverflow-${mosaicImage.release_mbid}`}
-                    lazy
-                  >
+                  <SwiperSlide key={`coverflow-${mosaicImage.release_mbid}`}>
                     <div
                       style={{
                         marginInline: "auto",
@@ -1483,13 +1471,11 @@ export default class YearInMusic extends React.Component<
                     >
                       <a href={imageLink} target="_blank" rel="noreferrer">
                         <img
-                          data-src={imageLink}
+                          src={imageLink}
                           alt={mosaicImage.release_name}
-                          className="swiper-lazy"
                           loading="lazy"
                         />
                       </a>
-                      <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
                       <h4 title={mosaicImage.release_name}>
                         {getEntityLink(
                           "release",
@@ -1572,7 +1558,9 @@ export default class YearInMusic extends React.Component<
             <br />
             <br />
             Feeling nostalgic? See your previous Year in Music:{" "}
-            <Link to={`/user/${user.name}/year-in-music/2023/`}>2023</Link>
+            <Link to={`/user/${encodedUsername}/year-in-music/legacy/2023/`}>
+              2023
+            </Link>
           </div>
         </div>
         {/* Trick to load the font files for use with the SVG render */}
@@ -1594,7 +1582,7 @@ export function YearInMusicWrapper() {
   const location = useLocation();
   const params = useParams();
   const { data } = useQuery<YearInMusicLoaderData>(
-    RouteQuery(["year-in-music-2024", params], location.pathname)
+    RouteQuery(["legacy-year-in-music-2024", params], location.pathname)
   );
   const fallbackUser = { name: "" };
   const {
@@ -1674,9 +1662,9 @@ export function YearInMusicWrapper() {
     });
   }
 
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
   React.useEffect(() => {
-    dispatch({ type: "SET_AMBIENT_QUEUE", data: listens });
+    setAmbientQueue(listens);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listens]);
 

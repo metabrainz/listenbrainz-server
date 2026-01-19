@@ -68,6 +68,17 @@ def handle_user_daily_activity(message):
     """ Take daily activity stats for user and save it in database. """
     _handle_stats(message, "daily_activity", "user_id")
 
+def handle_user_genre_activity(message):
+    """ Take genre activity stats for user and save it in database. """
+    _handle_stats(message, "genre_activity", "user_id")
+
+def handle_user_artist_evolution_activity(message):
+    """ Take artist evolution activity stats for user and save it in database. """
+    _handle_stats(message, "artist_evolution_activity", "user_id")
+
+def handle_user_era_activity(message):
+    """ Take daily activity stats for user and save it in database. """
+    _handle_stats(message, "era_activity", "user_id")
 
 def _handle_sitewide_stats(message, stat_type, has_count=False):
     try:
@@ -99,6 +110,14 @@ def handle_sitewide_artist_map(message):
 
 def handle_sitewide_listening_activity(message):
     _handle_sitewide_stats(message, "listening_activity")
+
+
+def handle_sitewide_era_activity(message):
+    _handle_sitewide_stats(message, "era_activity")
+
+
+def handle_sitewide_artist_evolution_activity(message):
+    _handle_sitewide_stats(message, "artist_evolution_activity")
 
 
 def handle_dump_imported(data):
@@ -327,6 +346,10 @@ def handle_yim_most_listened_year(message):
     year_in_music.insert_heavy("most_listened_year", message["year"], message["data"])
 
 
+def handle_yim_artist_evolution_activity(message):
+    year_in_music.insert_heavy("artist_evolution_activity", message["year"], message["data"])
+
+
 def handle_yim_top_stats(message):
     year_in_music.insert_top_stats(message["entity"], message["year"], message["data"])
 
@@ -355,12 +378,17 @@ def handle_yim_top_genres(message):
     year_in_music.insert_heavy("top_genres", message["year"], message["data"])
 
 
+def handle_yim_genre_activity(message):
+    year_in_music.insert_heavy("genre_activity", message["year"], message["data"])
+
+
 def handle_yim_playlists(message):
     process_yim_playlists(message["slug"], message["year"], message["data"])
 
 
 def handle_yim_playlists_end(message):
     process_yim_playlists_end(message["slug"], message["year"])
+
 
 def handle_troi_playlists(message):
     process_weekly_playlists(message["slug"], message["data"])

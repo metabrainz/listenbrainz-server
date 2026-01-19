@@ -20,6 +20,7 @@ import {
 import { Helmet } from "react-helmet";
 import { BarItemProps } from "@nivo/bar";
 import NiceModal from "@ebay/nice-modal-react";
+import { useSetAtom } from "jotai";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getData, processData } from "./utils";
 
@@ -34,12 +35,12 @@ import {
   userChartEntityToListen,
 } from "../stats/utils";
 import ListenCard from "../../common/listens/ListenCard";
-import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 import { COLOR_LB_ASPHALT, COLOR_LB_ORANGE } from "../../utils/constants";
 import { getBaseUrl, getStatsArtistLink } from "../../utils/utils";
 import { useMediaQuery } from "../../explore/fresh-releases/utils";
 import ReleaseCard from "../../explore/fresh-releases/components/ReleaseCard";
 import SyndicationFeedModal from "../../components/SyndicationFeedModal";
+import { setAmbientQueueAtom } from "../../common/brainzplayer/BrainzPlayerAtoms";
 
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
@@ -179,7 +180,7 @@ export default function UserEntityChart() {
   const listenableItems: BaseListenFormat[] =
     data?.map(userChartEntityToListen) ?? [];
 
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
 
   React.useEffect(() => {
     // If the entity is an artist or recording, then we add the release name or release group name to the track name for the listen so that BrainzPlayer plays a track from the release or release group.
@@ -196,17 +197,11 @@ export default function UserEntityChart() {
           },
         };
       });
-      dispatch({
-        type: "SET_AMBIENT_QUEUE",
-        data: listensToDispatch,
-      });
+      setAmbientQueue(listensToDispatch);
       return;
     }
 
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: listenableItems,
-    });
+    setAmbientQueue(listenableItems);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listenableItems]);
 
@@ -335,9 +330,11 @@ export default function UserEntityChart() {
                         min: 1,
                       },
                     ],
-                    baseUrl: `${getBaseUrl()}/syndication-feed/user/${
-                      user?.name
-                    }/stats/top-${terminology}s`,
+                    baseUrl: user?.name
+                      ? `${getBaseUrl()}/syndication-feed/user/${encodeURIComponent(
+                          user.name
+                        )}/stats/top-${terminology}s`
+                      : "",
                   });
                 }}
               >

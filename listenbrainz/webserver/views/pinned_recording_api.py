@@ -6,7 +6,7 @@ from flask import Blueprint, current_app, jsonify, request
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIInternalServerError, APINotFound
+from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIForbidden
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import (
     log_raise_400,
@@ -131,7 +131,7 @@ def delete_pin_for_user(row_id):
     return jsonify({"status": "ok"})
 
 
-@pinned_recording_api_bp.get("/<user_name>/pins")
+@pinned_recording_api_bp.get("/<mb_username:user_name>/pins")
 @crossdomain
 @ratelimit()
 def get_pins_for_user(user_name):
@@ -209,7 +209,7 @@ def get_pins_for_user(user_name):
     )
 
 
-@pinned_recording_api_bp.get("/<user_name>/pins/following")
+@pinned_recording_api_bp.get("/<mb_username:user_name>/pins/following")
 @crossdomain
 @ratelimit()
 def get_pins_for_user_following(user_name):
@@ -282,7 +282,7 @@ def get_pins_for_user_following(user_name):
     )
 
 
-@pinned_recording_api_bp.get("/<user_name>/pins/current")
+@pinned_recording_api_bp.get("/<mb_username:user_name>/pins/current")
 @crossdomain
 @ratelimit()
 def get_current_pin_for_user(user_name):
@@ -353,13 +353,21 @@ def update_blurb_content_pinned_recording(row_id):
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    validate_auth_header()
+    user = validate_auth_header()
 
     data = request.json
     try:
         row_id = int(row_id)
+        pin = db_pinned_rec.get_pin_by_id(db_conn, row_id)
     except ValueError:
         log_raise_400("Invalid row_id provided")
+
+    if pin is None:
+        raise APINotFound("Cannot find pin for row_id: %s" % (row_id,))
+
+    if pin.user_id != user["id"]:
+        raise APIForbidden("Cannot update pin for another user")
+
     if "blurb_content" not in data:
         log_raise_400("JSON document must contain blurb_content", data)
 

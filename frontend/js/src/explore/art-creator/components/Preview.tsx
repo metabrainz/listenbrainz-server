@@ -1,9 +1,10 @@
 import * as React from "react";
 import "external-svg-loader";
 
-type PreviewProps = {
+type PreviewProps = React.SVGProps<SVGSVGElement> & {
   size?: number;
   url: string;
+  showCaption?: boolean;
   styles: {
     textColor?: string;
     bgColor1?: string;
@@ -16,10 +17,7 @@ const Preview = React.forwardRef(function PreviewComponent(
   ref: React.ForwardedRef<SVGSVGElement>
 ) {
   const [error, setError] = React.useState<string>();
-  const { url, styles, size = 750 } = props;
-  const hasCustomStyles = Boolean(
-    Object.values(styles)?.filter(Boolean).length
-  );
+  const { url, styles, size = 750, showCaption, ...svgProps } = props;
   const { textColor, bgColor1, bgColor2 } = styles;
 
   React.useEffect(() => {
@@ -63,30 +61,42 @@ const Preview = React.forwardRef(function PreviewComponent(
       viewBox={`0 0 ${size} ${size}`}
       height={size}
       width={size}
+      {...svgProps}
     >
-      {hasCustomStyles && (
-        <style>
-          {textColor
-            ? `
-            text > tspan {
-            fill: ${textColor};
-          }`
-            : ""}
-          {bgColor1
-            ? `
-            stop:first-child {
-            stop-color: ${bgColor1};
-          }`
-            : ""}
-          {bgColor2
-            ? `
-            stop:nth-child(2) {
-            stop-color: ${bgColor2};
-          }`
-            : ""}
-        </style>
-      )}
-      <svg data-src={url} data-js="enabled" data-cache="21600" />
+      <style>
+        {!showCaption
+          ? ` .caption { display: none; } `
+          : `.caption text > tspan { fill: white; }`}
+        {textColor
+          ? `
+          text > tspan,
+          .accent-color {
+          fill: ${textColor} !important;
+        }
+        .accent-color-stroke {
+          stroke: ${textColor} !important;
+        }
+          `
+          : ""}
+        {bgColor1
+          ? `
+          stop:first-child { stop-color: ${bgColor1} !important; }
+          .bg-color-1 { fill: ${bgColor1} !important; }
+        `
+          : ""}
+        {bgColor2
+          ? `
+          stop:nth-child(2) { stop-color: ${bgColor2} !important; }
+          .bg-color-2 { fill: ${bgColor2} !important; }`
+          : ""}
+      </style>
+      <svg
+        data-src={url}
+        data-js="enabled"
+        data-cache="21600"
+        height={size}
+        width={size}
+      />
     </svg>
   );
 });

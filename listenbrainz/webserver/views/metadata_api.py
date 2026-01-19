@@ -12,6 +12,7 @@ from listenbrainz.labs_api.labs.api.artist_credit_recording_release_lookup impor
 from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery, MBIDMappingInput
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MBIDMapper
 from listenbrainz.webserver import ts_conn
+from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.utils import parse_boolean_arg
@@ -251,6 +252,7 @@ def get_mbid_mapping():
     .. literalinclude:: ../../../listenbrainz/testdata/mb_lookup_metadata_example.json
        :language: json
 
+    :reqheader Authorization: Token <user token>
     :param artist_name: artist name of the listen
     :type artist_name: ``str``
     :param recording_name: track name of the listen
@@ -264,7 +266,13 @@ def get_mbid_mapping():
     :type inc: ``str``
     :statuscode 200: lookup succeeded, does not indicate whether a match was found or not
     :statuscode 400: invalid arguments
+    
+    Note: Because of possible abuse by AI scrapers, this endpoint now requires an auth token.
     """
+
+    # Require a valid auth header for this endpoint
+    _ = validate_auth_header()
+
     artist_name = request.args.get("artist_name")
     recording_name = request.args.get("recording_name")
     release_name = request.args.get("release_name")
@@ -400,9 +408,16 @@ def get_mbid_mapping_post():
     To see what data this endpoint returns, please look at the data above for the GET version. Note that this endpoint
     does not support metadata and incs parameters.
 
+    :reqheader Authorization: Token <user token>
     :statuscode 200: lookup succeeded, does not indicate whether a match was found or not
     :statuscode 400: invalid arguments
+
+    Note: Because of possible abuse by AI scrapers, this endpoint now requires an auth token.
     """
+
+    # Require a valid auth header for this endpoint
+    _ = validate_auth_header()
+
     data = request.json
     recordings = data.get("recordings", [])
     if not recordings:
@@ -488,6 +503,8 @@ def submit_manual_mapping():
     )
 
     create_mbid_manual_mapping(ts_conn, mapping)
+
+    invalidate_user_listen_caches(user["id"])
 
     return jsonify({"status": "ok"})
 

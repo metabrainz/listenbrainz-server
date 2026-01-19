@@ -141,7 +141,7 @@ PRIVATE_TABLES = DumpTablesCollection(
             "service",
             "last_updated",
             "latest_listened_at",
-            "error_message"
+            "error"
         )),
         DumpTable(table_name="user_setting", columns=(
             "id",

@@ -6,7 +6,9 @@
      role="img"
      viewBox="0 0 {{ width }} {{ height }}"
      width="{{ width }}"
-     height="{{ height }}">
+     height="{{ height }}"
+     preserveAspectRatio="xMinYMin meet"
+>
 
      {% if title is defined %}
           <title>{{ title }}</title>
@@ -15,6 +17,6 @@
 
      <rect id="background" fill="{{ background }}" x="0" ry="0" width="{{ width }}" height="{{ height }}"/>
      {% for image in images %}
-          {{ render_image_link(entity, image) }}
+          {{ render_image_link(entity, image, show_caption) }}
      {% endfor %}
 </svg>

@@ -54,9 +54,18 @@ class Listen(object):
         'isrc',
         'spotify_id',
         'tags',
+        'media_player',
+        'media_player_version',
+        'submission_client',
+        'submission_client_version',
+        'original_submission_client',
         'recording_msid',
         'duration_ms',
         'duration',
+        'duration_played',
+        'origin_url',
+        'music_service',
+        'music_service_name',
     )
 
     TOP_LEVEL_KEYS = (

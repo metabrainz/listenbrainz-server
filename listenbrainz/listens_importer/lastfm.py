@@ -6,7 +6,7 @@ from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
 from listenbrainz.db import listens_importer
-from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError
+from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError, LastfmUserNotRetryableException
 from listenbrainz.domain.importer_service import ImporterService
 from listenbrainz.domain.lastfm import LastfmService
 from listenbrainz.listens_importer.base import ListensImporter
@@ -80,7 +80,7 @@ class BaseLastfmImporter(ListensImporter):
 
 
     def get_user_recent_tracks(self, session, user, page):
-        """ Get user’s recently played tracks from last.fm api. """
+        """ Get user's recently played tracks from last.fm api. """
         latest_listened_at = user["latest_listened_at"] or LISTEN_MINIMUM_DATE
         params = {
             "method": "user.getrecenttracks",
@@ -96,9 +96,17 @@ class BaseLastfmImporter(ListensImporter):
             case 200:
                 return response.json()
             case 404:
-                raise ExternalServiceError("Last.FM user with username %s not found" % (params["user"],))
+                raise LastfmUserNotRetryableException("Last.FM user with username %s not found" % (params["user"],))
             case 429:
                 raise ExternalServiceError("Encountered a rate limit.")
+            case 400:
+                # Check for error 17 (privacy mode enabled)
+                data = response.json()
+                if "error" in data and data.get("error") == 17:
+                    raise LastfmUserNotRetryableException(
+                        "Please disable privacy mode in the settings on your Last.fm account to allows importing listens."
+                    )
+                raise ExternalServiceAPIError("Error from the API while getting listens: %s" % response.text)
             case _:
                 raise ExternalServiceAPIError("Error from the API while getting listens: %s" % response.text)
 
@@ -166,6 +174,11 @@ class BaseLastfmImporter(ListensImporter):
             )
 
             return imported_listen_count
+        except LastfmUserNotRetryableException as e:
+            self.service.update_user_import_status(user_id=user["user_id"], error=str(e), retry=False)
+            if not current_app.config["TESTING"]:
+                self.notify_error(user["musicbrainz_id"], str(e))
+            raise e
         except ExternalServiceAPIError as e:
             # if it is an error from the Spotify API, show the error message to the user
             self.service.update_user_import_status(user_id=user["user_id"], error=str(e))

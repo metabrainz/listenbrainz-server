@@ -1,16 +1,22 @@
 import json
 import time
+import uuid
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
+from brainzutils import cache
 from psycopg2.extras import execute_values
 import requests_mock
+from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 from data.model.external_service import ExternalServiceType
+from listenbrainz.listenstore.timescale_utils import delete_listens
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
-from listenbrainz.webserver.views.api_tools import is_valid_uuid
+from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver.listens_cache import _get_listens_cache_key
+from listenbrainz.webserver.views.api_tools import is_valid_uuid, DEFAULT_ITEMS_PER_GET
 import listenbrainz.db.external_service_oauth as db_oauth
 from listenbrainz.webserver.views.playlist_api import PLAYLIST_EXTENSION_URI, PlaylistAPIXMLError
 
@@ -23,6 +29,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.follow_user_url = self.custom_url_for("social_api_v1.follow_user",
                                                    user_name=self.followed_user["musicbrainz_id"])
         self.follow_user_headers = {'Authorization': 'Token {}'.format(self.user['auth_token'])}
+        cache._r.flushall()
 
     def insert_lb_radio_data(self):
 
@@ -86,6 +93,18 @@ class APITestCase(ListenAPIIntegrationTestCase):
                                   user_name=self.user['musicbrainz_id'])
         response = self.client.get(url)
         self.assertStatus(response, 503)
+
+    def test_get_listens_invalid_ua(self):
+        url = self.custom_url_for('api_v1.get_listens',
+                                  user_name=self.user['musicbrainz_id'])
+        response = self.client.get(url, headers={"User-Agent": "foobar (lovable.dev)"})
+        self.assert400(response)
+        self.assertEqual(
+            response.json["message"],
+            "Please contact support@metabrainz.org for assistance."
+        )
+        response = self.client.get(url, headers={"User-Agent": "foobar"})
+        self.assert200(response)
 
     def test_get_listens(self):
         """ Test to make sure that the api sends valid listens on get requests.
@@ -1264,3 +1283,171 @@ class APITestCase(ListenAPIIntegrationTestCase):
         keys = list(r.json.keys())
         self.assertGreater(len(keys), 0)
         self.assertEqual(len(r.json[keys[0]][0]), 4)
+
+
+class ListenAPICachingTestCase(ListenAPIIntegrationTestCase):
+
+    def setUp(self):
+        super(ListenAPICachingTestCase, self).setUp()
+        patcher = patch.object(
+            timescale_connection._ts,
+            "fetch_listens",
+            wraps=timescale_connection._ts.fetch_listens
+        )
+        self.mock_fetch_listens = patcher.start()
+        self.addCleanup(patcher.stop)
+        self.test_listen = {
+            'listened_at': int(time.time()),
+            'track_metadata': {
+                'artist_name': 'Cache Test Artist',
+                'track_name': 'Cache Test Track',
+            }
+        }
+
+    def test_get_listens_caching_submission(self):
+        """Test that listens are properly cached and invalidated"""
+        url = self.custom_url_for(
+            "api_v1.get_listens",
+            user_name=self.user["musicbrainz_id"]
+        )
+        response = self.client.get(url)
+        self.assert200(response)
+        self.assertEqual(response.json["payload"]["listens"], [])
+
+        self.mock_fetch_listens.assert_called_once()
+
+        user_cache_key = f"user_listens_cache:{self.user['id']}"
+        listens_key = _get_listens_cache_key(self.user["id"], count=DEFAULT_ITEMS_PER_GET)
+        self.assertEqual(cache.smembers(user_cache_key), {listens_key})
+        self.assertEqual(
+            json.loads(cache.get(listens_key)),
+            {"count": 0, "listens": [], "latest_listen_ts": 0, "oldest_listen_ts": 0}
+        )
+
+        self.mock_fetch_listens.reset_mock()
+        
+        response = self.client.post(
+            self.custom_url_for('api_v1.submit_listen'),
+            data=json.dumps({'listen_type': 'single', 'payload': [self.test_listen]}),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type='application/json'
+        )
+        self.assert200(response)
+
+        attempts = 0
+        while attempts < 10:
+            result = self.ts_conn.execute(
+                text("select exists(select 1 from listen where user_id = :user_id)"),
+                {"user_id": self.user["id"]}
+            ).first()
+            if result[0]:
+                break
+            time.sleep(1)
+            attempts += 1
+
+        self.assertEqual(cache.smembers(user_cache_key), set())
+        self.assertEqual(cache.get(listens_key), None)
+
+        response = self.wait_for_query_to_have_items(url, num_items=1)
+        data = response.json["payload"]
+        cache_keys = cache.smembers(user_cache_key)
+        self.assertEqual(len(cache_keys), 1)
+        cached_data = json.loads(cache.get(cache_keys.pop()))
+
+        self.assertEqual(data["count"], cached_data["count"])
+        self.assertEqual(data["listens"], cached_data["listens"])
+        self.assertEqual(data["latest_listen_ts"], cached_data["latest_listen_ts"])
+        self.assertEqual(data["oldest_listen_ts"], cached_data["oldest_listen_ts"])
+        self.mock_fetch_listens.assert_called_once()
+
+        self.mock_fetch_listens.reset_mock()
+        response = self.wait_for_query_to_have_items(url, num_items=1)
+        self.assert200(response)
+        self.mock_fetch_listens.assert_not_called()
+
+        url2 = self.custom_url_for(
+            "api_v1.get_listens",
+            user_name=self.user["musicbrainz_id"],
+            count=2
+        )
+        response2 = self.wait_for_query_to_have_items(url2, num_items=1)
+        self.assert200(response2)
+        self.assertEqual(response.json, response2.json)
+        self.mock_fetch_listens.assert_called_once()
+        cache_keys = cache.smembers(user_cache_key)
+        self.assertEqual(len(cache_keys), 2)
+
+    def test_get_listens_caching_deletion(self):
+        response = self.client.post(
+            self.custom_url_for('api_v1.submit_listen'),
+            data=json.dumps({'listen_type': 'single', 'payload': [self.test_listen]}),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type='application/json'
+        )
+        self.assert200(response)
+
+        url = self.custom_url_for('api_v1.get_listens', user_name=self.user["musicbrainz_id"])
+        response = self.wait_for_query_to_have_items(url, num_items=1)
+        self.assert200(response)
+
+        user_cache_key = f"user_listens_cache:{self.user['id']}"
+        listens_key = _get_listens_cache_key(self.user["id"], count=DEFAULT_ITEMS_PER_GET)
+        self.assertEqual(cache.smembers(user_cache_key), {listens_key})
+
+        listen = response.json['payload']['listens'][0]
+        delete_response = self.client.post(
+            self.custom_url_for('api_v1.delete_listen'),
+            data=json.dumps({
+                'listened_at': listen['listened_at'],
+                'recording_msid': listen['track_metadata']['additional_info']['recording_msid']
+            }),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type='application/json'
+        )
+        self.assert200(delete_response)
+
+        self.assertEqual(cache.smembers(user_cache_key), set())
+        self.assertEqual(cache.get(listens_key), None)
+
+        delete_listens()
+        response = self.client.get(url)
+        self.assert200(response)
+        self.assertEqual(response.json["payload"]["listens"], [])
+
+    def test_get_listens_caching_manual_mapping(self):
+        response = self.client.post(
+            self.custom_url_for('api_v1.submit_listen'),
+            data=json.dumps({'listen_type': 'single', 'payload': [self.test_listen]}),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type='application/json'
+        )
+        self.assert200(response)
+
+        url = self.custom_url_for('api_v1.get_listens', user_name=self.user["musicbrainz_id"])
+        response = self.wait_for_query_to_have_items(url, num_items=1)
+        self.assert200(response)
+
+        user_cache_key = f"user_listens_cache:{self.user['id']}"
+        listens_key = _get_listens_cache_key(self.user["id"], count=DEFAULT_ITEMS_PER_GET)
+        self.assertEqual(cache.smembers(user_cache_key), {listens_key})
+
+        recording_mbid = str(uuid.uuid4())
+        response = self.client.post(
+            self.custom_url_for("metadata.submit_manual_mapping"),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            json={
+                "recording_msid": response.json["payload"]["listens"][0]["track_metadata"]["additional_info"]["recording_msid"],
+                "recording_mbid": recording_mbid,
+            },
+        )
+        self.assert200(response)
+
+        self.assertEqual(cache.smembers(user_cache_key), set())
+        self.assertEqual(cache.get(listens_key), None)
+
+        response = self.client.get(url)
+        self.assert200(response)
+        self.assertEqual(
+            response.json["payload"]["listens"][0]["track_metadata"]["mbid_mapping"]["recording_mbid"],
+            recording_mbid
+        )

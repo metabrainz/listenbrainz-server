@@ -10,7 +10,9 @@
      viewBox="0 0 924 924"
      xmlns:dc="http://purl.org/dc/elements/1.1/"
      height="{{ height }}"
-     width="{{ width }}">
+     width="{{ width }}"
+     preserveAspectRatio="xMinYMin meet"
+>
   <title>Top 10 releases {{ metadata["time_range"] }} for {{ metadata["user_name"] }}&#xA;</title>
   <desc>
       {%- for release in releases[:10] -%}
@@ -63,7 +65,7 @@
    </text>
    {% endfor %}
   </g>
-  <g id="lines" stroke="#FAFF5B">
+  <g id="lines" class="accent-color-stroke">
     {% for _ in releases[:10] %}
       <line
        x1="0"

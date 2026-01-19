@@ -111,18 +111,6 @@ CREATE TABLE hide_user_timeline_event (
     created      TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
-CREATE TABLE spotify_auth (
-  user_id                   INTEGER NOT NULL, -- PK and FK to user.id
-  user_token                VARCHAR NOT NULL,
-  token_expires             TIMESTAMP WITH TIME ZONE,
-  refresh_token             VARCHAR NOT NULL,
-  last_updated              TIMESTAMP WITH TIME ZONE,
-  latest_listened_at        TIMESTAMP WITH TIME ZONE,
-  record_listens            BOOLEAN DEFAULT TRUE,
-  error_message             VARCHAR,
-  permission                VARCHAR NOT NULL
-);
-
 CREATE TABLE external_service_oauth (
     id                      SERIAL,  -- PK
     user_id                 INTEGER NOT NULL,  -- FK to "user".id
@@ -143,7 +131,7 @@ CREATE TABLE listens_importer (
     last_updated                TIMESTAMP WITH TIME ZONE,
     latest_listened_at          TIMESTAMP WITH TIME ZONE,
     status                      JSONB,
-    error_message               TEXT
+    error                       JSONB    -- {message: text, retry: boolean}
 );
 
 CREATE TABLE recommendation_feedback (
@@ -241,6 +229,50 @@ CREATE TABLE user_data_export (
     filename            TEXT,
     available_until     TIMESTAMPTZ,
     created             TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE user_data_import (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY,
+    user_id             INTEGER NOT NULL,
+    service             user_data_import_service_type NOT NULL,
+    metadata            JSONB,
+    file_path           TEXT NOT NULL,
+    from_date           TIMESTAMPTZ NOT NULL DEFAULT 'epoch',
+    to_date             TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created             TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE funkwhale_servers (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY,
+    host_url            TEXT NOT NULL UNIQUE,
+    client_id           TEXT NOT NULL,
+    client_secret       TEXT NOT NULL,
+    scopes              TEXT NOT NULL,
+    created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE funkwhale_tokens (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY,
+    user_id             INTEGER NOT NULL,
+    funkwhale_server_id INTEGER NOT NULL,
+    access_token        TEXT NOT NULL,
+    refresh_token       TEXT NOT NULL,
+    token_expiry        TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
+CREATE TABLE navidrome_servers (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY,
+    host_url            TEXT NOT NULL UNIQUE,
+    created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE navidrome_tokens (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY,
+    user_id             INTEGER NOT NULL,
+    navidrome_server_id INTEGER NOT NULL,
+    username            TEXT NOT NULL,
+    encrypted_password  TEXT NOT NULL,   
+    created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- The following line is now executed by the init-db action from manage.py. If you create a DB without the init-db function

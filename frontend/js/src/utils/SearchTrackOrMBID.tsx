@@ -17,9 +17,11 @@ import GlobalAppContext from "./GlobalAppContext";
 import DropdownRef from "./Dropdown";
 import {
   LB_ALBUM_MBID_REGEXP,
-  RECORDING_MBID_REGEXP,
-  RELEASE_GROUP_MBID_REGEXP,
-  RELEASE_MBID_REGEXP,
+  LB_RELEASE_MBID_REGEXP,
+  LB_RECORDING_MBID_REGEXP,
+  MB_RECORDING_MBID_REGEXP,
+  MB_RELEASE_GROUP_MBID_REGEXP,
+  MB_RELEASE_MBID_REGEXP,
   UUID_REGEXP,
 } from "./constants";
 
@@ -155,7 +157,8 @@ const SearchTrackOrMBID = forwardRef<
       throttle(
         async (input: string, canonicalReleaseMBID?: string) => {
           let newRecordingMBID =
-            RECORDING_MBID_REGEXP.exec(input)?.[1] ??
+            MB_RECORDING_MBID_REGEXP.exec(input)?.[1] ??
+            LB_RECORDING_MBID_REGEXP.exec(input)?.[1] ??
             UUID_REGEXP.exec(input)?.[0];
           if (!newRecordingMBID) {
             return;
@@ -242,10 +245,13 @@ const SearchTrackOrMBID = forwardRef<
     }
     setLoading(true);
     const isValidUUID = UUID_REGEXP.test(inputValue);
-    const isValidRecordingUUID = RECORDING_MBID_REGEXP.test(inputValue);
+    const isValidRecordingUUID =
+      MB_RECORDING_MBID_REGEXP.test(inputValue) ||
+      LB_RECORDING_MBID_REGEXP.test(inputValue);
     const isValidAlbumUUID =
-      RELEASE_MBID_REGEXP.test(inputValue) ||
-      RELEASE_GROUP_MBID_REGEXP.test(inputValue) ||
+      MB_RELEASE_MBID_REGEXP.test(inputValue) ||
+      LB_RELEASE_MBID_REGEXP.test(inputValue) ||
+      MB_RELEASE_GROUP_MBID_REGEXP.test(inputValue) ||
       LB_ALBUM_MBID_REGEXP.test(inputValue);
     if (isValidAlbumUUID && isFunction(switchMode)) {
       switchMode(inputValue);

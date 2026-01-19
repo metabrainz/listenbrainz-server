@@ -1,11 +1,11 @@
 from datetime import datetime, date, time
 
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.stats.incremental.incremental_stats_engine import IncrementalStatsEngine
 from listenbrainz_spark.stats.incremental.range_selector import FromToRangeListenRangeSelector
 from listenbrainz_spark.stats.incremental.user.artist_map import ArtistMapUserEntity, ArtistMapStatsMessageCreator
 from listenbrainz_spark.stats.incremental.user.entity import UserStatsMessageCreator
 from listenbrainz_spark.stats.user.entity import incremental_entity_map
+from listenbrainz_spark.year_in_music.stats_engine import YIMStatsEngine
 
 NUMBER_OF_YIM_ENTITIES = 50
 
@@ -39,23 +39,16 @@ def calculate_top_entity_stats(year):
         entity_cls = incremental_entity_map[entity]
         entity_obj = entity_cls(selector, NUMBER_OF_YIM_ENTITIES)
         message_creator = YIMStatsMessageCreator(entity, selector)
-        engine = IncrementalStatsEngine(entity_obj, message_creator)
+        engine = YIMStatsEngine(entity_obj, message_creator)
         for message in engine.run():
-            # yim stats are stored in postgres instead of couchdb so drop those messages for yim
-            if message["type"] == "couchdb_data_start" or message["type"] == "couchdb_data_end":
-                continue
-
             message["year"] = year
             yield message
 
         if entity == "artists":
             artist_map_entity = ArtistMapUserEntity(selector, NUMBER_OF_YIM_ENTITIES)
             artist_map_message_creator = YIMArtistMapMessageCreator(selector)
-            artist_map_query = artist_map_entity.get_stats_query(engine._final_table)
+            artist_map_query = artist_map_entity.get_stats_query(engine.aggregate_table)
             artist_map_results = run_query(artist_map_query)
-            for message in engine.create_messages(artist_map_results, engine._only_inc, artist_map_message_creator):
-                if message["type"] == "couchdb_data_start" or message["type"] == "couchdb_data_end":
-                    continue
-
+            for message in artist_map_message_creator.create_messages(artist_map_results, only_inc=False):
                 message["year"] = year
                 yield message

@@ -12,13 +12,14 @@ login_manager.login_view = 'login.index'
 
 
 class User(UserMixin):
-    def __init__(self, id, created, musicbrainz_id, auth_token, gdpr_agreed, login_id):
+    def __init__(self, id, created, musicbrainz_id, auth_token, gdpr_agreed, login_id, musicbrainz_row_id):
         self.id = id
         self.created = created
         self.musicbrainz_id = musicbrainz_id
         self.auth_token = auth_token
         self.gdpr_agreed = gdpr_agreed
         self.login_id = login_id
+        self.musicbrainz_row_id = musicbrainz_row_id
 
     def get_id(self):
         return self.login_id
@@ -32,6 +33,7 @@ class User(UserMixin):
             auth_token=user['auth_token'],
             gdpr_agreed=user['gdpr_agreed'],
             login_id=user['login_id'],
+            musicbrainz_row_id=user['musicbrainz_row_id']
         )
 
     def to_dict(self):
@@ -41,7 +43,8 @@ class User(UserMixin):
             "musicbrainz_id": self.musicbrainz_id,
             "auth_token": self.auth_token,
             "gdpr_agreed": self.gdpr_agreed,
-            "login_id": self.login_id
+            "login_id": self.login_id,
+            "musicbrainz_row_id": self.musicbrainz_row_id
         }
 
 

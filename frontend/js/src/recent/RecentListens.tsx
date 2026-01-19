@@ -3,14 +3,15 @@
 import * as React from "react";
 import { useLoaderData } from "react-router";
 import { Helmet } from "react-helmet";
+import { useSetAtom } from "jotai";
 
 import ListenCard from "../common/listens/ListenCard";
 import Card from "../components/Card";
 
 import { getTrackName } from "../utils/utils";
-import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import RecentDonorsCard from "./components/RecentDonors";
 import FlairsExplanationButton from "../common/flairs/FlairsExplanationButton";
+import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
@@ -100,13 +101,9 @@ export default class RecentListens extends React.Component<
 export function RecentListensWrapper() {
   const data = useLoaderData() as RecentListensLoaderData;
   const listens = data.listens || [];
-  const dispatch = useBrainzPlayerDispatch();
-
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
   React.useEffect(() => {
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: listens,
-    });
+    setAmbientQueue(listens);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listens]);
   return <RecentListens {...data} />;

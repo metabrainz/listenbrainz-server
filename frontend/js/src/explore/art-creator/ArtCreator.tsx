@@ -1,10 +1,11 @@
 import * as React from "react";
 import { useCallback, useState } from "react";
-import { debounce } from "lodash";
+import { debounce, isEqual } from "lodash";
 import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import NiceModal from "@ebay/nice-modal-react";
+import { useSearchParams } from "react-router";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import ColorPicker from "./components/ColorPicker";
 import Gallery from "./components/Gallery";
@@ -15,14 +16,14 @@ import { ToastMsg } from "../../notifications/Notifications";
 import UserSearch from "../../common/UserSearch";
 import Sidebar from "../../components/Sidebar";
 import SyndicationFeedModal from "../../components/SyndicationFeedModal";
-import { getBaseUrl } from "../../utils/utils";
+import { getBaseUrl, getObjectForURLSearchParams } from "../../utils/utils";
 
 export enum TemplateNameEnum {
   designerTop5 = "designer-top-5",
   designerTop10 = "designer-top-10",
+  designerTop10Alt = "designer-top-10-alt",
   lPsOnTheFloor = "lps-on-the-floor",
   gridStats = "grid-stats",
-  gridStatsSpecial = "grid-stats-special",
 }
 
 export interface TemplateOption {
@@ -40,9 +41,6 @@ export interface GridTemplateOption extends TemplateOption {
   defaultGridSize: number;
   defaultGridLayout: number;
 }
-/* How many layouts are available fro each grid dimension (number of rows/columns)
-See GRID_TILE_DESIGNS in listenbrainz/art/cover_art_generator.py */
-const layoutsPerGridDimensionArr = [undefined, undefined, 1, 3, 4, 2];
 
 /* Fancy TypeScript to get a typed enum of object literals representing the options */
 export type TemplateEnumType = {
@@ -66,6 +64,13 @@ export const TemplateEnum: TemplateEnumType = {
     type: "text",
     defaultColors: ["#FAFF5B", "#00A2CC", "#FF29A5"],
   },
+  [TemplateNameEnum.designerTop10Alt]: {
+    name: TemplateNameEnum.designerTop10Alt,
+    displayName: "Designer top 10 (alt)",
+    image: "/static/img/explore/stats-art/template-designer-top-10-alt.png",
+    type: "text",
+    defaultColors: ["#006D39", "#083B2B", "#111820"],
+  },
   [TemplateNameEnum.lPsOnTheFloor]: {
     name: TemplateNameEnum.lPsOnTheFloor,
     displayName: "LPs on the floor",
@@ -79,14 +84,6 @@ export const TemplateEnum: TemplateEnumType = {
     type: "grid",
     defaultGridSize: 4,
     defaultGridLayout: 0,
-  },
-  [TemplateNameEnum.gridStatsSpecial]: {
-    name: TemplateNameEnum.gridStatsSpecial,
-    displayName: "Album grid alt",
-    image: "/static/img/explore/stats-art/template-grid-stats-2.png",
-    type: "grid",
-    defaultGridSize: 5,
-    defaultGridLayout: 1,
   },
 } as const;
 
@@ -104,28 +101,67 @@ enum TimeRangeOptions {
   "all_time" = "All time",
 }
 
+/* Layout options available for each grid dimension (number of rows/columns)
+See GRID_TILE_DESIGNS in listenbrainz/art/cover_art_generator.py */
+const coverArtGridOptions: CoverArtGridOptions[] = [
+  { dimension: 1, layout: 0 },
+  { dimension: 2, layout: 0 },
+  { dimension: 3, layout: 0 },
+  { dimension: 3, layout: 1 },
+  { dimension: 3, layout: 2 },
+  { dimension: 4, layout: 0 },
+  { dimension: 4, layout: 1 },
+  { dimension: 4, layout: 2 },
+  { dimension: 4, layout: 3 },
+  { dimension: 5, layout: 0 },
+  { dimension: 5, layout: 1 },
+];
+
 // enum FontNameEnum {
 //   "Roboto",
 //   "Integer",
 //   "Sans Serif",
 // }
+// const fontOptions = Object.values(FontNameEnum).filter((v) => isNaN(Number(v)));
 
 const DEFAULT_IMAGE_SIZE = 750;
 
-// const fontOptions = Object.values(FontNameEnum).filter((v) => isNaN(Number(v)));
+const defaultStyleOnLoad = TemplateEnum[
+  TemplateNameEnum.designerTop5
+] as TextTemplateOption;
 
-const defaultStyleOnLoad = TemplateEnum["designer-top-5"] as TextTemplateOption;
+const defaultTimeRangeOnLoad: keyof typeof TimeRangeOptions = "this_month";
 
 export default function ArtCreator() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
-  // Add images for the gallery, don't compose them on the fly
-  const [userName, setUserName] = useState(currentUser?.name);
-  const [style, setStyle] = useState<TemplateOption>(defaultStyleOnLoad);
-  const [timeRange, setTimeRange] = useState<keyof typeof TimeRangeOptions>(
-    "this_month"
+  const [searchParams, setSearchParams] = useSearchParams();
+  const updateSearchParam = useCallback(
+    (param: string, value: string) => {
+      setSearchParams((prevParams) => ({
+        ...getObjectForURLSearchParams(prevParams),
+        [param]: value,
+      }));
+    },
+    [setSearchParams]
   );
+  const userName = searchParams.get("username") ?? currentUser?.name;
+  const setUserNameCallback = useCallback(
+    (newUsername: string) => updateSearchParam("username", newUsername),
+    [updateSearchParam]
+  );
+  const style: TemplateOption =
+    TemplateEnum[searchParams.get("style") as TemplateNameEnum] ??
+    defaultStyleOnLoad;
+
+  const timeRange =
+    searchParams.get("range")! in TimeRangeOptions
+      ? (searchParams.get("range") as keyof typeof TimeRangeOptions)
+      : defaultTimeRangeOnLoad;
+
   const [gridSize, setGridSize] = useState(4);
   const [gridLayout, setGridLayout] = useState(0);
+  const [showCaption, setShowCaption] = useState(true);
+  const [skipMissing, setSkipMissing] = useState(true);
   const [previewUrl, setPreviewUrl] = useState("");
   // const [font, setFont] = useState<keyof typeof FontNameEnum>("Roboto");
   const [textColor, setTextColor] = useState<string>(
@@ -141,8 +177,8 @@ export default function ArtCreator() {
 
   const updateStyleButtonCallback = useCallback(
     (name: TemplateNameEnum) => {
-      const selectedStyle = TemplateEnum[name];
-      setStyle(selectedStyle);
+      const selectedStyle: TemplateOption = TemplateEnum[name];
+      updateSearchParam("style", selectedStyle.name);
       if (selectedStyle.type === "grid") {
         setGridLayout((selectedStyle as GridTemplateOption).defaultGridLayout);
         setGridSize((selectedStyle as GridTemplateOption).defaultGridSize);
@@ -154,18 +190,31 @@ export default function ArtCreator() {
         );
       }
     },
-    [setStyle]
+    [updateSearchParam]
   );
+
+  React.useEffect(() => {
+    // On page load, validate URL params and set defaults if invalid
+    const validStyleOrDefault: TemplateNameEnum =
+      TemplateEnum[searchParams.get("style") as TemplateNameEnum]?.name ??
+      defaultStyleOnLoad.name;
+    updateStyleButtonCallback(validStyleOrDefault);
+    if (!(searchParams.get("range")! in TimeRangeOptions)) {
+      updateSearchParam("range", defaultTimeRangeOnLoad);
+    }
+  }, []);
+
   const updateStyleCallback = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) =>
-      setStyle(TemplateEnum[event.target.value as TemplateNameEnum]),
-    [setStyle]
+      updateStyleButtonCallback(event.target.value as TemplateNameEnum),
+    [updateStyleButtonCallback]
   );
 
   const updateTimeRangeCallback = useCallback(
-    (event: React.ChangeEvent<HTMLSelectElement>) =>
-      setTimeRange(event.target.value as keyof typeof TimeRangeOptions),
-    [setTimeRange]
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      updateSearchParam("range", event.target.value);
+    },
+    [updateSearchParam]
   );
 
   const updateTextColorCallback = useCallback(
@@ -342,10 +391,12 @@ export default function ArtCreator() {
       options: [],
       baseUrl:
         style.type === "grid"
-          ? `${getBaseUrl()}/syndication-feed/user/${userName}/stats/art/grid?dimension=${gridSize}&layout=${gridLayout}&range=${timeRange}`
-          : `${getBaseUrl()}/syndication-feed/user/${userName}/stats/art/custom?custom_name=${
-              style.name
-            }&range=${timeRange}`,
+          ? `${getBaseUrl()}/syndication-feed/user/${encodeURIComponent(
+              userName
+            )}/stats/art/grid?dimension=${gridSize}&layout=${gridLayout}&range=${timeRange}`
+          : `${getBaseUrl()}/syndication-feed/user/${encodeURIComponent(
+              userName
+            )}/stats/art/custom?custom_name=${style.name}&range=${timeRange}`,
     });
   }, [userName, style, gridSize, gridLayout, timeRange]);
 
@@ -358,15 +409,32 @@ export default function ArtCreator() {
         userNameArg: string,
         timeRangeArg: keyof typeof TimeRangeOptions,
         gridSizeArg: number,
-        gridLayoutArg: number
+        gridLayoutArg: number,
+        showCaptionArg: boolean,
+        skipMissingArg: boolean
       ) => {
         if (styleArg.type === "grid") {
-          setPreviewUrl(
-            `${APIService.APIBaseURI}/art/grid-stats/${userNameArg}/${timeRangeArg}/${gridSizeArg}/${gridLayoutArg}/${DEFAULT_IMAGE_SIZE}`
-          );
+          let newPreviewUrl = `${
+            APIService.APIBaseURI
+          }/art/grid-stats/${encodeURIComponent(
+            userNameArg
+          )}/${timeRangeArg}/${gridSizeArg}/${gridLayoutArg}/${DEFAULT_IMAGE_SIZE}`;
+          const queryParams = new URLSearchParams();
+          if (!showCaptionArg) {
+            queryParams.set("caption", "false");
+          }
+          if (!skipMissingArg) {
+            queryParams.set("skip-missing", "false");
+          }
+          if (queryParams.size) {
+            newPreviewUrl += `?${queryParams.toString()}`;
+          }
+          setPreviewUrl(newPreviewUrl);
         } else {
           setPreviewUrl(
-            `${APIService.APIBaseURI}/art/${styleArg.name}/${userNameArg}/${timeRangeArg}/${DEFAULT_IMAGE_SIZE}`
+            `${APIService.APIBaseURI}/art/${styleArg.name}/${encodeURIComponent(
+              userNameArg
+            )}/${timeRangeArg}/${DEFAULT_IMAGE_SIZE}`
           );
         }
       },
@@ -374,17 +442,28 @@ export default function ArtCreator() {
       { leading: false }
     );
   }, [setPreviewUrl, APIService.APIBaseURI]);
+
   React.useEffect(() => {
     if (!userName) {
       return;
     }
-    debouncedSetPreviewUrl(style, userName, timeRange, gridSize, gridLayout);
+    debouncedSetPreviewUrl(
+      style,
+      userName,
+      timeRange,
+      gridSize,
+      gridLayout,
+      showCaption,
+      skipMissing
+    );
   }, [
     userName,
     style,
     timeRange,
     gridSize,
     gridLayout,
+    showCaption,
+    skipMissing,
     debouncedSetPreviewUrl,
   ]);
 
@@ -413,6 +492,7 @@ export default function ArtCreator() {
           <Preview
             key={previewUrl}
             url={previewUrl}
+            showCaption={showCaption}
             styles={{
               textColor,
               bgColor1: firstBgColor,
@@ -442,7 +522,7 @@ export default function ArtCreator() {
                 </label>
                 <UserSearch
                   initialValue={userName}
-                  onSelectUser={setUserName}
+                  onSelectUser={setUserNameCallback}
                   placeholder="Search for a user…"
                 />
               </div>
@@ -487,59 +567,54 @@ export default function ArtCreator() {
               <h4>Advanced</h4>
               {style.type === "grid" && (
                 <>
-                  <small>
-                    You can customize the grid size and select one of our
-                    advanced layouts
-                  </small>
-                  <div className="input-group">
-                    <div className="input-group-prepend">
-                      <label
-                        className="input-group-text"
-                        htmlFor="albums-per-row"
-                      >
-                        Albums per row
-                      </label>
-                    </div>
+                  <label className="form-check-label">
                     <input
-                      id="albums-per-row"
-                      className="form-control"
-                      type="number"
-                      min={2}
-                      max={5}
-                      value={gridSize}
-                      onChange={(event) => {
-                        setGridSize(event.target.valueAsNumber);
-                        setGridLayout(0);
-                      }}
-                    />
-                  </div>
-                  <div className="input-group">
-                    <div className="input-group-prepend">
-                      <label className="input-group-text" htmlFor="grid-layout">
-                        Grid layout
-                      </label>
-                    </div>
-                    <select
-                      id="grid-layout"
-                      className="form-select"
-                      value={gridLayout + 1}
-                      onChange={(event) => {
-                        setGridLayout(Number(event.target.value) - 1);
-                      }}
-                    >
-                      {[...Array(layoutsPerGridDimensionArr[gridSize])].map(
-                        (val, index) => {
-                          return (
-                            <option
-                              key={`option-${index + 1}`}
-                              value={index + 1}
-                            >
-                              Option {index + 1}
-                            </option>
-                          );
-                        }
-                      )}
-                    </select>
+                      className="form-check-input me-2"
+                      type="checkbox"
+                      checked={showCaption}
+                      onChange={(evt) => setShowCaption(evt.target.checked)}
+                    />{" "}
+                    Show caption
+                  </label>
+                  <label className="form-check-label">
+                    <input
+                      className="form-check-input me-2"
+                      type="checkbox"
+                      checked={skipMissing}
+                      onChange={(evt) => setSkipMissing(evt.target.checked)}
+                    />{" "}
+                    Skip missing covers
+                  </label>
+                  <small>Choose a grid layout:</small>
+                  <div className="cover-art-grid">
+                    {coverArtGridOptions.map((option) => {
+                      return (
+                        <label className="cover-art-option">
+                          <input
+                            type="radio"
+                            name="artwork"
+                            value={`artwork-${option.dimension}-${option.layout}`}
+                            key={`artwork-${option.dimension}-${option.layout}`}
+                            className="cover-art-radio"
+                            checked={
+                              isEqual(option.dimension, gridSize) &&
+                              isEqual(option.layout, gridLayout)
+                            }
+                            onChange={() => {
+                              setGridSize(option.dimension);
+                              setGridLayout(option.layout);
+                            }}
+                          />
+                          <img
+                            height={80}
+                            width={80}
+                            src={`/static/img/playlist-cover-art/cover-art_${option.dimension}-${option.layout}.svg`}
+                            alt={`Cover art option ${option.dimension}-${option.layout}`}
+                            className="cover-art-image"
+                          />
+                        </label>
+                      );
+                    })}
                   </div>
                 </>
               )}

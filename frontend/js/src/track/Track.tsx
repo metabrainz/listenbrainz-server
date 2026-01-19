@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -111,7 +111,7 @@ export default function TrackPage(): JSX.Element {
     tags,
   } = track || {};
 
-  const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
+  const queryClient = useQueryClient();
   const [expandDiscography, setExpandDiscography] = React.useState<boolean>(
     false
   );
@@ -134,23 +134,35 @@ export default function TrackPage(): JSX.Element {
       .catch(console.error);
   }, [recording_mbid]);
 
-  React.useEffect(() => {
-    async function fetchReviews() {
-      try {
-        const response = await fetch(
-          `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${recording_mbid}&entity_type=recording`
-        );
-        const body = await response.json();
-        if (!response.ok) {
-          throw body?.message ?? response.statusText;
-        }
-        setReviews(body.reviews);
-      } catch (error) {
-        toast.error(error);
+  // Fetch reviews using React Query
+  const { data: reviewsData, isError: reviewsError } = useQuery<{
+    reviews: CritiqueBrainzReviewAPI[];
+  }>({
+    queryKey: ["critiquebrainz-reviews", recording_mbid, "recording"],
+    queryFn: async () => {
+      if (!recording_mbid) {
+        return { reviews: [] };
       }
+      const response = await fetch(
+        `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${recording_mbid}&entity_type=recording`
+      );
+      const body = await response.json();
+      if (!response.ok) {
+        throw new Error(body?.message ?? response.statusText);
+      }
+      return body;
+    },
+    enabled: Boolean(recording_mbid),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const reviews = reviewsData?.reviews ?? [];
+
+  React.useEffect(() => {
+    if (reviewsError) {
+      toast.error("Failed to load reviews from CritiqueBrainz");
     }
-    fetchReviews();
-  }, [APIService, recording_mbid]);
+  }, [reviewsError]);
 
   const recordingName = recording_name || "";
 
@@ -413,6 +425,16 @@ export default function TrackPage(): JSX.Element {
                   type: "recording",
                   mbid: recording_mbid,
                   name: recording_name,
+                }}
+                onReviewSubmitted={() => {
+                  // Refetch reviews when a review is submitted
+                  queryClient.invalidateQueries({
+                    queryKey: [
+                      "critiquebrainz-reviews",
+                      recording_mbid,
+                      "recording",
+                    ],
+                  });
                 }}
               />
             </div>

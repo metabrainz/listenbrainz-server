@@ -477,31 +477,26 @@ $youtube-resize-transition: height 0.25s ease-out;
     min-width: 3em;
   }
 
-  // First header with negative top margin to remove gap with buttons above
-  > :nth-child(1 of .queue-headers) {
-    margin-top: -30px;
-  }
   .queue-headers {
-    font-size: 16px;
     margin-top: 4px;
     margin-bottom: 4px;
-    display: flex;
-    justify-content: space-between;
     border-bottom: 1px solid #ccc;
 
     h4 {
-      font-size: 18px;
       margin: 0;
       padding: 10px;
       padding-left: 0;
-      width: 100%;
     }
-
-    .queue-buttons {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+  }
+  .queue-buttons {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    gap: 1em;
+  }
+  // Negative top margin to remove gap with buttons above
+  .queue-buttons + .queue-headers {
+    margin-top: -30px;
   }
 }
 
@@ -705,4 +700,47 @@ $alert-thumbnail-size: 60px;
 .Toastify__toast-container--bottom-left,
 .Toastify__toast-container--bottom-right {
   bottom: calc(1em + $brainzplayer-height);
+}
+
+// Custom styling for Funkwhale icon
+svg.fa-funkwhale,
+.fa-funkwhale {
+  width: 1.3em !important;
+  height: 1.3em !important;
+
+  // Match the vertical alignment used by other music service icons
+  vertical-align: text-bottom !important;
+
+  // Default duotone colors for Funkwhale branding
+  --fa-primary-color: #009fe3; // Blue arcs
+  --fa-secondary-color: #3c3c3b; // dark whale fluke
+  --fa-primary-opacity: 1;
+  --fa-secondary-opacity: 1;
+}
+
+// When in a muted context, use currentColor to match other services
+.text-muted svg.fa-funkwhale,
+.text-muted .fa-funkwhale {
+  --fa-primary-color: currentColor !important;
+  --fa-secondary-color: currentColor !important;
+  --fa-primary-opacity: 1 !important;
+  --fa-secondary-opacity: 1 !important;
+}
+
+// Custom styling for Navidrome icon
+svg.fa-navidrome,
+.fa-navidrome {
+  --fa-secondary-color: #0084ff; // Blue disc with transparent inner circle
+  --fa-primary-color: #000000; // Black decorative rings and arcs
+  --fa-secondary-opacity: 1;
+  --fa-primary-opacity: 1;
+}
+
+// // When in a muted context, use currentColor to match other services
+.text-muted svg.fa-navidrome,
+.text-muted .fa-navidrome {
+  --fa-primary-color: currentColor !important;
+  --fa-secondary-color: currentColor !important;
+  --fa-primary-opacity: 0.6 !important;
+  --fa-secondary-opacity: 1 !important;
 }

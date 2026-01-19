@@ -10,7 +10,9 @@
      viewBox="0 0 924 924"
      xmlns:dc="http://purl.org/dc/elements/1.1/"
      height="{{ height }}"
-     width="{{ width }}">
+     width="{{ width }}"
+     preserveAspectRatio="xMinYMin meet"
+>
   <title>Top 5 artists {{ metadata["time_range"] }} for {{ metadata["user_name"] }}&#xA;</title>
   <desc>
    {%- for artist in artists[:5] -%}

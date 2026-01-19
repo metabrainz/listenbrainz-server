@@ -3,6 +3,7 @@ import { ResponsiveBar } from "@nivo/bar";
 /* eslint-disable import/no-unresolved */
 import { Navigation, Keyboard, EffectCoverflow } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css/bundle";
 /* eslint-enable import/no-unresolved */
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import { toast } from "react-toastify";
@@ -19,6 +20,7 @@ import {
 } from "lodash";
 import { Link, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useSetAtom } from "jotai";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 import { getEntityLink } from "../../stats/utils";
@@ -33,9 +35,12 @@ import {
 import FollowButton from "../../components/follow/FollowButton";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import { ToastMsg } from "../../../notifications/Notifications";
-import SEO, { YIMYearMetaTags } from "../SEO";
+import {
+  LegacyYIMSEO as SEO,
+  LegacyYIMYearMetaTags as YIMYearMetaTags,
+} from "../SEO";
 import { RouteQuery } from "../../../utils/Loader";
-import { useBrainzPlayerDispatch } from "../../../common/brainzplayer/BrainzPlayerContext";
+import { setAmbientQueueAtom } from "../../../common/brainzplayer/BrainzPlayerAtoms";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -350,15 +355,16 @@ export default class YearInMusic extends React.Component<
         We were not able to calculate this data for {youOrUsername}
       </div>
     );
+    const encodedUsername = encodeURIComponent(user.name);
     return (
-      <div role="main" id="year-in-music">
+      <div role="main" id="legacy-year-in-music">
         <SEO year={2021} userName={user?.name} />
         <YIMYearMetaTags year={2021} />
         <div className="flex flex-wrap" id="header">
           <div className="content-card flex-center flex-wrap">
             <img
               className="img-fluid header-image"
-              src="/static/img/year-in-music-2021.svg"
+              src="/static/img/legacy-year-in-music/year-in-music-21/year-in-music-2021.svg"
               alt="Your year in music 2021"
             />
             <div>
@@ -366,9 +372,12 @@ export default class YearInMusic extends React.Component<
                 <div className="center-p">
                   Share your year with your friends
                   <p id="share-link">
-                    <Link to={`/user/${user.name}/year-in-music/2021/`}>
-                      https://listenbrainz.org/user/{user.name}
-                      /year-in-music/2021/
+                    <Link
+                      to={`/user/${encodedUsername}/year-in-music/legacy/2021/`}
+                    >
+                      https://listenbrainz.org/user/
+                      {encodedUsername}
+                      /year-in-music/legacy/2021/
                     </Link>
                   </p>
                 </div>
@@ -389,13 +398,13 @@ export default class YearInMusic extends React.Component<
             <p>
               See profile on&nbsp;
               <img src="/static/img/favicon-16.png" alt="ListenBrainz Logo" />
-              <Link to={`/user/${user.name}/`}>ListenBrainz</Link>
+              <Link to={`/user/${encodedUsername}/`}>ListenBrainz</Link>
               &nbsp;and&nbsp;
               <img
                 src="/static/img/musicbrainz-16.svg"
                 alt="MusicBrainz Logo"
               />
-              <a href={`https://musicbrainz.org/user/${user.name}`}>
+              <a href={`https://musicbrainz.org/user/${encodedUsername}`}>
                 MusicBrainz
               </a>
             </p>
@@ -943,7 +952,7 @@ export function YearInMusicWrapper() {
   const location = useLocation();
   const params = useParams();
   const { data } = useQuery<YearInMusicLoaderData>(
-    RouteQuery(["year-in-music-2021", params], location.pathname)
+    RouteQuery(["legacy-year-in-music-2021", params], location.pathname)
   );
   const fallbackUser = { name: "" };
   const { user = fallbackUser, data: yearInMusicData } = data || {};
@@ -1060,9 +1069,9 @@ export function YearInMusicWrapper() {
     topRecordingsPlaylist,
   ];
 
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
   React.useEffect(() => {
-    dispatch({ type: "SET_AMBIENT_QUEUE", data: listens });
+    setAmbientQueue(listens);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listens]);
 

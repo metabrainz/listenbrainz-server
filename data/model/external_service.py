@@ -10,6 +10,8 @@ class ExternalServiceType(Enum):
     LIBREFM = 'librefm'
     SOUNDCLOUD = 'soundcloud'
     APPLE = 'apple'
+    FUNKWHALE = 'funkwhale'
+    NAVIDROME = 'navidrome'
     # these are not MB deployments but LB deployments
     MUSICBRAINZ_PROD = 'musicbrainz-prod'
     MUSICBRAINZ_BETA = 'musicbrainz-beta'

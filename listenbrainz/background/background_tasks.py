@@ -6,7 +6,7 @@ from sqlalchemy import text
 from listenbrainz.background.delete import delete_listens_history, delete_user
 from listenbrainz.background.export import export_user
 from listenbrainz.webserver import create_app, db_conn, ts_conn
-
+from listenbrainz.background.listens_importer import import_listens
 
 def add_task(user_id, task):
     """ Add a task to the background tasks """
@@ -17,7 +17,10 @@ def add_task(user_id, task):
 
 def get_task():
     """ Fetch one task from the database """
-    query = "SELECT * FROM background_tasks LIMIT 1"
+    # todo: use for update skip locked to scale to multiple workers
+    #  but that needs ensuring tasks processing doesn't interfere with
+    #  the task retrieval and deletion.
+    query = "SELECT * FROM background_tasks ORDER BY created LIMIT 1"
     result = db_conn.execute(text(query))
     return result.first()
 
@@ -30,17 +33,22 @@ def remove_task(task):
 
 class BackgroundTasks:
 
-    def process_task(self, task) -> bool:
-        """ Perform the task and return whether the task succeeded """
-        if task.task == "delete_listens":
-            delete_listens_history(db_conn, task.user_id, task.created)
-        elif task.task == "delete_user":
-            delete_user(db_conn, task.user_id, task.created)
-        elif task.task == "export_all_user_data":
-            export_user(db_conn, ts_conn, task.user_id, task.metadata)
-        else:
-            current_app.logger.error(f"Unknown task type: {task}")
-        return True
+    def process_task(self, task):
+        """ Perform the task """
+        try:
+            current_app.logger.info(f"Processing task: {task.id}")
+            if task.task == "delete_listens":
+                delete_listens_history(db_conn, task.user_id, task.created)
+            elif task.task == "delete_user":
+                delete_user(db_conn, task.user_id, task.created)
+            elif task.task == "export_all_user_data":
+                export_user(db_conn, ts_conn, task.user_id, task.metadata)
+            elif task.task == "import_listens":
+                import_listens(db_conn, ts_conn, task.user_id, task.metadata)
+            else:
+                current_app.logger.error(f"Unknown task type: {task}")
+        except Exception:
+            current_app.logger.error("Error processing task:", exc_info=True)
 
     def start(self):
         current_app.logger.info("Background tasks processor started.")
@@ -48,11 +56,10 @@ class BackgroundTasks:
             try:
                 task = get_task()
                 if task is None:
-                    time.sleep(5)
+                    time.sleep(current_app.config.get("BACKGROUND_TASKS_SLEEP_TIME", 5))
                     continue
-                status = self.process_task(task)
-                if status:
-                    remove_task(task)
+                self.process_task(task)
+                remove_task(task)
             except KeyboardInterrupt:
                 current_app.logger.error("Keyboard interrupt!")
                 break

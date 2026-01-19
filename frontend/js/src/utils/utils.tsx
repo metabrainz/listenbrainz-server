@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as _ from "lodash";
-import { isFinite, isUndefined } from "lodash";
+import { isFinite, isUndefined, deburr, escapeRegExp } from "lodash";
 import * as timeago from "time-ago";
 import { Rating } from "react-simple-star-rating";
 import { toast } from "react-toastify";
@@ -151,9 +151,9 @@ const searchForSoundcloudTrack = async (
   }
   // Considering we cannot tell the Soundcloud API that this should match only an album title,
   // results are paradoxically sometimes worse if we add it to the query
-  if (releaseName) {
-    query += ` ${releaseName}`;
-  }
+  // if (releaseName) {
+  //   query += ` ${releaseName}`;
+  // }
   if (!query) {
     return null;
   }
@@ -175,6 +175,272 @@ const searchForSoundcloudTrack = async (
     throw responseBody;
   }
   return responseBody?.[0]?.uri ?? null;
+};
+
+const searchForFunkwhaleTrack = async (
+  funkwhaleToken: string,
+  instanceURL: string,
+  trackName?: string,
+  artistName?: string
+): Promise<FunkwhaleTrack | null> => {
+  const query = trackName ?? "";
+  if (!query) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      `${instanceURL}/api/v1/tracks?q=${encodeURIComponent(query)}&limit=10`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${funkwhaleToken}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      const error = new Error(errorBody.detail || response.statusText);
+      (error as any).status = response.status;
+      throw error;
+    }
+
+    const responseBody = await response.json();
+    const tracks = responseBody?.results ?? [];
+
+    if (tracks.length === 0) {
+      return null;
+    }
+
+    // Filter only playable tracks
+    const playableTracks = tracks.filter(
+      (track: any) => track.is_playable === true
+    );
+
+    if (playableTracks.length === 0) {
+      return null;
+    }
+
+    if (!trackName) {
+      // If no track name to match against, return first playable track
+      return playableTracks[0] || null;
+    }
+
+    // Remove accents from track name for better matching
+    const trackNameWithoutAccents = deburr(trackName);
+
+    // https://docs.funkwhale.audio/specs/multi-artist/mb-content.html
+    // using multi-artist approch for better matching of tracks
+    const candidateMatches = playableTracks.map((candidate: any) => {
+      // Get artist name from multiple possible sources:
+      // 1. New multi-artist format: artist_credit array
+      // 2. Legacy format: artist object
+      // 3. Fallback: artist_credit as single object (if not array)
+      let candidateArtistName = "";
+      let artistCredits: any[] = [];
+
+      if (
+        candidate.artist_credit &&
+        Array.isArray(candidate.artist_credit) &&
+        candidate.artist_credit.length > 0
+      ) {
+        // New multi-artist format: preserve artist_credit structure
+        artistCredits = candidate.artist_credit;
+        // For search purposes, combine artist credits (without joinphrases)
+        candidateArtistName = candidate.artist_credit
+          .map((credit: any) => credit.credit || credit.artist.name || "")
+          .filter((name: string) => name.trim())
+          .join(" ");
+      } else if (
+        candidate.artist_credit &&
+        !Array.isArray(candidate.artist_credit)
+      ) {
+        // Single artist_credit object format
+        artistCredits = [candidate.artist_credit];
+        candidateArtistName =
+          candidate.artist_credit.credit ||
+          candidate.artist_credit.artist.name ||
+          "";
+      } else if (candidate.artist?.name) {
+        // Legacy artist format - convert to artist_credit-like structure
+        artistCredits = [
+          {
+            artist_id: candidate.artist.id,
+            credit: candidate.artist.name,
+            joinphrase: "",
+          },
+        ];
+        candidateArtistName = candidate.artist.name;
+      }
+
+      return {
+        ...candidate,
+        normalizedTitle: deburr(candidate.title || ""),
+        normalizedArtist: deburr(candidateArtistName),
+        artistCredits, // Preserve original structure for proper display
+      };
+    });
+
+    // If artist name is provided, try to filter by artist first
+    let filteredCandidates = candidateMatches;
+    if (artistName) {
+      const artistNameWithoutAccents = deburr(artistName);
+      const artistMatches = candidateMatches.filter((candidate: any) =>
+        candidate.normalizedArtist
+          .toLowerCase()
+          .includes(artistNameWithoutAccents.toLowerCase())
+      );
+
+      // If we found tracks by the right artist, use those for matching
+      if (artistMatches.length > 0) {
+        filteredCandidates = artistMatches;
+      }
+    }
+
+    // After artist filtering, check for exact title match first
+    const exactMatch = filteredCandidates.find((candidate: any) =>
+      new RegExp(escapeRegExp(trackNameWithoutAccents), "igu").test(
+        candidate.normalizedTitle
+      )
+    );
+
+    if (exactMatch) {
+      return exactMatch;
+    }
+
+    // If no exact match, return the first artist-filtered result
+    // (since artist filtering already gave us the right artist)
+    if (filteredCandidates.length > 0) {
+      return filteredCandidates[0];
+    }
+
+    // No good match found, return the first playable track as fallback
+    return playableTracks[0] || null;
+  } catch (error) {
+    // Log the error and return null instead of throwing
+    // eslint-disable-next-line no-console
+    console.error("Funkwhale search failed:", error);
+    return null;
+  }
+};
+
+/**
+ * Remove featuring artists from artist name to improve search matching.
+ * Based on MusicBrainz's battle-tested regex pattern:
+ * https://github.com/metabrainz/musicbrainz-server/blob/master/root/static/scripts/edit/utility/guessFeat.js
+ */
+const removeFeaturingArtists = (artistName: string): string => {
+  if (!artistName) return artistName;
+
+  // MusicBrainz-based regex for featuring artists
+  // Matches: feat./ft./featuring with optional punctuation and fullwidth variants
+  const featRegex = /(?:^\s*|[,，－-]\s*|\s+)((?:ft|feat|ｆｔ|ｆｅａｔ)(?:[.．]|(?=\s))|(?:featuring|ｆｅａｔｕｒｉｎｇ)(?=\s))\s*.+$/i;
+
+  let cleaned = artistName.replace(featRegex, "");
+
+  // Also handle featuring artists in brackets/parentheses at the end
+  // e.g., "Artist (feat. Guest)" or "Artist [ft. Someone]"
+  cleaned = cleaned.replace(
+    /\s*[[（(].*?(?:ft|feat|ｆｔ|ｆｅａｔ)(?:[.．]|(?=\s))|(?:featuring|ｆｅａｔｕｒｉｎｇ).*?[\]）)\s]*$/i,
+    ""
+  );
+
+  return cleaned.trim();
+};
+
+const performNavidromeSearch = async (
+  instanceURL: string,
+  authParams: string,
+  query: string
+): Promise<NavidromeTrack | null> => {
+  const searchUrl = `${instanceURL}/rest/search3?query=${encodeURIComponent(
+    query
+  )}&songCount=1&${authParams}`;
+
+  const response = await fetch(searchUrl);
+
+  if (!response.ok) {
+    let errorBody: any = {};
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      errorBody = await response.json().catch(() => ({}));
+    }
+    const error = new Error(errorBody.detail || response.statusText);
+    (error as any).status = response.status;
+    throw error;
+  }
+
+  let data;
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    data = await response.json();
+  } else {
+    throw new Error("Server returned non-JSON response");
+  }
+
+  const searchResult = data["subsonic-response"]?.searchResult3;
+  if (searchResult?.song && searchResult.song.length > 0) {
+    return searchResult.song[0];
+  }
+
+  return null;
+};
+
+const searchForNavidromeTrack = async (
+  instanceURL: string,
+  authParams: string,
+  trackName?: string,
+  artistName?: string
+): Promise<NavidromeTrack | null> => {
+  if (!instanceURL || !authParams) {
+    throw new Error(
+      "Missing Navidrome instance URL or authentication parameters"
+    );
+  }
+
+  if (!trackName || !artistName) {
+    throw new Error("Both track name and artist name are required for search");
+  }
+
+  try {
+    // Try with full artist name first to avoid unnecessary regex processing
+    const fullQuery = `${trackName} ${artistName}`.trim();
+    const result = await performNavidromeSearch(
+      instanceURL,
+      authParams,
+      fullQuery
+    );
+    if (result) {
+      return result;
+    }
+
+    // Fall back to cleaned artist name (without featuring artists)
+    const cleanedArtistName = removeFeaturingArtists(artistName);
+    const cleanedQuery = `${trackName} ${cleanedArtistName}`.trim();
+    const fallbackResult = await performNavidromeSearch(
+      instanceURL,
+      authParams,
+      cleanedQuery
+    );
+    if (fallbackResult) {
+      return fallbackResult;
+    }
+
+    return null;
+  } catch (error) {
+    if (
+      error.message ===
+        "Missing Navidrome instance URL or authentication parameters" ||
+      error.message === "No search terms provided"
+    ) {
+      throw error;
+    }
+    const newError = new Error(`Navidrome search failed: ${error.message}`);
+    (newError as any).status = error.status || 500;
+    throw newError;
+  }
 };
 
 const getAdditionalContent = (metadata: EventMetadata): string =>
@@ -398,7 +664,7 @@ const formatWSMessageToListen = (wsMsg: any): Listen | null => {
 
 // recieves or unix epoch timestamp int or ISO datetime string
 const preciseTimestamp = (
-  listened_at: number | string,
+  listened_at: number | string | Date,
   displaySetting?: "timeAgo" | "includeYear" | "excludeYear"
 ): string => {
   const listenDate: Date = new Date(listened_at);
@@ -456,7 +722,7 @@ const preciseTimestamp = (
 };
 // recieves or unix epoch timestamp int or ISO datetime string
 const fullLocalizedDateFromTimestampOrISODate = (
-  unix_epoch_timestamp: number | string | undefined | null
+  unix_epoch_timestamp: number | string | Date | undefined | null
 ): string => {
   if (!unix_epoch_timestamp) {
     return "";
@@ -516,25 +782,34 @@ export async function fetchMusicBrainzGenres() {
 }
 
 async function getOrFetchMBGenres(forceExpiry = false) {
-  // Try to load genres from local storage, fetch them otherwise
-  const localStorageString = localStorage?.getItem("musicbrainz-genres");
-  if (!localStorageString) {
-    // nothing saved, fetch the genres and save them
-    const fetchedGenres = await fetchMusicBrainzGenres();
-    return fetchedGenres;
+  try {
+    // Try to load genres from local storage, fetch them otherwise
+    const localStorageString = localStorage?.getItem("musicbrainz-genres");
+    if (!localStorageString) {
+      // nothing saved, fetch the genres and save them
+      const fetchedGenres = await fetchMusicBrainzGenres();
+      return fetchedGenres;
+    }
+    const localStorageObject = JSON.parse(localStorageString);
+    // expire the list after 2 weeks
+    if (
+      forceExpiry ||
+      !localStorageObject ||
+      Date.now() > localStorageObject.creation_date + 1209000000
+    ) {
+      // If the item is expired, fetch them afresh and save them
+      const fetchedGenres = await fetchMusicBrainzGenres();
+      return fetchedGenres;
+    }
+    return localStorageObject.genre_list;
+  } catch (error) {
+    // Cookies disabled or localStorage error, for example in Firefox Enhanced Tracking Protection mode
+    console.error(
+      "Cookie or storage error, some feature may not work as expected",
+      error
+    );
+    return [];
   }
-  const localStorageObject = JSON.parse(localStorageString);
-  // expire the list after 2 weeks
-  if (
-    forceExpiry ||
-    !localStorageObject ||
-    Date.now() > localStorageObject.creation_date + 1209000000
-  ) {
-    // If the item is expired, fetch them afresh and save them
-    const fetchedGenres = await fetchMusicBrainzGenres();
-    return fetchedGenres;
-  }
-  return localStorageObject.genre_list;
 }
 
 type SentryProps = {
@@ -551,6 +826,8 @@ type GlobalAppProps = {
   critiquebrainz?: MetaBrainzProjectUser;
   musicbrainz?: MetaBrainzProjectUser;
   appleMusic?: AppleMusicUser;
+  funkwhale?: FunkwhaleUser;
+  navidrome?: NavidromeUser;
   user_preferences?: UserPreferences;
   flair?: Flair;
 };
@@ -599,6 +876,8 @@ const getPageProps = async (): Promise<{
       critiquebrainz,
       musicbrainz,
       appleMusic,
+      funkwhale,
+      navidrome,
       sentry_traces_sample_rate,
       sentry_dsn,
       user_preferences,
@@ -630,6 +909,8 @@ const getPageProps = async (): Promise<{
       soundcloudAuth: soundcloud,
       critiquebrainzAuth: critiquebrainz,
       appleAuth: appleMusic,
+      funkwhaleAuth: funkwhale,
+      navidromeAuth: navidrome,
       musicbrainzAuth: {
         ...musicbrainz,
         refreshMBToken: async function refreshMBToken() {
@@ -1125,6 +1406,8 @@ export function getBaseUrl(): string {
 export {
   searchForSpotifyTrack,
   searchForSoundcloudTrack,
+  searchForFunkwhaleTrack,
+  searchForNavidromeTrack,
   getMBIDMappingArtistLink,
   getStatsArtistLink,
   getArtistLink,

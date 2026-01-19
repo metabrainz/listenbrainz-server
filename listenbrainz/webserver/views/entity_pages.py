@@ -56,33 +56,33 @@ def get_cover_art_for_artist(release_groups):
             }
             covers.append(cover)
 
+    # Select the best layout based on available cover art
+    selected_layout = CoverArtGenerator.select_best_layout(len(covers))
+    if selected_layout is None:
+        return None
+
     cac = CoverArtGenerator(
         current_app.config["MB_DATABASE_URI"],
-        4,
+        selected_layout["dimension"],
         400,
         "transparent",
         True,
-        False
+        False,
+        server_root_url=current_app.config["SERVER_ROOT_URL"]
     )
-    images = cac.generate_from_caa_ids(covers, [
-        "0,1,4,5",
-        "10,11,14,15",
-        "2",
-        "3",
-        "6",
-        "7",
-        "8",
-        "9",
-        "12",
-        "13",
-      ], None, 250)
+    images = cac.generate_from_caa_ids(
+        covers,
+        layout=selected_layout["layout"],
+        cover_art_size=250
+    )
     return render_template(
         "art/svg-templates/simple-grid.svg",
         background="transparent",
         images=images,
         entity="album",
         width=400,
-        height=400
+        height=400,
+        show_caption=False
     )
 
 

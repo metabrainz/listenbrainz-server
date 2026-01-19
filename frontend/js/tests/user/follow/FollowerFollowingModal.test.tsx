@@ -2,9 +2,9 @@ import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter } from "react-router";
-import FollowerFollowingModal, {
-  FollowerFollowingModalProps,
-} from "../../../src/user/components/follow/FollowerFollowingModal";
+import FollowerFollowingCards, {
+  FollowerFollowingCardsProps,
+} from "../../../src/user/components/follow/FollowerFollowingCards";
 import APIService from "../../../src/utils/APIService";
 import GlobalAppContext, {
   GlobalAppContextT,
@@ -13,7 +13,7 @@ import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManage
 import { ReactQueryWrapper } from "../../test-react-query";
 import { textContentMatcher } from "../../test-utils/rtl-test-utils";
 
-const defaultProps: FollowerFollowingModalProps = {
+const defaultProps: FollowerFollowingCardsProps = {
   user: { name: "foobar" },
   followerList: ["foo"],
   followingList: ["bar"],
@@ -34,21 +34,21 @@ const defaultContext: GlobalAppContextT = {
 };
 // Helper function to render the component with all necessary providers.
 const renderComponent = (
-  props: Partial<FollowerFollowingModalProps> = {},
+  props: Partial<FollowerFollowingCardsProps> = {},
   context: Partial<GlobalAppContextT> = {}
 ) => {
   return render(
     <GlobalAppContext.Provider value={{ ...defaultContext, ...context }}>
       <ReactQueryWrapper>
         <BrowserRouter>
-          <FollowerFollowingModal {...defaultProps} {...props} />
+          <FollowerFollowingCards {...defaultProps} {...props} />
         </BrowserRouter>
       </ReactQueryWrapper>
     </GlobalAppContext.Provider>
   );
 };
 
-describe("<FollowerFollowingModal />", () => {
+describe("<FollowerFollowingCards />", () => {
   it("renders with initial following list", () => {
     renderComponent();
 

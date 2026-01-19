@@ -25,9 +25,7 @@ import { SetupServerApi, setupServer } from "msw/node";
 import { toast } from "react-toastify";
 
 import UserSocialNetwork from "../../../src/user/components/follow/UserSocialNetwork";
-import {
-  GlobalAppContextT,
-} from "../../../src/utils/GlobalAppContext";
+import { GlobalAppContextT } from "../../../src/utils/GlobalAppContext";
 import APIService from "../../../src/utils/APIService";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
 import { renderWithProviders } from "../../test-utils/rtl-test-utils";
@@ -137,11 +135,13 @@ describe("<UserSocialNetwork />", () => {
     server.close();
   });
 
-  it("renders FollowerFollowingModal and SimilarUsersModal components", async () => {
+  it("renders FollowerFollowingCards and SimilarUsersModal components", async () => {
     renderWithProviders(<UserSocialNetwork {...props} />, globalContext);
 
     await waitFor(() => {
-      expect(screen.getByTestId("follower-following-modal")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("follower-following-cards")
+      ).toBeInTheDocument();
       expect(screen.getByTestId("similar-users-modal")).toBeInTheDocument();
     });
   });
@@ -172,15 +172,23 @@ describe("<UserSocialNetwork />", () => {
     );
 
     await waitFor(() => {
-      expect(screen.queryByTestId("compatibility-card")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("compatibility-card")
+      ).not.toBeInTheDocument();
     });
   });
 
   it("fetches and displays follower and following data on mount", async () => {
     // Spy on the API calls to verify they're made with correct parameters
-    const getFollowersOfUserSpy = jest.spyOn(globalContext.APIService, 'getFollowersOfUser');
-    const getFollowingForUserSpy = jest.spyOn(globalContext.APIService, 'getFollowingForUser');
-    
+    const getFollowersOfUserSpy = jest.spyOn(
+      globalContext.APIService,
+      "getFollowersOfUser"
+    );
+    const getFollowingForUserSpy = jest.spyOn(
+      globalContext.APIService,
+      "getFollowingForUser"
+    );
+
     // Mock the API responses
     getFollowersOfUserSpy.mockResolvedValue({ followers: followingFollowers });
     getFollowingForUserSpy.mockResolvedValue({ following: followingFollowers });
@@ -200,7 +208,7 @@ describe("<UserSocialNetwork />", () => {
 
     // Verify the modal component receives the data (check if it's rendered)
     await waitFor(() => {
-      const followerModal = screen.getByTestId("follower-following-modal");
+      const followerModal = screen.getByTestId("follower-following-cards");
       expect(followerModal).toBeInTheDocument();
 
       expect(followerModal).toHaveTextContent("jack");
@@ -214,7 +222,10 @@ describe("<UserSocialNetwork />", () => {
 
   it("fetches and displays similar users data on mount", async () => {
     // Spy on the API call
-    const getSimilarUsersForUserSpy = jest.spyOn(globalContext.APIService, 'getSimilarUsersForUser');
+    const getSimilarUsersForUserSpy = jest.spyOn(
+      globalContext.APIService,
+      "getSimilarUsersForUser"
+    );
     getSimilarUsersForUserSpy.mockResolvedValue({ payload: similarUsers });
 
     renderWithProviders(
@@ -241,7 +252,6 @@ describe("<UserSocialNetwork />", () => {
     // Clean up
     getSimilarUsersForUserSpy.mockRestore();
   });
-
 
   it("handles API errors gracefully with toast notifications", async () => {
     // Mock server to return error
@@ -283,17 +293,24 @@ describe("<UserSocialNetwork />", () => {
       </QueryClientProvider>,
       globalContext
     );
+// This scenario can trigger multiple API failures at once (followers, following,
+// and similar users so among all calls we check the one with correct toasstid for "similar user"
+   await waitFor(() => {
+  const calls = (toast.error as jest.Mock).mock.calls;
 
-    await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith(
-        expect.objectContaining({
-          props: expect.objectContaining({
-            title: " Error while fetching similar users",
-          }),
-        }),
-        { toastId: "fetch-similar-error" }
-      );
-    });
+  const similarCalls = calls.filter(call => {
+    const message = call[0] as { props?: { title?: string } } | undefined;
+    const options = call[1];
+
+    return (
+      message?.props?.title === "Error while fetching similar users" &&
+      options?.toastId === "fetch-similar-error"
+    );
+  });
+
+  expect(similarCalls.length).toBeGreaterThan(0);
+});
+
   });
 
   it("does not fetch similarity data when not logged in", async () => {
@@ -310,7 +327,9 @@ describe("<UserSocialNetwork />", () => {
     );
 
     await waitFor(() => {
-      expect(screen.queryByTestId("compatibility-card")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("compatibility-card")
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -327,14 +346,19 @@ describe("<UserSocialNetwork />", () => {
     );
 
     await waitFor(() => {
-      expect(screen.queryByTestId("compatibility-card")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("compatibility-card")
+      ).not.toBeInTheDocument();
     });
   });
 
   it("silently handles 'Similar-to user not found' error", async () => {
     server.use(
       http.get("/1/user/*/similar-to/*", () => {
-        return HttpResponse.json({ error: "Similar-to user not found" }, { status: 404 });
+        return HttpResponse.json(
+          { error: "Similar-to user not found" },
+          { status: 404 }
+        );
       })
     );
 
@@ -371,7 +395,9 @@ describe("<UserSocialNetwork />", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("follower-following-modal")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("follower-following-cards")
+      ).toBeInTheDocument();
     });
 
     // Change the user prop
@@ -383,7 +409,68 @@ describe("<UserSocialNetwork />", () => {
 
     // Should trigger new API calls and re-render
     await waitFor(() => {
-      expect(screen.getByTestId("follower-following-modal")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("follower-following-cards")
+      ).toBeInTheDocument();
     });
   });
+
+  it("should use the same toastId for all user-not-found errors to prevent duplicates", async () => {
+  const errorSpy = jest.spyOn(toast, "error");
+
+  // mock all endpoints to fail with 404
+  server.use(
+    http.get("*/user/nonexistent_user/followers", () => {
+      return HttpResponse.json(
+        { code: 404, error: "User not found" },
+        { status: 404 }
+      );
+    }),
+    http.get("*/user/nonexistent_user/following", () => {
+      return HttpResponse.json(
+        { code: 404, error: "User not found" },
+        { status: 404 }
+      );
+    }),
+    http.get("*/user/nonexistent_user/similar-users", () => {
+      return HttpResponse.json(
+        { code: 404, error: "User not found" },
+        { status: 404 }
+      );
+    })
+  );
+
+  renderWithProviders(
+    <UserSocialNetwork user={{ name: "nonexistent_user" }} />,
+    globalContext
+  );
+
+  // wait for the component to finish loading and error handling
+  await waitFor(
+    () => {
+      expect(errorSpy).toHaveBeenCalled();
+    },
+    { timeout: 3000 }
+  );
+
+  // filter out calls where the title is "User not found"
+ const notFoundCalls = errorSpy.mock.calls.filter((call) => {
+  const message = call[0] as { props?: { title?: string } } | undefined;
+  return message?.props?.title === "User not found";
+});
+
+
+  // should be called multiple times since all 3 endpoints failed
+  expect(notFoundCalls.length).toBeGreaterThan(1);
+
+  // now check that they all used the same toastId
+  const ids = notFoundCalls.map(call => call[1]?.toastId);
+  const uniqueIds = new Set(ids);
+  
+  // all failures should use the same ID so only 1 toast shows up
+  expect(uniqueIds.size).toBe(1);
+  expect(uniqueIds.has("user-not-found-error")).toBe(true);
+
+  errorSpy.mockRestore();
+});
 });

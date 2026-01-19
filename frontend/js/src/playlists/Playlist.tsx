@@ -21,6 +21,7 @@ import { Helmet } from "react-helmet";
 import { Link, useLoaderData, useNavigate, useRevalidator } from "react-router";
 import { formatDuration, intervalToDuration } from "date-fns";
 import NiceModal from "@ebay/nice-modal-react";
+import { useSetAtom } from "jotai";
 import Card from "../components/Card";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -36,10 +37,15 @@ import {
   PLAYLIST_TRACK_URI_PREFIX,
   PLAYLIST_URI_PREFIX,
 } from "./utils";
-import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import SyndicationFeedModal from "../components/SyndicationFeedModal";
 import { getBaseUrl } from "../utils/utils";
 import DuplicateTrackModal from "./components/DuplicateTrackModal";
+import {
+  addListenToBottomOfAmbientQueueAtom,
+  moveAmbientQueueItemAtom,
+  removeTrackFromAmbientQueueAtom,
+  setAmbientQueueAtom,
+} from "../common/brainzplayer/BrainzPlayerAtoms";
 
 export type PlaylistPageProps = {
   playlist: JSPFObject & {
@@ -69,10 +75,19 @@ const makeJSPFTrack = (trackMetadata: TrackMetadata): JSPFTrack => {
 
 export default function PlaylistPage() {
   // Context
-  const { currentUser, APIService, websocketsUrl } = React.useContext(
-    GlobalAppContext
+  const { currentUser, APIService, websocketsUrl } =
+    React.useContext(GlobalAppContext);
+
+  // BrainzPlayer Atoms
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
+  const addListenToBottomOfAmbientQueue = useSetAtom(
+    addListenToBottomOfAmbientQueueAtom
   );
-  const dispatch = useBrainzPlayerDispatch();
+  const removeTrackFromAmbientQueue = useSetAtom(
+    removeTrackFromAmbientQueueAtom
+  );
+  const moveAmbientQueueItem = useSetAtom(moveAmbientQueueItemAtom);
+
   const revalidator = useRevalidator();
   const navigate = useNavigate();
   // Loader data
@@ -181,7 +196,7 @@ export default function PlaylistPage() {
     await new Promise((resolve) => {
       setTimeout(resolve, 1500);
     });
-    navigate(`/user/${currentUser?.name}/playlists`);
+    navigate(`/user/${encodeURIComponent(currentUser?.name)}/playlists`);
   };
 
   const onPlaylistSave = (newPlaylist: JSPFPlaylist) => {
@@ -244,10 +259,8 @@ export default function PlaylistPage() {
         getPlaylistId(playlist),
         [jspfTrack]
       );
-      dispatch({
-        type: "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE",
-        data: jspfTrack,
-      });
+      addListenToBottomOfAmbientQueue(jspfTrack);
+
       toast.success(
         <ToastMsg
           title="Added Track"
@@ -291,12 +304,9 @@ export default function PlaylistPage() {
           ...playlist,
           track: [...tracks],
         };
-        dispatch({
-          type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
-          data: {
-            track: trackToDelete,
-            index: -1,
-          },
+        removeTrackFromAmbientQueue({
+          track: trackToDelete,
+          index: -1,
         });
         emitPlaylistChanged(newPlaylist);
         revalidator.revalidate();
@@ -324,10 +334,7 @@ export default function PlaylistPage() {
         evt.newIndex,
         1
       );
-      dispatch({
-        type: "MOVE_AMBIENT_QUEUE_ITEM",
-        data: evt,
-      });
+      moveAmbientQueueItem(evt);
       emitPlaylistChanged(playlist);
       revalidator.revalidate();
     } catch (error) {
@@ -356,10 +363,7 @@ export default function PlaylistPage() {
   const customFields = getPlaylistExtension(playlist);
 
   React.useEffect(() => {
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: tracks,
-    });
+    setAmbientQueue(tracks);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playlistProps]);
 
@@ -413,7 +417,11 @@ export default function PlaylistPage() {
             <div>
               {customFields?.public ? "Public " : "Private "}
               playlist by{" "}
-              <Link to={sanitizeUrl(`/user/${playlist.creator}/playlists/`)}>
+              <Link
+                to={sanitizeUrl(
+                  `/user/${encodeURIComponent(playlist.creator)}/playlists/`
+                )}
+              >
                 {playlist.creator}
               </Link>
             </div>
@@ -426,7 +434,11 @@ export default function PlaylistPage() {
                     With the help of:&ensp;
                     {customFields.collaborators.map((collaborator, index) => (
                       <React.Fragment key={collaborator}>
-                        <Link to={sanitizeUrl(`/user/${collaborator}/`)}>
+                        <Link
+                          to={sanitizeUrl(
+                            `/user/${encodeURIComponent(collaborator)}/`
+                          )}
+                        >
                           {collaborator}
                         </Link>
                         {index < (customFields?.collaborators?.length ?? 0) - 1
@@ -438,7 +450,8 @@ export default function PlaylistPage() {
                 )}
             </div>
             <div>
-              {playlist.track?.length} tracks
+              {playlist.track?.length}{" "}
+              {playlist.track?.length === 1 ? "track" : "tracks"}
               {totalDurationForDisplay && (
                 <>&nbsp;-&nbsp;{totalDurationForDisplay}</>
               )}
@@ -462,7 +475,7 @@ export default function PlaylistPage() {
             )}
           </div>
           {playlist.annotation && (
-            <div>
+            <div className="description">
               <div
                 className={`${isLongDescription ? "text-summary long" : ""} ${
                   showMore ? "expanded" : ""

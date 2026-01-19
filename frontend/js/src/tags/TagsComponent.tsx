@@ -279,6 +279,7 @@ export default function AddTagSelect(props: {
   return (
     <div className="add-tag-select">
       <CreatableSelect
+        createOptionPosition="first"
         value={sortBy(selected, ["originalTag.count", "isOwnTag"]).reverse()}
         options={musicbrainzGenres?.map((genre) => ({
           value: genre,

@@ -14,7 +14,7 @@ from flask_htmx import HTMX
 from listenbrainz import db
 from listenbrainz.db import create_test_database_connect_strings, timescale, donation
 from listenbrainz.db.timescale import create_test_timescale_connect_strings
-from listenbrainz.webserver.converters import NotApiPathConverter
+from listenbrainz.webserver.converters import NotApiPathConverter, UsernameConverter
 
 API_PREFIX = '/1'
 
@@ -108,6 +108,7 @@ def create_app(debug=None):
         logger.setLevel(logging.DEBUG)
 
     app.url_map.converters["not_api_path"] = NotApiPathConverter
+    app.url_map.converters["mb_username"] = UsernameConverter
 
     # initialize Flask-DebugToolbar if the debug option is True
     if app.debug and app.config['SECRET_KEY']:
@@ -270,6 +271,18 @@ def create_web_app(debug=None):
         # redirect them to agree to terms page.
         elif current_user.is_authenticated and current_user.gdpr_agreed is None:
             return redirect(url_for('index.gdpr_notice', next=request.full_path))
+
+    @app.before_request
+    def block_vibe_coding_ua():
+        user_agent = request.headers.get('User-Agent', '').lower()
+        if "lovable.dev" in user_agent:
+            from flask import jsonify
+            return jsonify({
+                "code": 400,
+                "message": "Please contact support@metabrainz.org for assistance."
+            }), 400
+        return None
+
     app.logger.info("Flask application created!")
     return app
 
@@ -320,6 +333,7 @@ def create_app_rtfd():
     ))
 
     app.url_map.converters["not_api_path"] = NotApiPathConverter
+    app.url_map.converters["mb_username"] = UsernameConverter
 
     _register_blueprints(app)
     return app
@@ -348,6 +362,9 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.export import export_bp
     app.register_blueprint(export_bp, url_prefix='/export')
+
+    from listenbrainz.webserver.views.import_listens import import_api_bp
+    app.register_blueprint(import_api_bp, url_prefix=API_PREFIX+'/import-listens')
 
     from listenbrainz.webserver.views.recommendations_cf_recording import recommendations_cf_recording_bp
     app.register_blueprint(recommendations_cf_recording_bp, url_prefix='/recommended/tracks')
@@ -437,3 +454,6 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.atom import atom_bp
     app.register_blueprint(atom_bp, url_prefix='/syndication-feed')
+
+    from listenbrainz.webserver.views.internet_archive_api import internet_archive_api_bp
+    app.register_blueprint(internet_archive_api_bp, url_prefix=API_PREFIX+"/internet_archive")

@@ -20,12 +20,13 @@ from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
     APIUnauthorized, ListenValidationError, APIForbidden
+from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, \
     is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, \
-    LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
-    get_non_negative_param, _parse_int_arg
+    LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
+    get_non_negative_param, _parse_int_arg, _validate_get_listens_endpoint_params
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -137,7 +138,7 @@ def submit_listen():
     return jsonify({'status': 'ok'})
 
 
-@api_bp.get("/user/<user_name>/listens")
+@api_bp.get("/user/<mb_username:user_name>/listens")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -160,30 +161,18 @@ def get_listens(user_name):
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
-    min_ts, max_ts, count = _validate_get_endpoint_params()
-    if min_ts and max_ts and min_ts >= max_ts:
-        raise APIBadRequest("min_ts should be less than max_ts")
-
-    listens, min_ts_per_user, max_ts_per_user = timescale_connection._ts.fetch_listens(
+    min_ts, max_ts, count = _validate_get_listens_endpoint_params()
+    data = timescale_connection._ts.fetch_listens_with_cache(
         user,
         limit=count,
-        from_ts=datetime.fromtimestamp(min_ts, timezone.utc) if min_ts else None,
-        to_ts=datetime.fromtimestamp(max_ts, timezone.utc) if max_ts else None
+        from_ts=min_ts,
+        to_ts=max_ts
     )
-    listen_data = []
-    for listen in listens:
-        listen_data.append(listen.to_api())
-
-    return jsonify({'payload': {
-        'user_id': user_name,
-        'count': len(listen_data),
-        'listens': listen_data,
-        'latest_listen_ts': int(max_ts_per_user.timestamp()),
-        'oldest_listen_ts': int(min_ts_per_user.timestamp()),
-    }})
+    data["user_id"] = user_name
+    return jsonify({"payload": data})
 
 
-@api_bp.get("/user/<user_name>/listen-count")
+@api_bp.get("/user/<mb_username:user_name>/listen-count")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -213,7 +202,7 @@ def get_listen_count(user_name):
     }})
 
 
-@api_bp.get("/user/<user_name>/playing-now")
+@api_bp.get("/user/<mb_username:user_name>/playing-now")
 @crossdomain
 @ratelimit()
 def get_playing_now(user_name):
@@ -251,7 +240,7 @@ def get_playing_now(user_name):
     })
 
 
-@api_bp.get("/user/<user_name>/similar-users")
+@api_bp.get("/user/<mb_username:user_name>/similar-users")
 @crossdomain
 @ratelimit()
 def get_similar_users(user_name):
@@ -287,7 +276,7 @@ def get_similar_users(user_name):
     })
 
 
-@api_bp.get("/user/<user_name>/similar-to/<other_user_name>")
+@api_bp.get("/user/<mb_username:user_name>/similar-to/<mb_username:other_user_name>")
 @crossdomain
 @ratelimit()
 def get_similar_to_user(user_name, other_user_name):
@@ -518,6 +507,7 @@ def delete_listen():
     try:
         timescale_connection._ts.delete_listen(listened_at=listened_at,
                                                recording_msid=recording_msid, user_id=user["id"])
+        invalidate_user_listen_caches(user["id"])
     except TimescaleListenStoreException as e:
         current_app.logger.error("Cannot delete listen for user: %s" % str(e))
         raise APIServiceUnavailable(
@@ -704,7 +694,7 @@ def search_user_playlist(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-@api_bp.get("/user/<user_name>/services")
+@api_bp.get("/user/<mb_username:user_name>/services")
 @crossdomain
 @ratelimit()
 def get_service_details(user_name):

@@ -12,7 +12,7 @@ from listenbrainz.webserver.views.api_tools import validate_auth_header
 social_api_bp = Blueprint('social_api_v1', __name__)
 
 
-@social_api_bp.get("/user/<user_name>/followers")
+@social_api_bp.get("/user/<mb_username:user_name>/followers")
 @crossdomain
 @ratelimit()
 def get_followers(user_name: str):
@@ -44,7 +44,7 @@ def get_followers(user_name: str):
     return jsonify({"followers": followers, "user": user["musicbrainz_id"]})
 
 
-@social_api_bp.get("/user/<user_name>/following")
+@social_api_bp.get("/user/<mb_username:user_name>/following")
 @crossdomain
 @ratelimit()
 def get_following(user_name: str):
@@ -76,7 +76,7 @@ def get_following(user_name: str):
     return jsonify({"following": following, "user": user["musicbrainz_id"]})
 
 
-@social_api_bp.post("/user/<user_name>/follow")
+@social_api_bp.post("/user/<mb_username:user_name>/follow")
 @crossdomain
 @ratelimit()
 def follow_user(user_name: str):
@@ -114,7 +114,7 @@ def follow_user(user_name: str):
     return jsonify({"status": "ok"})
 
 
-@social_api_bp.post("/user/<user_name>/unfollow")
+@social_api_bp.post("/user/<mb_username:user_name>/unfollow")
 @crossdomain
 @ratelimit()
 def unfollow_user(user_name: str):

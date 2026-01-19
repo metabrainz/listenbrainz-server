@@ -6,8 +6,8 @@ from brainzutils import cache
 import listenbrainz.db.fresh_releases
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
-from listenbrainz.webserver.views.api_tools import _parse_int_arg, _parse_bool_arg
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized
+from listenbrainz.webserver.views.api_tools import _parse_int_arg, _parse_bool_arg, validate_auth_header
 from listenbrainz.db.color import get_releases_for_color
 from troi.patches.lb_radio import LBRadioPatch
 from troi.patch import Patch
@@ -169,9 +169,20 @@ def lb_radio():
     :statuscode 500: Troi encountered an error
     :resheader Content-Type: *application/json*
     """
+
+    # Ensure that the user is passing an auth header
+    try:
+        _ = validate_auth_header()
+    except APIUnauthorized:
+        # Improve the error message until we can redirect to the login page.
+        return jsonify({ "error" : "Due to AI scraper's causing undue traffic on our sites, " + \
+                       "provide an Auth token. Sorry for this mess."""}), 401
+
     prompt = request.args.get("prompt", None)
     if prompt is None:
         raise APIBadRequest(f"The prompt parameter cannot be empty.")
+
+    current_app.logger.info("LB radio: '%s'" % prompt)
 
     mode = request.args.get("mode", None)
     if mode is None or mode not in ("easy", "medium", "hard"):
@@ -179,7 +190,17 @@ def lb_radio():
             f"The mode parameter must be one of 'easy', 'medium', 'hard'.")
 
     try:
-        patch = LBRadioPatch({ "mode": mode, "prompt": prompt, "quiet": True, "min_recordings": 1})
+        auth_token = request.headers.get("Authorization")
+        if auth_token is not None:
+            auth_token = auth_token.split(" ")[1]
+
+        patch = LBRadioPatch({
+            "mode": mode,
+            "prompt": prompt,
+            "quiet": True,
+            "min_recordings": 1,
+            "auth_token": auth_token
+        })
         playlist = patch.generate_playlist()
     except RuntimeError as err:
         raise APIBadRequest(f"LB Radio generation failed: {err}")

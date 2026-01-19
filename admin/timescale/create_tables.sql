@@ -271,6 +271,20 @@ CREATE TABLE soundcloud_cache.track (
     data                    JSONB NOT NULL
 );
 
+
+CREATE TABLE internetarchive_cache.track (
+    id            INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    track_id      TEXT UNIQUE NOT NULL,
+    name          TEXT NOT NULL,
+    artist        TEXT[] NOT NULL,
+    album         TEXT,
+    stream_urls   TEXT[] NOT NULL,
+    artwork_url   TEXT,
+    data          JSONB NOT NULL,
+    last_updated  TIMESTAMPTZ DEFAULT NOW()
+);
+
+
 CREATE TABLE background_worker_state (
     key     TEXT NOT NULL,
     value   TEXT
@@ -406,6 +420,14 @@ CREATE TABLE popularity.mlhd_top_release_group (
     release_group_mbid      UUID NOT NULL,
     total_listen_count      INTEGER NOT NULL,
     total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE statistics.year_in_music_cover (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    user_id             INTEGER NOT NULL,
+    year                SMALLINT NOT NULL,
+    caa_id              BIGINT,
+    caa_release_mbid    UUID
 );
 
 COMMIT;

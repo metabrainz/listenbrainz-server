@@ -17,8 +17,9 @@ import {
   useParams,
 } from "react-router";
 import { Helmet } from "react-helmet";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
+import { useSetAtom } from "jotai";
 import { getReviewEventContent } from "../utils/utils";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../common/listens/ListenCard";
@@ -35,12 +36,12 @@ import type {
 } from "../album/utils";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import { RouteQuery } from "../utils/Loader";
-import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
 import Pill from "../components/Pill";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import Username from "../common/Username";
 import CBReview from "../cb-review/CBReview";
+import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
 
 export function SortingButtons({
   sort,
@@ -167,7 +168,7 @@ export default function ArtistPage(): JSX.Element {
     total_user_count: userCount,
   } = listeningStats || {};
 
-  const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
+  const queryClient = useQueryClient();
   const [wikipediaExtract, setWikipediaExtract] = React.useState<
     WikipediaExtract
   >();
@@ -203,21 +204,37 @@ export default function ArtistPage(): JSX.Element {
     groupedReleaseGroups[type] = sortReleaseGroups(sort, rgGroups[type]);
   });
 
-  React.useEffect(() => {
-    async function fetchReviews() {
-      try {
-        const response = await fetch(
-          `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${artistMBID}&entity_type=artist`
-        );
-        const body = await response.json();
-        if (!response.ok) {
-          throw body?.message ?? response.statusText;
-        }
-        setReviews(body.reviews);
-      } catch (error) {
-        toast.error(error);
+  // Fetch reviews using React Query
+  const { data: reviewsData, isError: reviewsError } = useQuery<{
+    reviews: CritiqueBrainzReviewAPI[];
+  }>({
+    queryKey: ["critiquebrainz-reviews", artistMBID, "artist"],
+    queryFn: async () => {
+      if (!artistMBID) {
+        return { reviews: [] };
       }
+      const response = await fetch(
+        `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${artistMBID}&entity_type=artist`
+      );
+      const body = await response.json();
+      if (!response.ok) {
+        throw new Error(body?.message ?? response.statusText);
+      }
+      return body;
+    },
+    enabled: Boolean(artistMBID),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const reviews = reviewsData?.reviews ?? [];
+
+  React.useEffect(() => {
+    if (reviewsError) {
+      toast.error("Failed to load reviews from CritiqueBrainz");
     }
+  }, [reviewsError]);
+
+  React.useEffect(() => {
     async function fetchWikipediaExtract() {
       try {
         const response = await fetch(
@@ -232,20 +249,16 @@ export default function ArtistPage(): JSX.Element {
         toast.error(error);
       }
     }
-    fetchReviews();
     fetchWikipediaExtract();
   }, [artistMBID]);
 
   const listensFromPopularRecordings =
     popularRecordings?.map(popularRecordingToListen) ?? [];
 
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
 
   React.useEffect(() => {
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: listensFromPopularRecordings,
-    });
+    setAmbientQueue(listensFromPopularRecordings);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listensFromPopularRecordings]);
 
@@ -571,6 +584,12 @@ export default function ArtistPage(): JSX.Element {
                 type: "artist",
                 mbid: artistMBID,
                 name: artist?.name,
+              }}
+              onReviewSubmitted={() => {
+                // Refetch reviews when a review is submitted
+                queryClient.invalidateQueries({
+                  queryKey: ["critiquebrainz-reviews", artistMBID, "artist"],
+                });
               }}
             />
           </div>

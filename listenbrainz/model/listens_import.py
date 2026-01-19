@@ -19,8 +19,15 @@ class ListensImporter(db.Model):
     last_updated = db.Column(db.DateTime(timezone=True))
     latest_listened_at = db.Column(db.DateTime(timezone=True))
     status = db.Column(JSONB)
-    error_message = db.Column(db.String)
+    error = db.Column(JSONB)
+    error = db.Column(JSONB)
     user = db.relationship('User')
+
+
+def get_error_message(model):
+    if model.error is None:
+        return ""
+    return model.error.get("message", "")
 
 
 class ListensImporterAdminView(AdminModelView):
@@ -32,7 +39,7 @@ class ListensImporterAdminView(AdminModelView):
         'last_updated',
         'latest_listened_at',
         'status',
-        'error_message'
+        'error'
     ]
 
     column_list = [
@@ -44,23 +51,22 @@ class ListensImporterAdminView(AdminModelView):
         'last_updated',
         'latest_listened_at',
         'status',
-        'error_message'
+        'error'
     ]
 
     column_searchable_list = [
         'user_id',
         'service',
-        'error_message'
     ]
 
     column_filters = [
         'user_id',
         'service',
         'last_updated',
-        'error_message',
         'latest_listened_at'
     ]
 
     column_formatters = {
-        "user_name": lambda view, context, model, name: generate_username_link(model.user.musicbrainz_id)
+        "user_name": lambda view, context, model, name: generate_username_link(model.user.musicbrainz_id),
+        "error_message": lambda view, context, model, name: get_error_message(model)
     }

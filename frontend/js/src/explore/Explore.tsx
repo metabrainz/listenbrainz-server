@@ -6,7 +6,6 @@ import { useContext } from "react";
 import { Link } from "react-router";
 import { Helmet } from "react-helmet";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import { COLOR_LB_ORANGE } from "../utils/constants";
 
 type ExploreCardProps = {
   name: string;
@@ -50,10 +49,22 @@ export default function ExplorePage() {
       </Helmet>
       <div className="row">
         <ExploreCard
+          name="Art Creator"
+          desc="Share your album grids and other stats art"
+          img_name="art-creator.jpg"
+          url="/explore/art-creator/"
+        />
+        <ExploreCard
           name="Fresh Releases"
           desc="Discover"
           img_name="fresh-releases.jpg"
           url="/explore/fresh-releases/"
+        />
+        <ExploreCard
+          name="Year in Music"
+          desc="Yearly breakdown of your listening habits"
+          img_name="year-in-music.png"
+          url="/my/year-in-music/"
         />
         <ExploreCard
           name="Link listens"
@@ -86,42 +97,6 @@ export default function ExplorePage() {
           url="/explore/similar-users/"
         />
       </div>
-      {currentUser?.name && (
-        <>
-          <div className="explore-page-divider">
-            <h3>Your year in music</h3>
-            <hr />
-          </div>
-          <div className="row">
-            <ExploreCard
-              name="Your Year in Music 2024"
-              desc="Review"
-              img_name="year-in-music-2024.png"
-              url={`/user/${currentUser.name}/year-in-music/2024/`}
-            />
-
-            <ExploreCard
-              name="Your Year in Music 2023"
-              desc="Review"
-              img_name="year-in-music-2023.jpg"
-              url={`/user/${currentUser.name}/year-in-music/2023/`}
-            />
-
-            <ExploreCard
-              name="Your Year in Music 2022"
-              desc="Review"
-              img_name="year-in-music-2022.jpg"
-              url={`/user/${currentUser.name}/year-in-music/2022/`}
-            />
-            <ExploreCard
-              name="Your Year in Music 2021"
-              desc="Review"
-              img_name="year-in-music-2021.jpg"
-              url={`/user/${currentUser.name}/year-in-music/2021/`}
-            />
-          </div>
-        </>
-      )}
       <div className="explore-page-divider">
         <h3>Beta</h3>
         <hr />
@@ -133,13 +108,51 @@ export default function ExplorePage() {
           img_name="lb-radio-beta.jpg"
           url="/explore/lb-radio/"
         />
-        <ExploreCard
-          name="Stats art generator"
-          desc="Visualize and share your stats"
-          img_name="stats-art-beta.jpg"
-          url="/explore/art-creator/"
-        />
       </div>
+      {currentUser?.name && (
+        <>
+          <div className="explore-page-divider">
+            <h3>Archived</h3>
+            <hr />
+          </div>
+          <div className="row">
+            <ExploreCard
+              name="Your Year in Music 2024"
+              desc="Archival version of Year In Music 2024"
+              img_name="year-in-music-2024.png"
+              url={`/user/${encodeURIComponent(
+                currentUser.name
+              )}/year-in-music/legacy/2024/`}
+            />
+
+            <ExploreCard
+              name="Your Year in Music 2023"
+              desc="Archival version of Year In Music 2023"
+              img_name="year-in-music-2023.jpg"
+              url={`/user/${encodeURIComponent(
+                currentUser.name
+              )}/year-in-music/legacy/2023/`}
+            />
+
+            <ExploreCard
+              name="Your Year in Music 2022"
+              desc="Archival version of Year In Music 2022"
+              img_name="year-in-music-2022.jpg"
+              url={`/user/${encodeURIComponent(
+                currentUser.name
+              )}/year-in-music/legacy/2022/`}
+            />
+            <ExploreCard
+              name="Your Year in Music 2021"
+              desc="Archival version of Year In Music 2021"
+              img_name="year-in-music-2021.jpg"
+              url={`/user/${encodeURIComponent(
+                currentUser.name
+              )}/year-in-music/legacy/2021/`}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -41,7 +41,9 @@ const musicbrainz_website_regex = "^(?:https?:\/\/)?(?:beta\.)?musicbrainz\.org"
 const listenbrainz_website_regex = "^(?:https?:\/\/)?(?:beta\.)?listenbrainz\.org"
 // Note: adding a start-of-string and end-of-string character for UUID_REGEXP
 export const UUID_REGEXP = new RegExp(`^${uuid}$`,"i");
-export const RECORDING_MBID_REGEXP = new RegExp(`${musicbrainz_website_regex}\/recording\/${uuid}\/?`, "i");
-export const RELEASE_MBID_REGEXP = new RegExp(`${musicbrainz_website_regex}\/release\/${uuid}\/?`, "i");
-export const RELEASE_GROUP_MBID_REGEXP = new RegExp(`${musicbrainz_website_regex}\/release-group\/${uuid}\/?`, "i");
+export const MB_RECORDING_MBID_REGEXP = new RegExp(`${musicbrainz_website_regex}\/recording\/${uuid}\/?`, "i");
+export const MB_RELEASE_MBID_REGEXP = new RegExp(`${musicbrainz_website_regex}\/release\/${uuid}\/?`, "i");
+export const MB_RELEASE_GROUP_MBID_REGEXP = new RegExp(`${musicbrainz_website_regex}\/release-group\/${uuid}\/?`, "i");
 export const LB_ALBUM_MBID_REGEXP = new RegExp(`${listenbrainz_website_regex}\/album\/${uuid}\/?`, "i");
+export const LB_RELEASE_MBID_REGEXP = new RegExp(`${listenbrainz_website_regex}\/release\/${uuid}\/?`, "i");
+export const LB_RECORDING_MBID_REGEXP = new RegExp(`${listenbrainz_website_regex}\/track\/${uuid}\/?`, "i");

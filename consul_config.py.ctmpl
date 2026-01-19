@@ -173,10 +173,14 @@ SPARK_RESULT_QUEUE = '''{{template "KEY" "spark_result_queue"}}'''
 SPARK_REQUEST_EXCHANGE = '''{{template "KEY" "spark_request_exchange"}}'''
 SPARK_REQUEST_QUEUE = '''{{template "KEY" "spark_request_queue"}}'''
 
+REJECTION_EXCHANGE = '''{{template "KEY" "rejection_exchange"}}'''
+REJECTION_QUEUE = '''{{template "KEY" "rejection_queue"}}'''
+
 EXTERNAL_SERVICES_EXCHANGE = '''{{template "KEY" "external_services_exchange"}}'''
 EXTERNAL_SERVICES_SPOTIFY_CACHE_QUEUE = '''{{template "KEY" "external_services_spotify_cache"}}'''
 EXTERNAL_SERVICES_APPLE_CACHE_QUEUE = '''{{template "KEY" "external_services_apple_cache"}}'''
 EXTERNAL_SERVICES_SOUNDCLOUD_CACHE_QUEUE = '''{{template "KEY" "external_services_soundcloud_cache"}}'''
+EXTERNAL_SERVICES_IA_CACHE_QUEUE = '''{{template "KEY" "external_services_ia_cache"}}'''
 
 MUSICBRAINZ_BASE_URL = "https://musicbrainz.org"
 OAUTH_CLIENT_ID = '''{{template "KEY" "oauth/client_id"}}'''
@@ -194,11 +198,11 @@ LIBREFM_API_KEY = '''{{template "KEY" "librefm_api_key"}}'''
 # Default is fine for now
 PLAYING_NOW_MAX_DURATION = 10 * 60
 
-# MAX file size to be allowed for the lastfm-backup import, default is infinite
+# MAX file size to be allowed for file uploads, default is infinite
 # Size is in bytes
-MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
+MAX_CONTENT_LENGTH = 25 * 1024 * 1024  # 25MB
 
-# Specify the upload folder where all the lastfm-backup will be stored
+# Specify the upload folder where user uploaded files for import will be stored
 # The path must be absolute path
 UPLOAD_FOLDER = '''{{template "KEY" "upload_folder"}}'''
 
@@ -264,6 +268,9 @@ SOUNDCLOUD_REDIRECT_URI = '''{{template "KEY" "soundcloud/redirect_uri"}}'''
 # YOUTUBE
 YOUTUBE_API_KEY = '''{{template "KEY" "youtube/api_key"}}'''
 
+# FUNKWHALE
+FUNKWHALE_CALLBACK_URL = '''{{template "KEY" "funkwhale/redirect_uri"}}'''
+
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 TESTING = False
@@ -292,3 +299,9 @@ REJECT_NEW_USERS_WITHOUT_EMAIL = {{template "KEY_JSON" "reject_new_users_without
 
 # base directory for user data exports
 USER_DATA_EXPORT_BASE_DIR = '''{{template "KEY" "user_data_export_base_dir"}}'''
+
+# Navidrome configuration
+# Set to a base64 encoded key for encryption/decryption of passwords.
+NAVIDROME_ENCRYPTION_KEY = '''{{template "KEY" "navidrome/encryption_key"}}'''
+
+BACKGROUND_TASKS_SLEEP_TIME = 5
