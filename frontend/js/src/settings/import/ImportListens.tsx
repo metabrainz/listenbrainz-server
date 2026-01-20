@@ -38,7 +38,7 @@ enum Services {
   librefm = "Libre.fm",
   panoscrobbler = "PanoScrobbler",
   maloja = "Maloja",
-  audioscrobbler = "Audioscrobbler",
+  audioscrobbler = "Audioscrobbler/Rockbox",
 }
 const acceptedFileTypes = {
   [Services.spotify]: ".zip",
