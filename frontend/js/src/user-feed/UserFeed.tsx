@@ -222,15 +222,17 @@ export default function UserFeedPage() {
   >([]);
 
   React.useEffect(() => {
-    async function fetchThankedEvents(missingEventsIDs: number[]) {
-      // Prefetch each missing original event missing from thank you events
-      // separately from fetching the feed pages
-      const promises = missingEventsIDs.map((eventId) => {
+    async function fetchThankedEvents(
+      missingEvents: { id: number; type: string }[]
+    ) {
+      // Prefetch each missing original event using both ID and Type
+      const promises = missingEvents.map((event) => {
         return queryClient.ensureQueryData({
-          queryKey: ["feed-event", eventId],
+          queryKey: ["feed-event", event.id],
           queryFn: () =>
             APIService.getFeedEvent(
-              eventId,
+              event.id,
+              event.type,
               currentUser.name,
               currentUser.auth_token as string
             ),
@@ -238,7 +240,7 @@ export default function UserFeedPage() {
       });
       const resultsArray: TimelineEvent<EventMetadata>[] = [];
       const promiseResults = await Promise.allSettled(promises);
-      promiseResults.forEach((res, idx) => {
+      promiseResults.forEach((res) => {
         if (res.status === "fulfilled") {
           resultsArray.push(res.value);
         } else {
@@ -248,19 +250,27 @@ export default function UserFeedPage() {
       });
       setSeparatelyLoadedEvents(resultsArray);
     }
+
     const feedEvents = data?.pages.map((page) => page.events).flat();
-    // Extract IDs of events referenced in thank you events currently in cache
-    const thankYouOriginalEventIds = feedEvents
+
+    // Store both ID and Type from the Thanks metadata
+    const thankYouOriginalEvents = feedEvents
       ?.filter((ev) => ev.event_type === EventType.THANKS)
       .map((ev) => {
         const metadata = ev.metadata as ThanksMetadata;
-        return metadata.original_event_id;
+        return {
+          id: metadata.original_event_id,
+          type: metadata.original_event_type,
+        };
       });
-    const missingEventsIDs = thankYouOriginalEventIds?.filter(
-      (originalEventId) => !feedEvents?.some((ev) => ev.id === originalEventId)
+
+    // Filter out events that are already loaded in the current feed
+    const missingEvents = thankYouOriginalEvents?.filter(
+      (originalEvent) => !feedEvents?.some((ev) => ev.id === originalEvent.id)
     );
-    if (missingEventsIDs?.length) {
-      fetchThankedEvents(missingEventsIDs);
+
+    if (missingEvents?.length) {
+      fetchThankedEvents(missingEvents);
     }
   }, [data, APIService, currentUser, queryClient]);
 

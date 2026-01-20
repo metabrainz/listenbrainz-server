@@ -753,7 +753,7 @@ def create_thanks_event(user_name):
             result = db_user_timeline_event.get_user_timeline_event_by_id(
                 db_conn, row_id)
         elif event_type == UserTimelineEventType.RECORDING_PIN:
-            result = db_user_timeline_event.get_user_timeline_event_by_id(db_conn, row_id)
+            result = get_pin_by_id(db_conn, row_id)
         else:
             raise APIBadRequest(
                 "This event type is not supported for thanking")
