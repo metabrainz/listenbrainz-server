@@ -34,7 +34,7 @@ $youtube-resize-transition: height 0.25s ease-out;
   border-top: 1px solid $hr-border-color;
   z-index: 110;
 
-  >* {
+  > * {
     flex: 1;
   }
 
@@ -50,7 +50,8 @@ $youtube-resize-transition: height 0.25s ease-out;
 
       // Show big preview of the cover art when hovering over it
       @media (min-width: $offscreen-sidenav-breakpoint) {
-        &:hover>*:not(.hidden):not(.no-album-art):not(.youtube-wrapper):not(.soundcloud) {
+        &:hover
+          > *:not(.hidden):not(.no-album-art):not(.youtube-wrapper):not(.soundcloud) {
           height: min(80vw, $big-cover-art-size);
           width: min(80vw, $big-cover-art-size);
           bottom: $brainzplayer-height + $progress-bar-height;
@@ -58,7 +59,7 @@ $youtube-resize-transition: height 0.25s ease-out;
         }
       }
 
-      >* {
+      > * {
         height: $cover-art-size;
         width: $cover-art-size;
         position: absolute;
@@ -100,7 +101,7 @@ $youtube-resize-transition: height 0.25s ease-out;
           overflow: hidden;
           transition: $youtube-resize-transition;
 
-          >* {
+          > * {
             height: inherit;
           }
         }
@@ -112,7 +113,7 @@ $youtube-resize-transition: height 0.25s ease-out;
           background: color.change($black, $alpha: 50%);
           color: $white;
 
-          +.youtube-button {
+          + .youtube-button {
             margin-left: 0.5em;
           }
         }
@@ -140,7 +141,7 @@ $youtube-resize-transition: height 0.25s ease-out;
       padding: 0 0.7em;
     }
 
-    >* {
+    > * {
       transition: all 0.5s ease;
       background: none;
 
@@ -214,7 +215,7 @@ $youtube-resize-transition: height 0.25s ease-out;
     display: flex;
 
     /* Icons */
-    >* {
+    > * {
       stroke-width: 40px;
       font-size: 1.3em;
       margin: 0 0.7em;
@@ -235,7 +236,7 @@ $youtube-resize-transition: height 0.25s ease-out;
       &.music-service-icon {
         max-width: 1.5em;
 
-        >svg {
+        > svg {
           // Youtube forces us to follow their branding guidelines to the letter,
           // so we need to force a minimum height of 20px for the icon path inside the svg
           // [poo emoji]
@@ -314,7 +315,7 @@ $youtube-resize-transition: height 0.25s ease-out;
       .actions {
         flex: 0;
 
-        >.music-service-icon {
+        > .music-service-icon {
           max-width: 1em;
         }
       }
@@ -323,7 +324,6 @@ $youtube-resize-transition: height 0.25s ease-out;
 }
 
 .dropup-content {
-
   // A lot of these styles are copied part from Bootstrap
   // and part from ListenBrainz (ListenCard).
   // We copy them so that we don't have to rely on them for a standalone package
@@ -354,8 +354,8 @@ $youtube-resize-transition: height 0.25s ease-out;
   background-clip: padding-box;
 
   // Links within the dropdown menu
-  >a,
-  >button {
+  > a,
+  > button {
     display: block; // necessary for <a> tags
     width: 100%;
     background: none;
@@ -409,7 +409,7 @@ $youtube-resize-transition: height 0.25s ease-out;
     }
   }
 
-  &> ::after {
+  & > ::after {
     border-color: transparent;
   }
 }
@@ -531,7 +531,7 @@ $youtube-resize-transition: height 0.25s ease-out;
   }
 
   // Negative top margin to remove gap with buttons above
-  .queue-buttons+.queue-headers {
+  .queue-buttons + .queue-headers {
     margin-top: -30px;
   }
 }
@@ -560,13 +560,13 @@ $youtube-resize-transition: height 0.25s ease-out;
   &.open {
     bottom: 0;
 
-    +.queue {
+    + .queue {
       // When the music player is open, bring queu on top of it
       z-index: 112;
     }
   }
 
-  >* {
+  > * {
     margin-block: auto;
   }
 
@@ -714,7 +714,6 @@ $youtube-resize-transition: height 0.25s ease-out;
 }
 
 @keyframes leftright {
-
   0%,
   20% {
     transform: translateX(0%);
@@ -751,10 +750,11 @@ $alert-thumbnail-size: 60px;
 
 // Adding this css so that toasts appear above the yt player when player is visible.
 body.youtube-player-visible .Toastify__toast-container--bottom-right {
-  bottom: calc(1em + $brainzplayer-height + $youtube-player-height + $youtube-button-size + 8px);
+  bottom: calc(1em + 298px);
+  // 1em + $brainzplayer-height + $youtube-player-height + $youtube-button-size + 8px
+
   // This calculates to: 1em + 60px + 200px + 30px + 8px(for the border)
 }
-
 
 // Custom styling for Funkwhale icon
 svg.fa-funkwhale,
