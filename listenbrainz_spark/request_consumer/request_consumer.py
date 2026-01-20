@@ -23,6 +23,7 @@ import logging
 
 from kombu import Exchange, Queue, Message, Connection, Consumer
 from kombu.entity import PERSISTENT_DELIVERY_MODE
+from kombu.exceptions import PreconditionFailed
 from kombu.mixins import ConsumerProducerMixin
 
 import listenbrainz_spark
@@ -31,6 +32,8 @@ from listenbrainz_spark import config, hdfs_connection
 
 
 RABBITMQ_HEARTBEAT_TIME = 2 * 60 * 60  # 2 hours -- a full dump import takes 40 minutes right now
+
+SPARK_RESULTS_JSONL_PATH = "/spark_results.jsonl"
 
 logger = logging.getLogger(__name__)
 
@@ -87,12 +90,16 @@ class RequestConsumer(ConsumerProducerMixin):
             num_of_messages += 1
             body = json.dumps(message)
             avg_size_of_message += len(body)
-            self.producer.publish(
-                exchange=self.spark_result_exchange,
-                routing_key='',
-                body=body,
-                properties=PERSISTENT_DELIVERY_MODE,
-            )
+            try:
+                self.producer.publish(
+                    exchange=self.spark_result_exchange,
+                    routing_key='',
+                    body=body,
+                    properties=PERSISTENT_DELIVERY_MODE,
+                )
+            except PreconditionFailed:
+                logger.warning("PRECONDITION_FAILED error for message, writing to HDFS JSONL file")
+                self._write_message_to_hdfs(body)
 
         if num_of_messages:
             avg_size_of_message //= num_of_messages
@@ -100,6 +107,13 @@ class RequestConsumer(ConsumerProducerMixin):
             logger.info(f"Average size of message: {avg_size_of_message} bytes")
         else:
             logger.info("No messages calculated")
+
+    def _write_message_to_hdfs(self, message_body):
+        try:
+            hdfs_connection.client.write(SPARK_RESULTS_JSONL_PATH, message_body + "\n", append=True)
+            logger.info(f"Successfully wrote message to {SPARK_RESULTS_JSONL_PATH}")
+        except Exception as e:
+            logger.error(f"Failed to write message to HDFS: {e}", exc_info=True)
 
     def callback(self, message: Message):
         try:
