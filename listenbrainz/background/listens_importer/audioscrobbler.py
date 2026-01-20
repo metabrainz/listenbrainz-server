@@ -139,7 +139,7 @@ class AudioscrobblerListensImporter(BaseListensImporter):
 
             rating = row.get("rating")
             if rating != "L":
-                continue
+                continue # 'L' if listened at least 50% or 'S' if skipped
 
             try:
                 ts = int(row["timestamp"])
