@@ -749,7 +749,7 @@ $alert-thumbnail-size: 60px;
   bottom: calc(1em + $brainzplayer-height);
 }
 
-//Adding this css so that toasts appear above the yt player when player is visible.
+// Adding this css so that toasts appear above the yt player when player is visible.
 body.youtube-player-visible .Toastify__toast-container--bottom-right {
   bottom: calc(1em + $brainzplayer-height + $youtube-player-height + $youtube-button-size + 8px);
   // This calculates to: 1em + 60px + 200px + 30px + 8px(for the border)

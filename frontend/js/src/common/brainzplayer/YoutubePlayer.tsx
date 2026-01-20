@@ -139,8 +139,8 @@ export default class YoutubePlayer
       // Show player if playing music
       this.setState({ hidePlayer: false });
     }
-    //checks weather the current data source is youtube 
-    //if yt and yt player running then->isPlayerVisible=true 
+    // checks weather the current data source is youtube 
+    // if yt and yt player running then->isPlayerVisible=true 
     const isCurrentDataSource =
       store.get(currentDataSourceNameAtom) === this.name;
     const isPlayerVisible = isCurrentDataSource && !hidePlayer;
@@ -148,7 +148,7 @@ export default class YoutubePlayer
     if (isPlayerVisible) {
       document.body.classList.add("youtube-player-visible");
     } else {
-      document.body.classList.remove("youtube-player-visible");//removing when yt player is not visible
+      document.body.classList.remove("youtube-player-visible");// removing when yt player is not visible
     }
   }
 
