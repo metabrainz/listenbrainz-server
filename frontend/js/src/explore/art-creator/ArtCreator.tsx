@@ -226,6 +226,21 @@ export default function ArtCreator() {
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const previewSVGRef = React.useRef<SVGSVGElement>(null);
 
+  const applyPreset = async (presetId: string) => {
+    try {
+      setSelectedPreset(presetId);
+      await colorPresetStore.setItem("lb-art-selected-preset", presetId);
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Could not apply preset"
+          message={error?.message ?? String(error)}
+        />,
+        { toastId: "apply-preset-error" }
+      );
+    }
+  };
+
   useEffect(() => {
     if (!selectedPreset) {
       return;
@@ -258,6 +273,7 @@ export default function ArtCreator() {
           const currentPreset = allCurrentPresets.find(
             (preset) => preset.id === savedSelectedId
           );
+
           if (currentPreset) {
             setSelectedPreset(currentPreset.id);
           }
@@ -304,12 +320,11 @@ export default function ArtCreator() {
     try {
       const updatedPresets = [...customPresets, newPreset];
       await colorPresetStore.setItem("lb-art-custom-presets", updatedPresets);
-      await colorPresetStore.setItem("lb-art-selected-preset", newPreset.id);
       setCustomPresets(updatedPresets);
-      setSelectedPreset(newPreset.id);
       toast.success(<ToastMsg title="Success" message="Preset saved" />, {
         toastId: "save-preset-success",
       });
+      await applyPreset(newPreset.id);
     } catch (error) {
       toast.error(
         <ToastMsg
@@ -329,16 +344,13 @@ export default function ArtCreator() {
       await colorPresetStore.setItem("lb-art-custom-presets", updatedPresets);
       setCustomPresets(updatedPresets);
 
-      if (selectedPreset === presetId) {
-        setSelectedPreset(hardCodedPresets[0].id);
-        await colorPresetStore.setItem(
-          "lb-art-selected-preset",
-          hardCodedPresets[0].id
-        );
-      }
       toast.success(<ToastMsg title="Success" message="Preset deleted" />, {
         toastId: "delete-preset-success",
       });
+
+      if (selectedPreset === presetId) {
+        await applyPreset(hardCodedPresets[0].id);
+      }
     } catch (error) {
       toast.error(
         <ToastMsg
@@ -346,21 +358,6 @@ export default function ArtCreator() {
           message={error?.message ?? String(error)}
         />,
         { toastId: "delete-preset-error" }
-      );
-    }
-  };
-
-  const applyPreset = async (presetId: string) => {
-    try {
-      setSelectedPreset(presetId);
-      await colorPresetStore.setItem("lb-art-selected-preset", presetId);
-    } catch (error) {
-      toast.error(
-        <ToastMsg
-          title="Could not apply preset"
-          message={error?.message ?? String(error)}
-        />,
-        { toastId: "apply-preset-error" }
       );
     }
   };
