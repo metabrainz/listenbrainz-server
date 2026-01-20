@@ -23,7 +23,7 @@ import logging
 
 from kombu import Exchange, Queue, Message, Connection, Consumer
 from kombu.entity import PERSISTENT_DELIVERY_MODE
-from kombu.exceptions import PreconditionFailed
+from amqp.exceptions import PreconditionFailed
 from kombu.mixins import ConsumerProducerMixin
 
 import listenbrainz_spark
