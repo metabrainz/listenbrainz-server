@@ -131,6 +131,7 @@ export default class YoutubePlayer
 
   componentDidUpdate(prevProps: DataSourceProps) {
     const { volume, playerPaused } = this.props;
+    const { hidePlayer } = this.state;
     if (prevProps.volume !== volume && this.youtubePlayer?.setVolume) {
       this.youtubePlayer?.setVolume(volume ?? 100);
     }
@@ -138,6 +139,23 @@ export default class YoutubePlayer
       // Show player if playing music
       this.setState({ hidePlayer: false });
     }
+
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
+    const isPlayerVisible = isCurrentDataSource && !hidePlayer;
+
+    console.log("YT visible?", isPlayerVisible);
+
+    if (isPlayerVisible) {
+      document.body.classList.add("youtube-player-visible");
+    } else {
+      document.body.classList.remove("youtube-player-visible");
+    }
+  }
+
+  componentWillUnmount() {
+    // Cleanup remove class when component unmounts
+    document.body.classList.remove("youtube-player-visible");
   }
 
   stop = () => {
