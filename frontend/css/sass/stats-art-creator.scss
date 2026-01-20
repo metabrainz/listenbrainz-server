@@ -1,3 +1,5 @@
+$color-selector-size: 24px;
+
 #stats-art-creator {
   display: flex;
   gap: 15px;
@@ -29,7 +31,7 @@
     }
   }
 
-  .custom-presets-panel {
+  .color-presets-panel {
     margin-bottom: 4px;
     margin-top: 10px;
     display: grid;
@@ -37,7 +39,7 @@
     gap: 15px;
     max-height: 140px;
     overflow-y: scroll;
-    padding: 0px 15px 30px 4px;
+    padding: 5px;
     align-items: start;
     justify-items: center;
 
@@ -88,8 +90,8 @@
 
   /*Color Picker*/
   .color-picker {
-    width: 24px;
-    height: 24px;
+    width: $color-selector-size;
+    height: $color-selector-size;
     border-radius: 50%;
     position: relative;
     overflow: hidden;
@@ -112,17 +114,17 @@
     }
   }
 
-  .custom-preset-wrapper {
+  .color-preset-wrapper {
     position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
     border-radius: 50%;
-    height: 24px;
-    width: 24px;
+    height: $color-selector-size;
+    width: $color-selector-size;
 
     &.preset-selected {
-      box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px #194b9d;
+      box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px $listenbrainz-blue;
       z-index: 1;
     }
 
@@ -132,7 +134,7 @@
       right: -5px;
       border-radius: 50%;
       border: none;
-      color: #1e3050;
+      color: $listenbrainz-blue;
       font-size: 14px;
       cursor: pointer;
       opacity: 0;
@@ -150,10 +152,6 @@
     &:hover .delete-preset-btn {
       opacity: 1;
     }
-  }
-
-  .save-preset-btn {
-    border-radius: 5px;
   }
 
   .preview {
