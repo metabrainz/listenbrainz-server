@@ -1,4 +1,6 @@
 import { ResponsiveStream, TooltipProps } from "@nivo/stream";
+// eslint-disable-next-line import/no-extraneous-dependencies
+import {  type OrdinalColorScaleConfig } from "@nivo/colors";
 import * as React from "react";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -13,6 +15,13 @@ import { useMediaQuery } from "../../../explore/fresh-releases/utils";
 export type UserArtistEvolutionActivityProps = {
   range: UserStatsAPIRange;
   user?: ListenBrainzUser;
+};
+
+export type UserArtistEvolutionActivityGraphProps = {
+  rawData: RawUserArtistEvolutionRow[];
+  range: UserStatsAPIRange;
+  colorPalette?: OrdinalColorScaleConfig;
+  topN?: number;
 };
 
 export type StreamDataItem = {
@@ -242,12 +251,138 @@ export const artistEvolutionQueryKey = (
   range: UserStatsAPIRange
 ) => ["userArtistEvolutionActivity", userName, range] as const;
 
-export default function ArtistEvolutionActivityStreamGraph(
+export function UserArtistEvolutionActivityGraph(
+  props: UserArtistEvolutionActivityGraphProps
+) {
+  const {
+    rawData,
+    range,
+    topN = 10,
+    colorPalette = { scheme: "nivo" },
+  } = props;
+  const navigate = useNavigate();
+  const isMobile = useMediaQuery("(max-width: 767px)");
+
+  const { chartData, keys, orderedTimeUnits, artistMap } = React.useMemo(
+    () => transformArtistEvolutionActivityData(rawData, range, topN),
+    [rawData, range, topN]
+  );
+
+  const artistHref = React.useCallback(
+    (name: string) => {
+      const mbid = artistMap[name];
+      return mbid ? `/artist/${mbid}` : "#";
+    },
+    [artistMap]
+  );
+
+  const tooltipRenderer = React.useCallback(
+    (tooltipProps: TooltipProps) =>
+      renderCustomTooltip(tooltipProps as any, orderedTimeUnits, artistHref),
+    [orderedTimeUnits, artistHref]
+  );
+
+
+  return (
+    
+    <div
+      style={{ width: "100%", height: isMobile ? "500px" : "600px" }}
+      data-testid="artist-evolution-stream"
+      aria-label="artist-evolution-stream"
+    >
+      <ResponsiveStream
+        data={chartData}
+        keys={keys}
+        margin={
+          isMobile
+            ? { top: 60, right: 20, bottom: 120, left: 40 }
+            : { top: 60, right: 20, bottom: 60, left: 60 }
+        }
+        axisBottom={{
+          format: getAxisFormatter(range, orderedTimeUnits, isMobile),
+          tickSize: 5,
+          tickPadding: 5,
+          legend: getLegendText(range),
+          legendOffset: 40,
+          legendPosition: "middle",
+          tickRotation: isMobile ? -45 : 0,
+        }}
+        axisLeft={{ tickSize: 5, tickPadding: 5, tickRotation: 0 }}
+        enableGridX
+        enableGridY
+        offsetType="none"
+        order="ascending"
+        curve="basis"
+        colors={colorPalette}
+        fillOpacity={0.85}
+        borderColor={{ theme: "background" }}
+        dotSize={8}
+        dotColor={{ from: "color" }}
+        dotBorderWidth={2}
+        dotBorderColor={{
+          from: "color",
+          modifiers: [["darker", 0.7]],
+        }}
+        theme={{
+          axis: {
+            ticks: {
+              text: {
+                fontSize: isMobile ? 10 : 12,
+                fill: "#333333",
+              },
+            },
+          },
+          grid: {
+            line: {
+              stroke: "#dddddd",
+              strokeWidth: 1,
+            },
+          },
+          legends: { text: { fontSize: isMobile ? 10 : 12 } },
+        }}
+        legends={[
+          {
+            anchor: "top-left",
+            direction: isMobile ? "row" : "column",
+            translateX: 10,
+            translateY: 10,
+            itemWidth: isMobile ? 70 : 90,
+            itemHeight: 18,
+            itemTextColor: "#333333",
+            symbolSize: 12,
+            symbolShape: "circle",
+            itemsSpacing: isMobile ? 6 : 2,
+            itemBackground: "rgba(255,255,255,0.75)",
+            itemOpacity: 1,
+            effects: [
+              {
+                on: "hover",
+                style: { itemTextColor: "#000000" },
+              },
+            ],
+            onClick: (datum: any) => {
+              const name = datum.label;
+              const mbid = artistMap[name];
+              if (mbid) navigate(`/artist/${mbid}`);
+            },
+          } as any,
+        ]}
+        tooltip={tooltipRenderer}
+      />
+    </div>
+  );
+}
+
+export function UserArtistEvolutionActivityStats(
   props: UserArtistEvolutionActivityProps
 ) {
   const { APIService } = React.useContext(GlobalAppContext);
   const { user, range } = props;
-  const navigate = useNavigate();
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const [topN, setTopN] = React.useState<number>(10);
+  const onTopNChange: React.ChangeEventHandler<HTMLSelectElement> = (e) => {
+    setTopN(parseInt(e.target.value, 10));
+  };
 
   const { data: loaderData, isLoading: loading } = useQuery({
     queryKey: artistEvolutionQueryKey(user?.name, range),
@@ -292,37 +427,6 @@ export default function ArtistEvolutionActivityStreamGraph(
     hasError = false,
     errorMessage = "",
   } = loaderData || {};
-
-  const isMobile = useMediaQuery("(max-width: 767px)");
-
-  const [topN, setTopN] = React.useState<number>(10);
-  const onTopNChange: React.ChangeEventHandler<HTMLSelectElement> = (e) => {
-    setTopN(parseInt(e.target.value, 10));
-  };
-
-  const { chartData, keys, orderedTimeUnits, artistMap } = React.useMemo(
-    () =>
-      transformArtistEvolutionActivityData(
-        rawData.payload.artist_evolution_activity,
-        range,
-        topN
-      ),
-    [rawData.payload.artist_evolution_activity, range, topN]
-  );
-
-  const artistHref = React.useCallback(
-    (name: string) => {
-      const mbid = artistMap[name];
-      return mbid ? `/artist/${mbid}` : "#";
-    },
-    [artistMap]
-  );
-
-  const tooltipRenderer = React.useCallback(
-    (tooltipProps: TooltipProps) =>
-      renderCustomTooltip(tooltipProps as any, orderedTimeUnits, artistHref),
-    [orderedTimeUnits, artistHref]
-  );
 
   if (hasError) {
     return (
@@ -375,7 +479,7 @@ export default function ArtistEvolutionActivityStreamGraph(
         </div>
       </div>
       <Loader isLoading={loading}>
-        {chartData.length === 0 ? (
+        {rawData.payload.artist_evolution_activity.length === 0 ? (
           <div
             className="d-flex align-items-center justify-content-center"
             style={{ minHeight: "300px" }}
@@ -387,91 +491,11 @@ export default function ArtistEvolutionActivityStreamGraph(
         ) : (
           <div className="row">
             <div className="col-xs-12">
-              <div
-                style={{ width: "100%", height: isMobile ? "500px" : "600px" }}
-                data-testid="artist-evolution-stream"
-                aria-label="artist-evolution-stream"
-              >
-                <ResponsiveStream
-                  data={chartData}
-                  keys={keys}
-                  margin={
-                    isMobile
-                      ? { top: 60, right: 20, bottom: 120, left: 40 }
-                      : { top: 60, right: 20, bottom: 60, left: 60 }
-                  }
-                  axisBottom={{
-                    format: getAxisFormatter(range, orderedTimeUnits, isMobile),
-                    tickSize: 5,
-                    tickPadding: 5,
-                    legend: getLegendText(range),
-                    legendOffset: 40,
-                    legendPosition: "middle",
-                    tickRotation: isMobile ? -45 : 0,
-                  }}
-                  axisLeft={{ tickSize: 5, tickPadding: 5, tickRotation: 0 }}
-                  enableGridX
-                  enableGridY
-                  offsetType="none"
-                  order="ascending"
-                  curve="basis"
-                  colors={{ scheme: "nivo" }}
-                  fillOpacity={0.85}
-                  borderColor={{ theme: "background" }}
-                  dotSize={8}
-                  dotColor={{ from: "color" }}
-                  dotBorderWidth={2}
-                  dotBorderColor={{
-                    from: "color",
-                    modifiers: [["darker", 0.7]],
-                  }}
-                  theme={{
-                    axis: {
-                      ticks: {
-                        text: {
-                          fontSize: isMobile ? 10 : 12,
-                          fill: "#333333",
-                        },
-                      },
-                    },
-                    grid: {
-                      line: {
-                        stroke: "#dddddd",
-                        strokeWidth: 1,
-                      },
-                    },
-                    legends: { text: { fontSize: isMobile ? 10 : 12 } },
-                  }}
-                  legends={[
-                    {
-                      anchor: "top-left",
-                      direction: isMobile ? "row" : "column",
-                      translateX: 10,
-                      translateY: 10,
-                      itemWidth: isMobile ? 70 : 90,
-                      itemHeight: 18,
-                      itemTextColor: "#333333",
-                      symbolSize: 12,
-                      symbolShape: "circle",
-                      itemsSpacing: isMobile ? 6 : 2,
-                      itemBackground: "rgba(255,255,255,0.75)",
-                      itemOpacity: 1,
-                      effects: [
-                        {
-                          on: "hover",
-                          style: { itemTextColor: "#000000" },
-                        },
-                      ],
-                      onClick: (datum: any) => {
-                        const name = datum.label;
-                        const mbid = artistMap[name];
-                        if (mbid) navigate(`/artist/${mbid}`);
-                      },
-                    } as any,
-                  ]}
-                  tooltip={tooltipRenderer}
-                />
-              </div>
+              <UserArtistEvolutionActivityGraph
+                rawData={rawData.payload.artist_evolution_activity}
+                range={range}
+                topN={topN}
+              />
             </div>
           </div>
         )}
@@ -479,3 +503,5 @@ export default function ArtistEvolutionActivityStreamGraph(
     </Card>
   );
 }
+
+export default UserArtistEvolutionActivityStats;

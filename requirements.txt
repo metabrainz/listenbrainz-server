@@ -24,7 +24,7 @@ pydantic==1.10.19
 pycountry==24.6.1
 Flask==3.1.1
 Jinja2==3.1.6
-Werkzeug==3.1.4
+Werkzeug==3.1.5
 Flask-DebugToolbar==0.16.0
 requests==2.32.4
 SQLAlchemy==2.0.40
@@ -38,7 +38,7 @@ pyarrow==20.0.0
 more-itertools==10.7.0
 kombu==5.5.3
 itsdangerous==2.2.0
-urllib3==2.6.0
+urllib3==2.6.3
 orjson==3.10.18
 pyjwt[crypto]==2.10.1
 packaging~=25.0

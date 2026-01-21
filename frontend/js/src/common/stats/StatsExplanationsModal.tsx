@@ -19,8 +19,8 @@ export default NiceModal.create(() => {
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        We calculate our statistics exclusively from listens submitted directly
-        to ListenBrainz by you, our users.{" "}
+        We calculate our statistics exclusively from listens submitted or
+        imported directly to ListenBrainz by you, our users.{" "}
         <b>We do not rely on third-party statistics.</b>
         <br />
         This applies to all our popularity, similarity, listen counts and user

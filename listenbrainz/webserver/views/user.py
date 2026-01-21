@@ -363,9 +363,31 @@ def legacy_year_in_music(user_name, year: int):
     return jsonify(response)
 
 
-@user_bp.post("/<mb_username:user_name>/year-in-music/")
+@user_bp.get("/<mb_username:user_name>/year-in-music/<int:year>/")
+def year_in_music_get(user_name, year: int):
+    """ Get Year in Music data for a user """
+    user = _get_user(user_name)
+    if not user:
+        og_meta_tags = None
+    else:
+        current_app.config['SERVER_ROOT_URL'] = "https://test.listenbrainz.org"
+        url = f'{current_app.config["SERVER_ROOT_URL"]}/user/{user_name}/year-in-music/{year}/'
+        title = f"ListenBrainz {year} Year in Music for {user_name}"
+        description = f'Check out the music review for {year} that @ListenBrainz created from my listening history!'
+        image = f"{current_app.config['SERVER_ROOT_URL']}/static/img/explore/year-in-music.png"
+
+        og_meta_tags = {
+            "title": title,
+            "description": description,
+            "url": url,
+            "image": image,
+            "image:type": "image/png",
+        }
+
+    return render_template("index.html", og_meta_tags=og_meta_tags, user=user)
+
 @user_bp.post("/<mb_username:user_name>/year-in-music/<int:year>/")
-def year_in_music(user_name, year: int = 2024):
+def year_in_music(user_name, year: int):
     """ Year in Music """
     if year < LAST_FM_FOUNDING_YEAR or year > MAX_YEAR_IN_MUSIC_YEAR:
         return jsonify({"error": f"Cannot find Year in Music report for year: {year}"}), 404
@@ -388,21 +410,40 @@ def year_in_music(user_name, year: int = 2024):
         }
     }
 
-    # TODO: Move this 2024-specific code to the /legacy endpoint when YIM 25 comes out
-    if year_in_music_data and year == 2024:
-        try:
-            data = get_tag_hierarchy_data()
-        except Exception as e:
-            current_app.logger.error("Error loading genre hierarchy: %s", e)
-            return jsonify({"error": "Failed to load genre hierarchy"}), 500
+    try:
+        data = get_tag_hierarchy_data()
+    except Exception as e:
+        current_app.logger.error("Error loading genre hierarchy: %s", e)
+        return jsonify({"error": "Failed to load genre hierarchy"}), 500
 
-        yim_top_genres = year_in_music_data.get("top_genres", [])
-        genre_graph_data = db_year_in_music.process_genre_data(yim_top_genres, data, user_name)
-        response["genreGraphData"] = genre_graph_data
-    else:
-        response["genreGraphData"] = {}
+    yim_top_genres = year_in_music_data.get("top_genres", [])
+    genre_graph_data = db_year_in_music.process_genre_data(yim_top_genres, data, user_name)
+    response["genreGraphData"] = genre_graph_data
 
     return jsonify(response)
+
+
+@user_bp.post("/<mb_username:user_name>/year-in-music/")
+def year_in_music_covers(user_name):
+    """ Get Year in Music cover "cover art" data for all years for a user.
+
+    Returns a list of objects containing year, caa_id, and caa_release_mbid
+    for the user's topmost album that has cover art for that year.
+    """
+    user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
+
+    covers = db_year_in_music.get_yim_covers_for_user(user.id)
+
+    return jsonify({
+        "user": {
+            "id": user.id,
+            "name": user.musicbrainz_id,
+        },
+        "data": covers,
+    })
+
 
 # Embedable widgets, return HTML page to embed in an iframe
 

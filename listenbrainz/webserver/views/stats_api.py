@@ -2,6 +2,7 @@ import calendar
 import heapq
 from typing import Dict, Tuple, Optional
 
+import psycopg2.extras
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, jsonify, request
 
@@ -16,7 +17,6 @@ from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_era_activity import EraActivityRecord
 from data.model.user_artist_evolution_activity import ArtistEvolutionActivityRecord
 from listenbrainz.db import year_in_music as db_year_in_music
-from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.db.year_in_music import LAST_FM_FOUNDING_YEAR, MAX_YEAR_IN_MUSIC_YEAR
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
@@ -459,15 +459,22 @@ def _get_artist_activity(release_groups_list):
 
     artist_mbids = [x["artist_mbid"] for x in top_results if x["artist_mbid"] is not None]
     if artist_mbids:
-        metadata = get_metadata_for_artist(ts_conn, artist_mbids)
+        query = """
+        SELECT
+            artist_mbid,
+            artist_data->>'name' AS artist_name
+        FROM mapping.mb_artist_metadata_cache
+        WHERE artist_mbid IN %s
+        """
+        artist_mbid_tuple = tuple(artist_mbids)
+        with ts_conn.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+            curs.execute(query, (artist_mbid_tuple,))
+            artist_mbid_name_map = {str(row["artist_mbid"]): row["artist_name"] for row in curs.fetchall() if row["artist_name"]}
+
         # replace credited artist name on release group with artist name where possible
-        artist_mbid_name_map: dict[str, str] = {
-            str(item.artist_mbid): item.artist_data["name"]
-            for item in metadata
-        }
         for result in top_results:
             artist_mbid = result["artist_mbid"]
-            if artist_mbid in artist_mbid_name_map:
+            if artist_mbid and artist_mbid in artist_mbid_name_map:
                 result["artist_name"] = artist_mbid_name_map[artist_mbid]
 
     return top_results
@@ -737,9 +744,9 @@ def get_artist_evolution_activity(user_name: str):
 
     .. note::
         - ``time_unit`` depends on the stats range:
-            * ``week``  → weekday names (Monday..Sunday)
-            * ``month`` → day numbers as strings ("1".."31")
-            * ``year``  → month names (January..December)
+            * ``week``, ``this_week``  → weekday names (Monday..Sunday)
+            * ``month``, ``this_month`` → day numbers as strings ("1".."31")
+            * ``year``, ``this_year``, ``half_yearly``, ``quarter``  → month names (January..December)
             * ``all_time`` → calendar years as strings ("2019", "2020", ...)
         - ``artist_mbid`` may be null/omitted if unavailable.
 
@@ -1640,9 +1647,9 @@ def get_sitewide_artist_evolution_activity():
 
     .. note::
         - ``time_unit`` depends on the stats range:
-            * ``week``  → weekday names (Monday..Sunday)
-            * ``month`` → day numbers as strings ("1".."31")
-            * ``year``  → month names (January..December)
+            * ``week``, ``this_week``  → weekday names (Monday..Sunday)
+            * ``month``, ``this_month`` → day numbers as strings ("1".."31")
+            * ``year``, ``this_year``, ``half_yearly``, ``quarter``  → month names (January..December)
             * ``all_time`` → calendar years as strings ("2019", "2020", ...)
         - ``artist_mbid`` may be null/omitted if unavailable.
         - Shape matches ``/user/<user_name>/artist-evolution-activity`` for easy client reuse.

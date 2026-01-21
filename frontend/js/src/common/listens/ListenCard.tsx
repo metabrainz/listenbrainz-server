@@ -123,7 +123,7 @@ export default function ListenCard(props: ListenCardProps) {
     APIService,
     currentUser,
     userPreferences,
-    spotifyAuth
+    spotifyAuth,
   } = React.useContext(GlobalAppContext);
   const isMobile = useMediaQuery("(max-width: 480px)");
 
@@ -422,13 +422,17 @@ export default function ListenCard(props: ListenCardProps) {
                         text="Play Next"
                         icon={faPlay}
                         title="Play Next"
-                        action={addListenToTopOfQueue}
+                        action={() => {
+                          addListenToTopOfQueue(listenProp);
+                        }}
                       />
                       <ListenControl
                         text="Add to Queue"
                         icon={faPlusCircle}
                         title="Add to Queue"
-                        action={addListenToBottomOfQueue}
+                        action={() => {
+                          addListenToBottomOfQueue(listenProp);
+                        }}
                       />
                     </>
                   )}
