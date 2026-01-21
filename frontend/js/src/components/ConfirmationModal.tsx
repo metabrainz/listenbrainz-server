@@ -3,18 +3,27 @@ import { Modal } from "react-bootstrap";
 import * as React from "react";
 
 type ConfirmationModalProps = {
+  title?: string;
   body?: JSX.Element;
+  confirmLabel?: string;
+  cancelLabel?: string;
 };
 
 export default NiceModal.create((props: ConfirmationModalProps) => {
   const modal = useModal();
 
-  const { body } = props;
+  const {
+    title = "Confirm this action",
+    body,
+    confirmLabel = "Confirm",
+    cancelLabel = "Cancel",
+  } = props;
 
   const onCancel = () => {
     modal.reject();
     modal.hide();
   };
+
   const onConfirm = () => {
     modal.resolve();
     modal.hide();
@@ -24,22 +33,29 @@ export default NiceModal.create((props: ConfirmationModalProps) => {
     <Modal
       size="sm"
       {...bootstrapDialog(modal)}
-      title="Confirm this action"
       aria-labelledby="ConfirmationModalLabel"
+      aria-describedby="ConfirmationModalBody"
       id="ConfirmationModal"
     >
       <Modal.Header closeButton>
-        <Modal.Title id="ConfirmationModalLabel">
-          Confirm this action
-        </Modal.Title>
+        <Modal.Title id="ConfirmationModalLabel">{title}</Modal.Title>
       </Modal.Header>
-      <Modal.Body>{body || <>Do you confirm this action?</>}</Modal.Body>
+
+      <Modal.Body id="ConfirmationModalBody">
+        {body || <>Do you confirm this action?</>}
+      </Modal.Body>
+
       <Modal.Footer>
         <button type="button" className="btn btn-secondary" onClick={onCancel}>
-          Cancel
+          {cancelLabel}
         </button>
-        <button type="button" className="btn btn-danger" onClick={onConfirm}>
-          Confirm
+        <button
+          type="button"
+          className="btn btn-danger"
+          onClick={onConfirm}
+          autoFocus
+        >
+          {confirmLabel}
         </button>
       </Modal.Footer>
     </Modal>
