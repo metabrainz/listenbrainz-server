@@ -451,7 +451,8 @@ export default function PlaylistPage() {
                 )}
             </div>
             <div>
-              {playlist.track?.length} tracks
+              {playlist.track?.length}{" "}
+              {playlist.track?.length === 1 ? "track" : "tracks"}
               {totalDurationForDisplay && (
                 <>&nbsp;-&nbsp;{totalDurationForDisplay}</>
               )}

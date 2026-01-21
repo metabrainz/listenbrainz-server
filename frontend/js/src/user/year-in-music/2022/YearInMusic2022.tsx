@@ -41,7 +41,10 @@ import { JSPFTrackToListen } from "../../../playlists/utils";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import CustomChoropleth from "../../stats/components/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
-import SEO, { YIMYearMetaTags } from "../SEO";
+import {
+  LegacyYIMSEO as SEO,
+  LegacyYIMYearMetaTags as YIMYearMetaTags,
+} from "../SEO";
 import { RouteQuery } from "../../../utils/Loader";
 import { setAmbientQueueAtom } from "../../../common/brainzplayer/BrainzPlayerAtoms";
 
@@ -284,7 +287,7 @@ export default class YearInMusic extends React.Component<
               APIService.APIBaseURI
             }/art/year-in-music/2022/${encodeURIComponent(
               user.name
-            )}?image=${coverArtKey}`}
+            )}?image=${coverArtKey}&legacy=true`}
           >{`SVG of cover art for Top Discovery Playlist for ${user.name}`}</object>
           <h4>
             <a
@@ -358,13 +361,13 @@ export default class YearInMusic extends React.Component<
 
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
-        <div id="year-in-music" className="yim-2022 container">
+        <div id="legacy-year-in-music" className="yim-2022 container">
           <SEO year={2022} userName={user?.name} />
           <YIMYearMetaTags year={2022} />
           <div id="main-header" className="flex-center">
             <img
               className="img-fluid header-image"
-              src="/static/img/year-in-music-22/yim22-logo.png"
+              src="/static/img/legacy-year-in-music/year-in-music-22/yim22-logo.png"
               alt="Your year in music 2022"
             />
           </div>
@@ -493,15 +496,15 @@ export default class YearInMusic extends React.Component<
       </div>
     );
     const encodedUsername = encodeURIComponent(user.name);
-    const linkToThisPage = `https://listenbrainz.org/user/${encodedUsername}/year-in-music/2022`;
+    const linkToThisPage = `https://listenbrainz.org/user/${encodedUsername}/year-in-music/legacy/2022`;
     return (
-      <div id="year-in-music" className="yim-2022">
+      <div id="legacy-year-in-music" className="yim-2022">
         <SEO year={2022} userName={user?.name} />
         <YIMYearMetaTags year={2022} />
         <div id="main-header" className="flex-center">
           <img
             className="img-fluid header-image"
-            src="/static/img/year-in-music-22/yim22-logo.png"
+            src="/static/img/legacy-year-in-music/year-in-music-22/yim22-logo.png"
             alt="Your year in music 2022"
           />
           <div className="arrow-down" />
@@ -593,18 +596,15 @@ export default class YearInMusic extends React.Component<
                         return (
                           <SwiperSlide
                             key={`coverflow-${release.release_name}`}
-                            lazy
                           >
                             <img
-                              data-src={
+                              src={
                                 coverArt ??
                                 "/static/img/cover-art-placeholder.jpg"
                               }
                               alt={release.release_name}
-                              className="swiper-lazy"
                               loading="lazy"
                             />
-                            <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
                             <div title={release.release_name}>
                               {release.release_mbid ? (
                                 <Link to={`/release/${release.release_mbid}/`}>
@@ -628,7 +628,7 @@ export default class YearInMusic extends React.Component<
             </div>
             <div className="yim-share-button-container">
               <MagicShareButton
-                svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${encodedUsername}?image=albums`}
+                svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${encodedUsername}?image=albums&legacy=true`}
                 shareUrl={`${linkToThisPage}#top-albums`}
                 // shareText="Check out my"
                 shareTitle="My top albums of 2022"
@@ -651,7 +651,7 @@ export default class YearInMusic extends React.Component<
                   <div className="center-p">
                     <img
                       className="img-header"
-                      src="/static/img/year-in-music-22/stereo.png"
+                      src="/static/img/legacy-year-in-music/year-in-music-22/stereo.png"
                       alt="Top artists of 2022"
                     />
                     <h4>Top tracks of 2022</h4>
@@ -691,7 +691,7 @@ export default class YearInMusic extends React.Component<
                 </div>
                 <div className="yim-share-button-container">
                   <MagicShareButton
-                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${encodedUsername}?image=tracks`}
+                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${encodedUsername}?image=tracks&legacy=true`}
                     shareUrl={`${linkToThisPage}#top-tracks`}
                     // shareText="Check out my"
                     shareTitle="My top tracks of 2022"
@@ -704,7 +704,7 @@ export default class YearInMusic extends React.Component<
                   <div className="center-p">
                     <img
                       className="img-header"
-                      src="/static/img/year-in-music-22/map.png"
+                      src="/static/img/legacy-year-in-music/year-in-music-22/map.png"
                       alt="Top artists of 2022"
                     />
                     <h4>Top artists of 2022</h4>
@@ -757,7 +757,7 @@ export default class YearInMusic extends React.Component<
                 </div>
                 <div className="yim-share-button-container">
                   <MagicShareButton
-                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${encodedUsername}?image=artists`}
+                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${encodedUsername}?image=artists&legacy=true`}
                     shareUrl={`${linkToThisPage}#top-artists`}
                     // shareText="Check out my"
                     shareTitle="My top artists of 2022"
@@ -776,7 +776,7 @@ export default class YearInMusic extends React.Component<
             </div>
             <div className="yim-share-button-container">
               <MagicShareButton
-                svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${encodedUsername}?image=stats`}
+                svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${encodedUsername}?image=stats&legacy=true`}
                 shareUrl={`${linkToThisPage}#stats`}
                 shareTitle="My music listening in 2022"
                 fileName={`${user.name}-stats-2022`}
@@ -1019,7 +1019,7 @@ export default class YearInMusic extends React.Component<
                 <div className="center-p">
                   <img
                     className="img-header"
-                    src="/static/img/year-in-music-22/magnify.png"
+                    src="/static/img/legacy-year-in-music/year-in-music-22/magnify.png"
                     alt={`New albums from ${yourOrUsersName} top artists`}
                   />
                   <h4>
@@ -1109,7 +1109,7 @@ export default class YearInMusic extends React.Component<
                 <div className="center-p">
                   <img
                     className="img-header"
-                    src="/static/img/year-in-music-22/buddy.png"
+                    src="/static/img/legacy-year-in-music/year-in-music-22/buddy.png"
                     alt="Music buddies"
                   />
                   <h4>
@@ -1221,7 +1221,7 @@ export default class YearInMusic extends React.Component<
             <br />
             <br />
             Feeling nostalgic? See your previous Year in Music:{" "}
-            <Link to={`/user/${encodedUsername}/year-in-music/2021/`}>
+            <Link to={`/user/${encodedUsername}/year-in-music/legacy/2021/`}>
               2021
             </Link>
           </div>
@@ -1239,7 +1239,7 @@ export function YearInMusicWrapper() {
   const location = useLocation();
   const params = useParams();
   const { data } = useQuery<YearInMusicLoaderData>(
-    RouteQuery(["year-in-music-2022", params], location.pathname)
+    RouteQuery(["legacy-year-in-music-2022", params], location.pathname)
   );
   const fallbackUser = { name: "" };
   const { user = fallbackUser, data: yearInMusicData } = data || {};

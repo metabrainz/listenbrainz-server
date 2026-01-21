@@ -62,10 +62,10 @@ import {
   queueAtom,
   ambientQueueAtom,
   currentListenIndexAtom,
-  addListenToTopOfQueueAtom,
   addListenToBottomOfQueueAtom,
-  clearQueueAfterCurrentAndSetAmbientQueueAtom,
+  replaceQueueAndResetAtom,
   isActivatedAtom,
+  clearQueuesBeforeListenAndSetQueuesAtom,
 } from "./BrainzPlayerAtoms";
 
 import useWindowTitle from "./hooks/useWindowTitle";
@@ -220,10 +220,10 @@ export default function BrainzPlayer() {
 
   // Action Atoms
   const updatePlayerProgressBar = useSetAtom(setPlaybackTimerAtom);
-  const addListenToTopOfQueue = useSetAtom(addListenToTopOfQueueAtom);
   const addListenToBottomOfQueue = useSetAtom(addListenToBottomOfQueueAtom);
-  const clearQueueAfterCurrentAndSetAmbientQueue = useSetAtom(
-    clearQueueAfterCurrentAndSetAmbientQueueAtom
+  const replaceQueueAndReset = useSetAtom(replaceQueueAndResetAtom);
+  const addOrSkipToListenInQueue = useSetAtom(
+    clearQueuesBeforeListenAndSetQueuesAtom
   );
 
   const getProgressMs = () => store.get(progressMsAtom);
@@ -442,8 +442,6 @@ export default function BrainzPlayer() {
   const { submitCurrentListen, submitNowPlaying } = useListenSubmission({
     currentUser,
     listenBrainzAPIBaseURI,
-    onError: handleError,
-    onWarning: handleWarning,
     dataSourceRefs,
   });
 
@@ -889,15 +887,12 @@ export default function BrainzPlayer() {
   };
 
   const playListenEventHandler = (listen: Listen | JSPFTrack) => {
-    addListenToTopOfQueue(listen);
+    addOrSkipToListenInQueue(listen);
     playNextListenFromQueue();
   };
 
-  const playAmbientQueue = (tracks: BrainzPlayerQueue): void => {
-    // 1. Clear the items in the queue after the current playing track
-    clearQueueAfterCurrentAndSetAmbientQueue(tracks);
-
-    // 2. Play the first item in the ambient queue
+  const playAmbientQueue = (tracks: (Listen | JSPFTrack)[]): void => {
+    replaceQueueAndReset(tracks);
     playNextTrack();
   };
 

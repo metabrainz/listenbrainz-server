@@ -20,10 +20,16 @@ interface AddSingleListenProps {
   onPayloadChange: (listens: Listen[]) => void;
   switchMode: (text: string) => void;
   initialText?: string;
+  onSearchTextChange?: (text: string) => void;
 }
 
 const AddSingleListen = forwardRef(function AddSingleListen(
-  { onPayloadChange, switchMode, initialText }: AddSingleListenProps,
+  {
+    onPayloadChange,
+    switchMode,
+    initialText,
+    onSearchTextChange,
+  }: AddSingleListenProps,
   ref
 ) {
   const [selectedRecordings, setSelectedRecordings] = useState<
@@ -108,6 +114,8 @@ const AddSingleListen = forwardRef(function AddSingleListen(
         onSelectRecording={selectRecording}
         switchMode={switchMode}
         requiredInput={selectedRecordings.length === 0}
+        defaultValue={initialText}
+        onSearchTextChange={onSearchTextChange}
       />
       <div className="track-info">
         <div className="content">

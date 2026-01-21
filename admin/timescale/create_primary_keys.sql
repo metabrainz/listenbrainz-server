@@ -6,4 +6,6 @@ ALTER TABLE mbid_mapping_metadata ADD CONSTRAINT mbid_mapping_metadata_pkey PRIM
 ALTER TABLE mapping.mb_metadata_cache ADD CONSTRAINT mb_metadata_cache_pkey PRIMARY KEY (recording_mbid);
 ALTER TABLE background_worker_state ADD CONSTRAINT background_worker_state_pkey PRIMARY KEY (key);
 
+ALTER TABLE statistics.year_in_music_cover ADD CONSTRAINT year_in_music_cover_pkey PRIMARY KEY (id);
+
 COMMIT;

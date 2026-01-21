@@ -422,4 +422,12 @@ CREATE TABLE popularity.mlhd_top_release_group (
     total_user_count        INTEGER NOT NULL
 );
 
+CREATE TABLE statistics.year_in_music_cover (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    user_id             INTEGER NOT NULL,
+    year                SMALLINT NOT NULL,
+    caa_id              BIGINT,
+    caa_release_mbid    UUID
+);
+
 COMMIT;

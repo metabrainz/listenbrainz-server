@@ -142,6 +142,7 @@ export default function Listen() {
       let newPlayingNow = receivedPlayingNow;
       try {
         const response = await APIService.lookupRecordingMetadata(
+          currentUser?.auth_token || "",
           newPlayingNow.track_metadata.track_name,
           newPlayingNow.track_metadata.artist_name,
           true
@@ -185,7 +186,7 @@ export default function Listen() {
       }
       return newPlayingNow;
     },
-    [APIService]
+    [APIService, currentUser?.auth_token]
   );
 
   const getFollowing = React.useCallback(async () => {
