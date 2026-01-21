@@ -82,7 +82,7 @@
     "jotai": "^2.12.5",
     "lobes5": "^5.0.0",
     "localforage": "^1.10.0",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "node-vibrant": "^4.0.3",
     "panzoom": "^9.4.3",
     "rc-slider": "^10.1.0",
