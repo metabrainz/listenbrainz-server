@@ -110,7 +110,9 @@ class RequestConsumer(ConsumerProducerMixin):
 
     def _write_message_to_hdfs(self, message_body):
         try:
-            hdfs_connection.client.write(SPARK_RESULTS_JSONL_PATH, message_body + "\n", append=True)
+            message_json = json.loads(message_body)
+            df = listenbrainz_spark.session.createDataFrame([message_json])
+            df.write.mode('append').json(config.HDFS_CLUSTER_URI + SPARK_RESULTS_JSONL_PATH)
             logger.info(f"Successfully wrote message to {SPARK_RESULTS_JSONL_PATH}")
         except Exception as e:
             logger.error(f"Failed to write message to HDFS: {e}", exc_info=True)
