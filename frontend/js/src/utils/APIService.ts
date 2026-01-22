@@ -17,6 +17,11 @@ export default class APIService {
 
   MAX_LISTEN_SIZE: number = 10000; // Maximum size of listens that can be sent
 
+  // Centralized token refresh for Spotify to ensure only one refresh call at a time
+  private static pendingSpotifyTokenRefresh: Promise<string> | null = null;
+  private static spotifyTokenRefreshTime: number | null = null;
+  private static readonly SPOTIFY_TOKEN_CACHE_DURATION = 5 * 60 * 1000;
+
   constructor(APIBaseURI: string) {
     let finalUri = APIBaseURI;
     if (finalUri.endsWith("/")) {
@@ -259,7 +264,30 @@ export default class APIService {
   };
 
   refreshSpotifyToken = async (): Promise<string> => {
-    return this.refreshAccessToken("spotify");
+    const now = Date.now();
+    // If there's a pending refresh within the cache duration,
+    // return that promise
+    if (
+      APIService.pendingSpotifyTokenRefresh &&
+      APIService.spotifyTokenRefreshTime &&
+      now - APIService.spotifyTokenRefreshTime <
+        APIService.SPOTIFY_TOKEN_CACHE_DURATION
+    ) {
+      return APIService.pendingSpotifyTokenRefresh;
+    }
+
+    APIService.spotifyTokenRefreshTime = now;
+    APIService.pendingSpotifyTokenRefresh = this.refreshAccessToken(
+      "spotify"
+    ).catch((err) => {
+      // If the refresh fails, clear the cache so the
+      // next attempt can try again immediately.
+      APIService.pendingSpotifyTokenRefresh = null;
+      APIService.spotifyTokenRefreshTime = null;
+      throw err;
+    });
+
+    return APIService.pendingSpotifyTokenRefresh;
   };
 
   refreshCritiquebrainzToken = async (): Promise<string> => {
