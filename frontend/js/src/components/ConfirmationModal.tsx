@@ -53,6 +53,7 @@ export default NiceModal.create((props: ConfirmationModalProps) => {
           type="button"
           className="btn btn-danger"
           onClick={onConfirm}
+          // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
         >
           {confirmLabel}
