@@ -426,11 +426,14 @@ export default class APIService {
     retries: number = 3
   ): Promise<Response> => {
     let processedPayload = payload;
-    // When submitting playing_now listens, listened_at must NOT be present
+    const params = new URLSearchParams();
     if (listenType === "playing_now") {
+      // When submitting playing_now listens, listened_at must NOT be present
       processedPayload = payload.map(
         (listen) => omit(listen, "listened_at") as Listen
       );
+      // Get MSID in response for playing_now listens so users can send love/hate feedback straight away
+      params.append("return_msid", "true");
     }
     if (JSON.stringify(processedPayload).length <= this.MAX_LISTEN_SIZE) {
       // Payload is within submission limit, submit directly
@@ -439,7 +442,7 @@ export default class APIService {
         payload: processedPayload,
       } as SubmitListensPayload;
 
-      const url = `${this.APIBaseURI}/submit-listens`;
+      const url = `${this.APIBaseURI}/submit-listens?${params}`;
 
       try {
         const response = await fetch(url, {
