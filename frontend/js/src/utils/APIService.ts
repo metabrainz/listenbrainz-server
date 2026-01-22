@@ -442,7 +442,8 @@ export default class APIService {
         payload: processedPayload,
       } as SubmitListensPayload;
 
-      const url = `${this.APIBaseURI}/submit-listens?${params}`;
+      const url = new URL(`${this.APIBaseURI}/submit-listens`);
+      url.search = params.toString();
 
       try {
         const response = await fetch(url, {
