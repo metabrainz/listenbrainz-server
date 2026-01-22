@@ -23,6 +23,9 @@ the ``submit-listens`` endpoint. Submit one of three types of JSON documents:
 
    - ``payload`` should contain information about *exactly one* track
 
+   - Set the parameter :code:`return_msid` to :json:`true` to get a recording_msid in the response body.
+     The MSID can be used to submit love/hate feedback before a full listen is sent.
+
    - Submitting ``playing_now`` documents is optional
 
    - Timestamp must be omitted from a ``playing_now`` submission

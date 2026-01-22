@@ -143,10 +143,13 @@ const useListenSubmission = ({
         try {
           const { auth_token } = currentUser;
           let processedPayload = listen;
+          const params = new URLSearchParams();
 
-          // When submitting playing_now listens, listened_at must NOT be present
           if (isPlayingNowType) {
+            // When submitting playing_now listens, listened_at must NOT be present
             processedPayload = omit(listen, "listened_at") as Listen;
+            // Get MSID in response for playing_now listens so users can send feedback straight away
+            params.append("return_msid", "true");
           }
 
           const struct = {
@@ -154,7 +157,7 @@ const useListenSubmission = ({
             payload: [processedPayload],
           } as SubmitListensPayload;
 
-          const url = `${listenBrainzAPIBaseURI}/submit-listens`;
+          const url = `${listenBrainzAPIBaseURI}/submit-listens?${params}`;
 
           const response = await fetch(url, {
             method: "POST",

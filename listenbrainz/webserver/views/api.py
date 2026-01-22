@@ -67,6 +67,8 @@ def submit_listen():
 
     For complete details on the format of the JSON to be POSTed to this endpoint, see :ref:`json-doc`.
 
+    :param return_msid: If set to true and the listen_type is 'playing_now', the response will include a recording_msid
+        (to be used for submitting love/hate feedback). Defaults to false.
     :reqheader Authorization: Token <user token>
     :reqheader Content-Type: *application/json*
     :statuscode 200: listen(s) accepted.
@@ -134,7 +136,7 @@ def submit_listen():
         raise APIBadRequest(err.message, err.payload)
     
     msid = None
-    if listen_type == LISTEN_TYPE_PLAYING_NOW:
+    if listen_type == LISTEN_TYPE_PLAYING_NOW and request.args.get('return_msid', False):
         listen = validated_payload[0]
         track_metadata = listen.get("track_metadata", {})
         duration = track_metadata.get('duration') or (
