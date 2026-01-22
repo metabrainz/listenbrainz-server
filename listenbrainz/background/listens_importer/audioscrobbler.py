@@ -1,4 +1,5 @@
 import csv
+import uuid
 from datetime import datetime, timezone
 from typing import Any, Iterator, TextIO
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -100,7 +101,11 @@ class AudioscrobblerListensImporter(BaseListensImporter):
                 additional_info["tracknumber"] = item["tracknumber"]
 
             if item.get("track_mbid"):
-                additional_info["track_mbid"] = item["track_mbid"]
+                track_mbid = item["track_mbid"].strip()
+                if self.is_valid_uuid(track_mbid):
+                    additional_info["track_mbid"] = track_mbid
+                else:
+                    current_app.logger.debug("Skipping invalid Track MBID in Audioscrobbler row: %s", item)
 
             listens.append(listen)
 
@@ -166,3 +171,13 @@ class AudioscrobblerListensImporter(BaseListensImporter):
 
             row["timestamp"] = ts
             yield row
+
+    @staticmethod
+    def is_valid_uuid(u: str) -> bool:
+        if u is None:
+            return False
+        try:
+            uuid.UUID(u)
+            return True
+        except (AttributeError, ValueError, TypeError):
+            return False
