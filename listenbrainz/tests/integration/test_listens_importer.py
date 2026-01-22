@@ -1106,7 +1106,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(additional_info["original_submission_client"], "Rockbox sansae200")
         self.assertEqual(additional_info["duration"], 185)
         self.assertEqual(additional_info["tracknumber"], "18")
-        self.assertEqual(additional_info["track_mbid"], "f427312a-d073-4ba3-99f0-cd499528b639")
+        self.assertNotIn("track_mbid", additional_info)
 
         second_listen = listens[1]
         self.assertEqual(second_listen["listened_at"], 1577836800)
