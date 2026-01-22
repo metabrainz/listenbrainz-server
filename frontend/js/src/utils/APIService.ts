@@ -784,10 +784,8 @@ export default class APIService {
       }
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.error(
-        "Error in parsing response in APIService checkStatus:",
-        err
-      );
+      console.error("Error in parsing response in APIService checkStatus:", err);
+      throw err;
     }
 
     const error = new APIError(`HTTP Error ${response.statusText}`);
