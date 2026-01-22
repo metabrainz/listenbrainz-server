@@ -1,5 +1,5 @@
 import { atom, getDefaultStore, useAtom } from "jotai";
-import { atomWithReset, atomWithStorage } from "jotai/utils";
+import { atomWithReset, atomWithStorage, RESET } from "jotai/utils";
 import { faRepeat } from "@fortawesome/free-solid-svg-icons";
 import { isEqual } from "lodash";
 import { faRepeatOnce } from "../../utils/icons";
@@ -296,16 +296,14 @@ export const clearQueuesBeforeListenAndSetQueuesAtom = atom(
     }
   }
 );
-export const clearQueueAfterCurrentAndSetAmbientQueueAtom = atom(
-  null,
-  (get, set, data: BrainzPlayerQueue) => {
-    const currentListenIndex = get(currentListenIndexAtom);
-    const queue = get(queueAtom);
-    const updatedQueue = queue.slice(0, currentListenIndex + 1);
-    const newAmbientQueue = [...data].map(listenOrJSPFTrackToQueueItem);
 
-    set(queueAtom, updatedQueue);
-    set(ambientQueueAtom, newAmbientQueue);
+export const replaceQueueAndResetAtom = atom(
+  null,
+  (get, set, data: (Listen | JSPFTrack)[]) => {
+    const newQueue = data.map(listenOrJSPFTrackToQueueItem);
+    set(queueAtom, newQueue);
+    set(ambientQueueAtom, RESET);
+    set(currentListenIndexAtom, RESET);
   }
 );
 
@@ -372,7 +370,7 @@ export const useBrainzPlayerAtoms = () => ({
   addListenToTopOfQueueAtom,
   addListenToBottomOfQueueAtom,
   addListenToBottomOfAmbientQueueAtom,
-  clearQueueAfterCurrentAndSetAmbientQueueAtom,
+  replaceQueueAndResetAtom,
   clearQueuesBeforeListenAndSetQueuesAtom,
   moveAmbientQueueItemsToQueueAtom,
   addMultipleListensToBottomOfAmbientQueueAtom,
