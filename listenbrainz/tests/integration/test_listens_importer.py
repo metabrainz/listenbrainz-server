@@ -1129,5 +1129,5 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         metadata = response.json["metadata"]
         self.assertIn("attempted_count", metadata)
         self.assertIn("success_count", metadata)
-        self.assertEqual(metadata["attempted_count"], 2)
+        self.assertEqual(metadata["attempted_count"], 3)
         self.assertEqual(metadata["success_count"], 2)

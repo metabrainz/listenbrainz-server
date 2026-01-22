@@ -137,10 +137,9 @@ class AudioscrobblerListensImporter(BaseListensImporter):
                 current_app.logger.debug("Skipping Audioscrobbler row with missing required fields: %s", row)
                 continue
 
-            artist_name = row.get("artist_name", "")
-            if artist_name == "<Untagged>":
-                current_app.logger.debug("Skipping Audioscrobbler row with untagged artist: %s", row)
-                continue
+            if row.get("artist_name", "") == "<Untagged>":
+                row["artist_name"] = None
+                current_app.logger.debug("Skipping device file listen: %s", row)
 
             rating = row.get("rating")
             if rating != "L":
