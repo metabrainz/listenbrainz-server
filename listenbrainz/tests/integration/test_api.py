@@ -412,7 +412,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """
         with open(self.path_to_data_file('valid_playing_now.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload)
+        response = self.send_data(payload, url_params={'return_msid': 'true'})
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
         self.assertTrue(is_valid_uuid(response.json['recording_msid']))

@@ -101,13 +101,13 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
 
         return response
 
-    def send_data(self, payload, user=None, recalculate=False):
+    def send_data(self, payload, user=None, recalculate=False, url_params={}):
         """ Sends payload to api.submit_listen and return the response
         """
         if not user:
             user = self.user
         response = self.client.post(
-            self.custom_url_for('api_v1.submit_listen'),
+            self.custom_url_for('api_v1.submit_listen', **url_params),
             data=json.dumps(payload),
             headers={'Authorization': 'Token {}'.format(user['auth_token'])},
             content_type='application/json'
