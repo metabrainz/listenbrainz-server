@@ -5,6 +5,9 @@ import APIError from "./APIError";
 import type { Flair } from "./constants";
 import { Modes } from "../explore/lb-radio/components/Prompt";
 
+
+
+
 export interface LBRadioResponse {
   payload: { jspf: JSPFObject; feedback: string[] };
 }
@@ -27,6 +30,31 @@ export default class APIService {
     }
     this.APIBaseURI = finalUri;
   }
+
+  /**
+ Generic wrapper to perform the retry logic for API calls
+ Actual_operation is the async funct which is performing the actual work
+ */
+  private async withRetry<T>(
+    Actual_operation: () => Promise<T>,
+    retries: number,
+    delayMs = 3000  // default
+  ): Promise<T> {
+    try {
+      return await Actual_operation(); // Execute and return result when it succeeds 
+    } catch (error) {           // if not succeeds then jump into catch block for retry logic
+      if (retries <= 0) {
+        throw error;
+      }
+      // wait for 3 sec 
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, delayMs);
+      });
+      // retry with one less retry left untill retries are 0
+      return this.withRetry(Actual_operation, retries - 1, delayMs);
+    }
+  }
+
 
   getRecentListensForUsers = async (
     userNames: Array<string>,
@@ -441,71 +469,44 @@ export default class APIService {
 
       const url = `${this.APIBaseURI}/submit-listens`;
 
-      try {
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            Authorization: `Token ${userToken}`,
-            "Content-Type": "application/json;charset=UTF-8",
-          },
-          body: JSON.stringify(struct),
-        });
-        // we skip listens if we get an error code that's not a rate limit
-        if (response.status !== 429) {
-          return response; // Return response so that caller can handle appropriately
-        }
-        if (!response.ok) {
-          if (retries > 0) {
-            // Rate limit error, this should never happen, but if it does, try again in 3 seconds.
-            return this.retrySubmit(userToken, listenType, payload, retries);
+      // Retry behaviour is now handled by generic helper: withRetry
+      // Now submitListens focused on payload handling
+
+      return this.withRetry(
+        async () => {
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              Authorization: `Token ${userToken}`,
+              "Content-Type": "application/json;charset=UTF-8",
+            },
+            body: JSON.stringify(struct),
+          });
+
+          // Only retry on rate limit
+          if (response.status === 429) {
+            throw new Error("Rate limited");
           }
+
           return response;
-        }
-      } catch (error) {
-        if (retries > 0) {
-          return this.retrySubmit(userToken, listenType, payload, retries);
-        }
-
-        throw error;
-      }
+        },
+        retries
+      );
     }
-
     // Payload is not within submission limit, split and submit
     const payload1 = payload.slice(0, payload.length / 2);
     const payload2 = payload.slice(payload.length / 2, payload.length);
     return this.submitListens(userToken, listenType, payload1, retries)
+
+      // removed response2 because the line  .then((response2) => response2) is redundant
+      // send first half if suceeds then send second half
       .then((response1) =>
         // Succes of first request, now do the second one
         this.submitListens(userToken, listenType, payload2, retries)
-      )
-      .then((response2) => response2)
-      .catch((error) => {
-        if (retries > 0) {
-          return this.retrySubmit(userToken, listenType, payload, retries);
-        }
-        return error;
-      });
+      );
+
   };
 
-  // Helper Function for the retry logic
-
-  private async retrySubmit(
-    userToken: string,
-    listenType: ListenType,
-    payload: Array<Listen>,
-    retries: number
-  ): Promise<Response> {
-    await new Promise((resolve) => {
-      setTimeout(resolve, 3000);
-    });
-
-    return this.submitListens(
-      userToken,
-      listenType,
-      payload,
-      retries - 1
-    );
-  }
 
   /*
    *  Send a GET request to the ListenBrainz server to get the latest import time
