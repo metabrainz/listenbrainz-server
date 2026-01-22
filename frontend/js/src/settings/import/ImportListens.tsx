@@ -619,12 +619,13 @@ export default function ImportListens() {
                     <option value="">
                       Use profile timezone ({user_timezone})
                     </option>
-                    {pg_timezones.map(([name, offset]) => (
-                      <option key={name} value={name}>
-                        {name}
-                        {offset ? ` (${offset})` : ""}
-                      </option>
-                    ))}
+                    {pg_timezones.map((zone: string[]) => {
+                      return (
+                        <option key={zone[0]} value={zone[0]}>
+                          {zone[0]} ({zone[1]})
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
               </div>

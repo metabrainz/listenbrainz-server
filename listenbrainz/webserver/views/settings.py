@@ -81,11 +81,11 @@ def reset_token():
 @settings_bp.post("/select_timezone/")
 @api_login_required
 def select_timezone():
-    pg_timezones_raw = db_usersetting.get_pg_timezone(db_conn)
+    pg_timezones = db_usersetting.get_pg_timezone(db_conn)
     user_settings = db_usersetting.get(db_conn, current_user.id)
     user_timezone = user_settings['timezone_name']
     data = {
-        "pg_timezones": [{"name": tz[0], "offset": tz[1]} for tz in pg_timezones_raw],
+        "pg_timezones": pg_timezones,
         "user_timezone": user_timezone,
     }
     return jsonify(data)
