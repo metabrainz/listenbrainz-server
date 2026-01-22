@@ -365,7 +365,10 @@ export default class APIService {
       return { users: parsedResponse.users };
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.log("Error in parsing response in APIService searchUsers:", err);
+      console.error(
+        "Error in parsing response in APIService searchUsers:",
+        err
+      );
       throw err;
     }
   };
@@ -781,7 +784,10 @@ export default class APIService {
       }
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.log("Error in parsing response in APIService checkStatus:", err);
+      console.error(
+        "Error in parsing response in APIService checkStatus:",
+        err
+      );
     }
 
     const error = new APIError(`HTTP Error ${response.statusText}`);
