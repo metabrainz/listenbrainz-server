@@ -759,6 +759,53 @@ export default function BrainzPlayer() {
   const seekBackward = (): void => {
     seekToPositionMs(getProgressMs() - SEEK_TIME_MILLISECONDS);
   };
+  const handleNumberKeySkip = React.useCallback(
+    (event: KeyboardEvent) => {
+      if (process.env.NODE_ENV === "test") {
+        return;
+      }
+
+      const keyAsNumber = Number(event.key);
+      if (
+        !Number.isInteger(keyAsNumber) ||
+        keyAsNumber < 0 ||
+        keyAsNumber > 9
+      ) {
+        return;
+      }
+
+      const target = event.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      if (getPlayerPaused()) {
+        return;
+      }
+
+      event.preventDefault();
+
+      const durationMs = store.get(durationMsAtom);
+      if (!durationMs) {
+        return;
+      }
+
+      const seekToMs = (durationMs * keyAsNumber * 10) / 100;
+      seekToPositionMs(seekToMs);
+    },
+    [store, getPlayerPaused, seekToPositionMs]
+  );
+
+  React.useEffect(() => {
+    window.addEventListener("keydown", handleNumberKeySkip, true);
+    return () => {
+      window.removeEventListener("keydown", handleNumberKeySkip, true);
+    };
+  }, [handleNumberKeySkip]);
 
   const mediaSessionHandlers = [
     { action: "previoustrack", handler: playPreviousTrack },
