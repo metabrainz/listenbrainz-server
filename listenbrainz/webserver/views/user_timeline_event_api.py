@@ -566,6 +566,11 @@ def hide_user_timeline_event(user_name):
 
     row_id = data["event_id"]
     event_type = data["event_type"]
+
+    if event_type == UserTimelineEventType.NOTIFICATION.value:
+        db_user_timeline_event.hide_user_timeline_event(db_conn, user["id"], event_type, row_id)
+        return jsonify({"status": "ok"})
+
     if event_type in [
             UserTimelineEventType.RECORDING_RECOMMENDATION.value, UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value,
             UserTimelineEventType.THANKS.value]:
@@ -833,31 +838,6 @@ def get_feed_events_for_user(
         count=count,
     )
 
-    hidden_events = db_user_timeline_event.get_hidden_timeline_events(
-        db_conn, user['id'], count)
-    hidden_events_pin = {}
-    hidden_events_recommendation = {}
-
-    for hidden_event in hidden_events:
-        if hidden_event.event_type.value in [
-                UserTimelineEventType.RECORDING_RECOMMENDATION.value,
-                UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
-            hidden_events_recommendation[hidden_event.event_id] = hidden_event
-        else:
-            hidden_events_pin[hidden_event.event_id] = hidden_event
-
-    for event in recording_recommendation_events:
-        if event.id in hidden_events_recommendation:
-            event.hidden = True
-
-    for event in personal_recording_recommendation_events:
-        if event.id in hidden_events_recommendation:
-            event.hidden = True
-
-    for event in recording_pin_events:
-        if event.id in hidden_events_pin:
-            event.hidden = True
-
     # TODO: add playlist event and like event
     all_events = sorted(
         follow_events
@@ -869,6 +849,14 @@ def get_feed_events_for_user(
         + thanks_events,
         key=lambda event: -event.created,
     )
+
+    hidden_event_ids = db_user_timeline_event.get_hidden_timeline_event_ids(
+        db_conn, user["id"], count
+    )
+    for event in all_events:
+        if event.id in hidden_event_ids:
+            event.hidden = True
+
     return all_events
 
 
