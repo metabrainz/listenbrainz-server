@@ -28,22 +28,23 @@ export default class APIService {
     this.APIBaseURI = finalUri;
   }
 
-    /**
+  /**
  Generic wrapper to perform the retry logic for API calls
  Actual_operation is the async funct which is performing the actual work
  */
   private async withRetry<T>(
     Actual_operation: () => Promise<T>,
     retries: number,
-    delayMs = 3000  // default
+    delayMs = 3000 // default
   ): Promise<T> {
     try {
-      return await Actual_operation(); // Execute and return result when it succeeds 
-    } catch (error) {           // if not succeeds then jump into catch block for retry logic
+      return await Actual_operation(); // Execute and return result when it succeeds
+    } catch (error) {
+      // if not succeeds then jump into catch block for retry logic
       if (retries <= 0) {
         throw error;
       }
-      // wait for 3 sec 
+      // wait for 3 sec
       await new Promise<void>((resolve) => {
         setTimeout(resolve, delayMs);
       });
@@ -465,43 +466,41 @@ export default class APIService {
 
       const url = `${this.APIBaseURI}/submit-listens`;
 
-       // Retry behaviour is now handled by generic helper: withRetry
+      // Retry behaviour is now handled by generic helper: withRetry
       // Now submitListens focused on payload handling
 
-      return this.withRetry(
-        async () => {
-          const response = await fetch(url, {
-            method: "POST",
-            headers: {
-              Authorization: `Token ${userToken}`,
-              "Content-Type": "application/json;charset=UTF-8",
-            },
-            body: JSON.stringify(struct),
-          });
+      return this.withRetry(async () => {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            Authorization: `Token ${userToken}`,
+            "Content-Type": "application/json;charset=UTF-8",
+          },
+          body: JSON.stringify(struct),
+        });
 
-          // Only retry on rate limit
-          if (response.status === 429) {
-            throw new Error("Rate limited");
-          }
+        // Only retry on rate limit
+        if (response.status === 429) {
+          throw new Error("Rate limited");
+        }
 
-          return response;
-        },
-        retries
-      );
+        return response;
+      }, retries);
     }
 
     // Payload is not within submission limit, split and submit
     const payload1 = payload.slice(0, payload.length / 2);
     const payload2 = payload.slice(payload.length / 2, payload.length);
-    return this.submitListens(userToken, listenType, payload1, retries)
-    
-      // removed response2 because the line  .then((response2) => response2) is redundant
-      // send first half if suceeds then send second half
-      .then((response1) =>
-        // Succes of first request, now do the second one
-        this.submitListens(userToken, listenType, payload2, retries)
-      );
+    return (
+      this.submitListens(userToken, listenType, payload1, retries)
 
+        // removed response2 because the line  .then((response2) => response2) is redundant
+        // send first half if suceeds then send second half
+        .then((response1) =>
+          // Succes of first request, now do the second one
+          this.submitListens(userToken, listenType, payload2, retries)
+        )
+    );
   };
 
   /*
