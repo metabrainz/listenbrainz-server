@@ -83,6 +83,9 @@ export default class NavidromePlayer
 
   componentWillUnmount(): void {
     this.cleanupAudioListeners();
+    if (this.abortController) {
+      this.abortController.abort();
+    }
   }
 
   stop = () => {
