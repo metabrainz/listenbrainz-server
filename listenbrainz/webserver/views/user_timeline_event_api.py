@@ -567,13 +567,12 @@ def hide_user_timeline_event(user_name):
     row_id = data["event_id"]
     event_type = data["event_type"]
 
-    if event_type == UserTimelineEventType.NOTIFICATION.value:
-        db_user_timeline_event.hide_user_timeline_event(db_conn, user["id"], event_type, row_id)
-        return jsonify({"status": "ok"})
-
     if event_type in [
-            UserTimelineEventType.RECORDING_RECOMMENDATION.value, UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value,
-            UserTimelineEventType.THANKS.value]:
+        UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+        UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value,
+        UserTimelineEventType.THANKS.value,
+        UserTimelineEventType.NOTIFICATION.value,
+    ]:
         result = db_user_timeline_event.get_user_timeline_event_by_id(
             db_conn, row_id)
     elif data["event_type"] == UserTimelineEventType.RECORDING_PIN.value:
@@ -584,6 +583,14 @@ def hide_user_timeline_event(user_name):
     if not result:
         raise APIBadRequest(
             f"{data['event_type']} event with id {row_id} not found")
+
+    # Notification events are directly created for a user, so we can skip the follower check.
+    if event_type == UserTimelineEventType.NOTIFICATION.value:
+        if result.user_id == user["id"]:
+            db_user_timeline_event.hide_user_timeline_event(db_conn, user["id"], event_type, row_id)
+            return jsonify({"status": "ok"})
+        else:
+            raise APIUnauthorized("You cannot hide events of this user")
 
     if db_user_relationship.is_following_user(db_conn, user['id'], result.user_id):
         db_user_timeline_event.hide_user_timeline_event(
