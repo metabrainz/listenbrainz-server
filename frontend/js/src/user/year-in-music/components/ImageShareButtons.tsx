@@ -4,7 +4,7 @@ import {
   faCopy,
   faDownload,
   faShareAlt,
-  faClone,
+  faFileLines,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -35,17 +35,19 @@ export default function MagicShareButton({
   const [copySuccess, setCopySuccess] = useState(false);
 
   const hasShareFunctionality = Boolean(navigator.canShare);
+  const [svgText, setSvgText] = useState<string | null>(null);
 
-  const getSVG = React.useMemo(
-    () => async (): Promise<Blob | null | undefined> => {
-      let fetchedSvgString;
-      const canvas = canvasRef.current;
+  const getSvgText = React.useMemo(
+    () => async (): Promise<string | null> => {
+      if (svgText !== null) return svgText;
       try {
         const response = await fetch(svgURL);
-        fetchedSvgString = await response.text();
+        const fetchedSvgString = await response.text();
         if (!response.ok) {
           throw Error(fetchedSvgString);
         }
+        setSvgText(fetchedSvgString);
+        return fetchedSvgString;
       } catch (error) {
         toast.error(
           <ToastMsg
@@ -55,6 +57,17 @@ export default function MagicShareButton({
             }
           />
         );
+        return null;
+      }
+    },
+    [svgURL, svgText]
+  );
+
+  const getSVG = React.useMemo(
+    () => async (): Promise<Blob | null | undefined> => {
+      const canvas = canvasRef.current;
+      let fetchedSvgString = await getSvgText();
+      if (!canvas || !fetchedSvgString) {
         return undefined;
       }
       if (customStyles) {
@@ -89,20 +102,18 @@ export default function MagicShareButton({
       });
       return theBlob;
     },
-    [svgURL, customStyles]
+    [getSvgText, customStyles]
   );
 
   const copyAltText = useCallback(async () => {
     try {
-      const response = await fetch(svgURL);
-      const svgText = await response.text();
-
-      if (!response.ok) {
-        throw new Error(svgText);
+      const svgString = await getSvgText();
+      if (svgString === null) {
+        throw Error("No SVG data available");
       }
 
       const parser = new DOMParser();
-      const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
+      const svgDoc = parser.parseFromString(svgString, "image/svg+xml");
 
       const title = svgDoc.querySelector("title")?.textContent ?? "";
       const desc = svgDoc.querySelector("desc")?.textContent ?? "";
@@ -123,7 +134,7 @@ export default function MagicShareButton({
         />
       );
     }
-  }, [svgURL]);
+  }, [getSvgText]);
 
   const saveToFile = useCallback(async () => {
     const blob = await getSVG();
@@ -286,17 +297,12 @@ export default function MagicShareButton({
           <FontAwesomeIcon fixedWidth icon={faDownload} />
         </button>
         <button
-          className="yim-share-button btn btn-icon btn-link text-nowrap ms-2"
+          className="yim-share-button btn btn-icon btn-info"
           type="button"
           onClick={copyAltText}
-          title="Copy alt text for image"
+          title="Copy alt text"
         >
-          <span className="text-muted">alt text</span>
-          <FontAwesomeIcon
-            className="text-muted ms-1"
-            icon={faClone}
-            fixedWidth
-          />
+          <FontAwesomeIcon fixedWidth icon={faFileLines} />
         </button>
       </div>
     </>

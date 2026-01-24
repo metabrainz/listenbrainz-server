@@ -491,6 +491,7 @@ def _cover_art_yim_playlist(user_name, stats, key, year, options, styles):
         target_svg,
         user_name=user_name,
         images=cover_art_images,
+        playlists=stats[key],
         year=year,
         width=924,
         height=924,
