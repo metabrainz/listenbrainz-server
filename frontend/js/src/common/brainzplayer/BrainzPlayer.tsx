@@ -759,22 +759,11 @@ export default function BrainzPlayer() {
   const seekBackward = (): void => {
     seekToPositionMs(getProgressMs() - SEEK_TIME_MILLISECONDS);
   };
+
   const handleNumberKeySkip = React.useCallback(
     (event: KeyboardEvent) => {
-      if (process.env.NODE_ENV === "test") {
-        return;
-      }
-
-      const keyAsNumber = Number(event.key);
-      if (
-        !Number.isInteger(keyAsNumber) ||
-        keyAsNumber < 0 ||
-        keyAsNumber > 9
-      ) {
-        return;
-      }
-
       const target = event.target as HTMLElement;
+
       if (
         target.tagName === "INPUT" ||
         target.tagName === "TEXTAREA" ||
@@ -782,8 +771,22 @@ export default function BrainzPlayer() {
       ) {
         return;
       }
+      if (event.key === " ") {
+        event.preventDefault();
 
-      if (getPlayerPaused()) {
+        const index = store.get(currentDataSourceIndexAtom);
+        const dataSource = dataSourceRefs[index]?.current;
+
+        dataSource?.togglePlay();
+        return;
+      }
+      const keyAsNumber = Number(event.key);
+
+      if (
+        !Number.isInteger(keyAsNumber) ||
+        keyAsNumber < 0 ||
+        keyAsNumber > 9
+      ) {
         return;
       }
 
@@ -793,11 +796,10 @@ export default function BrainzPlayer() {
       if (!durationMs) {
         return;
       }
-
       const seekToMs = (durationMs * keyAsNumber * 10) / 100;
       seekToPositionMs(seekToMs);
     },
-    [store, getPlayerPaused, seekToPositionMs]
+    [store, seekToPositionMs, dataSourceRefs]
   );
 
   React.useEffect(() => {
