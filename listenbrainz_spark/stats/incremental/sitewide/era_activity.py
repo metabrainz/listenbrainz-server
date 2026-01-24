@@ -38,6 +38,7 @@ class EraActivitySitewideStatsQuery(SitewideStatsQueryProvider):
             LEFT JOIN release r ON l.release_mbid = r.release_mbid
             LEFT JOIN release_groups rg ON r.release_group_mbid = rg.release_group_mbid
             WHERE rg.first_release_date_year IS NOT NULL
+            AND rg.first_release_date_year >= 1900
             GROUP BY rg.first_release_date_year
         """
 
