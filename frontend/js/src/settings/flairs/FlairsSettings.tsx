@@ -16,6 +16,8 @@ import type { FlairName } from "../../utils/constants";
 import Username from "../../common/Username";
 import queryClient from "../../utils/QueryClient";
 import useUserFlairs from "../../utils/FlairLoader";
+import useAutoSave from "../../hooks/useAutoSave";
+import SaveStatusIndicator from "../../components/SaveStatusIndicator";
 
 function CustomOption(
   props: OptionProps<{ value: Flair; label: FlairName; username: string }>
@@ -51,6 +53,14 @@ export default function FlairsSettings() {
   const [selectedFlair, setSelectedFlair] = React.useState<Flair>(
     currentFlair ?? FlairEnum.None
   );
+
+  // NEW: Create ref to store current flair value
+  const flairRef = React.useRef(selectedFlair);
+
+  // NEW: Update ref whenever flair changes
+  React.useEffect(() => {
+    flairRef.current = selectedFlair;
+  }, [selectedFlair]);
   // If this has a value it should tell us if the flair is active,
   // as calculated on the back-end
   const currentUnlockedFlair = useUserFlairs(name);
@@ -78,16 +88,23 @@ export default function FlairsSettings() {
     fetchNagStatus();
   }, [name]);
 
-  const submitFlairPreferences = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // removing React.FormEvent so that we can handle both auto and manual save
+  const submitFlairPreferences = React.useCallback(async () => {
     if (!currentUser?.auth_token) {
       toast.error("You must be logged in to update your preferences");
       return;
     }
+
+    // Getting the current value from the ref
+    // so we use flaiRef.current insteaD of selectedFlair
+
+    const currentFlairValue = flairRef.current;
+
     try {
       const response = await APIService.submitFlairPreferences(
         currentUser?.auth_token,
-        selectedFlair
+        // using refs instead
+        currentFlairValue
       );
       toast.success("Flair saved successfully");
       globalContext.flair = selectedFlair;
@@ -97,11 +114,44 @@ export default function FlairsSettings() {
       console.error("Failed to update flair preferences:", error);
       toast.error("Failed to update flair preferences. Please try again.");
     }
+    // not keeping selectedFlair in dependency since we are using ref now
+  }, [APIService, currentUser?.auth_token, globalContext, queryClient]);
+
+  // Auto-save hook  after 2 seconds and tracks save status
+  const { triggerAutoSave, saveStatus, errorMessage } = useAutoSave({
+    delay: 2000, // 2 sec wait
+    onSave: submitFlairPreferences, // this funct will be called  when saving
+    enabled: true,
+  });
+
+  // Tracking first render
+  // so that auto save dont occur in starting
+  const isFirstRender = React.useRef(true);
+
+  React.useEffect(() => {
+    // Skip auto-save on first render - we only want to save when user makes changes
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    // Trigger auto-save whenever flair changes
+
+    triggerAutoSave();
+  }, [selectedFlair, triggerAutoSave]);
+
+  // Manual save handler so that user can save manually before or after 2 sec
+
+  const handleManualSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitFlairPreferences();
   };
 
   return (
+    // replacing submitFlairPreferences -> handleManualSave
+    // because now react needs to call this funct on form submit
     <div className="mb-4 donation-flairs-settings">
-      <form className="mb-4" onSubmit={submitFlairPreferences}>
+      <form className="mb-4" onSubmit={handleManualSave}>
         <ReactTooltip id="flair-tooltip" place="bottom" multiline>
           Every $5 donation unlocks flairs for 1 month,
           <br />
@@ -180,6 +230,14 @@ export default function FlairsSettings() {
               elementType="a"
             />
           </div>
+        </div>
+        {/* Save status indicator - shows Saving, Saved, or error messages */}
+
+        <div className="mt-3">
+          <SaveStatusIndicator
+            status={saveStatus}
+            errorMessage={errorMessage}
+          />
         </div>
 
         <button className="btn btn-success mt-3" type="submit">

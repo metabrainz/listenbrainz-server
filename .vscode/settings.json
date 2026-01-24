@@ -2,5 +2,22 @@
   "[python]": {
     "editor.defaultFormatter": "ms-python.autopep8"
   },
-  "python.formatting.provider": "none"
-} 
+  "python.formatting.provider": "none",
+
+  "editor.formatOnSave": true,
+
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "prettier.prettierPath": "./node_modules/prettier",
+  "prettier.requireConfig": false,
+
+  "files.trimTrailingWhitespace": false,
+  "files.insertFinalNewline": false,
+  "editor.trimAutoWhitespace": false,
+
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}
