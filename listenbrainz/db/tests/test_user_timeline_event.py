@@ -349,7 +349,7 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         )
 
         # creating a notification event.
-        message = 'Your daily-jams playlist has been updated.Give it a listen!.'
+        message = "Your daily-jams playlist has been updated.Give it a listen!"
         event_notif = db_user_timeline_event.create_user_notification_event(
             self.db_conn,
             user_id=new_user["id"],
@@ -385,6 +385,10 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             count=3,
         )
 
+        hidden_event_ids = db_user_timeline_event.get_hidden_timeline_event_ids(
+            self.db_conn, user_id=self.user["id"], count=3
+        )
+
         self.assertEqual(3, len(hidden_events))
         # events are in reverse chronological order
         self.assertEqual(hidden_events[2].event_type.value, 'notification')
@@ -393,6 +397,11 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(event_rec.id, hidden_events[1].event_id)
         self.assertEqual(hidden_events[0].event_type.value, 'personal_recording_recommendation')
         self.assertEqual(event_personal_rec.id, hidden_events[0].event_id)
+
+        self.assertEqual(3, len(hidden_event_ids))
+        self.assertIn(event_notif.id, hidden_event_ids)
+        self.assertIn(event_rec.id, hidden_event_ids)
+        self.assertIn(event_personal_rec.id, hidden_event_ids)
 
     def test_hide_feed_events_honors_count_parameter(self):
         # creating a user
