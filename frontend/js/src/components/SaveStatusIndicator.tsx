@@ -3,7 +3,7 @@ import React from "react";
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 interface SaveStatusIndicatorProps {
-  status: SaveStatus;
+  status: SaveStatus; // current status received
   errorMessage?: string;
 }
 
@@ -11,6 +11,7 @@ export default function SaveStatusIndicator({
   status,
   errorMessage,
 }: SaveStatusIndicatorProps) {
+  // when nothing is happeing then renderns nothing
   if (status === "idle") {
     return null;
   }
@@ -23,7 +24,10 @@ export default function SaveStatusIndicator({
   }
 
   return (
-    <div className={`alert ${alertClass} mb-3`} style={{ padding: "8px 12px" }}>
+    <div
+      className={`alert ${alertClass} mb-3`}
+      style={{ padding: "10px 12px" }}
+    >
       {status === "saving" && (
         <span>
           <i className="fa fa-spinner fa-spin" /> Saving...

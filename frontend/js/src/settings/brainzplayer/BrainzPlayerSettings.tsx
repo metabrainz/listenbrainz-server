@@ -151,7 +151,7 @@ function BrainzPlayerSettings() {
 
   const sortedList = getDataSourcesPriorityList();
 
-  /*  To store current values so  ref created  */
+  // Ref created To store current values
 
   const settingsRef = React.useRef({
     youtubeEnabled,
@@ -190,20 +190,13 @@ function BrainzPlayerSettings() {
     dataSourcesPriority,
   ]);
   const saveSettings = React.useCallback(async () => {
-    console.log("=== SAVE SETTINGS CALLED ===");
-
     if (!currentUser?.auth_token) {
-      console.log("ERROR: No auth token");
-
       toast.error("You must be logged in to update your preferences");
       return;
     }
 
     // Get CURRENT values from ref, not captured values
     const currentSettings = settingsRef.current;
-
-    console.log("DATA TO SAVE:", currentSettings);
-
     const { submitBrainzplayerPreferences } = APIService;
     try {
       const response = await submitBrainzplayerPreferences(
@@ -211,22 +204,16 @@ function BrainzPlayerSettings() {
         currentSettings
       );
 
-      console.log("SAVE RESPONSE:", response);
       toast.success("Saved your preferences successfully");
       // Update the global context values
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
       if (userPreferences) {
-        console.log("BEFORE UPDATE:", userPreferences.brainzplayer);
         userPreferences.brainzplayer = currentSettings;
-
-        console.log("AFTER UPDATE:", userPreferences.brainzplayer);
       } else {
-        console.log("WARNING: userPreferences is undefined!");
+        // console.log("WARNING: userPreferences is undefined!");
       }
     } catch (error) {
-      console.error("SAVE ERROR:", error);
-
       toast.error(
         <ToastMsg
           title="Error saving preferences"
@@ -243,18 +230,17 @@ function BrainzPlayerSettings() {
   }, [APIService, currentUser?.auth_token, userPreferences]);
 
   const { triggerAutoSave, saveStatus, errorMessage } = useAutoSave({
-    delay: 2000,
+    delay: 1000,
     onSave: saveSettings,
-    enabled: true,
   });
 
-  // Add this useEffect to auto-save whenever any setting changes
+  // This use effect auto-saves whenever any setting changes
   const isFirstRender = React.useRef(true);
   /*
   What it does:
-- Watches all settings (youtube, spotify, etc.)
-- Whenever ANY setting changes, it calls triggerAutoSave()
-- Skips the first render (so it doesn't auto-save when the page first loads)
+    - Watches all settings 
+    - Whenever ANY setting changes, it calls triggerAutoSave()
+    - Skips the first render
 */
 
   React.useEffect(() => {
