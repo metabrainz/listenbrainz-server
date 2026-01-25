@@ -57,6 +57,18 @@ const getUserRoutes = (): RouteObject[] => {
               },
             },
             {
+              path: "top-genres/",
+              lazy: {
+                loader: async () => {
+                  return (await import("../charts/UserEntityChart"))
+                    .UserEntityChartLoader;
+                },
+                Component: async () => {
+                  return (await import("../charts/UserEntityChart")).default;
+                },
+              },
+            },
+            {
               path: "top-albums/",
               lazy: {
                 loader: async () => {
