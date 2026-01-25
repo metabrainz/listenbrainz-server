@@ -309,8 +309,17 @@ const SearchTrackOrMBID = forwardRef<
             }}
             tabIndex={-1}
           >
-            {searchResults.map((track, index) => {
-              const trackNameAndArtistName = `${track.recording_name} - ${track.artist_credit_name}`;
+            {searchResults.map((track: any, index) => {
+              // const rawDuration = 245000;
+              const rawDuration = track.duration || track.length;
+              let durationString = "";
+              if (rawDuration) {
+                const minutes = Math.floor(rawDuration / 60000);
+                const seconds = Math.floor((rawDuration % 60000) / 1000);
+                const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
+                durationString = ` (${minutes}:${formattedSeconds})`;
+              }
+              const trackNameAndArtistName = `${track.recording_name} - ${track.artist_credit_name}${durationString}`;
               return (
                 <option
                   key={track.recording_mbid}
