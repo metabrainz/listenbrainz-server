@@ -9,7 +9,11 @@ from listenbrainz.db.fresh_releases import get_fresh_releases
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APINoContent, APINotFound, APIBadRequest
-from listenbrainz.webserver.views.api_tools import _parse_bool_arg
+from listenbrainz.webserver.views.api_tools import _parse_bool_arg, _parse_int_arg
+
+
+DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS = 14
+MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 90
 
 
 fresh_releases_bp = Blueprint('fresh_releases_v1', __name__)
@@ -62,6 +66,15 @@ def get_releases(user_name):
     past = _parse_bool_arg("past", True)
     future = _parse_bool_arg("future", True)
 
+    days = _parse_int_arg("days", DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS)
+    if days < 1 or days > MAX_NUMBER_OF_FRESH_RELEASE_DAYS:
+        raise APIBadRequest(
+            f"days must be between 1 and {MAX_NUMBER_OF_FRESH_RELEASE_DAYS}.")
+
+    today = datetime.date.today()
+    from_date = today - datetime.timedelta(days=days) if past else today
+    to_date = today + datetime.timedelta(days=days) if future else today
+
     try:
         data = get_fresh_releases(user["id"])
         releases = data["releases"] if data else []
@@ -74,11 +87,15 @@ def get_releases(user_name):
 
         if not past:
             releases = [r for r in releases if "release_date" in r and datetime.datetime.strptime(
-                r["release_date"], '%Y-%m-%d').date() >= datetime.date.today()]
+                r["release_date"], '%Y-%m-%d').date() >= today]
 
         if not future:
             releases = [r for r in releases if "release_date" in r and datetime.datetime.strptime(
-                r["release_date"], '%Y-%m-%d').date() <= datetime.date.today()]
+                r["release_date"], '%Y-%m-%d').date() <= today]
+
+        # Filter by selected range (days)
+        releases = [r for r in releases if "release_date" in r and
+                    from_date <= datetime.datetime.strptime(r["release_date"], '%Y-%m-%d').date() <= to_date]
 
         return jsonify({
             "payload": {

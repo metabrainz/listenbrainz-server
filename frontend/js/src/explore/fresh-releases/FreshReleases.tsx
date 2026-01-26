@@ -163,6 +163,7 @@ export default function FreshReleases() {
       : [
           "fresh-release-user",
           currentUser.name,
+          filterRangeOptions[range].value,
           showPastReleases,
           showFutureReleases,
           sort,
@@ -184,6 +185,7 @@ export default function FreshReleases() {
         } else {
           const userFreshReleases = await APIService.fetchUserFreshReleases(
             currentUser.name,
+            filterRangeOptions[range].value,
             showPastReleases,
             showFutureReleases,
             sort
