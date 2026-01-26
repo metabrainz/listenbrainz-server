@@ -118,7 +118,12 @@ export default function FlairsSettings() {
   }, [APIService, currentUser?.auth_token, globalContext, queryClient]);
 
   // Auto-save hook  after 1 seconds and tracks save status
-  const { triggerAutoSave, saveStatus, errorMessage } = useAutoSave({
+  const {
+    triggerAutoSave,
+    cancelAutoSave,
+    saveStatus,
+    errorMessage,
+  } = useAutoSave({
     delay: 1000, // 1 sec wait
     onSave: submitFlairPreferences, // this funct will be called  when saving
     enabled: true,
@@ -144,6 +149,10 @@ export default function FlairsSettings() {
 
   const handleManualSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    // cancel pending auto, saves prevents showing the
+    // the changes saved automatically for manual saves
+    cancelAutoSave();
+
     await submitFlairPreferences();
   };
 

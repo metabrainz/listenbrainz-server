@@ -165,7 +165,7 @@ function BrainzPlayerSettings() {
     dataSourcesPriority,
   });
 
-  // Update refs whenever state changes due to setting changes
+  // Update Refs whenever state changes due to setting changes
   React.useEffect(() => {
     settingsRef.current = {
       youtubeEnabled,
@@ -199,7 +199,7 @@ function BrainzPlayerSettings() {
     const currentSettings = settingsRef.current;
     const { submitBrainzplayerPreferences } = APIService;
     try {
-      const response = await submitBrainzplayerPreferences(
+      await submitBrainzplayerPreferences(
         currentUser.auth_token,
         currentSettings
       );
@@ -210,9 +210,8 @@ function BrainzPlayerSettings() {
       // eslint-disable-next-line react-hooks/exhaustive-deps
       if (userPreferences) {
         userPreferences.brainzplayer = currentSettings;
-      } else {
-        // console.log("WARNING: userPreferences is undefined!");
       }
+      // console.log("WARNING: userPreferences is undefined!");
     } catch (error) {
       toast.error(
         <ToastMsg
@@ -229,28 +228,32 @@ function BrainzPlayerSettings() {
     }
   }, [APIService, currentUser?.auth_token, userPreferences]);
 
-  const { triggerAutoSave, saveStatus, errorMessage } = useAutoSave({
+  const {
+    triggerAutoSave,
+    cancelAutoSave,
+    saveStatus,
+    errorMessage,
+  } = useAutoSave({
     delay: 1000,
     onSave: saveSettings,
   });
 
-  // This use effect auto-saves whenever any setting changes
-  const isFirstRender = React.useRef(true);
-  /*
-  What it does:
-    - Watches all settings 
-    - Whenever ANY setting changes, it calls triggerAutoSave()
-    - Skips the first render
-*/
+  // TO skip the auto save during initial render of screen before
+  // user make change . effectRuns
+
+  // Skip initial hydration passes
+  const effectRuns = React.useRef(0);
 
   React.useEffect(() => {
-    // Skip auto-save on first render
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
+    effectRuns.current += 1;
+
+    // Skip the first two runs (initial mount + hydration updates) which are not
+    // caused by user
+    if (effectRuns.current <= 2) {
       return;
     }
 
-    // Trigger auto-save whenever any setting changes
+    // now the change which occur will be made by user
     triggerAutoSave();
   }, [
     youtubeEnabled,
@@ -264,6 +267,11 @@ function BrainzPlayerSettings() {
     dataSourcesPriority,
     triggerAutoSave,
   ]);
+  // Adding  manual save function
+  const handleManualSave = async () => {
+    cancelAutoSave(); // Cancelling any pending auto-save
+    await saveSettings();
+  };
 
   return (
     <>
@@ -659,7 +667,7 @@ function BrainzPlayerSettings() {
       <button
         className="btn btn-lg btn-info"
         type="button"
-        onClick={saveSettings}
+        onClick={handleManualSave}
       >
         Save BrainzPlayer settings
       </button>

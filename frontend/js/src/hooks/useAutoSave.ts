@@ -32,6 +32,10 @@ export default function useAutoSave({
         await onSave();
         setSaveStatus("saved");
         setErrorMessage("");
+        // hide auto save after 1 sec
+        setTimeout(() => {
+          setSaveStatus("idle");
+        }, 1000);
       } catch (error) {
         // console.error("Auto-save failed:", error);
         setSaveStatus("error");
