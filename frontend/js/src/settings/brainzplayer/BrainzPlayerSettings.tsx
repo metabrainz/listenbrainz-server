@@ -283,9 +283,7 @@ function BrainzPlayerSettings() {
         id="enable-brainzplayer"
         value="brainzplayer"
         checked={brainzplayerEnabled}
-        onChange={(e) => {
-          setBrainzplayerEnabled(!brainzplayerEnabled);
-        }}
+        onChange={(e) => setBrainzplayerEnabled(!brainzplayerEnabled)}
         switchLabel={
           <span
             className={`text-brand ${!brainzplayerEnabled ? "text-muted" : ""}`}
@@ -324,9 +322,7 @@ function BrainzPlayerSettings() {
             }
             value="spotify"
             checked={spotifyEnabled}
-            onChange={(e) => {
-              setSpotifyEnabled(!spotifyEnabled);
-            }}
+            onChange={(e) => setSpotifyEnabled(!spotifyEnabled)}
             switchLabel={
               <span
                 className={`text-brand ${!spotifyEnabled ? "text-muted" : ""}`}
@@ -367,14 +363,11 @@ function BrainzPlayerSettings() {
               !appleMusicEnabled && !AppleMusicPlayer.hasPermissions(appleAuth)
             }
             checked={appleMusicEnabled}
-            onChange={(e) => {
-              setAppleMusicEnabled(!appleMusicEnabled);
-            }}
+            onChange={(e) => setAppleMusicEnabled(!appleMusicEnabled)}
             switchLabel={
               <span
-                className={`text-brand ${
-                  !appleMusicEnabled ? "text-muted" : ""
-                }`}
+                className={`text-brand ${!appleMusicEnabled ? "text-muted" : ""
+                  }`}
               >
                 <span>
                   <FontAwesomeIcon
@@ -416,14 +409,11 @@ function BrainzPlayerSettings() {
               !SoundcloudPlayer.hasPermissions(soundcloudAuth)
             }
             checked={soundcloudEnabled}
-            onChange={(e) => {
-              setSoundcloudEnabled(!soundcloudEnabled);
-            }}
+            onChange={(e) => setSoundcloudEnabled(!soundcloudEnabled)}
             switchLabel={
               <span
-                className={`text-brand ${
-                  !soundcloudEnabled ? "text-muted" : ""
-                }`}
+                className={`text-brand ${!soundcloudEnabled ? "text-muted" : ""
+                  }`}
               >
                 <span className={soundcloudEnabled ? "text-success" : ""}>
                   <FontAwesomeIcon
@@ -463,14 +453,11 @@ function BrainzPlayerSettings() {
               !FunkwhalePlayer.hasPermissions(funkwhaleAuth)
             }
             checked={funkwhaleEnabled}
-            onChange={(e) => {
-              setFunkwhaleEnabled(!funkwhaleEnabled);
-            }}
+            onChange={(e) => setFunkwhaleEnabled(!funkwhaleEnabled)}
             switchLabel={
               <span
-                className={`text-brand ${
-                  !funkwhaleEnabled ? "text-muted" : ""
-                }`}
+                className={`text-brand ${!funkwhaleEnabled ? "text-muted" : ""
+                  }`}
               >
                 <span>
                   <FontAwesomeIcon
@@ -508,14 +495,11 @@ function BrainzPlayerSettings() {
             value="navidrome"
             disabled={!navidromeEnabled && !navidromeAuth?.instance_url}
             checked={navidromeEnabled}
-            onChange={(e) => {
-              setNavidromeEnabled(!navidromeEnabled);
-            }}
+            onChange={(e) => setNavidromeEnabled(!navidromeEnabled)}
             switchLabel={
               <span
-                className={`text-brand ${
-                  !navidromeEnabled ? "text-muted" : ""
-                }`}
+                className={`text-brand ${!navidromeEnabled ? "text-muted" : ""
+                  }`}
               >
                 <span>
                   <FontAwesomeIcon
@@ -545,9 +529,7 @@ function BrainzPlayerSettings() {
             id="enable-youtube"
             value="youtube"
             checked={youtubeEnabled}
-            onChange={(e) => {
-              setYoutubeEnabled(!youtubeEnabled);
-            }}
+            onChange={(e) => setYoutubeEnabled(!youtubeEnabled)}
             switchLabel={
               <span
                 className={`text-brand ${!youtubeEnabled ? "text-muted" : ""}`}
@@ -596,15 +578,11 @@ function BrainzPlayerSettings() {
             id="enable-internet-archive"
             value="internetArchive"
             checked={internetArchiveEnabled}
-            onChange={(e) => {
-              setInternetArchiveEnabled(!internetArchiveEnabled);
-              triggerAutoSave();
-            }}
+            onChange={(e) => setInternetArchiveEnabled(!internetArchiveEnabled)}
             switchLabel={
               <span
-                className={`text-brand ${
-                  !internetArchiveEnabled ? "text-muted" : ""
-                }`}
+                className={`text-brand ${!internetArchiveEnabled ? "text-muted" : ""
+                  }`}
               >
                 <span>
                   <FontAwesomeIcon
