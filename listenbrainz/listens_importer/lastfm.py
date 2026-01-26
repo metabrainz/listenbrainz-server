@@ -99,7 +99,7 @@ class BaseLastfmImporter(ListensImporter):
                 raise LastfmUserNotRetryableException("Last.FM user with username %s not found" % (params["user"],))
             case 429:
                 raise ExternalServiceError("Encountered a rate limit.")
-            case 400:
+            case 400 | 403:
                 # Check for error 17 (privacy mode enabled)
                 data = response.json()
                 if "error" in data and data.get("error") == 17:
