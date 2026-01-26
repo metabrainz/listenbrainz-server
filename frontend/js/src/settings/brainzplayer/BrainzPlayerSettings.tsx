@@ -366,8 +366,9 @@ function BrainzPlayerSettings() {
             onChange={(e) => setAppleMusicEnabled(!appleMusicEnabled)}
             switchLabel={
               <span
-                className={`text-brand ${!appleMusicEnabled ? "text-muted" : ""
-                  }`}
+                className={`text-brand ${
+                  !appleMusicEnabled ? "text-muted" : ""
+                }`}
               >
                 <span>
                   <FontAwesomeIcon
@@ -412,8 +413,9 @@ function BrainzPlayerSettings() {
             onChange={(e) => setSoundcloudEnabled(!soundcloudEnabled)}
             switchLabel={
               <span
-                className={`text-brand ${!soundcloudEnabled ? "text-muted" : ""
-                  }`}
+                className={`text-brand ${
+                  !soundcloudEnabled ? "text-muted" : ""
+                }`}
               >
                 <span className={soundcloudEnabled ? "text-success" : ""}>
                   <FontAwesomeIcon
@@ -456,8 +458,9 @@ function BrainzPlayerSettings() {
             onChange={(e) => setFunkwhaleEnabled(!funkwhaleEnabled)}
             switchLabel={
               <span
-                className={`text-brand ${!funkwhaleEnabled ? "text-muted" : ""
-                  }`}
+                className={`text-brand ${
+                  !funkwhaleEnabled ? "text-muted" : ""
+                }`}
               >
                 <span>
                   <FontAwesomeIcon
@@ -498,8 +501,9 @@ function BrainzPlayerSettings() {
             onChange={(e) => setNavidromeEnabled(!navidromeEnabled)}
             switchLabel={
               <span
-                className={`text-brand ${!navidromeEnabled ? "text-muted" : ""
-                  }`}
+                className={`text-brand ${
+                  !navidromeEnabled ? "text-muted" : ""
+                }`}
               >
                 <span>
                   <FontAwesomeIcon
@@ -581,8 +585,9 @@ function BrainzPlayerSettings() {
             onChange={(e) => setInternetArchiveEnabled(!internetArchiveEnabled)}
             switchLabel={
               <span
-                className={`text-brand ${!internetArchiveEnabled ? "text-muted" : ""
-                  }`}
+                className={`text-brand ${
+                  !internetArchiveEnabled ? "text-muted" : ""
+                }`}
               >
                 <span>
                   <FontAwesomeIcon
