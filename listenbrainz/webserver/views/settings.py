@@ -470,7 +470,7 @@ def music_services_connect(service_name: str):
     if response.status_code != 200:
         if service_name.lower() == "lastfm" and "error" in response_data and response_data.get("error") == 17:
             raise APIUnauthorized(
-                "Please disable privacy mode in the settings on your Last.fm account to allows importing listens."
+                "Please disable privacy mode in the settings of your Last.fm account to allow importing listens."
             )
         raise APIServiceUnavailable(f"Error from the {service_name.capitalize()} API while verifying user: {response.text}")
 
