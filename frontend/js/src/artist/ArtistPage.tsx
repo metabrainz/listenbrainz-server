@@ -7,6 +7,7 @@ import {
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
+
 import { chain, isEmpty, isUndefined, orderBy, groupBy, sortBy } from "lodash";
 import DOMPurify from "dompurify";
 import {
@@ -100,6 +101,7 @@ export const typeOrder = [
   "Compilation",
   "Remix",
   "Broadcast",
+  "Appears On",
 ];
 export const sortReleaseGroups = (
   sort: "release_date" | "total_listen_count",
@@ -186,21 +188,48 @@ export default function ArtistPage(): JSX.Element {
 
   // Sort by the more precise secondary type first to create categories like "Live", "Compilation" and "Remix" instead of
   // "Album + Live", "Single + Live", "EP + Live", "Broadcast + Live" and "Album + Remix", etc.
-  const rgGroups = groupBy(
-    releaseGroups,
-    (rg) => rg.secondary_types?.[0] ?? rg.type ?? "Other"
+const isAppearsOn = (
+  rg: ReleaseGroupWithSecondaryTypesAndListenCount,
+  pageArtistMBID: string
+) => {
+  if (!rg.artists || rg.artists.length === 0) {
+    return false;
+  }
+
+  const isPageArtistPresent = rg.artists.some(
+    (artist) => artist.artist_mbid === pageArtistMBID
   );
 
-  const last = Object.keys(rgGroups).length;
-  const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), (type) =>
-    typeOrder.indexOf(type) !== -1 ? typeOrder.indexOf(type) : last
-  );
+  const isPrimaryArtist = rg.artists[0]?.artist_mbid === pageArtistMBID;
+
+  // Appears On = artist is present, but not the primary artist
+  return isPageArtistPresent && !isPrimaryArtist;
+};
+const rgGroups: Record<
+  string,
+  ReleaseGroupWithSecondaryTypesAndListenCount[]
+> = groupBy(
+  releaseGroups,
+  (rg: ReleaseGroupWithSecondaryTypesAndListenCount) => {
+    if (isAppearsOn(rg, artistMBID)) {
+      return "Appears On";
+    }
+    return rg.type ?? "Other";
+  }
+);
+
+const last = Object.keys(rgGroups).length;
+
+const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), (type) =>
+  typeOrder.indexOf(type) !== -1 ? typeOrder.indexOf(type) : last
+);
+
 
   const groupedReleaseGroups: Record<
     string,
     ReleaseGroupWithSecondaryTypesAndListenCount[]
   > = {};
-  sortedRgGroupsKeys.forEach((type) => {
+  sortedRgGroupsKeys.forEach((type:string) => {
     groupedReleaseGroups[type] = sortReleaseGroups(sort, rgGroups[type]);
   });
 
