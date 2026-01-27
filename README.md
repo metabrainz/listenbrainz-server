@@ -25,7 +25,9 @@
 ## About
 
 ListenBrainz keeps track of music you listen to and
-provides you with insights into your listening habits. We're
+provides you with insights into your listening habits. 
+It allows users to submit listening data from various players and services
+and explore their music taste through open data and visualizations. We're
 completely open-source and publish our data as open data.
 
 You can use ListenBrainz to track your music listening habits and
