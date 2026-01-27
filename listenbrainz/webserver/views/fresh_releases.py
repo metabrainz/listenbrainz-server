@@ -49,6 +49,7 @@ def get_releases(user_name):
             or "confidence". Default "release_date".
     :param past: Whether to show releases in the past. Default True.
     :param future: Whether to show releases in the future. Default True.
+    :param days: The number of days of fresh releases to show. Default 14. Max 90.
 
     :statuscode 200: fetch succeeded
     :statuscode 400: invalid date or number of days passed.

@@ -11,6 +11,17 @@ from listenbrainz.db import couchdb
 
 
 class FreshReleasesTestCase(IntegrationTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(FreshReleasesTestCase, cls).setUpClass()
+        cls.database = "fresh_releases_20220920"
+        couchdb.create_database(cls.database)
+
+    @classmethod
+    def tearDownClass(cls):
+        couchdb_url = f"{couchdb.get_base_url()}/{cls.database}"
+        requests.delete(couchdb_url)
+        super(FreshReleasesTestCase, cls).tearDownClass()
 
     def setUp(self):
         super(FreshReleasesTestCase, self).setUp()
@@ -19,9 +30,7 @@ class FreshReleasesTestCase(IntegrationTestCase):
         with open(self.path_to_data_file("user_fresh_releases.json")) as f:
             self.expected = json.load(f)
 
-        database = "fresh_releases_20220920"
-        couchdb.create_database(database)
-        db_fresh.insert_fresh_releases(database, [{
+        db_fresh.insert_fresh_releases(self.database, [{
             "user_id": self.user["id"],
             "releases": self.expected
         }])
