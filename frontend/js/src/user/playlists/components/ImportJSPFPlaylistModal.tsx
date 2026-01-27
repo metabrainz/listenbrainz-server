@@ -59,6 +59,7 @@ export default NiceModal.create(() => {
 
           return JSPFObject.playlist;
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.error(error);
 
           return undefined;
@@ -118,7 +119,7 @@ export default NiceModal.create(() => {
     }
   };
 
-  const onSubmit = async (event: React.SyntheticEvent) => {
+  const onSubmit = async () => {
     try {
       const newPlaylist = await createPlaylist();
       if (!newPlaylist) {
@@ -142,6 +143,9 @@ export default NiceModal.create(() => {
       {...bootstrapDialog(modal)}
       title="Import playlist"
       aria-labelledby="ImportPlaylistModalLabel"
+      aria-describedby="ImportPlaylistHelpText"
+      role="dialog"
+      aria-modal="true"
       id="ImportPlaylistModal"
     >
       <Modal.Header closeButton>
@@ -157,11 +161,20 @@ export default NiceModal.create(() => {
             className="form-control"
             id="playlistFile"
             accept=".jspf, .json"
+            aria-describedby={
+              fileError
+                ? "playlistFileError ImportPlaylistHelpText"
+                : "ImportPlaylistHelpText"
+            }
             onChange={handleFileChange}
           />
         </div>
-        {fileError && <div className="has-error">{fileError}</div>}
-        <p className="form-text">
+        {fileError && (
+          <div className="has-error" id="playlistFileError" role="alert">
+            {fileError}
+          </div>
+        )}
+        <p className="form-text" id="ImportPlaylistHelpText">
           For information on the JSPF playlist format, please visit{" "}
           <a href="https://musicbrainz.org/doc/jspf">
             musicbrainz.org/doc/jspf
@@ -180,6 +193,8 @@ export default NiceModal.create(() => {
           type="submit"
           className="btn btn-primary"
           disabled={!currentUser?.auth_token || fileContent === null}
+          aria-disabled={!currentUser?.auth_token || fileContent === null}
+          aria-busy={modal.visible}
           onClick={onSubmit}
         >
           Import
