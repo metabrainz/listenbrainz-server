@@ -572,6 +572,7 @@ def hide_user_timeline_event(user_name):
         UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value,
         UserTimelineEventType.THANKS.value,
         UserTimelineEventType.NOTIFICATION.value,
+        UserTimelineEventType.CRITIQUEBRAINZ_REVIEW.value,
     ]:
         result = db_user_timeline_event.get_user_timeline_event_by_id(
             db_conn, row_id)
