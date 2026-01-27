@@ -1,5 +1,5 @@
 import * as React from "react";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { getDefaultStore } from "jotai";
 import FunkwhalePlayer from "../../../src/common/brainzplayer/FunkwhalePlayer";
 import APIService from "../../../src/utils/APIService";
