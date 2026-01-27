@@ -2148,15 +2148,12 @@ def legacy_year_in_music(user_name: str, year: int):
 
     - Core payload structure matches the non-legacy Year in Music endpoint.
     - Playlist objects are no longer wrapped in JSPF.
-    - An additional ``yim_artist_map`` field is present alongside ``artist_map``. 
-      This duplication is a historical artifact of the 2022 pipeline. Clients should prefer ``artist_map``.
     - Some playlists have been removed, leaving ``playlist-top-discoveries-for-year`` and ``playlist-top-missed-recordings-for-year``.  
     - Playlist cover art is provided via additional ``*-coverart`` mappings.  
 
     **2023 and later**
 
     - Payload structure matches the non-legacy endpoint.
-    - The duplicate ``yim_artist_map`` is no longer present, while the ``artist_map`` field remains  
     - Playlist cover art mappings (``playlist-*-coverart``) are no longer included.
       Instead, cover art information is provided per track using the ``caa_id`` and ``caa_release_mbid`` 
       fields in ``track.extension["https://musicbrainz.org/doc/jspf#track"].additional_metadata``.
