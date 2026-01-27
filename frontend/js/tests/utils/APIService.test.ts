@@ -63,7 +63,6 @@ describe("submitListens", () => {
           status: 200,
         });
       });
-    const spy = jest.spyOn(apiService, "submitListens");
     apiService.submitListens("foobar", "import", [
       {
         listened_at: 1000,
@@ -76,22 +75,16 @@ describe("submitListens", () => {
 
     await jest.advanceTimersByTimeAsync(10000);
 
-    expect(spy).toHaveBeenCalledTimes(2);
-    expect(spy).toHaveBeenNthCalledWith(
-      2,
-      "foobar",
-      "import",
-      [
-        {
-          listened_at: 1000,
-          track_metadata: {
-            artist_name: "foobar",
-            track_name: "bazfoo",
-          },
-        },
-      ],
-      2
-    );
+    // As now Retry is now handled inside the generic withRetry helper.So submitListens
+    //  itself is called only once; the retry happens by
+    // re-executing the underlying network request.
+
+
+    // Therefore, we show that fetch is called twice instead of
+    // expecting submitListens to be called many times.
+
+    expect(window.fetch).toHaveBeenCalledTimes(2);
+
   });
 
   it("retries if error 429 is recieved (rate limited)", async () => {
@@ -111,7 +104,6 @@ describe("submitListens", () => {
           status: 200,
         });
       });
-    const spy = jest.spyOn(apiService, "submitListens");
     apiService.submitListens("foobar", "import", [
       {
         listened_at: 1000,
@@ -124,22 +116,15 @@ describe("submitListens", () => {
 
     await jest.advanceTimersByTimeAsync(10000);
 
-    expect(spy).toHaveBeenCalledTimes(2);
-    expect(spy).toHaveBeenNthCalledWith(
-      2,
-      "foobar",
-      "import",
-      [
-        {
-          listened_at: 1000,
-          track_metadata: {
-            artist_name: "foobar",
-            track_name: "bazfoo",
-          },
-        },
-      ],
-      2
-    );
+    // Earlier, retries were done by calling submitListens again,
+    // so the tests checked that the method itself was called multiple times.
+    // With the new withRetry helper, the retry happens inside the request  layer instead.
+
+    // submitListens runs only once, and the network request
+    // fetch is run again
+
+    expect(window.fetch).toHaveBeenCalledTimes(2);
+
   });
 
   it("skips if any other response code is recieved", async () => {
