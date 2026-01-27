@@ -2036,6 +2036,7 @@ export default class APIService {
 
   fetchUserFreshReleases = async (
     userName: string,
+    days?: number,
     past?: boolean,
     future?: boolean,
     sort?: SortOption
@@ -2048,6 +2049,9 @@ export default class APIService {
     )}/fresh_releases`;
 
     const queryParams: Array<string> = [];
+    if (days) {
+      queryParams.push(`days=${days}`);
+    }
     if (sort) {
       queryParams.push(`sort=${sort}`);
     }
