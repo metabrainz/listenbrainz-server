@@ -396,6 +396,20 @@ def get_hidden_timeline_events(db_conn, user_id: int, count: int) -> List[Hidden
         raise DatabaseException(str(e))
 
 
+def get_hidden_timeline_event_ids(db_conn, user_id: int, count: int) -> set[int]:
+    """Retrieves all event ids that are hidden by the user."""
+    result = db_conn.execute(
+            text("""
+            SELECT event_id
+              FROM hide_user_timeline_event
+             WHERE user_id = :user_id
+          ORDER BY created DESC
+             LIMIT :count
+        """),
+            {"user_id": user_id, "count": count},
+        )
+    return {row[0] for row in result}
+
 def unhide_timeline_event(db_conn, user: int, event_type: UserTimelineEventType, event_id: int) -> bool:
     ''' Deletes hidden timeline events for a user with specific row id '''
     try:
