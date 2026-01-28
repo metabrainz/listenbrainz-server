@@ -3,8 +3,10 @@ import * as React from "react";
 import { useLoaderData } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import debounce from "lodash/debounce"; // For auto-save debouncing
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import SaveStatusIndicator from "../../components/SaveStatusIndicator"; // Shows save status
 
 type SelectTroiPreferencesProps = {
   exportToSpotify: boolean;
@@ -20,6 +22,9 @@ type SelectTroiPreferencesLoaderData = {
 
 export interface SelectTroiPreferencesState {
   exportToSpotify: boolean;
+  // keep the record of  auto-save status
+  saveStatus: "idle" | "saving" | "saved" | "error";
+  errorMessage: string; // Store error messages for display
 }
 class SelectTroiPreferences extends React.Component<
   SelectTroiPreferencesProps,
@@ -27,16 +32,86 @@ class SelectTroiPreferences extends React.Component<
 > {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
+  // Debounced auto-save function
+  private debouncedAutoSave: ReturnType<typeof debounce>;
 
   constructor(props: SelectTroiPreferencesProps) {
     super(props);
     this.state = {
       exportToSpotify: props.exportToSpotify,
+      saveStatus: "idle", // Start with idle status and
+      errorMessage: "", // No errors
     };
+    // debounced auto save funct.Reset is r-toggles within 1 sec
+    this.debouncedAutoSave = debounce(this.performAutoSave, 1000);
+  }
+
+  // Prevents auto-save from firing after component is destroyed
+  componentWillUnmount(): void {
+    this.debouncedAutoSave.cancel();
   }
 
   exportToSpotifySelection = (exportToSpotify: boolean): void => {
     this.setState({ exportToSpotify });
+    this.debouncedAutoSave();
+  };
+
+  /* Performs the auto-save operation after debounce delay
+   This is called 1 seconds after the last preference change */
+  performAutoSave = async (): Promise<void> => {
+    const { APIService, currentUser } = this.context;
+    const { exportToSpotify } = this.state;
+
+    // Don't save if user is not logged in
+    if (!currentUser?.auth_token) {
+      return;
+    }
+
+    this.setState({ saveStatus: "saving" });
+
+    try {
+      // Call API to save playlist preferences
+
+      const status = await APIService.submitTroiPreferences(
+        currentUser?.auth_token,
+        exportToSpotify
+      );
+
+      if (status === 200) {
+        // show "Saved" indicator
+        this.setState({
+          saveStatus: "saved",
+          errorMessage: "", // Clear any previous errors
+        });
+
+        // Show success toast notification
+        toast.success(
+          <ToastMsg
+            title="Your playlist preferences have been saved."
+            message=""
+          />,
+          { toastId: "playlist-success" }
+        );
+
+        // After 1 seconds, hide the "Saved" indicator
+        setTimeout(() => {
+          this.setState({ saveStatus: "idle" });
+        }, 1000);
+      }
+    } catch (error) {
+      // Error occurred! Show error indicator
+      this.setState({
+        saveStatus: "error",
+        // showing actual error else the generic "Save failed"
+        errorMessage: error instanceof Error ? error.message : "Save failed",
+      });
+
+      // Show error toast notification
+      this.handleError(
+        error,
+        "Auto-save failed! Unable to update playlist preferences right now."
+      );
+    }
   };
 
   handleError = (error: string | Error, title?: string): void => {
@@ -62,6 +137,11 @@ class SelectTroiPreferences extends React.Component<
     if (event) {
       event.preventDefault();
     }
+    // Cancel any pending auto-save since we're saving manually now
+
+    this.debouncedAutoSave.cancel();
+
+    this.setState({ saveStatus: "saving" }); // during manual saving
 
     if (auth_token) {
       try {
@@ -70,7 +150,11 @@ class SelectTroiPreferences extends React.Component<
           exportToSpotify
         );
         if (status === 200) {
-          this.setState({ exportToSpotify });
+          this.setState({
+            saveStatus: "idle", // Don't show indicator for manual save
+            errorMessage: "",
+          });
+
           toast.success(
             <ToastMsg
               title="Your playlist preferences have been saved."
@@ -80,6 +164,11 @@ class SelectTroiPreferences extends React.Component<
           );
         }
       } catch (error) {
+        // Show error indicator on failure
+        this.setState({
+          saveStatus: "error",
+          errorMessage: error instanceof Error ? error.message : "Save failed",
+        });
         this.handleError(
           error,
           "Something went wrong! Unable to update playlist preferences right now."
@@ -89,8 +178,7 @@ class SelectTroiPreferences extends React.Component<
   };
 
   render() {
-    const { exportToSpotify } = this.state;
-
+    const { exportToSpotify, saveStatus, errorMessage } = this.state;
     return (
       <>
         <Helmet>
@@ -123,6 +211,11 @@ class SelectTroiPreferences extends React.Component<
                 <span className="switch bg-primary" />
               </label>
             </div>
+            {/* displays saving/saved/error states */}
+            <SaveStatusIndicator
+              status={saveStatus}
+              errorMessage={errorMessage}
+            />
             <p>
               <button type="submit" className="btn btn-info btn-lg">
                 Save changes
