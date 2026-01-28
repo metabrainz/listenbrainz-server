@@ -193,7 +193,8 @@ export default function BrainzPlayer() {
   };
 
   // Context Atoms - Values
-  const volume = useAtomValue(volumeAtom);
+  const [volume, setVolume] = useAtom(volumeAtom);
+  const lastVolumeRef = React.useRef(100);
   const queueRepeatMode = useAtomValue(queueRepeatModeAtom);
 
   // Context Atoms - Setters
@@ -277,7 +278,7 @@ export default function BrainzPlayer() {
 
   // Constants
   // By how much should we seek in the track?
-  const SEEK_TIME_MILLISECONDS = 5000;
+  const SEEK_TIME_MILLISECONDS = 10000;
   // Wait X milliseconds between start of song and sending a full listen
   const SUBMIT_LISTEN_AFTER_MS = 30000;
   // Check if it's time to submit the listen every X milliseconds
@@ -760,6 +761,22 @@ export default function BrainzPlayer() {
     seekToPositionMs(getProgressMs() - SEEK_TIME_MILLISECONDS);
   };
 
+  const togglePlay = () => {
+    try {
+      const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
+      if (!dataSource) {
+        invalidateDataSource();
+        return;
+      }
+      if (playerPaused) {
+        stopOtherBrainzPlayers();
+      }
+      dataSource.togglePlay();
+    } catch (error) {
+      handleError(error, "Could not play");
+    }
+  };
+
   const handleNumberKeySkip = React.useCallback(
     (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
@@ -776,27 +793,52 @@ export default function BrainzPlayer() {
         togglePlay();
         return;
       }
-
-      const keyAsNumber = Number(event.key);
-
-      if (
-        !Number.isInteger(keyAsNumber) ||
-        keyAsNumber < 0 ||
-        keyAsNumber > 9
-      ) {
+      if (event.key === "m" || event.key === "M") {
+        event.preventDefault();
+        if (volume > 0) {
+          lastVolumeRef.current = volume;
+          setVolume(0);
+        } else {
+          setVolume(lastVolumeRef.current || 100);
+        }
         return;
       }
-
-      event.preventDefault();
 
       const durationMs = store.get(durationMsAtom);
       if (!durationMs) {
         return;
       }
-      const seekToMs = (durationMs * keyAsNumber * 10) / 100;
-      seekToPositionMs(seekToMs);
+      if (event.code === "ArrowLeft") {
+        event.preventDefault();
+        seekBackward();
+        return;
+      }
+      if (event.code === "ArrowRight") {
+        event.preventDefault();
+        seekForward();
+        return;
+      }
+      const keyAsNumber = Number(event.key);
+      if (
+        Number.isInteger(keyAsNumber) &&
+        keyAsNumber >= 0 &&
+        keyAsNumber <= 9
+      ) {
+        event.preventDefault();
+        const seekToMs = (durationMs * keyAsNumber * 10) / 100;
+        seekToPositionMs(seekToMs);
+      }
     },
-    [store, seekToPositionMs, dataSourceRefs]
+    [
+      store,
+      seekToPositionMs,
+      dataSourceRefs,
+      volume,
+      setVolume,
+      togglePlay,
+      seekBackward,
+      seekForward,
+    ]
   );
 
   React.useEffect(() => {
@@ -817,22 +859,6 @@ export default function BrainzPlayer() {
     await activatePlayer();
     overwriteMediaSession(mediaSessionHandlers);
     playNextTrack();
-  };
-
-  const togglePlay = () => {
-    try {
-      const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
-      if (!dataSource) {
-        invalidateDataSource();
-        return;
-      }
-      if (playerPaused) {
-        stopOtherBrainzPlayers();
-      }
-      dataSource.togglePlay();
-    } catch (error) {
-      handleError(error, "Could not play");
-    }
   };
 
   /* Listeners for datasource events */
