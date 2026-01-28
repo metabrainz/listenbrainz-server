@@ -771,15 +771,12 @@ export default function BrainzPlayer() {
       ) {
         return;
       }
-      if (event.key === " ") {
+      if (event.code === "Space") {
         event.preventDefault();
-
-        const index = store.get(currentDataSourceIndexAtom);
-        const dataSource = dataSourceRefs[index]?.current;
-
-        dataSource?.togglePlay();
+        togglePlay();
         return;
       }
+
       const keyAsNumber = Number(event.key);
 
       if (
