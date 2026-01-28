@@ -1,10 +1,10 @@
-import html2canvas from "html2canvas";
 import React, { useState } from "react";
 import { faCamera, faHeadphones } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import ListenCard from "../../../../listens/ListenCard";
-import { getEntityLink } from "../../../../stats/utils";
+import { snapdom } from "@zumer/snapdom";
+import ListenCard from "../../../../common/listens/ListenCard";
+import { getEntityLink } from "../../../stats/utils";
 import Loader from "../../../../components/Loader";
 
 export type ComponentToImageProps = {
@@ -15,51 +15,22 @@ export type ComponentToImageProps = {
 
 function ComponentToImage({ data, entityType, user }: ComponentToImageProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const saveAs = (blob: string, fileName: string) => {
-    const elem = window.document.createElement("a");
-    elem.href = blob;
-    elem.download = fileName;
-    (document.body || document.documentElement).appendChild(elem);
-    if (typeof elem.click === "function") {
-      elem.click();
-    } else {
-      elem.target = "_blank";
-      elem.dispatchEvent(
-        new MouseEvent("click", {
-          view: window,
-          bubbles: true,
-          cancelable: true,
-        })
-      );
-    }
-    URL.revokeObjectURL(elem.href);
-    elem.remove();
-    setIsLoading(false);
-  };
 
-  const exportAsPicture = () => {
+  const exportAsPicture = async () => {
     setIsLoading(true);
     const targetId = `savable-${entityType}-component`;
     const element = document.getElementById(targetId);
-    html2canvas(element as HTMLElement, {
-      onclone(clonedDoc) {
-        // eslint-disable-next-line no-param-reassign
-        clonedDoc!.getElementById(targetId)!.style.display = "block";
-      },
-      useCORS: true,
-      allowTaint: true,
-      imageTimeout: 30000,
-      scrollX: -window.scrollX,
-      scrollY: -window.scrollY,
-      windowWidth: element!.offsetWidth,
-      windowHeight: element!.offsetHeight,
-    })
-      .then((canvas) => {
-        return canvas.toDataURL("image/png", 1.0);
-      })
-      .then((image) => {
-        saveAs(image, `${user.name}-top-${entityType}s-2022.png`);
-      });
+    if (!element) {
+      return;
+    }
+
+    await snapdom.download(element, {
+      format: "png",
+      filename: `${user.name}-top-${entityType}s-2022`,
+      scale: 1,
+      quality: 1,
+    });
+    setIsLoading(false);
   };
 
   return (
@@ -71,7 +42,6 @@ function ComponentToImage({ data, entityType, user }: ComponentToImageProps) {
       >
         <Loader isLoading={isLoading} loaderText="Generating image…">
           <FontAwesomeIcon
-            className="col-6"
             size="1x"
             style={{ marginRight: "4px" }}
             icon={faCamera as IconProp}
@@ -82,7 +52,7 @@ function ComponentToImage({ data, entityType, user }: ComponentToImageProps) {
       <div id={`savable-${entityType}-component`} className="savable-card card">
         <img
           className="card-img-top"
-          src="/static/img/year-in-music-2021.png"
+          src="/static/img/legacy-year-in-music/year-in-music-21/year-in-music-2021.png"
           alt="Your year in music 2022"
         />
         <h3 className="card-title">
@@ -104,7 +74,7 @@ function ComponentToImage({ data, entityType, user }: ComponentToImageProps) {
                 artist.artist_mbids[0]
               );
               const thumbnail = (
-                <span className="badge badge-info">
+                <span className="badge bg-info">
                   <FontAwesomeIcon
                     style={{ marginRight: "4px" }}
                     icon={faHeadphones as IconProp}

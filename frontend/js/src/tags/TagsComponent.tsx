@@ -14,6 +14,7 @@ import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import TagComponent, { TagActionType } from "./TagComponent";
 import GlobalAppContext from "../utils/GlobalAppContext";
+import { ToastMsg } from "../notifications/Notifications";
 
 const originalFetch = window.fetch;
 const fetchWithRetry = require("fetch-retry")(originalFetch);
@@ -48,7 +49,7 @@ function DropdownIndicator(props: DropdownIndicatorProps<TagOptionType>) {
   }
   return (
     <components.DropdownIndicator {...props}>
-      <button className="btn btn-xs btn-outline" type="button">
+      <button className="btn btn-sm btn-outline-info" type="button">
         + tag
       </button>
     </components.DropdownIndicator>
@@ -119,52 +120,59 @@ export default function AddTagSelect(props: {
       return;
     }
     const url = `${MBBaseURI}/${entityType}/${entityMBID}?fmt=json&inc=user-tags tags`;
-    const response = await fetchWithRetry(encodeURI(url), {
-      headers: {
-        "Content-Type": "application/xml; charset=utf-8",
-        Authorization: `Bearer ${musicbrainzAuthToken}`,
-      },
-      async retryOn(attempt: number, error: Error, res: Response) {
-        if (attempt > 3) return false;
+    try {
+      let token = musicbrainzAuthToken;
+      const response = await fetchWithRetry(encodeURI(url), {
+        headers: {
+          "Content-Type": "application/xml; charset=utf-8",
+          Authorization: `Bearer ${token}`,
+        },
+        async retryOn(attempt: number, error: Error, res: Response) {
+          if (attempt >= 3) return false;
 
-        if (error !== null || res.status === 401) {
-          if (isFunction(refreshMBToken)) {
-            try {
-              await refreshMBToken();
-              return true;
-            } catch {
+          if (error !== null || res.status === 401) {
+            if (isFunction(refreshMBToken)) {
+              const newToken = await refreshMBToken();
+              if (newToken) {
+                token = newToken;
+                return true;
+              }
               return false;
             }
           }
+          return false;
+        },
+      });
+      if (response.ok) {
+        const responseJSON = await response.json();
+        const userTags: MBResponseTag[] = responseJSON["user-tags"];
+        if (responseJSON.tags?.length || userTags?.length) {
+          const userTagNames: string[] = userTags.map((t) => t.name);
+          const formattedTags: TagOptionType[] = responseJSON.tags?.map(
+            (tag: MBResponseTag) => ({
+              value: tag.name,
+              label: tag.name,
+              entityType,
+              entityMBID,
+              isNew: false,
+              isOwnTag: false,
+              originalTag: { tag: tag.name, count: tag.count },
+            })
+          );
+          // mark the tags that the user has voted on
+          formattedTags.forEach((tag) => {
+            if (userTagNames.includes(tag.value)) {
+              // eslint-disable-next-line no-param-reassign
+              tag.isOwnTag = true;
+            }
+          });
+          setSelected(formattedTags);
         }
-        return false;
-      },
-    });
-    if (response.ok) {
-      const responseJSON = await response.json();
-      const userTags: MBResponseTag[] = responseJSON["user-tags"];
-      if (responseJSON.tags?.length || userTags?.length) {
-        const userTagNames: string[] = userTags.map((t) => t.name);
-        const formattedTags: TagOptionType[] = responseJSON.tags?.map(
-          (tag: MBResponseTag) => ({
-            value: tag.name,
-            label: tag.name,
-            entityType,
-            entityMBID,
-            isNew: false,
-            isOwnTag: false,
-            originalTag: { tag: tag.name, count: tag.count },
-          })
-        );
-        // mark the tags that the user has voted on
-        formattedTags.forEach((tag) => {
-          if (userTagNames.includes(tag.value)) {
-            // eslint-disable-next-line no-param-reassign
-            tag.isOwnTag = true;
-          }
-        });
-        setSelected(formattedTags);
       }
+    } catch (error) {
+      toast.error(
+        <ToastMsg title="Failed to fetch tags" message={error.toString()} />
+      );
     }
   }, [entityType, entityMBID, musicbrainzAuthToken, MBBaseURI, refreshMBToken]);
 
@@ -271,6 +279,7 @@ export default function AddTagSelect(props: {
   return (
     <div className="add-tag-select">
       <CreatableSelect
+        createOptionPosition="first"
         value={sortBy(selected, ["originalTag.count", "isOwnTag"]).reverse()}
         options={musicbrainzGenres?.map((genre) => ({
           value: genre,
@@ -303,6 +312,7 @@ export default function AddTagSelect(props: {
             flexWrap: "nowrap",
             overflowX: "auto",
             paddingRight: "3.5em",
+            scrollbarWidth: "thin",
             "::-webkit-scrollbar": {
               height: "5px",
               backgroundColor: "#f5f5f5",

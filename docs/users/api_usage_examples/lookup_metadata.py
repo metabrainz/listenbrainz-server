@@ -3,6 +3,9 @@
 import json
 import requests
 
+# Set DEBUG to True to test local dev server.
+DEBUG = False
+ROOT = 'http://localhost:8100' if DEBUG else 'https://api.listenbrainz.org'
 
 def lookup_metadata(track_name: str, artist_name: str, incs: str) -> dict:
     """Looks up the metadata for a listen using track name and artist name."""
@@ -14,7 +17,7 @@ def lookup_metadata(track_name: str, artist_name: str, incs: str) -> dict:
         params["metadata"] = True
         params["incs"] = incs
     response = requests.get(
-        url="https://api.listenbrainz.org/1/metadata/lookup/",
+        url="{0}/1/metadata/lookup/".format(ROOT),
         params=params
     )
     response.raise_for_status()

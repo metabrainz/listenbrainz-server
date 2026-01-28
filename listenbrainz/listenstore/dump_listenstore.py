@@ -1,58 +1,71 @@
 import os
-import shutil
-import subprocess
-import tarfile
 import time
-import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
+import orjson
 import pandas as pd
 import psycopg2
 import psycopg2.sql
 import pyarrow as pa
 import pyarrow.parquet as pq
 import sqlalchemy
-import tempfile
-import orjson
 from psycopg2.extras import execute_values
+from sqlalchemy import text
 
-from listenbrainz import DUMP_LICENSE_FILE_PATH, db
-from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db import timescale
 from listenbrainz.db.user import get_all_usernames
+from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT
+from listenbrainz.dumps.exporter import zstd_dump, uncompressed_dump
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION
-from listenbrainz.listenstore.timescale_listenstore import DATA_START_YEAR_IN_SECONDS
-from listenbrainz.utils import create_path
 
 # These values are defined to create spark parquet files that are at most 128MB in size.
 # This compression ration allows us to roughly estimate how full we can make files before starting a new one
-PARQUET_APPROX_COMPRESSION_RATIO = .57
+PARQUET_APPROX_COMPRESSION_RATIO = 0.25
 
 # This is the approximate amount of data to write to a parquet file in order to meet the max size
 PARQUET_TARGET_SIZE = 134217728 / PARQUET_APPROX_COMPRESSION_RATIO  # 128MB / compression ratio
+
+
+SPARK_LISTENS_SCHEMA = pa.schema([
+    pa.field("listened_at", pa.timestamp("ms"), False),
+    pa.field("created", pa.timestamp("ms"), False),
+    pa.field("user_id", pa.int64(), False),
+    pa.field("recording_msid", pa.string(), False),
+    pa.field("artist_name", pa.string(), False),
+    pa.field("artist_credit_id", pa.int64(), True),
+    pa.field("release_name", pa.string(), True),
+    pa.field("release_mbid", pa.string(), True),
+    pa.field("recording_name", pa.string(), False),
+    pa.field("recording_mbid", pa.string(), True),
+    pa.field("artist_credit_mbids", pa.list_(pa.string()), True),
+])
 
 
 class DumpListenStore:
 
     def __init__(self, app):
         self.log = app.logger
-        self.dump_temp_dir_root = app.config.get('LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
 
-    def get_listens_query_for_dump(self, start_time, end_time):
+    def get_listens_query_for_dump(self, start_time, end_time, max_created):
         """
             Get a query and its args dict to select a batch for listens for the full dump.
             Use listened_at timestamp, since not all listens have the created timestamp.
         """
-
+        # filter on created timestamp in addition to listened_at as well to avoid duplicates
+        # with incremental dumps in case of listens imported with past listened_at values
+        # use max created timestamp instead of end_time because regardless of which start-end
+        # range is being dumped the created limit should be the same and max desired.
         query = """SELECT extract(epoch from listened_at) as listened_at, user_id, created, recording_msid::TEXT, data
                       FROM listen
                      WHERE listened_at >= :start_time
                        AND listened_at <= :end_time
+                       AND created <= :max_created
                   ORDER BY listened_at ASC"""
         args = {
-            'start_time': start_time,
-            'end_time': end_time
+            "start_time": start_time,
+            "end_time": end_time,
+            "max_created": max_created,
         }
 
         return query, args
@@ -75,59 +88,26 @@ class DumpListenStore:
         }
         return query, args
 
-    def write_dump_metadata(self, archive_name, start_time, end_time, temp_dir, tar, full_dump=True):
-        """ Write metadata files (schema version, timestamps, license) into the dump archive.
+    def get_dump_metadata(self, start_time: datetime, end_time: datetime, full_dump):
+        """ Get metadata to write into the dump archive.
 
         Args:
-            archive_name: the name of the archive
-            start_time and end_time: the time range of the dump
-            temp_dir: the directory to use for writing files before addition into the archive
-            tar (TarFile object): The tar file to add the files into
+            start_time: the start time of the dump
+            end_time: the end time of the dump
             full_dump (bool): flag to specify whether the archive is a full dump or an incremental dump
         """
-        try:
-            if full_dump:
-                # add timestamp
-                timestamp_path = os.path.join(temp_dir, 'TIMESTAMP')
-                with open(timestamp_path, 'w') as f:
-                    f.write(end_time.isoformat(' '))
-                tar.add(timestamp_path,
-                        arcname=os.path.join(archive_name, 'TIMESTAMP'))
-            else:
-                start_timestamp_path = os.path.join(
-                    temp_dir, 'START_TIMESTAMP')
-                with open(start_timestamp_path, 'w') as f:
-                    f.write(start_time.isoformat(' '))
-                tar.add(start_timestamp_path,
-                        arcname=os.path.join(archive_name, 'START_TIMESTAMP'))
-                end_timestamp_path = os.path.join(temp_dir, 'END_TIMESTAMP')
-                with open(end_timestamp_path, 'w') as f:
-                    f.write(end_time.isoformat(' '))
-                tar.add(end_timestamp_path,
-                        arcname=os.path.join(archive_name, 'END_TIMESTAMP'))
+        metadata: dict[str, int | str | datetime] = {
+            "SCHEMA_SEQUENCE": LISTENS_DUMP_SCHEMA_VERSION,
+        }
+        if full_dump:
+            metadata["TIMESTAMP"] = end_time
+        else:
+            metadata["START_TIMESTAMP"] = start_time
+            metadata["END_TIMESTAMP"] = end_time
+        return metadata
 
-            # add schema version
-            schema_version_path = os.path.join(temp_dir, 'SCHEMA_SEQUENCE')
-            with open(schema_version_path, 'w') as f:
-                f.write(str(LISTENS_DUMP_SCHEMA_VERSION))
-            tar.add(schema_version_path,
-                    arcname=os.path.join(archive_name, 'SCHEMA_SEQUENCE'))
-
-            # add copyright notice
-            tar.add(DUMP_LICENSE_FILE_PATH,
-                    arcname=os.path.join(archive_name, 'COPYING'))
-
-        except IOError as e:
-            self.log.critical(
-                'IOError while writing metadata dump files: %s', str(e), exc_info=True)
-            raise
-        except Exception as e:
-            self.log.error(
-                'Exception while adding dump metadata: %s', str(e), exc_info=True)
-            raise
-
-    def write_listens(self, temp_dir, tar_file, archive_name, start_time_range=None, end_time_range=None,
-                      full_dump=True):
+    def write_listens(self, temp_dir, tar_file, archive_name,
+                      start_time_range, end_time_range, full_dump):
         """ Dump listens in the format for the ListenBrainz dump.
 
         Args:
@@ -136,25 +116,14 @@ class DumpListenStore:
             full_dump (bool): the type of dump
         """
         user_id_map = get_all_usernames()
-
+        max_created = end_time_range
         t0 = time.monotonic()
         listen_count = 0
-
-        # This right here is why we should ONLY be using seconds timestamps. Someone could
-        # pass in a timezone aware timestamp (when listens have no timezones) or one without.
-        # If you pass the wrong one and a test invokes a command line any failures are
-        # invisible causing massive hair-pulling. FUCK DATETIME.
-        if start_time_range:
-            start_time_range = datetime.utcfromtimestamp(
-                datetime.timestamp(start_time_range))
-        if end_time_range:
-            end_time_range = datetime.utcfromtimestamp(
-                datetime.timestamp(end_time_range))
 
         year = start_time_range.year
         month = start_time_range.month
         while True:
-            start_time = datetime(year, month, 1)
+            start_time = datetime(year, month, 1, tzinfo=timezone.utc)
             start_time = max(start_time_range, start_time)
             if start_time > end_time_range:
                 break
@@ -165,7 +134,7 @@ class DumpListenStore:
                 next_month = 1
                 next_year += 1
 
-            end_time = datetime(next_year, next_month, 1)
+            end_time = datetime(next_year, next_month, 1, tzinfo=timezone.utc)
             end_time = end_time - timedelta(seconds=1)
             if end_time > end_time_range:
                 end_time = end_time_range
@@ -176,9 +145,8 @@ class DumpListenStore:
             except FileExistsError:
                 pass
 
-            query, args = None, None
             if full_dump:
-                query, args = self.get_listens_query_for_dump(start_time, end_time)
+                query, args = self.get_listens_query_for_dump(start_time, end_time, max_created)
             else:
                 query, args = self.get_incremental_listens_query(start_time, end_time)
 
@@ -206,8 +174,11 @@ class DumpListenStore:
                             ).to_json()
                             out_file.write(orjson.dumps(listen).decode("utf-8") + "\n")
                             rows_added += 1
-                    tar_file.add(filename, arcname=os.path.join(
-                        archive_name, 'listens', str(year), "%d.listens" % month))
+                    tar_file.add(
+                        filename,
+                        arcname=os.path.join(archive_name, 'listens', str(year), f"{month}.listens")
+                    )
+                    os.unlink(filename)
 
                     listen_count += rows_added
                     self.log.info("%d listens dumped for %s at %.2f listens/s", listen_count,
@@ -216,11 +187,10 @@ class DumpListenStore:
 
             month = next_month
             year = next_year
-            rows_added = 0
 
-    def dump_listens(self, location, dump_id, start_time=datetime.utcfromtimestamp(0), end_time=None,
-                     threads=DUMP_DEFAULT_THREAD_COUNT):
-        """ Dumps all listens in the ListenStore into a .tar.xz archive.
+    def dump_listens(self, location, dump_id, start_time, end_time, dump_type,
+                     threads=DUMP_DEFAULT_THREAD_COUNT, temp_location=None):
+        """ Dumps all listens in the ListenStore into a .tar.zst archive.
 
         Files are created with UUIDs as names. Each file can contain listens for a number of users.
         An index.json file is used to save which file contains the listens of which users.
@@ -232,50 +202,27 @@ class DumpListenStore:
             location: the directory where the listens dump archive should be created
             dump_id (int): the ID of the dump in the dump sequence
             start_time and end_time (datetime): the time range for which listens should be dumped
-                start_time defaults to utc 0 (meaning a full dump) and end_time defaults to the current time
+            dump_type: whether listens are dumped for a full or incremental dump
             threads (int): the number of threads to use for compression
 
         Returns:
             the path to the dump archive
         """
-
-        if end_time is None:
-            end_time = datetime.now()
-
+        full_dump = dump_type == "full"
         self.log.info('Beginning dump of listens from TimescaleDB...')
-        full_dump = bool(start_time == datetime.utcfromtimestamp(0))
-        archive_name = 'listenbrainz-listens-dump-{dump_id}-{time}'.format(dump_id=dump_id,
-                                                                           time=end_time.strftime('%Y%m%d-%H%M%S'))
+        archive_name = f'listenbrainz-listens-dump-{dump_id}-{end_time.strftime("%Y%m%d-%H%M%S")}'
         if full_dump:
             archive_name = '{}-full'.format(archive_name)
         else:
             archive_name = '{}-incremental'.format(archive_name)
-        archive_path = os.path.join(
-            location, '{filename}.tar.xz'.format(filename=archive_name))
-        with open(archive_path, 'w') as archive:
 
-            xz_command = ['xz', '--compress',
-                           '-T{threads}'.format(threads=threads)]
-            xz = subprocess.Popen(
-                xz_command, stdin=subprocess.PIPE, stdout=archive)
-
-            with tarfile.open(fileobj=xz.stdin, mode='w|') as tar:
-                temp_dir = os.path.join(
-                    self.dump_temp_dir_root, str(uuid.uuid4()))
-                create_path(temp_dir)
-                self.write_dump_metadata(
-                    archive_name, start_time, end_time, temp_dir, tar, full_dump)
-
-                listens_path = os.path.join(temp_dir, 'listens')
-                self.write_listens(listens_path, tar, archive_name,
-                                   start_time, end_time, full_dump)
-
-                # remove the temporary directory
-                shutil.rmtree(temp_dir)
-
-            xz.stdin.close()
-
-        xz.wait()
+        metadata = self.get_dump_metadata(start_time, end_time, full_dump)
+        with zstd_dump(location, archive_name, metadata, threads, temp_location=temp_location) as (zstd, tar, temp_dir, archive_path):
+            listens_path = os.path.join(temp_dir, 'listens')
+            self.write_listens(
+                listens_path, tar, archive_name,
+                start_time, end_time, full_dump
+            )
         self.log.info('ListenBrainz listen dump done!')
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
@@ -287,6 +234,7 @@ class DumpListenStore:
                             dump_type,
                             start_time: datetime,
                             end_time: datetime,
+                            max_created: datetime,
                             parquet_file_id=0):
         """
             Carry out fetching listens from the DB, joining them to the MBID mapping table and
@@ -299,6 +247,7 @@ class DumpListenStore:
             dump_type: type of dump, full or incremental
             start_time: the start of the time range for which listens should be dumped
             end_time: the end of the time range for which listens should be dumped
+            max_created: the max timestamp listens created beyond which should not be dumped
             parquet_file_id: the file id number to use for indexing parquet files
 
         Returns:
@@ -313,12 +262,23 @@ class DumpListenStore:
         # listens using the created column. all incremental listens are always loaded by spark
         # , so we can get upto date stats sooner.
         if dump_type == "full":
-            criteria = "listened_at"
+            # filter on created timestamp in addition to listened_at as well to avoid duplicates
+            # with incremental dumps in case of listens imported with past listened_at values
+            # use max created timestamp instead of end_time because regardless of which start-end
+            # range is being dumped the created limit should be the same and max desired.
+            where_clause = psycopg2.sql.SQL("""
+                    l.listened_at > %(start)s
+                AND l.listened_at <= %(end)s
+                AND l.created <= %(max_created)s
+            """)
+            order_by = psycopg2.sql.SQL("l.listened_at")
         else:  # incremental dump
-            criteria = "created"
+            where_clause = psycopg2.sql.SQL("l.created > %(start)s AND l.created <= %(end)s")
+            order_by = psycopg2.sql.SQL("l.created")
         args = {
             "start": start_time,
-            "end": end_time
+            "end": end_time,
+            "max_created": max_created
         }
 
         query = psycopg2.sql.SQL("""
@@ -328,6 +288,7 @@ class DumpListenStore:
         -- setting multiple columns at once.
                 WITH listen_with_mbid AS (
                      SELECT l.listened_at
+                          , l.created::timestamp(3) with time zone AS created -- reduce timestamp resolution to ms
                           , l.user_id
                           , l.recording_msid
                           -- converting jsonb array to text array is non-trivial, so return a jsonb array not text
@@ -348,9 +309,9 @@ class DumpListenStore:
                         AND user_mm.user_id = l.user_id 
                   LEFT JOIN mbid_manual_mapping_top other_mm
                          ON l.recording_msid = other_mm.recording_msid
-                      WHERE {criteria} > %(start)s
-                        AND {criteria} <= %(end)s
+                      WHERE {where_clause}
                 )    SELECT l.listened_at
+                          , l.created
                           , l.user_id
                           , l.recording_msid::TEXT
                           , l_artist_credit_mbids
@@ -369,12 +330,13 @@ class DumpListenStore:
                        FROM listen_with_mbid l
                   LEFT JOIN mapping.mb_metadata_cache mbc
                          ON l.m_recording_mbid = mbc.recording_mbid
-                """).format(criteria=psycopg2.sql.Identifier("l", criteria))  # l is the listen table's alias
+                   ORDER BY {order_by}
+        """).format(where_clause=where_clause, order_by=order_by)
 
         listen_count = 0
         current_listened_at = None
         conn = timescale.engine.raw_connection()
-        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs:
+        with (conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs):
             curs.execute(query, args)
             while True:
                 t0 = time.monotonic()
@@ -382,6 +344,7 @@ class DumpListenStore:
                 approx_size = 0
                 data = {
                     'listened_at': [],
+                    'created': [],
                     'user_id': [],
                     'recording_msid': [],
                     'artist_name': [],
@@ -424,10 +387,11 @@ class DumpListenStore:
 
                     current_listened_at = result["listened_at"]
                     data["listened_at"].append(current_listened_at)
+                    data["created"].append(result["created"])
                     data["user_id"].append(result["user_id"])
                     data["recording_msid"].append(result["recording_msid"])
-                    approx_size += len(str(result["listened_at"])) + len(str(result["user_id"])) \
-                                   + len(result["recording_msid"])
+                    approx_size += len(str(result["listened_at"])) + len(str(result["created"])) \
+                                   + len(str(result["user_id"])) + len(result["recording_msid"])
 
                     written += 1
                     listen_count += 1
@@ -441,8 +405,8 @@ class DumpListenStore:
 
                 # Create a pandas dataframe, then write that to a parquet files
                 df = pd.DataFrame(data, dtype=object)
-                table = pa.Table.from_pandas(df, preserve_index=False)
-                pq.write_table(table, filename)
+                table = pa.Table.from_pandas(df, schema=SPARK_LISTENS_SCHEMA, preserve_index=False)
+                pq.write_table(table, filename, flavor="spark", compression="zstd")
                 file_size = os.path.getsize(filename)
                 tar_file.add(filename, arcname=os.path.join(archive_dir, "%d.parquet" % parquet_file_id))
                 os.unlink(filename)
@@ -455,11 +419,11 @@ class DumpListenStore:
 
         return parquet_file_id
 
-    def dump_listens_for_spark(self, location,
-                               dump_id: int,
-                               dump_type: str,
-                               start_time: datetime = datetime.utcfromtimestamp(DATA_START_YEAR_IN_SECONDS),
-                               end_time: datetime = None):
+    def dump_listens_for_spark(
+        self, location, dump_id: int, dump_type: str,
+        start_time: datetime, end_time: datetime,
+        temp_location: str = None,
+    ):
         """ Dumps all listens in the ListenStore into spark parquet files in a .tar archive.
 
         Listens are dumped into files ideally no larger than 128MB, sorted from oldest to newest. Files
@@ -479,27 +443,19 @@ class DumpListenStore:
         Returns:
             the path to the dump archive
         """
-
-        if end_time is None:
-            end_time = datetime.now()
-
         self.log.info('Beginning spark dump of listens from TimescaleDB...')
-        full_dump = bool(start_time == datetime.utcfromtimestamp(DATA_START_YEAR_IN_SECONDS))
+        full_dump = dump_type == "full"
         archive_name = 'listenbrainz-spark-dump-{dump_id}-{time}'.format(dump_id=dump_id,
                                                                          time=end_time.strftime('%Y%m%d-%H%M%S'))
         if full_dump:
-            archive_name = '{}-full'.format(archive_name)
+            archive_name = f'{archive_name}-full'
         else:
-            archive_name = '{}-incremental'.format(archive_name)
-        archive_path = os.path.join(
-            location, '{filename}.tar'.format(filename=archive_name))
+            archive_name = f'{archive_name}-incremental'
 
+        metadata = self.get_dump_metadata(start_time, end_time, full_dump)
+        max_created = end_time
         parquet_index = 0
-        with tarfile.open(archive_path, "w") as tar:
-
-            temp_dir = os.path.join(self.dump_temp_dir_root, str(uuid.uuid4()))
-            create_path(temp_dir)
-            self.write_dump_metadata(archive_name, start_time, end_time, temp_dir, tar, full_dump)
+        with uncompressed_dump(location, archive_name, metadata, temp_location=temp_location) as (tar, temp_dir, archive_path):
 
             for year in range(start_time.year, end_time.year + 1):
                 if year == start_time.year:
@@ -519,13 +475,20 @@ class DumpListenStore:
                 # Keeping this block should help with future testing...
                 try:
                     parquet_index = self.write_parquet_files(archive_name, temp_dir, tar, dump_type,
-                                                             start, end, parquet_index)
+                                                             start, end, max_created, parquet_index)
                 except Exception as err:
                     self.log.exception("likely test failure: " + str(err))
                     raise
 
-            shutil.rmtree(temp_dir)
-
         self.log.info('ListenBrainz spark listen dump done!')
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
+
+    def cleanup_listen_delete_metadata(self):
+        """ Cleanup listen delete metadata after spark full dump is complete """
+        self.log.info("Cleaning up listen_delete_metadata")
+        with timescale.engine.connect() as connection:
+            connection.execute(text("DELETE FROM listen_delete_metadata WHERE status != 'pending'"))
+            connection.execute(text("DELETE FROM deleted_user_listen_history"))
+            connection.commit()
+        self.log.info("Cleaning up listen_delete_metadata done!")

@@ -1,14 +1,19 @@
 {{user_name}}, your ListenBrainz Year in Music is now available.
 
-The Year in Music report summarises your listening throughout the year of 2023. We have lots of soothing
-statistics for you, like your most active listening day of the week, your listening activity over the year,
-users who listened to similar music to you, and we‘ve generated up to 4 new playlists for you to keep enjoying
-into 2024.
+The Year in Music report summarises your listening throughout the year of {{year}}. Check out your
+highlights, statistics, most active days of the week, and more! 
 
-Top Discoveries, Tracks Released, and Top Recordings are all playlists that review your listening habits of
-2023. We’ve also included one more playlist, Top Missed Recordings, which selects tracks that users similar to
-you listened to, but you didn’t. Maybe there‘s still more for you to discover!
+New this year: you can now navigate through the years and go on a trip down memory lane.
+You get the same stats and playlists for every year you have data for in ListenBrainz,
+available at any time for when you're feeling nostalgic.
 
-Thanks for being part of ListenBrainz.
+Meanwhile, jam along with the new playlists that we've generated for you based on your listens.
+See what you discovered throughout the year and what gems you missed out on based on users with similar tastes.
 
-Wishing you a restful 2024, from the ListenBrainz team.
+Don't forget you can share images of your stats, with the #yearinmusic hashtag.
+We will be re-posting the hashtag on our channels (links are at the bottom of the email),
+come check out what music everyone's been listening to in the past year.
+
+Thanks for being part of this community.
+
+Wishing you a restful {{year + 1}}, from the ListenBrainz team.

@@ -5,7 +5,6 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel, validator, NonNegativeInt, constr
 from data.model.validators import check_valid_uuid
 
-
 PLAYLIST_TRACK_URI_PREFIX = "https://musicbrainz.org/recording/"
 PLAYLIST_ARTIST_URI_PREFIX = "https://musicbrainz.org/artist/"
 PLAYLIST_RELEASE_URI_PREFIX = "https://musicbrainz.org/release/"
@@ -152,7 +151,7 @@ class Playlist(BaseModel):
 
         tracks = []
         for rec in self.recordings:
-            tr = {"identifier": PLAYLIST_TRACK_URI_PREFIX + str(rec.mbid)}
+            tr = {"identifier": [PLAYLIST_TRACK_URI_PREFIX + str(rec.mbid)]}
             if rec.artist_credit:
                 tr["creator"] = rec.artist_credit
 
@@ -162,8 +161,10 @@ class Playlist(BaseModel):
             if rec.title:
                 tr["title"] = rec.title
 
-            extension = {"added_by": rec.added_by,
-                         "added_at": rec.created.astimezone(datetime.timezone.utc).isoformat()}
+            if rec.duration_ms:
+                tr["duration"] = rec.duration_ms
+
+            extension = {"added_by": rec.added_by, "added_at": rec.created.astimezone(datetime.timezone.utc).isoformat()}
             if rec.artist_mbids:
                 extension["artist_identifiers"] = [PLAYLIST_ARTIST_URI_PREFIX + str(mbid) for mbid in rec.artist_mbids]
 

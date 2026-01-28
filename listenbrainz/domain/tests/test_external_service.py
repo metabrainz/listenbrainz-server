@@ -3,10 +3,10 @@ import datetime
 from freezegun import freeze_time
 
 from listenbrainz.domain.spotify import SpotifyService
-from listenbrainz.webserver.testing import ServerTestCase
+from listenbrainz.tests.integration import NonAPIIntegrationTestCase
 
 
-class ExternalServiceTestCase(ServerTestCase):
+class ExternalServiceTestCase(NonAPIIntegrationTestCase):
 
     @freeze_time("2021-05-12 03:21:34", tz_offset=0)
     def test_user_oauth_token_has_expired(self):

@@ -1,9 +1,12 @@
+import logging
+from datetime import datetime, timezone
 from typing import Dict, Tuple
 from urllib.parse import urlparse
 
 import bleach
-from kombu import Producer
+import requests
 from kombu.entity import PERSISTENT_DELIVERY_MODE
+from more_itertools import chunked
 
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
 import listenbrainz.webserver.redis_connection as redis_connection
@@ -13,14 +16,18 @@ import orjson
 import uuid
 import sentry_sdk
 
+from typing import NoReturn
+
 from flask import current_app, request
 
 from listenbrainz.listenstore import LISTEN_MINIMUM_TS
-from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
+from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW, db_conn
 from listenbrainz.webserver.errors import APIServiceUnavailable, APIBadRequest, APIUnauthorized, \
     ListenValidationError
 
 from listenbrainz.webserver.models import SubmitListenUserMetadata
+
+logger = logging.getLogger(__name__)
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
@@ -50,6 +57,8 @@ MAX_DURATION_LIMIT = 24 * 24 * 60 * 60
 MAX_DURATION_MS_LIMIT = MAX_DURATION_LIMIT * 1000
 
 MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
+
+MAX_LISTENS_PER_RMQ_MESSAGE = 100  # internal limit on number of listens per RMQ message to avoid timeouts in TS writer
 
 
 # Define the values for types of listens
@@ -115,7 +124,8 @@ def _send_listens_to_queue(listen_type, listens):
         else:
             exchange = rabbitmq_connection.INCOMING_EXCHANGE
 
-        publish_data_to_queue(submit, exchange)
+        for chunk in chunked(submit, MAX_LISTENS_PER_RMQ_MESSAGE):
+            publish_data_to_queue(chunk, exchange)
 
 
 def _raise_error_if_has_unicode_null(value, listen):
@@ -210,7 +220,7 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
             validate_multiple_mbids_field(listen, key)
 
     # monitor performance of unicode null check because it might be a potential bottleneck
-    with sentry_sdk.start_span(op="null check", description="check for unicode null in submitted listen json"):
+    with sentry_sdk.start_span(op="null check", name="check for unicode null in submitted listen json"):
         # If unicode null is present in the listen, postgres will raise an
         # error while trying to insert it. hence, reject such listens.
         check_for_unicode_null_recursively(listen)
@@ -248,7 +258,7 @@ def _get_augmented_listens(payload, user: SubmitListenUserMetadata):
     return payload
 
 
-def log_raise_400(msg, data=""):
+def log_raise_400(msg, data="") -> NoReturn:
     """ Helper function for logging issues with request data and showing error page.
         Logs the message and data, raises BadRequest exception which shows 400 Bad
         Request to the user.
@@ -434,6 +444,17 @@ def _parse_bool_arg(name, default=None):
         return default
 
 
+def _parse_datetime_arg(name, default=None):
+    value = request.args.get(name)
+    if value is not None:
+        try:
+            return datetime.fromtimestamp(int(value), timezone.utc)
+        except (ValueError, TypeError):
+            raise APIBadRequest("Incorrect %s timestamp argument: %s" % (name, value))
+    else:
+        return default
+
+
 def _validate_get_endpoint_params() -> Tuple[int, int, int]:
     """ Validates parameters for listen GET endpoints like /username/listens and /username/feed/events
 
@@ -442,42 +463,91 @@ def _validate_get_endpoint_params() -> Tuple[int, int, int]:
     max_ts = _parse_int_arg("max_ts")
     min_ts = _parse_int_arg("min_ts")
 
-    if max_ts and min_ts:
-        if max_ts < min_ts:
-            log_raise_400("max_ts should be greater than min_ts")
+    if max_ts and min_ts and max_ts < min_ts:
+        log_raise_400("max_ts should be greater than min_ts")
 
     # Validate requested listen count is positive
-    count = min(_parse_int_arg(
-        "count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET)
+    count = min(
+        _parse_int_arg("count", DEFAULT_ITEMS_PER_GET),
+        MAX_ITEMS_PER_GET
+    )
     if count < 0:
         log_raise_400("Number of items requested should be positive")
 
     return min_ts, max_ts, count
 
 
-def validate_auth_header(*, optional: bool = False, fetch_email: bool = False):
+def _validate_get_listens_endpoint_params() -> Tuple[datetime, datetime, int]:
+    """ Validates parameters for /listens endpoint"""
+    max_ts = _parse_datetime_arg("max_ts")
+    min_ts = _parse_datetime_arg("min_ts")
+
+    if max_ts and min_ts and max_ts < min_ts:
+        log_raise_400("max_ts should be greater than min_ts")
+
+    # Validate requested listen count is positive
+    count = min(
+        _parse_int_arg("count", DEFAULT_ITEMS_PER_GET),
+        MAX_ITEMS_PER_GET
+    )
+    if count < 0:
+        log_raise_400("Number of items requested should be positive")
+
+    return min_ts, max_ts, count
+
+
+def validate_auth_header(*, optional: bool = False, fetch_email: bool = False, scopes: list[str] = None):
     """ Examine the current request headers for an Authorization: Token <uuid>
         header that identifies a LB user and then load the corresponding user
-        object from the database and return it, if succesful. Otherwise raise
+        object from the database and return it, if successful. Otherwise raise
         APIUnauthorized() exception.
 
     Args:
         optional: If the optional flag is given, do not raise an exception
             if the Authorization header is not set.
         fetch_email: if True, include email in the returned dict
+        scopes: the scopes the access token is required to have access to
     """
-
-    auth_token = request.headers.get('Authorization')
+    auth_token = request.headers.get("Authorization")
     if not auth_token:
         if optional:
             return None
         raise APIUnauthorized("You need to provide an Authorization header.")
+
     try:
         auth_token = auth_token.split(" ")[1]
     except IndexError:
         raise APIUnauthorized("Provided Authorization header is invalid.")
 
-    user = db_user.get_by_token(auth_token, fetch_email=fetch_email)
+    if auth_token.startswith("meba_"):
+        try:
+            response = requests.post(
+                current_app.config["OAUTH_INTROSPECTION_URL"],
+                data={
+                    "client_id": current_app.config["OAUTH_CLIENT_ID"],
+                    "client_secret": current_app.config["OAUTH_CLIENT_SECRET"],
+                    "token": auth_token,
+                    "token_type_hint": "access_token",
+                }
+            )
+            token = response.json()
+        except requests.exceptions.RequestException:
+            logger.error("Error while trying to introspect token:", exc_info=True)
+            raise APIServiceUnavailable("Something is wrong. Please try again later.")
+
+        if not token["active"] or datetime.fromtimestamp(token["expires_at"]) < datetime.now():
+            raise APIUnauthorized("Invalid access token.")
+
+        if scopes:
+            token_scopes = token["scope"]
+            for scope in scopes:
+                if scope not in token_scopes:
+                    raise APIUnauthorized("Insufficient scope.")
+
+        user = db_user.get_by_mb_id(db_conn, token["sub"], fetch_email=fetch_email)
+    else:
+        user = db_user.get_by_token(db_conn, auth_token, fetch_email=fetch_email)
+
     if user is None:
         raise APIUnauthorized("Invalid authorization token.")
 

@@ -1,7 +1,6 @@
 import spotipy
-from troi.core import generate_playlist
 from troi.patches.playlist_from_listenbrainz import TransferPlaylistPatch
-
+from listenbrainz.metadata_cache.soundcloud.client import SoundCloud
 
 def export_to_spotify(lb_token, spotify_token, is_public, playlist_mbid=None, jspf=None):
     sp = spotipy.Spotify(auth=spotify_token)
@@ -21,6 +20,48 @@ def export_to_spotify(lb_token, spotify_token, is_public, playlist_mbid=None, js
         "echo": False,
         "min_recordings": 1
     }
-    playlist = generate_playlist(TransferPlaylistPatch(), args)
+    patch = TransferPlaylistPatch(args)
+    playlist = patch.generate_playlist()
     metadata = playlist.playlists[0].additional_metadata
     return metadata["external_urls"]["spotify"]
+
+
+def export_to_apple_music(lb_token, apple_music_token, music_user_token, is_public, playlist_mbid=None, jspf=None):
+    args = {
+        "mbid": playlist_mbid,
+        "jspf": jspf,
+        "read_only_token": lb_token,
+        "apple_music": {
+            "developer_token": apple_music_token,
+            "music_user_token": music_user_token,
+            "is_public": is_public
+        },
+        "upload": True,
+        "echo": False,
+        "min_recordings": 1
+    }
+    patch = TransferPlaylistPatch(args)
+    playlist = patch.generate_playlist()
+    metadata = playlist.playlists[0].additional_metadata
+    if not metadata:
+        raise Exception("Failed to export playlist to Apple Music")
+    return metadata["external_urls"]["apple_music"]
+
+
+def export_to_soundcloud(lb_token, soundcloud_token, is_public, playlist_mbid=None, jspf=None):
+    args = {
+        "mbid": playlist_mbid,
+        "jspf": jspf,
+        "read_only_token": lb_token,
+        "soundcloud": {
+            "token": soundcloud_token,
+            "is_public": is_public,
+        },
+        "upload": True,
+        "echo": False,
+        "min_recordings": 1
+    }
+    patch = TransferPlaylistPatch(args)
+    playlist = patch.generate_playlist()
+    metadata = playlist.playlists[0].additional_metadata
+    return metadata["external_urls"]["soundcloud"]

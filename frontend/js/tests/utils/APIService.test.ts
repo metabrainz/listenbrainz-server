@@ -15,7 +15,7 @@ describe("submitListens", () => {
         status: 200,
       });
     });
-    jest.useFakeTimers({advanceTimers: true});
+    jest.useFakeTimers({ advanceTimers: true });
   });
 
   it("calls fetch with correct parameters", async () => {
@@ -73,7 +73,7 @@ describe("submitListens", () => {
         },
       },
     ]);
-    
+
     await jest.advanceTimersByTimeAsync(10000);
 
     expect(spy).toHaveBeenCalledTimes(2);
@@ -321,12 +321,12 @@ describe("getUserEntity", () => {
       return Promise.resolve({
         ok: true,
         status: 204,
-        statusText: "NO CONTENT",
+        statusText: "Whatever error",
       });
     });
 
     await expect(apiService.getUserEntity("foobar", "artist")).rejects.toThrow(
-      Error("HTTP Error NO CONTENT")
+      Error("There are no statistics available for this user for this period")
     );
   });
 
@@ -376,12 +376,12 @@ describe("getUserListeningActivity", () => {
       return Promise.resolve({
         ok: true,
         status: 204,
-        statusText: "NO CONTENT",
+        statusText: "Whatever error",
       });
     });
 
     await expect(apiService.getUserListeningActivity("foobar")).rejects.toThrow(
-      Error("HTTP Error NO CONTENT")
+      Error("There are no statistics available for this user for this period")
     );
   });
 
@@ -424,12 +424,12 @@ describe("getUserDailyActivity", () => {
       return Promise.resolve({
         ok: true,
         status: 204,
-        statusText: "NO CONTENT",
+        statusText: "Whatever error",
       });
     });
 
     await expect(apiService.getUserDailyActivity("foobar")).rejects.toThrow(
-      Error("HTTP Error NO CONTENT")
+      Error("There are no statistics available for this user for this period")
     );
   });
 
@@ -479,12 +479,12 @@ describe("getUserArtistMap", () => {
       return Promise.resolve({
         ok: true,
         status: 204,
-        statusText: "NO CONTENT",
+        statusText: "Whatever error",
       });
     });
 
     await expect(apiService.getUserArtistMap("foobar")).rejects.toThrow(
-      Error("HTTP Error NO CONTENT")
+      Error("There are no statistics available for this user for this period")
     );
   });
 
@@ -544,7 +544,11 @@ describe("getLatestImport", () => {
       return Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ latest_import: "0" }),
+        json: () =>
+          Promise.resolve({
+            latest_import: 0,
+            status: null,
+          }),
       });
     });
 
@@ -570,7 +574,7 @@ describe("getLatestImport", () => {
   it("returns the latest import timestamp", async () => {
     await expect(
       apiService.getLatestImport("foobar", "lastfm")
-    ).resolves.toEqual(0);
+    ).resolves.toEqual({ latest_import: 0, status: null });
   });
 });
 

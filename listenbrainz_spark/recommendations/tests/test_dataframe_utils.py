@@ -18,8 +18,8 @@ class DataframeUtilsTestCase(SparkNewTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        super(DataframeUtilsTestCase, cls).tearDownClass()
         cls.delete_uploaded_listens()
+        super(DataframeUtilsTestCase, cls).tearDownClass()
 
     def test_generate_dataframe_id(self):
         prefix = 'listenbrainz-recommendation-dataframe'

@@ -1,0 +1,209 @@
+import * as React from "react";
+import { Helmet } from "react-helmet";
+import { useLocation } from "react-router";
+
+type SEOProps = {
+  year: number;
+  userName: string;
+};
+
+export function LegacyYIMYearMetaTags({ year }: { year?: number }) {
+  if (year === 2021) {
+    return (
+      <Helmet>
+        <meta
+          property="og:image"
+          content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-21/year-in-music-2021.png"
+        />
+        <meta
+          property="twitter:image"
+          content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-21/year-in-music-2021.png"
+        />
+      </Helmet>
+    );
+  }
+  if (year === 2022) {
+    return (
+      <Helmet>
+        <meta
+          property="og:image"
+          content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-22/yim22-logo.png"
+        />
+        <meta
+          property="twitter:image"
+          content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-22/yim22-logo.png"
+        />
+        <style type="text/css">
+          {`body>.container, body>.container-fluid {
+            margin:0;
+            padding:0;
+            width: 100%;
+          }
+          section.footer{
+              display: none;
+          }`}
+        </style>
+      </Helmet>
+    );
+  }
+  if (year === 2023) {
+    return (
+      <Helmet>
+        <meta
+          property="og:image"
+          content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-23/yim-23-header.png"
+        />
+        <meta
+          property="twitter:image"
+          content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-23/yim-23-header.png"
+        />
+        <meta property="og:image:type" content="image/png" />
+        <style type="text/css">
+          {`body>*:not(nav) {
+              margin:0;
+              padding:0;
+              background-color: #F0EEE2
+            }
+            section.footer{
+              display: none;
+            }`}
+        </style>
+      </Helmet>
+    );
+  }
+  return (
+    <Helmet>
+      <meta
+        property="og:image"
+        content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-24/yim-24-header.png"
+      />
+      <meta
+        property="twitter:image"
+        content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-24/yim-24-header.png"
+      />
+      <meta property="og:image:type" content="image/png" />
+      <style type="text/css">
+        {`
+        @font-face {
+          font-family: "Inter";
+          src: url("/static/fonts/Inter-variable.ttf");
+        }
+        section.footer{
+          display: none;
+        }`}
+      </style>
+    </Helmet>
+  );
+}
+
+export function LegacyYIMSEO(props: SEOProps) {
+  const { year, userName } = props;
+  const location = useLocation();
+
+  const urlString = new URL(
+    location.pathname,
+    "https://listenbrainz.org"
+  ).toString();
+
+  return (
+    <Helmet>
+      <title>{`Year in Music ${year} for ${userName}`}</title>
+      <meta
+        name="description"
+        content={`Check out the music review for ${year} that @ListenBrainz created from my listening history!`}
+      />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@listenbrainz" />
+      <meta property="og:url" content={urlString} />
+      <meta property="og:type" content="website" />
+      <meta
+        property="og:title"
+        content={`ListenBrainz ${year} Year in Music for ${userName}`}
+      />
+      <meta
+        property="og:description"
+        content={`Check out the music review for ${year} that @ListenBrainz created from my listening history!`}
+      />
+      <meta property="twitter:url" content={urlString} />
+      <meta
+        property="twitter:title"
+        content={`ListenBrainz ${year} Year in Music for ${userName}`}
+      />
+      <meta property="twitter:domain" content="listenbrainz.org" />
+      <meta
+        property="twitter:description"
+        content={`Check out the music review for ${year} that @ListenBrainz created from my listening history!`}
+      />
+      <meta
+        property="og:image"
+        content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-23/yim-23-header.png"
+      />
+      <meta
+        property="twitter:image"
+        content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-23/yim-23-header.png"
+      />
+      <meta property="og:image:type" content="image/png" />
+    </Helmet>
+  );
+}
+
+export function YIMSEO(props: SEOProps) {
+  const { year, userName } = props;
+  const location = useLocation();
+
+  const urlString = new URL(
+    location.pathname,
+    "https://listenbrainz.org"
+  ).toString();
+
+  return (
+    <Helmet>
+      <title>{`Year in Music ${year} for ${userName}`}</title>
+      <meta
+        name="description"
+        content={`Check out the music review for ${year} that @ListenBrainz created from my listening history!`}
+      />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@listenbrainz" />
+      <meta property="og:url" content={urlString} />
+      <meta property="og:type" content="website" />
+      <meta
+        property="og:title"
+        content={`ListenBrainz ${year} Year in Music for ${userName}`}
+      />
+      <meta
+        property="og:description"
+        content={`Check out the music review for ${year} that @ListenBrainz created from my listening history!`}
+      />
+      <meta property="twitter:url" content={urlString} />
+      <meta
+        property="twitter:title"
+        content={`ListenBrainz ${year} Year in Music for ${userName}`}
+      />
+      <meta property="twitter:domain" content="listenbrainz.org" />
+      <meta
+        property="twitter:description"
+        content={`Check out the music review for ${year} that @ListenBrainz created from my listening history!`}
+      />
+      <meta
+        property="og:image"
+        content="https://listenbrainz.org/static/img/explore/year-in-music.png"
+      />
+      <meta
+        property="twitter:image"
+        content="https://listenbrainz.org/static/img/explore/year-in-music.png"
+      />
+      <meta property="og:image:type" content="image/png" />
+      <style type="text/css">
+        {`
+        @font-face {
+          font-family: "Inter";
+          src: url("/static/fonts/Inter-variable.ttf") format("truetype");
+        }
+        section.footer{
+          display: none;
+        }`}
+      </style>
+    </Helmet>
+  );
+}

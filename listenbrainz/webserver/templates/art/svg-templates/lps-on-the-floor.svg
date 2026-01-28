@@ -13,7 +13,7 @@
     >
         {% if image.title and image.artist %}
         <title>
-          {{ image.title|escape ~ " - " ~ image.artist|escape }}
+          {{- image.title|escape ~ " - " ~ image.artist|escape -}}
         </title>
         {% endif %}
     </image>
@@ -23,8 +23,17 @@
 {% endmacro %}
 <svg version="1.1"
      xmlns="http://www.w3.org/2000/svg"
+     role="img"
      width="{{ width }}" height="{{ height }}"
-     viewBox="0 0 {{ width }} {{ height }}">
+     viewBox="0 0 {{ width }} {{ height }}"
+     preserveAspectRatio="xMinYMin meet"
+>
+    <title>Top 5 releases {{ metadata["time_range"] }} for {{ metadata["user_name"] }}&#xA;</title>
+    <desc>
+        {%- for release in releases[:5] -%}
+            {{- loop.index -}}. {{ release.release_name }} - {{ release.artist_name }}&#xA;
+        {%- endfor -%}
+    </desc>
     <style>
         .background-image {
             pointer-events: none;

@@ -1,5 +1,10 @@
-from datasethoster import Query
+from datetime import datetime, timedelta
+from typing import Optional, Union
+from uuid import UUID
+
+from datasethoster import Query, QueryOutputLine
 from markupsafe import Markup
+from pydantic import BaseModel
 from sqlalchemy import text
 
 from listenbrainz import db
@@ -7,6 +12,27 @@ from listenbrainz.db import timescale
 
 SESSION_SKIP_THRESHOLD = 30
 DEFAULT_TRACK_LENGTH = 180
+MAX_TIME_RANGE = timedelta(days=31)
+
+
+class UserListensSessionInput(BaseModel):
+    user_name: str
+    from_ts: datetime
+    to_ts: datetime
+    threshold: int
+
+
+class UserListensSessionOutputItem(BaseModel):
+    listened_at: str
+    duration: int
+    difference: Optional[int]
+    skipped: Optional[int]
+    artist_name: str
+    track_name: str
+    recording_mbid: Optional[UUID]
+
+
+UserListensSessionOutput = Union[QueryOutputLine, UserListensSessionOutputItem]
 
 
 class UserListensSessionQuery(Query):
@@ -19,7 +45,7 @@ class UserListensSessionQuery(Query):
         return "sessions-viewer", "ListenBrainz Session Viewer"
 
     def inputs(self):
-        return ['user_name', 'from_ts', 'to_ts', 'threshold']
+        return UserListensSessionInput
 
     def introduction(self):
         return """This page allows you to view the listens of the given time period for a user distributed
@@ -31,30 +57,24 @@ class UserListensSessionQuery(Query):
         """
 
     def outputs(self):
-        return None
+        return UserListensSessionOutput
 
-    def fetch(self, params, offset=-1, count=-1):
-        user_name = params[0]["user_name"].strip()
-        from_ts = int(params[0]["from_ts"])
-        to_ts = int(params[0]["to_ts"])
-        threshold = int(params[0]["threshold"])
+    def fetch(self, params, source, offset=-1, count=-1):
+        user_name = params[0].user_name
+        from_ts = params[0].from_ts
+        to_ts = params[0].to_ts
+        threshold = params[0].threshold
 
-        MAX_TIME_RANGE = 30 * 24 * 60 * 60
         if to_ts - from_ts >= MAX_TIME_RANGE:
             to_ts = from_ts + MAX_TIME_RANGE
 
         with db.engine.connect() as conn:
-            curs = conn.execute(text('SELECT id FROM "user" WHERE musicbrainz_id = :user_name'), user_name=user_name)
+            curs = conn.execute(text('SELECT id FROM "user" WHERE musicbrainz_id = :user_name'), {"user_name": user_name})
             row = curs.fetchone()
             if row:
-                user_id = row["id"]
+                user_id = row.id
             else:
-                return [
-                    {
-                        "type": "markup",
-                        "data": f"User {user_name} not found"
-                    }
-                ]
+                return [QueryOutputLine(line=Markup(f"User {user_name} not found"))]
 
         query = f"""
             WITH listens AS (
@@ -62,12 +82,12 @@ class UserListensSessionQuery(Query):
                       , COALESCE(mbc.artist_data->>'name', l.data->>'artist_name') AS artist_name
                       , COALESCE(mbc.recording_data->>'name', l.data->>'track_name') AS track_name
                       , COALESCE((data->'additional_info'->>'recording_mbid')::uuid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
-                      , COALESCE(
+                      , make_interval(secs => COALESCE(
                             (mbc.recording_data->>'length')::INT / 1000
                           , (l.data->'additional_info'->>'duration')::INT
                           , (l.data->'additional_info'->>'duration_ms')::INT / 1000
                           , {DEFAULT_TRACK_LENGTH}
-                        ) AS duration
+                        )) AS duration
                    FROM listen l
               LEFT JOIN mbid_mapping mm
                      ON l.recording_msid = mm.recording_msid
@@ -97,7 +117,7 @@ class UserListensSessionQuery(Query):
                      , difference
                      -- a 30s leeway to allow for difference in track length in MB and other services or any issue
                      -- in timestamping
-                     , LEAD(difference, 1) OVER w < -{SESSION_SKIP_THRESHOLD} AS skipped
+                     , LEAD(difference, 1) OVER w < - make_interval(secs => {SESSION_SKIP_THRESHOLD}) AS skipped
                      , artist_name
                      , track_name
                      , recording_mbid
@@ -108,7 +128,7 @@ class UserListensSessionQuery(Query):
                      , duration
                      , difference
                      , skipped
-                     , COUNT(*) FILTER ( WHERE difference > :threshold ) OVER w AS session_id
+                     , COUNT(*) FILTER ( WHERE difference > make_interval(secs => :threshold) ) OVER w AS session_id
                      , artist_name
                      , track_name
                      , recording_mbid
@@ -118,9 +138,9 @@ class UserListensSessionQuery(Query):
                 SELECT session_id
                      , jsonb_agg(
                             jsonb_build_object(
-                                'listened_at', to_char(to_timestamp(listened_at), 'YYYY-MM-DD HH24:MI:SS')
-                              , 'duration', duration  
-                              , 'difference', difference
+                                'listened_at', to_char(listened_at, 'YYYY-MM-DD HH24:MI:SS')
+                              , 'duration', extract(epoch from duration)  
+                              , 'difference', extract(epoch from difference)
                               , 'skipped', skipped
                               , 'artist_name', artist_name
                               , 'track_name', track_name
@@ -132,16 +152,15 @@ class UserListensSessionQuery(Query):
         """
         results = []
         with timescale.engine.connect() as conn:
-            curs = conn.execute(text(query), user_id=user_id, from_ts=from_ts, to_ts=to_ts, threshold=threshold)
+            curs = conn.execute(text(query), {
+                "user_id": user_id,
+                "from_ts": from_ts,
+                "to_ts": to_ts,
+                "threshold": threshold,
+            })
             for row in curs.fetchall():
-                results.append({
-                    "type": "markup",
-                    "data": Markup(f"<p><b>Session Number: {row['session_id']}</b></p>")
-                })
-                results.append({
-                    "type": "dataset",
-                    "columns": ["listened_at", "duration", "difference", "skipped",
-                                "artist_name", "track_name", "recording_mbid"],
-                    "data": row["data"]
-                })
+                results.append(QueryOutputLine(
+                    line=Markup(f"<p><b>Session Number: {row.session_id}</b></p>")
+                ))
+                results.extend([UserListensSessionOutputItem(**item) for item in row.data])
         return results

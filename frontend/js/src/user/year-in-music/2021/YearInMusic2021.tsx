@@ -1,8 +1,10 @@
-import { createRoot } from "react-dom/client";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
-import { Navigation, Keyboard, EffectCoverflow } from "swiper";
+/* eslint-disable import/no-unresolved */
+import { Navigation, Keyboard, EffectCoverflow } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css/bundle";
+/* eslint-enable import/no-unresolved */
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import { toast } from "react-toastify";
 import {
@@ -16,32 +18,33 @@ import {
   capitalize,
   toPairs,
 } from "lodash";
-import NiceModal from "@ebay/nice-modal-react";
-import ErrorBoundary from "../../../utils/ErrorBoundary";
-import GlobalAppContext, {
-  GlobalAppContextT,
-} from "../../../utils/GlobalAppContext";
-import BrainzPlayer from "../../../brainzplayer/BrainzPlayer";
+import { Link, useLocation, useParams } from "react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useSetAtom } from "jotai";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 
-import withAlertNotifications from "../../../notifications/AlertNotificationsHOC";
-
-import { getPageProps } from "../../../utils/utils";
-import { getEntityLink } from "../../../stats/utils";
+import { getEntityLink } from "../../stats/utils";
 import ComponentToImage from "./components/ComponentToImage";
 
-import ListenCard from "../../../listens/ListenCard";
-import UserListModalEntry from "../../../follow/UserListModalEntry";
+import ListenCard from "../../../common/listens/ListenCard";
+import UserListModalEntry from "../../components/follow/UserListModalEntry";
 import {
   JSPFTrackToListen,
   MUSICBRAINZ_JSPF_TRACK_EXTENSION,
 } from "../../../playlists/utils";
-import FollowButton from "../../../follow/FollowButton";
+import FollowButton from "../../components/follow/FollowButton";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import { ToastMsg } from "../../../notifications/Notifications";
+import {
+  LegacyYIMSEO as SEO,
+  LegacyYIMYearMetaTags as YIMYearMetaTags,
+} from "../SEO";
+import { RouteQuery } from "../../../utils/Loader";
+import { setAmbientQueueAtom } from "../../../common/brainzplayer/BrainzPlayerAtoms";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
-  yearInMusicData: {
+  yearInMusicData?: {
     day_of_week: string;
     top_artists: Array<{
       artist_name: string;
@@ -85,6 +88,19 @@ export type YearInMusicProps = {
       artist_credit_names: string[];
     }>;
   };
+  allPlaylists: (
+    | {
+        jspf: JSPFObject;
+        mbid: string;
+        description?: string | undefined;
+      }
+    | undefined
+  )[];
+};
+
+type YearInMusicLoaderData = {
+  user: YearInMusicProps["user"];
+  data: YearInMusicProps["yearInMusicData"];
 };
 
 export type YearInMusicState = {
@@ -115,6 +131,13 @@ export default class YearInMusic extends React.Component<
     }, 500);
   }
 
+  async componentDidUpdate(prevProps: YearInMusicProps) {
+    const { user } = this.props;
+    if (user !== prevProps.user) {
+      await this.getFollowing();
+    }
+  }
+
   private getPlaylistByName(
     playlistName: string,
     description?: string
@@ -136,7 +159,13 @@ export default class YearInMusic extends React.Component<
       playlist.jspf.playlist.track = playlist.jspf.playlist.track.map(
         (track: JSPFTrack) => {
           const newTrack = { ...track };
-          const track_id = track.identifier;
+          let track_id;
+          if (Array.isArray(track.identifier)) {
+            // eslint-disable-next-line prefer-destructuring
+            track_id = track.identifier[0];
+          } else {
+            track_id = track.identifier;
+          }
           const found = track_id.match(uuidMatch);
           if (found) {
             const recording_mbid = found[0];
@@ -225,7 +254,7 @@ export default class YearInMusic extends React.Component<
   };
 
   render() {
-    const { user, yearInMusicData } = this.props;
+    const { user, yearInMusicData, allPlaylists } = this.props;
     const { APIService, currentUser } = this.context;
     const { activeCoverflowImage } = this.state;
     const listens: BaseListenFormat[] = [];
@@ -233,19 +262,22 @@ export default class YearInMusic extends React.Component<
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
         <div className="flex-center flex-wrap">
+          <SEO year={2021} userName={user?.name ?? ""} />
+          <YIMYearMetaTags year={2021} />
           <h3>
-            We don&apos;t have enough listening data for {user.name} to produce
+            We don&apos;t have enough listening data for {user?.name} to produce
             any statistics or playlists. (If you received an email from us
             telling you that you had a report waiting for you, we apologize for
             the goof-up. We don&apos;t -- 2022 continues to suck, sorry!)
           </h3>
           <p>
             Check out how you can submit listens by{" "}
-            <a href="/profile/music-services/details/">
+            <Link to="/settings/music-services/details/">
               connecting a music service
-            </a>{" "}
-            or <a href="/profile/import/">importing your listening history</a>,
-            and come back next year!
+            </Link>{" "}
+            or{" "}
+            <Link to="/settings/import/">importing your listening history</Link>
+            , and come back next year!
           </p>
         </div>
       );
@@ -318,51 +350,21 @@ export default class YearInMusic extends React.Component<
         .filter(Boolean);
     }
 
-    /* Playlists */
-    const topDiscoveriesPlaylist = this.getPlaylistByName(
-      "playlist-top-discoveries-for-year",
-      `Highlights songs that ${user.name} first listened to (more than once) in 2021`
-    );
-    const topMissedRecordingsPlaylist = this.getPlaylistByName(
-      "playlist-top-missed-recordings-for-year",
-      `Favorite songs of ${user.name}'s most similar users that ${user.name} hasn't listened to this year`
-    );
-    const topNewRecordingsPlaylist = this.getPlaylistByName(
-      "playlist-top-new-recordings-for-year",
-      `Songs released in 2021 that ${user.name} listened to`
-    );
-    const topRecordingsPlaylist = this.getPlaylistByName(
-      "playlist-top-recordings-for-year",
-      `This playlist is made from ${user.name}'s top recordings for 2021 statistics`
-    );
-    if (
-      !topDiscoveriesPlaylist ||
-      !topMissedRecordingsPlaylist ||
-      !topNewRecordingsPlaylist ||
-      !topRecordingsPlaylist
-    ) {
-      missingSomeData = true;
-    }
-
-    const allPlaylists = [
-      topDiscoveriesPlaylist,
-      topMissedRecordingsPlaylist,
-      topNewRecordingsPlaylist,
-      topRecordingsPlaylist,
-    ];
-
     const noDataText = (
       <div className="center-p">
         We were not able to calculate this data for {youOrUsername}
       </div>
     );
+    const encodedUsername = encodeURIComponent(user.name);
     return (
-      <div role="main" id="year-in-music">
+      <div role="main" id="legacy-year-in-music">
+        <SEO year={2021} userName={user?.name} />
+        <YIMYearMetaTags year={2021} />
         <div className="flex flex-wrap" id="header">
           <div className="content-card flex-center flex-wrap">
             <img
-              className="img-responsive header-image"
-              src="/static/img/year-in-music-2021.svg"
+              className="img-fluid header-image"
+              src="/static/img/legacy-year-in-music/year-in-music-21/year-in-music-2021.svg"
               alt="Your year in music 2021"
             />
             <div>
@@ -370,12 +372,13 @@ export default class YearInMusic extends React.Component<
                 <div className="center-p">
                   Share your year with your friends
                   <p id="share-link">
-                    <a
-                      href={`https://listenbrainz.org/user/${user.name}/year-in-music/2021/`}
+                    <Link
+                      to={`/user/${encodedUsername}/year-in-music/legacy/2021/`}
                     >
-                      https://listenbrainz.org/user/{user.name}
-                      /year-in-music/2021/
-                    </a>
+                      https://listenbrainz.org/user/
+                      {encodedUsername}
+                      /year-in-music/legacy/2021/
+                    </Link>
                   </p>
                 </div>
               </h4>
@@ -395,15 +398,13 @@ export default class YearInMusic extends React.Component<
             <p>
               See profile on&nbsp;
               <img src="/static/img/favicon-16.png" alt="ListenBrainz Logo" />
-              <a href={`https://listenbrainz.org/user/${user.name}/`}>
-                ListenBrainz
-              </a>
+              <Link to={`/user/${encodedUsername}/`}>ListenBrainz</Link>
               &nbsp;and&nbsp;
               <img
                 src="/static/img/musicbrainz-16.svg"
                 alt="MusicBrainz Logo"
               />
-              <a href={`https://musicbrainz.org/user/${user.name}`}>
+              <a href={`https://musicbrainz.org/user/${encodedUsername}`}>
                 MusicBrainz
               </a>
             </p>
@@ -417,43 +418,24 @@ export default class YearInMusic extends React.Component<
             <p>You will find in this page:</p>
             <ul>
               <li>
-                {yourOrUsersName} top{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#top-releases">
-                  albums
-                </a>
-                ,{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#top-recordings">
-                  songs
-                </a>{" "}
-                and{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#top-artists">
-                  artists
-                </a>{" "}
-                of the year
+                {yourOrUsersName} top <a href="#top-releases">albums</a>,{" "}
+                <a href="#top-recordings">songs</a> and{" "}
+                <a href="#top-artists">artists</a> of the year
               </li>
               <li>
                 some statistics about {yourOrUsersName}{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#calendar">
-                  listening activity
-                </a>
+                <a href="#calendar">listening activity</a>
               </li>
               <li>
                 a list of{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#similar-users">
-                  users similar to {youOrUsername}
-                </a>
+                <a href="#similar-users">users similar to {youOrUsername}</a>
               </li>
               <li>
                 new albums that {yourOrUsersName} top artists{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#new-releases">
-                  released in 2021
-                </a>
+                <a href="#new-releases">released in 2021</a>
               </li>
               <li>
-                and finally four{" "}
-                <a href="listenbrainz/webserver/static/js/src/year-in-music#playlists">
-                  personalized playlists
-                </a>
+                and finally four <a href="#playlists">personalized playlists</a>
                 &nbsp; of music {youOrUsername} listened to and new songs to
                 discover
               </li>
@@ -462,9 +444,9 @@ export default class YearInMusic extends React.Component<
               Double click on any song to start playing it — we will do our best
               to find a matching song to play. If you have a Spotify pro
               account, we recommend{" "}
-              <a href="/profile/music-services/details/">
+              <Link to="/settings/music-services/details/">
                 connecting your account
-              </a>{" "}
+              </Link>{" "}
               for a better playback experience.
             </p>
             <p>
@@ -493,7 +475,7 @@ export default class YearInMusic extends React.Component<
         <hr className="wide" />
         <div className="row">
           <div className="card content-card" id="top-releases">
-            <div className="col-md-12 d-flex center-p">
+            <div className="center-p">
               <h3>{capitalize(yourOrUsersName)} top albums of 2021</h3>
               {yearInMusicData.top_releases && (
                 <ComponentToImage
@@ -520,7 +502,7 @@ export default class YearInMusic extends React.Component<
             </div>
 
             {yearInMusicData.top_releases ? (
-              <div id="releases-coverflow">
+              <div id="top-albums">
                 <Swiper
                   modules={[Navigation, Keyboard, EffectCoverflow]}
                   spaceBetween={15}
@@ -566,17 +548,13 @@ export default class YearInMusic extends React.Component<
                           alt={release.release_name}
                         />
                         <div title={release.release_name}>
-                          <a
-                            href={
-                              release.release_mbid
-                                ? `/release/${release.release_mbid}/`
-                                : undefined
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {release.release_name}
-                          </a>
+                          {release.release_mbid ? (
+                            <Link to={`/release/${release.release_mbid}/`}>
+                              {release.release_name}
+                            </Link>
+                          ) : (
+                            release.release_name
+                          )}
                           <div className="small text-muted">
                             {release.artist_name}
                           </div>
@@ -593,7 +571,7 @@ export default class YearInMusic extends React.Component<
         </div>
         <div className="row flex flex-wrap">
           <div className="card content-card" id="top-recordings">
-            <div className="col-md-12 d-flex center-p">
+            <div className="center-p">
               <h3>
                 {capitalize(yourOrUsersName)} 50 most played songs of 2021
               </h3>
@@ -640,7 +618,7 @@ export default class YearInMusic extends React.Component<
             )}
           </div>
           <div className="card content-card" id="top-artists">
-            <div className="col-md-12 d-flex center-p">
+            <div className="center-p">
               <h3>{capitalize(yourOrUsersName)} top 50 artists of 2021</h3>
               {yearInMusicData.top_artists && (
                 <ComponentToImage
@@ -659,7 +637,7 @@ export default class YearInMusic extends React.Component<
                     artist.artist_mbids[0]
                   );
                   const thumbnail = (
-                    <span className="badge badge-info">
+                    <span className="badge bg-info">
                       {artist.listen_count} listens
                     </span>
                   );
@@ -693,10 +671,14 @@ export default class YearInMusic extends React.Component<
           </div>
         </div>
         <div className="row">
-          <div className="card content-card" id="calendar">
+          <div
+            className="card content-card"
+            id="calendar"
+            style={{ width: "100%" }}
+          >
             <h3 className="text-center">
               {capitalize(yourOrUsersName)} listening activity in 2021
-              <div className="small mt-15">
+              <div className="small mt-4">
                 Number of listens submitted for each day of the year
               </div>
             </h3>
@@ -754,7 +736,7 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="most-listened-year">
             <h3 className="text-center">
               What year are {yourOrUsersName} favorite songs from?
-              <div className="small mt-15">
+              <div className="small mt-4">
                 How much were you on the lookout for new music this year? Not
                 that we&apos;re judging.
               </div>
@@ -794,7 +776,7 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="similar-users">
             <h3 className="text-center">
               Music buddies
-              <div className="small mt-15">
+              <div className="small mt-4">
                 Here are the users with the most similar taste to {user.name}{" "}
                 this year. Maybe go check them out?
               </div>
@@ -827,7 +809,7 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="new-releases">
             <h3 className="text-center">
               New albums of {yourOrUsersName} top artists
-              <div className="small mt-15">
+              <div className="small mt-4">
                 New albums released in 2021 from {yourOrUsersName} favorite
                 artists
               </div>
@@ -890,7 +872,7 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="playlists">
             <h3 className="text-center">
               We made some personalized playlists for {youOrUsername}!
-              <div className="small mt-15">
+              <div className="small mt-4">
                 You&apos;ll find below 3 playlists that encapsulate{" "}
                 {yourOrUsersName} year, and 1 playlist of music exploration
                 based on users similar to {youOrUsername}
@@ -904,19 +886,15 @@ export default class YearInMusic extends React.Component<
                     }
                     return (
                       <div
-                        className="card content-card mb-10"
+                        className="card content-card mb-3"
                         id="top-discoveries"
                       >
                         <h3 className="text-center">
-                          <a
-                            href={`/playlist/${topLevelPlaylist.mbid}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
+                          <Link to={`/playlist/${topLevelPlaylist.mbid}/`}>
                             {topLevelPlaylist.jspf?.playlist?.title}
-                          </a>
+                          </Link>
                           {topLevelPlaylist.description && (
-                            <div className="small mt-15">
+                            <div className="small mt-4">
                               {topLevelPlaylist.description}
                             </div>
                           )}
@@ -950,14 +928,12 @@ export default class YearInMusic extends React.Component<
                             }
                           )}
                           <hr />
-                          <a
-                            href={`/playlist/${topLevelPlaylist.mbid}`}
-                            className="btn btn-info btn-block"
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <Link
+                            to={`/playlist/${topLevelPlaylist.mbid}/`}
+                            className="btn btn-info w-100"
                           >
                             See the full playlist…
-                          </a>
+                          </Link>
                         </div>
                       </div>
                     );
@@ -967,35 +943,143 @@ export default class YearInMusic extends React.Component<
           </div>
         </div>
         <hr className="wide" />
-        <BrainzPlayer
-          listens={listens}
-          listenBrainzAPIBaseURI={APIService.APIBaseURI}
-          refreshSpotifyToken={APIService.refreshSpotifyToken}
-          refreshYoutubeToken={APIService.refreshYoutubeToken}
-          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-        />
       </div>
     );
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const { domContainer, reactProps, globalAppContext } = await getPageProps();
-  const { user, data: yearInMusicData } = reactProps;
-
-  const YearInMusicWithAlertNotifications = withAlertNotifications(YearInMusic);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <YearInMusicWithAlertNotifications
-            user={user}
-            yearInMusicData={yearInMusicData}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
+export function YearInMusicWrapper() {
+  const location = useLocation();
+  const params = useParams();
+  const { data } = useQuery<YearInMusicLoaderData>(
+    RouteQuery(["legacy-year-in-music-2021", params], location.pathname)
   );
-});
+  const fallbackUser = { name: "" };
+  const { user = fallbackUser, data: yearInMusicData } = data || {};
+  const listens: BaseListenFormat[] = [];
+  if (yearInMusicData?.top_recordings) {
+    yearInMusicData.top_recordings.forEach((recording) => {
+      const listen = {
+        listened_at: 0,
+        track_metadata: {
+          artist_name: recording.artist_name,
+          track_name: recording.track_name,
+          release_name: recording.release_name,
+          additional_info: {
+            recording_mbid: recording.recording_mbid,
+            release_mbid: recording.release_mbid,
+            artist_mbids: recording.artist_mbids,
+          },
+        },
+      };
+      listens.push(listen);
+    });
+  }
+
+  function getPlaylistByName(
+    playlistName: string,
+    description?: string
+  ): { jspf: JSPFObject; mbid: string; description?: string } | undefined {
+    const uuidMatch = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/g;
+    /* We generated some playlists with this incorrect value as the track extension key, rewrite it if it exists */
+    const badPlaylistTrackExtensionValue = "https://musicbrainz.org/recording/";
+    let playlist;
+    try {
+      const rawPlaylist = get(yearInMusicData, playlistName);
+      const coverArt = get(yearInMusicData, `${playlistName}-coverart`);
+      playlist = isString(rawPlaylist) ? JSON.parse(rawPlaylist) : rawPlaylist;
+      // Append manual description used in this page (rather than parsing HTML, ellipsis issues, etc.)
+      if (description) {
+        playlist.description = description;
+      }
+      /* Add a track image if it exists in the `{playlistName}-coverart` key */
+      playlist.jspf.playlist.track = playlist.jspf.playlist.track.map(
+        (track: JSPFTrack) => {
+          const newTrack = { ...track };
+          const track_id = Array.isArray(track.identifier)
+            ? track.identifier[0]
+            : track.identifier;
+          const found = track_id.match(uuidMatch);
+          if (found) {
+            const recording_mbid = found[0];
+            newTrack.id = recording_mbid;
+            const recording_coverart = coverArt?.[recording_mbid];
+            if (recording_coverart) {
+              newTrack.image = recording_coverart;
+            }
+          }
+          if (
+            newTrack.extension &&
+            track.extension?.[badPlaylistTrackExtensionValue]
+          ) {
+            newTrack.extension[MUSICBRAINZ_JSPF_TRACK_EXTENSION] =
+              track.extension[badPlaylistTrackExtensionValue];
+          }
+          const trackExtension =
+            newTrack?.extension?.[MUSICBRAINZ_JSPF_TRACK_EXTENSION];
+          // See https://github.com/metabrainz/listenbrainz-server/pull/1839 for context
+          if (trackExtension && has(trackExtension, "artist_mbids")) {
+            //  Using some forbiddden (but oh so sweet) ts-ignore as we're fixing objects that don't fit the expected type
+            // @ts-ignore
+            trackExtension.artist_identifiers = trackExtension.artist_mbids;
+            // @ts-ignore
+            delete trackExtension.artist_mbids;
+          }
+          return newTrack;
+        }
+      );
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(`"Error parsing ${playlistName}:`, error);
+    }
+    return playlist;
+  }
+
+  /* Playlists */
+  const topDiscoveriesPlaylist = getPlaylistByName(
+    "playlist-top-discoveries-for-year",
+    `Highlights songs that ${user.name} first listened to (more than once) in 2021`
+  );
+  const topMissedRecordingsPlaylist = getPlaylistByName(
+    "playlist-top-missed-recordings-for-year",
+    `Favorite songs of ${user.name}'s most similar users that ${user.name} hasn't listened to this year`
+  );
+  const topNewRecordingsPlaylist = getPlaylistByName(
+    "playlist-top-new-recordings-for-year",
+    `Songs released in 2021 that ${user.name} listened to`
+  );
+  const topRecordingsPlaylist = getPlaylistByName(
+    "playlist-top-recordings-for-year",
+    `This playlist is made from ${user.name}'s top recordings for 2021 statistics`
+  );
+  let missingSomeData = false;
+  if (
+    !topDiscoveriesPlaylist ||
+    !topMissedRecordingsPlaylist ||
+    !topNewRecordingsPlaylist ||
+    !topRecordingsPlaylist
+  ) {
+    missingSomeData = true;
+  }
+
+  const allPlaylists = [
+    topDiscoveriesPlaylist,
+    topMissedRecordingsPlaylist,
+    topNewRecordingsPlaylist,
+    topRecordingsPlaylist,
+  ];
+
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
+  React.useEffect(() => {
+    setAmbientQueue(listens);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listens]);
+
+  return (
+    <YearInMusic
+      user={user ?? fallbackUser}
+      yearInMusicData={yearInMusicData}
+      allPlaylists={allPlaylists}
+    />
+  );
+}

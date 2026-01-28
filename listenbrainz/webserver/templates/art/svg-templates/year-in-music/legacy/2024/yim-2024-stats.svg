@@ -1,0 +1,91 @@
+<svg
+    width="924"
+    height="924"
+    viewBox="0 0 924 924"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;900');
+        text {
+            fill: {{ accent_color }};
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+        }
+        .branding {
+            font-size: 20px;
+            letter-spacing: 0em;
+            text-transform: uppercase;
+        }
+        .subtitle {
+            text-anchor: middle;
+            font-size: 32px;
+        }
+        .common-description {
+          font-weight: 300;
+          font-size: 28px;
+          letter-spacing: 0em;
+          text-anchor: middle;
+        }
+        .user-stat {
+          font-weight: 900;
+        }
+        .background {
+            fill: {{ background_color }};
+        }
+    </style>
+    <g>
+        <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
+        <image
+            href="{{ image_folder }}/playlists/yim24-playlist-04.png" width="250" height="250" x="620" y="0" style="pointer-events: none;" id="top">
+        </image>
+        <image
+            href="{{ image_folder }}/playlists/yim24-playlist-03.png" width="350" height="350" x="160" y="600" style="pointer-events: none;" id="stumpy">
+        </image>
+        <g>
+            <text class="branding" x="750" y="897">LISTENBRAINZ</text>
+            <text class="branding" x="26" y="43">{{user_name}}</text>
+            <text class="branding" font-style="italic" x="26" y="897">#YEARINMUSIC</text>
+            <text class="branding" x="844" y="43">2024</text>
+            <text x="50%" y="90" id="my-year" class="subtitle">
+                <tspan>M</tspan>
+                <tspan dx="12">Y</tspan>
+                <tspan dx="30">Y</tspan>
+                <tspan dx="12">E</tspan>
+                <tspan dx="12">A</tspan>
+                <tspan dx="12">R</tspan>
+            </text>
+            <text x="50%" y="130" id="in-music" class="subtitle">
+                <tspan>I</tspan>
+                <tspan dx="12">N</tspan>
+                <tspan dx="30">M</tspan>
+                <tspan dx="12">U</tspan>
+                <tspan dx="12">S</tspan>
+                <tspan dx="12">I</tspan>
+                <tspan dx="12">C</tspan>
+            </text>
+        </g>
+        <g style="transform: translateY(-40px);">
+            <rect x="110.5" y="276.5" width="684" height="462" fill="#FAFFFA"/>
+            <text class="common-description" x="451.5" y="353" fill="{{ accent_color }}">
+                {{most_played_day_message}}
+            </text>
+            <text class="common-description" x="451.5" y="440" fill="{{ accent_color }}">
+                LISTENED TO <tspan class="user-stat">{{total_listen_count}}</tspan> SONGS
+            </text>
+            <text class="common-description" x="451.5" y="527" fill="{{ accent_color }}">
+                MAINLY PLAYED MUSIC FROM <tspan class="user-stat">{{most_listened_year}}</tspan>
+            </text>
+            <text class="common-description" x="451.5" y="611" fill="{{ accent_color }}">
+                LISTENED TO <tspan class="user-stat">{{total_artists_count}}</tspan> ARTISTS
+            </text>
+            <text class="common-description" x="451.5" y="695" fill="{{ accent_color }}">
+                DISCOVERED <tspan class="user-stat">{{total_new_artists_discovered}}</tspan> NEW ARTISTS
+            </text>
+            <line x1="399" y1="384.5" x2="504" y2="384.5" stroke="{{ accent_color }}"/>
+            <line x1="399" y1="470.5" x2="504" y2="470.5" stroke="{{ accent_color }}"/>
+            <line x1="399" y1="556.5" x2="504" y2="556.5" stroke="{{ accent_color }}"/>
+            <line x1="399" y1="642.5" x2="504" y2="642.5" stroke="{{ accent_color }}"/>
+        </g>
+    </g>
+</svg>

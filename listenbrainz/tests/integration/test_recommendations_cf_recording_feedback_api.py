@@ -3,8 +3,6 @@ import uuid
 import listenbrainz.db.user as db_user
 import listenbrainz.db.recommendations_cf_recording_feedback as db_feedback
 
-from redis import Redis
-from flask import url_for, current_app
 from listenbrainz.db.model.recommendation_feedback import RecommendationFeedbackSubmit
 from listenbrainz.tests.integration import IntegrationTestCase
 
@@ -12,14 +10,9 @@ from listenbrainz.tests.integration import IntegrationTestCase
 class RecommendationFeedbackAPITestCase(IntegrationTestCase):
     def setUp(self):
         super(RecommendationFeedbackAPITestCase, self).setUp()
-        self.user = db_user.get_or_create(1, "vansika")
-        self.user1 = db_user.get_or_create(2, "vansika_1")
-        self.user2 = db_user.get_or_create(3, "vansika_2")
-
-    def tearDown(self):
-        r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
-        r.flushall()
-        super(RecommendationFeedbackAPITestCase, self).tearDown()
+        self.user = db_user.get_or_create(self.db_conn, 1, "vansika")
+        self.user1 = db_user.get_or_create(self.db_conn, 2, "vansika_1")
+        self.user2 = db_user.get_or_create(self.db_conn, 3, "vansika_2")
 
     def insert_test_data(self):
         sample_feedback = [
@@ -37,6 +30,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
 
         for fb in sample_feedback:
             db_feedback.insert(
+                self.db_conn,
                 RecommendationFeedbackSubmit(
                     user_id=fb['user_id'],
                     recording_mbid=fb["recording_mbid"],
@@ -54,7 +48,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
             data=json.dumps(feedback),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json"
@@ -71,7 +65,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
 
         # request with no authorization header
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
             data=json.dumps(feedback),
             content_type="application/json"
         )
@@ -80,7 +74,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
 
         # request with invalid authorization header
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
             data=json.dumps(feedback),
             headers={"Authorization": "Token testtokenplsignore"},
             content_type="application/json"
@@ -97,7 +91,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
             data=json.dumps(incomplete_feedback),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json"
@@ -111,7 +105,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
             data=json.dumps(incomplete_feedback),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json"
@@ -123,7 +117,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         empty_feedback = {}
 
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
             data=json.dumps(empty_feedback),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json"
@@ -140,7 +134,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
             data=json.dumps(invalid_feedback),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json"
@@ -158,7 +152,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
             data=json.dumps(invalid_feedback),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json"
@@ -172,7 +166,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
             data=json.dumps(invalid_feedback),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json"
@@ -186,7 +180,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
             data=json.dumps(invalid_feedback),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json"
@@ -203,7 +197,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
             data=json.dumps(feedback),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json"
@@ -211,7 +205,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
 
-        result = db_feedback.get_feedback_for_user(self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].recording_mbid, feedback["recording_mbid"])
@@ -224,7 +218,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
             data=json.dumps(updated_feedback),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json"
@@ -233,7 +227,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["status"], "ok")
 
         # check that the record gets updated
-        result = db_feedback.get_feedback_for_user(self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].recording_mbid, updated_feedback["recording_mbid"])
@@ -247,7 +241,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.submit_recommendation_feedback"),
             data=json.dumps(feedback),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json"
@@ -255,14 +249,14 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
 
-        result = db_feedback.get_feedback_for_user(self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].recording_mbid, feedback["recording_mbid"])
         self.assertEqual(result[0].rating, feedback["rating"])
 
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.delete_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.delete_recommendation_feedback"),
             data=json.dumps({
                 "recording_mbid": "7babc9be-ca2b-4544-b932-7c9ab38770d6",
             }),
@@ -273,7 +267,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["status"], "ok")
 
         # check that the record gets deleted
-        result = db_feedback.get_feedback_for_user(self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 0)
 
     def test_recommendation_feedback_delete_unauthorised_submission(self):
@@ -284,7 +278,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
 
         # request with no authorization header
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.delete_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.delete_recommendation_feedback"),
             data=json.dumps(del_rec),
             content_type="application/json"
         )
@@ -292,7 +286,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
 
         # request with invalid authorization header
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.delete_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.delete_recommendation_feedback"),
             data=json.dumps(del_rec),
             headers={"Authorization": "Token testtokenplsignore"},
             content_type="application/json"
@@ -307,7 +301,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.delete_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.delete_recommendation_feedback"),
             data=json.dumps(invalid_del_rec),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json"
@@ -318,7 +312,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         empty_del_rec = {}
 
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.delete_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.delete_recommendation_feedback"),
             data=json.dumps(empty_del_rec),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json"
@@ -331,7 +325,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.delete_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.delete_recommendation_feedback"),
             data=json.dumps(invalid_del_rec),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json"
@@ -346,7 +340,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for("recommendation_feedback_api_v1.delete_recommendation_feedback"),
+            self.custom_url_for("recommendation_feedback_api_v1.delete_recommendation_feedback"),
             data=json.dumps(invalid_del_rec),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json"
@@ -357,7 +351,8 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
     def test_get_feedback_for_user(self):
         sample_feedback = self.insert_test_data()
 
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user", user_name=self.user1["musicbrainz_id"]))
+        response = self.client.get(self.custom_url_for("recommendation_feedback_api_v1.get_feedback_for_user",
+                                                       user_name=self.user1["musicbrainz_id"]))
         self.assert200(response)
         data = json.loads(response.data)
 
@@ -381,14 +376,16 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
 
     def test_get_feedback_for_user_invalid_user(self):
         """ Test to make sure that the API sends 404 if user does not exist. """
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user", user_name="invalid"))
+        response = self.client.get(
+            self.custom_url_for("recommendation_feedback_api_v1.get_feedback_for_user", user_name="invalid"))
         self.assert404(response)
 
     def test_get_feedback_for_user_with_rating_param(self):
         sample_feedback = self.insert_test_data()
 
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
-                                   user_name=self.user1["musicbrainz_id"]), query_string={"rating": 'hate'})
+        response = self.client.get(self.custom_url_for("recommendation_feedback_api_v1.get_feedback_for_user",
+                                                       user_name=self.user1["musicbrainz_id"]),
+                                   query_string={"rating": 'hate'})
         self.assert200(response)
         data = json.loads(response.data)
 
@@ -407,8 +404,9 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
 
     def test_get_feedback_for_user_with_invalid_rating_param(self):
         """ Test to make sure 400 response is received if rating argument is not valid """
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
-                                   user_name=self.user1["musicbrainz_id"]), query_string={"rating": "invalid"})
+        response = self.client.get(self.custom_url_for("recommendation_feedback_api_v1.get_feedback_for_user",
+                                                       user_name=self.user1["musicbrainz_id"]),
+                                   query_string={"rating": "invalid"})
         self.assert400(response)
 
     def test_get_feedback_for_user_for_count_and_offset(self):
@@ -417,6 +415,7 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         for i in range(110):
             rec_mbid = str(uuid.uuid4())
             db_feedback.insert(
+                self.db_conn,
                 RecommendationFeedbackSubmit(
                     user_id=self.user2['id'],
                     recording_mbid=rec_mbid,
@@ -434,8 +433,9 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
                 }
             )
         # check for count
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
-                                   user_name=self.user2["musicbrainz_id"]), query_string={"count": 10})
+        response = self.client.get(self.custom_url_for("recommendation_feedback_api_v1.get_feedback_for_user",
+                                                       user_name=self.user2["musicbrainz_id"]),
+                                   query_string={"count": 10})
         self.assert200(response)
         data = json.loads(response.data)
 
@@ -451,8 +451,9 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
             self.assertEqual(feedback[i]['rating'], feedback_love[i]['rating'])
 
         # check for offset
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
-                                   user_name=self.user2["musicbrainz_id"]), query_string={"offset": 90})
+        response = self.client.get(self.custom_url_for("recommendation_feedback_api_v1.get_feedback_for_user",
+                                                       user_name=self.user2["musicbrainz_id"]),
+                                   query_string={"offset": 90})
         self.assert200(response)
         data = json.loads(response.data)
 
@@ -464,11 +465,12 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         feedback = data["feedback"]  # sorted in descending order of their creation
         self.assertEqual(len(feedback), 20)
         for i in range(10):
-            self.assertEqual(feedback[i]['recording_mbid'], feedback_love[i+90]['recording_mbid'])
-            self.assertEqual(feedback[i]['rating'], feedback_love[i+90]['rating'])
+            self.assertEqual(feedback[i]['recording_mbid'], feedback_love[i + 90]['recording_mbid'])
+            self.assertEqual(feedback[i]['rating'], feedback_love[i + 90]['rating'])
         # check for feedback, too many
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
-                                   user_name=self.user2["musicbrainz_id"]), query_string={"count": 110})
+        response = self.client.get(self.custom_url_for("recommendation_feedback_api_v1.get_feedback_for_user",
+                                                       user_name=self.user2["musicbrainz_id"]),
+                                   query_string={"count": 110})
         self.assert200(response)
         data = json.loads(response.data)
 
@@ -487,26 +489,30 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         """ Test to make sure 400 response is received if count argument is not valid """
 
         # pass non-int value to count
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
-                                   user_name=self.user["musicbrainz_id"]), query_string={"count": "invalid_count"})
+        response = self.client.get(self.custom_url_for("recommendation_feedback_api_v1.get_feedback_for_user",
+                                                       user_name=self.user["musicbrainz_id"]),
+                                   query_string={"count": "invalid_count"})
         self.assert400(response)
 
         # pass negative int value to count
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
-                                   user_name=self.user["musicbrainz_id"]), query_string={"count": -1})
+        response = self.client.get(self.custom_url_for("recommendation_feedback_api_v1.get_feedback_for_user",
+                                                       user_name=self.user["musicbrainz_id"]),
+                                   query_string={"count": -1})
         self.assert400(response)
 
     def test_get_feedback_for_user_with_invalid_offset_param(self):
         """ Test to make sure 400 response is received if offset argument is not valid """
 
         # pass non-int value to offset
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
-                                   user_name=self.user["musicbrainz_id"]), query_string={"offset": "invalid_offset"})
+        response = self.client.get(self.custom_url_for("recommendation_feedback_api_v1.get_feedback_for_user",
+                                                       user_name=self.user["musicbrainz_id"]),
+                                   query_string={"offset": "invalid_offset"})
         self.assert400(response)
 
         # pass negative int value to offset
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
-                                   user_name=self.user["musicbrainz_id"]), query_string={"offset": -1})
+        response = self.client.get(self.custom_url_for("recommendation_feedback_api_v1.get_feedback_for_user",
+                                                       user_name=self.user["musicbrainz_id"]),
+                                   query_string={"offset": -1})
         self.assert400(response)
 
     def test_get_feedback_for_recordings_for_user(self):
@@ -516,9 +522,10 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         rec_mbid_1 = sample_feedback[0]["recording_mbid"]
         rec_mbid_2 = sample_feedback[1]["recording_mbid"]
 
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
-                                           user_name=self.user1["musicbrainz_id"]),
-                                           query_string={"mbids": ""+rec_mbid_1+','+rec_mbid_2})
+        response = self.client.get(
+            self.custom_url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
+                                user_name=self.user1["musicbrainz_id"]),
+            query_string={"mbids": "" + rec_mbid_1 + ',' + rec_mbid_2})
 
         self.assert200(response)
         data = json.loads(response.data)
@@ -535,34 +542,40 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(feedback[1]["recording_mbid"], rec_mbid_1)
         self.assertEqual(feedback[1]["rating"], sample_feedback[0]["rating"])
 
-    def test_get_feedback_for_user_invalid_user(self):
+    def test_get_feedback_for_user_invalid_user_404(self):
         """ Test to make sure that the API sends 404 if user does not exist. """
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user", user_name="invalid"))
+        response = self.client.get(
+            self.custom_url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
+                                user_name="invalid"))
         self.assert404(response)
 
     def test_get_feedback_for_recording_invalid_recording_mbid(self):
         """ Test to make sure that the API sends 404 if recording_msid is invalid. """
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
-                                           user_name=self.user1["musicbrainz_id"]),
-                                           query_string={"mbids":"invalid_recording_mbid"})
+        response = self.client.get(
+            self.custom_url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
+                                user_name=self.user1["musicbrainz_id"]),
+            query_string={"mbids": "invalid_recording_mbid"})
         self.assert400(response)
 
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
-                                           user_name=self.user1["musicbrainz_id"]),
-                                           query_string={"mbids":" "})
+        response = self.client.get(
+            self.custom_url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
+                                user_name=self.user1["musicbrainz_id"]),
+            query_string={"mbids": " "})
         self.assert400(response)
 
     def test_get_feedback_for_recording_missing_mbid_args(self):
         """ Test to make sure that the API sends 404 if recording_msid is invalid. """
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
-                                           user_name=self.user1["musicbrainz_id"]))
+        response = self.client.get(
+            self.custom_url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
+                                user_name=self.user1["musicbrainz_id"]))
         self.assert400(response)
 
     def test_get_feedback_for_recording_empty_response(self):
         """ Test to make sure that the API return empty list if user hasn't rated a recording """
-        response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
-                                           user_name=self.user1["musicbrainz_id"]),
-                                           query_string={"mbids":"222eb00d-9ead-42de-aec9-8f8c15094130"})
+        response = self.client.get(
+            self.custom_url_for("recommendation_feedback_api_v1.get_feedback_for_recordings_for_user",
+                                user_name=self.user1["musicbrainz_id"]),
+            query_string={"mbids": "222eb00d-9ead-42de-aec9-8f8c15094130"})
         self.assert200(response)
         data = json.loads(response.data)
 

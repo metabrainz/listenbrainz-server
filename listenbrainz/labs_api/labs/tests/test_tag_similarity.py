@@ -1,13 +1,12 @@
 from unittest.mock import patch
 
 import flask_testing
+from datasethoster import RequestSource
 from datasethoster.main import create_app
-from listenbrainz.labs_api.labs.api.tag_similarity import TagSimilarityQuery
+from listenbrainz.labs_api.labs.api.tag_similarity import TagSimilarityQuery, TagSimilarityInput, TagSimilarityOutput
 
 json_request = [
-    {
-        "tag": "trip-hop"
-    },
+    TagSimilarityInput(tag="trip-hop")
 ]
 
 db_response = [
@@ -54,14 +53,14 @@ class MainTestCase(flask_testing.TestCase):
         self.assertEqual(q.names()[0], "tag-similarity")
         self.assertEqual(q.names()[1], "ListenBrainz Tag Similarity")
         self.assertNotEqual(q.introduction(), "")
-        self.assertEqual(q.inputs(), ['tag'])
-        self.assertEqual(q.outputs(), ['similar_tag', 'count'])
+        self.assertCountEqual(q.inputs().__fields__.keys(), ['tag'])
+        self.assertCountEqual(q.outputs().__fields__.keys(), ['similar_tag', 'count'])
 
     @patch('psycopg2.connect')
     def test_fetch(self, mock_connect):
         mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [db_response[0], db_response[1], None]
         q = TagSimilarityQuery()
-        resp = q.fetch(json_request)
+        resp = q.fetch(json_request, RequestSource.json_post)
         self.assertEqual(len(resp), 2)
-        self.assertDictEqual(resp[0], json_response[0])
-        self.assertDictEqual(resp[1], json_response[1])
+        self.assertDictEqual(resp[0].dict(), json_response[0])
+        self.assertDictEqual(resp[1].dict(), json_response[1])

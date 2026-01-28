@@ -34,7 +34,7 @@ source "admin/functions.sh"
 
 # This variable contains the name of a directory that is deleted when the script
 # exits, so we sanitise it here in case it was included in the environment.
-DUMP_TEMP_DIR=""
+DUMP_INTERMEDIATE_DIR=""
 
 if [ "$CONTAINER_NAME" == "listenbrainz-cron-prod" ] && [ "$PROD" == "prod" ]
 then
@@ -61,8 +61,12 @@ function add_rsync_include_rule {
 function on_exit {
     echo "Disk space when create-dumps ends:"; df -m
 
-    if [ -n "$DUMP_TEMP_DIR" ]; then
-        rm -rf "$DUMP_TEMP_DIR"
+    if [ -n "$DUMP_INTERMEDIATE_DIR" ]; then
+        rm -rf "$DUMP_INTERMEDIATE_DIR"
+    fi
+
+    if [ -n "$PRIVATE_DUMP_INTERMEDIATE_DIR" ]; then
+        rm -rf "$PRIVATE_DUMP_INTERMEDIATE_DIR"
     fi
 
     if [ -n "$START_TIME" ]; then
@@ -71,7 +75,7 @@ function on_exit {
     fi
 
     # Remove the cron lock
-    /usr/local/bin/python admin/cron_lock.py unlock-cron create-dumps
+    /usr/local/bin/python admin/cron_lock.py unlock-cron "create-$DUMP_TYPE-dumps"
 }
 
 START_TIME=$(date +%s)
@@ -84,7 +88,7 @@ if [ -z $DUMP_BASE_DIR ]; then
 fi
 
 if [ -z $PRIVATE_DUMP_BASE_DIR ]; then
-    echo "DUMP_BASE_PRIVATE_DIR isn't set"
+    echo "PRIVATE_DUMP_BASE_DIR isn't set"
     exit 1
 fi
 
@@ -101,45 +105,56 @@ elif [ "$DUMP_TYPE" == "feedback" ]; then
     SUB_DIR="spark"
 elif [ "$DUMP_TYPE" == "mbcanonical" ]; then
     SUB_DIR="mbcanonical"
+elif [ "$DUMP_TYPE" == "sample" ]; then
+    SUB_DIR="sample"
 else
-    echo "ERROR: Dump Type $DUMP_TYPE is invalid. Dump type must be one of 'full', 'incremental', 'feedback' or 'mbcanonical'"
+    echo "ERROR: Dump Type $DUMP_TYPE is invalid. Dump type must be one of 'full', 'incremental', 'feedback', 'mbcanonical' or 'sample'"
     exit
 fi
 
 # Lock cron, so it cannot be accidentally terminated.
-/usr/local/bin/python admin/cron_lock.py lock-cron create-dumps "Creating $DUMP_TYPE dump."
+/usr/local/bin/python admin/cron_lock.py lock-cron "create-$DUMP_TYPE-dumps" "Creating $DUMP_TYPE dump."
 
 # Trap should not be called before we lock cron to avoid wiping out an existing lock file
 trap on_exit EXIT
 
-DUMP_TEMP_DIR="$DUMP_BASE_DIR/$SUB_DIR.$$"
+DUMP_INTERMEDIATE_DIR="$DUMP_BASE_DIR/$SUB_DIR.$$"
 echo "DUMP_BASE_DIR is $DUMP_BASE_DIR"
-echo "creating DUMP_TEMP_DIR $DUMP_TEMP_DIR"
-mkdir -p "$DUMP_TEMP_DIR"
+echo "creating DUMP_INTERMEDIATE_DIR $DUMP_INTERMEDIATE_DIR"
+mkdir -p "$DUMP_INTERMEDIATE_DIR"
 
-PRIVATE_DUMP_BASE_DIR="$PRIVATE_DUMP_BASE_DIR/$SUB_DIR.$$"
-echo "DUMP_BASE_DIR is $PRIVATE_DUMP_BASE_DIR"
-echo "creating PRIVATE_DUMP_BASE_DIR $PRIVATE_DUMP_BASE_DIR"
-mkdir -p "$PRIVATE_DUMP_BASE_DIR"
+DUMP_TEMP_DIR="$DUMP_BASE_DIR"
+
+PRIVATE_DUMP_INTERMEDIATE_DIR="$PRIVATE_DUMP_BASE_DIR/$SUB_DIR.$$"
+echo "PRIVATE_DUMP_BASE_DIR is $PRIVATE_DUMP_BASE_DIR"
+echo "creating PRIVATE_DUMP_INTERMEDIATE_DIR $PRIVATE_DUMP_INTERMEDIATE_DIR"
+mkdir -p "$PRIVATE_DUMP_INTERMEDIATE_DIR"
+
+PRIVATE_DUMP_TEMP_DIR="$PRIVATE_DUMP_BASE_DIR"
 
 if [ "$DUMP_TYPE" == "full" ]; then
-    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_TEMP_DIR" -lp "$PRIVATE_DUMP_BASE_DIR" -t "$DUMP_THREADS" "$@"; then
+    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_INTERMEDIATE_DIR" -lp "$PRIVATE_DUMP_INTERMEDIATE_DIR" -lt "$DUMP_TEMP_DIR" -lpt "$PRIVATE_DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
         echo "Full dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "incremental" ]; then
-    if ! /usr/local/bin/python manage.py dump create_incremental -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
+    if ! /usr/local/bin/python manage.py dump create_incremental -l "$DUMP_INTERMEDIATE_DIR" -t "$DUMP_THREADS" "$@"; then
         echo "Incremental dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "feedback" ]; then
-    if ! /usr/local/bin/python manage.py dump create_feedback -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
+    if ! /usr/local/bin/python manage.py dump create_feedback -l "$DUMP_INTERMEDIATE_DIR" -t "$DUMP_THREADS" "$@"; then
         echo "Feedback dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "mbcanonical" ]; then
-    if ! /usr/local/bin/python manage.py dump create_mbcanonical -l "$DUMP_TEMP_DIR" "$@"; then
+    if ! /usr/local/bin/python manage.py dump create_mbcanonical -l "$DUMP_INTERMEDIATE_DIR" "$@"; then
         echo "MB Canonical dump failed, exiting!"
+        exit 1
+    fi
+elif [ "$DUMP_TYPE" == "sample" ]; then
+    if ! /usr/local/bin/python manage.py dump create_sample -l "$DUMP_INTERMEDIATE_DIR" "$@"; then
+        echo "Sample dump failed, exiting!"
         exit 1
     fi
 else
@@ -147,13 +162,13 @@ else
     exit 1
 fi
 
-DUMP_ID_FILE=$(find "$DUMP_TEMP_DIR" -type f -name 'DUMP_ID.txt')
+DUMP_ID_FILE=$(find "$DUMP_INTERMEDIATE_DIR" -type f -name 'DUMP_ID.txt')
 if [ -z "$DUMP_ID_FILE" ]; then
     echo "DUMP_ID.txt not found, exiting."
     exit 1
 fi
 
-HAS_EMPTY_DIRS_OR_FILES=$(find "$DUMP_TEMP_DIR" -empty)
+HAS_EMPTY_DIRS_OR_FILES=$(find "$DUMP_INTERMEDIATE_DIR" -empty)
 if [ -n "$HAS_EMPTY_DIRS_OR_FILES" ]; then
     echo "Empty files or dirs found, exiting."
     echo "$HAS_EMPTY_DIRS_OR_FILES"
@@ -179,11 +194,11 @@ retry rsync -a "$DUMP_DIR/" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME/"
 chmod "$BACKUP_FILE_MODE" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME/"*
 echo "Dumps copied to backup directory!"
 
-HAS_EMPTY_PRIVATE_DIRS_OR_FILES=$(find "$PRIVATE_DUMP_BASE_DIR" -empty)
+HAS_EMPTY_PRIVATE_DIRS_OR_FILES=$(find "$PRIVATE_DUMP_INTERMEDIATE_DIR" -empty)
 if [ -z "$HAS_EMPTY_PRIVATE_DIRS_OR_FILES" ]; then
     # private dumps directory is not empty
 
-    PRIVATE_DUMP_ID_FILE=$(find "$PRIVATE_DUMP_BASE_DIR" -type f -name 'DUMP_ID.txt')
+    PRIVATE_DUMP_ID_FILE=$(find "$PRIVATE_DUMP_INTERMEDIATE_DIR" -type f -name 'DUMP_ID.txt')
     if [ -z "$PRIVATE_DUMP_ID_FILE" ]; then
         echo "DUMP_ID.txt not found, exiting."
         exit 1
@@ -232,22 +247,25 @@ touch "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-public-dump-$DUMP_TIMESTAMP.tar.xz"
+    "listenbrainz-public-dump-$DUMP_TIMESTAMP.tar.zst"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-public-timescale-dump-$DUMP_TIMESTAMP.tar.xz"
+    "listenbrainz-public-timescale-dump-$DUMP_TIMESTAMP.tar.zst"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar.xz"
+    "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar.zst"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
     "listenbrainz-spark-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-feedback-dump-$DUMP_TIMESTAMP.tar.xz"
+    "listenbrainz-feedback-dump-$DUMP_TIMESTAMP.tar.zst"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-statistics-dump-$DUMP_TIMESTAMP.tar.xz"
+    "listenbrainz-statistics-dump-$DUMP_TIMESTAMP.tar.zst"
+add_rsync_include_rule \
+    "$FTP_CURRENT_DUMP_DIR" \
+    "listenbrainz-sample-dump-$DUMP_TIMESTAMP.tar.zst"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
     "musicbrainz-canonical-dump-$DUMP_TIMESTAMP.tar.zst"
@@ -259,6 +277,7 @@ cat "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
 /usr/local/bin/python manage.py dump delete_old_dumps "$FTP_DIR/$SUB_DIR"
 /usr/local/bin/python manage.py dump delete_old_dumps "$BACKUP_DIR/$SUB_DIR"
+/usr/local/bin/python manage.py dump delete_old_dumps "$PRIVATE_BACKUP_DIR/$SUB_DIR"
 
 # rsync to ftp folder taking care of the rules
 ./admin/rsync-dump-files.sh "$DUMP_TYPE"

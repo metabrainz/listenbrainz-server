@@ -1,30 +1,15 @@
-from unittest.mock import patch
-
 import flask_testing
 from datasethoster.main import create_app
-from listenbrainz.labs_api.labs.api.explain_mbid_mapping import ExplainMBIDMappingQuery
-
+from listenbrainz.labs_api.labs.api.explain_mbid_mapping import ExplainMBIDMappingQuery, ExplainMBIDMappingInput
 
 json_request_0 = [
-    {
-        "[artist_credit_name]": "u2",
-        "[recording_name]": "gloria"
-    },
-    {
-        "[artist_credit_name]": "portishead",
-        "[recording_name]": "strangers"
-    },
-    {
-        "[artist_credit_name]": "portishead",
-        "[recording_name]": "glory box (feat. your mom)"
-    }
+    ExplainMBIDMappingInput(artist_credit_name="u2", recording_name="gloria", release_name=" "),
+    ExplainMBIDMappingInput(artist_credit_name="portishead", recording_name="strangers", release_name=" "),
+    ExplainMBIDMappingInput(artist_credit_name="portishead", recording_name="glory box (feat. your mom)", release_name=" ")
 ]
 
 json_request_1 = [
-    {
-        "[artist_credit_name]": "portishead",
-        "[recording_name]": "strangers a"
-    }
+    ExplainMBIDMappingInput(artist_credit_name="portishead", recording_name="strangers a", release_name=" ")
 ]
 
 typesense_response_0 = [
@@ -178,5 +163,4 @@ class MainTestCase(flask_testing.TestCase):
         self.assertEqual(q.names()[0], "explain-mbid-mapping")
         self.assertEqual(q.names()[1], "Explain MusicBrainz ID Mapping lookup")
         self.assertNotEqual(q.introduction(), "")
-        self.assertEqual(q.inputs(), ['artist_credit_name', 'recording_name', 'release_name'])
-        self.assertEqual(q.outputs(), None)
+        self.assertCountEqual(q.inputs().__fields__.keys(), ['artist_credit_name', 'recording_name', 'release_name'])

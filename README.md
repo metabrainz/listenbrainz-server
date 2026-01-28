@@ -4,6 +4,9 @@
 </h1>
 <h4 align="center">Server for the ListenBrainz project</h4>
 <p align="center">
+    <a href="https://app.readthedocs.org/projects/listenbrainz/">
+    <img src="https://readthedocs.org/projects/listenbrainz/badge/"
+         alt="Readthedocs status"></a>
     <a href="https://github.com/metabrainz/listenbrainz-server/commits/master">
     <img src="https://img.shields.io/github/last-commit/metabrainz/listenbrainz-server.svg?style=flat-square&logo=github&logoColor=white"
          alt="GitHub last commit"></a>
@@ -55,7 +58,8 @@ If you are interested in helping out, consider
 
 If you are interested in contributing code or documentation,
 please have a look at the [issue tracker](https://tickets.metabrainz.org/browse/LB)
-or come visit us in the #metabrainz IRC channel on irc.libera.chat.
+or chat with us in [IRC/Matrix/Discord](https://musicbrainz.org/doc/Communication/ChatBrainz)
+on the #metabrainz channel.
 
 ## Development environment
 

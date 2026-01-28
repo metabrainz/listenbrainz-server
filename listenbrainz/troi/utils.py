@@ -1,11 +1,9 @@
 from sqlalchemy import text
 
-from listenbrainz.db import timescale
-
 SPOTIFY_EXPORT_PREFERENCE = "export_to_spotify"
 
 
-def get_existing_playlist_urls(user_ids: list[int], playlist_slug):
+def get_existing_playlist_urls(ts_conn, user_ids: list[int], playlist_slug):
     """ Retrieve urls of the existing spotify playlists of daily jams users """
     query = """
         SELECT DISTINCT ON (created_for_id)
@@ -16,6 +14,5 @@ def get_existing_playlist_urls(user_ids: list[int], playlist_slug):
            AND created_for_id = ANY(:user_ids)
       ORDER BY created_for_id, created DESC
     """
-    with timescale.engine.connect() as conn:
-        results = conn.execute(text(query), {"user_ids": user_ids, "playlist_slug": playlist_slug})
-        return {r.created_for_id: r.spotify_url for r in results}
+    results = ts_conn.execute(text(query), {"user_ids": user_ids, "playlist_slug": playlist_slug})
+    return {r.created_for_id: r.spotify_url for r in results}

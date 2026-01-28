@@ -1,5 +1,6 @@
 import { isString } from "lodash";
 import React, { useState } from "react";
+import { Link } from "react-router";
 
 export enum Modes {
   "easy" = "easy",
@@ -64,16 +65,13 @@ function Prompt(props: PromptProps) {
               id="doc-link"
               href="https://troi.readthedocs.io/en/latest/lb_radio.html"
             >
-              How do I write a query?
+              How do I write a prompt?
             </a>
           </small>
         </h3>
       </div>
       <form onSubmit={generateCallbackFunction}>
-        <div
-          className="input-group input-group-flex input-group-lg"
-          id="prompt-input"
-        >
+        <div className="input-group input-group-lg" id="prompt-input">
           <input
             type="text"
             className="form-control"
@@ -83,7 +81,7 @@ function Prompt(props: PromptProps) {
             onChange={onInputChangeCallback}
           />
           <select
-            className="form-control"
+            className="form-select"
             id="mode-dropdown"
             name="mode"
             value={mode}
@@ -93,29 +91,31 @@ function Prompt(props: PromptProps) {
               return <option value={modeName}>{modeName}</option>;
             })}
           </select>
-          <span className="input-group-btn input-group-lg">
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={prompt?.length <= 3}
-            >
-              Generate
-            </button>
-          </span>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={prompt?.length <= 3}
+          >
+            Generate
+          </button>
         </div>
       </form>
       {hideExamples === false && (
         <div>
           <div id="examples">
             Examples:
-            <a href="/explore/lb-radio?prompt=artist:(radiohead)&mode=easy">
+            <Link to="/explore/lb-radio/?prompt=artist:(radiohead)&mode=easy">
               artist:(radiohead)
-            </a>
-            <a href="/explore/lb-radio?prompt=tag:(trip hop)&mode=easy">
+            </Link>
+            <Link to="/explore/lb-radio/?prompt=tag:(trip hop)&mode=easy">
               tag:(trip hop)
-            </a>
-            <a href="/explore/lb-radio?prompt=%23metal&mode=easy">#metal</a>
-            <a href="/explore/lb-radio?prompt=stats:rob&mode=easy">stats:rob</a>
+            </Link>
+            <Link to="/explore/lb-radio/?prompt=%23metal&mode=easy">
+              #metal
+            </Link>
+            <Link to="/explore/lb-radio/?prompt=stats:rob&mode=easy">
+              stats:rob
+            </Link>
           </div>
           <div id="made-with-postgres">
             <img

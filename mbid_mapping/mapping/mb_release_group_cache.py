@@ -133,9 +133,18 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                 tag["genre_mbid"] = genre_mbid
             release_group_tags.append(tag)
 
+
+        date = ''
+        if row["year"] is not None:
+            date = str(row["year"])
+            if row["month"] is not None:
+                date += "-%02d" % row["month"]
+                if row["day"] is not None:
+                    date += "-%02d" % row["day"]
+
         release_group = {
             "name": row["release_group_name"],
-            "date": row["date"],
+            "date": date,
             "type": row["type"],
             "caa_id": row["caa_id"],
             "caa_release_mbid": row["caa_release_mbid"],
@@ -212,6 +221,7 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                                     ON l.link_type = lt.id
                                   {values_join}
                                  WHERE lt.gid IN ({ARTIST_LINK_GIDS_SQL})
+                                 -- do not show outdated urls to users
                                    AND NOT l.ended
                               GROUP BY a.gid
                    ), release_group_rels AS (
@@ -232,7 +242,7 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                                     ON la.attribute_type = lat.id
                                   {values_join}
                                  WHERE lt.gid IN ({RELEASE_GROUP_LINK_GIDS_SQL})
-                                   AND NOT l.ended
+                                 -- the release group rels we use make sense to be shown to the user even if they have been marked as ended
                                GROUP BY rg.gid
                    ), artist_data AS (
                             SELECT rg.gid
@@ -427,9 +437,9 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                                  , rgca.caa_id
                                  , rgca.caa_release_mbid
                                  , rgpt.name AS type
-                                 , (rgm.first_release_date_year::TEXT || '-' ||
-                                    LPAD(rgm.first_release_date_month::TEXT, 2, '0') || '-' ||
-                                    LPAD(rgm.first_release_date_day::TEXT, 2, '0')) AS date
+                                 , rgm.first_release_date_year AS year
+                                 , rgm.first_release_date_month AS month
+                                 , rgm.first_release_date_day AS day
                                  , rec_data.mediums
                                  , rec_data.recordings_release_mbid
                               FROM musicbrainz.release_group rg

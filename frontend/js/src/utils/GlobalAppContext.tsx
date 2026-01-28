@@ -1,6 +1,7 @@
-import { createContext, createRef } from "react";
+import { createContext } from "react";
 import APIService from "./APIService";
 import RecordingFeedbackManager from "./RecordingFeedbackManager";
+import { FlairEnum, FlairName, Flair } from "./constants";
 
 export type GlobalAppContextT = {
   APIService: APIService;
@@ -9,28 +10,42 @@ export type GlobalAppContextT = {
   spotifyAuth?: SpotifyUser;
   youtubeAuth?: YoutubeUser;
   soundcloudAuth?: SoundCloudUser;
+  funkwhaleAuth?: FunkwhaleUser;
+  navidromeAuth?: NavidromeUser;
   critiquebrainzAuth?: MetaBrainzProjectUser;
+  appleAuth?: AppleMusicUser;
   musicbrainzAuth?: MetaBrainzProjectUser & {
-    refreshMBToken: () => Promise<void>;
+    refreshMBToken: () => Promise<string | undefined>;
   };
   userPreferences?: UserPreferences;
   musicbrainzGenres?: string[];
   recordingFeedbackManager: RecordingFeedbackManager;
+  flair?: Flair;
 };
 const apiService = new APIService(`${window.location.origin}/1`);
 
-const GlobalAppContext = createContext<GlobalAppContextT>({
+export const defaultGlobalContext: GlobalAppContextT = {
   APIService: apiService,
   websocketsUrl: "",
   currentUser: {} as ListenBrainzUser,
   spotifyAuth: {},
   youtubeAuth: {},
   soundcloudAuth: {},
+  funkwhaleAuth: undefined,
+  navidromeAuth: undefined,
+  appleAuth: {},
   critiquebrainzAuth: {},
-  musicbrainzAuth: { refreshMBToken: async () => {} },
+  musicbrainzAuth: {
+    refreshMBToken: async () => {
+      return undefined;
+    },
+  },
   userPreferences: {},
   musicbrainzGenres: [],
   recordingFeedbackManager: new RecordingFeedbackManager(apiService),
-});
+  flair: FlairEnum.None,
+};
+
+const GlobalAppContext = createContext<GlobalAppContextT>(defaultGlobalContext);
 
 export default GlobalAppContext;

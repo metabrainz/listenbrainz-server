@@ -19,6 +19,7 @@
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
+from listenbrainz.webserver import ts_conn, db_conn
 
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound, APINoContent
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
@@ -32,7 +33,7 @@ from brainzutils.ratelimit import ratelimit
 missing_musicbrainz_data_api_bp = Blueprint('missing_musicbrainz_data_v1', __name__)
 
 
-@missing_musicbrainz_data_api_bp.route("/user/<user_name>/")
+@missing_musicbrainz_data_api_bp.get("/user/<mb_username:user_name>/")
 @crossdomain
 @ratelimit()
 def get_missing_musicbrainz_data(user_name):
@@ -87,7 +88,7 @@ def get_missing_musicbrainz_data(user_name):
     # The source may change in future
     source = 'cf'
 
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: {}".format(user_name))
 
@@ -96,7 +97,7 @@ def get_missing_musicbrainz_data(user_name):
 
     count = min(count, MAX_ITEMS_PER_GET)
 
-    data, created = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(user['id'], source)
+    data, created = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(db_conn, ts_conn, user['id'], source)
 
     if not data:
         err_msg = 'Missing MusicBrainz data for {} not calculated or none exists.'.format(user_name)

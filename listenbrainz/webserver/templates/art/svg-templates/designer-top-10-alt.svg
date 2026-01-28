@@ -6,10 +6,19 @@
      version="1.1"
      xmlns:cc="http://creativecommons.org/ns#"
      xmlns:xlink="http://www.w3.org/1999/xlink"
+     role="img"
      viewBox="0 0 924 924"
      xmlns:dc="http://purl.org/dc/elements/1.1/"
      height="{{ height }}"
-     width="{{ width }}">
+     width="{{ width }}"
+     preserveAspectRatio="xMinYMin meet"
+>
+  <title>Top 10 releases {{ metadata["time_range"] }} for {{ metadata["user_name"] }}&#xA;</title>
+  <desc>
+      {%- for release in releases[:10] -%}
+        {%- if loop.index == 10 -%}X{%- else -%}{{- loop.index -}}{%- endif -%}. {{ release.release_name }} - {{ release.artist_name }}&#xA;
+      {%- endfor -%}
+  </desc>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;900');
     .artist-name *, .artist-name {
@@ -17,10 +26,9 @@
     }
   </style>
  <defs id="defs42">
-  <linearGradient id="gradient" x1="-588.5" y1="-729" x2="1241.5" y2="1235" gradientUnits="userSpaceOnUse">
-    <stop stop-color="#006D39"/>
-    <stop offset="0.274676" stop-color="#0A3A2A"/>
-    <stop offset="0.647633" stop-color="#0F2223"/>
+    <linearGradient id="gradient" x1="-20%" y1="-20%" x2="100%" y2="100%"
+      gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#083b2b"/>
     <stop offset="1" stop-color="#111820"/>
   </linearGradient>
   <clipPath id="clip">
@@ -29,7 +37,7 @@
  </defs>
  <rect id="background" height="924" fill="url(#gradient)" rx="4" ry="4" width="924" y="0" x="0"/>
  <g clip-path="url(#clip)" letter-spacing="0em" font-weight="900" font-family="Inter, sans-serif" fill="#006D39">
-  <rect width="770" height="770" x="77" y="77" stroke="#006D39" fill="none"/>
+  <rect width="770" height="770" x="77" y="77" class="accent-color-stroke" fill="none" />
   <g font-size="20px">
    <text id="user_name"><tspan id="tspan6" y="36" x="22">{{ metadata["user_name"]|upper|e }}</tspan></text>
    <text id="text8"><tspan id="tspan10" y="894" x="22">TOP TEN RELEASES {{ metadata["time_range"]|upper|e }}</tspan></text>
@@ -50,10 +58,10 @@
       {% endif %}
      </tspan>
      <tspan x="175" y="{{ y_artists_start + loop.index0 * gap }}" id="artist-{{ loop.index }}-album">
-      {{ render_entity_link("release", release.release_mbid, release.release_name|upper|e) }}
+      {{ render_entity_link("release", release.release_mbid, release.release_name) }}
      </tspan>
      <tspan x="175" y="{{ y_albums_start + loop.index0 * gap }}" class="artist-name" id="artist-{{ loop.index }}-name">
-      {{ render_entity_link("artist", release.artist_mbids[0], release.artist_name|upper|e) }}
+      {{ render_entity_link("artist", release.artist_mbids[0], release.artist_name) }}
      </tspan>
     </text>
    {% endfor %}

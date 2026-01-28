@@ -40,8 +40,11 @@ elif [ $DUMP_TYPE == "feedback" ]; then
 elif [ $DUMP_TYPE == "mbcanonical" ]; then
     SOURCE_DIR=$RSYNC_MBCANONICAL_DIR
     SSH_KEY=$RSYNC_MBCANONICAL_KEY
+elif [ $DUMP_TYPE == "sample" ]; then
+    SOURCE_DIR=$RSYNC_SAMPLE_DIR
+    SSH_KEY=$RSYNC_SAMPLE_KEY
 else
-    echo "Could not determine which directory (full, incremental, feedback, mbcanonical) to copy over, exiting!"
+    echo "Could not determine which directory (full, incremental, feedback, mbcanonical, sample) to copy over, exiting!"
     exit 1
 fi
 

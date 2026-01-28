@@ -1,12 +1,13 @@
 import json
 import time
 
-from flask import url_for
 from unittest.mock import patch
+
+from flask import url_for
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
-from listenbrainz.spotify_updater import spotify_read_listens
+from listenbrainz.listens_importer.spotify import SpotifyImporter
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.db import external_service_oauth
 
@@ -15,22 +16,31 @@ class SpotifyReaderTestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(SpotifyReaderTestCase, self).setUp()
-        external_service_oauth.save_token(user_id=self.user['id'],
+        self.ctx = self.app.test_request_context()
+        self.ctx.push()
+
+        external_service_oauth.save_token(self.db_conn, user_id=self.user['id'],
                                           service=ExternalServiceType.SPOTIFY,
                                           access_token='token', refresh_token='refresh',
                                           token_expires_ts=int(time.time()) + 3000,
                                           record_listens=True,
                                           scopes=['user-read-recently-played'])
 
-    @patch('listenbrainz.spotify_updater.spotify_read_listens.get_user_currently_playing')
-    @patch('listenbrainz.spotify_updater.spotify_read_listens.get_user_recently_played')
+    def tearDown(self):
+        self.ctx.pop()
+        super(SpotifyReaderTestCase, self).tearDown()
+
+    @patch.object(SpotifyImporter, 'get_user_currently_playing')
+    @patch.object(SpotifyImporter, 'get_user_recently_played')
     def test_spotify_recently_played_submitted(self, mock_recently_played, mock_currently_playing):
         with open(self.path_to_data_file('spotify_recently_played_submitted.json')) as f:
             mock_recently_played.return_value = json.load(f)
         mock_currently_playing.return_value = None
 
-        result = spotify_read_listens.process_all_spotify_users()
-        self.assertEqual(result, (1, 0))
+        with self.app.app_context():
+            importer = SpotifyImporter()
+            result = importer.process_all_users()
+            self.assertEqual(result, (1, 0))
 
         time.sleep(0.5)
         recalculate_all_user_data()

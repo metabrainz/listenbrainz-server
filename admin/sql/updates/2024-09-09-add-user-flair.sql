@@ -1,0 +1,5 @@
+BEGIN;
+
+ALTER TABLE user_setting ADD COLUMN flair JSONB;
+
+COMMIT;

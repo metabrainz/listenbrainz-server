@@ -2,6 +2,9 @@ from listenbrainz.model import db
 from listenbrainz.model.utils import generate_username_link
 from listenbrainz.webserver.admin import AdminModelView
 
+from sqlalchemy.dialects.postgresql import JSONB
+
+
 
 class ListensImporter(db.Model):
     __tablename__ = 'listens_importer'
@@ -15,8 +18,16 @@ class ListensImporter(db.Model):
     service = db.Column(db.String, nullable=False)
     last_updated = db.Column(db.DateTime(timezone=True))
     latest_listened_at = db.Column(db.DateTime(timezone=True))
-    error_message = db.Column(db.String)
+    status = db.Column(JSONB)
+    error = db.Column(JSONB)
+    error = db.Column(JSONB)
     user = db.relationship('User')
+
+
+def get_error_message(model):
+    if model.error is None:
+        return ""
+    return model.error.get("message", "")
 
 
 class ListensImporterAdminView(AdminModelView):
@@ -27,7 +38,8 @@ class ListensImporterAdminView(AdminModelView):
         'service',
         'last_updated',
         'latest_listened_at',
-        'error_message'
+        'status',
+        'error'
     ]
 
     column_list = [
@@ -38,23 +50,23 @@ class ListensImporterAdminView(AdminModelView):
         'service',
         'last_updated',
         'latest_listened_at',
-        'error_message'
+        'status',
+        'error'
     ]
 
     column_searchable_list = [
         'user_id',
         'service',
-        'error_message'
     ]
 
     column_filters = [
         'user_id',
         'service',
         'last_updated',
-        'error_message',
         'latest_listened_at'
     ]
 
     column_formatters = {
-        "user_name": lambda view, context, model, name: generate_username_link(model.user.musicbrainz_id)
+        "user_name": lambda view, context, model, name: generate_username_link(model.user.musicbrainz_id),
+        "error_message": lambda view, context, model, name: get_error_message(model)
     }

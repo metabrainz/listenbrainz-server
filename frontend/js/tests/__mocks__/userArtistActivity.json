@@ -1,0 +1,167 @@
+{
+  "payload": {
+    "artist_activity": [
+      {
+        "name": "Ed Sheeran",
+        "artist_name": "Ed Sheeran",
+        "artist_mbid": null,
+        "listen_count": 87,
+        "albums": [
+          { "listen_count": 17, "name": "=", "release_group_mbid": null },
+          { "listen_count": 12, "name": "÷", "release_group_mbid": null },
+          { "listen_count": 11, "name": "+", "release_group_mbid": null },
+          { "listen_count": 10, "name": "×", "release_group_mbid": null },
+          { "listen_count": 16, "name": "No.6 Collaborations Project", "release_group_mbid": null },
+          { "listen_count": 16, "name": "-", "release_group_mbid": null },
+          { "listen_count": 3, "name": "Autumn Variations", "release_group_mbid": null },
+          { "listen_count": 2, "name": "Under the tree", "release_group_mbid": null }
+        ]
+      },
+      {
+        "name": "AP Dhillon",
+        "artist_name": "AP Dhillon",
+        "artist_mbid": null,
+        "listen_count": 46,
+        "albums": [
+          { "listen_count": 6, "name": "Two Hearts Never Break The Same", "release_group_mbid": null },
+          { "listen_count": 3, "name": "HIDDEN GEMS", "release_group_mbid": null },
+          { "listen_count": 8, "name": "Summer High", "release_group_mbid": null },
+          { "listen_count": 8, "name": "Ma Belle", "release_group_mbid": null },
+          { "listen_count": 8, "name": "Excuses", "release_group_mbid": null },
+          { "listen_count": 7, "name": "Insane", "release_group_mbid": null },
+          { "listen_count": 6, "name": "The Brownprint", "release_group_mbid": null }
+        ]
+      },
+      {
+        "name": "Diljit Dosanjh",
+        "artist_name": "Diljit Dosanjh",
+        "artist_mbid": null,
+        "listen_count": 27,
+        "albums": [
+          { "listen_count": 7, "name": "Ghost", "release_group_mbid": null },
+          { "listen_count": 5, "name": "G.O.A.T.", "release_group_mbid": null },
+          { "listen_count": 3, "name": "Drive Thru", "release_group_mbid": null },
+          { "listen_count": 6, "name": "Love Ya", "release_group_mbid": null },
+          { "listen_count": 6, "name": "In Love With Diljit Dosanjh", "release_group_mbid": null }
+        ]
+      },
+      {
+        "name": "Honey Singh",
+        "artist_name": "Honey Singh",
+        "artist_mbid": null,
+        "listen_count": 21,
+        "albums": [
+          { "listen_count": 21, "name": "International Villager", "release_group_mbid": null }
+        ]
+      },
+      {
+        "name": "Yo Yo Honey Singh",
+        "artist_name": "Yo Yo Honey Singh",
+        "artist_mbid": null,
+        "listen_count": 14,
+        "albums": [
+          { "listen_count": 4, "name": "Desi Kalakaar", "release_group_mbid": null },
+          { "listen_count": 2, "name": "Zorawar", "release_group_mbid": null },
+          { "listen_count": 8, "name": "Glory", "release_group_mbid": null }
+        ]
+      },
+      {
+        "name": "Anuv Jain",
+        "artist_name": "Anuv Jain",
+        "artist_mbid": null,
+        "listen_count": 12,
+        "albums": [
+          { "listen_count": 5, "name": "Ocean", "release_group_mbid": null },
+          { "listen_count": 7, "name": "Baarishein", "release_group_mbid": null }
+        ]
+      },
+      {
+        "name": "Avvy Sra & Karan Aujla",
+        "artist_name": "Avvy Sra & Karan Aujla",
+        "artist_mbid": null,
+        "listen_count": 8,
+        "albums": [
+          { "listen_count": 8, "name": "White Brown Black", "release_group_mbid": null }
+        ]
+      },
+      {
+        "name": "Shubh",
+        "artist_name": "Shubh",
+        "artist_mbid": null,
+        "listen_count": 8,
+        "albums": [
+          { "listen_count": 2, "name": "We Rollin", "release_group_mbid": null },
+          { "listen_count": 6, "name": "Bandana", "release_group_mbid": null }
+        ]
+      },
+      {
+        "name": "Pav Dharia",
+        "artist_name": "Pav Dharia",
+        "artist_mbid": null,
+        "listen_count": 8,
+        "albums": [
+          { "listen_count": 8, "name": "Na Ja", "release_group_mbid": null }
+        ]
+      },
+      {
+        "name": "Vishal Mishra",
+        "artist_name": "Vishal Mishra",
+        "artist_mbid": null,
+        "listen_count": 8,
+        "albums": [
+          { "listen_count": 8, "name": "Manjha", "release_group_mbid": null }
+        ]
+      },
+      {
+        "name": "Aditya Rikhari",
+        "artist_name": "Aditya Rikhari",
+        "artist_mbid": null,
+        "listen_count": 8,
+        "albums": [
+          { "listen_count": 8, "name": "Jaana Samjho Na (From \"Bhool Bhulaiyaa 3\")", "release_group_mbid": null }
+        ]
+      },
+      {
+        "name": "Juss & MixSingh",
+        "artist_name": "Juss & MixSingh",
+        "artist_mbid": null,
+        "listen_count": 7,
+        "albums": [
+          { "listen_count": 7, "name": "Suniyan Suniyan", "release_group_mbid": null }
+        ]
+      },
+      {
+        "name": "Diljit Dosanjh & Sia",
+        "artist_name": "Diljit Dosanjh & Sia",
+        "artist_mbid": null,
+        "listen_count": 7,
+        "albums": [
+          { "listen_count": 7, "name": "Hass Hass", "release_group_mbid": null }
+        ]
+      },
+      {
+        "name": "Jassa Dhillon",
+        "artist_name": "Jassa Dhillon",
+        "artist_mbid": null,
+        "listen_count": 6,
+        "albums": [
+          { "listen_count": 6, "name": "VIBIN", "release_group_mbid": null }
+        ]
+      },
+      {
+        "name": "Jasleen Royal",
+        "artist_name": "Jasleen Royal",
+        "artist_mbid": null,
+        "listen_count": 6,
+        "albums": [
+          { "listen_count": 6, "name": "Sahiba", "release_group_mbid": null }
+        ]
+      }
+    ],
+    "user_id": "foobar",
+    "range": "week",
+    "from_ts": 1609459200,
+    "to_ts": 1640995200,
+    "last_updated": 1640995200
+  }
+}

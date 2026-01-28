@@ -58,11 +58,6 @@ const lookupMBReleaseSpy = jest
   .spyOn(testAPIService, "lookupMBRelease")
   .mockResolvedValue(lookupMBRelease);
 
-// mock api refreshtoken sending a new token
-const apiRefreshSpy = jest
-  .spyOn(testAPIService, "refreshAccessToken")
-  .mockResolvedValue("this is new token");
-
 const user = userEvent.setup();
 
 describe("CBReviewModal", () => {
@@ -122,11 +117,21 @@ describe("CBReviewModal", () => {
   });
 
   it("submits the review and displays a success alert", async () => {
+    // The modal closes upon successful submission, which messes up the following test
+    // Isolate this modal from other tests
+    const apiService = new APIService("FOO");
+    const submitReviewSpy = jest
+      .spyOn(apiService, "submitReviewToCB")
+      .mockResolvedValue({
+        metadata: { review_id: "new-review-id-that-API-returns" },
+      });
+
+    NiceModal.register("cb-modal-1", CBReviewModal);
     renderWithProviders(<NiceModal.Provider />, {
-      APIService: testAPIService,
+      APIService: apiService,
     });
     act(() => {
-      NiceModal.show(CBReviewModal, { ...props });
+      NiceModal.show("cb-modal-1", { ...props });
     });
 
     const textInput = await screen.findByRole("textbox");
@@ -150,7 +155,7 @@ describe("CBReviewModal", () => {
 
     // expect a success toast message
     await screen.findByText("Your review was submitted to CritiqueBrainz!");
-    expect(submitReviewToCBSpy).toHaveBeenCalledWith("FNORD", "never_gonna", {
+    expect(submitReviewSpy).toHaveBeenCalledWith("FNORD", "never_gonna", {
       entity_name: "Criminal",
       entity_id: "2bf47421-2344-4255-a525-e7d7f54de742",
       entity_type: "recording",
@@ -274,17 +279,27 @@ describe("CBReviewModal", () => {
   });
 
   it("retries once if API throws invalid token error", async () => {
-    submitReviewToCBSpy
+    // The modal closes upon successful submission, which messes up the following test
+    // Isolate this modal from other tests
+    const apiService = new APIService("FOO");
+    // mock api refreshtoken sending a new token
+    const apiRefreshSpy = jest
+      .spyOn(apiService, "refreshAccessToken")
+      .mockResolvedValue("this is new token");
+    const submitReviewSpy = jest
+      .spyOn(apiService, "submitReviewToCB")
       .mockRejectedValueOnce({ message: "invalid_token" })
-      .mockResolvedValueOnce({
+      .mockResolvedValue({
         metadata: { review_id: "new-review-id-that-API-returns" },
       });
 
+    NiceModal.register("cb-modal-2", CBReviewModal);
+
     renderWithProviders(<NiceModal.Provider />, {
-      APIService: testAPIService,
+      APIService: apiService,
     });
     act(() => {
-      NiceModal.show(CBReviewModal, { ...props });
+      NiceModal.show("cb-modal-2", { ...props, keepMounted: true });
     });
 
     const textInput = await screen.findByRole("textbox");
@@ -305,16 +320,11 @@ describe("CBReviewModal", () => {
     // expect a success toast message eventually
     await screen.findByText("Your review was submitted to CritiqueBrainz!");
 
-    await waitFor(
-      () => expect(apiRefreshSpy).toHaveBeenCalledTimes(1) // a new token is requested once
-    );
-    await waitFor(() =>
-      expect(apiRefreshSpy).toHaveBeenCalledWith("critiquebrainz")
-    );
-    await waitFor(() =>
-      // new token was received, and the submission retried
-      expect(submitReviewToCBSpy).toHaveBeenCalledTimes(2)
-    );
+    expect(apiRefreshSpy).toHaveBeenCalledTimes(1); // a new token is requested once
+    expect(apiRefreshSpy).toHaveBeenCalledWith("critiquebrainz");
+
+    // new token was received, and the submission retried
+    expect(submitReviewSpy).toHaveBeenCalledTimes(2);
   });
 
   it("catches API call errors and displays it on screen", async () => {

@@ -1,17 +1,19 @@
 import * as React from "react";
-import { mount, ReactWrapper } from "enzyme";
 
 import { act } from "react-dom/test-utils";
 import NiceModal, { NiceModalHocProps } from "@ebay/nice-modal-react";
+import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import PinRecordingModal, {
   maxBlurbContentLength,
 } from "../../src/pins/PinRecordingModal";
 import APIServiceClass from "../../src/utils/APIService";
-import GlobalAppContext, {
-  GlobalAppContextT,
-} from "../../src/utils/GlobalAppContext";
-import { waitForComponentToPaint } from "../test-utils";
+import { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
+import {
+  renderWithProviders,
+  textContentMatcher,
+} from "../test-utils/rtl-test-utils";
 
 const recordingToPin: Listen = {
   listened_at: 1605927742,
@@ -44,16 +46,15 @@ const pinnedRecordingFromAPI: PinnedRecording = {
   },
 };
 
-const user = {
-  id: 1,
-  name: "name",
-  auth_token: "auth_token",
-};
 const APIService = new APIServiceClass("");
 const globalProps: GlobalAppContextT = {
   APIService,
   websocketsUrl: "",
-  currentUser: user,
+  currentUser: {
+    id: 1,
+    name: "name",
+    auth_token: "auth_token",
+  },
   spotifyAuth: {},
   youtubeAuth: {},
   recordingFeedbackManager: new RecordingFeedbackManager(APIService, {
@@ -72,46 +73,40 @@ const submitPinRecordingSpy = jest
     Promise.resolve({ status: "ok", data: pinnedRecordingFromAPI })
   );
 
+jest.unmock("react-toastify");
+const user = userEvent.setup();
+
 describe("PinRecordingModal", () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
-  it("renders the prompt, input text area, track_name, and artist_name", () => {
-    const wrapper = mount(
-      <GlobalAppContext.Provider value={globalProps}>
-        <NiceModal.Provider>
-          <PinRecordingModal
-            {...niceModalProps}
-            recordingToPin={recordingToPin}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    );
-    const modalElement = wrapper.find("#PinRecordingModal");
-    expect(modalElement).toHaveLength(1);
-    expect(modalElement.getDOMNode()).toHaveTextContent("Feel Special");
-    expect(modalElement.getDOMNode()).toHaveTextContent("TWICE");
-    expect(modalElement.find("textarea")).toHaveLength(1);
+  it("renders the prompt, input text area, track_name, and artist_name", async () => {
+    renderWithProviders(<NiceModal.Provider />, globalProps);
+    act(() => {
+      NiceModal.show(PinRecordingModal, { ...niceModalProps, recordingToPin });
+    });
+
+    await screen.findByRole("dialog");
+    await screen.findByText(textContentMatcher("Feel Special by TWICE"));
+    // expect(screen.getByText(/Feel Special by TWICE/i)).toBeVisible();
+    await screen.findByRole("textbox");
   });
 
   describe("submitPinRecording", () => {
     it("calls API, and creates a new alert on success", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <NiceModal.Provider>
-            <PinRecordingModal
-              {...niceModalProps}
-              recordingToPin={recordingToPin}
-            />
-          </NiceModal.Provider>
-        </GlobalAppContext.Provider>
-      );
-
-      await act(async () => {
-        const submitButton = wrapper.find("button[type='submit']").first();
-        submitButton?.simulate("click");
+      renderWithProviders(<NiceModal.Provider />, globalProps);
+      act(() => {
+        NiceModal.show(PinRecordingModal, {
+          ...niceModalProps,
+          recordingToPin,
+        });
       });
-      await waitForComponentToPaint(wrapper);
+
+      const submitButton = await screen.findByRole("button", {
+        name: /pin track/i,
+      });
+      expect(submitButton).not.toBeDisabled();
+      await user.click(submitButton);
 
       expect(submitPinRecordingSpy).toHaveBeenCalledTimes(1);
       expect(submitPinRecordingSpy).toHaveBeenCalledWith(
@@ -123,167 +118,111 @@ describe("PinRecordingModal", () => {
     });
 
     it("sets default blurbContent in state on success", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <NiceModal.Provider>
-            <PinRecordingModal
-              {...niceModalProps}
-              recordingToPin={recordingToPin}
-            />
-          </NiceModal.Provider>
-        </GlobalAppContext.Provider>
-      );
-      await act(async () => {
-        const blurbTextArea = wrapper
-          .find("textarea[name='blurb-content']")
-          .first();
-        blurbTextArea.simulate("change", { target: { value: "foobar" } });
+      renderWithProviders(<NiceModal.Provider />, globalProps);
+      act(() => {
+        NiceModal.show(PinRecordingModal, {
+          ...niceModalProps,
+          recordingToPin,
+        });
       });
-      await act(async () => {
-        const submitButton = wrapper.find("button[type='submit']").first();
-        submitButton?.simulate("click");
+      const textInput = await screen.findByRole("textbox");
+      await user.type(textInput, "foobar");
+      const submitButton = await screen.findByRole("button", {
+        name: /pin track/i,
       });
-      await waitForComponentToPaint(wrapper);
+      await user.click(submitButton);
+
       expect(submitPinRecordingSpy).toHaveBeenCalledWith(
         "auth_token",
         "recording_msid",
         "recording_mbid",
         "foobar"
       );
-      expect(
-        wrapper.find("textarea[name='blurb-content']").first().props().value
-      ).toEqual("");
+      expect(textInput).toHaveTextContent("");
     });
 
     it("does nothing if currentUser.authtoken is not set", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider
-          value={{
-            ...globalProps,
-            currentUser: { auth_token: undefined, id: 1, name: "test" }, // auth token not set
-          }}
-        >
-          <NiceModal.Provider>
-            <PinRecordingModal
-              {...niceModalProps}
-              recordingToPin={recordingToPin}
-            />
-          </NiceModal.Provider>
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-
-      await act(async () => {
-        const submitButton = wrapper.find("button[type='submit']").first();
-        submitButton?.simulate("click");
+      renderWithProviders(<NiceModal.Provider />, {
+        ...globalProps,
+        currentUser: { auth_token: undefined, id: 1, name: "test" }, // auth token not set
       });
-      await waitForComponentToPaint(wrapper);
+      act(() => {
+        NiceModal.show(PinRecordingModal, {
+          ...niceModalProps,
+          recordingToPin,
+        });
+      });
+      const submitButton = await screen.findByRole("button", {
+        name: /pin track/i,
+      });
+      await user.click(submitButton);
       expect(submitPinRecordingSpy).toHaveBeenCalledTimes(0);
     });
 
     it("calls handleError if error is returned", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <NiceModal.Provider>
-            <PinRecordingModal
-              {...niceModalProps}
-              recordingToPin={recordingToPin}
-            />
-          </NiceModal.Provider>
-        </GlobalAppContext.Provider>
-      );
+      renderWithProviders(<NiceModal.Provider />, globalProps);
+      act(() => {
+        NiceModal.show(PinRecordingModal, {
+          ...niceModalProps,
+          recordingToPin,
+        });
+      });
 
-      const error = new Error("error");
+      const error = new Error("Beep boop an error occurred");
       submitPinRecordingSpy.mockImplementationOnce(() => {
         throw error;
       });
 
-      await act(async () => {
-        const submitButton = wrapper.find("button[type='submit']").first();
-        submitButton?.simulate("click");
+      const submitButton = await screen.findByRole("button", {
+        name: /pin track/i,
       });
-      await waitForComponentToPaint(wrapper);
+      await user.click(submitButton);
+      await screen.findByText("Beep boop an error occurred");
     });
   });
 
   describe("handleBlurbInputChange", () => {
     it("removes line breaks and excessive spaces from input before setting blurbContent in state ", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <NiceModal.Provider>
-            <PinRecordingModal
-              {...niceModalProps}
-              recordingToPin={recordingToPin}
-            />
-          </NiceModal.Provider>
-        </GlobalAppContext.Provider>
-      );
-      await waitForComponentToPaint(wrapper);
+      renderWithProviders(<NiceModal.Provider />, globalProps);
+      act(() => {
+        NiceModal.show(PinRecordingModal, {
+          ...niceModalProps,
+          recordingToPin,
+        });
+      });
 
       const unparsedInput =
         "This string contains \n\n line breaks and multiple   consecutive   spaces.";
+      const parsedOutput =
+        "This string contains line breaks and multiple consecutive spaces.";
 
-      // simulate writing in the textArea
-      await act(() => {
-        wrapper
-          .find("#blurb-content")
-          .first()
-          .simulate("change", {
-            target: { value: unparsedInput },
-          });
-      });
-      await waitForComponentToPaint(wrapper);
+      const textInput = await screen.findByRole("textbox");
+      await user.type(textInput, unparsedInput);
 
       // the string should have been parsed and cleaned up
-      const blurbTextArea = wrapper
-        .find("textarea[name='blurb-content']")
-        .first();
-      expect(blurbTextArea.props().value).toEqual(
-        "This string contains line breaks and multiple consecutive spaces."
-      );
+      expect(textInput).toHaveTextContent(parsedOutput);
     });
 
     it("does not set blurbContent in state if input length is greater than MAX_BLURB_CONTENT_LENGTH ", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <NiceModal.Provider>
-            <PinRecordingModal
-              {...niceModalProps}
-              recordingToPin={recordingToPin}
-            />
-          </NiceModal.Provider>
-        </GlobalAppContext.Provider>
-      );
-      await act(async () => {
-        wrapper
-          .find("textarea[name='blurb-content']")
-          .first()
-          .simulate("change", {
-            target: { value: "This string is valid." },
-          });
+      renderWithProviders(<NiceModal.Provider />, globalProps);
+      act(() => {
+        NiceModal.show(PinRecordingModal, {
+          ...niceModalProps,
+          recordingToPin,
+        });
       });
-      await waitForComponentToPaint(wrapper);
+      const textInput = await screen.findByRole("textbox");
+      await user.type(textInput, "This string is valid.");
 
-      const blurbTextArea = wrapper
-        .find("textarea[name='blurb-content']")
-        .first();
-      expect(blurbTextArea.props().value).toEqual("This string is valid.");
+      expect(textInput).toHaveTextContent("This string is valid.");
 
       const invalidInputString = "a".repeat(maxBlurbContentLength + 1);
       expect(invalidInputString.length).toBeGreaterThan(maxBlurbContentLength);
 
-      await act(async () => {
-        wrapper
-          .find("textarea[name='blurb-content']")
-          .first()
-          .simulate("change", {
-            target: { value: invalidInputString },
-          });
-      });
-      await waitForComponentToPaint(wrapper);
+      await user.type(textInput, invalidInputString);
 
       // blurbContent should not have changed
-      expect(blurbTextArea.props().value).toEqual("This string is valid.");
+      expect(textInput).toHaveTextContent("This string is valid.");
     });
   });
 });

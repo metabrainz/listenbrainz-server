@@ -17,8 +17,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 import time
-from datetime import datetime, timedelta
-from typing import List, Tuple, Dict, Iterable
+from datetime import datetime, timedelta, timezone
+from typing import List, Dict, Iterable
 
 import pydantic
 import orjson
@@ -29,30 +29,36 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 from data.model.listen import APIListen
-from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, SimilarUserTimelineEvent, UserTimelineEventType, \
+from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, \
+    SimilarUserTimelineEvent, UserTimelineEventType, \
     APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent, \
-    CBReviewTimelineMetadata, PersonalRecordingRecommendationMetadata, APIPersonalRecommendationEvent
+    CBReviewTimelineMetadata, PersonalRecordingRecommendationMetadata, APIPersonalRecommendationEvent, \
+    WritePersonalRecordingRecommendationMetadata, ThanksMetadata, APIThanksEvent
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.model.review import CBReviewMetadata
 from listenbrainz.db.pinned_recording import get_pins_for_feed, get_pin_by_id
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
-from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, \
     APIForbidden
 from listenbrainz.webserver.views.api_tools import validate_auth_header, \
     _validate_get_endpoint_params
 
-MAX_LISTEN_EVENTS_PER_USER = 2  # the maximum number of listens we want to return in the feed per user
-MAX_LISTEN_EVENTS_OVERALL = 10  # the maximum number of listens we want to return in the feed overall across users
-DEFAULT_LISTEN_EVENT_WINDOW = timedelta(days=14) # to limit the search space of listen events and avoid timeouts
-DEFAULT_LISTEN_EVENT_WINDOW_NEW = timedelta(days=7) # to limit the search space of listen events and avoid timeouts
+# the maximum number of listens we want to return in the feed per user
+MAX_LISTEN_EVENTS_PER_USER = 2
+# the maximum number of listens we want to return in the feed overall across users
+MAX_LISTEN_EVENTS_OVERALL = 10
+# to limit the search space of listen events and avoid timeouts
+DEFAULT_LISTEN_EVENT_WINDOW = timedelta(days=14)
+# to limit the search space of listen events and avoid timeouts
+DEFAULT_LISTEN_EVENT_WINDOW_NEW = timedelta(days=7)
 
 user_timeline_event_api_bp = Blueprint('user_timeline_event_api_bp', __name__)
 
 
-@user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/recording', methods=['POST', 'OPTIONS'])
+@user_timeline_event_api_bp.post('/user/<mb_username:user_name>/timeline-event/create/recording')
 @crossdomain
 @ratelimit()
 def create_user_recording_recommendation_event(user_name):
@@ -83,7 +89,8 @@ def create_user_recording_recommendation_event(user_name):
     """
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIForbidden("You don't have permissions to post to this user's timeline.")
+        raise APIForbidden(
+            "You don't have permissions to post to this user's timeline.")
 
     try:
         data = orjson.loads(request.get_data())
@@ -96,17 +103,18 @@ def create_user_recording_recommendation_event(user_name):
         raise APIBadRequest(f"Invalid metadata: {str(e)}")
 
     try:
-        event = db_user_timeline_event.create_user_track_recommendation_event(user['id'], metadata)
+        event = db_user_timeline_event.create_user_track_recommendation_event(
+            db_conn, user['id'], metadata)
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
 
     event_data = event.dict()
-    event_data['created'] = event_data['created'].timestamp()
+    event_data['created'] = int(event_data['created'].timestamp())
     event_data['event_type'] = event_data['event_type'].value
     return jsonify(event_data)
 
 
-@user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/notification', methods=['POST', 'OPTIONS'])
+@user_timeline_event_api_bp.post('/user/<mb_username:user_name>/timeline-event/create/notification')
 @crossdomain
 @ratelimit()
 def create_user_notification_event(user_name):
@@ -132,9 +140,10 @@ def create_user_notification_event(user_name):
     """
     creator = validate_auth_header()
     if creator["musicbrainz_id"] not in current_app.config['APPROVED_PLAYLIST_BOTS']:
-        raise APIForbidden("Only approved users are allowed to post a message on a user's timeline.")
+        raise APIForbidden(
+            "Only approved users are allowed to post a message on a user's timeline.")
 
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound(f"Cannot find user: {user_name}")
 
@@ -149,20 +158,22 @@ def create_user_notification_event(user_name):
     # Not filtering html in the message because only approved users can use this endpoint.
     # if this changes in the future, add back html cleanup here.
     message = data["message"]
-    metadata = NotificationMetadata(creator=creator['musicbrainz_id'], message=message)
+    metadata = NotificationMetadata(
+        creator=creator['musicbrainz_id'], message=message)
 
     try:
-        event = db_user_timeline_event.create_user_notification_event(user['id'], metadata)
+        event = db_user_timeline_event.create_user_notification_event(
+            db_conn, user['id'], metadata)
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
 
     event_data = event.dict()
-    event_data['created'] = event_data['created'].timestamp()
+    event_data['created'] = int(event_data['created'].timestamp())
     event_data['event_type'] = event_data['event_type'].value
     return jsonify(event_data)
 
 
-@user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/review', methods=['POST', 'OPTIONS'])
+@user_timeline_event_api_bp.post('/user/<mb_username:user_name>/timeline-event/create/review')
 @crossdomain
 @ratelimit()
 def create_user_cb_review_event(user_name):
@@ -181,7 +192,7 @@ def create_user_cb_review_event(user_name):
                 "entity_type": "<entity type, required>",
                 "text": "<the message to post, required>",
                 "language": "<language code, required>",
-                "rating": <rating, int>,
+                "rating": "<rating, int>",
             },
         }
 
@@ -195,7 +206,8 @@ def create_user_cb_review_event(user_name):
     """
     user = validate_auth_header()
     if user_name != user["musicbrainz_id"]:
-        raise APIForbidden("You don't have permissions to post to this user's timeline.")
+        raise APIForbidden(
+            "You don't have permissions to post to this user's timeline.")
 
     try:
         data = orjson.loads(request.get_data())
@@ -221,15 +233,16 @@ def create_user_cb_review_event(user_name):
         entity_id=review.entity_id,
         entity_name=review.name
     )
-    event = db_user_timeline_event.create_user_cb_review_event(user["id"], metadata)
+    event = db_user_timeline_event.create_user_cb_review_event(
+        db_conn, user["id"], metadata)
 
     event_data = event.dict()
-    event_data["created"] = event_data["created"].timestamp()
+    event_data["created"] = int(event_data["created"].timestamp())
     event_data["event_type"] = event_data["event_type"].value
     return jsonify(event_data)
 
 
-@user_timeline_event_api_bp.route('/user/<user_name>/feed/events', methods=['OPTIONS', 'GET'])
+@user_timeline_event_api_bp.get('/user/<mb_username:user_name>/feed/events')
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -256,105 +269,81 @@ def user_feed(user_name: str):
 
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIForbidden("You don't have permissions to view this user's timeline.")
+        raise APIForbidden(
+            "You don't have permissions to view this user's timeline.")
 
     min_ts, max_ts, count = _validate_get_endpoint_params()
     if min_ts is None and max_ts is None:
         max_ts = int(time.time())
 
-    users_following = db_user_relationship.get_following_for_user(user['id'])
+    users_following = db_user_relationship.get_following_for_user(
+        db_conn, user['id'])
 
-    # TODO: Remove these listen events from event list after listen events endpoint is active.
-    # get all listen events
-    if len(users_following) == 0:
-        listen_events = []
-    else:
-        listen_events = get_listen_events(users_following, min_ts, max_ts)
+    user_events = get_feed_events_for_user(
+        user=user, followed_users=users_following, min_ts=min_ts, max_ts=max_ts, count=count)
 
-    # for events like "follow" and "recording recommendations", we want to show the user
-    # their own events as well
-    users_for_feed_events = users_following + [user]
-    follow_events = get_follow_events(
-        users_for_events=users_for_feed_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    recording_recommendation_events = get_recording_recommendation_events(
-        users_for_events=users_for_feed_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    personal_recording_recommendation_events = get_personal_recording_recommendation_events(
-        user=user,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    cb_review_events = get_cb_review_events(
-        users_for_events=users_for_feed_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    notification_events = get_notification_events(
-        user=user,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    recording_pin_events = get_recording_pin_events(
-        users_for_events=users_for_feed_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    hidden_events = db_user_timeline_event.get_hidden_timeline_events(user['id'], count)
-    hidden_events_pin = {}
-    hidden_events_recommendation = {}
-
-    for hidden_event in hidden_events:
-        if hidden_event.event_type.value == UserTimelineEventType.RECORDING_RECOMMENDATION.value:
-            hidden_events_recommendation[hidden_event.event_id] = hidden_event
-        else:
-            hidden_events_pin[hidden_event.event_id] = hidden_event
-
-    for event in recording_recommendation_events:
-        if event.id in hidden_events_recommendation:
-            event.hidden = True
-
-    for event in recording_pin_events:
-        if event.id in hidden_events_pin:
-            event.hidden = True
-
-    # TODO: add playlist event and like event
-    all_events = sorted(
-        listen_events + follow_events + recording_recommendation_events + recording_pin_events
-        + cb_review_events + notification_events + personal_recording_recommendation_events,
-        key=lambda event: -event.created,
-    )
-
-    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
-    for index, event in enumerate(all_events):
-        all_events[index].event_type = event.event_type.value
-
-    all_events = all_events[:count]
+    user_events = user_events[:count]
 
     return jsonify({'payload': {
-        'count': len(all_events),
+        'count': len(user_events),
         'user_id': user_name,
-        'events': [event.dict() for event in all_events],
+        'events': [event.dict() for event in user_events],
     }})
 
 
-@user_timeline_event_api_bp.route('/user/<user_name>/feed/events/listens/following', methods=['OPTIONS', 'GET'])
+@user_timeline_event_api_bp.get('/user/<string:user_name>/feed/events/<int:event_id>')
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def user_feed_event(user_name: str, event_id: int):
+    """ Get a single feed event using the event's ID.
+
+    :param user_name: The MusicBrainz ID of the user whose timeline is being requested.
+    :type user_name: ``str``
+    :param event_id: ID of the event you want to fetch
+    :type event_id: ``int``
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Successful query, you have feed events!
+    :statuscode 400: Bad request, check ``response['error']`` for more details.
+    :statuscode 401: Unauthorized, you do not have permission to view this user's feed.
+    :statuscode 403: Forbidden, you do not have permission to view this user's feed.
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+
+    user = validate_auth_header()
+    if user_name != user['musicbrainz_id']:
+        raise APIForbidden(
+            "You don't have permissions to view this user's timeline.")
+
+    user_event = db_user_timeline_event.get_user_timeline_event_by_id(
+        db_conn, event_id)
+
+    if not user_event:
+        raise APINotFound(f"Event with id {event_id} not found")
+
+    # Get metadata for event
+    _ = fetch_track_metadata_for_items(ts_conn, [user_event.metadata])
+
+    # Format the event
+    user_event = APITimelineEvent(
+        id=user_event.id,
+        event_type=user_event.event_type,
+        user_name=user_name,
+        created=user_event.created.timestamp(),
+        metadata=user_event.metadata,
+        hidden=False,
+    )
+
+    return jsonify({'payload': {
+        'count': 1,
+        'user_id': user_name,
+        'events': [user_event.dict()],
+    }})
+
+
+@user_timeline_event_api_bp.get('/user/<mb_username:user_name>/feed/events/listens/following')
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -381,30 +370,29 @@ def user_feed_listens_following(user_name: str):
 
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIForbidden("You don't have permissions to view this user's timeline.")
-    
+        raise APIForbidden(
+            "You don't have permissions to view this user's timeline.")
+
     min_ts, max_ts, count = _validate_get_endpoint_params()
 
-    users_following = db_user_relationship.get_following_for_user(user['id'])
+    users_following = db_user_relationship.get_following_for_user(
+        db_conn, user['id'])
 
     # Get all listen events
     if len(users_following) == 0:
         listen_events = []
     else:
-        listen_events = get_all_listen_events(users_following, min_ts, max_ts, count)
-
-    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
-    for index, event in enumerate(listen_events):
-        listen_events[index].event_type = event.event_type.value
+        listen_events = get_all_listen_events(
+            users_following, min_ts, max_ts, count)
 
     return jsonify({'payload': {
         'count': len(listen_events),
         'user_id': user_name,
         'events': [event.dict() for event in listen_events],
     }})
-    
 
-@user_timeline_event_api_bp.route('/user/<user_name>/feed/events/listens/similar', methods=['OPTIONS', 'GET'])
+
+@user_timeline_event_api_bp.get('/user/<mb_username:user_name>/feed/events/listens/similar')
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -431,26 +419,27 @@ def user_feed_listens_similar(user_name: str):
 
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIForbidden("You don't have permissions to view this user's timeline.")
-    
+        raise APIForbidden(
+            "You don't have permissions to view this user's timeline.")
+
     min_ts, max_ts, count = _validate_get_endpoint_params()
 
-    # Here, list is in descending order as we want similar_users with 
+    # Here, list is in descending order as we want similar_users with
     # highest similarity to be processed first and lowest at last.
-    similar_users = db_user.get_similar_users(user_id=user['id'])
+    similar_users = db_user.get_similar_users(db_conn, user_id=user['id'])
 
     # Get all listen events
     if len(similar_users) == 0:
         listen_events = []
     else:
-        listen_events = get_all_listen_events(similar_users, min_ts, max_ts, count)
+        listen_events = get_all_listen_events(
+            similar_users, min_ts, max_ts, count)
 
     # Constructing an id-similarity map
-    id_similarity_map = {user["musicbrainz_id"]: user["similarity"] for user in similar_users}
+    id_similarity_map = {user["musicbrainz_id"]
+        : user["similarity"] for user in similar_users}
 
-    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
     for index, event in enumerate(listen_events):
-        listen_events[index].event_type = event.event_type.value
         listen_events[index].similarity = id_similarity_map[event.user_name]
 
     return jsonify({
@@ -462,7 +451,7 @@ def user_feed_listens_similar(user_name: str):
     })
 
 
-@user_timeline_event_api_bp.route("/user/<user_name>/feed/events/delete", methods=['OPTIONS', 'POST'])
+@user_timeline_event_api_bp.post("/user/<mb_username:user_name>/feed/events/delete")
 @crossdomain
 @ratelimit()
 def delete_feed_events(user_name):
@@ -498,29 +487,34 @@ def delete_feed_events(user_name):
     '''
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIForbidden("You don't have permissions to delete from this user's timeline.")
+        raise APIForbidden(
+            "You don't have permissions to delete from this user's timeline.")
 
     try:
         event = orjson.loads(request.get_data())
 
         if event["event_type"] in [UserTimelineEventType.RECORDING_RECOMMENDATION.value,
-                UserTimelineEventType.NOTIFICATION.value, UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
+                                   UserTimelineEventType.NOTIFICATION.value,
+                                   UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
             try:
-                event_deleted = db_user_timeline_event.delete_user_timeline_event(event["id"], user["id"])
+                event_deleted = db_user_timeline_event.delete_user_timeline_event(
+                    db_conn, event["id"], user["id"])
             except Exception as e:
-                raise APIInternalServerError("Something went wrong. Please try again")
+                raise APIInternalServerError(
+                    "Something went wrong. Please try again")
             if not event_deleted:
                 raise APINotFound("Cannot find '%s' event with id '%s' for user '%s'" % (event["event_type"], event["id"],
-                    user["id"]))
+                                                                                         user["id"]))
             return jsonify({"status": "ok"})
 
-        raise APIBadRequest("This event type is not supported for deletion via this method")
+        raise APIBadRequest(
+            "This event type is not supported for deletion via this method")
 
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
 
-@user_timeline_event_api_bp.route("/user/<user_name>/feed/events/hide", methods=['OPTIONS', 'POST'])
+@user_timeline_event_api_bp.post("/user/<mb_username:user_name>/feed/events/hide")
 @crossdomain
 @ratelimit()
 def hide_user_timeline_event(user_name):
@@ -558,7 +552,8 @@ def hide_user_timeline_event(user_name):
 
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIForbidden("You don't have permissions to hide events from this user's timeline.")
+        raise APIForbidden(
+            "You don't have permissions to hide events from this user's timeline.")
 
     try:
         data = orjson.loads(request.get_data())
@@ -566,27 +561,34 @@ def hide_user_timeline_event(user_name):
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
     if 'event_type' not in data or 'event_id' not in data:
-        raise APIBadRequest("JSON document must contain both event_type and event_id", data)
+        raise APIBadRequest(
+            "JSON document must contain both event_type and event_id", data)
 
     row_id = data["event_id"]
-    if data["event_type"] == UserTimelineEventType.RECORDING_RECOMMENDATION.value:
-        result = db_user_timeline_event.get_user_timeline_event_by_id(row_id)
+    event_type = data["event_type"]
+    if event_type in [
+            UserTimelineEventType.RECORDING_RECOMMENDATION.value, UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value,
+            UserTimelineEventType.THANKS.value]:
+        result = db_user_timeline_event.get_user_timeline_event_by_id(
+            db_conn, row_id)
     elif data["event_type"] == UserTimelineEventType.RECORDING_PIN.value:
-        result = get_pin_by_id(row_id)
+        result = get_pin_by_id(db_conn, row_id)
     else:
         raise APIBadRequest("This event type is not supported for hiding")
 
     if not result:
-        raise APIBadRequest(f"{data['event_type']} event with id {row_id} not found")
+        raise APIBadRequest(
+            f"{data['event_type']} event with id {row_id} not found")
 
-    if db_user_relationship.is_following_user(user['id'], result.user_id):
-        db_user_timeline_event.hide_user_timeline_event(user['id'], data["event_type"], data["event_id"])
+    if db_user_relationship.is_following_user(db_conn, user['id'], result.user_id):
+        db_user_timeline_event.hide_user_timeline_event(
+            db_conn, user['id'], data["event_type"], data["event_id"])
         return jsonify({"status": "ok"})
     else:
         raise APIUnauthorized("You cannot hide events of this user")
 
 
-@user_timeline_event_api_bp.route("/user/<user_name>/feed/events/unhide", methods=['OPTIONS', 'POST'])
+@user_timeline_event_api_bp.post("/user/<mb_username:user_name>/feed/events/unhide")
 @crossdomain
 @ratelimit()
 def unhide_user_timeline_event(user_name):
@@ -611,10 +613,11 @@ def unhide_user_timeline_event(user_name):
     :statuscode 500: API Internal Server Error
     :resheader Content-Type: *application/json*
     '''
-    
+
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
-        raise APIForbidden("You don't have permissions to delete events from this user's timeline.")
+        raise APIForbidden(
+            "You don't have permissions to delete events from this user's timeline.")
 
     try:
         data = orjson.loads(request.get_data())
@@ -622,13 +625,15 @@ def unhide_user_timeline_event(user_name):
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
     if 'event_type' not in data or 'event_id' not in data:
-        raise APIBadRequest("JSON document must contain both event_type and event_id", data)
+        raise APIBadRequest(
+            "JSON document must contain both event_type and event_id", data)
 
-    db_user_timeline_event.unhide_timeline_event(user['id'], data['event_type'], data['event_id'])
+    db_user_timeline_event.unhide_timeline_event(
+        db_conn, user['id'], data['event_type'], data['event_id'])
     return jsonify({"status": "ok"})
 
 
-@user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/recommend-personal', methods=['POST', 'OPTIONS'])
+@user_timeline_event_api_bp.post('/user/<mb_username:user_name>/timeline-event/create/recommend-personal')
 @crossdomain
 @ratelimit()
 def create_personal_recommendation_event(user_name):
@@ -643,7 +648,7 @@ def create_personal_recommendation_event(user_name):
             "metadata": {
                 "recording_msid": "<The MessyBrainz ID of the recording, optional>",
                 "recording_mbid": "<The MusicBrainz ID of the recording>",
-                "users": [<usernames of the persons you want to recommend to, required>]
+                "users": [], // "<usernames of the persons you want to recommend to, required>"
                 "blurb_content": "<String containing personalized recommendation>"
             }
         }
@@ -653,16 +658,17 @@ def create_personal_recommendation_event(user_name):
     :statuscode 200: Successful query, recording has been recommended!
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized, you do not have permissions to recommend
-    personal recordings on the behalf of this user
+        personal recordings on the behalf of this user
     :statuscode 403: Forbidden, you do not have permissions to recommend
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     '''
-    
+
     user = validate_auth_header()
 
     if user_name != user['musicbrainz_id']:
-        raise APIForbidden("You don't have permissions to post to this user's timeline.")
+        raise APIForbidden(
+            "You don't have permissions to post to this user's timeline.")
 
     try:
         data = orjson.loads(request.get_data())
@@ -672,24 +678,198 @@ def create_personal_recommendation_event(user_name):
     metadata = data['metadata']
 
     try:
-        metadata = PersonalRecordingRecommendationMetadata(**metadata)
-        follower_results = db_user_relationship.multiple_users_by_username_following_user(user['id'], metadata.users)
+        metadata = WritePersonalRecordingRecommendationMetadata(**metadata)
+        follower_results = db_user_relationship.multiple_users_by_username_following_user(
+            db_conn,
+            user['id'],
+            metadata.users
+        )
         non_followers = []
         for follower in metadata.users:
             if not follower_results or not follower_results[follower]:
                 non_followers.append(follower)
         if non_followers:
-            raise APIBadRequest(f"You cannot recommend tracks to non-followers! These people don't follow you {str(non_followers)}")
-        event = db_user_timeline_event.create_personal_recommendation_event(user['id'], metadata)
+            raise APIBadRequest(
+                f"You cannot recommend tracks to non-followers! These people don't follow you {str(non_followers)}")
+        event = db_user_timeline_event.create_personal_recommendation_event(
+            db_conn, user['id'], metadata)
     except pydantic.ValidationError as e:
         raise APIBadRequest(f"Invalid metadata: {str(e)}")
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
 
     event_data = event.dict()
-    event_data['created'] = event_data['created'].timestamp()
+    event_data['created'] = int(event_data['created'].timestamp())
     event_data['event_type'] = event_data['event_type'].value
     return jsonify(event_data)
+
+
+@user_timeline_event_api_bp.post('/user/<mb_username:user_name>/timeline-event/create/thanks')
+@crossdomain
+@ratelimit()
+def create_thanks_event(user_name):
+    '''
+    Make the user thank a pin/suggestion.
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Successful query, recording has been recommended!
+    :statuscode 400: Bad request, check ``response['error']`` for more details.
+    :statuscode 401: Unauthorized, you do not have permissions to recommend
+        personal recordings on the behalf of this user
+    :statuscode 403: Forbidden, you do not have permissions to recommend
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    '''
+
+    user = validate_auth_header()
+
+    if user_name != user['musicbrainz_id']:
+        raise APIForbidden(
+            "You don't have permissions to thank events from this user's timeline.")
+
+    try:
+        data = orjson.loads(request.get_data())
+    except (ValueError, KeyError) as e:
+        raise APIBadRequest(f"Invalid JSON: {str(e)}")
+
+    if 'metadata' not in data:
+        raise APIBadRequest("JSON document must contain metadata", data)
+
+    metadata = data["metadata"]
+
+    if 'original_event_type' not in metadata or 'original_event_id' not in metadata:
+        raise APIBadRequest(
+            "Metadata must contain both original_event_type and original_event_id", metadata)
+
+    try:
+        metadata = ThanksMetadata(**metadata)
+        row_id = metadata.original_event_id
+        event_type = metadata.original_event_type
+        if event_type in [
+                UserTimelineEventType.RECORDING_RECOMMENDATION,
+                UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION]:
+            result = db_user_timeline_event.get_user_timeline_event_by_id(
+                db_conn, row_id)
+        elif event_type == UserTimelineEventType.RECORDING_PIN:
+            result = get_pin_by_id(db_conn, row_id)
+        else:
+            raise APIBadRequest(
+                "This event type is not supported for thanking")
+
+        if not result:
+            raise APIBadRequest(
+                f"{event_type} event with id {row_id} not found")
+        thankee_username = db_user.get_users_by_id(
+            db_conn, [result.user_id])[result.user_id]
+        if db_user_relationship.is_following_user(db_conn, user['id'], result.user_id):
+            db_user_timeline_event.create_thanks_event(
+                db_conn, user['id'], user_name, result.user_id, thankee_username, metadata)
+            return jsonify({"status": "ok"})
+        else:
+            raise APIUnauthorized("You cannot thank events of this user")
+    except pydantic.ValidationError as e:
+        raise APIBadRequest(f"Invalid metadata: {str(e)}")
+    except DatabaseException:
+        raise APIInternalServerError("Something went wrong, please try again.")
+
+
+def get_feed_events_for_user(
+    user: Dict,
+    followed_users: List[Dict],
+    min_ts: int,
+    max_ts: int,
+    count: int,
+) -> List[APITimelineEvent]:
+    """Gets all user events in the feed."""
+
+    users_for_events = followed_users + [user]
+    follow_events = get_follow_events(
+        users_for_events=users_for_events,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
+
+    recording_recommendation_events = get_recording_recommendation_events(
+        users_for_events=users_for_events,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
+
+    personal_recording_recommendation_events = get_personal_recording_recommendation_events(
+        user=user,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
+
+    thanks_events = get_thanks_events(
+        user=user,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
+
+    cb_review_events = get_cb_review_events(
+        users_for_events=users_for_events,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
+
+    notification_events = get_notification_events(
+        user=user,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
+
+    recording_pin_events = get_recording_pin_events(
+        users_for_events=users_for_events,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
+
+    hidden_events = db_user_timeline_event.get_hidden_timeline_events(
+        db_conn, user['id'], count)
+    hidden_events_pin = {}
+    hidden_events_recommendation = {}
+
+    for hidden_event in hidden_events:
+        if hidden_event.event_type.value in [
+                UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+                UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
+            hidden_events_recommendation[hidden_event.event_id] = hidden_event
+        else:
+            hidden_events_pin[hidden_event.event_id] = hidden_event
+
+    for event in recording_recommendation_events:
+        if event.id in hidden_events_recommendation:
+            event.hidden = True
+
+    for event in personal_recording_recommendation_events:
+        if event.id in hidden_events_recommendation:
+            event.hidden = True
+
+    for event in recording_pin_events:
+        if event.id in hidden_events_pin:
+            event.hidden = True
+
+    # TODO: add playlist event and like event
+    all_events = sorted(
+        follow_events
+        + recording_recommendation_events
+        + recording_pin_events
+        + cb_review_events
+        + notification_events
+        + personal_recording_recommendation_events
+        + thanks_events,
+        key=lambda event: -event.created,
+    )
+    return all_events
 
 
 def get_listen_events(
@@ -705,17 +885,17 @@ def get_listen_events(
     # if neither is set, use current time as max_ts and subtract window
     # length to get min_ts.
     if min_ts and max_ts:
-        min_ts = datetime.utcfromtimestamp(min_ts)
-        max_ts = datetime.utcfromtimestamp(max_ts)
+        min_ts = datetime.fromtimestamp(min_ts, timezone.utc)
+        max_ts = datetime.fromtimestamp(max_ts, timezone.utc)
     else:
         if min_ts:
-            min_ts = datetime.utcfromtimestamp(min_ts)
+            min_ts = datetime.fromtimestamp(min_ts, timezone.utc)
             max_ts = min_ts + DEFAULT_LISTEN_EVENT_WINDOW
         elif max_ts:
-            max_ts = datetime.utcfromtimestamp(max_ts)
+            max_ts = datetime.fromtimestamp(max_ts, timezone.utc)
             min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW
         else:
-            max_ts = datetime.utcnow()
+            max_ts = datetime.now(tz=timezone.utc)
             min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW
 
     listens = timescale_connection._ts.fetch_recent_listens_for_users(
@@ -739,7 +919,8 @@ def get_listen_events(
                 hidden=False
             ))
         except pydantic.ValidationError as e:
-            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+            current_app.logger.error(
+                'Validation error: ' + str(e), exc_info=True)
             continue
     return events
 
@@ -758,22 +939,22 @@ def get_all_listen_events(
     # if neither is set, use current time as max_ts and subtract window
     # length to get min_ts.
     if min_ts and max_ts:
-        temp = datetime.utcfromtimestamp(min_ts)
-        max_ts = datetime.utcfromtimestamp(max_ts)
+        temp = datetime.fromtimestamp(min_ts, timezone.utc)
+        max_ts = datetime.fromtimestamp(max_ts, timezone.utc)
         if max_ts - temp < DEFAULT_LISTEN_EVENT_WINDOW_NEW:
-            min_ts = temp 
+            min_ts = temp
         else:
             # If the given interval for search is greater than :DEFAULT_LISTEN_EVENT_WINDOW_NEW:,
             # then we must limit the search interval to :DEFAULT_LISTEN_EVENT_WINDOW_NEW:.
             min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
     elif min_ts:
-        min_ts = datetime.utcfromtimestamp(min_ts)
+        min_ts = datetime.fromtimestamp(min_ts, timezone.utc)
         max_ts = min_ts + DEFAULT_LISTEN_EVENT_WINDOW_NEW
     elif max_ts:
-        max_ts = datetime.utcfromtimestamp(max_ts)
+        max_ts = datetime.fromtimestamp(max_ts, timezone.utc)
         min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
     else:
-        max_ts = datetime.utcnow()
+        max_ts = datetime.now(tz=timezone.utc)
         min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
 
     listens = timescale_connection._ts.fetch_all_recent_listens_for_users(
@@ -796,7 +977,8 @@ def get_all_listen_events(
                 hidden=False
             ))
         except pydantic.ValidationError as e:
-            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+            current_app.logger.error(
+                'Validation error: ' + str(e), exc_info=True)
             continue
     return events
 
@@ -805,6 +987,7 @@ def get_follow_events(users_for_events: Iterable[dict], min_ts: int, max_ts: int
     """ Gets all follow events in the feed.
     """
     follow_events_db = db_user_relationship.get_follow_events(
+        db_conn,
         user_ids=(user['id'] for user in users_for_events),
         min_ts=min_ts,
         max_ts=max_ts,
@@ -828,7 +1011,8 @@ def get_follow_events(users_for_events: Iterable[dict], min_ts: int, max_ts: int
                 hidden=False
             ))
         except pydantic.ValidationError as e:
-            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+            current_app.logger.error(
+                'Validation error: ' + str(e), exc_info=True)
             continue
     return events
 
@@ -836,6 +1020,7 @@ def get_follow_events(users_for_events: Iterable[dict], min_ts: int, max_ts: int
 def get_notification_events(user: dict, min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
     """ Gets notification events for the user in the feed."""
     notification_events_db = db_user_timeline_event.get_user_notification_events(
+        db_conn,
         user_ids=[user["id"]],
         min_ts=min_ts,
         max_ts=max_ts,
@@ -863,14 +1048,17 @@ def get_recording_recommendation_events(
 ) -> List[APITimelineEvent]:
     """ Gets all recording recommendation events in the feed. """
 
-    id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
+    id_username_map = {user['id']: user['musicbrainz_id']
+                       for user in users_for_events}
     recording_recommendation_events_db = db_user_timeline_event.get_recording_recommendation_events_for_feed(
+        db_conn,
         user_ids=(user['id'] for user in users_for_events),
         min_ts=min_ts,
         max_ts=max_ts,
         count=count,
     )
-    _ = fetch_track_metadata_for_items([e.metadata for e in recording_recommendation_events_db])
+    _ = fetch_track_metadata_for_items(
+        ts_conn, [e.metadata for e in recording_recommendation_events_db])
 
     events = []
     for event in recording_recommendation_events_db:
@@ -889,7 +1077,8 @@ def get_recording_recommendation_events(
                 hidden=False,
             ))
         except pydantic.ValidationError as e:
-            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+            current_app.logger.error(
+                'Validation error: ' + str(e), exc_info=True)
             continue
     return events
 
@@ -897,8 +1086,10 @@ def get_recording_recommendation_events(
 def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int, count: int) -> List[APITimelineEvent]:
     """ Gets all CritiqueBrainz review events in the feed.
     """
-    id_username_map = {user["id"]: user["musicbrainz_id"] for user in users_for_events}
+    id_username_map = {user["id"]: user["musicbrainz_id"]
+                       for user in users_for_events}
     cb_review_events_db = db_user_timeline_event.get_cb_review_events(
+        db_conn,
         user_ids=[user["id"] for user in users_for_events],
         min_ts=min_ts,
         max_ts=max_ts,
@@ -939,7 +1130,8 @@ def get_cb_review_events(users_for_events: List[dict], min_ts: int, max_ts: int,
                 hidden=False
             ))
         except pydantic.ValidationError as e:
-            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+            current_app.logger.error(
+                'Validation error: ' + str(e), exc_info=True)
             continue
     return api_events
 
@@ -952,14 +1144,17 @@ def get_recording_pin_events(
 ) -> List[APITimelineEvent]:
     """ Gets all recording pin events in the feed."""
 
-    id_username_map = {user['id']: user['musicbrainz_id'] for user in users_for_events}
+    id_username_map = {user['id']: user['musicbrainz_id']
+                       for user in users_for_events}
     recording_pin_events_db = get_pins_for_feed(
+        db_conn,
         user_ids=id_username_map.keys(),
         min_ts=min_ts,
         max_ts=max_ts,
         count=count,
     )
-    recording_pin_events_db = fetch_track_metadata_for_items(recording_pin_events_db)
+    recording_pin_events_db = fetch_track_metadata_for_items(
+        ts_conn, recording_pin_events_db)
 
     events = []
     for pin in recording_pin_events_db:
@@ -979,7 +1174,8 @@ def get_recording_pin_events(
                 hidden=False
             ))
         except (pydantic.ValidationError, TypeError, KeyError):
-            current_app.logger.error("Could not convert pinned recording to feed event", exc_info=True)
+            current_app.logger.error(
+                "Could not convert pinned recording to feed event", exc_info=True)
             continue
     return events
 
@@ -994,12 +1190,14 @@ def get_personal_recording_recommendation_events(
     """
 
     personal_recording_recommendation_events_db = db_user_timeline_event.get_personal_recommendation_events_for_feed(
+        db_conn,
         user_id=user['id'],
         min_ts=min_ts,
         max_ts=max_ts,
         count=count,
     )
-    _ = fetch_track_metadata_for_items([e.metadata for e in personal_recording_recommendation_events_db])
+    _ = fetch_track_metadata_for_items(
+        ts_conn, [e.metadata for e in personal_recording_recommendation_events_db])
 
     events = []
     for event in personal_recording_recommendation_events_db:
@@ -1019,6 +1217,55 @@ def get_personal_recording_recommendation_events(
                 hidden=False,
             ))
         except pydantic.ValidationError as e:
-            current_app.logger.error('Validation error: ' + str(e), exc_info=True)
+            current_app.logger.error(
+                'Validation error: ' + str(e), exc_info=True)
+            continue
+    return events
+
+
+def get_thanks_events(
+    user: dict,
+    min_ts: int,
+    max_ts: int,
+    count: int
+) -> List[APITimelineEvent]:
+    """ Gets all thanks events in the feed.
+    """
+
+    thanks_events_db = db_user_timeline_event.get_thanks_events_for_feed(
+        db_conn,
+        user_id=user['id'],
+        min_ts=min_ts,
+        max_ts=max_ts,
+        count=count,
+    )
+
+    events = []
+    for event in thanks_events_db:
+        try:
+            thank = APIThanksEvent(
+                user_id=event.user_id,
+                created=event.created.timestamp(),
+                original_event_id=event.metadata.original_event_id,
+                original_event_type=event.metadata.original_event_type.value,
+                blurb_content=event.metadata.blurb_content,
+                thanker_id=event.metadata.thanker_id,
+                thanker_username=event.metadata.thanker_username,
+                thankee_id=event.metadata.thankee_id,
+                thankee_username=event.metadata.thankee_username,
+            )
+
+            events.append(APITimelineEvent(
+                id=event.id,
+                event_type=UserTimelineEventType.THANKS,
+                user_name=event.user_name,
+                created=event.created.timestamp(),
+                metadata=thank,
+                hidden=False,
+            ))
+
+        except pydantic.ValidationError as e:
+            current_app.logger.error(
+                'Validation error: ' + str(e), exc_info=True)
             continue
     return events

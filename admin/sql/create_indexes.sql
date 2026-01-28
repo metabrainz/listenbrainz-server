@@ -6,7 +6,6 @@ CREATE UNIQUE INDEX login_id_ndx_user ON "user" (login_id);
 
 CREATE INDEX user_name_search_trgm_idx ON "user" USING GIST (musicbrainz_id gist_trgm_ops);
 
-
 CREATE INDEX reporter_user_id_ndx_reported_users ON reported_users (reporter_user_id);
 CREATE INDEX reported_user_id_ndx_reported_users ON reported_users (reported_user_id);
 CREATE UNIQUE INDEX user_id_reports_ndx_reported_users ON reported_users (reporter_user_id, reported_user_id);
@@ -16,8 +15,6 @@ CREATE UNIQUE INDEX token_api_key_ndx_token ON api_compat.token (token, api_key)
 
 CREATE UNIQUE INDEX sid_ndx_session ON api_compat.session (sid);
 CREATE UNIQUE INDEX sid_api_key_ndx_session ON api_compat.session (sid, api_key);
-
-CREATE INDEX latest_listened_at_spotify_auth ON spotify_auth (latest_listened_at DESC NULLS LAST);
 
 CREATE INDEX user_id_ndx_external_service_oauth ON external_service_oauth (user_id);
 CREATE INDEX service_ndx_external_service_oauth ON external_service_oauth (service);
@@ -50,9 +47,30 @@ CREATE UNIQUE INDEX user_id_event_type_event_id_ndx_hide_user_timeline_event ON 
 
 CREATE INDEX user_id_ndx_pinned_recording ON pinned_recording (user_id);
 
-CREATE INDEX release_mbid_ndx_release_color ON release_color (release_mbid);
-CREATE UNIQUE INDEX caa_id_ndx_release_color ON release_color (caa_id);
+CREATE UNIQUE INDEX release_mbid_ndx_release_color ON release_color (release_mbid);
+CREATE INDEX year_ndx_release_color ON release_color (year);
+CREATE UNIQUE INDEX caa_id_release_mbid_ndx_release_color ON release_color (caa_id, release_mbid);
 
 CREATE UNIQUE INDEX user_id_ndx_user_setting ON user_setting (user_id);
+
+CREATE UNIQUE INDEX background_tasks_user_id_task_type_uniq_idx ON background_tasks (user_id, task);
+
+CREATE INDEX user_data_export_user_id_idx ON user_data_export (user_id);
+
+CREATE UNIQUE INDEX user_data_export_deduplicate_waiting_idx ON user_data_export (user_id, type) WHERE status = 'waiting' OR status = 'in_progress';
+
+CREATE INDEX user_data_import_user_id_idx ON user_data_import (user_id);
+
+CREATE UNIQUE INDEX user_data_import_deduplicate_waiting_idx ON user_data_import (user_id, service) WHERE metadata->>'status' IN ('waiting', 'in_progress');
+
+CREATE INDEX host_url_ndx_funkwhale_servers ON funkwhale_servers (host_url);
+CREATE INDEX user_id_ndx_funkwhale_tokens ON funkwhale_tokens (user_id);
+CREATE INDEX server_id_ndx_funkwhale_tokens ON funkwhale_tokens (funkwhale_server_id);
+CREATE UNIQUE INDEX unique_user_server_funkwhale_tokens ON funkwhale_tokens (user_id, funkwhale_server_id);
+
+CREATE INDEX host_url_ndx_navidrome_servers ON navidrome_servers (host_url);
+CREATE INDEX user_id_ndx_navidrome_tokens ON navidrome_tokens (user_id);
+CREATE INDEX server_id_ndx_navidrome_tokens ON navidrome_tokens (navidrome_server_id);
+CREATE UNIQUE INDEX unique_user_server_navidrome_tokens ON navidrome_tokens (user_id, navidrome_server_id);
 
 COMMIT;

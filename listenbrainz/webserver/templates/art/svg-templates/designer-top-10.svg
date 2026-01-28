@@ -6,10 +6,19 @@
      version="1.1"
      xmlns:cc="http://creativecommons.org/ns#"
      xmlns:xlink="http://www.w3.org/1999/xlink"
+     role="img"
      viewBox="0 0 924 924"
      xmlns:dc="http://purl.org/dc/elements/1.1/"
      height="{{ height }}"
-     width="{{ width }}">
+     width="{{ width }}"
+     preserveAspectRatio="xMinYMin meet"
+>
+  <title>Top 10 releases {{ metadata["time_range"] }} for {{ metadata["user_name"] }}&#xA;</title>
+  <desc>
+      {%- for release in releases[:10] -%}
+        {%- if loop.index == 10 -%}X{%- else -%}{{- loop.index -}}{%- endif -%}. {{ release.release_name }} - {{ release.artist_name }}&#xA;
+      {%- endfor -%}
+  </desc>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;900');
     .artist-name *, .artist-name {
@@ -48,15 +57,15 @@
        {% endif %}
      </tspan>
      <tspan x="40" y="{{ y_artists_start + loop.index0 * gap }}" id="artist-{{ loop.index }}-album">
-       {{ render_entity_link("release", release.release_mbid, release.release_name|upper|e) }}
+       {{ render_entity_link("release", release.release_mbid, release.release_name) }}
      </tspan>
      <tspan x="40" y="{{ y_albums_start + loop.index0 * gap }}" class="artist-name" id="artist-{{ loop.index }}-name">
-       {{ render_entity_link("artist", release.artist_mbids[0], release.artist_name|upper|e) }}
+       {{ render_entity_link("artist", release.artist_mbids[0], release.artist_name) }}
      </tspan>
    </text>
    {% endfor %}
   </g>
-  <g id="lines" stroke="#FAFF5B">
+  <g id="lines" class="accent-color-stroke">
     {% for _ in releases[:10] %}
       <line
        x1="0"

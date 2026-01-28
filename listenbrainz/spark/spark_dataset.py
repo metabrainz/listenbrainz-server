@@ -1,13 +1,18 @@
 import abc
 import time
 from abc import ABC
+from concurrent.futures import as_completed
+from concurrent.futures.thread import ThreadPoolExecutor
 from urllib.error import HTTPError
 
 from flask import current_app
+from more_itertools import chunked
 from psycopg2.extras import execute_values
-from psycopg2.sql import Identifier, SQL, Literal
+from psycopg2.sql import Identifier, SQL, Literal, Composable
+from sentry_sdk import start_transaction
 
 from listenbrainz.db import couchdb, timescale
+import listenbrainz.db.stats as db_stats
 
 
 class SparkDataset(ABC):
@@ -50,6 +55,10 @@ class SparkDataset(ABC):
             f"{self.name}_end": self.handle_end
         }
 
+    def handle_shutdown(self):
+        """ Shutdown method invoked when spark reader is stopping """
+        pass
+
 
 class _CouchDbDataset(SparkDataset):
     """ Base class for bulk datasets stored in couchdb. """
@@ -65,8 +74,6 @@ class _CouchDbDataset(SparkDataset):
             return
         try:
             couchdb.create_database(match[1] + "_" + match[2] + "_" + match[3])
-            if match[1] == "artists":
-                couchdb.create_database("artistmap" + "_" + match[2] + "_" + match[3])
         except HTTPError as e:
             current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
@@ -87,19 +94,98 @@ class _CouchDbDataset(SparkDataset):
             if retained:
                 current_app.logger.info(f"Databases: {retained} matched but weren't deleted because"
                                         f" _LOCK file existed")
-
-            # when new artist stats received, also invalidate old artist map stats
-            if match[1] == "artists":
-                _, retained = couchdb.delete_database("artistmap" + "_" + match[2])
-                if retained:
-                    current_app.logger.info(f"Databases: {retained} matched but weren't deleted because"
-                                            f" _LOCK file existed")
-
         except HTTPError as e:
             current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
 
 CouchDbDataset = _CouchDbDataset()
+
+
+class _StatsDataset(SparkDataset):
+
+    def __init__(self, stats_type):
+        super().__init__(stats_type)
+        # doing empirical testing for various numbers of workers, no speedup
+        # was observed by raising workers to more than 2 because the bottleneck
+        # shifted to stats generation in spark
+        self.workers = 2
+        self.executor = ThreadPoolExecutor(max_workers=self.workers)
+
+    @abc.abstractmethod
+    def get_key(self, message):
+        pass
+
+    def insert_stats(self, database, stats_range, from_ts, to_ts, data, key):
+        with start_transaction(op="insert", name=f"insert {self.name} - {stats_range} stats"):
+            db_stats.insert(
+                database,
+                from_ts,
+                to_ts,
+                data,
+                key
+            )
+
+    def handle_insert(self, message):
+        if "database_prefix" in message:
+            database = couchdb.list_databases(message["database_prefix"])[0]
+        else:
+            database = message["database"]
+        stats_range = message["stats_range"]
+        from_ts = message["from_ts"]
+        to_ts = message["to_ts"]
+
+        key = self.get_key(message)
+
+        futures = []
+        chunk_size = len(message["data"]) // self.workers
+        for chunk in chunked(message["data"], chunk_size):
+            f = self.executor.submit(self.insert_stats, database, stats_range, from_ts, to_ts, chunk, key)
+            futures.append(f)
+
+        for f in as_completed(futures):
+            try:
+                f.result()
+            except Exception:
+                current_app.logger.error(f"Error in writing {self.name} stats: %s", exc_info=True)
+
+    def handle_start(self, message):
+        raise NotImplementedError()
+
+    def handle_end(self, message):
+        raise NotImplementedError()
+
+    def handle_shutdown(self):
+        self.executor.shutdown()
+
+
+class _UserStatsDataset(_StatsDataset):
+
+    def get_key(self, message):
+        return "user_id"
+
+UserEntityStatsDataset = _UserStatsDataset("user_entity")
+DailyActivityStatsDataset = _UserStatsDataset("user_daily_activity")
+ListeningActivityStatsDataset = _UserStatsDataset("user_listening_activity")
+EraStatsDataset = _UserStatsDataset("user_era_activity")
+ArtistEvolutionActivityStatsDataset = _UserStatsDataset("user_artist_evolution_activity")
+GenreActivityStatsDataset = _UserStatsDataset("user_genre_activity")
+
+class _EntityListenerStatsDataset(_StatsDataset):
+
+    def __init__(self):
+        super().__init__("entity_listener")
+
+    def get_key(self, message):
+        if message["entity"] == "artists":
+            return "artist_mbid"
+        elif message["entity"] == "releases":
+            return "release_mbid"
+        elif message["entity"] == "release_groups":
+            return "release_group_mbid"
+        else:
+            return "recording_mbid"
+
+EntityListenerStatsDataset = _EntityListenerStatsDataset()
 
 
 class DatabaseDataset(SparkDataset, ABC):
@@ -162,7 +248,9 @@ class DatabaseDataset(SparkDataset, ABC):
         query = SQL("DROP TABLE IF EXISTS {table}").format(table=tmp_table)
         cursor.execute(query)
 
-        query = SQL(self.get_table()).format(table=tmp_table)
+        query = self.get_table()
+        if not isinstance(query, Composable):
+            query = SQL(query).format(table=tmp_table)
         cursor.execute(query)
 
     def create_indices(self, cursor):
@@ -212,8 +300,10 @@ class DatabaseDataset(SparkDataset, ABC):
 
     def handle_insert(self, message):
         query, template, values = self.get_inserts(message)
-        tmp_table = self._get_table_name("tmp")
-        query = SQL(query).format(table=tmp_table)
+
+        if not isinstance(query, Composable):
+            tmp_table = self._get_table_name("tmp")
+            query = SQL(query).format(table=tmp_table)
 
         if isinstance(template, str):
             template = SQL(template)

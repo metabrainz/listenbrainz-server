@@ -1,0 +1,7 @@
+<p>
+    <a href="{{ user_page_url }}">{{ event.user_name }}</a> reviewed
+    <a href="https://critiquebrainz.org/review/{{ event.metadata.review_mbid }}">{{ event.metadata.entity_name }}</a>
+    on CritiqueBrainz.
+</p>
+<p>Rating: {{ event.metadata.rating }}/5</p>
+<p>Review: {{ event.metadata.text }}</p>

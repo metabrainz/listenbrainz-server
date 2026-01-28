@@ -1,7 +1,8 @@
 import * as timeago from "time-ago";
 import {
   formatWSMessageToListen,
-  preciseTimestamp, searchForSoundcloudTrack,
+  preciseTimestamp,
+  searchForSoundcloudTrack,
   searchForSpotifyTrack,
 } from "../../src/utils/utils";
 
@@ -123,7 +124,7 @@ describe("searchForSpotifyTrack", () => {
   it("calls fetch with correct parameters", async () => {
     await searchForSpotifyTrack("foobar", "import", "vs", "star");
     expect(window.fetch).toHaveBeenCalledWith(
-      "https://api.spotify.com/v1/search?type=track&q=track:import artist:vs album:star",
+      "https://api.spotify.com/v1/search?type=track&q=import%20artist%3Avs%20album%3Astar",
       {
         method: "GET",
         headers: {
@@ -201,7 +202,7 @@ describe("searchForSoundcloudTrack", () => {
   it("calls fetch with correct parameters", async () => {
     await searchForSoundcloudTrack("foobar", "import", "vs", "star");
     expect(window.fetch).toHaveBeenCalledWith(
-      "https://api.soundcloud.com/tracks?q=import%20vs%20star&access=playable",
+      "https://api.soundcloud.com/tracks?q=import%20vs&access=playable",
       {
         method: "GET",
         headers: {

@@ -1,13 +1,12 @@
-import uuid
-from operator import itemgetter
+from operator import attrgetter
 
 import sqlalchemy
 import psycopg2
-from flask import current_app
-from psycopg2.extras import execute_values
-from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery
-from listenbrainz.mbid_mapping_writer.mbid_mapper import MATCH_TYPES, MATCH_TYPE_NO_MATCH, MATCH_TYPE_EXACT_MATCH
-from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
+from datasethoster import RequestSource
+from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery, MBIDMappingInput
+from listenbrainz.mbid_mapping_writer.mbid_mapper import MATCH_TYPES, MATCH_TYPE_EXACT_MATCH
+from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery, \
+    ArtistCreditRecordingLookupInput
 from listenbrainz.db import timescale
 
 
@@ -16,35 +15,12 @@ MAX_QUEUED_JOBS = MAX_THREADS * 2
 SEARCH_TIMEOUT = 3600  # basically, don't have searches timeout.
 
 
-def process_listens(app, listens, priority):
-    """Given a set of listens, look up each one and then save the results to
-       the DB. Note: Legacy listens to not need to be checked to see if
-       a result alrady exists in the DB -- the selection of legacy listens
-       has already taken care of this."""
-
-    from listenbrainz.mbid_mapping_writer.job_queue import NEW_LISTEN, RECHECK_LISTEN
-
-    stats = {"processed": 0, "total": 0, "errors": 0, "listen_count": 0, "listens_matched": 0}
-    for typ in MATCH_TYPES:
-        stats[typ] = 0
-
-    msids = {str(listen['recording_msid']): listen for listen in listens}
-    stats["total"] = len(msids)
-    if priority == NEW_LISTEN:
-        stats["listen_count"] += len(msids)
-
-    # To debug the mapping, set this to True or a specific priority
-    # e.g. (priority == RECHECK_LISTEN)
-    debug = False
-
-    if len(msids) == 0:
-        return stats
-
-    listens_to_check = []
-
+def filter_incoming_listens(msids, stats, app, debug):
+    """ Filter incoming to avoid rechecking listens that have been recently checked """
     # Remove msids for which we already have a match, unless its timestamp is 0
     # or if the msid was last checked more than 2 weeks ago and no match was
     # found at that time, which means we should re-check the item
+    listens_to_check = []
     with timescale.engine.connect() as connection:
         query = """
             SELECT t.recording_msid
@@ -55,6 +31,7 @@ def process_listens(app, listens, priority):
                 ON t.recording_msid::uuid = mm.recording_msid
              WHERE mm.last_updated = '1970-01-01'  -- msid marked for rechecking manually
                 OR mm.check_again <= NOW()     -- msid not found last time, marked for rechecking
+                OR (mm.check_again IS NULL AND mm.recording_mbid IS NULL)  -- msid not found last time, not marked for rechecking because existed prior to rechecking existed
                 OR mm.recording_msid IS NULL   -- msid seen for first time
         """
         curs = connection.execute(sqlalchemy.text(query), {"msids": list(msids.keys())})
@@ -75,6 +52,38 @@ def process_listens(app, listens, priority):
             for msid in msids:
                 if msid not in msids_to_check:
                     app.logger.info(f"Remove {msid}, since a match exists")
+
+    return listens_to_check
+
+
+def process_listens(app, listens, priority):
+    """Given a set of listens, look up each one and then save the results to
+       the DB. Note: Legacy listens to not need to be checked to see if
+       a result alrady exists in the DB -- the selection of legacy listens
+       has already taken care of this."""
+
+    from listenbrainz.mbid_mapping_writer.job_queue import NEW_LISTEN, RECHECK_LISTEN
+
+    stats = {"processed": 0, "total": 0, "errors": 0, "listen_count": 0, "listens_matched": 0}
+    for typ in MATCH_TYPES:
+        stats[typ] = 0
+
+    msids = {str(listen["recording_msid"]): listen for listen in listens}
+    stats["total"] = len(msids)
+    if priority == NEW_LISTEN:
+        stats["listen_count"] += len(msids)
+
+    # To debug the mapping, set this to True or a specific priority
+    # e.g. (priority == RECHECK_LISTEN)
+    debug = False
+
+    if len(msids) == 0:
+        return stats
+
+    if priority == NEW_LISTEN:
+        listens_to_check = filter_incoming_listens(msids, stats, app, debug)
+    else:
+        listens_to_check = list(msids.values())
 
     if len(listens_to_check) == 0:
         return stats
@@ -98,8 +107,8 @@ def process_listens(app, listens, priority):
             # For all listens that are not matched, enter a no match entry, so we don't
             # keep attempting to look up more listens.
             for listen in remaining_listens:
-                matches.append((listen['recording_msid'], None, None, None, None, None, None, None, MATCH_TYPES[0]))
-                stats['no_match'] += 1
+                matches.append((listen["recording_msid"], None, None, None, None, None, None, None, MATCH_TYPES[0]))
+                stats["no_match"] += 1
 
             stats["processed"] += len(matches)
 
@@ -166,7 +175,7 @@ def process_listens(app, listens, priority):
                 )
 
         except psycopg2.errors.CardinalityViolation:
-            app.logger.error("CardinalityViolation on insert to mbid mapping\n%s" % str(query))
+            app.logger.error("CardinalityViolation on insert to mbid mapping\n", exc_info=True)
             conn.rollback()
             return
 
@@ -186,43 +195,49 @@ def lookup_listens(app, listens, stats, exact, debug):
         use a typesense fuzzy lookup.
     """
     if len(listens) == 0:
-        return ([], [], stats)
+        return [], [], stats
 
     if debug:
-        app.logger.info(f"""Lookup (exact {exact}) '{listens[0]["data"]["artist_name"]}', '{listens[0]["data"]["track_name"]}'""")
+        app.logger.info(f"""Lookup (exact {exact}) "{listens[0]["data"]["artist_name"]}", "{listens[0]["data"]["track_name"]}" """)
 
     if exact:
         q = ArtistCreditRecordingLookupQuery(debug=debug)
+        ModelT = ArtistCreditRecordingLookupInput
     else:
         q = MBIDMappingQuery(timeout=SEARCH_TIMEOUT, remove_stop_words=True, debug=debug)
+        ModelT = MBIDMappingInput
 
     params = []
     for listen in listens:
-        params.append({'[artist_credit_name]': listen["track_metadata"]["artist_name"],
-                       '[recording_name]': listen["track_metadata"]["track_name"]})
+        params.append(ModelT(
+            artist_credit_name=listen["track_metadata"]["artist_name"],
+            recording_name=listen["track_metadata"]["track_name"]
+        ))
 
     rows = []
-    hits = q.fetch(params)
-    for hit in sorted(hits, key=itemgetter("index"), reverse=True):
-        listen = listens[hit["index"]]
+    hits = q.fetch(params, RequestSource.json_post)
+    for hit in sorted(hits, key=attrgetter("index"), reverse=True):
+        listen = listens[hit.index]
 
         if exact:
-            hit["match_type"] = MATCH_TYPE_EXACT_MATCH
-        stats[MATCH_TYPES[hit["match_type"]]] += 1
-        rows.append((listen['recording_msid'],
-                     hit["recording_mbid"],
-                     hit["release_mbid"],
-                     hit["release_name"],
-                     hit["artist_mbids"],
-                     hit["artist_credit_id"],
-                     hit["artist_credit_name"],
-                     hit["recording_name"],
-                     MATCH_TYPES[hit["match_type"]]))
+            match_type = MATCH_TYPE_EXACT_MATCH
+        else:
+            match_type = hit.match_type
+        stats[MATCH_TYPES[match_type]] += 1
+        rows.append((listen["recording_msid"],
+                     str(hit.recording_mbid),
+                     str(hit.release_mbid),
+                     hit.release_name,
+                     [str(artist_mbid) for artist_mbid in hit.artist_mbids],
+                     hit.artist_credit_id,
+                     hit.artist_credit_name,
+                     hit.recording_name,
+                     MATCH_TYPES[match_type]))
 
         if debug:
             app.logger.info("\n".join(q.get_debug_log_lines()))
 
-        listens.pop(hit["index"])
+        listens.pop(hit.index)
         if len(listens) == 0:
             break
 

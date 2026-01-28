@@ -1,34 +1,26 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
 import * as React from "react";
-import { createRoot } from "react-dom/client";
-import * as Sentry from "@sentry/react";
-import { get } from "lodash";
-import { toast } from "react-toastify";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import { useLoaderData } from "react-router";
+import { Helmet } from "react-helmet";
+import { useSetAtom } from "jotai";
 
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import ListenCard from "../listens/ListenCard";
-
-import {
-  getPageProps,
-  getRecordingMBID,
-  getTrackName,
-  getRecordingMSID,
-} from "../utils/utils";
-
+import ListenCard from "../common/listens/ListenCard";
 import Card from "../components/Card";
-import { ToastMsg } from "../notifications/Notifications";
+
+import { getTrackName } from "../utils/utils";
+import RecentDonorsCard from "./components/RecentDonors";
+import FlairsExplanationButton from "../common/flairs/FlairsExplanationButton";
+import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
   globalListenCount: number;
   globalUserCount: string;
+  recentDonors: Array<DonationInfoWithPinnedRecording>;
 };
+
+type RecentListensLoaderData = RecentListensProps;
 
 export interface RecentListensState {
   listens: Array<Listen>;
@@ -39,9 +31,6 @@ export default class RecentListens extends React.Component<
   RecentListensProps,
   RecentListensState
 > {
-  static contextType = GlobalAppContext;
-  declare context: React.ContextType<typeof GlobalAppContext>;
-
   constructor(props: RecentListensProps) {
     super(props);
     this.state = {
@@ -51,14 +40,18 @@ export default class RecentListens extends React.Component<
 
   render() {
     const { listens } = this.state;
-    const { globalListenCount, globalUserCount } = this.props;
-    const { APIService, currentUser } = this.context;
+    const { globalListenCount, globalUserCount, recentDonors } = this.props;
 
     return (
       <div role="main">
-        <h3>Global listens</h3>
+        <Helmet>
+          <title>Recent listens</title>
+        </Helmet>
+        <div className="listen-header">
+          <h3 className="header-with-line">Global listens</h3>
+        </div>
         <div className="row">
-          <div className="col-md-4 col-md-push-8">
+          <div className="col-lg-4 order-lg-2">
             <Card id="listen-count-card">
               <div>
                 {globalListenCount?.toLocaleString() ?? "-"}
@@ -66,15 +59,19 @@ export default class RecentListens extends React.Component<
                 <small className="text-muted">songs played</small>
               </div>
             </Card>
-            <Card id="listen-count-card">
+            <Card id="listen-count-card" className="card-user-sn">
               <div>
                 {globalUserCount ?? "-"}
                 <br />
                 <small className="text-muted">users</small>
               </div>
             </Card>
+            <Card className="d-none d-md-block">
+              <RecentDonorsCard donors={recentDonors} />
+            </Card>
+            <FlairsExplanationButton className="d-none d-md-block" />
           </div>
-          <div className="col-md-8 col-md-pull-4">
+          <div className="col-lg-8 order-lg-1">
             {!listens.length && (
               <h5 className="text-center">No listens to show</h5>
             )}
@@ -96,52 +93,18 @@ export default class RecentListens extends React.Component<
             )}
           </div>
         </div>
-        <BrainzPlayer
-          listens={listens}
-          listenBrainzAPIBaseURI={APIService.APIBaseURI}
-          refreshSpotifyToken={APIService.refreshSpotifyToken}
-          refreshYoutubeToken={APIService.refreshYoutubeToken}
-          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-        />
       </div>
     );
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-
-  const { listens, globalListenCount, globalUserCount } = reactProps;
-
-  const RecentListensWithAlertNotifications = withAlertNotifications(
-    RecentListens
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <RecentListensWithAlertNotifications
-            listens={listens}
-            globalListenCount={globalListenCount}
-            globalUserCount={globalUserCount}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export function RecentListensWrapper() {
+  const data = useLoaderData() as RecentListensLoaderData;
+  const listens = data.listens || [];
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
+  React.useEffect(() => {
+    setAmbientQueue(listens);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listens]);
+  return <RecentListens {...data} />;
+}

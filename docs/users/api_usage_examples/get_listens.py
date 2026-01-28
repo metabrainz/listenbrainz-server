@@ -1,6 +1,10 @@
 import requests
 
-ROOT = '127.0.0.1'
+# Set DEBUG to True to test local dev server.
+# API keys for local dev server and the real server are different.
+DEBUG = True
+ROOT = 'http://localhost:8100' if DEBUG else 'https://api.listenbrainz.org'
+
 # The following token must be valid, but it doesn't have to be the token of the user you're
 # trying to get the listen history of.
 TOKEN = 'YOUR_TOKEN_HERE'
@@ -30,7 +34,7 @@ def get_listens(username, min_ts=None, max_ts=None, count=None):
         An IndexError if the JSON is not structured as expected.
     """
     response = requests.get(
-        url="http://{0}/1/user/{1}/listens".format(ROOT, username),
+        url="{0}/1/user/{1}/listens".format(ROOT, username),
         params={
             "min_ts": min_ts,
             "max_ts": max_ts,

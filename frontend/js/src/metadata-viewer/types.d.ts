@@ -12,6 +12,7 @@ declare type MusicBrainzArtist = {
   tag?: {
     artist: Array<ArtistTag>;
   };
+  gender?: string;
 };
 
 declare type MusicBrainzArtistCredit = {
@@ -37,6 +38,10 @@ declare type MusicBrainzReleaseGroup = {
   "secondary-types": string[];
   "secondary-type-ids": string[];
 };
+declare type MusicBrainzLabel = {
+  "catalog-number": string;
+  label?:{id:string;name:string};
+}
 
 declare type MusicBrainzTrack = {
   number: string;
@@ -49,7 +54,7 @@ declare type MusicBrainzTrack = {
 declare type MusicBrainzMedia = {
   title: string;
   position: number;
-  tracks: Array<MusicBrainzTrack>;
+  tracks: Array<MusicBrainzTrack | (MusicBrainzTrack & WithArtistCredits)>;
   format: string;
   "format-id": string;
   "track-offset": number;
@@ -67,13 +72,23 @@ declare type MusicBrainzRelease = {
   disambiguation: string;
   quality: string;
   country: string;
+  "label-info"?: MusicBrainzLabel[];
 };
-declare type MusicBrainzReleaseWithMedia = MusicBrainzRelease & {
+// With ?inc=media
+declare type WithMedia = {
   media: Array<MusicBrainzMedia>;
 };
+// With ?inc=artist-credits
+declare type WithArtistCredits = {
+  "artist-credit": Array<MusicBrainzArtistCredit>;
+};
 // With ?inc=release-groups
-declare type MusicBrainzReleaseWithReleaseGroup = MusicBrainzRelease & {
+declare type WithReleaseGroup = {
   "release-group": MusicBrainzReleaseGroup;
+};
+// With ?inc=releases
+declare type WithReleases = {
+  releases: MusicBrainzRelease[];
 };
 
 declare type MusicBrainzRecording = {
@@ -88,6 +103,10 @@ declare type MusicBrainzRecording = {
 // With ?inc=releases
 declare type MusicBrainzRecordingWithReleases = MusicBrainzRecording & {
   releases: Array<MusicBrainzRelease>;
+};
+// With ?inc=releases+release-groups
+declare type MusicBrainzRecordingWithReleasesAndRGs = MusicBrainzRecording & {
+  releases: Array<MusicBrainzRelease & WithReleaseGroup>;
 };
 
 declare type MusicBrainzRecordingRel = {

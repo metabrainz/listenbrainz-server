@@ -15,31 +15,32 @@ import config
 
 
 ARTIST_LINK_GIDS = (
-    '99429741-f3f6-484b-84f8-23af51991770',
-    'fe33d22f-c3b0-4d68-bd53-a856badf2b15',
-    '689870a4-a1e4-4912-b17f-7b2664215698',
-    '93883cf6-e818-4938-990e-75863f8db2d3',
-    '6f77d54e-1d81-4e1a-9ea5-37947577151b',
-    'e4d73442-3762-45a8-905c-401da65544ed',
-    '611b1862-67af-4253-a64f-34adba305d1d',
-    'f8319a2f-f824-4617-81c8-be6560b3b203',
-    '34ae77fe-defb-43ea-95d4-63c7540bac78',
-    '769085a1-c2f7-4c24-a532-2375a77693bd',
-    '63cc5d1f-f096-4c94-a43f-ecb32ea94161',
-    '6a540e5b-58c6-4192-b6ba-dbc71ec8fcf0'
+    '99429741-f3f6-484b-84f8-23af51991770',  # social network
+    'fe33d22f-c3b0-4d68-bd53-a856badf2b15',  # official homepage
+    '689870a4-a1e4-4912-b17f-7b2664215698',  # wikidata
+    '93883cf6-e818-4938-990e-75863f8db2d3',  # crowdfunding
+    '6f77d54e-1d81-4e1a-9ea5-37947577151b',  # patronage
+    'e4d73442-3762-45a8-905c-401da65544ed',  # lyrics
+    '611b1862-67af-4253-a64f-34adba305d1d',  # purchase for mail-order
+    'f8319a2f-f824-4617-81c8-be6560b3b203',  # purchase for download
+    '34ae77fe-defb-43ea-95d4-63c7540bac78',  # download for free
+    '769085a1-c2f7-4c24-a532-2375a77693bd',  # free streaming
+    '63cc5d1f-f096-4c94-a43f-ecb32ea94161',  # streaming
+    '6a540e5b-58c6-4192-b6ba-dbc71ec8fcf0'   # youtube
 )
 ARTIST_LINK_GIDS_SQL = ", ".join([f"'{x}'" for x in ARTIST_LINK_GIDS])
 
 RECORDING_LINK_GIDS = (
-    '628a9658-f54c-4142-b0c0-95f031b544da',
-    '59054b12-01ac-43ee-a618-285fd397e461',
-    '0fdbe3c6-7700-4a31-ae54-b53f06ae1cfa',
-    '234670ce-5f22-4fd0-921b-ef1662695c5d',
-    '3b6616c5-88ba-4341-b4ee-81ce1e6d7ebb',
-    '92777657-504c-4acb-bd33-51a201bd57e1',
-    '45d0cbc5-d65b-4e77-bdfd-8a75207cb5c5',
-    '7e41ef12-a124-4324-afdb-fdbae687a89c',
-    'b5f3058a-666c-406f-aafb-f9249fc7b122'
+    '628a9658-f54c-4142-b0c0-95f031b544da',  # performer
+    '59054b12-01ac-43ee-a618-285fd397e461',  # instrument
+    '0fdbe3c6-7700-4a31-ae54-b53f06ae1cfa',  # vocal
+    '234670ce-5f22-4fd0-921b-ef1662695c5d',  # conductor
+    '3b6616c5-88ba-4341-b4ee-81ce1e6d7ebb',  # performing orchestra
+    # TODO: the following URL rels are unused (queries only join artist table)
+    '92777657-504c-4acb-bd33-51a201bd57e1',  # purchase for download
+    '45d0cbc5-d65b-4e77-bdfd-8a75207cb5c5',  # download for free
+    '7e41ef12-a124-4324-afdb-fdbae687a89c',  # free streaming
+    'b5f3058a-666c-406f-aafb-f9249fc7b122'   # streaming
 )
 RECORDING_LINK_GIDS_SQL = ", ".join([f"'{x}'" for x in RECORDING_LINK_GIDS])
 
@@ -202,21 +203,41 @@ def create_metadata_cache(cache_cls, cache_key, required_tables, use_lb_conn: bo
         mb_uri = config.MBID_MAPPING_DATABASE_URI
         unlogged = True
 
+    success = False
+    try:
+        with psycopg2.connect(mb_uri) as mb_conn:
+            # I think sqlalchemy captures tracebacks and obscures where the real problem is
+            try:
+                lb_conn = None
+                if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
+                    lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
+
+                for table_cls in required_tables:
+                    table = table_cls(mb_conn, lb_conn, unlogged=unlogged)
+
+                    if not table.table_exists():
+                        log(f"{table.table_name} table does not exist, first create the table normally")
+                        return
+
+                new_timestamp = datetime.now()
+                cache = cache_cls(mb_conn, lb_conn, unlogged=unlogged)
+                cache.run()
+                success = True
+            except Exception:
+                log(format_exc())
+
+    except psycopg2.OperationalError:
+        if not success:
+            raise()
+
+        # Otherwise ignore the connection error, makde a new connection
+
+    # the connection times out after the long process above, so start with a fresh connection
     with psycopg2.connect(mb_uri) as mb_conn:
         lb_conn = None
         if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
             lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
 
-        for table_cls in required_tables:
-            table = table_cls(mb_conn, lb_conn, unlogged=unlogged)
-
-            if not table.table_exists():
-                log(f"{table.table_name} table does not exist, first create the table normally")
-                return
-
-        new_timestamp = datetime.now()
-        cache = cache_cls(mb_conn, lb_conn, unlogged=unlogged)
-        cache.run()
         update_metadata_cache_timestamp(lb_conn or mb_conn, new_timestamp, cache_key)
 
 

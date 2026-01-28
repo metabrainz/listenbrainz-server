@@ -3,6 +3,8 @@ import { LazyLoadImage } from "react-lazy-load-image-component";
 import { faPlay, faHourglass } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { isArray, isString, isUndefined } from "lodash";
+import { Link } from "react-router";
+import { isValid } from "date-fns";
 import { formatListenCount, formatReleaseDate } from "../utils";
 import {
   generateAlbumArtThumbnailLink,
@@ -32,6 +34,9 @@ type ReleaseCardProps = {
   releaseTags?: Array<string>;
   listenCount?: number;
   dateFormatOptions?: Intl.DateTimeFormatOptions;
+  onClick?:
+    | React.MouseEventHandler<HTMLElement>
+    | React.KeyboardEventHandler<HTMLElement>;
 };
 
 export default function ReleaseCard(props: ReleaseCardProps) {
@@ -49,6 +54,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     confidence,
     caaID,
     caaReleaseMBID,
+    onClick,
     showReleaseTitle,
     showArtist,
     showInformation,
@@ -63,7 +69,8 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   const hasReleaseDate =
     !isUndefined(releaseDate) &&
     isString(releaseDate) &&
-    Boolean(releaseDate.length);
+    Boolean(releaseDate.length) &&
+    isValid(new Date(releaseDate));
   const futureRelease = hasReleaseDate && new Date(releaseDate) > new Date();
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
   const RELEASE_TYPE_UNKNOWN = "Unknown";
@@ -115,13 +122,11 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   React.useEffect(() => {
     async function getCoverArt() {
       let coverartURL;
-      if (releaseMBID) {
+      if (releaseMBID || releaseGroupMBID) {
         coverartURL = await getAlbumArtFromReleaseMBID(
           releaseMBID,
-          releaseGroupMBID ?? true
+          releaseGroupMBID
         );
-      } else if (releaseGroupMBID) {
-        coverartURL = await getAlbumArtFromReleaseGroupMBID(releaseGroupMBID);
       }
       if (coverartURL) {
         setCoverartSrc(coverartURL);
@@ -136,11 +141,35 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     }
   }, [releaseMBID, releaseGroupMBID, caaID, caaReleaseMBID, setCoverartSrc]);
 
-  const linkToEntity = releaseGroupMBID
-    ? `/album/${releaseGroupMBID}`
-    : `/release/${releaseMBID}`;
+  let linkToEntity: string;
+  if (releaseGroupMBID) {
+    linkToEntity = `/album/${releaseGroupMBID}/`;
+  } else if (releaseMBID) {
+    linkToEntity = `/release/${releaseMBID}/`;
+  } else {
+    linkToEntity = `/search/?search_type=album&search_term=${encodeURIComponent(
+      releaseName
+    )}+${encodeURIComponent(artistCreditName)}`;
+  }
+
+  const coverArtElement = coverartSrc ? (
+    <>
+      {coverArtPlaceholder}
+      <LazyLoadImage
+        className={`release-coverart ${imageLoaded ? "" : "hide-image"}`}
+        src={coverartSrc}
+        alt={`${releaseName} by ${artistCreditName}`}
+        onLoad={handleImageLoad}
+      />
+      <div className="hover-backdrop">{releaseCoverArtIcon}</div>
+    </>
+  ) : (
+    <div className="release-coverart release-coverart-placeholder">
+      {releaseCoverArtIcon}
+    </div>
+  );
   return (
-    <div className="release-card-container">
+    <div className="release-card-container" key={releaseMBID}>
       <div className="release-item">
         {showListens && listenCount ? (
           <div className="listen-count">
@@ -188,66 +217,54 @@ export default function ReleaseCard(props: ReleaseCardProps) {
             </div>
           )}
         </div>
-        <a
-          href={linkToEntity}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="release-coverart-container"
-        >
-          {coverartSrc ? (
-            <>
-              {coverArtPlaceholder}
-              <LazyLoadImage
-                className={`release-coverart ${
-                  imageLoaded ? "" : "hide-image"
-                }`}
-                src={coverartSrc}
-                alt={`${releaseName} by ${artistCreditName}`}
-                onLoad={handleImageLoad}
-              />
-              <div className="hover-backdrop">{releaseCoverArtIcon}</div>
-            </>
-          ) : (
-            <div className="release-coverart release-coverart-placeholder">
-              {releaseCoverArtIcon}
-            </div>
-          )}
-        </a>
+        {onClick ? (
+          <div
+            className="release-coverart-container"
+            onClick={onClick as React.MouseEventHandler}
+            onKeyDown={onClick as React.KeyboardEventHandler}
+            role="button"
+            tabIndex={0}
+          >
+            {coverArtElement}
+          </div>
+        ) : (
+          <Link to={linkToEntity} className="release-coverart-container">
+            {coverArtElement}
+          </Link>
+        )}
       </div>
       {showReleaseTitle && (
         <div className="name-type-container">
           <div className="release-name" title={releaseName}>
-            <a href={linkToEntity} target="_blank" rel="noopener noreferrer">
-              {releaseName}
-            </a>
+            <Link to={linkToEntity}>{releaseName}</Link>
           </div>
         </div>
       )}
-      {showArtist && isArray(artistCredits) && (
+      {showArtist && isArray(artistCredits) && artistCredits.length && (
         <div className="release-artist" title={artistCreditName}>
           {artistCredits.map((ac) => (
-            <>
-              <a
-                href={`/artist/${ac.artist_mbid}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+            <span key={ac.artist_mbid}>
+              <Link to={`/artist/${ac.artist_mbid}/`}>
                 {ac.artist_credit_name}
-              </a>
+              </Link>
               {ac.join_phrase}
-            </>
+            </span>
           ))}
         </div>
       )}
       {showArtist && !isArray(artistCredits) && (
         <div className="release-artist" title={artistCreditName}>
-          <a
-            href={`/artist/${artistMBIDs[0]}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to={
+              artistMBIDs.length
+                ? `/artist/${artistMBIDs[0]}/`
+                : `/search/?search_type=artist&search_term=${encodeURIComponent(
+                    artistCreditName
+                  )}`
+            }
           >
             {artistCreditName}
-          </a>
+          </Link>
         </div>
       )}
     </div>

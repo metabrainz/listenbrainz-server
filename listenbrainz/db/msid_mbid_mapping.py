@@ -7,7 +7,6 @@ from psycopg2.extras import DictCursor
 from pydantic import BaseModel, validator, root_validator
 
 from data.model.validators import check_valid_uuid
-from listenbrainz.db import timescale
 from listenbrainz.db.recording import load_recordings_from_mbids
 from listenbrainz.messybrainz import load_recordings_from_msids
 
@@ -40,10 +39,11 @@ class MsidMbidModel(BaseModel):
 ModelT = TypeVar('ModelT', bound=MsidMbidModel)
 
 
-def fetch_track_metadata_for_items(items: List[ModelT]) -> List[ModelT]:
+def fetch_track_metadata_for_items(ts_conn, items: List[ModelT]) -> List[ModelT]:
     """ Fetches track_metadata for every object in a list of MsidMbidModel items.
 
         Args:
+            ts_conn: timescale database connection
             items: the MsidMbidModel items to fetch track_metadata for.
         Returns:
             The given list of MsidMbidModel objects with updated track_metadata.
@@ -61,7 +61,7 @@ def fetch_track_metadata_for_items(items: List[ModelT]) -> List[ModelT]:
 
     # first we try to load data from mapping using mbids. for the items without a mbid,
     # we'll later lookup data for these items from messybrainz.
-    with timescale.engine.connect() as ts_conn, ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
+    with ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
         mbid_metadatas = load_recordings_from_mbids(ts_curs, mbid_item_map.keys())
         _update_mbid_items(mbid_item_map, mbid_metadatas, msid_item_map)
 

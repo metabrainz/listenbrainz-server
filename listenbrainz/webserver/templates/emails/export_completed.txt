@@ -1,0 +1,6 @@
+Hi {{ username }}!
+
+We completed your requested data export. Please visit {{ url }} to download your data archive.
+
+Best,
+The ListenBrainz Team

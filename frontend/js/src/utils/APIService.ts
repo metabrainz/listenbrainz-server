@@ -2,6 +2,12 @@ import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
 import { TagActionType } from "../tags/TagComponent";
 import type { SortOption } from "../explore/fresh-releases/FreshReleases";
 import APIError from "./APIError";
+import type { Flair } from "./constants";
+import { Modes } from "../explore/lb-radio/components/Prompt";
+
+export interface LBRadioResponse {
+  payload: { jspf: JSPFObject; feedback: string[] };
+}
 
 export default class APIService {
   APIBaseURI: string;
@@ -10,6 +16,11 @@ export default class APIService {
   CBBaseURI: string = "https://critiquebrainz.org/ws/1";
 
   MAX_LISTEN_SIZE: number = 10000; // Maximum size of listens that can be sent
+
+  // Centralized token refresh for Spotify to ensure only one refresh call at a time
+  private static pendingSpotifyTokenRefresh: Promise<string> | null = null;
+  private static spotifyTokenRefreshTime: number | null = null;
+  private static readonly SPOTIFY_TOKEN_CACHE_DURATION = 5 * 60 * 1000;
 
   constructor(APIBaseURI: string) {
     let finalUri = APIBaseURI;
@@ -26,7 +37,9 @@ export default class APIService {
     userNames: Array<string>,
     limit?: number
   ): Promise<Array<Listen>> => {
-    const userNamesForQuery: string = userNames.join(",");
+    const userNamesForQuery: string = userNames
+      .map(encodeURIComponent)
+      .join(",");
 
     let query = `${this.APIBaseURI}/users/${userNamesForQuery}/recent-listens`;
 
@@ -55,7 +68,9 @@ export default class APIService {
       );
     }
 
-    let query: string = `${this.APIBaseURI}/user/${userName}/listens`;
+    let query: string = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/listens`;
 
     const queryParams: Array<string> = [];
     if (maxTs) {
@@ -80,13 +95,18 @@ export default class APIService {
     return result.payload.listens;
   };
 
-  getFeedForUser = async (
+  getListensFromFollowedUsers = async (
     userName: string,
     userToken: string,
     minTs?: number,
     maxTs?: number,
     count?: number
-  ): Promise<Array<TimelineEvent>> => {
+  ): Promise<Array<TimelineEvent<Listen>>> => {
+    if (maxTs && minTs) {
+      throw new SyntaxError(
+        "Cannot have both minTs and maxTs defined at the same time"
+      );
+    }
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
@@ -94,7 +114,102 @@ export default class APIService {
       throw new SyntaxError("User token missing");
     }
 
-    let query: string = `${this.APIBaseURI}/user/${userName}/feed/events`;
+    let query: string = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/feed/events/listens/following`;
+
+    const queryParams: Array<string> = [];
+    if (maxTs) {
+      queryParams.push(`max_ts=${maxTs}`);
+    }
+    if (minTs) {
+      queryParams.push(`min_ts=${minTs}`);
+    }
+    if (count) {
+      queryParams.push(`count=${count}`);
+    }
+    if (queryParams.length) {
+      query += `?${queryParams.join("&")}`;
+    }
+
+    const response = await fetch(query, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    await this.checkStatus(response);
+    const result = await response.json();
+
+    return result.payload.events;
+  };
+
+  getListensFromSimilarUsers = async (
+    userName: string,
+    userToken: string,
+    minTs?: number,
+    maxTs?: number,
+    count?: number
+  ): Promise<Array<TimelineEvent<Listen>>> => {
+    if (maxTs && minTs) {
+      throw new SyntaxError(
+        "Cannot have both minTs and maxTs defined at the same time"
+      );
+    }
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+
+    let query: string = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/feed/events/listens/similar`;
+
+    const queryParams: Array<string> = [];
+    if (maxTs) {
+      queryParams.push(`max_ts=${maxTs}`);
+    }
+    if (minTs) {
+      queryParams.push(`min_ts=${minTs}`);
+    }
+    if (count) {
+      queryParams.push(`count=${count}`);
+    }
+    if (queryParams.length) {
+      query += `?${queryParams.join("&")}`;
+    }
+
+    const response = await fetch(query, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    await this.checkStatus(response);
+    const result = await response.json();
+
+    return result.payload.events;
+  };
+
+  getFeedForUser = async (
+    userName: string,
+    userToken: string,
+    minTs?: number,
+    maxTs?: number,
+    count?: number
+  ): Promise<Array<TimelineEvent<EventMetadata>>> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+
+    let query: string = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/feed/events`;
 
     const queryParams: Array<string> = [];
     if (maxTs) {
@@ -127,7 +242,9 @@ export default class APIService {
       throw new SyntaxError("Username missing");
     }
 
-    const query: string = `${this.APIBaseURI}/user/${userName}/listen-count`;
+    const query: string = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/listen-count`;
 
     const response = await fetch(query, {
       method: "GET",
@@ -147,7 +264,30 @@ export default class APIService {
   };
 
   refreshSpotifyToken = async (): Promise<string> => {
-    return this.refreshAccessToken("spotify");
+    const now = Date.now();
+    // If there's a pending refresh within the cache duration,
+    // return that promise
+    if (
+      APIService.pendingSpotifyTokenRefresh &&
+      APIService.spotifyTokenRefreshTime &&
+      now - APIService.spotifyTokenRefreshTime <
+        APIService.SPOTIFY_TOKEN_CACHE_DURATION
+    ) {
+      return APIService.pendingSpotifyTokenRefresh;
+    }
+
+    APIService.spotifyTokenRefreshTime = now;
+    APIService.pendingSpotifyTokenRefresh = this.refreshAccessToken(
+      "spotify"
+    ).catch((err) => {
+      // If the refresh fails, clear the cache so the
+      // next attempt can try again immediately.
+      APIService.pendingSpotifyTokenRefresh = null;
+      APIService.spotifyTokenRefreshTime = null;
+      throw err;
+    });
+
+    return APIService.pendingSpotifyTokenRefresh;
   };
 
   refreshCritiquebrainzToken = async (): Promise<string> => {
@@ -158,9 +298,32 @@ export default class APIService {
     return this.refreshAccessToken("musicbrainz");
   };
 
+  refreshFunkwhaleToken = async (
+    userToken: string,
+    hostUrl?: string
+  ): Promise<string> => {
+    if (!hostUrl) {
+      throw new Error("Host URL is required for Funkwhale token refresh");
+    }
+    const response = await fetch(
+      `/settings/music-services/funkwhale/refresh/`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ host_url: hostUrl }),
+      }
+    );
+    await this.checkStatus(response);
+    const result = await response.json();
+    return result.access_token;
+  };
+
   refreshAccessToken = async (service: string): Promise<string> => {
     const response = await fetch(
-      `/profile/music-services/${service}/refresh/`,
+      `/settings/music-services/${service}/refresh/`,
       {
         method: "POST",
       }
@@ -180,12 +343,15 @@ export default class APIService {
     if (!userToken) {
       throw new SyntaxError("User token missing");
     }
-    const response = await fetch(`${this.APIBaseURI}/user/${userName}/follow`, {
-      method: "POST",
-      headers: {
-        Authorization: `Token ${userToken}`,
-      },
-    });
+    const response = await fetch(
+      `${this.APIBaseURI}/user/${encodeURIComponent(userName)}/follow`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+        },
+      }
+    );
     return { status: response.status };
   };
 
@@ -200,7 +366,7 @@ export default class APIService {
       throw new SyntaxError("User token missing");
     }
     const response = await fetch(
-      `${this.APIBaseURI}/user/${userName}/unfollow`,
+      `${this.APIBaseURI}/user/${encodeURIComponent(userName)}/unfollow`,
       {
         method: "POST",
         headers: {
@@ -233,39 +399,45 @@ export default class APIService {
   };
 
   getFollowersOfUser = async (
-    username: string
+    userName: string
   ): Promise<{ followers: Array<string> }> => {
-    if (!username) {
+    if (!userName) {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `${this.APIBaseURI}/user/${username}/followers`;
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/followers`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
   };
 
   getFollowingForUser = async (
-    username: string
+    userName: string
   ): Promise<{ following: Array<string> }> => {
-    if (!username) {
+    if (!userName) {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `${this.APIBaseURI}/user/${username}/following`;
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/following`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
   };
 
   getPlayingNowForUser = async (
-    username: string
+    userName: string
   ): Promise<Listen | undefined> => {
-    if (!username) {
+    if (!userName) {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `${this.APIBaseURI}/user/${username}/playing-now`;
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/playing-now`;
     const response = await fetch(url);
     await this.checkStatus(response);
     const result = await response.json();
@@ -372,16 +544,17 @@ export default class APIService {
   getLatestImport = async (
     userName: string,
     service: ImportService
-  ): Promise<number> => {
-    const url = encodeURI(
-      `${this.APIBaseURI}/latest-import?user_name=${userName}&service=${service}`
-    );
+  ): Promise<LatestImportResponse> => {
+    const url = `${
+      this.APIBaseURI
+    }/latest-import?user_name=${encodeURIComponent(
+      userName
+    )}&service=${service}`;
     const response = await fetch(url, {
       method: "GET",
     });
     await this.checkStatus(response);
-    const result = await response.json();
-    return parseInt(result.latest_import, 10);
+    return response.json();
   };
 
   /*
@@ -407,6 +580,25 @@ export default class APIService {
     return response.status; // Return true if timestamp is updated
   };
 
+  getUserDataImportStatus = async (
+    importId: number,
+    authToken?: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/import-listens/${importId}/`;
+    const headers = authToken
+      ? {
+          Authorization: `Token ${authToken}`,
+        }
+      : undefined;
+    const response = await fetch(url, {
+      method: "GET",
+      headers,
+    });
+    await this.checkStatus(response);
+    const result = await response.json();
+    return result;
+  };
+
   getUserEntity = async (
     userName: string | undefined,
     entity: Entity,
@@ -416,7 +608,7 @@ export default class APIService {
   ): Promise<UserEntityResponse> => {
     let url;
     if (userName) {
-      url = `${this.APIBaseURI}/stats/user/${userName}/`;
+      url = `${this.APIBaseURI}/stats/user/${encodeURIComponent(userName)}/`;
     } else {
       url = `${this.APIBaseURI}/stats/sitewide/`;
     }
@@ -428,7 +620,9 @@ export default class APIService {
     await this.checkStatus(response);
     // if response code is 204, then statistics havent been calculated, send empty object
     if (response.status === 204) {
-      const error = new APIError(`HTTP Error ${response.statusText}`);
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
       error.status = response.statusText;
       error.response = response;
       throw error;
@@ -442,14 +636,18 @@ export default class APIService {
   ): Promise<UserListeningActivityResponse> => {
     let url;
     if (userName) {
-      url = `${this.APIBaseURI}/stats/user/${userName}/listening-activity`;
+      url = `${this.APIBaseURI}/stats/user/${encodeURIComponent(
+        userName
+      )}/listening-activity`;
     } else {
       url = `${this.APIBaseURI}/stats/sitewide/listening-activity`;
     }
     const response = await fetch(`${url}?range=${range}`);
     await this.checkStatus(response);
     if (response.status === 204) {
-      const error = new APIError(`HTTP Error ${response.statusText}`);
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
       error.status = response.statusText;
       error.response = response;
       throw error;
@@ -461,11 +659,109 @@ export default class APIService {
     userName: string,
     range: UserStatsAPIRange = "all_time"
   ): Promise<UserDailyActivityResponse> => {
-    const url = `${this.APIBaseURI}/stats/user/${userName}/daily-activity?range=${range}`;
+    const url = `${this.APIBaseURI}/stats/user/${encodeURIComponent(
+      userName
+    )}/daily-activity?range=${range}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     if (response.status === 204) {
-      const error = new APIError(`HTTP Error ${response.statusText}`);
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    return response.json();
+  };
+
+  getUserArtistActivity = async (
+    userName?: string,
+    range: UserStatsAPIRange = "all_time"
+  ): Promise<UserArtistActivityResponse> => {
+    let url;
+    if (userName) {
+      url = `${this.APIBaseURI}/stats/user/${encodeURIComponent(
+        userName
+      )}/artist-activity`;
+    } else {
+      url = `${this.APIBaseURI}/stats/sitewide/artist-activity`;
+    }
+    url += `?range=${range}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    if (response.status === 204) {
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    return response.json();
+  };
+
+  getUserEraActivity = async (
+    userName?: string,
+    range: UserStatsAPIRange = "all_time"
+  ): Promise<UserEraActivityResponse> => {
+    let url;
+    if (userName) {
+      url = `${this.APIBaseURI}/stats/user/${userName}/era-activity`;
+    } else {
+      url = `${this.APIBaseURI}/stats/sitewide/era-activity`;
+    }
+    url += `?range=${range}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    if (response.status === 204) {
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    return response.json();
+  };
+
+  getUserArtistEvolutionActivity = async (
+    userName?: string,
+    range: UserStatsAPIRange = "all_time"
+  ): Promise<UserArtistEvolutionActivityResponse> => {
+    let url;
+    if (userName) {
+      url = `${this.APIBaseURI}/stats/user/${encodeURIComponent(
+        userName
+      )}/artist-evolution-activity`;
+    } else {
+      url = `${this.APIBaseURI}/stats/sitewide/artist-evolution-activity`;
+    }
+    url += `?range=${range}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    if (response.status === 204) {
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    return response.json();
+  };
+
+  getUserGenreActivity = async (
+    userName: string,
+    range: UserStatsAPIRange = "all_time"
+  ): Promise<UserGenreActivityResponse> => {
+    const url = `${this.APIBaseURI}/stats/user/${userName}/genre-activity?range=${range}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    if (response.status === 204) {
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
       error.status = response.statusText;
       error.response = response;
       throw error;
@@ -480,7 +776,7 @@ export default class APIService {
   ) => {
     let url;
     if (userName) {
-      url = `${this.APIBaseURI}/stats/user/${userName}/`;
+      url = `${this.APIBaseURI}/stats/user/${encodeURIComponent(userName)}/`;
     } else {
       url = `${this.APIBaseURI}/stats/sitewide/`;
     }
@@ -488,7 +784,9 @@ export default class APIService {
     const response = await fetch(url);
     await this.checkStatus(response);
     if (response.status === 204) {
-      const error = new APIError(`HTTP Error ${response.statusText}`);
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
       error.status = response.statusText;
       error.response = response;
       throw error;
@@ -607,7 +905,9 @@ export default class APIService {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
-    let queryURL = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback`;
+    let queryURL = `${this.APIBaseURI}/feedback/user/${encodeURIComponent(
+      userName
+    )}/get-feedback`;
     const queryParams: Array<string> = ["metadata=true"];
     if (!isUndefined(offset)) {
       queryParams.push(`offset=${offset}`);
@@ -634,7 +934,9 @@ export default class APIService {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
-    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings`;
+    const url = `${this.APIBaseURI}/feedback/user/${encodeURIComponent(
+      userName
+    )}/get-feedback-for-recordings`;
     const requestBody: FeedbackForUserForRecordingsRequestBody = {
       recording_mbids,
     };
@@ -692,7 +994,6 @@ export default class APIService {
     });
     await this.checkStatus(response);
     const result = await response.json();
-
     return result.playlist_mbid;
   };
 
@@ -742,9 +1043,11 @@ export default class APIService {
       };
     }
 
-    const url = `${this.APIBaseURI}/user/${userName}/playlists${
-      createdFor ? "/createdfor" : ""
-    }${collaborator ? "/collaborator" : ""}?offset=${offset}&count=${count}`;
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/playlists${createdFor ? "/createdfor" : ""}${
+      collaborator ? "/collaborator" : ""
+    }?offset=${offset}&count=${count}`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -929,7 +1232,11 @@ export default class APIService {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `${this.APIBaseURI}/recommendation/feedback/user/${userName}/recordings?mbids=${recordings}`;
+    const url = `${
+      this.APIBaseURI
+    }/recommendation/feedback/user/${encodeURIComponent(
+      userName
+    )}/recordings?mbids=${recordings}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
@@ -940,7 +1247,9 @@ export default class APIService {
     authToken: string,
     metadata: UserTrackRecommendationMetadata
   ) => {
-    const url = `${this.APIBaseURI}/user/${userName}/timeline-event/create/recording`;
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/timeline-event/create/recording`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -954,28 +1263,51 @@ export default class APIService {
   };
 
   getSimilarUsersForUser = async (
-    username: string
+    userName: string
   ): Promise<{
     payload: Array<{ user_name: string; similarity: number }>;
   }> => {
-    if (!username) {
+    if (!userName) {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `${this.APIBaseURI}/user/${username}/similar-users`;
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/similar-users`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getSimilarityBetweenUsers = async (
+    userName: string,
+    otherUserName: string
+  ): Promise<{
+    payload: { user_name: string; similarity: number };
+  }> => {
+    if (!userName || !otherUserName) {
+      throw new SyntaxError("One username missing");
+    }
+
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/similar-to/${encodeURIComponent(otherUserName)}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
   };
 
   reportUser = async (userName: string, optionalContext?: string) => {
-    const response = await fetch(`/user/${userName}/report-user/`, {
-      method: "POST",
-      body: JSON.stringify({ reason: optionalContext }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await fetch(
+      `/user/${encodeURIComponent(userName)}/report-user/`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reason: optionalContext }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
     await this.checkStatus(response);
   };
 
@@ -996,6 +1328,26 @@ export default class APIService {
         recording_msid: recordingMSID,
         recording_mbid: recordingMBID,
         blurb_content,
+      }),
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  updatePinRecordingBlurbContent = async (
+    userToken: string,
+    rowId: number,
+    blurbContent: string
+  ): Promise<{ status: string }> => {
+    const url = `${this.APIBaseURI}/pin/update/${rowId}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        blurb_content: blurbContent,
       }),
     });
     await this.checkStatus(response);
@@ -1054,7 +1406,9 @@ export default class APIService {
       throw new SyntaxError("Username missing");
     }
 
-    const query = `${this.APIBaseURI}/${userName}/pins?offset=${offset}&count=${count}`;
+    const query = `${this.APIBaseURI}/${encodeURIComponent(
+      userName
+    )}/pins?offset=${offset}&count=${count}`;
 
     const response = await fetch(query, {
       method: "GET",
@@ -1069,7 +1423,9 @@ export default class APIService {
     userToken: string,
     review: CritiqueBrainzReview
   ) => {
-    const url = `${this.APIBaseURI}/user/${userName}/timeline-event/create/review`;
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/timeline-event/create/review`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -1092,6 +1448,106 @@ export default class APIService {
     return response.json();
   };
 
+  lookupMBArtist = async (
+    artistMBID: string,
+    inc?: string
+  ): Promise<Array<MusicBrainzArtist>> => {
+    let url = `${this.APIBaseURI}/metadata/artist/?artist_mbids=${artistMBID}`;
+    if (inc) {
+      url += `&inc=${inc}`;
+    }
+    const response = await fetch(encodeURI(url));
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  importPlaylistFromSpotify = async (userToken?: string): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/import/spotify`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  importPlaylistFromAppleMusic = async (userToken?: string): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/import/apple_music`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  importPlaylistFromSoundCloud = async (userToken?: string): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/import/soundcloud`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  importSpotifyPlaylistTracks = async (
+    userToken: string,
+    playlistID: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/spotify/${playlistID}/tracks`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  importAppleMusicPlaylistTracks = async (
+    userToken: string,
+    playlistID: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/apple_music/${playlistID}/tracks`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  importSoundCloudPlaylistTracks = async (
+    userToken: string,
+    playlistID: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/soundcloud/${playlistID}/tracks`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   lookupMBRecording = async (
     recordingMBID: string,
     inc = "artists"
@@ -1103,9 +1559,26 @@ export default class APIService {
   };
 
   lookupMBRelease = async (
-    releaseMBID: string
-  ): Promise<MusicBrainzReleaseWithReleaseGroup> => {
-    const url = `${this.MBBaseURI}/release/${releaseMBID}?fmt=json&inc=release-groups`;
+    releaseMBID: string,
+    inc = "release-groups"
+  ): Promise<
+    (MusicBrainzRelease & WithReleaseGroup) | (MusicBrainzRelease & WithMedia)
+  > => {
+    const url = `${this.MBBaseURI}/release/${releaseMBID}?fmt=json&inc=${inc}`;
+    const response = await fetch(encodeURI(url));
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  lookupMBReleaseGroup = async (
+    releaseGroupMBID: string
+  ): Promise<
+    MusicBrainzReleaseGroup &
+      WithArtistCredits & {
+        releases: Array<MusicBrainzRelease & WithMedia>;
+      }
+  > => {
+    const url = `${this.MBBaseURI}/release-group/${releaseGroupMBID}?fmt=json&inc=releases+artists+media`;
     const response = await fetch(encodeURI(url));
     await this.checkStatus(response);
     return response.json();
@@ -1116,7 +1589,7 @@ export default class APIService {
   ): Promise<{
     "release-offset": number;
     "release-count": number;
-    releases: MusicBrainzReleaseWithMedia[];
+    releases: Array<MusicBrainzRelease & WithMedia>;
   }> => {
     const url = `${this.MBBaseURI}/release?track=${trackMBID}&fmt=json`;
     const response = await fetch(encodeURI(url));
@@ -1135,16 +1608,40 @@ export default class APIService {
     return response.json();
   };
 
+  getFeedEvent = async (
+    eventId: number,
+    userName: string,
+    userToken: string
+  ): Promise<TimelineEvent<EventMetadata>> => {
+    if (!eventId) {
+      throw new SyntaxError("Event ID not present");
+    }
+    const query = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/feed/events/${eventId}`;
+    const response = await fetch(query, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    await this.checkStatus(response);
+    const result = await response.json();
+    return result.payload.events?.[0];
+  };
+
   deleteFeedEvent = async (
     eventType: string,
-    username: string,
+    userName: string,
     userToken: string,
     id: number
   ): Promise<any> => {
     if (!id) {
       throw new SyntaxError("Event ID not present");
     }
-    const query = `${this.APIBaseURI}/user/${username}/feed/events/delete`;
+    const query = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/feed/events/delete`;
     const response = await fetch(query, {
       method: "POST",
       headers: {
@@ -1159,14 +1656,16 @@ export default class APIService {
 
   hideFeedEvent = async (
     eventType: string,
-    username: string,
+    userName: string,
     userToken: string,
     event_id: number
   ): Promise<any> => {
     if (!event_id) {
       throw new SyntaxError("Event ID not present");
     }
-    const query = `${this.APIBaseURI}/user/${username}/feed/events/hide`;
+    const query = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/feed/events/hide`;
     const response = await fetch(query, {
       method: "POST",
       headers: {
@@ -1181,14 +1680,16 @@ export default class APIService {
 
   unhideFeedEvent = async (
     eventType: string,
-    username: string,
+    userName: string,
     userToken: string,
     event_id: number
   ): Promise<any> => {
     if (!event_id) {
       throw new SyntaxError("Event ID not present");
     }
-    const query = `${this.APIBaseURI}/user/${username}/feed/events/unhide`;
+    const query = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/feed/events/unhide`;
     const response = await fetch(query, {
       method: "POST",
       headers: {
@@ -1201,12 +1702,44 @@ export default class APIService {
     return response.status;
   };
 
+  thankFeedEvent = async (
+    event_id: number | undefined,
+    eventType: EventTypeT,
+    userToken: string,
+    userName: string,
+    blurb_content: string
+  ): Promise<any> => {
+    if (!event_id) {
+      throw new SyntaxError("Event ID not present");
+    }
+    const query = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/timeline-event/create/thanks`;
+    const response = await fetch(query, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        metadata: {
+          original_event_type: eventType,
+          original_event_id: event_id,
+          blurb_content,
+        },
+      }),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
   lookupRecordingMetadata = async (
+    userToken: string,
     trackName: string,
     artistName: string,
     metadata: boolean = true
   ): Promise<MetadataLookup | null> => {
-    if (!trackName) {
+    if (!trackName || !userToken) {
       return null;
     }
     const queryParams: any = {
@@ -1227,7 +1760,11 @@ export default class APIService {
       url.searchParams.append("inc", "artist tag release");
     }
 
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
     await this.checkStatus(response);
     return response.json();
   };
@@ -1275,7 +1812,9 @@ export default class APIService {
     userName: string,
     metadata: UserTrackPersonalRecommendationMetadata
   ) => {
-    const url = `${this.APIBaseURI}/user/${userName}/timeline-event/create/recommend-personal`;
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/timeline-event/create/recommend-personal`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -1306,6 +1845,40 @@ export default class APIService {
     return response.status;
   };
 
+  submitBrainzplayerPreferences = async (
+    userToken: string,
+    brainzPlayerSettings: BrainzPlayerSettings
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/settings/brainzplayer`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(brainzPlayerSettings),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
+  submitFlairPreferences = async (
+    userToken: string,
+    flair: Flair
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/settings/flair`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ flair }),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
   exportPlaylistToSpotify = async (
     userToken: string,
     playlist_mbid: string
@@ -1322,6 +1895,39 @@ export default class APIService {
     return response.json();
   };
 
+  exportPlaylistToAppleMusic = async (
+    userToken: string,
+    playlist_mbid: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/${playlist_mbid}/export/apple_music`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  exportJSPFPlaylistToAppleMusic = async (
+    userToken: string,
+    playlist: JSPFPlaylist
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/export-jspf/apple_music`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(playlist),
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   exportJSPFPlaylistToSpotify = async (
     userToken: string,
     playlist: JSPFPlaylist
@@ -1330,6 +1936,42 @@ export default class APIService {
       throw new Error("Expected a playlist");
     }
     const url = `${this.APIBaseURI}/playlist/export-jspf/spotify`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(playlist),
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  exportPlaylistToSoundCloud = async (
+    userToken: string,
+    playlist_mbid: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/${playlist_mbid}/export/soundcloud`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  exportJSPFPlaylistToSoundCloud = async (
+    userToken: string,
+    playlist: JSPFPlaylist
+  ): Promise<any> => {
+    if (!playlist) {
+      throw new Error("Expected a playlist");
+    }
+    const url = `${this.APIBaseURI}/playlist/export-jspf/soundcloud`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -1393,17 +2035,23 @@ export default class APIService {
   };
 
   fetchUserFreshReleases = async (
-    username: string,
+    userName: string,
+    days?: number,
     past?: boolean,
     future?: boolean,
     sort?: SortOption
   ): Promise<any> => {
-    if (!username) {
+    if (!userName) {
       throw new SyntaxError("Username missing");
     }
-    let url = `${this.APIBaseURI}/user/${username}/fresh_releases`;
+    let url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/fresh_releases`;
 
     const queryParams: Array<string> = [];
+    if (days) {
+      queryParams.push(`days=${days}`);
+    }
     if (sort) {
       queryParams.push(`sort=${sort}`);
     }
@@ -1508,4 +2156,152 @@ export default class APIService {
       return false;
     }
   };
+
+  artistLookup = async (
+    searchQuery: string,
+    offset: number = 0,
+    count: number = 25
+  ): Promise<ArtistTypeSearchResult> => {
+    const url = `${this.MBBaseURI}/artist?query=${encodeURIComponent(
+      searchQuery
+    )}&fmt=json&offset=${offset}&limit=${count}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  albumLookup = async (
+    searchQuery: string,
+    offset: number = 0,
+    count: number = 25
+  ): Promise<AlbumTypeSearchResult> => {
+    const url = `${this.MBBaseURI}/release-group?query=${encodeURIComponent(
+      searchQuery
+    )}&fmt=json&offset=${offset}&limit=${count}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  recordingLookup = async (
+    searchQuery: string,
+    offset: number = 0,
+    count: number = 25
+  ): Promise<TrackTypeSearchResult> => {
+    const url = `${this.MBBaseURI}/recording?query=${encodeURIComponent(
+      searchQuery
+    )}&fmt=json&offset=${offset}&limit=${count}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  searchMBRelease = async (
+    searchQuery: string
+  ): Promise<{
+    count: number;
+    offset: number;
+    releases: Array<
+      MusicBrainzRelease & WithReleaseGroup & WithArtistCredits & WithMedia
+    >;
+  }> => {
+    const url = `${this.MBBaseURI}/release?query=${encodeURIComponent(
+      searchQuery
+    )}&fmt=json`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getArtistWikipediaExtract = async (artistMBID: string): Promise<string> => {
+    const url = `https://musicbrainz.org/artist/${artistMBID}/wikipedia-extract`;
+    const response = await fetch(url);
+    const { wikipediaExtract } = await response.json();
+
+    if (!wikipediaExtract || !wikipediaExtract.content) {
+      return "No wiki data found.";
+    }
+
+    const htmlParser = new DOMParser();
+    const htmlData = htmlParser.parseFromString(
+      wikipediaExtract.content,
+      "text/html"
+    );
+    const htmlParagraphs = htmlData.querySelector("p:not(.mw-empty-elt)");
+
+    return htmlParagraphs?.textContent || "No wiki data found.";
+  };
+
+  getTopRecordingsForArtist = async (
+    artistMBID: string
+  ): Promise<RecordingType[]> => {
+    const url = `${this.APIBaseURI}/popularity/top-recordings-for-artist/${artistMBID}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getTopReleaseGroupsForArtist = async (
+    artistMBID: string
+  ): Promise<ReleaseGroupType[]> => {
+    const url = `${this.APIBaseURI}/popularity/top-release-groups-for-artist/${artistMBID}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  searchPlaylistsForUser = async (
+    searchQuery: string,
+    musicbrainzID: string,
+    count: number = 25,
+    offset: number = 0
+  ): Promise<PlaylistTypeSearchResult> => {
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      musicbrainzID
+    )}/playlists/search?query=${encodeURIComponent(
+      searchQuery
+    )}&count=${count}&offset=${offset}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  searchPlaylists = async (
+    searchQuery: string,
+    count: number = 25,
+    offset: number = 0
+  ): Promise<PlaylistTypeSearchResult> => {
+    const url = `${this.APIBaseURI}/playlist/search?query=${encodeURIComponent(
+      searchQuery
+    )}&count=${count}&offset=${offset}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getUserFlairs = async (): Promise<Record<string, Flair>> => {
+    const url = `${this.APIBaseURI}/donors/all-flairs`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  async getLBRadioPlaylist(
+    userToken: string,
+    prompt: string,
+    mode: Modes = Modes.easy
+  ): Promise<LBRadioResponse> {
+    const url = `${
+      this.APIBaseURI
+    }/explore/lb-radio?prompt=${encodeURIComponent(prompt)}&mode=${mode}`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/xspf+xml;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  }
 }

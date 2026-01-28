@@ -15,13 +15,13 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
-from listenbrainz.db import year_in_music, couchdb
+from listenbrainz.db import year_in_music
 from listenbrainz.db.fresh_releases import insert_fresh_releases
-from listenbrainz.db import similarity
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.troi.daily_jams import run_post_recommendation_troi_bot
 from listenbrainz.troi.weekly_playlists import process_weekly_playlists, process_weekly_playlists_end
 from listenbrainz.troi.year_in_music import process_yim_playlists, process_yim_playlists_end
+from listenbrainz.webserver import db_conn
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
@@ -68,15 +68,20 @@ def handle_user_daily_activity(message):
     """ Take daily activity stats for user and save it in database. """
     _handle_stats(message, "daily_activity", "user_id")
 
+def handle_user_genre_activity(message):
+    """ Take genre activity stats for user and save it in database. """
+    _handle_stats(message, "genre_activity", "user_id")
+
+def handle_user_artist_evolution_activity(message):
+    """ Take artist evolution activity stats for user and save it in database. """
+    _handle_stats(message, "artist_evolution_activity", "user_id")
+
+def handle_user_era_activity(message):
+    """ Take daily activity stats for user and save it in database. """
+    _handle_stats(message, "era_activity", "user_id")
 
 def _handle_sitewide_stats(message, stat_type, has_count=False):
     try:
-        stats_range = message["stats_range"]
-        databases = couchdb.list_databases(f"{stat_type}_{stats_range}")
-        if not databases:
-            current_app.logger.error(f"No database found to insert {stats_range} sitewide {stat_type} stats")
-            return
-
         stats = {
             "data": message["data"]
         }
@@ -84,7 +89,8 @@ def _handle_sitewide_stats(message, stat_type, has_count=False):
             stats["count"] = message["count"]
 
         db_stats.insert_sitewide_stats(
-            databases[0],
+            stat_type,
+            message["stats_range"],
             message["from_ts"],
             message["to_ts"],
             stats
@@ -98,8 +104,20 @@ def handle_sitewide_entity(message):
     _handle_sitewide_stats(message, message["entity"], has_count=True)
 
 
+def handle_sitewide_artist_map(message):
+    _handle_sitewide_stats(message, "artist_map")
+
+
 def handle_sitewide_listening_activity(message):
     _handle_sitewide_stats(message, "listening_activity")
+
+
+def handle_sitewide_era_activity(message):
+    _handle_sitewide_stats(message, "era_activity")
+
+
+def handle_sitewide_artist_evolution_activity(message):
+    _handle_sitewide_stats(message, "artist_evolution_activity")
 
 
 def handle_dump_imported(data):
@@ -147,7 +165,7 @@ def handle_missing_musicbrainz_data(data):
     """ Insert user missing musicbrainz data i.e data submitted to ListenBrainz but not MusicBrainz.
     """
     user_id = data['user_id']
-    user = db_user.get(user_id)
+    user = db_user.get(db_conn, user_id)
 
     if not user:
         return
@@ -159,6 +177,7 @@ def handle_missing_musicbrainz_data(data):
 
     try:
         db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(
+            db_conn,
             user['id'],
             UserMissingMusicBrainzDataJson(missing_musicbrainz_data=missing_musicbrainz_data),
             source
@@ -213,7 +232,7 @@ def handle_recommendations(data):
     """ Take recommended recordings for a user and save it in the db.
     """
     user_id = data['user_id']
-    user = db_user.get(user_id)
+    user = db_user.get(db_conn, user_id)
     if not user:
         current_app.logger.info(f"Generated recommendations for a user that doesn't exist in the Postgres database: {user_id}")
         return
@@ -223,6 +242,7 @@ def handle_recommendations(data):
 
     try:
         db_recommendations_cf_recording.insert_user_recommendation(
+            db_conn,
             user_id,
             UserRecommendationsJson(**recommendations)
         )
@@ -255,27 +275,6 @@ def notify_mapping_import(data):
     send_mail(
         subject='MSID MBID mapping has been imported into the Spark cluster',
         text=render_template('emails/mapping_import_notification.txt', mapping_name=mapping_name, import_time=import_time,
-                             time_taken_to_import=time_taken_to_import),
-        recipients=['listenbrainz-observability@metabrainz.org'],
-        from_name='ListenBrainz',
-        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
-    )
-
-
-def notify_artist_relation_import(data):
-    """ Send an email after artist relation has been sucessfully imported into the cluster.
-    """
-    if current_app.config['TESTING']:
-        return
-
-    artist_relation_name = data['imported_artist_relation']
-    import_time = data['import_time']
-    time_taken_to_import = data['time_taken_to_import']
-
-    send_mail(
-        subject='Artist relation has been imported into the Spark cluster',
-        text=render_template('emails/artist_relation_import_notification.txt',
-                             artist_relation_name=artist_relation_name, import_time=import_time,
                              time_taken_to_import=time_taken_to_import),
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',
@@ -347,6 +346,10 @@ def handle_yim_most_listened_year(message):
     year_in_music.insert_heavy("most_listened_year", message["year"], message["data"])
 
 
+def handle_yim_artist_evolution_activity(message):
+    year_in_music.insert_heavy("artist_evolution_activity", message["year"], message["data"])
+
+
 def handle_yim_top_stats(message):
     year_in_music.insert_top_stats(message["entity"], message["year"], message["data"])
 
@@ -375,20 +378,16 @@ def handle_yim_top_genres(message):
     year_in_music.insert_heavy("top_genres", message["year"], message["data"])
 
 
+def handle_yim_genre_activity(message):
+    year_in_music.insert_heavy("genre_activity", message["year"], message["data"])
+
+
 def handle_yim_playlists(message):
     process_yim_playlists(message["slug"], message["year"], message["data"])
 
 
 def handle_yim_playlists_end(message):
     process_yim_playlists_end(message["slug"], message["year"])
-
-
-def handle_similar_recordings(message):
-    similarity.insert("recording", message["data"], message["algorithm"])
-
-
-def handle_similar_artists(message):
-    similarity.insert("artist_credit_mbids", message["data"], message["algorithm"])
 
 
 def handle_troi_playlists(message):

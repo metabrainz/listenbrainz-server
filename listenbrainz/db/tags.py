@@ -1,3 +1,4 @@
+from flask import current_app
 from psycopg2.sql import Literal, SQL
 from sqlalchemy import text
 
@@ -44,36 +45,32 @@ class _TagsDataset(DatabaseDataset):
 TagsDataset = _TagsDataset()
 
 
-def get_once(connection, query, count_query, params, results, counts):
+def get_once(connection, query, params, results):
     """ One pass over the lb radio tags dataset to retrieve matching recordings """
     rows = connection.execute(text(query), params)
     for row in rows:
         source = row.source
         results[source].extend(row.recordings)
 
-    rows = connection.execute(text(count_query), params)
-    for row in rows:
-        source = row.source
-        counts[source] += row.total_count
 
-
-def get(query, count_query, more_query, more_count_query, params):
+def get(query, more_query, params):
     """ Retrieve recordings and tags for the given query. First it tries to retrieve recordings matching the
         specified criteria. If there are not enough recordings matching the given criteria, it relaxes the
         percentage bounds and to gather and return more recordings.
     """
-    results = {"artist": [], "recording": [], "release-group": []}
-    counts = {"artist": 0, "recording": 0, "release-group": 0}
-
+    recordings = []
     count = params["count"]
 
     with timescale.engine.connect() as connection:
-        get_once(connection, query, count_query, params, results, counts)
-        if len(results["artist"]) < count or len(results["recording"]) < count or len(results["release-group"]) < count:
-            get_once(connection, more_query, more_count_query, params, results, counts)
+        result = connection.execute(text(query), params).first()
+        if result is not None and result.recordings is not None:
+            recordings.extend(result.recordings)
+        if len(recordings) < count:
+            result = connection.execute(text(more_query), params).first()
+            if result is not None and result.recordings is not None:
+                recordings.extend(result.recordings)
 
-    results["count"] = counts
-    return results
+    return recordings
 
 
 def get_partial_clauses(expanded):
@@ -86,16 +83,16 @@ def get_partial_clauses(expanded):
     if expanded:
         order_clause = """
             ORDER BY CASE 
-                     WHEN :begin_percent > percent THEN percent - :begin_percent
-                     WHEN :end_percent < percent THEN :end_percent - percent
+                     WHEN percent < :begin_percent THEN :begin_percent - percent
+                     WHEN percent > :end_percent THEN percent - :end_percent
                      ELSE 1
                      END
                    , RANDOM()
         """
-        percent_clause = ":begin_percent <= percent AND percent < :end_percent"
+        percent_clause = "percent < :begin_percent OR percent > :end_percent"
     else:
         order_clause = "ORDER BY RANDOM()"
-        percent_clause = "percent < :begin_percent OR percent >= :end_percent"
+        percent_clause = ":begin_percent <= percent AND percent <= :end_percent"
 
     return order_clause, percent_clause
 
@@ -113,7 +110,6 @@ def build_and_query(tags, expanded):
         clauses.append(f"""
             SELECT recording_mbid
                  , source
-                 , percent
               FROM tags.lb_tag_radio
              WHERE tag = :{param}
                AND ({percent_clause})
@@ -123,25 +119,35 @@ def build_and_query(tags, expanded):
     query = f"""
         WITH all_recs AS (
             {clause}
-         ), randomize_recs AS (
+        ), add_percent_to_recs AS (
+            SELECT ar.recording_mbid
+                 , ar.source
+                 , ltr.percent
+              FROM tags.lb_tag_radio ltr
+              JOIN all_recs ar
+                ON ar.recording_mbid = ltr.recording_mbid
+               AND ar.source = ltr.source
+               AND ltr.tag = :tag_0
+        ), randomize_recs AS (
             SELECT recording_mbid
                  , source
                  , row_number() OVER (PARTITION BY source {order_clause}) AS rnum
-              FROM all_recs    
-         ), selected_recs AS (
+              FROM add_percent_to_recs    
+        ), selected_recs AS (
             SELECT recording_mbid
                  , source
               FROM randomize_recs
              WHERE rnum <= :count
-        )   SELECT source
-                 , jsonb_agg(
+        )   SELECT jsonb_agg(
                         jsonb_build_object(
                             'recording_mbid'
                            , recording_mbid
                            , 'tag_count'
                            , tag_count
                            , 'percent'
-                           , percent
+                           , percent * 100
+                           , 'source'
+                           , source
                         )
                         ORDER BY tag_count DESC
                    ) AS recordings
@@ -149,18 +155,8 @@ def build_and_query(tags, expanded):
               JOIN tags.lb_tag_radio
              USING (recording_mbid, source)
              WHERE tag = :tag_0
-          GROUP BY source
     """
-    count_query = f"""
-        WITH all_recs AS (
-            {clause}
-         ) SELECT source
-                , count(*) AS total_count
-             FROM all_recs
-         GROUP BY source
-    """
-
-    return query, count_query, params
+    return query, params
 
 
 def build_or_query(expanded=True):
@@ -178,33 +174,23 @@ def build_or_query(expanded=True):
               FROM tags.lb_tag_radio
              WHERE tag IN :tags
                AND ({percent_clause})
-        )   SELECT source
-                 , jsonb_agg(
+        )   SELECT jsonb_agg(
                         jsonb_build_object(
                             'recording_mbid'
                            , recording_mbid
                            , 'tag_count'
                            , tag_count
                            , 'percent'
-                           , percent
+                           , percent * 100
+                           , 'source'
+                           , source
                         )
                         ORDER BY tag_count DESC
                    ) AS recordings
               FROM all_tags
              WHERE rnum <= :count
-          GROUP BY source
     """
-
-    count_query = f"""
-        SELECT source
-             , count(*) AS total_count
-          FROM tags.lb_tag_radio
-         WHERE tag IN :tags
-           AND ({percent_clause})
-      GROUP BY source
-    """
-
-    return query, count_query
+    return query
 
 
 def get_and(tags, begin_percent, end_percent, count):
@@ -213,10 +199,10 @@ def get_and(tags, begin_percent, end_percent, count):
         outside the percent bounds may also be returned.)
     """
     params = {"count": count, "begin_percent": begin_percent, "end_percent": end_percent}
-    query, count_query, _params = build_and_query(tags, False)
-    more_query, more_count_query, _ = build_and_query(tags, True)
+    query, _params = build_and_query(tags, False)
+    more_query, _ = build_and_query(tags, True)
     params.update(_params)
-    return get(query, count_query, more_query, more_count_query, params)
+    return get(query, more_query, params)
 
 
 def get_or(tags, begin_percent, end_percent, count):
@@ -225,6 +211,6 @@ def get_or(tags, begin_percent, end_percent, count):
         outside the percent bounds may also be returned.)
     """
     params = {"tags": tuple(tags), "begin_percent": begin_percent, "end_percent": end_percent, "count": count}
-    query, count_query = build_or_query(False)
-    more_query, more_count_query = build_or_query(True)
-    return get(query, count_query, more_query, more_count_query, params)
+    query = build_or_query(False)
+    more_query = build_or_query(True)
+    return get(query, more_query, params)

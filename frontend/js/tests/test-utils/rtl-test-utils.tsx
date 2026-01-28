@@ -3,6 +3,7 @@ import * as React from "react";
 import { RenderOptions, render } from "@testing-library/react";
 import { ToastContainer } from "react-toastify";
 import { isString } from "lodash";
+import { BrowserRouter } from "react-router";
 import APIService from "../../src/utils/APIService";
 import GlobalAppContext, {
   GlobalAppContextT,
@@ -14,6 +15,7 @@ This shouldn't be required once we move all the tests away
 from Enzyme to RTL, and the file at frontend/js/tests/__mocks__/react-toastify.js
 will need to be be deleted
 */
+jest.unmock("react-toastify");
 jest.requireActual("react-toastify");
 
 const testAPIService = new APIService("");
@@ -38,7 +40,8 @@ const defaultGlobalContext: GlobalAppContextT = {
 export const renderWithProviders = (
   ui: React.ReactElement,
   globalContext?: Partial<GlobalAppContextT>,
-  renderOptions?: RenderOptions
+  renderOptions?: RenderOptions,
+  withRouter = true
 ) => {
   function WithProviders({ children }: { children: React.ReactElement }) {
     const globalProps = React.useMemo<GlobalAppContextT>(
@@ -49,14 +52,22 @@ export const renderWithProviders = (
       []
     );
 
-    return (
+    const providers = (
       <GlobalAppContext.Provider value={globalProps}>
         <ToastContainer />
         {children}
       </GlobalAppContext.Provider>
     );
+    if (!withRouter) return providers;
+    return <BrowserRouter>{providers}</BrowserRouter>;
   }
-  return render(ui, { wrapper: WithProviders, ...renderOptions });
+  const { wrapper: MyWrapper, ...otherRenderOptions } = renderOptions ?? {};
+  let wrapper = WithProviders;
+  if (MyWrapper) {
+    wrapper = ({ children }: { children: React.ReactElement }) =>
+      WithProviders({ children: <MyWrapper>{children}</MyWrapper> });
+  }
+  return render(ui, { wrapper, ...otherRenderOptions });
 };
 
 /**

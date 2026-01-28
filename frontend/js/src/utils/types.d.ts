@@ -2,6 +2,8 @@
 
 declare module "react-responsive";
 declare module "spotify-web-playback-sdk";
+declare module "musickit-typescript";
+
 declare module "time-ago";
 declare module "debounce-async";
 // declaration typescript file doesn't exist for react-datetime-picker/dist/entry.nostyle.js so had to declare a dummy declaration.
@@ -31,8 +33,9 @@ interface AdditionalInfo {
   origin_url?: string | null;
   tags?: Array<string> | null;
   track_mbid?: string | null;
-  tracknumber?: number | null;
+  tracknumber?: string | number | null;
   work_mbids?: Array<string> | null;
+  funkwhale_id?: string | null;
 }
 
 declare type MBIDMappingArtist = {
@@ -62,6 +65,7 @@ declare type BaseListenFormat = {
 declare type Listen = BaseListenFormat & {
   listened_at_iso?: string | null;
   playing_now?: boolean | null;
+  inserted_at?: number;
 };
 
 declare type Recommendation = Listen & {
@@ -83,144 +87,12 @@ declare type SubmitListensPayload = {
   payload: Array<Listen>;
 };
 
-declare type SpotifyUser = {
-  access_token?: string;
-  permission?: Array<SpotifyPermission>;
-};
-
 declare type YoutubeUser = {
   api_key?: string;
 };
 
-declare type SoundCloudUser = {
-  access_token?: string;
-};
-
 declare type MetaBrainzProjectUser = {
   access_token?: string;
-};
-
-declare type SpotifyPermission =
-  | "user-read-currently-playing"
-  | "user-read-recently-played"
-  | "streaming"
-  | "user-read-birthdate"
-  | "user-read-email"
-  | "user-read-private"
-  | "playlist-modify-public"
-  | "playlist-modify-private";
-
-declare type SpotifyImage = {
-  height: number | null;
-  url: string;
-  width: number | null;
-};
-
-declare type SpotifyArtist = {
-  uri: string;
-  name: string;
-};
-
-declare type SpotifyTrack = {
-  album: {
-    uri: string;
-    name: string;
-    images: Array<SpotifyImage>;
-  };
-  artists: Array<SpotifyArtist>;
-  id: string | null;
-  is_playable: boolean;
-  media_type: "audio" | "video";
-  name: string;
-  type: "track" | "episode" | "ad";
-  uri: string;
-};
-
-declare type SpotifyPlayerTrackWindow = {
-  device_id: string;
-};
-
-declare type SpotifyPlayerSDKState = {
-  paused: boolean;
-  loading: boolean;
-  position: number;
-  duration: number;
-  track_window: {
-    current_track: SpotifyTrack | null;
-    previous_tracks: SpotifyTrack[];
-  };
-};
-
-declare type SpotifyAPIError = {
-  error: {
-    status: number;
-    message: string;
-  };
-};
-
-declare type SpotifyPlaylistTrackObject = {
-  added_at: string; // ISO 8601 datetime string	The date and time the track or episode was added.
-  // Note: that some very old playlists may return null in this field.
-  added_by: SpotifyUserObject; // The Spotify user who added the track or episode.
-  // Note: that some very old playlists may return null in this field.
-  is_local: boolean; //	Whether this track or episode is a local file or not.
-  track: SpotifyTrack; //	Information about the track or episode.
-};
-
-declare type SpotifyUserObject = {
-  display_name: string; //	The name displayed on the user’s profile. null if not available.
-  external_urls: Array<{ [key: string]: string }>; // external URL object	Known public external URLs for this user.
-  followers: { href: string | null; total: number }; // followers object	Information about the followers of this user.
-  href: string; //	A link to the Web API endpoint for this user.
-  id: string; //	The Spotify user ID for this user.
-  images: SpotifyImage[]; // of image objects	The user’s profile image.
-  type: string; //	The object type: “user”
-  uri: string; // The Spotify URI for this user.
-};
-
-declare type SpotifyPlaylistObject = {
-  collaborative: boolean; //	true if the owner allows other users to modify the playlist.
-  description: string | null; // The playlist description. Only returned for modified, verified playlists, otherwise null.
-  external_urls: Array<{ [key: string]: string }>; // external URL object Known external URLs for this playlist.
-  followers: { href: string | null; total: number }; // followers object Information about the followers of the playlist.
-  href: string; // A link to the Web API endpoint providing full details of the playlist.
-  id: string; // The Spotify ID for the playlist.
-  images: SpotifyImage[]; // array of image objects Images for the playlist. The array may be empty or contain up to three images. The images are returned by size in descending order. See Working with Playlists. Note: If returned, the source URL for the image ( url ) is temporary and will expire in less than a day.
-  name: string; // The name of the playlist.
-  owner: SpotifyUserObject; // public user object The user who owns the playlist
-  public: boolean | null; // The playlist’s public/private status: true the playlist is public, false the playlist is private, null the playlist status is not relevant. For more about public/private status, see Working with Playlists.
-  snapshot_id: string; // The version identifier for the current playlist. Can be supplied in other requests to target a specific playlist version: see Remove tracks from a playlist
-  tracks: SpotifyPlaylistTrackObject[]; // array of playlist track objects inside a paging object Information about the tracks of the playlist.
-  type: string; // The object type: “playlist”
-  uri: string; // The Spotify URI for the playlist.
-};
-
-declare type SpotifyPagingObject<T> = {
-  href: string; //	A link to the Web API endpoint returning the full result of the request.
-  items: T[]; //	The requested data.
-  limit: number; //	The maximum number of items in the response (as set in the query or by default).
-  next: string; //	URL to the next page of items. ( null if none)
-  offset: number; //	The offset of the items returned (as set in the query or by default).
-  previous: string; //	URL to the previous page of items. ( null if none)
-  total: number; //	The maximum number of
-};
-
-// the spotify-web-playback-sdk types are a bit messy
-// Adding an any here for now.
-// TODO: remove this any eventually
-declare type SpotifyPlayerType = any | Spotify.SpotifyPlayer;
-
-declare type SoundCloudTrack = {
-  id: number;
-  permalink_url: string;
-  artwork_url: string;
-  title: string;
-  uri: string;
-  duration: number;
-  user: {
-    id: string;
-    username: string;
-  };
 };
 
 // Expect either a string or an Error or an html Response object
@@ -231,6 +103,14 @@ declare type BrainzPlayerError =
 declare type LastFmScrobblePage = {
   recenttracks: {
     track: any;
+  };
+};
+
+declare type LatestImportResponse = {
+  latest_import: number;
+  status?: {
+    state: ImportStatusT;
+    count: number;
   };
 };
 
@@ -413,6 +293,77 @@ declare type UserDailyActivityResponse = {
   };
 };
 
+declare type UserArtistActivityResponse = {
+  payload: {
+    artist_activity: Array<{
+      name: string;
+      artist_name?: string;
+      listen_count: number;
+      artist_mbid: string | null;
+      albums: Array<{
+        name: string;
+        listen_count: number;
+        release_group_mbid: string | null;
+      }>;
+    }>;
+    user_id?: string;
+    range: UserStatsAPIRange;
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+  };
+};
+
+declare type UserEraActivityResponse = {
+  payload: {
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    user_id: string;
+    range: UserStatsAPIRange;
+    era_activity: Array<{
+      year: number;
+      count: number;
+    }>;
+  };
+};
+
+declare type UserArtistEvolutionActivityResponse = {
+  payload: {
+    user_id: string;
+    artist_evolution_activity: RawUserArtistEvolutionRow[];
+    range: UserStatsAPIRange;
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    offset_year?: number;
+  };
+};
+
+declare type RawUserArtistEvolutionRow = {
+  time_unit: string | number;
+  artist_mbid: string;
+  artist_name: string;
+  listen_count: number;
+};
+
+declare type GenreHourData = {
+  genre: string;
+  hour: number;
+  listen_count: number;
+};
+
+declare type UserGenreActivityResponse = {
+  payload: {
+    genre_activity: Array<GenreHourData>;
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    user_id: string;
+    range: UserStatsAPIRange;
+  };
+};
+
 declare type UserArtistMapArtist = {
   artist_name: string;
   artist_mbid: string;
@@ -432,6 +383,12 @@ declare type UserArtistMapResponse = {
       listen_count: number;
       artists: Array<UserArtistMapArtist>;
     }>;
+  };
+};
+
+declare type CountryFeature = ChoroplethBoundFeature & {
+  properties: {
+    name: string;
   };
 };
 
@@ -487,6 +444,11 @@ declare type ACRMSearchResult = {
   release_name: string;
 };
 
+type CoverArtGridOptions = {
+  dimension: number;
+  layout: number;
+};
+
 // XSPF/JSPF format: https://www.xspf.org/jspf/
 declare type JSPFObject = {
   playlist: JSPFPlaylist;
@@ -494,10 +456,11 @@ declare type JSPFObject = {
 
 declare type JSPFPlaylistMetadata = {
   external_urls?: { [key: string]: any };
-  algorithm_metadata: {
+  algorithm_metadata?: {
     source_patch: string;
   };
   expires_at?: string; // ISO date string
+  cover_art?: CoverArtGridOptions;
 };
 
 declare type JSPFPlaylistExtension = {
@@ -540,7 +503,7 @@ declare type JSPFPlaylist = {
 declare type JSPFTrack = {
   id?: string; // React-sortable library expects an id attribute, this is not part of JSPF specification
   location?: string[];
-  identifier: string;
+  identifier: string | string[];
   title: string;
   creator: string;
   annotation?: string;
@@ -602,13 +565,24 @@ type EventTypeT =
   | "block_follow"
   | "notification"
   | "personal_recording_recommendation"
-  | "critiquebrainz_review";
+  | "critiquebrainz_review"
+  | "thanks";
 
 type UserRelationshipEventMetadata = {
   user_name_0: string;
   user_name_1: string;
   relationship_type: "follow";
   created: number;
+};
+
+type ThanksMetadata = {
+  original_event_id: number;
+  original_event_type: EventTypeT;
+  blurb_content: string;
+  thanker_id: number;
+  thanker_username: string;
+  thankee_id: number;
+  thankee_username: string;
 };
 
 type NotificationEventMetadata = {
@@ -621,14 +595,15 @@ type EventMetadata =
   | PinEventMetadata
   | NotificationEventMetadata
   | UserTrackPersonalRecommendationMetadata
-  | CritiqueBrainzReview;
+  | CritiqueBrainzReview
+  | ThanksMetadata;
 
-type TimelineEvent = {
+type TimelineEvent<T extends EventMetadata> = {
   event_type: EventTypeT;
   id?: number;
   user_name: string;
   created: number;
-  metadata: EventMetadata;
+  metadata: T;
   hidden: boolean;
 };
 
@@ -664,6 +639,7 @@ type CritiqueBrainzReview = {
   languageCode?: string;
   rating?: number;
   user_name?: string;
+  published_on?: string;
 };
 
 type CritiqueBrainzReviewAPI = {
@@ -736,11 +712,11 @@ type ColorReleasesResponse = {
   };
 };
 
-type MissingMBData = {
+type UnlinkedListens = {
   artist_name: string;
   listened_at: string;
   recording_name: string;
-  release_name?: string;
+  release_name?: string | null;
   recording_msid: string;
 };
 
@@ -771,11 +747,44 @@ declare type SearchUser = {
   user_name: string;
 };
 
+declare type BrainzPlayerSettings = {
+  youtubeEnabled?: boolean;
+  spotifyEnabled?: boolean;
+  soundcloudEnabled?: boolean;
+  appleMusicEnabled?: boolean;
+  internetArchiveEnabled?: boolean;
+  funkwhaleEnabled?: boolean;
+  navidromeEnabled?: boolean;
+  brainzplayerEnabled?: boolean;
+  dataSourcesPriority?: Array<
+    | "spotify"
+    | "youtube"
+    | "soundcloud"
+    | "appleMusic"
+    | "funkwhale"
+    | "navidrome"
+    | "internetArchive"
+  >;
+};
+
 declare type UserPreferences = {
   saveData?: boolean;
+  brainzplayer?: BrainzPlayerSettings;
 };
 
 declare type FeedbackForUserForRecordingsRequestBody = {
   recording_mbids: string[];
   recording_msids?: string[];
+};
+
+declare type BrainzPlayerQueueItem = Listen & {
+  id: string;
+};
+
+declare type BrainzPlayerQueue = BrainzPlayerQueueItem[];
+
+type SearchInputImperativeHandle = {
+  focus(): void;
+  triggerSearch(newText: string): void;
+  reset(): void;
 };

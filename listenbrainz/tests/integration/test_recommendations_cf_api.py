@@ -1,7 +1,5 @@
 import json
 import uuid
-from flask import url_for, current_app
-from redis import Redis
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
@@ -14,9 +12,9 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
     def setUp(self):
         super(CFRecommendationsViewsTestCase, self).setUp()
 
-        self.user = db_user.get_or_create(1, 'vansika_1')
-        self.user2 = db_user.get_or_create(2, 'vansika_2')
-        self.user3 = db_user.get_or_create(3, 'vansika_3')
+        self.user = db_user.get_or_create(self.db_conn, 1, 'vansika_1')
+        self.user2 = db_user.get_or_create(self.db_conn, 2, 'vansika_2')
+        self.user3 = db_user.get_or_create(self.db_conn, 3, 'vansika_3')
 
         # generate test data
         data = {"recording_mbid": []}
@@ -26,41 +24,45 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
             recordings.append({"recording_mbid": str(uuid.uuid4()), "score": score})
 
         db_recommendations_cf_recording.insert_user_recommendation(
+            self.db_conn,
             self.user['id'],
             UserRecommendationsJson(raw=recordings)
         )
 
         db_recommendations_cf_recording.insert_user_recommendation(
+            self.db_conn,
             self.user2['id'],
             UserRecommendationsJson(raw=[])
         )
 
         # get recommendations
-        self.user_recommendations = db_recommendations_cf_recording.get_user_recommendation(self.user['id'])
-        self.user2_recommendations = db_recommendations_cf_recording.get_user_recommendation(self.user2['id'])
-
-    def tearDown(self):
-        r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
-        r.flushall()
-        super(CFRecommendationsViewsTestCase, self).tearDown()
+        self.user_recommendations = db_recommendations_cf_recording.get_user_recommendation(
+            self.db_conn, self.user['id']
+        )
+        self.user2_recommendations = db_recommendations_cf_recording.get_user_recommendation(
+            self.db_conn, self.user2['id']
+        )
 
     def test_invalid_user(self):
-        response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations', user_name='invalid_user'))
+        response = self.client.get(
+            self.custom_url_for('recommendations_cf_recording_v1.get_recommendations', user_name='invalid_user'))
         self.assert404(response)
 
     def test_inactive_user(self):
-        response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
-                                           user_name=self.user3['musicbrainz_id']), query_string={'artist_type': 'top'})
+        response = self.client.get(self.custom_url_for('recommendations_cf_recording_v1.get_recommendations',
+                                                       user_name=self.user3['musicbrainz_id']),
+                                   query_string={'artist_type': 'top'})
         self.assertEqual(response.status_code, 204)
 
     def test_recommendations_not_generated(self):
-        response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
-                                           user_name=self.user2['musicbrainz_id']), query_string={'artist_type': 'top'})
+        response = self.client.get(self.custom_url_for('recommendations_cf_recording_v1.get_recommendations',
+                                                       user_name=self.user2['musicbrainz_id']),
+                                   query_string={'artist_type': 'top'})
         self.assertEqual(response.status_code, 204)
 
     def test_recommendations_without_count(self):
-        response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
-                                           user_name=self.user['musicbrainz_id']))
+        response = self.client.get(self.custom_url_for('recommendations_cf_recording_v1.get_recommendations',
+                                                       user_name=self.user['musicbrainz_id']))
         self.assert200(response)
         data = json.loads(response.data)['payload']
 
@@ -89,8 +91,8 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         self.assertEqual(expected_raw_recommendations, received_raw_recommendations)
 
     def test_recommendations_with_count(self):
-        response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
-                                           user_name=self.user['musicbrainz_id']),
+        response = self.client.get(self.custom_url_for('recommendations_cf_recording_v1.get_recommendations',
+                                                       user_name=self.user['musicbrainz_id']),
                                    query_string={'artist_type': 'top', 'count': 10})
         self.assert200(response)
         data = json.loads(response.data)['payload']
@@ -120,8 +122,8 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         self.assertEqual(expected_raw_recommendations, received_raw_recommendations)
 
     def test_recommendations_too_many(self):
-        response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
-                                           user_name=self.user['musicbrainz_id']),
+        response = self.client.get(self.custom_url_for('recommendations_cf_recording_v1.get_recommendations',
+                                                       user_name=self.user['musicbrainz_id']),
                                    query_string={'artist_type': 'top', 'count': 1500, 'offset': 100})
         self.assert200(response)
         data = json.loads(response.data)['payload']
@@ -151,8 +153,8 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         self.assertEqual(expected_raw_recommendations, received_raw_recommendations)
 
     def test_recommendations_with_offset(self):
-        response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
-                                           user_name=self.user['musicbrainz_id']),
+        response = self.client.get(self.custom_url_for('recommendations_cf_recording_v1.get_recommendations',
+                                                       user_name=self.user['musicbrainz_id']),
                                    query_string={'artist_type': 'top', 'offset': 10})
 
         self.assert200(response)

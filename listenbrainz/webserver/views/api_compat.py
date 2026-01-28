@@ -4,78 +4,60 @@ import listenbrainz.db.user as db_user
 from collections import defaultdict
 from yattag import Doc
 import yattag
-from flask import Blueprint, request, render_template, current_app, make_response, Response
+from flask import Blueprint, request, render_template, current_app, Response, jsonify
 from flask_login import login_required, current_user
 from brainzutils.ratelimit import ratelimit
 from brainzutils.musicbrainz_db import engine as mb_engine
-from listenbrainz.webserver.errors import InvalidAPIUsage, CompatError, ListenValidationError, LastFMError
+from listenbrainz.webserver.errors import InvalidAPIUsage, CompatError, ListenValidationError, LastFMError, APIUnauthorized
 import xmltodict
 
 from listenbrainz.webserver.models import SubmitListenUserMetadata
-from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
+from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, LISTEN_TYPE_SINGLE, LISTEN_TYPE_PLAYING_NOW
 
 from listenbrainz.db.lastfm_user import User
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.db.lastfm_token import Token
 import calendar
 from datetime import datetime
-from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver import timescale_connection, db_conn
+from listenbrainz.webserver.utils import REJECT_LISTENS_FROM_PAUSED_USER_ERROR
+
 
 api_bp = Blueprint('api_compat', __name__)
 
 
-@api_bp.route('/api/auth/', methods=['GET'])
+@api_bp.get('/api/auth/')
 @ratelimit()
 @login_required
 def api_auth():
     """ Renders the token activation page.
     """
-    token = request.args['token']
     return render_template(
-        "user/auth.html",
-        user_id=current_user.musicbrainz_id,
-        token=token
+        "index.html",
     )
 
 
-@api_bp.route('/api/auth/', methods=['POST'])
+@api_bp.post('/api/auth/')
 @ratelimit()
 @login_required
 def api_auth_approve():
     """ Authenticate the user token provided.
     """
-    user = User.load_by_name(current_user.musicbrainz_id)
-    if "token" not in request.form:
-        return render_template(
-            "user/auth.html",
-            user_id=current_user.musicbrainz_id,
-            msg="Missing required parameters. Please provide correct parameters and try again."
-        )
-    token = Token.load(request.form['token'])
+    data = request.json
+    user = User.load_by_name(db_conn, current_user.musicbrainz_id)
+    if "token" not in data:
+        return jsonify({"message": "Missing required parameters. Please provide correct parameters and try again."})
+    token = Token.load(db_conn, data['token'])
     if not token:
-        return render_template(
-            "user/auth.html",
-            user_id=current_user.musicbrainz_id,
-            msg="Either this token is already used or invalid. Please try again."
-        )
+        return jsonify({"message": "Either this token is already used or invalid. Please try again."})
     if token.user:
-        return render_template(
-            "user/auth.html",
-            user_id=current_user.musicbrainz_id,
-            msg="This token is already approved. Please check the token and try again."
-        )
+        return jsonify({"message": "This token is already approved. Please check the token and try again."})
     if token.has_expired():
-        return render_template(
-            "user/auth.html",
-            user_id=current_user.musicbrainz_id,
-            msg="This token has expired. Please create a new token and try again."
-        )
-    token.approve(user.name)
-    return render_template(
-        "user/auth.html",
-        user_id=current_user.musicbrainz_id,
-        msg="Token %s approved for user %s, press continue in client." % (token.token, current_user.musicbrainz_id)
-    )
+        return jsonify({"message": "This token has expired. Please create a new token and try again."})
+    token.approve(db_conn, user.name)
+    return jsonify({
+        "message": "Token %s approved for user %s, press continue in client." % (token.token, current_user.musicbrainz_id)
+    })
 
 
 @api_bp.route('/2.0/', methods=['POST', 'GET'])
@@ -117,8 +99,8 @@ def session_info(data):
     except KeyError:
         raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)        # Missing Required Params
 
-    session = Session.load(sk)
-    if (not session) or User.load_by_name(username).id != session.user.id:
+    session = Session.load(db_conn, sk)
+    if (not session) or User.load_by_name(db_conn, username).id != session.user.id:
         raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)       # Invalid Session KEY
 
     print("SESSION INFO for session %s, user %s" % (session.id, session.user.name))
@@ -151,7 +133,7 @@ def get_token(data):
     if not Token.is_valid_api_key(api_key):
         raise InvalidAPIUsage(CompatError.INVALID_API_KEY, output_format=output_format)      # Invalid API_KEY
 
-    token = Token.generate(api_key)
+    token = Token.generate(db_conn, api_key)
 
     doc, tag, text = Doc().tagtext()
     with tag('lfm', status='ok'):
@@ -167,7 +149,7 @@ def get_session(data):
     output_format = data.get('format', 'xml')
     try:
         api_key = data['api_key']
-        token = Token.load(data['token'], api_key)
+        token = Token.load(db_conn, data['token'], api_key)
     except KeyError:
         raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)   # Missing Required Params
 
@@ -180,7 +162,7 @@ def get_session(data):
     if not token.user:
         raise InvalidAPIUsage(CompatError.UNAUTHORIZED_TOKEN, output_format=output_format)   # Unauthorized token
 
-    session = Session.create(token)
+    session = Session.create(db_conn, token)
 
     doc, tag, text = Doc().tagtext()
     with tag('lfm', status='ok'):
@@ -251,16 +233,17 @@ def record_listens(data):
     except KeyError:
         raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)    # Invalid parameters
 
-    session = Session.load(sk)
+    session = Session.load(db_conn, sk)
     if not session:
         if not Token.is_valid_api_key(api_key):
             raise InvalidAPIUsage(CompatError.INVALID_API_KEY, output_format=output_format)   # Invalid API_KEY
         raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)   # Invalid Session KEY
 
-    user = db_user.get(session.user_id, fetch_email=True)
+    user = db_user.get(db_conn, session.user_id, fetch_email=True)
     if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and user["email"] is None:
         raise InvalidAPIUsage(CompatError.NO_EMAIL, output_format=output_format)  # No email available for user in LB
-
+    if user['is_paused']:
+        raise InvalidAPIUsage(REJECT_LISTENS_FROM_PAUSED_USER_ERROR)
     lookup = defaultdict(dict)
     for key, value in data.items():
         if key in ["sk", "token", "api_key", "method", "api_sig", "format"]:
@@ -427,11 +410,11 @@ def user_info(data):
         if not Token.is_valid_api_key(api_key):
             raise InvalidAPIUsage(CompatError.INVALID_API_KEY, output_format=output_format)     # Invalid API key
 
-        user = User.load_by_sessionkey(sk, api_key)
+        user = User.load_by_sessionkey(db_conn, sk, api_key)
         if not user:
             raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)  # Invalid Session key
 
-        query_user = User.load_by_name(username) if (username and username != user.name) else user
+        query_user = User.load_by_name(db_conn, username) if (username and username != user.name) else user
         if not query_user:
             raise InvalidAPIUsage(CompatError.INVALID_RESOURCE, output_format=output_format)     # Invalid resource specified
 
@@ -448,7 +431,7 @@ def user_info(data):
             with tag('url'):
                 text('http://listenbrainz.org/user/' + query_user.name)
             with tag('playcount'):
-                text(User.get_play_count(query_user.id, timescale_connection._ts))
+                text(User.get_play_count(db_conn, query_user.id, timescale_connection._ts))
             with tag('registered', unixtime=str(query_user.created.strftime("%s"))):
                 text(str(query_user.created))
 

@@ -5,7 +5,7 @@ import spotipy
 import urllib3
 from spotipy import SpotifyClientCredentials
 
-from listenbrainz.metadata_cache.handler import BaseHandler
+from listenbrainz.metadata_cache.album_handler import AlbumHandler
 from listenbrainz.metadata_cache.models import Album, Artist, Track
 from listenbrainz.metadata_cache.unique_queue import JobItem
 
@@ -14,7 +14,7 @@ INCOMING_ALBUM_PRIORITY = 0
 CACHE_KEY_PREFIX = "spotify:album:"
 
 
-class SpotifyCrawlerHandler(BaseHandler):
+class SpotifyCrawlerHandler(AlbumHandler):
 
     def __init__(self, app):
         super().__init__(
@@ -34,8 +34,8 @@ class SpotifyCrawlerHandler(BaseHandler):
             respect_retry_after_header=False
         )
         self.sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
-            client_id=app.config["SPOTIFY_CLIENT_ID"],
-            client_secret=app.config["SPOTIFY_CLIENT_SECRET"]
+            client_id=app.config["SPOTIFY_CACHE_CLIENT_ID"],
+            client_secret=app.config["SPOTIFY_CACHE_CLIENT_SECRET"]
         ))
 
     def get_items_from_listen(self, listen) -> list[JobItem]:
@@ -50,7 +50,7 @@ class SpotifyCrawlerHandler(BaseHandler):
     @staticmethod
     def transform_album(album) -> Album:
         tracks = []
-        for track in album.pop("tracks"):
+        for track in album.pop("tracks")["items"]:
             track_artists = [
                 Artist(id=artist["id"], name=artist["name"], data=artist)
                 for artist in track.pop("artists")
@@ -134,7 +134,7 @@ class SpotifyCrawlerHandler(BaseHandler):
 
         return new_items
 
-    def get_seed_albums(self) -> list[str]:
+    def get_seed_ids(self) -> list[str]:
         """ Retrieve spotify album ids from new releases for all markets"""
         markets = self.sp.available_markets()["markets"]
 

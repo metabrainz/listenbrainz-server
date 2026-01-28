@@ -35,6 +35,11 @@ class ServerTestCase(unittest.TestCase):
         cls.app = cls.create_app()
         cls.client = cls.app.test_client()
 
+        server_name = cls.app.config.get("SERVER_NAME")
+        if server_name is None:
+            server_name = "localhost"
+        cls.url_adapter = cls.app.url_map.bind(server_name)
+
         template_rendered.connect(cls._set_template)
         message_flashed.connect(cls._add_flash_message)
 
@@ -42,9 +47,6 @@ class ServerTestCase(unittest.TestCase):
         cls.flashed_messages = []
 
     def setUp(self) -> None:
-        self._ctx = self.app.test_request_context()
-        self._ctx.push()
-
         ServerTestCase.template = None
         ServerTestCase.flashed_messages = []
 
@@ -57,8 +59,6 @@ class ServerTestCase(unittest.TestCase):
         cls.template = (template, context)
 
     def tearDown(self):
-        self._ctx.pop()
-        del self._ctx
         del ServerTestCase.template
         del ServerTestCase.flashed_messages
 
@@ -68,6 +68,15 @@ class ServerTestCase(unittest.TestCase):
         message_flashed.disconnect(cls._add_flash_message)
         del cls.client
         del cls.app
+
+    def custom_url_for(self, endpoint, **values):
+        """ A custom version of Flask's url_for() that does not require an active app context.
+
+            Note that this function is not on feature parity with Flask's url_for() and only supports the
+            basic use cases we have.
+        """
+        force_external = values.pop('force_external', False)
+        return self.url_adapter.build(endpoint, values, force_external=force_external)
 
     def assertMessageFlashed(self, message, category='message'):
         """
@@ -238,6 +247,8 @@ class APICompatServerTestCase(ServerTestCase):
 
     @classmethod
     def create_app(cls):
-        app = create_api_compat_app()
+        # set debug = false to avoid initializing Flask-DebugToolbar
+        # related warnings from missing body tag in response.
+        app = create_api_compat_app(debug=False)
         app.config['TESTING'] = True
         return app

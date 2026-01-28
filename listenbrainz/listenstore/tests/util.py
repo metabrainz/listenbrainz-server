@@ -1,10 +1,8 @@
-# coding=utf-8
-
 import json
 import os
 import uuid
 
-from datetime import datetime
+from datetime import datetime, timezone
 from listenbrainz.listen import Listen
 
 
@@ -16,10 +14,10 @@ def generate_data(test_user_id, user_name, from_ts, num_records, inserted_ts=Non
 
     for i in range(num_records):
         if not inserted_ts:
-            inserted_timestamp = datetime.utcnow()
+            inserted_timestamp = datetime.now(timezone.utc)
         else:
-            inserted_timestamp = datetime.utcfromtimestamp(inserted_ts)
-        timestamp = datetime.utcfromtimestamp(from_ts)
+            inserted_timestamp = datetime.fromtimestamp(inserted_ts, timezone.utc)
+        timestamp = datetime.fromtimestamp(from_ts, timezone.utc)
         item = Listen(
             user_name=user_name,
             user_id=test_user_id,
@@ -41,7 +39,7 @@ def generate_data(test_user_id, user_name, from_ts, num_records, inserted_ts=Non
 
 
 def to_epoch(date):
-    return int((date - datetime.utcfromtimestamp(0)).total_seconds())
+    return int((date - datetime.fromtimestamp(0, timezone.utc)).total_seconds())
 
 
 def create_test_data_for_timescalelistenstore(user_name: str, user_id: int, test_data_file_name: str = None):

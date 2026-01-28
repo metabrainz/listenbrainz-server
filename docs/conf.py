@@ -12,6 +12,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+from datetime import datetime
 from shutil import copyfile
 import sys
 import os
@@ -54,7 +55,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'ListenBrainz'
-copyright = u'2017-2018, MetaBrainz Foundation'
+copyright = f'2017-{datetime.now().year}, MetaBrainz Foundation'
 author = u'MetaBrainz Foundation'
 
 # The version info for the project you're documenting, acts as replacement for

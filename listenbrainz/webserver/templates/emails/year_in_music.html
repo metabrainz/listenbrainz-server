@@ -1,107 +1,232 @@
-<!DOCTYPE html PUBLIC
-    "-//W3C//DTD XHTML 1.0 Transitional //EN""http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office"
-      xmlns:v="urn:schemas-microsoft-com:vml" lang="en">
-<head>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" hs-webfonts="true"
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@900&family=Roboto:wght@300;700&display=swap">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-  <title>Your Year in Music report</title>
-  <meta property="og:title" content="Your Year in Music report">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      hs-webfonts="true"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;500&display=swap"
+    />
 
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Year in Music {{year}} report</title>
+    <meta property="og:title" content="Your Year in Music {{year}} report" />
 
-  <!--[if gte mso 9]>
-  <xml>
-    <o:OfficeDocumentSettings>
-      <o:AllowPNG/>
-      <o:PixelsPerInch>96</o:PixelsPerInch>
-    </o:OfficeDocumentSettings>
-  </xml>
-  <![endif]-->
-</head>
-<body>
-<table style="width: 100%; height: 100%; padding: 8px; margin: 0; background-color: #F0EEE2;">
-  <tr>
-    <td style="text-align: center" align="center" valign="middle">
-      <center>
-        <table>
-          <tr>
-            <td>
-              <div style="max-width: 600px; margin: auto; border-color: transparent; font-family: 'Roboto', sans-serif; font-weight: 300; text-align: center; word-wrap: break-word">
-                <img alt="Year in music 2023 logo" src="cid:{{ logo_cid }}" height="215" width="437"
-                     style="min-height: 106px; min-width: 220px; height: 35%; width: 35%; margin-top: 16px"/>
-                <div style="color: #4C6C52; font-size: 20px; font-family: 'Inter', sans-serif; font-weight: 900; text-transform: uppercase; letter-spacing: 12px;">
-                  #yearinmusic
-                </div>
-                <table style="max-width: 450px; min-height: 90px; width: 100%; margin: 32px auto; background: #4C6C52; border-radius: 8px; font-size: 16px;">
-                  <tr>
-                    <td>
-                      <a style="color: #F0EEE2; text-decoration: none; padding: 24px; display: inline-block"
-                         href="https://listenbrainz.org/user/{{ user_name }}/year-in-music/">
-                        <span>{{ user_name }}, your ListenBrainz Year in Music is now available.</span>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style type="text/css">
+      body {
+        background: linear-gradient(to right, #447d87, #8c4d89),
+          url("data:image/svg+xml,%3Csvg viewBox='0 0 398 398' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='5.77' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        background-blend-mode: multiply;
+        background-attachment: fixed;
+        background-size: cover;
+        font-family: "Roboto", sans-serif;
+        font-weight: 300;
+        text-align: center;
+        word-wrap: break-word;
+      }
+      table {
+        background: linear-gradient(to right, #447d87, #8c4d89),
+          url("data:image/svg+xml,%3Csvg viewBox='0 0 398 398' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='5.77' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        background-blend-mode: multiply;
+        background-attachment: fixed;
+        background-size: cover;
+        font-family: "Roboto", sans-serif;
+        font-weight: 300;
+        text-align: center;
+        word-wrap: break-word;
+      }
+      a,
+      a:hover,
+      a:active,
+      a:visited {
+        color: inherit !important;
+        font-weight: 500;
+      }
+    </style>
+
+    <!--[if gte mso 9]>
+      <xml>
+        <o:OfficeDocumentSettings>
+          <o:AllowPNG />
+          <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
+      </xml>
+    <![endif]-->
+  </head>
+  <body>
+    <table style="width: 100%; height: 100%; padding: 8px; margin: 0;">
+      <tr>
+        <td style="text-align: center;" align="center" valign="middle">
+          <center>
+            <table>
+              <tr>
+                <td>
+                  <div
+                    style="
+                      max-width: 600px;
+                      max-width: min(100%, 600px);
+                      margin: auto;
+                      border-color: transparent;
+                      margin-bottom: 60px;
+                    "
+                  >
+                    <img
+                      alt="Year in music logo"
+                      src="cid:{{ logo_cid }}"
+                      height="455"
+                      width="1314"
+                      style="
+                        min-height: 91px;
+                        min-width: 263px;
+                        height: 100%;
+                        width: 100%;
+                        margin: 32px auto;
+                        mix-blend-mode: color-dodge;
+                      "
+                    />
+                    <table
+                      style="
+                        min-width: min(100%, 520px);
+                        background: rgba(0, 0, 0, 0.25);
+                        color: #f1f2e1;
+                        font-size: 16px;
+                        font-weight: 500;
+                        padding: 1.5em;
+                        border-radius: 8px;
+                        border-bottom-left-radius: 0;
+                        border-bottom-right-radius: 0;
+                        margin: auto;
+                      "
+                    >
+                      <tr>
+                        <td>
+                          <p>
+                            {{ user_name }}, your ListenBrainz Year in Music is
+                            now available:
+                          </p>
+                          <a
+                            style="
+                              margin: auto;
+                              background: #353070;
+                              border-radius: 8px;
+                              font-size: 16px;
+                              padding: 12px 36px;
+                              display: inline-block;
+                              text-decoration: none;
+                            "
+                            href="{{ link_to_year_in_music }}"
+                          >
+                            Click here
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                    <div
+                      style="
+                        background: #f1f2e1;
+                        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
+                        color: #447d87;
+                        padding: 2em;
+                        line-height: 1.5em;
+                        font-size: 14px;
+                        font-weight: 500;
+                        border-radius: 8px;
+                      "
+                    >
+                      <p style="padding-bottom: 14px;">
+                        The Year in Music report summarises your listening
+                        habits throughout {{ year }}.<br />Check out your
+                        highlights, top statistics, most active day of the week,
+                        favorite genres, new albums and more!
+                      </p>
+                      <p style="padding-bottom: 14px;">
+                        New this year: you can now navigate through the years
+                        and go on a trip down memory lane. You get the same
+                        stats and playlists for every year you have data for in
+                        ListenBrainz, available at any time for when you're
+                        feeling nostalgic.
+                      </p>
+                      <p style="padding-bottom: 14px;">
+                        Meanwhile, jam along with the new playlists that we've
+                        generated for you based on your listens. See what you
+                        discovered throughout the year and what gems you missed
+                        out on based on users with similar tastes.
+                      </p>
+                      <p>
+                        Don't forget you can share images of your stats, with
+                        the
+                        <b
+                          ><a href="https://mastodon.social/tags/yearinmusic"
+                            >#yearinmusic</a
+                          ></b
+                        >
+                        hashtag.
                         <br />
-                        <br />
-                        <span style="font-weight: 700;">Click here</span>
-                      </a>
-                    </td>
-                  </tr>
-                </table>
-                <div style="color: #253127; font-size: 14px">
-                  <p style="padding-bottom: 14px">
-                    The Year in Music report summarises your listening throughout the year of 2023. We have lots of
-                    soothing
-                    statistics for you, like your most active listening day of the week, your listening activity over
-                    the year,
-                    users who listened to similar music to you, and we‘ve generated up to 4 new playlists for you to
-                    keep enjoying
-                    into 2024.
-                  </p>
-                  <p style="padding-bottom: 24px">
-                    Top Discoveries, Tracks Released, and Top Recordings are all playlists that review your listening
-                    habits of
-                    2023. We’ve also included one more playlist, Top Missed Recordings, which selects tracks that users
-                    similar to
-                    you listened to, but you didn’t. Maybe there‘s still more for you to discover!
-                  </p>
-                  <p>
-                    Thanks for being part of ListenBrainz.
-                    <br/>
-                    Wishing you a restful 2024, from the ListenBrainz team.
-                  </p>
-                </div>
-                <table style="max-width: 450px; min-height: 90px; width: 100%; margin: 32px auto; background: #F1F1F1; border-radius: 8px; font-size: 16px;">
-                  <tr>
-                    <td>
-                      <div style="color: #253127; padding: 12px; font-size: 12px;">
-                        <a style="color: #253127 !important;" href="https://listenbrainz.org">listenbrainz.org</a>
-                        <br />
-                        <br />
-                        <div>
-                          Discuss, share and feed back:
-                          <a style="color: #253127 !important;" href="https://community.metabrainz.org/c/listenbrainz/18">forums</a>
-                          | <a style="color: #253127 !important;" href="https://twitter.com/ListenBrainz">X</a>
-                          | <a style="color: #253127 !important;" href="https://mastodon.social/@metabrainz">Mastodon</a>
-                          | <a style="color: #253127 !important;" href="https://bsky.app/profile/metabrainz.bsky.social">Bluesky</a>
-                          | <a style="color: #253127 !important;" href="https://www.reddit.com/r/listenbrainz/">reddit</a>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                </table>
-              </div>
-            </td>
-          </tr>
-        </table>
-      </center>
-    </td>
-  </tr>
-</table>
-
-
-</body>
+                        We will be re-posting the hashtag on our channels (links
+                        are at the bottom of the email), come check out what
+                        music everyone's been listening to in the past year.
+                      </p>
+                    </div>
+                    <table
+                      style="
+                        min-width: min(100%, 520px);
+                        padding: 1.5em;
+                        margin: 0 auto;
+                        background: rgba(0, 0, 0, 0.25);
+                        color: #f1f2e1;
+                        border-radius: 8px;
+                        border-top-left-radius: 0;
+                        border-top-right-radius: 0;
+                        font-size: 16px;
+                      "
+                    >
+                      <tr>
+                        <td>
+                          <p>
+                            Thanks for being part of this community.
+                            <br />
+                            Wishing you a restful {{year + 1}}, from the
+                            ListenBrainz team.
+                          </p>
+                          <p style="margin-top: 2em; font-size: 12px;">
+                            <a href="https://listenbrainz.org"
+                              >listenbrainz.org</a
+                            >
+                          </p>
+                          <p style="font-size: 12px;">
+                            To discuss, share and feedback:
+                            <a href="https://mastodon.social/@metabrainz"
+                              >Mastodon</a
+                            >
+                            |
+                            <a
+                              href="https://bsky.app/profile/metabrainz.bsky.social"
+                              >Bluesky</a
+                            >
+                            |
+                            <a href="https://www.reddit.com/r/listenbrainz/"
+                              >reddit</a
+                            >
+                            |
+                            <a
+                              href="https://community.metabrainz.org/c/listenbrainz/18"
+                              >forums</a
+                            >
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </center>
+        </td>
+      </tr>
+    </table>
+  </body>
 </html>

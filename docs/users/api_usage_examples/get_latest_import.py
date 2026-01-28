@@ -1,6 +1,10 @@
 import requests
 
-ROOT = '127.0.0.1'
+# Set DEBUG to True to test local dev server.
+# API keys for local dev server and the real server are different.
+DEBUG = True
+ROOT = 'http://localhost:8100' if DEBUG else 'https://api.listenbrainz.org'
+
 # The token can be any valid token.
 TOKEN = 'YOUR_TOKEN_HERE'
 AUTH_HEADER = {
@@ -23,7 +27,7 @@ def get_latest_import(username, service="lastfm"):
         An IndexError if the JSON is not structured as expected.
     """
     response = requests.get(
-        url="http://{0}/1/latest-import".format(ROOT),
+        url="{0}/1/latest-import".format(ROOT),
         params={
             "user_name": username,
             "service": service

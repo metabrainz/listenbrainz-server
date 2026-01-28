@@ -1,0 +1,99 @@
+{
+    "currentUser": {
+        "id": 1,
+        "name": "iliekcomputers",
+        "auth_token": "dontspillthebeans"
+    },
+    "spotify": {
+        "access_token": "access token",
+        "permission": [
+            "streaming",
+            "user-read-email",
+            "user-read-private"
+        ]
+    },
+    "youtube": {
+        "api_key": "fake-api-key"
+    },
+    "events": [
+        {
+            "event_type": "listen",
+            "user_name": "mr_monkey",
+            "created": 1675181138,
+            "metadata": {
+                "inserted_at": 1675181149,
+                "listened_at": 1675181138,
+                "recording_msid": "a0af5dac-777a-423d-b4f1-e9d460583f71",
+                "track_metadata": {
+                    "additional_info": {
+                        "duration_ms": 314158,
+                        "media_player": "com.bandcamp.android",
+                        "recording_msid": "a0af5dac-777a-423d-b4f1-e9d460583f71",
+                        "submission_client": "ListenBrainz Android",
+                        "submission_client_version": "2.7.3"
+                    },
+                    "artist_name": "Psychlona",
+                    "mbid_mapping": {
+                        "artist_mbids": [
+                            "9f1f273d-dbd3-4de5-847b-48d7c9b9f2a7"
+                        ],
+                        "artists": [
+                            {
+                                "artist_credit_name": "Psychlona",
+                                "artist_mbid": "9f1f273d-dbd3-4de5-847b-48d7c9b9f2a7",
+                                "join_phrase": ""
+                            }
+                        ],
+                        "caa_id": 39996470464,
+                        "caa_release_mbid": "1c7b0517-6bca-4ff0-86ef-0ce024893f72",
+                        "recording_mbid": "1ccb04dd-f7bf-4fe5-9aae-ef9e0c31f398",
+                        "recording_name": "Jasmine",
+                        "release_mbid": "1c7b0517-6bca-4ff0-86ef-0ce024893f72"
+                    },
+                    "release_name": "Warped Vision",
+                    "track_name": "Jasmine"
+                },
+                "user_name": "mr_monkey"
+            }
+        },
+        {
+            "event_type": "listen",
+            "user_name": "reosarevok",
+            "created": 1614714523,
+            "metadata": {
+                "inserted_at": "Tue, 16 Feb 2021 11:42:11 GMT",
+                "listened_at": 1613475505,
+                "recording_msid": "45ddbea4-79ee-4462-be9c-20a55bb5c20d",
+                "track_metadata": {
+                    "additional_info": {
+                        "artist_names": [
+                            "Tintura + Arno Tamm"
+                        ],
+                        "discnumber": 1,
+                        "duration_ms": 254815,
+                        "isrc": "EEVC11700034",
+                        "music_service": "spotify.com",
+                        "recording_msid": "45ddbea4-79ee-4462-be9c-20a55bb5c20d",
+                        "release_artist_name": "Tintura + Arno Tamm",
+                        "release_artist_names": [
+                            "Tintura + Arno Tamm"
+                        ],
+                        "spotify_album_artist_ids": [
+                            "https://open.spotify.com/artist/6gMNNbVoRx8LCJ3LZVSiQs"
+                        ],
+                        "spotify_album_id": "https://open.spotify.com/album/57ZoaPPLZRirQpPnfFhg98",
+                        "spotify_artist_ids": [
+                            "https://open.spotify.com/artist/6gMNNbVoRx8LCJ3LZVSiQs"
+                        ],
+                        "spotify_id": "https://open.spotify.com/track/7bG7mmsONmrGppDZSPtME3",
+                        "tracknumber": 7
+                    },
+                    "artist_name": "Tintura + Arno Tamm",
+                    "release_name": "Kaugel üksi võõra rahva hulgas",
+                    "track_name": "Kust on tulnud muodike"
+                },
+                "user_name": "reosarevok"
+            }
+        }
+    ]
+}

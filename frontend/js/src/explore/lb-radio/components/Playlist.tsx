@@ -4,8 +4,8 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCog } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
-import PlaylistItemCard from "../../../playlists/PlaylistItemCard";
-import PlaylistMenu from "../../../playlists/PlaylistMenu";
+import PlaylistItemCard from "../../../playlists/components/PlaylistItemCard";
+import PlaylistMenu from "../../../playlists/components/PlaylistMenu";
 
 type LBRadioFeedbackProps = {
   feedback: string[];
@@ -51,9 +51,9 @@ export function Playlist(props: PlaylistProps) {
             className="btn btn-info dropdown-toggle"
             type="button"
             id="options-dropdown"
-            data-toggle="dropdown"
+            data-bs-toggle="dropdown"
             aria-haspopup="true"
-            aria-expanded="true"
+            aria-expanded="false"
           >
             <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
             &nbsp;Options

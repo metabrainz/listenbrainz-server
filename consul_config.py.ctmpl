@@ -31,15 +31,14 @@ REMEMBER_COOKIE_HTTPONLY = True
 {{if service "pgbouncer-master"}}
 {{with index (service "pgbouncer-master") 0}}
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
-MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
 POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/postgres"
+SQLALCHEMY_METABRAINZ_URI = "postgresql://metabrainz:metabrainz@{{.Address}}:{{.Port}}/metabrainz_db"
 {{end}}
 {{else}}
 SQLALCHEMY_DATABASE_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
-MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
 POSTGRES_ADMIN_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
+SQLALCHEMY_METABRAINZ_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
 {{end}}
-
 
 IS_MUSICBRAINZ_UP = {{template "KEY_JSON" "musicbrainz_up"}}
 # Use a key '$musicbrainz_up' in consul (json boolean true or false) to decide if we connect to musicbrainz.
@@ -80,16 +79,22 @@ MB_DATABASE_URI = ""
 SQLALCHEMY_TIMESCALE_URI = """postgresql://listenbrainz_ts:{{template "KEY" "timescale_lb_password"}}@{{.Address}}:{{.Port}}/listenbrainz_ts"""
 TIMESCALE_ADMIN_URI = """postgresql://postgres:{{template "KEY" "timescale_admin_password"}}@{{.Address}}:{{.Port}}/postgres"""
 TIMESCALE_ADMIN_LB_URI = """postgresql://postgres:{{template "KEY" "timescale_admin_password"}}@{{.Address}}:{{.Port}}/listenbrainz_ts"""
+# for use in playlists admin view
+SQLALCHEMY_BINDS = {
+   'timescale': SQLALCHEMY_TIMESCALE_URI
+}
     {{end}}
     {{else}}
 SQLALCHEMY_TIMESCALE_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
 TIMESCALE_ADMIN_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
 TIMESCALE_ADMIN_LB_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
+SQLALCHEMY_BINDS = {}
     {{end}}
 {{else}}
 SQLALCHEMY_TIMESCALE_URI = ""
 TIMESCALE_ADMIN_URI=""
 TIMESCALE_ADMIN_LB_URI=""
+SQLALCHEMY_BINDS = {}
 {{end}}
 
 
@@ -101,13 +106,8 @@ MBID_MAPPING_DATABASE_URI = "dbname=musicbrainz_json_dump user=musicbrainz host=
 MBID_MAPPING_DATABASE_URI = ""
 {{end}}
 
-# for use in playlists admin view
-SQLALCHEMY_BINDS = {
-   'timescale': SQLALCHEMY_TIMESCALE_URI
-}
-
-{{if service "typesense-listenbrainz"}}
-{{with index (service "typesense-listenbrainz") 0}}
+{{if service "typesense-listenbrainz-new"}}
+{{with index (service "typesense-listenbrainz-new") 0}}
 TYPESENSE_HOST = "{{.Address}}"
 TYPESENSE_PORT = {{.Port}}
 {{end}}
@@ -173,14 +173,21 @@ SPARK_RESULT_QUEUE = '''{{template "KEY" "spark_result_queue"}}'''
 SPARK_REQUEST_EXCHANGE = '''{{template "KEY" "spark_request_exchange"}}'''
 SPARK_REQUEST_QUEUE = '''{{template "KEY" "spark_request_queue"}}'''
 
+REJECTION_EXCHANGE = '''{{template "KEY" "rejection_exchange"}}'''
+REJECTION_QUEUE = '''{{template "KEY" "rejection_queue"}}'''
+
 EXTERNAL_SERVICES_EXCHANGE = '''{{template "KEY" "external_services_exchange"}}'''
 EXTERNAL_SERVICES_SPOTIFY_CACHE_QUEUE = '''{{template "KEY" "external_services_spotify_cache"}}'''
 EXTERNAL_SERVICES_APPLE_CACHE_QUEUE = '''{{template "KEY" "external_services_apple_cache"}}'''
+EXTERNAL_SERVICES_SOUNDCLOUD_CACHE_QUEUE = '''{{template "KEY" "external_services_soundcloud_cache"}}'''
+EXTERNAL_SERVICES_IA_CACHE_QUEUE = '''{{template "KEY" "external_services_ia_cache"}}'''
 
-MUSICBRAINZ_CLIENT_ID = '''{{template "KEY" "musicbrainz/client_id"}}'''
-MUSICBRAINZ_CLIENT_SECRET = '''{{template "KEY" "musicbrainz/client_secret"}}'''
 MUSICBRAINZ_BASE_URL = "https://musicbrainz.org"
-MUSICBRAINZ_OAUTH_URL = f"{MUSICBRAINZ_BASE_URL}/oauth2/userinfo"
+OAUTH_CLIENT_ID = '''{{template "KEY" "oauth/client_id"}}'''
+OAUTH_CLIENT_SECRET = '''{{template "KEY" "oauth/client_secret"}}'''
+OAUTH_AUTHORIZE_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/authorize"
+OAUTH_TOKEN_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/token"
+OAUTH_INTROSPECTION_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/introspect"
 
 LASTFM_API_URL = '''{{template "KEY" "lastfm_api_url"}}'''
 LASTFM_API_KEY = '''{{template "KEY" "lastfm_api_key"}}'''
@@ -191,11 +198,11 @@ LIBREFM_API_KEY = '''{{template "KEY" "librefm_api_key"}}'''
 # Default is fine for now
 PLAYING_NOW_MAX_DURATION = 10 * 60
 
-# MAX file size to be allowed for the lastfm-backup import, default is infinite
+# MAX file size to be allowed for file uploads, default is infinite
 # Size is in bytes
-MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
+MAX_CONTENT_LENGTH = 25 * 1024 * 1024  # 25MB
 
-# Specify the upload folder where all the lastfm-backup will be stored
+# Specify the upload folder where user uploaded files for import will be stored
 # The path must be absolute path
 UPLOAD_FOLDER = '''{{template "KEY" "upload_folder"}}'''
 
@@ -214,7 +221,7 @@ LOG_SENTRY = {
     'traces_sample_rate': {{template "KEY" "sentry/traces_sample_rate"}},
 }
 DATASETS_SENTRY_DSN = '''{{template "KEY" "sentry/datasets_dsn"}}'''
-
+CRON_SENTRY_DSN = '''{{template "KEY" "sentry/cron_dsn"}}'''
 
 # Stats
 STATS_ENTITY_LIMIT = 100 # the number of entities to calculate at max with BQ
@@ -239,11 +246,14 @@ SPOTIFY_CLIENT_ID = '''{{template "KEY" "spotify/client_id"}}'''
 SPOTIFY_CLIENT_SECRET = '''{{template "KEY" "spotify/client_secret"}}'''
 SPOTIFY_CALLBACK_URL = '''{{template "KEY" "spotify/redirect_uri"}}'''
 
+# SPOTIFY METADATA CACHE
+SPOTIFY_CACHE_CLIENT_ID = '''{{template "KEY" "spotify_cache/client_id"}}'''
+SPOTIFY_CACHE_CLIENT_SECRET = '''{{template "KEY" "spotify_cache/client_secret"}}'''
+
 # APPLE MUSIC
 APPLE_MUSIC_TEAM_ID = '''{{template "KEY" "apple/team_id"}}'''
 APPLE_MUSIC_KID = '''{{template "KEY" "apple/kid"}}'''
 APPLE_MUSIC_KEY = '''{{template "KEY" "apple/key"}}'''
-APPLE_MUSIC_CALLBACK_URL = '''{{template "KEY" "apple/redirect_uri"}}'''
 
 # CRITIQUEBRAINZ
 CRITIQUEBRAINZ_CLIENT_ID = '''{{template "KEY" "critiquebrainz/client_id"}}'''
@@ -257,6 +267,9 @@ SOUNDCLOUD_REDIRECT_URI = '''{{template "KEY" "soundcloud/redirect_uri"}}'''
 
 # YOUTUBE
 YOUTUBE_API_KEY = '''{{template "KEY" "youtube/api_key"}}'''
+
+# FUNKWHALE
+FUNKWHALE_CALLBACK_URL = '''{{template "KEY" "funkwhale/redirect_uri"}}'''
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -283,3 +296,12 @@ REJECT_LISTENS_WITHOUT_USER_EMAIL = {{template "KEY_JSON" "reject_listens_withou
 
 # If set to True, do not allow new users without email to register and warn existing without email
 REJECT_NEW_USERS_WITHOUT_EMAIL = {{template "KEY_JSON" "reject_new_users_without_email"}}
+
+# base directory for user data exports
+USER_DATA_EXPORT_BASE_DIR = '''{{template "KEY" "user_data_export_base_dir"}}'''
+
+# Navidrome configuration
+# Set to a base64 encoded key for encryption/decryption of passwords.
+NAVIDROME_ENCRYPTION_KEY = '''{{template "KEY" "navidrome/encryption_key"}}'''
+
+BACKGROUND_TASKS_SLEEP_TIME = 5

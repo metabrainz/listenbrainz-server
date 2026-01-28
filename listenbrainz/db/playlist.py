@@ -5,21 +5,18 @@ from uuid import UUID
 
 import sqlalchemy
 import orjson
-from psycopg2.extras import execute_values
-from psycopg2.sql import SQL, Literal
 from sqlalchemy import text
 
 from listenbrainz.db.model import playlist as model_playlist
-from listenbrainz.db import timescale as ts
 from listenbrainz.db import user as db_user
 from listenbrainz.db.model.playlist import Playlist
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
-from listenbrainz.db.user import get_users_by_id
-from troi.patches.periodic_jams import WEEKLY_JAMS_DESCRIPTION, WEEKLY_EXPLORATION_DESCRIPTION
 
 TROI_BOT_USER_ID = 12939
 TROI_BOT_DEBUG_USER_ID = 19055
 LISTENBRAINZ_USER_ID = 23944
+DELETED_USER_ID = 2615344
+DELETED_USER_NAME = "deleted_lb_user"
 
 # These are the recommendation troi patches that we showcase on the recommendations page for each user
 RECOMMENDATION_PATCHES = (
@@ -33,10 +30,12 @@ RECOMMENDATION_PATCHES = (
 )
 
 
-def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[model_playlist.Playlist]:
+def get_by_mbid(db_conn, ts_conn, playlist_id: str, load_recordings: bool = True) -> Optional[model_playlist.Playlist]:
     """Get a playlist given its mbid
 
     Arguments:
+        db_conn: database connection
+        ts_conn: timeseries database connection
         playlist_id: the uuid of a playlist to get
         load_recordings: If true, load the recordings for the playlist too
 
@@ -47,7 +46,7 @@ def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[mode
         a ``model_playlist.Playlist``, or ``None`` if no such Playlist with the
         given id exists
     """
-    query = sqlalchemy.text("""
+    query = text("""
         SELECT pl.id
              , pl.mbid
              , pl.creator_id
@@ -64,40 +63,42 @@ def get_by_mbid(playlist_id: str, load_recordings: bool = True) -> Optional[mode
      LEFT JOIN playlist.playlist AS copy
             ON pl.copied_from_id = copy.id
          WHERE pl.mbid = :mbid""")
-    with ts.engine.connect() as connection:
-        result = connection.execute(query, {"mbid": playlist_id})
-        obj = result.mappings().first()
-        if not obj:
-            return None
-        obj = dict(obj)
-        user_id = obj['creator_id']
-        user = db_user.get(user_id)
+    result = ts_conn.execute(query, {"mbid": playlist_id})
+    obj = result.mappings().first()
+    if not obj:
+        return None
+    obj = dict(obj)
+    user_id = obj['creator_id']
+    user = db_user.get(db_conn, user_id)
+    try:
         obj['creator'] = user['musicbrainz_id']
-        if obj['created_for_id']:
-            created_for_user = db_user.get(obj['created_for_id'])
-            if created_for_user:
-                obj['created_for'] = created_for_user['musicbrainz_id']
+    except TypeError:
+        obj['creator'] = DELETED_USER_NAME
 
-        if load_recordings:
-            playlist_map = get_recordings_for_playlists(connection, [obj['id']])
-            obj['recordings'] = playlist_map.get(obj['id'], [])
-        else:
-            obj['recordings'] = []
-        playlist_collaborator_ids = get_collaborators_for_playlists(connection, [obj['id']])
-        collaborator_ids_list = playlist_collaborator_ids.get(obj['id'], [])
-        obj['collaborator_ids'] = collaborator_ids_list
-        obj['collaborators'] = get_collaborators_names_from_ids(collaborator_ids_list)
-        return model_playlist.Playlist.parse_obj(obj)
+    if obj['created_for_id']:
+        created_for_user = db_user.get(db_conn, obj['created_for_id'])
+        if created_for_user:
+            obj['created_for'] = created_for_user['musicbrainz_id']
+
+    if load_recordings:
+        playlist_map = get_recordings_for_playlists(db_conn, ts_conn, [obj['id']])
+        obj['recordings'] = playlist_map.get(obj['id'], [])
+    else:
+        obj['recordings'] = []
+    playlist_collaborator_ids = get_collaborators_for_playlists(ts_conn, [obj['id']])
+    collaborator_ids_list = playlist_collaborator_ids.get(obj['id'], [])
+    obj['collaborator_ids'] = collaborator_ids_list
+    obj['collaborators'] = get_collaborators_names_from_ids(db_conn, collaborator_ids_list)
+    return model_playlist.Playlist.parse_obj(obj)
 
 
-def get_playlists_for_user(user_id: int,
-                           include_private: bool = False,
-                           load_recordings: bool = False,
-                           count: int = 0,
-                           offset: int = 0):
+def get_playlists_for_user(db_conn, ts_conn, user_id: int, include_private: bool = False,
+                           load_recordings: bool = False, count: int = 0, offset: int = 0):
     """Get all playlists that a user created
 
     Arguments:
+        db_conn: database connection
+        ts_conn: timescale database connection
         user_id: The user to find playlists for
         include_private: If True, include all playlists by a user, including private ones. The count of
                          playlists returned will include private playlists if True
@@ -120,7 +121,7 @@ def get_playlists_for_user(user_id: int,
     if not include_private:
         where_public = "AND pl.public = :public"
         params["public"] = True
-    query = sqlalchemy.text(f"""
+    query = text(f"""
         SELECT pl.id
              , pl.mbid
              , pl.creator_id
@@ -142,29 +143,30 @@ def get_playlists_for_user(user_id: int,
          LIMIT :count
         OFFSET :offset""")
 
-    with ts.engine.connect() as connection:
-        result = connection.execute(query, params)
-        playlists = _playlist_resultset_to_model(connection, result, load_recordings)
+    result = ts_conn.execute(query, params)
+    playlists = _playlist_resultset_to_model(db_conn, ts_conn, result, load_recordings)
 
-        # Now fetch the count of playlists
-        params = {"creator_id": user_id}
-        where_public = ""
-        if not include_private:
-            where_public = "AND public = :public"
-            params["public"] = True
-        query = sqlalchemy.text(f"""SELECT COUNT(*)
-                                      FROM playlist.playlist
-                                     WHERE creator_id = :creator_id
-                                           {where_public}""")
-        count = connection.execute(query, params).fetchone()[0]
+    # Now fetch the count of playlists
+    params = {"creator_id": user_id}
+    where_public = ""
+    if not include_private:
+        where_public = "AND public = :public"
+        params["public"] = True
+    query = text(f"""SELECT COUNT(*)
+                       FROM playlist.playlist
+                      WHERE creator_id = :creator_id
+                           {where_public}""")
+    count = ts_conn.execute(query, params).fetchone()[0]
 
     return playlists, count
 
 
-def get_recommendation_playlists_for_user(user_id: int):
+def get_recommendation_playlists_for_user(db_conn, ts_conn, user_id: int):
     """Get all recommendation playlists that have been created for the user
 
     Arguments:
+        db_conn: database connection
+        ts_conn: timescale database connection
         user_id: The user to find playlists for
 
     Returns:
@@ -173,7 +175,7 @@ def get_recommendation_playlists_for_user(user_id: int):
     """
 
     params = {"creator_id": (LISTENBRAINZ_USER_ID, TROI_BOT_USER_ID), "created_for_id": user_id, "patches": RECOMMENDATION_PATCHES}
-    query = sqlalchemy.text(f"""
+    query = text(f"""
            SELECT pl.id
                 , pl.mbid
                 , pl.name
@@ -187,19 +189,18 @@ def get_recommendation_playlists_for_user(user_id: int):
                 , pl.created_for_id
                 , pl.additional_metadata
             FROM playlist.playlist pl
-           WHERE additional_metadata->'algorithm_metadata'->>'source_patch' IN :patches
+           WHERE pl.additional_metadata->'algorithm_metadata'->>'source_patch' IN :patches
              AND created_for_id = :created_for_id
              AND creator_id IN :creator_id
         ORDER BY pl.created DESC""")
 
-    with ts.engine.connect() as connection:
-        result = connection.execute(query, params)
-        playlists = _playlist_resultset_to_model(connection, result, False)
+    result = ts_conn.execute(query, params)
+    playlists = _playlist_resultset_to_model(db_conn, ts_conn, result, False)
 
     return playlists
 
 
-def _playlist_resultset_to_model(connection, result, load_recordings):
+def _playlist_resultset_to_model(db_conn, ts_conn, result, load_recordings):
     """Parse the result of an sql query to get playlists
 
     Fill in related data (username, created_for username) and collaborators
@@ -208,13 +209,20 @@ def _playlist_resultset_to_model(connection, result, load_recordings):
     user_id_map = {}
     for row in result.mappings():
         row = dict(row)
-        creator_id = row["creator_id"]
+        creator_id = row.get("creator_id")
+        if creator_id is None:
+            continue
         if creator_id not in user_id_map:
-            # TODO: Do this lookup in bulk
-            user_id_map[creator_id] = db_user.get(creator_id)
-        created_for_id = row["created_for_id"]
+            user = db_user.get(db_conn, creator_id)
+            user_id_map[creator_id] = user
+            if user is None:
+                continue
+        created_for_id = row.get("created_for_id")
         if created_for_id and created_for_id not in user_id_map:
-            user_id_map[created_for_id] = db_user.get(created_for_id)
+            user = db_user.get(db_conn, created_for_id)
+            user_id_map[created_for_id] = user
+            if user is None:
+                continue
         row["creator"] = user_id_map[creator_id]["musicbrainz_id"]
         if created_for_id:
             row["created_for"] = user_id_map[created_for_id]["musicbrainz_id"]
@@ -225,24 +233,24 @@ def _playlist_resultset_to_model(connection, result, load_recordings):
     playlist_ids = [p.id for p in playlists]
     if playlist_ids:
         if load_recordings:
-            playlist_recordings = get_recordings_for_playlists(connection, playlist_ids)
+            playlist_recordings = get_recordings_for_playlists(db_conn, ts_conn, playlist_ids)
             for p in playlists:
                 p.recordings = playlist_recordings.get(p.id, [])
-        playlist_collaborator_ids = get_collaborators_for_playlists(connection, playlist_ids)
+        playlist_collaborator_ids = get_collaborators_for_playlists(ts_conn, playlist_ids)
         for p in playlists:
             p.collaborator_ids = playlist_collaborator_ids.get(p.id, [])
-            p.collaborators = get_collaborators_names_from_ids(p.collaborator_ids)
+            p.collaborators = get_collaborators_names_from_ids(db_conn, p.collaborator_ids)
 
     return playlists
 
 
-def get_playlists_created_for_user(user_id: int,
-                                   load_recordings: bool = False,
-                                   count: int = 0,
-                                   offset: int = 0):
+def get_playlists_created_for_user(db_conn, ts_conn, user_id: int, load_recordings: bool = False,
+                                   count: int = 0, offset: int = 0):
     """Get all playlists that were created for a user by bots
 
     Arguments:
+        db_conn: database connection
+        ts_conn: timescale database connection
         user_id
         load_recordings
         count: Return max count number of playlists, for pagination purposes. If omitted, return all.
@@ -258,7 +266,7 @@ def get_playlists_created_for_user(user_id: int,
         count = None
 
     params = {"created_for_id": user_id, "count": count, "offset": offset}
-    query = sqlalchemy.text(f"""
+    query = text(f"""
         SELECT pl.id
              , pl.mbid
              , pl.creator_id
@@ -279,29 +287,27 @@ def get_playlists_created_for_user(user_id: int,
          LIMIT :count
         OFFSET :offset""")
 
-    with ts.engine.connect() as connection:
-        result = connection.execute(query, params)
-        playlists = _playlist_resultset_to_model(connection, result, load_recordings)
+    result = ts_conn.execute(query, params)
+    playlists = _playlist_resultset_to_model(db_conn, ts_conn, result, load_recordings)
 
-        # Fetch the total count of playlists
-        params = {"created_for_id": user_id}
-        query = sqlalchemy.text(f"""SELECT COUNT(*)
-                                      FROM playlist.playlist
-                                     WHERE created_for_id = :created_for_id""")
-        count = connection.execute(query, params).fetchone()[0]
+    # Fetch the total count of playlists
+    params = {"created_for_id": user_id}
+    query = text(f"""SELECT COUNT(*)
+                       FROM playlist.playlist
+                      WHERE created_for_id = :created_for_id""")
+    count = ts_conn.execute(query, params).fetchone()[0]
 
     return playlists, count
 
 
-def get_playlists_collaborated_on(user_id: int,
-                                  include_private: bool = False,
-                                  load_recordings: bool = False,
-                                  count: int = 0,
-                                  offset: int = 0):
+def get_playlists_collaborated_on(db_conn, ts_conn, user_id: int, include_private: bool = False,
+                                  load_recordings: bool = False, count: int = 0, offset: int = 0):
     """Get playlists that this user doesn't own, but is a collaborator on.
     Playlists are ordered by creation date.
 
     Arguments:
+        db_conn: database connection
+        ts_conn: timescale database connection
         user_id: The user id
         load_recordings: If True, also return recordings for each playlist
         include_private: If True, include all playlists by a user, including private ones. The count of
@@ -320,7 +326,7 @@ def get_playlists_collaborated_on(user_id: int,
     if not include_private:
         where_public = "AND pl.public = :public"
         params["public"] = True
-    query = sqlalchemy.text(f"""
+    query = text(f"""
         SELECT pl.id
              , pl.mbid
              , pl.creator_id
@@ -344,32 +350,201 @@ def get_playlists_collaborated_on(user_id: int,
          LIMIT :count
         OFFSET :offset""")
 
-    with ts.engine.connect() as connection:
-        result = connection.execute(query, params)
-        playlists = _playlist_resultset_to_model(connection, result, load_recordings)
+    result = ts_conn.execute(query, params)
+    playlists = _playlist_resultset_to_model(db_conn, ts_conn, result, load_recordings)
 
-        # Fetch the total count of playlists
-        params = {"collaborator_id": user_id}
-        where_public = ""
-        if not include_private:
-            where_public = "AND playlist.public = :public"
-            params["public"] = True
-        query = sqlalchemy.text(f"""SELECT COUNT(*)
-                                      FROM playlist.playlist
-                                 LEFT JOIN playlist.playlist_collaborator
-                                        ON playlist.playlist.id = playlist_collaborator.playlist_id
-                                     WHERE playlist.playlist_collaborator.collaborator_id = :collaborator_id
-                                           {where_public}""")
-        count = connection.execute(query, params).fetchone()[0]
+    # Fetch the total count of playlists
+    params = {"collaborator_id": user_id}
+    where_public = ""
+    if not include_private:
+        where_public = "AND playlist.public = :public"
+        params["public"] = True
+    query = sqlalchemy.text(f"""
+        SELECT COUNT(*)
+          FROM playlist.playlist
+     LEFT JOIN playlist.playlist_collaborator
+            ON playlist.playlist.id = playlist_collaborator.playlist_id
+         WHERE playlist.playlist_collaborator.collaborator_id = :collaborator_id
+               {where_public}
+    """)
+    count = ts_conn.execute(query, params).fetchone()[0]
 
     return playlists, count
 
 
-def get_collaborators_for_playlists(connection, playlist_ids: List[int]):
+def search_playlists_for_user(db_conn, ts_conn, user_id: int, query: str, count: int = 0, offset: int = 0):
+    """
+    Search for playlists by name or description
+
+    Arguments:
+        db_conn: database connection
+        ts_conn: timescale database connection
+        user_id: The user id
+        query: The search query
+        count: Return this many playlists. If 0, return all playlists
+        offset: if set, get playlists from this offset
+
+    Returns:
+        a tuple (playlists, total_playlists)
+    """
+    if count == 0:
+        count = None
+
+    params = {"query": query, "count": count, "offset": offset, "user_id": user_id}
+    query = text(f"""
+    WITH playlist_similarities AS (
+        SELECT pl.id
+             , pl.mbid
+             , pl.creator_id
+             , pl.name
+             , pl.description
+             , pl.public
+             , pl.created
+             , pl.last_updated
+             , pl.copied_from_id
+             , pl.created_for_id
+             , pl.additional_metadata
+             , copy.mbid as copied_from_mbid
+             , similarity(pl.name, :query) AS name_similarity
+             , similarity(pl.description, :query) AS description_similarity
+          FROM playlist.playlist AS pl
+     LEFT JOIN playlist.playlist AS copy
+            ON pl.copied_from_id = copy.id
+     LEFT JOIN playlist.playlist_collaborator
+            ON pl.id = playlist_collaborator.playlist_id
+        WHERE pl.creator_id = :user_id
+            OR pl.created_for_id = :user_id
+            OR playlist.playlist_collaborator.collaborator_id = :user_id
+            OR pl.public = true
+    )
+    SELECT *
+      FROM playlist_similarities
+     WHERE name_similarity > 0.1
+        OR description_similarity > 0.1
+  ORDER BY name_similarity DESC, description_similarity DESC
+     LIMIT :count
+    OFFSET :offset
+    """)
+
+    result = ts_conn.execute(query, params)
+    playlists = _playlist_resultset_to_model(db_conn, ts_conn, result, False)
+
+    # Fetch the total count of playlists
+    total_count = 0
+    query = text(f"""
+    WITH playlist_similarities AS (
+        SELECT similarity(pl.name, :query) AS name_similarity
+             , similarity(pl.description, :query) AS description_similarity
+          FROM playlist.playlist AS pl
+     LEFT JOIN playlist.playlist AS copy
+            ON pl.copied_from_id = copy.id
+     LEFT JOIN playlist.playlist_collaborator
+            ON pl.id = playlist_collaborator.playlist_id
+        WHERE pl.creator_id = :user_id
+            OR pl.created_for_id = :user_id
+            OR playlist.playlist_collaborator.collaborator_id = :user_id
+            OR pl.public = true
+    )
+    SELECT COUNT(*)
+      FROM playlist_similarities
+     WHERE name_similarity > 0.1
+        OR description_similarity > 0.1
+    """)
+    result = ts_conn.execute(query, params)
+    row = result.fetchone()
+    if row:
+        total_count = row[0]
+
+    return playlists, total_count
+
+
+def search_playlist(db_conn, ts_conn, query: str, count: int = 0, offset: int = 0):
+    """
+    Search for playlists by name or description
+
+    Arguments:
+        db_conn: database connection
+        ts_conn: timescale database connection
+        query: The search query
+        include_private: If True, include all playlists by a user, including private ones. The count of
+                 playlists returned will include private playlists if True
+        count: Return this many playlists. If 0, return all playlists
+        offset: if set, get playlists from this offset
+
+    Returns:
+        a tuple (playlists, total_playlists)
+    """
+
+    if count == 0:
+        count = None
+
+    params = {"query": query, "count": count, "offset": offset}
+    query = text(f"""
+    WITH playlist_similarities AS (
+        SELECT pl.id
+             , pl.mbid
+             , pl.creator_id
+             , pl.name
+             , pl.description
+             , pl.public
+             , pl.created
+             , pl.last_updated
+             , pl.copied_from_id
+             , pl.created_for_id
+             , pl.additional_metadata
+             , copy.mbid as copied_from_mbid
+             , similarity(pl.name, :query) AS name_similarity
+             , similarity(pl.description, :query) AS description_similarity
+          FROM playlist.playlist AS pl
+     LEFT JOIN playlist.playlist AS copy
+            ON pl.copied_from_id = copy.id
+     LEFT JOIN playlist.playlist_collaborator
+            ON pl.id = playlist_collaborator.playlist_id
+        WHERE pl.public = true
+    )
+    SELECT *
+      FROM playlist_similarities
+     WHERE name_similarity > 0.1
+        OR description_similarity > 0.1
+  ORDER BY name_similarity DESC, description_similarity DESC
+     LIMIT :count
+    OFFSET :offset
+    """)
+
+    result = ts_conn.execute(query, params)
+    playlists = _playlist_resultset_to_model(db_conn, ts_conn, result, False)
+
+    # Fetch the total count of playlists
+    total_count = 0
+    query = text(f"""
+    WITH playlist_similarities AS (
+        SELECT similarity(pl.name, :query) AS name_similarity
+             , similarity(pl.description, :query) AS description_similarity
+          FROM playlist.playlist AS pl
+     LEFT JOIN playlist.playlist AS copy
+            ON pl.copied_from_id = copy.id
+     LEFT JOIN playlist.playlist_collaborator
+            ON pl.id = playlist_collaborator.playlist_id
+        WHERE pl.public = true
+    )
+    SELECT COUNT(*)
+      FROM playlist_similarities
+     WHERE name_similarity > 0.1
+        OR description_similarity > 0.1
+    """)
+    result = ts_conn.execute(query, params)
+    row = result.fetchone()
+    if row:
+        total_count = row[0]
+
+    return playlists, total_count
+
+
+def get_collaborators_for_playlists(ts_conn, playlist_ids: List[int]):
     """Get all of the collaborators for the given playlists
 
     Args:
-        connection: an open database connection
+        ts_conn: timescale database connection
         playlist_ids: a list of playlist ids to get collaborator information for
 
     Return:
@@ -378,23 +553,23 @@ def get_collaborators_for_playlists(connection, playlist_ids: List[int]):
     if not playlist_ids:
         return {}
 
-    query = sqlalchemy.text("""
+    query = text("""
         SELECT playlist_id
              , array_agg(collaborator_id) AS collaborator_ids
           FROM playlist.playlist_collaborator
          WHERE playlist_id in :playlist_ids
       GROUP BY playlist_id""")
-    result = connection.execute(query, {"playlist_ids": tuple(playlist_ids)})
+    result = ts_conn.execute(query, {"playlist_ids": tuple(playlist_ids)})
     ret = {}
     for row in result.fetchall():
         ret[row.playlist_id] = row.collaborator_ids
     return ret
 
 
-def get_recordings_for_playlists(connection, playlist_ids: List[int]):
-    """"""
+def get_recordings_for_playlists(db_conn, ts_conn, playlist_ids: List[int]):
+    """ Get all recordings for the given playlists """
 
-    query = sqlalchemy.text("""
+    query = text("""
         SELECT id
              , playlist_id
              , position
@@ -405,7 +580,7 @@ def get_recordings_for_playlists(connection, playlist_ids: List[int]):
          WHERE playlist_id IN :playlist_ids
       ORDER BY playlist_id, position
     """)
-    result = connection.execute(query, {"playlist_ids": tuple(playlist_ids)})
+    result = ts_conn.execute(query, {"playlist_ids": tuple(playlist_ids)})
     user_id_map = {}
     playlist_recordings_map = collections.defaultdict(list)
     for row in result.mappings():
@@ -413,8 +588,12 @@ def get_recordings_for_playlists(connection, playlist_ids: List[int]):
         added_by_id = row["added_by_id"]
         if added_by_id not in user_id_map:
             # TODO: Do this lookup in bulk
-            user_id_map[added_by_id] = db_user.get(added_by_id)
-        row["added_by"] = user_id_map[added_by_id]["musicbrainz_id"]
+            user_id_map[added_by_id] = db_user.get(db_conn, added_by_id)
+        try:
+            row["added_by"] = user_id_map[added_by_id]["musicbrainz_id"]
+        except TypeError:
+            row["added_by"] = DELETED_USER_NAME
+
         playlist_recording = model_playlist.PlaylistRecording.parse_obj(row)
         playlist_recordings_map[playlist_recording.playlist_id].append(playlist_recording)
     for playlist_id in playlist_ids:
@@ -422,26 +601,50 @@ def get_recordings_for_playlists(connection, playlist_ids: List[int]):
             playlist_recordings_map[playlist_id] = []
     return dict(playlist_recordings_map)
 
+def get_recordings_count_for_playlist(ts_conn, playlist_id: int):
+    """ Get a count of recordings for a given playlist.
 
-def _remove_old_collaborative_playlists(connection, creator_id: int, created_for_id: int, source_patch: str):
+    Arguments:
+        ts_conn: timsecale database connection
+        playlist_id: Numerical sequential id of a playlist (NOT its UUID)
+
+    Returns:
+        an integer of the number of recordings in the playlist """
+
+    query = text("""
+        SELECT COUNT(*)
+          FROM playlist.playlist_recording
+         WHERE playlist_id = :playlist_id
+    """)
+    result = ts_conn.execute(query, {"playlist_id": playlist_id})
+    return result.scalar()
+
+
+def _remove_old_collaborative_playlists(ts_conn, creator_id: int, created_for_id: int, source_patch: str):
     """
        Remove all the collaborative playlists for the given creator, credit_for and source_patch.
        This function will be used in the create function in order to remove the old collaborative playlists
        that the new playlist replaces, all in one transaction.
     """
-    del_query = sqlalchemy.text("""DELETE FROM playlist.playlist
-                                         WHERE creator_id = :creator_id
-                                           AND additional_metadata->'algorithm_metadata'->>'source_patch' = :source_patch
-                                           AND created_for_id = :created_for_id""")
-    connection.execute(del_query, {"creator_id": creator_id,
-                                   "created_for_id": created_for_id,
-                                   "source_patch": source_patch})
+    del_query = text("""
+        DELETE FROM playlist.playlist
+              WHERE creator_id = :creator_id
+                AND additional_metadata->'algorithm_metadata'->>'source_patch' = :source_patch
+                AND created_for_id = :created_for_id
+    """)
+    ts_conn.execute(del_query, {
+        "creator_id": creator_id,
+        "created_for_id": created_for_id,
+        "source_patch": source_patch
+    })
 
 
-def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist:
+def create(db_conn, ts_conn, playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist:
     """Create a playlist
 
     Arguments:
+        db_conn: database connection
+        ts_conn: timsecale database connection
         playlist: A playlist to add
 
     Raises:
@@ -453,7 +656,7 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
 
     """
     # TODO: These two gets should be done in a single query
-    creator = db_user.get(playlist.creator_id)
+    creator = db_user.get(db_conn, playlist.creator_id)
     if creator is None:
         raise Exception("TODO: Custom exception")
 
@@ -461,11 +664,11 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
     # and then the name is fetched for verification again. Should we accept created_for here and do
     # lookup only here and not he in the API call validation?
     if playlist.created_for_id:
-        created_for = db_user.get(playlist.created_for_id)
+        created_for = db_user.get(db_conn, playlist.created_for_id)
         if created_for is None:
             raise Exception("TODO: Custom exception")
 
-    query = sqlalchemy.text("""
+    query = text("""
         INSERT INTO playlist.playlist (creator_id
                                      , name
                                      , description
@@ -486,103 +689,112 @@ def create(playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist
                                     'copied_from_id', 'created_for_id'})
     fields["additional_metadata"] = orjson.dumps(playlist.additional_metadata or {}).decode("utf-8")
 
-    with ts.engine.connect() as connection:
-        with connection.begin():
-            # This code seems out of place for a create function, but in order to keep the deletion of
-            # old collaborative playlists in the same transaction as creating new playlists, it needs to
-            # to be here.
-            if playlist.creator_id in (LISTENBRAINZ_USER_ID, TROI_BOT_USER_ID)  and playlist.created_for_id is not None and \
-                    playlist.additional_metadata is not None and "algorithm_metadata" in playlist.additional_metadata\
-                    and "source_patch" in playlist.additional_metadata["algorithm_metadata"]:
-                _remove_old_collaborative_playlists(
-                    connection,
-                    playlist.creator_id,
-                    playlist.created_for_id,
-                    playlist.additional_metadata["algorithm_metadata"]["source_patch"]
-                )
+    # This code seems out of place for a create function, but in order to keep the deletion of
+    # old collaborative playlists in the same transaction as creating new playlists, it needs to
+    # to be here.
+    if playlist.creator_id in (LISTENBRAINZ_USER_ID, TROI_BOT_USER_ID) and playlist.created_for_id is not None and \
+            playlist.additional_metadata is not None and "algorithm_metadata" in playlist.additional_metadata\
+            and "source_patch" in playlist.additional_metadata["algorithm_metadata"]:
+        _remove_old_collaborative_playlists(
+            ts_conn,
+            playlist.creator_id,
+            playlist.created_for_id,
+            playlist.additional_metadata["algorithm_metadata"]["source_patch"]
+        )
 
-            result = connection.execute(query, fields)
-            row = result.fetchone()
-            playlist.id = row.id
-            playlist.mbid = row.mbid
-            playlist.created = row.created
-            playlist.creator = creator["musicbrainz_id"]
-            playlist.recordings = insert_recordings(connection, playlist.id, playlist.recordings, 0)
+    result = ts_conn.execute(query, fields)
+    row = result.fetchone()
+    playlist.id = row.id
+    playlist.mbid = row.mbid
+    playlist.created = row.created
+    playlist.creator = creator["musicbrainz_id"]
+    playlist.recordings = insert_recordings(db_conn, ts_conn, playlist.id, playlist.recordings, 0)
 
-            if playlist.collaborator_ids:
-                add_playlist_collaborators(connection, playlist.id, playlist.collaborator_ids)
-                collaborator_ids = get_collaborators_for_playlists(connection, [playlist.id])
-                collaborator_ids = collaborator_ids.get(playlist.id, [])
-                playlist.collaborators = get_collaborators_names_from_ids(collaborator_ids)
+    if playlist.collaborator_ids:
+        add_playlist_collaborators(ts_conn, playlist.id, playlist.collaborator_ids)
+        collaborator_ids = get_collaborators_for_playlists(ts_conn, [playlist.id])
+        collaborator_ids = collaborator_ids.get(playlist.id, [])
+        playlist.collaborators = get_collaborators_names_from_ids(db_conn, collaborator_ids)
 
-            return model_playlist.Playlist.parse_obj(playlist.dict())
+    ts_conn.commit()
+
+    return model_playlist.Playlist.parse_obj(playlist.dict())
 
 
-def add_playlist_collaborators(connection, playlist_id, collaborator_ids):
-    delete_query = sqlalchemy.text(
-        """DELETE FROM playlist.playlist_collaborator
-                 WHERE playlist_id = :playlist_id""")
-    insert_query = sqlalchemy.text(
-        """INSERT INTO playlist.playlist_collaborator (playlist_id, collaborator_id)
-                VALUES (:playlist_id, :collaborator_id)""")
+def add_playlist_collaborators(ts_conn, playlist_id, collaborator_ids):
+    delete_query = text("""
+        DELETE FROM playlist.playlist_collaborator
+              WHERE playlist_id = :playlist_id
+    """)
+    insert_query = sqlalchemy.text("""
+        INSERT INTO playlist.playlist_collaborator (playlist_id, collaborator_id)
+                VALUES (:playlist_id, :collaborator_id)
+    """)
 
     collaborator_params = [{"playlist_id": playlist_id, "collaborator_id": c_id} for c_id in collaborator_ids]
-    connection.execute(delete_query, {"playlist_id": playlist_id})
+    ts_conn.execute(delete_query, {"playlist_id": playlist_id})
     if collaborator_params:
-        connection.execute(insert_query, collaborator_params)
+        ts_conn.execute(insert_query, collaborator_params)
 
 
-def get_collaborators_names_from_ids(collaborator_ids: List[int]):
+def get_collaborators_names_from_ids(db_conn, collaborator_ids: List[int]):
     collaborators = []
     # TODO: Look this up in one query
     for user_id in collaborator_ids:
-        user = db_user.get(user_id)
+        user = db_user.get(db_conn, user_id)
         if user:
             collaborators.append(user["musicbrainz_id"])
     collaborators.sort()
     return collaborators
 
 
-def update_playlist(playlist: model_playlist.Playlist):
+def update_playlist(db_conn, ts_conn, playlist: model_playlist.Playlist):
     """Update playlist metadata (Name, description, public flag)
 
     Arguments:
 
     """
 
-    query = sqlalchemy.text("""
+    query = text("""
         UPDATE playlist.playlist
            SET name = :name
              , description = :description
              , public = :public
+             , additional_metadata = :additional_metadata
          WHERE id = :id
     """)
-    with ts.engine.begin() as connection:
-        params = playlist.dict(include={'id', 'name', 'description', 'public'})
-        connection.execute(query, params)
-        # Unconditionally add collaborators, this allows us to delete all collaborators
-        # if [] is passed in.
-        # TODO: Optimise this by getting collaborators from the database and only updating
-        #  if what has passed is different to what exists
-        add_playlist_collaborators(connection, playlist.id, playlist.collaborator_ids)
-        collaborator_ids = get_collaborators_for_playlists(connection, [playlist.id])
-        collaborator_ids = collaborator_ids.get(playlist.id, [])
-        playlist.collaborators = get_collaborators_names_from_ids(playlist.collaborator_ids)
-        playlist.last_updated = set_last_updated(connection, playlist.id)
-        return playlist
+    params = {
+        'id': playlist.id,
+        'name': playlist.name,
+        'description': playlist.description,
+        'public': playlist.public,
+        'additional_metadata': orjson.dumps(playlist.additional_metadata or {}).decode('utf-8')
+    }
+    ts_conn.execute(query, params)
+    # Unconditionally add collaborators, this allows us to delete all collaborators
+    # if [] is passed in.
+    # TODO: Optimise this by getting collaborators from the database and only updating
+    #  if what has passed is different to what exists
+    add_playlist_collaborators(ts_conn, playlist.id, playlist.collaborator_ids)
+    collaborator_ids = get_collaborators_for_playlists(ts_conn, [playlist.id])
+    collaborator_ids = collaborator_ids.get(playlist.id, [])
+    playlist.collaborators = get_collaborators_names_from_ids(db_conn, playlist.collaborator_ids)
+    playlist.last_updated = set_last_updated(ts_conn, playlist.id)
+    ts_conn.commit()
+    return playlist
 
 
-def set_last_updated(connection, playlist_id):
-    query = sqlalchemy.text("""
+def set_last_updated(ts_conn, playlist_id):
+    query = text("""
         UPDATE playlist.playlist
            SET last_updated = now()
          WHERE id = :playlist_id
      RETURNING last_updated""")
-    result = connection.execute(query, {"playlist_id": playlist_id})
+    result = ts_conn.execute(query, {"playlist_id": playlist_id})
     return result.fetchone()[0]
 
 
-def copy_playlist(playlist: model_playlist.Playlist, creator_id: int):
+def copy_playlist(db_conn, ts_conn, playlist: model_playlist.Playlist, creator_id: int):
     newplaylist = playlist.copy()
     newplaylist.name = "Copy of " + newplaylist.name
     newplaylist.creator_id = creator_id
@@ -593,46 +805,49 @@ def copy_playlist(playlist: model_playlist.Playlist, creator_id: int):
     newplaylist.collaborators = []
     # TODO: We need a copied_from_mbid (calculated) field in the playlist object so we can show the mbid in the ui
 
-    return create(newplaylist)
+    return create(db_conn, ts_conn, newplaylist)
 
 
-def delete_playlist(playlist: model_playlist.Playlist):
+def delete_playlist(ts_conn, playlist: model_playlist.Playlist):
     """Delete a playlist.
 
     Arguments:
+        ts_conn: timescale database connection
         playlist: The playlist to delete
 
     Returns:
         True if the playlist was deleted, False if no such playlist with the given mbid exists
     """
-    return delete_playlist_by_mbid(playlist.mbid)
+    return delete_playlist_by_mbid(ts_conn, playlist.mbid)
 
 
-def delete_playlist_by_mbid(playlist_mbid: str):
+def delete_playlist_by_mbid(ts_conn, playlist_mbid: str):
     """Delete a playlist given an mbid.
 
     Arguments:
+        ts_conn: timescale database connection
         playlist_mbid: The mbid of the playlist to delete
 
     Returns:
         True if the playlist was deleted, False if no such playlist with the given mbid exists
     """
-    query = sqlalchemy.text("""
+    query = text("""
         DELETE FROM playlist.playlist
               WHERE playlist.mbid = :playlist_mbid
     """)
-    with ts.engine.begin() as connection:
-        result = connection.execute(query, {"playlist_mbid": playlist_mbid})
-        return result.rowcount == 1
+    result = ts_conn.execute(query, {"playlist_mbid": playlist_mbid})
+    ts_conn.commit()
+    return result.rowcount == 1
 
 
-def insert_recordings(connection, playlist_id: int, recordings: List[model_playlist.WritablePlaylistRecording],
+def insert_recordings(db_conn, ts_conn, playlist_id: int, recordings: List[model_playlist.WritablePlaylistRecording],
                       starting_position: int):
     """Insert recordings to an existing playlist. The position field will be computed based on the order
     of the provided recordings.
 
     Arguments:
-        connection: an open database connection
+        db_conn: database connection
+        ts_conn: timescale database connection
         playlist_id: the playlist id to add the recordings to
         recordings: a list of recordings to add
         starting_position: The position number to set in the first recording. The first recording in a playlist is position 0
@@ -641,20 +856,21 @@ def insert_recordings(connection, playlist_id: int, recordings: List[model_playl
         recording.playlist_id = playlist_id
         recording.position = position
 
-    query = sqlalchemy.text("""
+    query = text("""
         INSERT INTO playlist.playlist_recording (playlist_id, position, mbid, added_by_id, created)
                                          VALUES (:playlist_id, :position, :mbid, :added_by_id, :created)
-                                      RETURNING id, created""")
+                                      RETURNING id, created
+    """)
     return_recordings = []
     user_id_map = {}
-    insert_ts = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+    insert_ts = datetime.datetime.now(tz=datetime.timezone.utc)
     for recording in recordings:
         if not recording.created:
             recording.created = insert_ts
-        result = connection.execute(query, recording.dict(include={'playlist_id', 'position', 'mbid', 'added_by_id', 'created'}))
+        result = ts_conn.execute(query, recording.dict(include={'playlist_id', 'position', 'mbid', 'added_by_id', 'created'}))
         if recording.added_by_id not in user_id_map:
             # TODO: Do this lookup in bulk
-            user_id_map[recording.added_by_id] = db_user.get(recording.added_by_id)
+            user_id_map[recording.added_by_id] = db_user.get(db_conn, recording.added_by_id)
         row = result.fetchone()
         recording.id = row.id
         recording.created = row.created
@@ -663,11 +879,12 @@ def insert_recordings(connection, playlist_id: int, recordings: List[model_playl
     return return_recordings
 
 
-def delete_recordings_from_playlist(playlist: model_playlist.Playlist, remove_from: int, remove_count: int):
+def delete_recordings_from_playlist(ts_conn, playlist: model_playlist.Playlist, remove_from: int, remove_count: int):
     """Delete recordings from a playlist. If the remove_from + remove_count is more than the number
     of items in the playlist, silently remove as many as possible
 
     Arguments:
+        ts_conn: timescale database connection
         playlist: The playlist to remove recordings from
         remove_from: The position to remove from, 0 indexed
         remove_count: The number of items to remove
@@ -694,41 +911,42 @@ def delete_recordings_from_playlist(playlist: model_playlist.Playlist, remove_fr
     if remove_from >= len(playlist.recordings):
         raise ValueError("Cannot remove item past the end of the list of recordings")
 
-    delete = sqlalchemy.text("""
+    delete = text("""
         DELETE FROM playlist.playlist_recording
           WHERE playlist_id = :playlist_id
             AND position >= :position_start
             AND position < :position_end
     """)
-    reorder = sqlalchemy.text("""
+    reorder = text("""
         UPDATE playlist.playlist_recording
            SET position = position + :offset
          WHERE playlist_id = :playlist_id
            AND position >= :position
     """)
-    with ts.engine.begin() as connection:
-        delete_params = {"playlist_id": playlist.id,
-                         "position_start": remove_from,
-                         "position_end": remove_from+remove_count}
-        connection.execute(delete, delete_params)
-        if remove_from + remove_count < len(playlist.recordings):
-            reorder_params = {"playlist_id": playlist.id,
-                              "position": remove_from + remove_count,
-                              "offset": -1 * remove_count}
-            connection.execute(reorder, reorder_params)
-        # TODO: In move_recordings we call delete and then add, so this is called twice
-        set_last_updated(connection, playlist.id)
+    delete_params = {"playlist_id": playlist.id,
+                     "position_start": remove_from,
+                     "position_end": remove_from+remove_count}
+    ts_conn.execute(delete, delete_params)
+    if remove_from + remove_count < len(playlist.recordings):
+        reorder_params = {"playlist_id": playlist.id,
+                          "position": remove_from + remove_count,
+                          "offset": -1 * remove_count}
+        ts_conn.execute(reorder, reorder_params)
+    # TODO: In move_recordings we call delete and then add, so this is called twice
+    set_last_updated(ts_conn, playlist.id)
+    ts_conn.commit()
 
 
-def add_recordings_to_playlist(playlist: model_playlist.Playlist,
-                               recordings: List[model_playlist.WritablePlaylistRecording],
-                               position: int = None):
+def add_recordings_to_playlist(db_conn, ts_conn, playlist: model_playlist.Playlist,
+                               recordings: List[model_playlist.WritablePlaylistRecording], position: int = None):
     """Add some recordings to a playlist at a given position
 
     Recording positions are counted from 0, and recordings are added at the given position. If the playlist
     has other recordings at this position, they will be moved
 
     Arguments:
+        db_conn: database connection
+        ts_conn: timescale database connection
         playlist: A Playlist to append to. Must be loaded with ``get_by_id`` and have and id and recordings set
         recordings: A list of recordings to add
         position: The position in the existing playlist after which to add the recordings. If ``None`` or
@@ -742,7 +960,7 @@ def add_recordings_to_playlist(playlist: model_playlist.Playlist,
     #   - can we just check if there's an exception on insert?
     # TODO: Need unique key on (playlist_id, position) on playlist_recording
     # TODO: This is the same reorder method as delete
-    reorder = sqlalchemy.text("""
+    reorder = text("""
         UPDATE playlist.playlist_recording
            SET position = position + :offset
          WHERE playlist_id = :playlist_id
@@ -750,23 +968,24 @@ def add_recordings_to_playlist(playlist: model_playlist.Playlist,
     """)
     if position is None:
         position = len(playlist.recordings)
-    with ts.engine.begin() as connection:
-        if position < len(playlist.recordings):
-            reorder_params = {"playlist_id": playlist.id,
-                              "offset": len(recordings),
-                              "position": position}
-            connection.execute(reorder, reorder_params)
-        recordings = insert_recordings(connection, playlist.id, recordings, position)
-        playlist.recordings = playlist.recordings[0:position] + recordings + playlist.recordings[position:]
-        set_last_updated(connection, playlist.id)
-        return playlist
+
+    if position < len(playlist.recordings):
+        reorder_params = {"playlist_id": playlist.id,
+                          "offset": len(recordings),
+                          "position": position}
+        ts_conn.execute(reorder, reorder_params)
+    recordings = insert_recordings(db_conn, ts_conn, playlist.id, recordings, position)
+    playlist.recordings = playlist.recordings[0:position] + recordings + playlist.recordings[position:]
+    set_last_updated(ts_conn, playlist.id)
+    ts_conn.commit()
+    return playlist
 
 
-def move_recordings(playlist: model_playlist.Playlist, position_from: int, position_to: int, count: int):
+def move_recordings(db_conn, ts_conn, playlist: model_playlist.Playlist, position_from: int, position_to: int, count: int):
     # TODO: This must be done in a single transaction
     removed = playlist.recordings[position_from:position_from+count]
-    delete_recordings_from_playlist(playlist, position_from, count)
-    add_recordings_to_playlist(playlist, removed, position_to)
+    delete_recordings_from_playlist(ts_conn, playlist, position_from, count)
+    add_recordings_to_playlist(db_conn, ts_conn, playlist, removed, position_to)
 
 
 def get_playlist_recordings_metadata(mb_curs, ts_curs, playlist: Playlist) -> Playlist:
@@ -779,8 +998,8 @@ def get_playlist_recordings_metadata(mb_curs, ts_curs, playlist: Playlist) -> Pl
 
     for rec, row in zip(playlist.recordings, rows):
         rec.artist_credit = row.get("artist_credit_name", "")
-        if "[artist_credit_mbids]" in row and row["[artist_credit_mbids]"] is not None:
-            rec.artist_mbids = [UUID(mbid) for mbid in row["[artist_credit_mbids]"]]
+        if "artist_credit_mbids" in row and row["artist_credit_mbids"] is not None:
+            rec.artist_mbids = [UUID(mbid) for mbid in row["artist_credit_mbids"]]
         rec.title = row.get("recording_name", "")
         rec.release_name = row.get("release_name", "")
         rec.duration_ms = row.get("length", "")
@@ -799,3 +1018,40 @@ def get_playlist_recordings_metadata(mb_curs, ts_curs, playlist: Playlist) -> Pl
             rec.additional_metadata = additional_metadata
 
     return playlist
+
+
+def get_playlist_count(ts_conn, creator_ids: List[str]) -> dict:
+    query = text("""
+        SELECT creator_id, COUNT(*) as count
+          FROM playlist.playlist
+         WHERE creator_id IN :creator_ids
+      GROUP BY creator_id
+    """)
+    result = ts_conn.execute(query, {"creator_ids": tuple(creator_ids)})
+    return {row[0]: row[1] for row in result.fetchall()}
+
+
+def delete_playlists_by_user_id(ts_conn, user_id: int) -> int:
+    """Delete all playlists for a given user.
+
+    This deletes playlists where the user is the creator (creator_id = user_id)
+    or where the playlist was created for the user (created_for_id = user_id).
+    It also removes the user from playlist collaborators.
+
+    Arguments:
+        ts_conn: timescale database connection
+        user_id: The user id to delete playlists for
+    """
+    delete_collaborators_query = text("""
+        DELETE FROM playlist.playlist_collaborator
+              WHERE collaborator_id = :user_id
+    """)
+    ts_conn.execute(delete_collaborators_query, {"user_id": user_id})
+
+    delete_playlist_query = text("""
+        DELETE FROM playlist.playlist
+              WHERE creator_id = :user_id
+                 OR created_for_id = :user_id
+    """)
+    ts_conn.execute(delete_playlist_query, {"user_id": user_id})
+    ts_conn.commit()

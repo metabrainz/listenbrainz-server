@@ -281,8 +281,6 @@ def main(ranks=None, lambdas=None, iterations=None, alphas=None, use_transformed
         "use_transformed_listencounts": use_transformed_listencounts
     }
 
-    listenbrainz_spark.init_spark_session("Train Models")
-
     # Add checkpoint dir to break and save RDD lineage.
     listenbrainz_spark.context.setCheckpointDir(config.HDFS_CLUSTER_URI + path.CHECKPOINT_DIR)
 
@@ -300,7 +298,7 @@ def main(ranks=None, lambdas=None, iterations=None, alphas=None, use_transformed
     best_model, all_models = train_models(training_data, test_data, use_transformed_listencounts,
                                           ranks, lambdas, iterations, alphas, context)
 
-    context["model_html_file"] = f"Model-{datetime.utcnow().strftime('%Y-%m-%d-%H:%M')}-{uuid.uuid4()}.html"
+    context["model_html_file"] = f"Model-{datetime.now(tz=timezone.utc).strftime('%Y-%m-%d-%H:%M')}-{uuid.uuid4()}.html"
 
     save_model(best_model, context)
     save_training_html(context)

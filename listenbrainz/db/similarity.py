@@ -1,25 +1,35 @@
-from flask import current_app
 from psycopg2.extras import execute_values
-from psycopg2.sql import SQL, Literal, Identifier
+from psycopg2.sql import SQL, Literal, Identifier, Composable
 
 from listenbrainz.db import timescale
 from listenbrainz.db.artist import load_artists_from_mbids_with_redirects
-from listenbrainz.spark.spark_dataset import DatabaseDataset
+from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
+from listenbrainz.spark.spark_dataset import DatabaseDataset, SparkDataset
 
 
-class SimilarityDataset(DatabaseDataset):
+class SimilarityProdDataset(DatabaseDataset):
 
-    def __init__(self, entity):
-        super().__init__(f"similarity_{entity}", entity, "similarity")
+    def __init__(self, entity, is_mlhd):
+        if is_mlhd:
+            name = f"mlhd_similarity_{entity}"
+            table_name = f"mlhd_{entity}"
+            index_prefix = f"mlhd_sim"
+        else:
+            name = f"listens_similarity_{entity}"
+            table_name = entity
+            index_prefix = f"sim"
+        super().__init__(name, table_name, "similarity")
+        self.is_mlhd = is_mlhd
         self.entity = entity
+        self.index_prefix = index_prefix
 
     def get_table(self):
         return "CREATE TABLE {table} (mbid0 UUID NOT NULL, mbid1 UUID NOT NULL, score INT NOT NULL)"
 
     def get_indices(self):
         return [
-            f"CREATE UNIQUE INDEX similar_{self.entity}s_uniq_idx_{{suffix}} ON {{table}} (mbid0, mbid1)",
-            f"CREATE UNIQUE INDEX similar_{self.entity}s_reverse_uniq_idx_{{suffix}} ON {{table}} (mbid1, mbid0)"
+            f"CREATE UNIQUE INDEX {self.index_prefix}_{self.entity}s_uniq_idx_{{suffix}} ON {{table}} (mbid0, mbid1)",
+            f"CREATE UNIQUE INDEX {self.index_prefix}_{self.entity}s_reverse_uniq_idx_{{suffix}} ON {{table}} (mbid1, mbid0)"
         ]
 
     def get_inserts(self, message):
@@ -35,29 +45,115 @@ class SimilarityDataset(DatabaseDataset):
         cursor.execute(query)
 
 
-SimilarRecordingsDataset = SimilarityDataset("recording")
-SimilarArtistsDataset = SimilarityDataset("artist")
+class SimilarityDevDataset(DatabaseDataset):
+
+    def __init__(self, entity, is_mlhd):
+        if is_mlhd:
+            name = f"mlhd_similarity_{entity}_dev"
+            table_name = f"mlhd_{entity}_dev"
+            index_prefix = "mlhd_sim_dev"
+        else:
+            name = f"listens_similarity_{entity}_dev"
+            table_name = f"{entity}_dev"
+            index_prefix = "sim_dev"
+        super().__init__(name, table_name, "similarity")
+        self.is_mlhd = is_mlhd
+        self.entity = entity
+        self.index_prefix = index_prefix
+
+    def get_table(self):
+        return "CREATE TABLE IF NOT EXISTS {table} (mbid0 UUID NOT NULL, mbid1 UUID NOT NULL, metadata JSONB NOT NULL)"
+
+    def create_table(self, cursor):
+        table = self._get_table_name()
+        query = self.get_table()
+        if not isinstance(query, Composable):
+            query = SQL(query).format(table=table)
+        cursor.execute(query)
+
+    def get_indices(self):
+        return [
+            f"CREATE UNIQUE INDEX IF NOT EXISTS {self.index_prefix}_{self.entity}s_uniq_idx ON {{table}} (mbid0, mbid1)",
+            f"CREATE UNIQUE INDEX IF NOT EXISTS {self.index_prefix}_{self.entity}s_reverse_uniq_idx ON {{table}} (mbid1, mbid0)",
+            f"CREATE INDEX IF NOT EXISTS {self.index_prefix}_{self.entity}s_algorithm_idx ON {{table}} USING GIN (metadata jsonb_path_ops)"
+        ]
+
+    def create_indices(self, cursor):
+        table = self._get_table_name()
+        for index in self.get_indices():
+            query = SQL(index).format(table=table)
+            cursor.execute(query)
+
+    def rotate_tables(self, cursor):
+        pass
+
+    def run_post_processing(self, cursor, message):
+        cursor.execute(SQL("VACUUM ANALYZE {table}").format(table=self._get_table_name()))
+
+    def get_inserts(self, message):
+        algorithm = message["algorithm"]
+        data = message["data"]
+        query = """
+            INSERT INTO {table} AS sr (mbid0, mbid1, metadata)
+                 VALUES %s
+            ON CONFLICT (mbid0, mbid1)
+              DO UPDATE
+                    SET metadata = sr.metadata || EXCLUDED.metadata
+        """
+        template = SQL("(%s, %s, jsonb_build_object({algorithm}, %s))").format(
+            algorithm=Literal(algorithm)
+        )
+        values = [(x["mbid0"], x["mbid1"], x["score"]) for x in data]
+        return query, template, values
+
+    def handle_insert(self, message):
+        query, template, values = self.get_inserts(message)
+        table = self._get_table_name()
+        query = SQL(query).format(table=table)
+
+        conn = timescale.engine.raw_connection()
+        try:
+            with conn.cursor() as curs:
+                execute_values(curs, query, values, template)
+            conn.commit()
+        finally:
+            conn.close()
 
 
-def insert(table, data, algorithm):
-    """ Insert similar recordings in database """
-    query = SQL("""
-        INSERT INTO {table} AS sr (mbid0, mbid1, metadata)
-             VALUES %s
-        ON CONFLICT (mbid0, mbid1)
-          DO UPDATE
-                SET metadata = sr.metadata || EXCLUDED.metadata
-    """).format(table=Identifier("similarity", f"{table}_dev"))
-    values = [(x["mbid0"], x["mbid1"], x["score"]) for x in data]
-    template = SQL("(%s, %s, jsonb_build_object({algorithm}, %s))").format(algorithm=Literal(algorithm))
+class SimilarityDataset(SparkDataset):
 
-    conn = timescale.engine.raw_connection()
-    try:
-        with conn.cursor() as curs:
-            execute_values(curs, query, values, template)
-        conn.commit()
-    finally:
-        conn.close()
+    def __init__(self, entity, is_mlhd):
+        if is_mlhd:
+            name = "mlhd_similarity"
+        else:
+            name = "listens_similarity"
+        super().__init__(f"{name}_{entity}")
+        self.dev_dataset = SimilarityDevDataset(entity, is_mlhd)
+        self.prod_dataset = SimilarityProdDataset(entity, is_mlhd)
+
+    def choose_dataset(self, message):
+        return self.prod_dataset if message["is_production_dataset"] else self.dev_dataset
+
+    def handle_start(self, message):
+        dataset = self.choose_dataset(message)
+        dataset.handle_start(message)
+
+    def handle_insert(self, message):
+        dataset = self.choose_dataset(message)
+        dataset.handle_insert(message)
+
+    def handle_end(self, message):
+        dataset = self.choose_dataset(message)
+        dataset.handle_end(message)
+
+    def handle_shutdown(self):
+        self.dev_dataset.handle_shutdown()
+        self.prod_dataset.handle_shutdown()
+
+
+SimilarRecordingsDataset = SimilarityDataset("recording", False)
+SimilarArtistsDataset = SimilarityDataset("artist", False)
+MlhdSimilarRecordingsDataset = SimilarityDataset("recording", True)
 
 
 def get(curs, table, mbids, algorithm, count):
@@ -114,6 +210,21 @@ def get_artists(mb_curs, ts_curs, mbids, algorithm, count):
 
     metadata = load_artists_from_mbids_with_redirects(mb_curs, similar_mbids)
     for item in metadata:
-        item["score"] = score_idx.get(item["artist_mbid"])
+        item["score"] = score_idx.get(item["original_artist_mbid"])
         item["reference_mbid"] = mbid_idx.get(item["artist_mbid"])
+    return metadata
+
+
+def get_recordings(mb_curs, ts_curs, mbids, algorithm, count):
+    """ For the given recording mbids, fetch at most `count` number of similar recordings using the given algorithm
+        along with their metadata. """
+    similar_mbids, score_idx, mbid_idx = get(ts_curs, "recording_dev", mbids, algorithm, count)
+    if not similar_mbids:
+        return []
+
+    metadata = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, similar_mbids)
+
+    for item in metadata:
+        item["score"] = score_idx.get(item["original_recording_mbid"])
+        item["reference_mbid"] = mbid_idx.get(item["recording_mbid"])
     return metadata

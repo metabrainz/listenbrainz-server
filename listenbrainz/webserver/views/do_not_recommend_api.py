@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request
 
 import listenbrainz.db.user as db_user
 from listenbrainz.db import do_not_recommend
+from listenbrainz.webserver import db_conn
 
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APINotFound, APIBadRequest
@@ -14,7 +15,7 @@ allowed_entity_types = ['artist', 'release', 'release_group', 'recording']
 do_not_recommend_api_bp = Blueprint('do_not_recommend_api_v1', __name__)
 
 
-@do_not_recommend_api_bp.get("/user/<user_name>/do-not-recommend")
+@do_not_recommend_api_bp.get("/user/<mb_username:user_name>/do-not-recommend")
 @crossdomain
 @ratelimit()
 def get_do_not_recommends(user_name):
@@ -50,12 +51,12 @@ def get_do_not_recommends(user_name):
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
     count = min(count, MAX_ITEMS_PER_GET)
 
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
-    results = do_not_recommend.get(user["id"], count, offset)
-    total_count = do_not_recommend.get_total_count(user["id"])
+    results = do_not_recommend.get(db_conn, user["id"], count, offset)
+    total_count = do_not_recommend.get_total_count(db_conn, user["id"])
 
     return jsonify({
         "offset": offset,
@@ -92,7 +93,7 @@ def add_do_not_recommend():
     :resheader Content-Type: *application/json*
     """
     user, entity, entity_mbid, until = _parse_json_params()
-    do_not_recommend.insert(user["id"], entity, entity_mbid, until)
+    do_not_recommend.insert(db_conn, user["id"], entity, entity_mbid, until)
     return jsonify({"status": "ok"})
 
 
@@ -119,7 +120,7 @@ def delete_do_not_recommend():
     :resheader Content-Type: *application/json*
     """
     user, entity, entity_mbid, until = _parse_json_params()
-    do_not_recommend.delete(user["id"], entity, entity_mbid)
+    do_not_recommend.delete(db_conn, user["id"], entity, entity_mbid)
     return jsonify({"status": "ok"})
 
 

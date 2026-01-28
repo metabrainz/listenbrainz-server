@@ -21,9 +21,8 @@
 
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
-from flask import url_for
 from werkzeug.exceptions import BadRequest
 
 import listenbrainz.db.user as db_user
@@ -39,7 +38,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
     def setUp(self):
         super(APICompatDeprecatedTestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'apicompatoldtestuser')
+        self.user = db_user.get_or_create(self.db_conn, 1, 'apicompatoldtestuser')
 
         self.log = logging.getLogger(__name__)
         self.ls = timescale_connection._ts
@@ -135,14 +134,15 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
             'i[0]': int(time.time()),
         }
 
-        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat_old.submit_listens'), data=data)
         self.assert200(r)
         self.assertEqual(r.data.decode('utf-8'), 'OK\n')
 
         time.sleep(1)
         recalculate_all_user_data()
-        to_ts = datetime.utcnow()
-        listens, _, _ = self.ls.fetch_listens(self.user, to_ts=to_ts)
+        to_ts = datetime.now(timezone.utc)
+        with self.app.app_context():
+            listens, _, _ = self.ls.fetch_listens(self.user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
     def test_submit_listen_invalid_sid(self):
@@ -159,7 +159,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
             'i[0]': int(time.time()),
         }
 
-        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat_old.submit_listens'), data=data)
         self.assert401(r)
         self.assertEqual(r.data.decode('utf-8'), 'BADSESSION\n')
 
@@ -185,27 +185,27 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
             'i[0]': int(time.time()),
         }
 
-        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat_old.submit_listens'), data=data)
         self.assert400(r)
         self.assertEqual(r.data.decode('utf-8').split()[0], 'FAILED')
 
         # add artist and remove track name
         data['a[0]'] = 'Kishore Kumar'
         del data['t[0]']
-        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat_old.submit_listens'), data=data)
         self.assert400(r)
         self.assertEqual(r.data.decode('utf-8').split()[0], 'FAILED')
 
         # add track name and remove timestamp
         data['t[0]'] = 'Saamne Ye Kaun Aya'
         del data['i[0]']
-        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat_old.submit_listens'), data=data)
         self.assert400(r)
         self.assertEqual(r.data.decode('utf-8').split()[0], 'FAILED')
 
         # re-add a timestamp in ns
         data['i[0]'] = int(time.time()) * 10**9
-        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat_old.submit_listens'), data=data)
         self.assert400(r)
         self.assertEqual(r.data.decode('utf-8').split()[0], 'FAILED')
 
@@ -227,23 +227,20 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
             'b': 'Jawani Diwani',
         }
 
-        r = self.client.post(url_for('api_compat_old.submit_now_playing'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat_old.submit_now_playing'), data=data)
         self.assert200(r)
         self.assertEqual(r.data.decode('utf-8'), 'OK\n')
 
     def test_get_session(self):
         """ Tests _get_session method in api_compat_deprecated """
-
-        s = Session.create_by_user_id(self.user['id'])
-
-        session = _get_session(s.sid)
+        s = Session.create_by_user_id(self.db_conn, self.user['id'])
+        session = _get_session(self.db_conn, s.sid)
         self.assertEqual(s.sid, session.sid)
 
     def test_get_session_which_doesnt_exist(self):
         """ Make sure BadRequest is raised when we try to get a session that doesn't exists """
-
         with self.assertRaises(BadRequest):
-            session = _get_session('')
+            session = _get_session(self.db_conn, '')
 
     def test_404(self):
 

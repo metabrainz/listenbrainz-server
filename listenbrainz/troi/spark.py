@@ -1,7 +1,6 @@
 """ Common code for processing troi playlists generated in spark """
 
 import json
-from datetime import datetime, timedelta
 
 from flask import current_app
 from psycopg2.extras import execute_values, DictCursor
@@ -9,7 +8,6 @@ from psycopg2.sql import SQL, Literal
 from spotipy import Spotify
 from sqlalchemy import text
 from troi import Recording, Playlist
-from troi.patches.periodic_jams import WEEKLY_JAMS_DESCRIPTION, WEEKLY_EXPLORATION_DESCRIPTION
 from troi.tools.spotify_lookup import submit_to_spotify
 
 from listenbrainz import db
@@ -53,8 +51,8 @@ def get_user_details(slug, user_ids):
 
             if r.export_to_spotify:
                 users_for_urls.append(r.user_id)
-
-    existing_urls = get_existing_playlist_urls(users_for_urls, slug)
+    with timescale.engine.connect() as ts_conn:
+        existing_urls = get_existing_playlist_urls(ts_conn, users_for_urls, slug)
     for user_id, detail in details.items():
         detail["existing_url"] = existing_urls.get(user_id)
 

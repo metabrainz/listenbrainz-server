@@ -1,6 +1,6 @@
-ARG PYTHON_BASE_IMAGE_VERSION=3.11-20231006
+ARG PYTHON_BASE_IMAGE_VERSION=3.13-20250313
 ARG NODE_VERSION=20-alpine
-FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION as listenbrainz-base
+FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION AS listenbrainz-base
 
 ARG PYTHON_BASE_IMAGE_VERSION
 
@@ -11,15 +11,15 @@ LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-serve
       org.label-schema.name="ListenBrainz" \
       org.metabrainz.based-on-image="metabrainz/python:$PYTHON_BASE_IMAGE_VERSION"
 
-ENV DOCKERIZE_VERSION v0.6.1
+ENV DOCKERIZE_VERSION=v0.6.1
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
-ENV SENTRY_CLI_VERSION 1.63.1
+ENV SENTRY_CLI_VERSION=1.63.1
 RUN wget -O /usr/local/bin/sentry-cli https://downloads.sentry-cdn.com/sentry-cli/$SENTRY_CLI_VERSION/sentry-cli-Linux-x86_64 \
     && chmod +x /usr/local/bin/sentry-cli
 
-ENV SENTRY_SERVICE_ERROR_ENVIRONMENT listenbrainz
+ENV SENTRY_SERVICE_ERROR_ENVIRONMENT=listenbrainz
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -37,7 +37,7 @@ RUN apt-get update \
 
 # PostgreSQL client
 RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-ENV PG_MAJOR 12
+ENV PG_MAJOR=12
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" $PG_MAJOR > /etc/apt/sources.list.d/pgdg.list
 RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-$PG_MAJOR \
@@ -55,7 +55,7 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 ############################################
 # NOTE: The development image starts here. #
 ############################################
-FROM listenbrainz-base as listenbrainz-dev
+FROM listenbrainz-base AS listenbrainz-dev
 COPY requirements_development.txt /code/listenbrainz
 RUN pip3 install --no-cache-dir -r requirements_development.txt
 RUN mkdir /code/listenbrainz/docs
@@ -67,7 +67,7 @@ COPY . /code/listenbrainz
 #####################################################################################################
 # NOTE: The javascript files are continously watched and compiled using this image in developement. #
 #####################################################################################################
-FROM node:$NODE_VERSION as listenbrainz-frontend-dev
+FROM node:$NODE_VERSION AS listenbrainz-frontend-dev
 
 ARG NODE_VERSION
 
@@ -83,13 +83,13 @@ WORKDIR /code
 COPY package.json package-lock.json /code/
 RUN npm install
 
-COPY webpack.config.js babel.config.js enzyme.config.ts jest.config.js tsconfig.json .eslintrc.js .stylelintrc.js /code/
+COPY webpack.config.js babel.config.js jest.config.js tsconfig.json .eslintrc.js .stylelintrc.js /code/
 
 
 #########################################################################
 # NOTE: The javascript files for production are compiled in this image. #
 #########################################################################
-FROM listenbrainz-frontend-dev as listenbrainz-frontend-prod
+FROM listenbrainz-frontend-dev AS listenbrainz-frontend-prod
 
 # Compile front-end (static) files
 COPY ./frontend /code/frontend
@@ -99,7 +99,7 @@ RUN npm run build:prod
 ###########################################
 # NOTE: The production image starts here. #
 ###########################################
-FROM listenbrainz-base as listenbrainz-prod
+FROM listenbrainz-base AS listenbrainz-prod
 
 # Create directories for cron logs and dumps
 # /mnt/dumps: Temporary working space for dumps
@@ -153,11 +153,29 @@ COPY ./docker/services/spotify_reader/spotify_reader.service /etc/service/spotif
 COPY ./docker/services/spotify_reader/spotify_reader.finish /etc/service/spotify_reader/finish
 RUN touch /etc/service/spotify_reader/down
 
+# Last.fm importer
+COPY ./docker/services/lastfm_importer/consul-template-lastfm-importer.conf /etc/consul-template-lastfm-importer.conf
+COPY ./docker/services/lastfm_importer/lastfm_importer.service /etc/service/lastfm_importer/run
+COPY ./docker/services/lastfm_importer/lastfm_importer.finish /etc/service/lastfm_importer/finish
+RUN touch /etc/service/lastfm_importer/down
+
+# Libre.fm importer
+COPY ./docker/services/librefm_importer/consul-template-librefm-importer.conf /etc/consul-template-librefm-importer.conf
+COPY ./docker/services/librefm_importer/librefm_importer.service /etc/service/librefm_importer/run
+COPY ./docker/services/librefm_importer/librefm_importer.finish /etc/service/librefm_importer/finish
+RUN touch /etc/service/librefm_importer/down
+
 # Timescale writer
 COPY ./docker/services/timescale_writer/consul-template-timescale-writer.conf /etc/consul-template-timescale-writer.conf
 COPY ./docker/services/timescale_writer/timescale_writer.service /etc/service/timescale_writer/run
 COPY ./docker/services/timescale_writer/timescale_writer.finish /etc/service/timescale_writer/finish
 RUN touch /etc/service/timescale_writer/down
+
+# Background tasks
+COPY ./docker/services/background_tasks/consul-template-background-tasks.conf /etc/consul-template-background-tasks.conf
+COPY ./docker/services/background_tasks/background_tasks.service /etc/service/background_tasks/run
+COPY ./docker/services/background_tasks/background_tasks.finish /etc/service/background_tasks/finish
+RUN touch /etc/service/background_tasks/down
 
 # MBID-mapping writer
 COPY ./docker/services/mbid_mapping_writer/consul-template-mbid-mapping-writer.conf /etc/consul-template-mbid-mapping-writer.conf
@@ -177,8 +195,20 @@ COPY ./docker/services/apple_metadata_cache/apple_metadata_cache.service /etc/se
 COPY ./docker/services/apple_metadata_cache/apple_metadata_cache.finish /etc/service/apple_metadata_cache/finish
 RUN touch /etc/service/apple_metadata_cache/down
 
+# Soundcloud Metadata Cache
+COPY ./docker/services/soundcloud_metadata_cache/consul-template-soundcloud-metadata-cache.conf /etc/consul-template-soundcloud-metadata-cache.conf
+COPY ./docker/services/soundcloud_metadata_cache/soundcloud_metadata_cache.service /etc/service/soundcloud_metadata_cache/run
+COPY ./docker/services/soundcloud_metadata_cache/soundcloud_metadata_cache.finish /etc/service/soundcloud_metadata_cache/finish
+RUN touch /etc/service/soundcloud_metadata_cache/down
+
+# Internet Archive Metadata Cache
+COPY ./docker/services/internetarchive_metadata_cache/consul-template-internetarchive-metadata-cache.conf /etc/consul-template-internetarchive-metadata-cache.conf
+COPY ./docker/services/internetarchive_metadata_cache/internetarchive_metadata_cache.service /etc/service/internetarchive_metadata_cache/run
+COPY ./docker/services/internetarchive_metadata_cache/internetarchive_metadata_cache.finish /etc/service/internetarchive_metadata_cache/finish
+RUN touch /etc/service/internetarchive_metadata_cache/down
+
 # uwsgi (website)
-COPY ./docker/services/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
+COPY ./docker/services/uwsgi/uwsgi.ini.ctmpl /etc/uwsgi/uwsgi.ini.ctmpl
 COPY ./docker/services/uwsgi/consul-template-uwsgi.conf /etc/consul-template-uwsgi.conf
 COPY ./docker/services/uwsgi/uwsgi.service /etc/service/uwsgi/run
 COPY ./docker/services/uwsgi/uwsgi.finish /etc/service/uwsgi/finish
@@ -196,7 +226,7 @@ COPY --from=listenbrainz-frontend-prod /code/frontend/sound /static/sound
 COPY --from=listenbrainz-frontend-prod /code/frontend/fonts /static/fonts
 COPY --from=listenbrainz-frontend-prod /code/frontend/img /static/img
 COPY --from=listenbrainz-frontend-prod /code/frontend/js/lib /static/js/lib
-COPY --from=listenbrainz-frontend-prod /code/frontend/js/info.js /static/js/
+COPY --from=listenbrainz-frontend-prod /code/frontend/css/static /static/css/static
 COPY --from=listenbrainz-frontend-prod /code/frontend/dist /static/dist
 
 # Now install our code, which may change frequently

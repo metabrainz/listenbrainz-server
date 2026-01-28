@@ -1,11 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import panzoom, { PanZoom } from "panzoom";
-import { createRoot } from "react-dom/client";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHandPointRight, faSyncAlt } from "@fortawesome/free-solid-svg-icons";
 import jsonMap from "./data/rainbow1-100-7.json";
-import { getPageProps } from "../../../utils/utils";
-import ErrorBoundary from "../../../utils/ErrorBoundary";
+import SEO, { CACYearStyleTags } from "../SEO";
 
 type CoverDef = {
   x1: number;
@@ -62,7 +60,7 @@ export default function CoverArtComposite() {
 
   return (
     <div
-      id="year-in-music"
+      id="legacy-year-in-music"
       className="yim-2022"
       style={{
         textAlign: "center",
@@ -71,6 +69,8 @@ export default function CoverArtComposite() {
         WebkitOverflowScrolling: "auto", // See https://github.com/anvaka/panzoom/issues/235#issuecomment-1207341563
       }}
     >
+      <SEO year={2022} />
+      <CACYearStyleTags year={2022} />
       <div className="red-section">
         <div
           className="header"
@@ -156,8 +156,6 @@ export default function CoverArtComposite() {
                       href={
                         preventClick ? undefined : `/release/${release_mbid}/`
                       }
-                      target="_blank"
-                      rel="noopener noreferrer"
                     />
                   );
                 })}
@@ -169,14 +167,3 @@ export default function CoverArtComposite() {
     </div>
   );
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const { domContainer } = await getPageProps();
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <CoverArtComposite />
-    </ErrorBoundary>
-  );
-});

@@ -141,8 +141,14 @@ def init_error_handlers(app):
                 A Response which will be a json error if request was made to the LB api and an html page
                 otherwise
         """
-        if current_app.config.get('IS_API_COMPAT_APP') or request.path.startswith(API_PREFIX):
-            response = jsonify({'code': code, 'error': error.description})
+        if current_app.config.get('IS_API_COMPAT_APP') or \
+                request.path.startswith(API_PREFIX) or \
+                request.accept_mimetypes.accept_json:
+            if hasattr(error, "description"):
+                description = error.description
+            else:
+                description = "An unknown error occured."
+            response = jsonify({"code": code, "error": description})
             response.headers["Access-Control-Allow-Origin"] = "*"
             return response, code
         return error_wrapper('errors/{code}.html'.format(code=code), error, code)
@@ -180,11 +186,7 @@ def init_error_handlers(app):
         # We specifically return json in the case that the request was within our API path
         original = getattr(error, "original_exception", None)
 
-        if request.path.startswith(API_PREFIX):
-            error = APIError("An unknown error occured.", 500)
-            return jsonify(error.to_dict()), error.status_code
-        else:
-            return handle_error(original or error, 500)
+        return handle_error(original or error, 500)
 
     @app.errorhandler(502)
     def bad_gateway(error):
@@ -206,6 +208,10 @@ def init_error_handlers(app):
     # Handle error of API_compat
     @app.errorhandler(InvalidAPIUsage)
     def handle_api_compat_error(error):
+        return error.render_error()
+    
+    @app.errorhandler(PlaylistAPIXMLError)
+    def handle_playlist_api_xml_error(error):
         return error.render_error()
 
 
@@ -242,11 +248,43 @@ class InvalidAPIUsage(Exception):
         return '<?xml version="1.0" encoding="utf-8"?>\n' + yattag.indent(doc.getvalue())
 
 
+class PlaylistAPIXMLError(Exception):
+    """
+    Custom error class for Playlist API to render errors in XML format.
+    """
+
+    def __init__(self, message, status_code=404):
+        Exception.__init__(self)
+        self.message = message
+        self.status_code = status_code
+
+    def render_error(self):
+        data = self.to_xml()
+        content_type = "application/xml; charset=utf-8"
+        return Response(data, status=self.status_code, mimetype=content_type)
+
+    def to_xml(self):
+        doc, tag, text = Doc().tagtext()
+        with tag('playlist_error'):
+            with tag('error', code=str(self.status_code)):
+                text(self.message)
+        return '<?xml version="1.0" encoding="utf-8"?>\n' + yattag.indent(doc.getvalue())
+
+
 class ListenValidationError(Exception):
     """ Error class for raising when the submitted payload does not pass validation.
     Only use for code paths common to LB API, API compat & API compat deprecated.
     Throw this error from an util method, capture it in each of the corresponding
     views and re-raise the API dependent error.
+    """
+
+    def __init__(self, message, payload=None):
+        self.message = message
+        self.payload = payload
+
+class ImportFailedError(Exception):
+    """
+    Error class for raising when the listens import fails.
     """
 
     def __init__(self, message, payload=None):

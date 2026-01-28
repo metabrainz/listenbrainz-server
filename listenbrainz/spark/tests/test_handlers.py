@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest import mock
 from unittest.mock import call
 
@@ -7,6 +7,9 @@ from data.model.user_artist_stat import ArtistRecord
 from data.model.user_cf_recommendations_recording_message import (UserRecommendationsJson,
                                                                   UserRecommendationsRecord)
 from data.model.user_daily_activity import DailyActivityRecord
+from data.model.user_era_activity import EraActivityRecord
+from data.model.user_genre_activity import GenreActivityRecord
+from data.model.user_artist_evolution_activity import ArtistEvolutionActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzDataRecord,
@@ -18,9 +21,10 @@ from listenbrainz.db.tests.utils import delete_all_couch_databases
 from listenbrainz.spark.handlers import (
     handle_candidate_sets, handle_dataframes, handle_dump_imported,
     handle_model, handle_recommendations, handle_sitewide_entity,
-    handle_user_daily_activity, handle_user_entity,
+    handle_user_daily_activity, handle_user_entity, handle_user_genre_activity,
+    handle_user_era_activity,
     handle_user_listening_activity,
-    notify_artist_relation_import,
+    handle_user_artist_evolution_activity,
     notify_mapping_import,
     handle_missing_musicbrainz_data,
     cf_recording_recommendations_complete)
@@ -33,8 +37,8 @@ class HandlersTestCase(DatabaseTestCase):
     def setUp(self):
         super(HandlersTestCase, self).setUp()
         self.app = create_app()
-        self.user1 = db_user.get_or_create(1, 'iliekcomputers')
-        self.user2 = db_user.get_or_create(2, 'lucifer')
+        self.user1 = db_user.get_or_create(self.db_conn, 1, 'iliekcomputers')
+        self.user2 = db_user.get_or_create(self.db_conn, 2, 'lucifer')
 
     def tearDown(self):
         super(HandlersTestCase, self).tearDown()
@@ -285,6 +289,262 @@ class HandlersTestCase(DatabaseTestCase):
             last_updated=received.last_updated
         ))
 
+    def test_handle_user_genre_activity(self):
+        data = {
+            'type': 'genre_activity',
+            'stats_range': 'all_time',
+            'from_ts': 1,
+            'to_ts': 10,
+            'data': [
+                {
+                    'user_id': self.user1['id'],
+                    'data': [
+                        {
+                            'genre': 'rock',
+                            'hour': 11,
+                            'listen_count': 16,
+                        },
+                        {
+                            'genre': 'electronic',
+                            'hour': 10,
+                            'listen_count': 13,
+                        }
+                    ]
+                },
+                {
+                    'user_id': self.user2['id'],
+                    'data': [
+                        {
+                            'genre': 'alternative rock',
+                            'hour': 13,
+                            'listen_count': 9,
+                        },
+                        {
+                            'genre': 'pop',
+                            'hour': 11,
+                            'listen_count': 9,
+                        },
+                        {
+                            'genre': 'indie rock',
+                            'hour': 10,
+                            'listen_count': 9,
+                        }
+                    ]
+                }
+            ],
+            'database': 'genre_activity_all_time_20220718'
+        }
+        CouchDbDataset.handle_start({"database": "genre_activity_all_time_20220718"})
+        handle_user_genre_activity(data)
+
+        received = db_stats.get(self.user1['id'], 'genre_activity', 'all_time', GenreActivityRecord)
+        self.assertEqual(received, StatApi[GenreActivityRecord](
+            user_id=self.user1['id'],
+            to_ts=10,
+            from_ts=1,
+            stats_range='all_time',
+            data=StatRecordList[GenreActivityRecord](
+                __root__=[
+                    GenreActivityRecord(
+                        genre='rock',
+                        hour=11,
+                        listen_count=16,
+                    ),
+                    GenreActivityRecord(
+                        genre='electronic',
+                        hour=10,
+                        listen_count=13,
+                    )
+                ]
+            ),
+            last_updated=received.last_updated
+        ))
+
+        received = db_stats.get(self.user2['id'], 'genre_activity', 'all_time', GenreActivityRecord)
+        self.assertEqual(received, StatApi[GenreActivityRecord](
+            user_id=self.user2['id'],
+            to_ts=10,
+            from_ts=1,
+            stats_range='all_time',
+            data=StatRecordList[GenreActivityRecord](
+                __root__=[
+                    GenreActivityRecord(
+                        genre='alternative rock',
+                        hour=13,
+                        listen_count=9,
+                    ),
+                    GenreActivityRecord(
+                        genre='pop',
+                        hour=11,
+                        listen_count=9,
+                    ),
+                    GenreActivityRecord(
+                        genre='indie rock',
+                        hour=10,
+                        listen_count=9,
+                    ),
+                ]
+            ),
+            last_updated=received.last_updated
+        ))
+
+
+    def test_handle_user_era_activity(self):
+        data = {
+            'type': 'era_activity',
+            'stats_range': 'all_time',
+            'from_ts': 1,
+            'to_ts': 10,
+            'data': [
+                {
+                    'user_id': self.user1['id'],
+                    'data': [
+                        {
+                            'year': 1999,
+                            'listen_count': 3
+                        }
+                    ]
+                },
+                {
+                    'user_id': self.user2['id'],
+                    'data': [
+                        {
+                            'year': 2000,
+                            'listen_count': 3
+                        },
+                        {
+                            'year': 2001,
+                            'listen_count': 5
+                        }
+                    ]
+                }
+            ],
+            'database': 'era_activity_all_time_20220718'
+        }
+        CouchDbDataset.handle_start({"database": "era_activity_all_time_20220718"})
+        handle_user_era_activity(data)
+
+        received = db_stats.get(self.user1['id'], 'era_activity', 'all_time', EraActivityRecord)
+        self.assertEqual(received, StatApi[EraActivityRecord](
+            user_id=self.user1['id'],
+            to_ts=10,
+            from_ts=1,
+            stats_range='all_time',
+            data=StatRecordList[EraActivityRecord](
+                __root__=[
+                    EraActivityRecord(
+                        year=1999,
+                        listen_count=3,
+                    )
+                ]
+            ),
+            last_updated=received.last_updated
+        ))
+
+        received = db_stats.get(self.user2['id'], 'era_activity', 'all_time', EraActivityRecord)
+        self.assertEqual(received, StatApi[EraActivityRecord](
+            user_id=self.user2['id'],
+            to_ts=10,
+            from_ts=1,
+            stats_range='all_time',
+            data=StatRecordList[EraActivityRecord](
+                __root__=[
+                    EraActivityRecord(
+                        year=2000,
+                        listen_count=3,
+                    ),
+                    EraActivityRecord(
+                        year=2001,
+                        listen_count=5,
+                    ),
+                ]
+            ),
+            last_updated=received.last_updated
+        ))
+
+
+
+    def test_handle_user_artist_evolution_activity(self):
+        data = {
+            'type': 'artist_evolution_activity',
+            'stats_range': 'all_time',
+            'from_ts': 1009843200,
+            'to_ts': 1753749386,
+            'data': [
+                {
+                    'user_id': self.user1['id'],
+                    'data': [
+                        {
+                            'time_unit': 2025,
+                            'artist_mbid': 'f59c5520-5f46-4d2c-b2c4-822eabf53419',
+                            'artist_name': 'Linkin Park',
+                            'listen_count': 17
+                        },
+                        {
+                            'time_unit': 2025,
+                            'artist_mbid': 'd15721d8-56b4-453d-b506-fc915b14cba2',
+                            'artist_name': 'The Black Keys',
+                            'listen_count': 2
+                        },
+                        {
+                            'time_unit': 2025,
+                            'artist_mbid': 'b7ffd2af-418f-4be2-bdd1-22f8b48613da',
+                            'artist_name': 'Nine Inch Nails',
+                            'listen_count': 1
+                        },
+                        {
+                            'time_unit': 2025,
+                            'artist_mbid': '9c9f1380-2516-4fc9-a3e6-f9f61941d090',
+                            'artist_name': 'Muse',
+                            'listen_count': 7
+                        }
+                    ]
+                }
+            ],
+            'database': 'artist_evolution_activity_all_time_20220718'
+        }
+
+        CouchDbDataset.handle_start({"database": "artist_evolution_activity_all_time_20220718"})
+        handle_user_artist_evolution_activity(data)
+
+        received = db_stats.get(self.user1['id'], 'artist_evolution_activity', 'all_time', ArtistEvolutionActivityRecord)
+        self.assertEqual(received, StatApi[ArtistEvolutionActivityRecord](
+            user_id=self.user1['id'],
+            to_ts=1753749386,
+            from_ts=1009843200,
+            stats_range='all_time',
+            data=StatRecordList[ArtistEvolutionActivityRecord](
+                __root__=[
+                    ArtistEvolutionActivityRecord(
+                        time_unit=2025,
+                        artist_mbid='f59c5520-5f46-4d2c-b2c4-822eabf53419',
+                        artist_name='Linkin Park',
+                        listen_count=17,
+                    ),
+                    ArtistEvolutionActivityRecord(
+                        time_unit=2025,
+                        artist_mbid='d15721d8-56b4-453d-b506-fc915b14cba2',
+                        artist_name='The Black Keys',
+                        listen_count=2,
+                    ),
+                    ArtistEvolutionActivityRecord(
+                        time_unit=2025,
+                        artist_mbid='b7ffd2af-418f-4be2-bdd1-22f8b48613da',
+                        artist_name='Nine Inch Nails',
+                        listen_count=1,
+                    ),
+                    ArtistEvolutionActivityRecord(
+                        time_unit=2025,
+                        artist_mbid='9c9f1380-2516-4fc9-a3e6-f9f61941d090',
+                        artist_name='Muse',
+                        listen_count=7,
+                    )
+                ]
+            ),
+            last_updated=received.last_updated
+        ))
+
+
     def test_handle_sitewide_artists(self):
         data = {
             'type': 'sitewide_entity',
@@ -303,27 +563,12 @@ class HandlersTestCase(DatabaseTestCase):
         }
         CouchDbDataset.handle_start({"database": "artists_all_time_20220818"})
         handle_sitewide_entity(data)
-        stats = db_stats.get(
-            db_stats.SITEWIDE_STATS_USER_ID,
-            "artists",
-            "all_time",
-            ArtistRecord
-        )
-        self.assertEqual(stats, StatApi[ArtistRecord](
-            user_id=db_stats.SITEWIDE_STATS_USER_ID,
-            to_ts=10,
-            from_ts=1,
-            count=1,
-            stats_range='all_time',
-            data=StatRecordList[ArtistRecord](__root__=[
-                ArtistRecord(
-                    artist_name='Coldplay',
-                    artist_mbid=None,
-                    listen_count=20,
-                )
-            ]),
-            last_updated=stats.last_updated
-        ))
+        stats = db_stats.get_sitewide_stats("artists","all_time")
+        self.assertEqual(stats["count"], data["count"])
+        self.assertEqual(stats["from_ts"], data["from_ts"])
+        self.assertEqual(stats["to_ts"], data["to_ts"])
+        self.assertEqual(stats["data"], data["data"])
+
 
     @mock.patch('listenbrainz.spark.handlers.db_recommendations_cf_recording.insert_user_recommendation')
     @mock.patch('listenbrainz.spark.handlers.db_user.get')
@@ -351,6 +596,7 @@ class HandlersTestCase(DatabaseTestCase):
             handle_recommendations(data)
 
         mock_db_insert.assert_called_with(
+            mock.ANY,
             1,
             UserRecommendationsJson(
                 top_artist=[
@@ -368,9 +614,9 @@ class HandlersTestCase(DatabaseTestCase):
         )
 
     @mock.patch('listenbrainz.troi.daily_jams.get_followers_of_user')
-    @mock.patch('listenbrainz.troi.daily_jams.generate_playlist')
+    @mock.patch('listenbrainz.troi.daily_jams.RecommendationsToPlaylistPatch')
     @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_cf_recording_recommendations_complete(self, mock_send_mail, mock_gen_playlist, mock_get_followers):
+    def test_cf_recording_recommendations_complete(self, mock_send_mail, mock_recs_patch, mock_get_followers):
         with self.app.app_context():
             active_user_count = 10
             top_artist_user_count = 5
@@ -381,7 +627,7 @@ class HandlersTestCase(DatabaseTestCase):
             self.app.config['TESTING'] = True
             self.app.config["WHITELISTED_AUTH_TOKENS"] = ["fake_token0", "fake_token1"]
 
-            mock_gen_playlist.return_value = "https://listenbrainz.org/playlist/97889d4d-1474-4a9b-925a-851148356f9d/"
+            mock_recs_patch.generate_playlist.return_value = "https://listenbrainz.org/playlist/97889d4d-1474-4a9b-925a-851148356f9d/"
             mock_get_followers.return_value = [{"musicbrainz_id": "lucifer"}]
 
             cf_recording_recommendations_complete({
@@ -393,10 +639,10 @@ class HandlersTestCase(DatabaseTestCase):
             mock_send_mail.assert_not_called()
 
             calls = [
-                call(mock.ANY, {'user_name': 'lucifer', 'upload': True, 'token': 'fake_token1', 'created_for': 'lucifer', 'echo': False, 'type': 'top'}),
-                call(mock.ANY, {'user_name': 'lucifer', 'upload': True, 'token': 'fake_token1', 'created_for': 'lucifer', 'echo': False, 'type': 'similar'}),
+                call({'user_name': 'lucifer', 'upload': True, 'token': 'fake_token1', 'created_for': 'lucifer', 'echo': False, 'type': 'top'}),
+                call({'user_name': 'lucifer', 'upload': True, 'token': 'fake_token1', 'created_for': 'lucifer', 'echo': False, 'type': 'similar'}),
             ]
-            mock_gen_playlist.assert_has_calls(calls)
+            mock_recs_patch.assert_has_calls(calls, any_order=True)
 
             # in prod now, should send it
             self.app.config['TESTING'] = False
@@ -412,7 +658,7 @@ class HandlersTestCase(DatabaseTestCase):
     def test_handle_dump_imported(self, mock_send_mail):
         with self.app.app_context():
             time = datetime.now()
-            dump_name = 'listenbrainz-listens-dump-20200223-000000-spark-full.tar.xz'
+            dump_name = 'listenbrainz-listens-dump-20200223-000000-spark-full.tar.zst'
             errors = ["Could not download dump!"]
 
             # testing, should not send a mail
@@ -438,7 +684,7 @@ class HandlersTestCase(DatabaseTestCase):
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_handle_dataframes(self, mock_send_mail):
         with self.app.app_context():
-            time = datetime.utcnow()
+            time = datetime.now(tz=timezone.utc)
 
             self.app.config['TESTING'] = True
             handle_dataframes({
@@ -463,7 +709,7 @@ class HandlersTestCase(DatabaseTestCase):
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_handle_model(self, mock_send_mail):
         with self.app.app_context():
-            time = datetime.utcnow()
+            time = datetime.now(tz=timezone.utc)
 
             self.app.config['TESTING'] = True
             handle_model({
@@ -484,7 +730,7 @@ class HandlersTestCase(DatabaseTestCase):
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_handle_candidate_sets(self, mock_send_mail):
         with self.app.app_context():
-            time = datetime.utcnow()
+            time = datetime.now(tz=timezone.utc)
 
             self.app.config['TESTING'] = True
             handle_candidate_sets({
@@ -531,31 +777,6 @@ class HandlersTestCase(DatabaseTestCase):
             })
             mock_send_mail.assert_called_once()
 
-    @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_notify_artist_relation_import(self, mock_send_mail):
-        with self.app.app_context():
-            import_time = datetime.now()
-            time_taken_to_import = 11
-            artist_relation_name = 'artist-credit-artist-credit-relations-01-20191230-134806.tar.bz2'
-
-            # testing, should not send a mail
-            self.app.config['TESTING'] = True
-            notify_artist_relation_import({
-                'imported_artist_relation': artist_relation_name,
-                'import_time': str(import_time),
-                'time_taken_to_import': str(time_taken_to_import),
-            })
-            mock_send_mail.assert_not_called()
-
-            # in prod now, should send it
-            self.app.config['TESTING'] = False
-            notify_artist_relation_import({
-                'imported_artist_relation': artist_relation_name,
-                'import_time': str(import_time),
-                'time_taken_to_import': str(time_taken_to_import),
-            })
-            mock_send_mail.assert_called_once()
-
     @mock.patch('listenbrainz.spark.handlers.db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data')
     @mock.patch('listenbrainz.spark.handlers.db_user.get')
     def test_handle_missing_musicbrainz_data(self, mock_get, mock_db_insert):
@@ -580,6 +801,7 @@ class HandlersTestCase(DatabaseTestCase):
             handle_missing_musicbrainz_data(data)
 
         mock_db_insert.assert_called_with(
+            mock.ANY,
             1,
             UserMissingMusicBrainzDataJson(
                 missing_musicbrainz_data=[UserMissingMusicBrainzDataRecord(

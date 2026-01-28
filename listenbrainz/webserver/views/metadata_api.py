@@ -1,27 +1,34 @@
 from brainzutils.ratelimit import ratelimit
-from flask import Blueprint, request, jsonify,current_app
+from datasethoster import RequestSource
+from flask import Blueprint, request, jsonify, current_app
 
 from listenbrainz.db.mbid_manual_mapping import create_mbid_manual_mapping, get_mbid_manual_mapping
 from listenbrainz.db.metadata import get_metadata_for_recording, get_metadata_for_artist, get_metadata_for_release_group
-from listenbrainz.db.model.metadata import ReleaseGroupMetadata
 from listenbrainz.db.model.mbid_manual_mapping import MbidManualMapping
-from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery
+from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery, \
+    ArtistCreditRecordingLookupInput
 from listenbrainz.labs_api.labs.api.artist_credit_recording_release_lookup import \
-    ArtistCreditRecordingReleaseLookupQuery
+    ArtistCreditRecordingReleaseLookupQuery, ArtistCreditRecordingReleaseLookupInput
+from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery, MBIDMappingInput
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MBIDMapper
-from listenbrainz.mbid_mapping_writer.mbid_mapper_metadata_api import MBIDMapperMetadataAPI
+from listenbrainz.webserver import ts_conn
+from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.utils import parse_boolean_arg
-from listenbrainz.webserver.views.api_tools import is_valid_uuid, validate_auth_header
+from listenbrainz.webserver.views.api_tools import is_valid_uuid, validate_auth_header, MAX_ITEMS_PER_GET
 
 metadata_bp = Blueprint('metadata', __name__)
 
+#: The maximum length of the query permitted for a mapping search
+MAX_MAPPING_QUERY_LENGTH = 250
+#: The maximum number of lookups permitted in a bulk POST query
+MAX_LOOKUPS_PER_POST = 50
 
-def parse_incs():
+
+def parse_incs(incs):
     allowed_incs = ("artist", "tag", "release", "recording", "release_group")
 
-    incs = request.args.get("inc")
     if not incs:
         return []
     incs = incs.split()
@@ -33,7 +40,7 @@ def parse_incs():
 
 
 def fetch_metadata(recording_mbids, incs):
-    metadata = get_metadata_for_recording(recording_mbids)
+    metadata = get_metadata_for_recording(ts_conn, recording_mbids)
     result = {}
     for entry in metadata:
         data = {"recording": entry.recording_data}
@@ -52,7 +59,7 @@ def fetch_metadata(recording_mbids, incs):
 
 
 def fetch_release_group_metadata(release_group_mbids, incs):
-    metadata = get_metadata_for_release_group(release_group_mbids)
+    metadata = get_metadata_for_release_group(ts_conn, release_group_mbids)
     result = {}
     for entry in metadata:
         data = {"release_group": entry.release_group_data}
@@ -75,7 +82,7 @@ def fetch_release_group_metadata(release_group_mbids, incs):
     return result
 
 
-@metadata_bp.route("/recording/", methods=["GET", "OPTIONS"])
+@metadata_bp.get("/recording/")
 @crossdomain
 @ratelimit()
 def metadata_recording():
@@ -99,7 +106,7 @@ def metadata_recording():
     :statuscode 200: you have data!
     :statuscode 400: invalid recording_mbid arguments
     """
-    incs = parse_incs()
+    incs = parse_incs(request.args.get("inc"))
 
     recordings = request.args.get("recording_mbids", default=None)
     if recordings is None:
@@ -118,7 +125,61 @@ def metadata_recording():
     return jsonify(result)
 
 
-@metadata_bp.route("/release_group/", methods=["GET", "OPTIONS"])
+@metadata_bp.post("/recording/")
+@crossdomain
+@ratelimit()
+def metadata_recording_post():
+    """
+    This endpoint is the POST verson for fetching recording metadata, since it allows up to the
+    max number of items allowed. (:data:`~webserver.views.api.MAX_ITEMS_PER_GET` items)
+
+    A JSON document with a list of recording_mbids and inc string must be POSTed
+    to this endpoint to returns an array of dicts that contain
+    recording metadata suitable for showing in a context that requires as much detail about
+    a recording and the artist. Using the inc parameter, you can control which portions of metadata
+    to fetch.
+
+
+    .. code-block:: json
+
+       {
+            "recording_mbids": [ "25d47b0c-5177-49db-b740-c166e4acebd1", "..." ],
+            "inc": "artist tag"
+       }
+
+    To see what data this endpoint returns, please look at the data above for the GET version.
+
+    :statuscode 200: you have data!
+    :statuscode 400: invalid recording_mbid arguments
+    """
+    data = request.json
+
+    try:
+        incs = parse_incs(data["inc"])
+    except KeyError:
+        incs = []
+
+    try:
+        recording_mbids = data["recording_mbids"]
+    except KeyError:
+        raise APIBadRequest(
+            "recording_mbids JSON element must be present and contain a list of recording_mbids")
+
+    for mbid in recording_mbids:
+        if not is_valid_uuid(mbid):
+            raise APIBadRequest(f"recording_mbid {mbid} is not valid.")
+
+    if len(recording_mbids) == 0:
+        raise APIBadRequest("At least one valid recording_mbid must be present.")
+
+    if len(recording_mbids) > MAX_ITEMS_PER_GET:
+        raise APIBadRequest("Maximum number of recordings_mbids that can be fetched at once is %s" % MAX_ITEMS_PER_GET)
+
+    result = fetch_metadata(recording_mbids, incs)
+    return jsonify(result)
+
+
+@metadata_bp.get("/release_group/")
 @crossdomain
 @ratelimit()
 def metadata_release_group():
@@ -142,7 +203,7 @@ def metadata_release_group():
     :statuscode 200: you have data!
     :statuscode 400: invalid release_group_mbid arguments
     """
-    incs = parse_incs()
+    incs = parse_incs(request.args.get("inc"))
 
     release_groups = request.args.get("release_group_mbids", default=None)
     if release_groups is None:
@@ -162,11 +223,11 @@ def metadata_release_group():
 
 
 def process_results(match, metadata, incs):
-    recording_mbid = match["recording_mbid"]
+    recording_mbid = str(match["recording_mbid"])
     result = {
         "recording_mbid": recording_mbid,
-        "release_mbid": match["release_mbid"],
-        "artist_mbids": match["artist_mbids"],
+        "release_mbid": str(match["release_mbid"]),
+        "artist_mbids": [str(artist_mbid) for artist_mbid in match["artist_mbids"]],
         "recording_name": match["recording_name"],
         "release_name": match["release_name"],
         "artist_credit_name": match["artist_credit_name"]
@@ -177,17 +238,27 @@ def process_results(match, metadata, incs):
     return result
 
 
-@metadata_bp.route("/lookup/", methods=["GET", "OPTIONS"])
+@metadata_bp.get("/lookup/")
 @crossdomain
 @ratelimit()
 def get_mbid_mapping():
     """
-    This endpoint looks up mbid metadata for the given artist and recording name.
+    This endpoint looks up mbid metadata for the given artist, recording and optionally a release name.
+    The total number of characters in the artist name, recording name and release name query arguments should be
+    less than or equal to :data:`~webserver.views.metadata_api.MAX_MAPPING_QUERY_LENGTH`.
 
+    The data returned by this endpoint can be seen here:
+
+    .. literalinclude:: ../../../listenbrainz/testdata/mb_lookup_metadata_example.json
+       :language: json
+
+    :reqheader Authorization: Token <user token>
     :param artist_name: artist name of the listen
     :type artist_name: ``str``
     :param recording_name: track name of the listen
-    :type artist_name: ``str``
+    :type recording_name: ``str``
+    :param release_name: release name of the listen
+    :type release_name: ``str``
     :param metadata: should extra metadata be also returned if a match is found,
                      see /metadata/recording for details.
     :type metadata: ``bool``
@@ -195,7 +266,13 @@ def get_mbid_mapping():
     :type inc: ``str``
     :statuscode 200: lookup succeeded, does not indicate whether a match was found or not
     :statuscode 400: invalid arguments
+    
+    Note: Because of possible abuse by AI scrapers, this endpoint now requires an auth token.
     """
+
+    # Require a valid auth header for this endpoint
+    _ = validate_auth_header()
+
     artist_name = request.args.get("artist_name")
     recording_name = request.args.get("recording_name")
     release_name = request.args.get("release_name")
@@ -203,31 +280,34 @@ def get_mbid_mapping():
         raise APIBadRequest("artist_name is invalid or not present in arguments")
     if not recording_name:
         raise APIBadRequest("recording_name is invalid or not present in arguments")
+    if len(artist_name) + len(recording_name) + len(release_name or "") > MAX_MAPPING_QUERY_LENGTH:
+        raise APIBadRequest(f"total number of characters in artist_name, recording_name and release_name"
+                            f" arguments must be less than {MAX_MAPPING_QUERY_LENGTH}")
 
     metadata = parse_boolean_arg("metadata")
-    incs = parse_incs() if metadata else []
+    incs = parse_incs(request.args.get("inc")) if metadata else []
 
     params = [
-        {
-            "[artist_credit_name]": artist_name,
-            "[recording_name]": recording_name,
-            "[release_name]": release_name
-        }
+        ArtistCreditRecordingReleaseLookupInput(
+            artist_credit_name=artist_name,
+            recording_name=recording_name,
+            release_name=release_name or "",
+        )
     ]
 
     try:
         if release_name:
             q = ArtistCreditRecordingReleaseLookupQuery(debug=False)
-            exact_results = q.fetch(params)
+            exact_results = q.fetch(params, RequestSource.json_post)
             if exact_results:
-                return process_results(exact_results[0], metadata, incs)
+                return process_results(exact_results[0].dict(), metadata, incs)
 
         q = ArtistCreditRecordingLookupQuery(debug=False)
-        exact_results = q.fetch(params)
+        exact_results = q.fetch(params, RequestSource.json_post)
         if exact_results:
-            return process_results(exact_results[0], metadata, incs)
+            return process_results(exact_results[0].dict(), metadata, incs)
 
-        q = MBIDMapper(timeout=10, remove_stop_words=True, debug=False)
+        q = MBIDMapper(timeout=10, remove_stop_words=True, debug=False, retry_on_timeout=False)
         fuzzy_result = q.search(artist_name, recording_name, release_name)
         if fuzzy_result:
             return process_results(fuzzy_result, metadata, incs)
@@ -239,7 +319,152 @@ def get_mbid_mapping():
     return jsonify({})
 
 
-@metadata_bp.route("/submit_manual_mapping/", methods=["POST", "OPTIONS"])
+def make_acrr_input(recording):
+    """ Create input for ArtistCreditRecordingReleaseLookup labs api query """
+    if "release_name" in recording:
+        return ArtistCreditRecordingReleaseLookupInput(
+            artist_credit_name=recording["artist_name"],
+            recording_name=recording["recording_name"],
+            release_name=recording["release_name"],
+        )
+    else:
+        return None
+
+
+def make_acr_input(recording):
+    """ Create input for ArtistCreditRecordingLookup labs api query """
+    return ArtistCreditRecordingLookupInput(
+        artist_credit_name=recording["artist_name"],
+        recording_name=recording["recording_name"],
+    )
+
+
+def make_mapping_input(recording):
+    """ Create input for MBIDMapper labs api query """
+    return MBIDMappingInput(
+        artist_credit_name=recording["artist_name"],
+        recording_name=recording["recording_name"],
+    )
+
+
+def process_bulk_lookup_results(all_results, all_params, query, make_input):
+    """ Lookup recordings using the specified query and update successful lookups in all results"""
+    query_params = []
+    reverse_index = {}
+    param_idx = 0
+
+    for original_idx, recording in all_params.items():
+        param = make_input(recording)
+        if param is None:
+            continue
+        query_params.append(param)
+        reverse_index[param_idx] = original_idx
+        param_idx += 1
+
+    if not query_params:
+        return all_results, all_params
+
+    query_results = query.fetch(query_params, RequestSource.json_post)
+
+    for query_result in query_results:
+        original_idx = reverse_index[query_result.index]
+        original_result = all_results[original_idx]
+
+        result_dict = query_result.dict(exclude={"index", "artist_credit_arg", "recording_name_arg", "release_name_arg"})
+        original_result.update(**result_dict)
+        all_params.pop(original_idx)
+
+    return all_results, all_params
+
+
+@metadata_bp.post("/lookup/")
+@crossdomain
+@ratelimit()
+def get_mbid_mapping_post():
+    """
+    This endpoint is the POST version for looking up recording mbids and associated MusicBrainz data. It allows up to
+    max number of items allowed. (:data:`~webserver.views.api.MAX_LOOKUPS_PER_POST` items)
+
+    A JSON document with a list of dicts each of which contain metadata (artist_name, recording_name and optionally
+    a release name) for the recording to be looked up. The total number of characters in the artist name, recording name
+    and release name for each recording should be less than or equal to :data:`~webserver.views.metadata_api.MAX_MAPPING_QUERY_LENGTH`.
+
+    .. code:: json
+
+        {
+          "recordings": [
+            {
+              "recording_name": "Never Gonna Give You Up",
+              "artist_name": "Rick Astley",
+              "release_name": "Red Hot"
+            },
+            {
+              "recording_name": "Blinding Lights",
+              "artist_name": "The Weeknd"
+            }
+          ]
+        }
+
+    To see what data this endpoint returns, please look at the data above for the GET version. Note that this endpoint
+    does not support metadata and incs parameters.
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: lookup succeeded, does not indicate whether a match was found or not
+    :statuscode 400: invalid arguments
+
+    Note: Because of possible abuse by AI scrapers, this endpoint now requires an auth token.
+    """
+
+    # Require a valid auth header for this endpoint
+    _ = validate_auth_header()
+
+    data = request.json
+    recordings = data.get("recordings", [])
+    if not recordings:
+        raise APIBadRequest("recordings is invalid or not present in body")
+
+    if len(recordings) > MAX_LOOKUPS_PER_POST:
+        raise APIBadRequest(f"Number of recordings in request body exceeds maximum permitted. ({MAX_LOOKUPS_PER_POST})")
+
+    all_params = {}
+    all_results = []
+    for idx, recording in enumerate(recordings):
+        artist_name = recording.get("artist_name")
+        recording_name = recording.get("recording_name")
+        release_name = recording.get("release_name")
+        if not artist_name:
+            raise APIBadRequest(f"Recording {idx} artist_name is invalid or not present")
+        if not recording_name:
+            raise APIBadRequest(f"Recording {idx} recording_name is invalid or not present")
+        if len(artist_name) + len(recording_name) + len(release_name or "") > MAX_MAPPING_QUERY_LENGTH:
+            raise APIBadRequest(f"Recording {idx} total number of characters in artist_name, recording_name and"
+                                f" release_name arguments must be less than {MAX_MAPPING_QUERY_LENGTH}")
+
+        all_params[idx] = recording
+        all_results.append({
+            "artist_name_arg": artist_name,
+            "recording_name_arg": recording_name,
+            "release_name_arg": release_name,
+            "index": idx
+        })
+
+    try:
+        acrr_query = ArtistCreditRecordingReleaseLookupQuery(debug=False)
+        all_results, all_params = process_bulk_lookup_results(all_results, all_params, acrr_query, make_acrr_input)
+
+        acr_query = ArtistCreditRecordingLookupQuery(debug=False)
+        all_results, all_params = process_bulk_lookup_results(all_results, all_params, acr_query, make_acr_input)
+
+        mapping_query = MBIDMappingQuery(timeout=10, remove_stop_words=True, debug=False)
+        all_results, _ = process_bulk_lookup_results(all_results, all_params, mapping_query, make_mapping_input)
+
+        return jsonify(all_results)
+    except Exception as e:
+        current_app.logger.error("Server failed to lookup recording: {}".format(e), exc_info=True)
+        raise APIInternalServerError("Server failed to lookup recording")
+
+
+@metadata_bp.post("/submit_manual_mapping/")
 @crossdomain
 @ratelimit()
 def submit_manual_mapping():
@@ -277,12 +502,14 @@ def submit_manual_mapping():
         user_id=user["id"]
     )
 
-    create_mbid_manual_mapping(mapping)
+    create_mbid_manual_mapping(ts_conn, mapping)
+
+    invalidate_user_listen_caches(user["id"])
 
     return jsonify({"status": "ok"})
 
 
-@metadata_bp.route("/get_manual_mapping/", methods=["GET", "OPTIONS"])
+@metadata_bp.get("/get_manual_mapping/")
 @crossdomain
 @ratelimit()
 def get_manual_mapping():
@@ -301,7 +528,7 @@ def get_manual_mapping():
     if not recording_msid or not is_valid_uuid(recording_msid):
         raise APIBadRequest("recording_msid is invalid or not present in arguments")
 
-    existing_mapping = get_mbid_manual_mapping(recording_msid=recording_msid, user_id=user["id"])
+    existing_mapping = get_mbid_manual_mapping(ts_conn, recording_msid=recording_msid, user_id=user["id"])
 
     if existing_mapping:
         return jsonify({
@@ -312,7 +539,7 @@ def get_manual_mapping():
         return jsonify({"status": "none"}), 404
 
 
-@metadata_bp.route("/artist/", methods=["GET", "OPTIONS"])
+@metadata_bp.get("/artist/")
 @crossdomain
 @ratelimit()
 def metadata_artist():
@@ -324,7 +551,7 @@ def metadata_artist():
 
     The data returned by this endpoint can be seen here:
 
-    .. literalinclude:: ../../../listenbrainz/testdata/mb_metadata_cache_example.json
+    .. literalinclude:: ../../../listenbrainz/testdata/mb_artist_metadata_example.json
        :language: json
 
     :param artist_mbids: A comma separated list of recording_mbids
@@ -336,7 +563,7 @@ def metadata_artist():
     :statuscode 200: you have data!
     :statuscode 400: invalid recording_mbid arguments
     """
-    incs = parse_incs()
+    incs = parse_incs(request.args.get("inc"))
 
     artists = request.args.get("artist_mbids", default=None)
     if artists is None:
@@ -352,7 +579,7 @@ def metadata_artist():
         artist_mbids.append(mbid_clean)
 
     results = []
-    for row in get_metadata_for_artist(artist_mbids):
+    for row in get_metadata_for_artist(ts_conn, artist_mbids):
         item = {"artist_mbid": row.artist_mbid}
         item.update(**row.artist_data)
         if "tag" in incs:

@@ -1,11 +1,10 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
-import { createRoot } from "react-dom/client";
 import * as React from "react";
 import { useContext } from "react";
-import { getPageProps } from "../utils/utils";
 
-import ErrorBoundary from "../utils/ErrorBoundary";
+import { Link } from "react-router";
+import { Helmet } from "react-helmet";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 type ExploreCardProps = {
@@ -20,9 +19,9 @@ function ExploreCard(props: ExploreCardProps) {
   return (
     <div className="explore-card-container">
       <div className="explore-card">
-        <a href={url}>
+        <Link to={url}>
           <div className="explore-card-img-overlay"> </div>
-        </a>
+        </Link>
         <div className="explore-card-img-clip flex-center">
           <img
             src={`/static/img/explore/${img_name}`}
@@ -32,7 +31,7 @@ function ExploreCard(props: ExploreCardProps) {
         </div>
         <div className="explore-card-text">
           <div className="explore-card-text-name">
-            <a href={url}>{name}</a>
+            <Link to={url}>{name}</Link>
           </div>
           <div>{desc}</div>
         </div>
@@ -41,73 +40,62 @@ function ExploreCard(props: ExploreCardProps) {
   );
 }
 
-function ExplorePage() {
+export default function ExplorePage() {
   const { currentUser } = useContext(GlobalAppContext);
   return (
-    <>
+    <div role="main">
+      <Helmet>
+        <title>Explore</title>
+      </Helmet>
       <div className="row">
-        <div>
-          <ExploreCard
-            name="Fresh Releases"
-            desc="Discover"
-            img_name="fresh-releases.jpg"
-            url="/explore/fresh-releases"
-          />
-        </div>
-        <div>
-          <ExploreCard
-            name="Hue Sound"
-            desc="Discover"
-            img_name="huesound.jpg"
-            url="/explore/huesound"
-          />
-        </div>
-        <div>
-          <ExploreCard
-            name="Cover Art Collage"
-            desc="Discover"
-            img_name="cover-art-collage.jpg"
-            url="/explore/cover-art-collage"
-          />
-        </div>
-        <div>
-          <ExploreCard
-            name="Top Similar Users"
-            desc="Social"
-            img_name="similar-users.jpg"
-            url="/explore/similar-users"
-          />
-        </div>
-        {currentUser?.name && (
-          <div>
-            <ExploreCard
-              name="Your Year in Music 2023"
-              desc="Review"
-              img_name="year-in-music-2023.jpg"
-              url={`/user/${currentUser.name}/year-in-music/2023`}
-            />
-          </div>
-        )}
-        {currentUser?.name && (
-          <div>
-            <ExploreCard
-              name="Your Year in Music 2022"
-              desc="Review"
-              img_name="year-in-music-2022.jpg"
-              url={`/user/${currentUser.name}/year-in-music/2022`}
-            />
-          </div>
-        )}
-        {currentUser?.name && (
-          <div>
-            <ExploreCard
-              name="Your Year in Music 2021"
-              desc="Review"
-              img_name="year-in-music-2021.jpg"
-              url={`/user/${currentUser.name}/year-in-music/2021`}
-            />
-          </div>
-        )}
+        <ExploreCard
+          name="Art Creator"
+          desc="Share your album grids and other stats art"
+          img_name="art-creator.jpg"
+          url="/explore/art-creator/"
+        />
+        <ExploreCard
+          name="Fresh Releases"
+          desc="Discover"
+          img_name="fresh-releases.jpg"
+          url="/explore/fresh-releases/"
+        />
+        <ExploreCard
+          name="Year in Music"
+          desc="Yearly breakdown of your listening habits"
+          img_name="year-in-music.png"
+          url="/my/year-in-music/"
+        />
+        <ExploreCard
+          name="Link listens"
+          desc="Fix your unlinked listens"
+          img_name="link-listens.jpg"
+          url="/settings/link-listens/"
+        />
+        <ExploreCard
+          name="Hue Sound"
+          desc="Discover"
+          img_name="huesound.jpg"
+          url="/explore/huesound/"
+        />
+        <ExploreCard
+          name="Cover Art Collage"
+          desc="Discover"
+          img_name="cover-art-collage.jpg"
+          url="/explore/cover-art-collage/"
+        />
+        <ExploreCard
+          name="Music Neighborhood"
+          desc="Visualisation"
+          img_name="music-neighborhood.jpg"
+          url="/explore/music-neighborhood/"
+        />
+        <ExploreCard
+          name="Top Similar Users"
+          desc="Social"
+          img_name="similar-users.jpg"
+          url="/explore/similar-users/"
+        />
       </div>
       <div className="explore-page-divider">
         <h3>Beta</h3>
@@ -118,28 +106,53 @@ function ExplorePage() {
           name="ListenBrainz Radio"
           desc="Instant custom playlists"
           img_name="lb-radio-beta.jpg"
-          url="/explore/lb-radio"
-        />
-        <ExploreCard
-          name="Stats art generator"
-          desc="Visualize and share your stats"
-          img_name="stats-art-beta.jpg"
-          url="/explore/art-creator"
+          url="/explore/lb-radio/"
         />
       </div>
-    </>
+      {currentUser?.name && (
+        <>
+          <div className="explore-page-divider">
+            <h3>Archived</h3>
+            <hr />
+          </div>
+          <div className="row">
+            <ExploreCard
+              name="Your Year in Music 2024"
+              desc="Archival version of Year In Music 2024"
+              img_name="year-in-music-2024.png"
+              url={`/user/${encodeURIComponent(
+                currentUser.name
+              )}/year-in-music/legacy/2024/`}
+            />
+
+            <ExploreCard
+              name="Your Year in Music 2023"
+              desc="Archival version of Year In Music 2023"
+              img_name="year-in-music-2023.jpg"
+              url={`/user/${encodeURIComponent(
+                currentUser.name
+              )}/year-in-music/legacy/2023/`}
+            />
+
+            <ExploreCard
+              name="Your Year in Music 2022"
+              desc="Archival version of Year In Music 2022"
+              img_name="year-in-music-2022.jpg"
+              url={`/user/${encodeURIComponent(
+                currentUser.name
+              )}/year-in-music/legacy/2022/`}
+            />
+            <ExploreCard
+              name="Your Year in Music 2021"
+              desc="Archival version of Year In Music 2021"
+              img_name="year-in-music-2021.jpg"
+              url={`/user/${encodeURIComponent(
+                currentUser.name
+              )}/year-in-music/legacy/2021/`}
+            />
+          </div>
+        </>
+      )}
+    </div>
   );
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const { domContainer, globalAppContext } = await getPageProps();
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <ExplorePage />
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

@@ -1,9 +1,0 @@
-{% extends 'user/base.html' %}
-{%- block title -%}
-   Playlist - ListenBrainz
-{%- endblock-%}
-
-{% block scripts %}
-  {{ super() }}
-  <script src="{{ get_static_path('playlist.js') }}" type="text/javascript"></script>
-{% endblock %}
