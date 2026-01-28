@@ -944,6 +944,48 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(metadata["success_count"], 0)
         self.assertEqual(metadata["status"], "completed")
 
+    def test_import_youtube(self):
+        data = {
+            "service": "youtubemusic",
+            "file": open(self.path_to_data_file("youtubemusic.json"), "rb")
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert200(response)
+        import_id = response.json["import_id"]
+
+        url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
+        response = self.wait_for_query_to_have_items(url, num_items=1, attempts=20)
+        listens = response.json["payload"]["listens"]
+        self.assertEqual(len(listens), 1)
+
+        listen = listens[0]
+        self.assertEqual(listen["listened_at"], 1639818816)
+        track_metadata = listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "Rage Against the Machine")
+        self.assertEqual(track_metadata["track_name"], "Killing In the Name")
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "YouTube Music History Importer")
+        self.assertEqual(additional_info["music_service"], "music.youtube.com")
+        self.assertEqual(additional_info["youtube_id"], "2o9aoL0NWpw")
+        self.assertEqual(additional_info["origin_url"], "https://www.youtube.com/watch?v=2o9aoL0NWpw")
+
+        response = self.client.get(
+            self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+        )
+        self.assert200(response)
+        metadata = response.json["metadata"]
+        self.assertIn("attempted_count", metadata)
+        self.assertIn("success_count", metadata)
+        self.assertEqual(metadata["attempted_count"], 1)
+        self.assertEqual(metadata["success_count"], 1)
+
+
     def test_import_with_partial_validation_failures(self):
         data = {
             "service": "listenbrainz",
