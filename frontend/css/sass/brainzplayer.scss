@@ -20,9 +20,11 @@ $youtube-resize-transition: height 0.25s ease-out;
   bottom: 0;
   right: 0;
   width: calc(100% - $sidenav-width);
+
   @media (max-width: $offscreen-sidenav-breakpoint) {
     width: 100%;
   }
+
   height: $brainzplayer-height;
   background: $white-background;
   display: flex;
@@ -39,11 +41,13 @@ $youtube-resize-transition: height 0.25s ease-out;
   .content {
     display: flex;
     overflow: hidden;
+
     .cover-art {
       min-width: $brainzplayer-height;
       height: 100%;
       flex: 0;
       margin-right: 1em;
+
       // Show big preview of the cover art when hovering over it
       @media (min-width: $offscreen-sidenav-breakpoint) {
         &:hover
@@ -84,6 +88,7 @@ $youtube-resize-transition: height 0.25s ease-out;
 
         &.reduced {
           height: $youtube-button-size;
+
           .youtube-player {
             height: 0;
           }
@@ -95,6 +100,7 @@ $youtube-resize-transition: height 0.25s ease-out;
           border-top-right-radius: 0; // intersection with the square drag handle
           overflow: hidden;
           transition: $youtube-resize-transition;
+
           > * {
             height: inherit;
           }
@@ -106,12 +112,15 @@ $youtube-resize-transition: height 0.25s ease-out;
           display: inline-block;
           background: color.change($black, $alpha: 50%);
           color: $white;
+
           + .youtube-button {
             margin-left: 0.5em;
           }
         }
+
         .youtube-drag-handle {
           cursor: grab;
+
           &:active {
             cursor: grabbing;
           }
@@ -131,12 +140,15 @@ $youtube-resize-transition: height 0.25s ease-out;
     .play {
       padding: 0 0.7em;
     }
+
     > * {
       transition: all 0.5s ease;
       background: none;
+
       &:hover {
         color: color.adjust($primary-color, $lightness: -10%);
       }
+
       &.disabled {
         color: $gray-600;
         pointer-events: none;
@@ -177,6 +189,7 @@ $youtube-resize-transition: height 0.25s ease-out;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
     .ellipsis-2-lines {
       display: -webkit-box;
       line-clamp: 2;
@@ -209,16 +222,20 @@ $youtube-resize-transition: height 0.25s ease-out;
       max-width: 1em;
       cursor: pointer;
       color: $gray-600;
+
       &:hover {
         color: #46433a;
       }
+
       &.disabled {
         pointer-events: none;
         stroke: $gray-300 !important;
         color: $gray-300 !important;
       }
+
       &.music-service-icon {
         max-width: 1.5em;
+
         > svg {
           // Youtube forces us to follow their branding guidelines to the letter,
           // so we need to force a minimum height of 20px for the icon path inside the svg
@@ -239,6 +256,7 @@ $youtube-resize-transition: height 0.25s ease-out;
       &:hover {
         stroke: $love;
       }
+
       &.loved {
         stroke: transparent;
         color: $love;
@@ -249,6 +267,7 @@ $youtube-resize-transition: height 0.25s ease-out;
       &:hover {
         stroke: $hate;
       }
+
       &.hated {
         stroke: transparent;
         color: $hate;
@@ -279,18 +298,23 @@ $youtube-resize-transition: height 0.25s ease-out;
     .content .cover-art {
       margin-right: 0.5em;
     }
+
     .controls {
       margin-left: 2em;
+
       .play {
         padding: initial;
       }
     }
+
     &.playing {
       .controls {
         margin-left: 0;
       }
+
       .actions {
         flex: 0;
+
         > .music-service-icon {
           max-width: 1em;
         }
@@ -306,6 +330,7 @@ $youtube-resize-transition: height 0.25s ease-out;
   &.open {
     display: block;
   }
+
   display: none;
   position: absolute;
   min-width: 140px;
@@ -366,6 +391,7 @@ $youtube-resize-transition: height 0.25s ease-out;
     background-color: $primary-color;
     border-right: 2px solid $dark-turquoise;
   }
+
   &:hover {
     height: $progress-bar-hover-height;
     top: -$progress-bar-hover-height;
@@ -377,10 +403,12 @@ $youtube-resize-transition: height 0.25s ease-out;
     border-radius: 24px;
     font-size: 1.2rem;
     padding: 6px 12px;
+
     &::before {
       display: none;
     }
   }
+
   & > ::after {
     border-color: transparent;
   }
@@ -395,20 +423,24 @@ $youtube-resize-transition: height 0.25s ease-out;
   transition: bottom 0.5s ease-in-out;
   border-top: 1px solid #ccc;
   box-shadow: -6px -1px 10px rgba(0, 0, 0, 0.2);
+
   .volume-input {
     width: 3.5em;
     writing-mode: vertical-rl;
     direction: rtl;
     margin: 1.5em 0.6em;
   }
+
   &.show {
     bottom: $brainzplayer-height;
   }
+
   @media (max-width: map.get($grid-breakpoints, "sm")) {
     right: -6em;
     bottom: 6.5em;
     z-index: 112;
     transition-property: right;
+
     &.show {
       bottom: 6.5em;
       right: 1.5em;
@@ -435,6 +467,7 @@ $youtube-resize-transition: height 0.25s ease-out;
 
   &.show {
     bottom: $brainzplayer-height;
+
     &.mobile {
       bottom: 0;
     }
@@ -460,6 +493,7 @@ $youtube-resize-transition: height 0.25s ease-out;
       font-size: 1.6em;
     }
   }
+
   .queue-item {
     display: flex;
     justify-content: space-between;
@@ -488,12 +522,14 @@ $youtube-resize-transition: height 0.25s ease-out;
       padding-left: 0;
     }
   }
+
   .queue-buttons {
     display: flex;
     justify-content: end;
     align-items: center;
     gap: 1em;
   }
+
   // Negative top margin to remove gap with buttons above
   .queue-buttons + .queue-headers {
     margin-top: -30px;
@@ -523,6 +559,7 @@ $youtube-resize-transition: height 0.25s ease-out;
 
   &.open {
     bottom: 0;
+
     + .queue {
       // When the music player is open, bring queu on top of it
       z-index: 112;
@@ -596,6 +633,7 @@ $youtube-resize-transition: height 0.25s ease-out;
     &:hover {
       stroke: $love;
     }
+
     &.loved {
       color: $love;
       fill-opacity: 1;
@@ -606,6 +644,7 @@ $youtube-resize-transition: height 0.25s ease-out;
     &:hover {
       stroke: $hate;
     }
+
     &.hated {
       color: $hate;
       fill-opacity: 1;
@@ -637,6 +676,7 @@ $youtube-resize-transition: height 0.25s ease-out;
     .play svg {
       font-size: 4.25em !important;
     }
+
     &.secondary {
       margin-top: 1.2em;
     }
@@ -644,6 +684,7 @@ $youtube-resize-transition: height 0.25s ease-out;
 
   .progress-bar-wrapper {
     margin-top: 1em;
+
     .progress {
       position: inherit;
       height: 10px;
@@ -654,15 +695,18 @@ $youtube-resize-transition: height 0.25s ease-out;
         background-color: var(--music-player-accent-color);
       }
     }
+
     .progress-numbers {
       margin-top: 0.5em;
       display: flex;
       justify-content: space-between;
+
       .divider {
         display: none;
       }
     }
   }
+
   .dropup-content {
     top: 45px;
     bottom: unset;
@@ -675,6 +719,7 @@ $youtube-resize-transition: height 0.25s ease-out;
     transform: translateX(0%);
     left: 0%;
   }
+
   80%,
   100% {
     transform: translateX(-100%);
@@ -690,6 +735,7 @@ $alert-thumbnail-size: 60px;
   align-items: center;
   justify-content: center;
 }
+
 .alert-thumbnail {
   max-height: $alert-thumbnail-size;
   margin: -$alert-padding-x;
@@ -700,6 +746,14 @@ $alert-thumbnail-size: 60px;
 .Toastify__toast-container--bottom-left,
 .Toastify__toast-container--bottom-right {
   bottom: calc(1em + $brainzplayer-height);
+}
+
+// Adding this css so that toasts appear above the yt player when player is visible.
+body.youtube-player-visible .Toastify__toast-container--bottom-right {
+  bottom: calc(1em + 298px);
+  // 1em + $brainzplayer-height + $youtube-player-height + $youtube-button-size + 8px
+
+  // This calculates to: 1em + 60px + 200px + 30px + 8px(for the border)
 }
 
 // Custom styling for Funkwhale icon
