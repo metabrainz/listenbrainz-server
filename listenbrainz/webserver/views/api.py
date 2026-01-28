@@ -27,6 +27,7 @@ from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400
     is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, \
     LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
     get_non_negative_param, _parse_int_arg, _validate_get_listens_endpoint_params
+from listenbrainz.messybrainz import submit_recording
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -66,6 +67,8 @@ def submit_listen():
 
     For complete details on the format of the JSON to be POSTed to this endpoint, see :ref:`json-doc`.
 
+    :param return_msid: If set to true and the listen_type is 'playing_now', the response will include a recording_msid
+        (to be used for submitting love/hate feedback). Defaults to false.
     :reqheader Authorization: Token <user token>
     :reqheader Content-Type: *application/json*
     :statuscode 200: listen(s) accepted.
@@ -131,10 +134,31 @@ def submit_listen():
         validated_payload = [validate_listen(listen, listen_type) for listen in payload]
     except ListenValidationError as err:
         raise APIBadRequest(err.message, err.payload)
+    
+    msid = None
+    if listen_type == LISTEN_TYPE_PLAYING_NOW and request.args.get('return_msid', False):
+        listen = validated_payload[0]
+        track_metadata = listen.get("track_metadata", {})
+        duration = track_metadata.get('duration') or (
+            track_metadata.get('duration_ms') or 0) / 1000 or None
+        additional_info = track_metadata.get("additional_info", {})
+        track_number = additional_info.get('tracknumber')
+
+        msid = submit_recording(connection=ts_conn,
+                        recording=track_metadata.get('track_name'),
+                        artist=track_metadata.get('artist_name'),
+                        release=track_metadata.get('release_name'),
+                        track_number=track_number,
+                        duration=duration)
+        if msid:
+            additional_info.update({"recording_msid": msid})
 
     user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
     insert_payload(validated_payload, user_metadata, listen_type)
 
+    if msid:
+        return jsonify({'status': 'ok', 'recording_msid': msid})
+    
     return jsonify({'status': 'ok'})
 
 
