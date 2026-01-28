@@ -10,6 +10,8 @@ import {
   faPlayCircle,
   faSlash,
   faVolumeUp,
+  faVolumeDown,
+  faVolumeOff,
   faVolumeMute,
   faMaximize,
 } from "@fortawesome/free-solid-svg-icons";
@@ -112,6 +114,12 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const currentListen = useAtomValue(currentListenAtom);
   const toggleRepeatMode = useSetAtom(toggleRepeatModeAtom);
   const volume = useAtomValue(volumeAtom);
+  const getVolumeIcon = () => {
+    if (volume === 0) return faVolumeMute;
+    if (volume < 40) return faVolumeOff;
+    if (volume < 75) return faVolumeDown;
+    return faVolumeUp;
+  };
 
   React.useEffect(() => {
     async function getFeedback() {
@@ -419,7 +427,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
               </a>
               {!isMobile && (
                 <FontAwesomeIcon
-                  icon={volume === 0 ? faVolumeMute : faVolumeUp}
+                  icon={getVolumeIcon()}
                   style={{ color: showVolume ? "green" : "" }}
                   onClick={() => setShowVolume(!showVolume)}
                   className="d-none d-md-block"
