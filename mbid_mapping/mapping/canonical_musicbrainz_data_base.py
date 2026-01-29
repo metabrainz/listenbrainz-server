@@ -23,6 +23,7 @@ class CanonicalMusicBrainzDataBase(BulkInsertTable):
             ("release_name",       "TEXT NOT NULL"),
             ("recording_mbid",     "UUID NOT NULL"),
             ("recording_name",     "TEXT NOT NULL"),
+            ("recording_length",   "INTEGER"),
             ("combined_lookup",    "TEXT NOT NULL"),
             ("score",              "INTEGER NOT NULL")
         ]
@@ -31,6 +32,7 @@ class CanonicalMusicBrainzDataBase(BulkInsertTable):
         return ["""
                SELECT ac.id as artist_credit_id
                     , r.name AS recording_name
+                    , r.length AS recording_length
                     , r.gid AS recording_mbid
                     , ac.name AS artist_credit_name
                     , s.artist_mbids
@@ -64,7 +66,7 @@ class CanonicalMusicBrainzDataBase(BulkInsertTable):
                -- postgres indexing limits. therefore filter out such recordings before-hand, otherwise index creation
                -- may fail
                 WHERE length(concat(ac.name, r.name, rl.name)) < 500 
-             GROUP BY rpr.id, ac.id, s.artist_mbids, rl.gid, artist_credit_name, r.gid, r.name, release_name
+             GROUP BY rpr.id, ac.id, s.artist_mbids, rl.gid, artist_credit_name, r.gid, r.name, r.length, release_name
              ORDER BY ac.id, rpr.id
         """]
 
@@ -82,6 +84,7 @@ class CanonicalMusicBrainzDataBase(BulkInsertTable):
                 row["release_name"],
                 row["recording_mbid"],
                 row["recording_name"],
+                row["recording_length"],
                 combined_lookup,
                 row["score"]
             )]

@@ -20,6 +20,7 @@ class RecordingSearchInput(BaseModel):
 class RecordingSearchOutput(BaseModel):
     recording_name: Optional[str]
     recording_mbid: Optional[UUID]
+    recording_length: Optional[int] 
     release_name: Optional[str]
     release_mbid: Optional[UUID]
     artist_credit_name: Optional[str]
@@ -78,6 +79,7 @@ class RecordingSearchQuery(Query):
                            'release_name': hit['document']['release_name'],
                            'release_mbid': hit['document']['release_mbid'],
                            'recording_name': hit['document']['recording_name'],
-                           'recording_mbid': hit['document']['recording_mbid']})
+                           'recording_mbid': hit['document']['recording_mbid'],
+                           'recording_length': hit['document']['recording_length']})
 
         return [RecordingSearchOutput(**row) for row in output]

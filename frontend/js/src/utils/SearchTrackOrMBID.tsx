@@ -12,6 +12,7 @@ import React, {
   useState,
 } from "react";
 import { toast } from "react-toastify";
+import { millisecondsToStr } from "../playlists/utils";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "./GlobalAppContext";
 import DropdownRef from "./Dropdown";
@@ -310,7 +311,12 @@ const SearchTrackOrMBID = forwardRef<
             tabIndex={-1}
           >
             {searchResults.map((track, index) => {
-              const trackNameAndArtistName = `${track.recording_name} - ${track.artist_credit_name}`;
+              const rawDuration = Number(track.recording_length);
+              const duration =
+                Number.isFinite(rawDuration) && rawDuration > 0
+                  ? ` (${millisecondsToStr(rawDuration)})`
+                  : "";
+              const trackNameAndArtistName = `${track.recording_name} - ${track.artist_credit_name}${duration}`;
               return (
                 <option
                   key={track.recording_mbid}

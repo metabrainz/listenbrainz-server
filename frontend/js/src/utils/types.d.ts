@@ -442,6 +442,7 @@ declare type ACRMSearchResult = {
   recording_name: string;
   release_mbid: string;
   release_name: string;
+  recording_length: string;
 };
 
 type CoverArtGridOptions = {
@@ -541,11 +542,12 @@ declare type UserTrackRecommendationMetadata = {
 };
 
 /** For recommending a track personally from the front-end */
-declare type UserTrackPersonalRecommendationMetadata = UserTrackRecommendationMetadata & {
-  blurb_content: string;
-  users: Array<string>;
-  track_metadata?: TrackMetadata;
-};
+declare type UserTrackPersonalRecommendationMetadata =
+  UserTrackRecommendationMetadata & {
+    blurb_content: string;
+    users: Array<string>;
+    track_metadata?: TrackMetadata;
+  };
 
 declare type PinEventMetadata = Listen & {
   blurb_content?: string;

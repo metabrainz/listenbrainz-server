@@ -93,6 +93,7 @@ def build(client, collection_name, table, combiner):
             query = f"""
                 SELECT recording_name
                      , recording_mbid
+                     , recording_length
                      , release_name
                      , release_mbid
                      , artist_credit_id
