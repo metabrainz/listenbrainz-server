@@ -1,6 +1,7 @@
 import * as React from "react";
 import { act, render, screen } from "@testing-library/react";
 import { getDefaultStore } from "jotai";
+import fetchMock from "jest-fetch-mock";
 import FunkwhalePlayer from "../../../src/common/brainzplayer/FunkwhalePlayer";
 import APIService from "../../../src/utils/APIService";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
@@ -52,6 +53,7 @@ describe("FunkwhalePlayer", () => {
   beforeEach(() => {
     store.set(currentDataSourceNameAtom, "funkwhale");
     jest.clearAllMocks();
+    fetchMock.resetMocks();
   });
 
   describe("Static methods", () => {
@@ -282,6 +284,98 @@ describe("FunkwhalePlayer", () => {
     });
   });
 
+  describe("Artist name handling", () => {
+    it("should extract artist name from artist object", () => {
+      const playerRef = React.createRef<FunkwhalePlayer>();
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <FunkwhalePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      const trackWithArtist: FunkwhaleTrack = {
+        id: 1,
+        title: "Test Track",
+        listen_url: "/test",
+        duration: 180,
+        creation_date: "2024-01-01T00:00:00Z",
+        modification_date: "2024-01-01T00:00:00Z",
+        artist: {
+          id: 1,
+          name: "Single Artist",
+          fid: "artist-1",
+        },
+      };
+
+      const artistName = playerRef.current?.getArtistNamesFromTrack(trackWithArtist);
+      expect(artistName).toBe("Single Artist");
+    });
+
+    it("should extract artist names from artist_credit array", () => {
+      const playerRef = React.createRef<FunkwhalePlayer>();
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <FunkwhalePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      const trackWithArtistCredit: FunkwhaleTrack = {
+        id: 1,
+        title: "Test Track",
+        listen_url: "/test",
+        duration: 180,
+        creation_date: "2024-01-01T00:00:00Z",
+        modification_date: "2024-01-01T00:00:00Z",
+        artist_credit: [
+          {
+            artist: {
+              id: 1,
+              name: "Artist One",
+              fid: "artist-1",
+            },
+            credit: "Artist One",
+            joinphrase: " & ",
+            index: 0,
+          },
+          {
+            artist: {
+              id: 2,
+              name: "Artist Two",
+              fid: "artist-2",
+            },
+            credit: "Artist Two",
+            joinphrase: "",
+            index: 1,
+          },
+        ],
+      };
+
+      const artistName = playerRef.current?.getArtistNamesFromTrack(trackWithArtistCredit);
+      expect(artistName).toBe("Artist One & Artist Two");
+    });
+
+    it("should return empty string when no artist data is available", () => {
+      const playerRef = React.createRef<FunkwhalePlayer>();
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <FunkwhalePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      const trackWithoutArtist: FunkwhaleTrack = {
+        id: 1,
+        title: "Test Track",
+        listen_url: "/test",
+        duration: 180,
+        creation_date: "2024-01-01T00:00:00Z",
+        modification_date: "2024-01-01T00:00:00Z",
+      };
+
+      const artistName = playerRef.current?.getArtistNamesFromTrack(trackWithoutArtist);
+      expect(artistName).toBe("");
+    });
+  });
+
   describe("Audio element behavior", () => {
     it("should update volume when volume prop changes", () => {
       const { rerender } = render(
@@ -508,13 +602,355 @@ describe("FunkwhalePlayer", () => {
     });
   });
 
-  describe("searchAndPlayTrack integration", () => {
+  describe("Authenticated audio fetching", () => {
+    let createObjectURLSpy: jest.SpyInstance;
+    let revokeObjectURLSpy: jest.SpyInstance;
+
     beforeEach(() => {
-      global.fetch = jest.fn();
+      fetchMock.enableMocks();
+      // Mock URL methods on global object
+      global.URL.createObjectURL = jest.fn(() => "blob:mock-url");
+      global.URL.revokeObjectURL = jest.fn();
+      createObjectURLSpy = global.URL.createObjectURL as jest.Mock;
+      revokeObjectURLSpy = global.URL.revokeObjectURL as jest.Mock;
     });
 
     afterEach(() => {
+      fetchMock.disableMocks();
       jest.restoreAllMocks();
+    });
+
+    it("should fetch authenticated audio and create blob URL", async () => {
+      const mockAudioBlob = new Blob(["audio data"], { type: "audio/mpeg" });
+      fetchMock.mockResponseOnce(async () => mockAudioBlob as any);
+
+      const playerRef = React.createRef<FunkwhalePlayer>();
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <FunkwhalePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      const result = await playerRef.current?.getAuthenticatedAudioUrl("/api/v1/listen/123/");
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "https://test.funkwhale.audio/api/v1/listen/123/",
+        expect.objectContaining({
+          headers: {
+            Authorization: "Bearer test-token",
+          },
+        })
+      );
+      expect(createObjectURLSpy).toHaveBeenCalled();
+      expect(result).toBe("blob:mock-url");
+    });
+
+    it("should handle full URL in getAuthenticatedAudioUrl", async () => {
+      const mockAudioBlob = new Blob(["audio data"], { type: "audio/mpeg" });
+      fetchMock.mockResponseOnce(async () => mockAudioBlob as any);
+
+      const playerRef = React.createRef<FunkwhalePlayer>();
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <FunkwhalePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      const result = await playerRef.current?.getAuthenticatedAudioUrl(
+        "https://test.funkwhale.audio/api/v1/listen/456/"
+      );
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "https://test.funkwhale.audio/api/v1/listen/456/",
+        expect.objectContaining({
+          headers: {
+            Authorization: "Bearer test-token",
+          },
+        })
+      );
+      expect(result).toBe("blob:mock-url");
+    });
+
+    it("should return null when audio fetch fails", async () => {
+      fetchMock.mockResponseOnce("", { status: 404 });
+
+      const playerRef = React.createRef<FunkwhalePlayer>();
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <FunkwhalePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      const result = await playerRef.current?.getAuthenticatedAudioUrl("/api/v1/listen/999/");
+
+      expect(result).toBe(null);
+    });
+
+    it("should return null when access token is missing", async () => {
+      const contextWithoutToken = {
+        ...defaultContext,
+        funkwhaleAuth: {
+          instance_url: "https://test.funkwhale.audio",
+          user_id: "test-user-id",
+          username: "test-user",
+        },
+      };
+
+      const playerRef = React.createRef<FunkwhalePlayer>();
+      render(
+        <GlobalAppContext.Provider value={contextWithoutToken}>
+          <FunkwhalePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      const result = await playerRef.current?.getAuthenticatedAudioUrl("/api/v1/listen/123/");
+
+      expect(result).toBe(null);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it("should cleanup previous blob URL when setting new audio src", async () => {
+      const playerRef = React.createRef<FunkwhalePlayer>();
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <FunkwhalePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      const audioElement = screen.getByTestId("funkwhale-audio") as HTMLAudioElement;
+
+      // Set first blob URL
+      playerRef.current?.setAudioSrc(audioElement, "blob:first-url");
+      expect(audioElement.src).toContain("blob:first-url");
+
+      // Set second blob URL - should revoke first one
+      playerRef.current?.setAudioSrc(audioElement, "blob:second-url");
+      expect(revokeObjectURLSpy).toHaveBeenCalledWith("blob:first-url");
+      expect(audioElement.src).toContain("blob:second-url");
+    });
+  });
+
+  describe("fetchTrackInfo integration", () => {
+    beforeEach(() => {
+      fetchMock.enableMocks();
+    });
+
+    afterEach(() => {
+      fetchMock.disableMocks();
+    });
+
+    it("should fetch track info with Authorization header", async () => {
+      const mockTrack: FunkwhaleTrack = {
+        id: 123,
+        title: "Test Track",
+        fid: "test-fid",
+        listen_url: "/api/v1/listen/123/",
+        is_playable: true,
+        duration: 180,
+        creation_date: "2024-01-01T00:00:00Z",
+        modification_date: "2024-01-01T00:00:00Z",
+        artist: {
+          id: 1,
+          name: "Test Artist",
+          fid: "artist-fid",
+        },
+        album: {
+          id: 1,
+          title: "Test Album",
+          cover: {
+            urls: {
+              original: "https://test.funkwhale.audio/media/cover.jpg",
+            },
+          },
+        },
+      };
+
+      fetchMock.mockResponseOnce(JSON.stringify(mockTrack));
+
+      const playerRef = React.createRef<FunkwhalePlayer>();
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <FunkwhalePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      const result = await playerRef.current?.fetchTrackInfo("123");
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "https://test.funkwhale.audio/api/v1/tracks/123/",
+        expect.objectContaining({
+          headers: {
+            Authorization: "Bearer test-token",
+            "Content-Type": "application/json",
+          },
+        })
+      );
+      expect(result).toEqual(mockTrack);
+    });
+
+    it("should return null when track fetch fails", async () => {
+      fetchMock.mockResponseOnce("", { status: 404 });
+
+      const playerRef = React.createRef<FunkwhalePlayer>();
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <FunkwhalePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      const result = await playerRef.current?.fetchTrackInfo("999");
+
+      expect(result).toBe(null);
+    });
+
+    it("should return null when access token is missing", async () => {
+      const contextWithoutToken = {
+        ...defaultContext,
+        funkwhaleAuth: {
+          instance_url: "https://test.funkwhale.audio",
+          user_id: "test-user-id",
+          username: "test-user",
+        },
+      };
+
+      const playerRef = React.createRef<FunkwhalePlayer>();
+      render(
+        <GlobalAppContext.Provider value={contextWithoutToken}>
+          <FunkwhalePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      const result = await playerRef.current?.fetchTrackInfo("123");
+
+      expect(result).toBe(null);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("playFunkwhaleURL integration", () => {
+    let createObjectURLSpy: jest.Mock;
+    let audioPlaySpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      fetchMock.enableMocks();
+      // Mock URL methods on global object
+      global.URL.createObjectURL = jest.fn(() => "blob:mock-audio-url");
+      createObjectURLSpy = global.URL.createObjectURL as jest.Mock;
+    });
+
+    afterEach(() => {
+      fetchMock.disableMocks();
+      jest.restoreAllMocks();
+      if (audioPlaySpy) {
+        audioPlaySpy.mockRestore();
+      }
+    });
+
+    it("should play track by ID with full authenticated flow", async () => {
+      const mockTrack: FunkwhaleTrack = {
+        id: 123,
+        title: "Test Track",
+        fid: "test-fid",
+        listen_url: "/api/v1/listen/123/",
+        is_playable: true,
+        duration: 180,
+        creation_date: "2024-01-01T00:00:00Z",
+        modification_date: "2024-01-01T00:00:00Z",
+        artist: {
+          id: 1,
+          name: "Test Artist",
+          fid: "artist-fid",
+        },
+        album: {
+          id: 1,
+          title: "Test Album",
+          cover: {
+            urls: {
+              original: "https://test.funkwhale.audio/media/cover.jpg",
+            },
+          },
+        },
+      };
+
+      const mockAudioBlob = new Blob(["audio data"], { type: "audio/mpeg" });
+
+      // First fetch for track info, second for audio blob
+      fetchMock.mockResponses(
+        [JSON.stringify(mockTrack), { status: 200 }],
+        [mockAudioBlob as any, { status: 200 }]
+      );
+
+      const playerRef = React.createRef<FunkwhalePlayer>();
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <FunkwhalePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      const audioElement = screen.getByTestId("funkwhale-audio") as HTMLAudioElement;
+      audioPlaySpy = jest.spyOn(audioElement, "play").mockResolvedValue();
+
+      await act(async () => {
+        await playerRef.current?.playFunkwhaleURL("123");
+      });
+
+      // Verify track info fetch
+      expect(fetchMock.mock.calls[0][0]).toBe("https://test.funkwhale.audio/api/v1/tracks/123/");
+      expect(fetchMock.mock.calls[0][1]).toMatchObject({
+        headers: {
+          Authorization: "Bearer test-token",
+          "Content-Type": "application/json",
+        },
+      });
+
+      // Verify audio blob fetch
+      expect(fetchMock.mock.calls[1][0]).toBe("https://test.funkwhale.audio/api/v1/listen/123/");
+      expect(fetchMock.mock.calls[1][1]).toMatchObject({
+        headers: {
+          Authorization: "Bearer test-token",
+        },
+      });
+
+      // Verify blob URL creation and playback
+      expect(createObjectURLSpy).toHaveBeenCalled();
+      expect(audioElement.src).toContain("blob:mock-audio-url");
+      expect(audioPlaySpy).toHaveBeenCalled();
+    });
+
+    it("should call onTrackNotFound when track fetch fails", async () => {
+      fetchMock.mockResponseOnce("", { status: 404 });
+
+      const onTrackNotFound = jest.fn();
+      const handleError = jest.fn();
+      const playerRef = React.createRef<FunkwhalePlayer>();
+
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <FunkwhalePlayer
+            {...defaultProps}
+            onTrackNotFound={onTrackNotFound}
+            handleError={handleError}
+            ref={playerRef}
+          />
+        </GlobalAppContext.Provider>
+      );
+
+      await act(async () => {
+        await playerRef.current?.playFunkwhaleURL("999");
+      });
+
+      expect(handleError).toHaveBeenCalled();
+      expect(onTrackNotFound).toHaveBeenCalled();
+    });
+  });
+
+  describe("searchAndPlayTrack integration", () => {
+    beforeEach(() => {
+      fetchMock.enableMocks();
+    });
+
+    afterEach(() => {
+      fetchMock.disableMocks();
     });
 
     it("should call handleWarning when track metadata is missing", async () => {
