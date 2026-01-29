@@ -40,8 +40,8 @@ declare type MusicBrainzReleaseGroup = {
 };
 declare type MusicBrainzLabel = {
   "catalog-number": string;
-  label?:{id:string;name:string};
-}
+  label?: { id: string; name: string };
+};
 
 declare type MusicBrainzTrack = {
   number: string;
@@ -172,6 +172,7 @@ declare type MetadataLookup = {
   recording_name: string;
   release_mbid: string;
   release_name: string;
+  release_length: string;
 };
 declare type ReleaseGroupMetadataLookupResponse = {
   [string]: ReleaseGroupMetadataLookup;
