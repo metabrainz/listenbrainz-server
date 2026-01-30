@@ -72,6 +72,7 @@ export const currentTrackCoverURLAtom = atomWithReset<string | undefined>(
 export const playerPausedAtom = atomWithReset<boolean>(true);
 export const isActivatedAtom = atomWithReset<boolean>(false);
 export const volumeAtom = atomWithStorage<number>("brainzplayer-volume", 100);
+export const showVolumeSliderAtom = atomWithReset<boolean>(false);
 export const durationMsAtom = atomWithReset<number>(0);
 export const progressMsAtom = atomWithReset<number>(0);
 export const updateTimeAtom = atomWithReset<number>(performance.now());
@@ -358,6 +359,7 @@ export const useBrainzPlayerAtoms = () => ({
   continuousPlaybackTimeAtom,
   volumeAtom,
   queueRepeatModeAtom,
+  showVolumeSliderAtom,
 
   // Action atoms
   setAmbientQueueAtom,

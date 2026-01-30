@@ -336,7 +336,6 @@ export default class YoutubePlayer
       return;
     }
     this.youtubePlayer.seekTo(msTimecode / 1000, true);
-    this.youtubePlayer.playVideo();
   };
 
   onError = (event: YT.OnErrorEvent): void => {
