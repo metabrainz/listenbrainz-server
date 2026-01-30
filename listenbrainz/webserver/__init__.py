@@ -360,8 +360,6 @@ def _register_blueprints(app):
     # Retro-compatible 'profile' endpoint
     app.register_blueprint(settings_bp, url_prefix='/profile', name='profile')
 
-    from listenbrainz.webserver.views.export import export_bp
-    app.register_blueprint(export_bp, url_prefix='/export')
 
     from listenbrainz.webserver.views.import_listens import import_api_bp
     app.register_blueprint(import_api_bp, url_prefix=API_PREFIX+'/import-listens')
@@ -428,6 +426,9 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.user_settings_api import user_settings_api_bp
     app.register_blueprint(user_settings_api_bp, url_prefix=API_PREFIX+'/settings')
+
+    from listenbrainz.webserver.views.export_api import export_api_bp
+    app.register_blueprint(export_api_bp, url_prefix=API_PREFIX+'/export')
 
     from listenbrainz.webserver.views.explore_api import explore_api_bp
     app.register_blueprint(explore_api_bp, url_prefix=API_PREFIX+'/explore')

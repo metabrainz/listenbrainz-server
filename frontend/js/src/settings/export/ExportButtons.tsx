@@ -12,8 +12,10 @@ import {
   faRefresh,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
+import { saveAs } from "file-saver";
 import { ToastMsg } from "../../notifications/Notifications";
 import Loader from "../../components/Loader";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 
 enum ExportType {
   allUserData = "export_all_user_data",
@@ -37,7 +39,8 @@ type Export = {
 function renderExport(
   ex: Export,
   deleteExport: (event: React.SyntheticEvent, exportToDeleteId: number) => void,
-  fetchExport: (exportId: number) => Promise<any>
+  fetchExport: (exportId: number) => Promise<any>,
+  downloadExport: (exportId: number, filename: string | null) => void
 ) {
   const extraInfo = (
     <p>
@@ -65,22 +68,18 @@ function renderExport(
   );
   if (ex.status === ExportStatus.complete) {
     return (
-      <div className="mt-4 alert alert-success" role="alert">
+      <div className="mt-4 alert alert-success" role="alert" key={ex.export_id}>
         <h4 className="alert-heading">Export ready to download</h4>
-        <form
-          action={`/export/download/${ex.export_id}/`}
-          method="post"
-          className="mb-3"
-        >
+        <div className="mb-3">
           <button
-            type="submit"
-            name="download_export"
+            type="button"
             className="btn btn-success"
+            onClick={() => downloadExport(ex.export_id, ex.filename)}
           >
             <FontAwesomeIcon icon={faDownload} />
             &nbsp;Download {ex.filename ?? `${ex.export_id}.zip`}
           </button>
-        </form>
+        </div>
         <p>
           <b>
             Note: the file will be deleted automatically after 30 days
@@ -105,7 +104,7 @@ function renderExport(
   }
   if (ex.status === ExportStatus.failed) {
     return (
-      <div className="mt-4 alert alert-danger" role="alert">
+      <div className="mt-4 alert alert-danger" role="alert" key={ex.export_id}>
         <h4 className="alert-heading">Export failed</h4>
         <p>
           There was an error creating an export of your data.
@@ -132,7 +131,7 @@ function renderExport(
     </div>
   ); */
   return (
-    <div className="mt-4 alert alert-info" role="alert">
+    <div className="mt-4 alert alert-info" role="alert" key={ex.export_id}>
       <h4 className="alert-heading">
         Export in progress
         <br />
@@ -150,7 +149,6 @@ function renderExport(
           <FontAwesomeIcon icon={faRefresh} />
         </button>
       </p>
-      {/* {ex.status !== ExportStatus.waiting && progressBar} */}
       <p>
         Once your export is ready we&apos;ll send you an email, and you can
         return to this page to download the zip file.
@@ -172,15 +170,26 @@ function renderExport(
 }
 
 export default function ExportButtons({ listens = true, feedback = false }) {
+  const { currentUser, APIService } = React.useContext(GlobalAppContext);
   const [loading, setLoading] = React.useState(false);
   const [exports, setExports] = React.useState<Array<Export>>([]);
+
+  const headers = React.useMemo((): Headers => {
+    const obj = new Headers();
+    obj.append("Content-Type", "application/json");
+    if (currentUser?.auth_token) {
+      obj.append("Authorization", `Token ${currentUser.auth_token}`);
+    }
+    return obj;
+  }, [currentUser]);
 
   React.useEffect(() => {
     // Fetch the list of exports in progress in background tasks or finished
     async function getExportsInProgress() {
       try {
-        const response = await fetch("/export/list/", {
+        const response = await fetch(`${APIService.APIBaseURI}/export/list/`, {
           method: "GET",
+          headers,
         });
         if (!response.ok) {
           const errorText = await response.text();
@@ -203,20 +212,20 @@ export default function ExportButtons({ listens = true, feedback = false }) {
     }
     setLoading(true);
     getExportsInProgress();
-  }, []);
+  }, [APIService.APIBaseURI, headers]);
 
   const fetchExport = React.useCallback(
     async function fetchExport(id: number) {
       setLoading(true);
       try {
-        const response = await fetch(`/export/${id}/`, {
+        const response = await fetch(`${APIService.APIBaseURI}/export/${id}/`, {
           method: "GET",
+          headers,
         });
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(errorText);
         }
-        // Expecting an array of exports
         const nexExport = await response.json();
         setExports((prevExports) => {
           // Replace item in exports array, or if not found there
@@ -243,7 +252,7 @@ export default function ExportButtons({ listens = true, feedback = false }) {
         setLoading(false);
       }
     },
-    [setLoading]
+    [APIService.APIBaseURI, headers]
   );
 
   const hasAnExportInProgress =
@@ -257,11 +266,9 @@ export default function ExportButtons({ listens = true, feedback = false }) {
     async (event: React.SyntheticEvent) => {
       event.preventDefault();
       try {
-        const response = await fetch("/export/", {
+        const response = await fetch(`${APIService.APIBaseURI}/export/`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers,
         });
 
         if (!response.ok) {
@@ -281,19 +288,20 @@ export default function ExportButtons({ listens = true, feedback = false }) {
         );
       }
     },
-    []
+    [APIService.APIBaseURI, headers]
   );
 
   const deleteExport = React.useCallback(
     async (event: React.SyntheticEvent, exportToDeleteId: number) => {
       event.preventDefault();
       try {
-        const response = await fetch(`/export/delete/${exportToDeleteId}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(
+          `${APIService.APIBaseURI}/export/delete/${exportToDeleteId}/`,
+          {
+            method: "POST",
+            headers,
+          }
+        );
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -315,12 +323,41 @@ export default function ExportButtons({ listens = true, feedback = false }) {
           <ToastMsg
             title="There was an error canceling your export"
             message={`Please try again and contact us if the issue persists.
-           Details: ${error}`}
+            Details: ${error}`}
           />
         );
       }
     },
-    []
+    [APIService.APIBaseURI, headers]
+  );
+
+  const downloadExport = React.useCallback(
+    async (exportId: number, filename: string | null) => {
+      try {
+        const response = await fetch(
+          `${APIService.APIBaseURI}/export/download/${exportId}/`,
+          {
+            method: "GET",
+            headers,
+          }
+        );
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
+        const blob = await response.blob();
+        saveAs(blob, filename ?? `export-${exportId}.zip`);
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="There was an error downloading your export"
+            message={`Please try again and contact us if the issue persists.
+            Details: ${error}`}
+          />
+        );
+      }
+    },
+    [APIService.APIBaseURI, headers]
   );
 
   return (
@@ -362,7 +399,9 @@ export default function ExportButtons({ listens = true, feedback = false }) {
       )} */}
       <Loader isLoading={loading} style={{ margin: "0 1em" }} />
       {exports &&
-        exports.map((ex) => renderExport(ex, deleteExport, fetchExport))}
+        exports.map((ex) =>
+          renderExport(ex, deleteExport, fetchExport, downloadExport)
+        )}
     </section>
   );
 }
