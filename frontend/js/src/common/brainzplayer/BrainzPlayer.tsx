@@ -66,6 +66,7 @@ import {
   replaceQueueAndResetAtom,
   isActivatedAtom,
   clearQueuesBeforeListenAndSetQueuesAtom,
+  showVolumeSliderAtom,
 } from "./BrainzPlayerAtoms";
 
 import useWindowTitle from "./hooks/useWindowTitle";
@@ -226,7 +227,17 @@ export default function BrainzPlayer() {
   const addOrSkipToListenInQueue = useSetAtom(
     clearQueuesBeforeListenAndSetQueuesAtom
   );
-
+  const setShowVolumeSlider = useSetAtom(showVolumeSliderAtom);
+  const volumeSliderTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const showVolumeBriefly = React.useCallback(() => {
+    setShowVolumeSlider(true);
+    if (volumeSliderTimeoutRef.current) {
+      clearTimeout(volumeSliderTimeoutRef.current);
+    }
+    volumeSliderTimeoutRef.current = setTimeout(() => {
+      setShowVolumeSlider(false);
+    }, 2000);
+  }, [setShowVolumeSlider]);
   const getProgressMs = () => store.get(progressMsAtom);
   const getQueue = () => store.get(queueAtom);
   const getAmbientQueue = () => store.get(ambientQueueAtom);
@@ -760,6 +771,13 @@ export default function BrainzPlayer() {
   const seekBackward = (): void => {
     seekToPositionMs(getProgressMs() - SEEK_TIME_MILLISECONDS);
   };
+  const increaseVolume = (): void => {
+    setVolume((prev) => Math.min(100, Math.ceil((prev + 5) / 5) * 5));
+  };
+
+  const decreaseVolume = (): void => {
+    setVolume((prev) => Math.max(0, Math.floor((prev - 5) / 5) * 5));
+  };
 
   const togglePlay = () => {
     try {
@@ -818,6 +836,18 @@ export default function BrainzPlayer() {
         seekForward();
         return;
       }
+      if (event.code === "ArrowUp") {
+        event.preventDefault();
+        increaseVolume();
+        showVolumeBriefly();
+        return;
+      }
+      if (event.code === "ArrowDown") {
+        event.preventDefault();
+        decreaseVolume();
+        showVolumeBriefly();
+        return;
+      }
       const keyAsNumber = Number(event.key);
       if (
         Number.isInteger(keyAsNumber) &&
@@ -838,6 +868,9 @@ export default function BrainzPlayer() {
       togglePlay,
       seekBackward,
       seekForward,
+      increaseVolume,
+      decreaseVolume,
+      showVolumeBriefly,
     ]
   );
 

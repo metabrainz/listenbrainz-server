@@ -26,7 +26,7 @@ import { Link } from "react-router";
 import { Vibrant as VibrantLibrary } from "node-vibrant/browser";
 import type { Palette } from "@vibrant/color";
 import tinycolor from "tinycolor2";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { ToastMsg } from "../../notifications/Notifications";
 import { millisecondsToStr } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -49,6 +49,7 @@ import {
   currentTrackCoverURLAtom,
   currentListenAtom,
   volumeAtom,
+  showVolumeSliderAtom,
 } from "./BrainzPlayerAtoms";
 import BrainzPlayerTimer from "./BrainzPlayerTimer";
 
@@ -114,6 +115,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const currentListen = useAtomValue(currentListenAtom);
   const toggleRepeatMode = useSetAtom(toggleRepeatModeAtom);
   const volume = useAtomValue(volumeAtom);
+  const [showVolume, setShowVolume] = useAtom(showVolumeSliderAtom);
   const getVolumeIcon = () => {
     if (volume === 0) return faVolumeMute;
     if (volume < 40) return faVolumeOff;
@@ -224,12 +226,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const playbackDisabledText = "Playback disabled in preferences";
 
   const [showQueue, setShowQueue] = React.useState(false);
-  const [showVolume, setShowVolume] = React.useState(false);
   const [showMusicPlayer, setShowMusicPlayer] = React.useState(false);
-
-  const toggleShowVolume = () => {
-    setShowVolume((prevValue) => !prevValue);
-  };
 
   const [musicPlayerColorPalette, setMusicPlayerColorPalette] = React.useState<
     Palette
@@ -329,7 +326,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           playPreviousTrack={playPreviousTrack}
           playNextTrack={playNextTrack}
           togglePlay={togglePlay}
-          toggleShowVolume={toggleShowVolume}
+          toggleShowVolume={() => setShowVolume(!showVolume)}
           seekToPositionMs={seekToPositionMs}
           toggleRepeatMode={toggleRepeatMode}
           submitFeedback={submitFeedback}
