@@ -544,6 +544,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
         #
         # |   CTE / table    |         purpose               |  last_updated considered           | last_updated ignored
         # |   recording_rels |   artist - recording links    |  link relationship related and url | recording, artist
+        # |   recording_url_rels |   streaming links         |                                    |
         # |   recording_tags |   recording tags              |  recording_tag, genre              | recording
         # |   recording      |                               |  recording                         |
         recording_mbids_query = f"""
