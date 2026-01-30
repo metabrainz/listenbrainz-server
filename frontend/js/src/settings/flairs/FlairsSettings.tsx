@@ -16,6 +16,7 @@ import type { FlairName } from "../../utils/constants";
 import Username from "../../common/Username";
 import queryClient from "../../utils/QueryClient";
 import useUserFlairs from "../../utils/FlairLoader";
+import useAutoSave from "../../hooks/useAutoSave";
 
 function CustomOption(
   props: OptionProps<{ value: Flair; label: FlairName; username: string }>
@@ -51,6 +52,14 @@ export default function FlairsSettings() {
   const [selectedFlair, setSelectedFlair] = React.useState<Flair>(
     currentFlair ?? FlairEnum.None
   );
+
+  // NEW: Create ref to store current flair value
+  const flairRef = React.useRef(selectedFlair);
+
+  // NEW: Update ref whenever flair changes
+  React.useEffect(() => {
+    flairRef.current = selectedFlair;
+  }, [selectedFlair]);
   // If this has a value it should tell us if the flair is active,
   // as calculated on the back-end
   const currentUnlockedFlair = useUserFlairs(name);
@@ -78,30 +87,52 @@ export default function FlairsSettings() {
     fetchNagStatus();
   }, [name]);
 
-  const submitFlairPreferences = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitFlairPreferences = React.useCallback(async () => {
     if (!currentUser?.auth_token) {
       toast.error("You must be logged in to update your preferences");
       return;
     }
-    try {
-      const response = await APIService.submitFlairPreferences(
-        currentUser?.auth_token,
-        selectedFlair
-      );
-      toast.success("Flair saved successfully");
-      globalContext.flair = selectedFlair;
-      queryClient.invalidateQueries({ queryKey: ["flair"] });
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Failed to update flair preferences:", error);
-      toast.error("Failed to update flair preferences. Please try again.");
+
+    // Getting the current value from the ref
+    const currentFlairValue = flairRef.current;
+
+    await APIService.submitFlairPreferences(
+      currentUser?.auth_token,
+      // using refs instead
+      currentFlairValue
+    );
+
+    globalContext.flair = flairRef.current;
+    queryClient.invalidateQueries({ queryKey: ["flair"] });
+
+    // not keeping selectedFlair in dependency since we are using ref now
+  }, [APIService, currentUser?.auth_token, globalContext, queryClient]);
+
+  // Auto-save hook  after 3 seconds
+  const { triggerAutoSave } = useAutoSave({
+    delay: 3000, // 3 sec wait
+    onSave: submitFlairPreferences, // this funct will be called  when saving
+    enabled: true,
+  });
+
+  // Tracking first render
+  const isFirstRender = React.useRef(true);
+
+  React.useEffect(() => {
+    // Skip auto-save on first render - we only want to save when user makes changes
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
     }
-  };
+
+    // Trigger auto-save whenever flair changes
+
+    triggerAutoSave();
+  }, [selectedFlair, triggerAutoSave]);
 
   return (
     <div className="mb-4 donation-flairs-settings">
-      <form className="mb-4" onSubmit={submitFlairPreferences}>
+      <div className="mb-4">
         <ReactTooltip id="flair-tooltip" place="bottom" multiline>
           Every $5 donation unlocks flairs for 1 month,
           <br />
@@ -141,6 +172,12 @@ export default function FlairsSettings() {
             />
           </div>
         )}
+        <p
+          className="border-start border-info border-3 px-3 py-2 mb-3"
+          style={{ backgroundColor: "rgba(248, 249, 250)", fontSize: "1.1em" }}
+        >
+          Changes are saved automatically.
+        </p>
         <div
           className="flex flex-wrap"
           style={{ gap: "1em", alignItems: "center" }}
@@ -181,11 +218,7 @@ export default function FlairsSettings() {
             />
           </div>
         </div>
-
-        <button className="btn btn-success mt-3" type="submit">
-          Save flair
-        </button>
-      </form>
+      </div>
     </div>
   );
 }

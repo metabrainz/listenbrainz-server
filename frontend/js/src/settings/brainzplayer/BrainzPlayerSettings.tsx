@@ -25,6 +25,7 @@ import Card from "../../components/Card";
 import faInternetArchive from "../../common/icons/faInternetArchive";
 import faFunkwhale from "../../common/icons/faFunkwhale";
 import { faNavidrome } from "../../common/icons/faNavidrome";
+import useAutoSave from "../../hooks/useAutoSave";
 
 export const dataSourcesInfo = {
   youtube: {
@@ -127,7 +128,6 @@ function BrainzPlayerSettings() {
       defaultDataSourcesPriority
     )
   );
-
   const moveDataSource = (evt: any) => {
     const { newIndex, oldIndex } = evt;
     const newPriority = [...dataSourcesPriority];
@@ -150,55 +150,33 @@ function BrainzPlayerSettings() {
 
   const sortedList = getDataSourcesPriorityList();
 
-  const saveSettings = React.useCallback(async () => {
-    if (!currentUser?.auth_token) {
-      toast.error("You must be logged in to update your preferences");
-      return;
-    }
-    const { submitBrainzplayerPreferences } = APIService;
-    try {
-      await submitBrainzplayerPreferences(currentUser.auth_token, {
-        youtubeEnabled,
-        spotifyEnabled,
-        soundcloudEnabled,
-        appleMusicEnabled,
-        internetArchiveEnabled,
-        funkwhaleEnabled,
-        navidromeEnabled,
-        brainzplayerEnabled,
-        dataSourcesPriority,
-      });
-      toast.success("Saved your preferences successfully");
-      // Update the global context values
+  // Ref created To store current values
 
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      if (userPreferences) {
-        userPreferences.brainzplayer = {
-          youtubeEnabled,
-          spotifyEnabled,
-          soundcloudEnabled,
-          appleMusicEnabled,
-          internetArchiveEnabled,
-          funkwhaleEnabled,
-          navidromeEnabled,
-          brainzplayerEnabled,
-          dataSourcesPriority,
-        };
-      }
-    } catch (error) {
-      toast.error(
-        <ToastMsg
-          title="Error saving preferences"
-          message={
-            <>
-              {error.toString()}
-              <br />
-              Please try again or contact us if the issue persists.
-            </>
-          }
-        />
-      );
-    }
+  const settingsRef = React.useRef({
+    youtubeEnabled,
+    spotifyEnabled,
+    soundcloudEnabled,
+    appleMusicEnabled,
+    internetArchiveEnabled,
+    funkwhaleEnabled,
+    navidromeEnabled,
+    brainzplayerEnabled,
+    dataSourcesPriority,
+  });
+
+  // Update Refs whenever state changes due to setting changes
+  React.useEffect(() => {
+    settingsRef.current = {
+      youtubeEnabled,
+      spotifyEnabled,
+      soundcloudEnabled,
+      appleMusicEnabled,
+      internetArchiveEnabled,
+      funkwhaleEnabled,
+      navidromeEnabled,
+      brainzplayerEnabled,
+      dataSourcesPriority,
+    };
   }, [
     youtubeEnabled,
     spotifyEnabled,
@@ -209,9 +187,63 @@ function BrainzPlayerSettings() {
     navidromeEnabled,
     brainzplayerEnabled,
     dataSourcesPriority,
-    APIService,
-    currentUser?.auth_token,
-    userPreferences,
+  ]);
+  const saveSettings = React.useCallback(async () => {
+    if (!currentUser?.auth_token) {
+      toast.error("You must be logged in to update your preferences");
+      return;
+    }
+
+    // Get CURRENT values from ref, not captured values
+    const currentSettings = settingsRef.current;
+    const { submitBrainzplayerPreferences } = APIService;
+
+    await submitBrainzplayerPreferences(
+      currentUser.auth_token,
+      currentSettings
+    );
+
+    // Update the global context values
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (userPreferences) {
+      userPreferences.brainzplayer = currentSettings;
+    }
+  }, [APIService, currentUser?.auth_token, userPreferences]);
+
+  const { triggerAutoSave } = useAutoSave({
+    delay: 3000,
+    onSave: saveSettings,
+  });
+
+  // TO skip the auto save during initial render of screen before
+  // user make change
+
+  // Skip initial hydration passes
+  const effectRuns = React.useRef(0);
+
+  React.useEffect(() => {
+    effectRuns.current += 1;
+
+    // Skip the first two runs (initial mount + hydration updates) which are not
+    // caused by user
+    if (effectRuns.current <= 2) {
+      return;
+    }
+
+    // now the change which occur will be made by user
+    triggerAutoSave();
+  }, [
+    youtubeEnabled,
+    spotifyEnabled,
+    soundcloudEnabled,
+    appleMusicEnabled,
+    internetArchiveEnabled,
+    funkwhaleEnabled,
+    navidromeEnabled,
+    brainzplayerEnabled,
+    dataSourcesPriority,
+    triggerAutoSave,
   ]);
 
   return (
@@ -220,6 +252,12 @@ function BrainzPlayerSettings() {
         <title>BrainzPlayer Settings</title>
       </Helmet>
       <h2 className="page-title">BrainzPlayer settings</h2>
+      <p
+        className="border-start border-info border-3 px-3 py-2 mb-3"
+        style={{ backgroundColor: "rgba(248, 249, 250)", fontSize: "1.1em" }}
+      >
+        Changes are saved automatically.
+      </p>
       <Switch
         id="enable-brainzplayer"
         value="brainzplayer"
@@ -523,7 +561,7 @@ function BrainzPlayerSettings() {
             id="enable-internet-archive"
             value="internetArchive"
             checked={internetArchiveEnabled}
-            onChange={() => setInternetArchiveEnabled(!internetArchiveEnabled)}
+            onChange={(e) => setInternetArchiveEnabled(!internetArchiveEnabled)}
             switchLabel={
               <span
                 className={`text-brand ${
@@ -585,13 +623,6 @@ function BrainzPlayerSettings() {
           ))}
         </ReactSortable>
       </details>
-      <button
-        className="btn btn-lg btn-info"
-        type="button"
-        onClick={saveSettings}
-      >
-        Save BrainzPlayer settings
-      </button>
       <ReactTooltip id="login-first" aria-haspopup="true" delayHide={500}>
         You must login to this service in the &quot;Connect services&quot;
         section before using it.
