@@ -4,16 +4,15 @@ Server development
 Set up ListenBrainz Server development environment
 --------------------------------------------------
 
-To contribute to the ListenBrainz project, you need a development environment.
-With your development environment, you can test your changes before submitting a
-patch to the project. This guide helps you set up a development environment
-and run ListenBrainz locally on your workstation. By the end of this guide, you
-will have…
+This guide explains how to set up a local ListenBrainz Server development environment.
+After completing these steps, you will be able to run ListenBrainz locally and test your changes before submitting a pull request.
 
-* Installed system dependencies
-* Registered a MusicBrainz application
-* Initialized development databases
-* Running ListenBrainz Server
+By the end of this guide, you will have:
+
+  Installed required system dependencies
+  Registered a MusicBrainz OAuth application
+  Initialized development databases
+  Successfully run ListenBrainz Server locally
 
 Clone listenbrainz-server
 -------------------------
