@@ -151,6 +151,8 @@ def submit_listen():
                         track_number=track_number,
                         duration=duration)
         if msid:
+            # Set additional_info if it doesn't exist already in the listen metadata
+            track_metadata["additional_info"] = additional_info
             additional_info.update({"recording_msid": msid})
 
     user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
