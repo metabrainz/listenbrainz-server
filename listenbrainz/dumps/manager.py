@@ -43,7 +43,12 @@ from listenbrainz.listenstore.dump_listenstore import DumpListenStore
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
 
-cli = click.Group()
+cli = click.Group(help="""
+Manage ListenBrainz database dumps.
+
+Includes commands to create, list,
+and manage database dump files.
+""")
 
 
 @cli.command(name="create_mbcanonical")
