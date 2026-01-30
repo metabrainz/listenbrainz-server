@@ -1051,17 +1051,25 @@ const getThumbnailFromCAAResponse = (
 };
 
 const retryParams = {
-  retries: 4,
-  retryOn: [429],
+  retries: 5,
+
+  retryOn(attempt: number, error: any, response: Response | null) {
+    // This code will Retry on network failure
+    if (error) return true;
+
+    //  and This code willRetry on rate limit & server errors
+    if (response) {
+      return [429, 500, 502, 503, 504].includes(response.status);
+    }
+
+    return false;
+  },
+
   retryDelay(attempt: number) {
-    // Exponential backoff at random interval between maxRetryTime and minRetryTime,
-    // adding minRetryTime for every attempt. `attempt` starts at 0
-    const maxRetryTime = 2500;
-    const minRetryTime = 1800;
-    const clampedRandomTime =
-      Math.random() * (maxRetryTime - minRetryTime) + minRetryTime;
-    // Make it exponential
-    return Math.floor(clampedRandomTime) * 2 ** attempt;
+    const baseDelay = 1000; 
+    const maxDelay = 30000; 
+
+    return Math.min(baseDelay * 2 ** attempt, maxDelay);
   },
 };
 
