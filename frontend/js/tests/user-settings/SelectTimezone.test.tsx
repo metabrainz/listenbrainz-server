@@ -1,5 +1,5 @@
 import * as React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen , waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   renderWithProviders,
@@ -28,7 +28,6 @@ describe("User settings", () => {
       render(<SelectTimezone {...props} />);
 
       await screen.findByRole("heading", { name: /select your timezone/i });
-      await screen.findByRole("button", { name: /save timezone/i });
       const defaultOption = await screen.findByRole<HTMLOptionElement>(
         "option",
         { name: "Choose an option" }
@@ -56,6 +55,10 @@ describe("User settings", () => {
           name: "America/New_York (-4:00:00 GMT)",
         }).selected
       ).toBe(true);
+     // Mocking the API call before auto-save is triggered
+      const spy = jest
+        .spyOn(testAPIService, "resetUserTimezone")
+        .mockImplementation(() => Promise.resolve(200));
 
       await userEvent.selectOptions(
         screen.getByRole("combobox"),
@@ -73,18 +76,17 @@ describe("User settings", () => {
           name: "America/New_York (-4:00:00 GMT)",
         }).selected
       ).toBe(false);
+      // Wait for debounced auto-save to complete
+      await waitFor(
+        () => {
+          expect(spy).toHaveBeenCalledTimes(1);
+          expect(spy).toHaveBeenCalledWith("never_gonna", "America/Adak");
+        },
+        { timeout: 4000 } // 3 sec debounce + buffer 
+      );
 
-      const spy = jest
-        .spyOn(testAPIService, "resetUserTimezone")
-        .mockImplementation(() => Promise.resolve(200));
-
-      // submit the form
-      await userEvent.click(screen.getByRole("button"));
-
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith("never_gonna", "America/Adak");
-      // expect success message
-      screen.getByText(textContentMatcher("Your timezone has been saved."));
+      //   new  toast message instead of old alert
+      await screen.findByText(/timezone saved/i);
     });
   });
 });

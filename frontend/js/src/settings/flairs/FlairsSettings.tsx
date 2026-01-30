@@ -17,7 +17,6 @@ import Username from "../../common/Username";
 import queryClient from "../../utils/QueryClient";
 import useUserFlairs from "../../utils/FlairLoader";
 import useAutoSave from "../../hooks/useAutoSave";
-import SaveStatusIndicator from "../../components/SaveStatusIndicator";
 
 function CustomOption(
   props: OptionProps<{ value: Flair; label: FlairName; username: string }>
@@ -88,7 +87,6 @@ export default function FlairsSettings() {
     fetchNagStatus();
   }, [name]);
 
-  // removing React.FormEvent so that we can handle both auto and manual save
   const submitFlairPreferences = React.useCallback(async () => {
     if (!currentUser?.auth_token) {
       toast.error("You must be logged in to update your preferences");
@@ -96,41 +94,28 @@ export default function FlairsSettings() {
     }
 
     // Getting the current value from the ref
-    // so we use flaiRef.current insteaD of selectedFlair
-
     const currentFlairValue = flairRef.current;
 
-    try {
-      const response = await APIService.submitFlairPreferences(
-        currentUser?.auth_token,
-        // using refs instead
-        currentFlairValue
-      );
-      toast.success("Flair saved successfully");
-      globalContext.flair = selectedFlair;
-      queryClient.invalidateQueries({ queryKey: ["flair"] });
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Failed to update flair preferences:", error);
-      toast.error("Failed to update flair preferences. Please try again.");
-    }
+    await APIService.submitFlairPreferences(
+      currentUser?.auth_token,
+      // using refs instead
+      currentFlairValue
+    );
+
+    globalContext.flair = flairRef.current;
+    queryClient.invalidateQueries({ queryKey: ["flair"] });
+
     // not keeping selectedFlair in dependency since we are using ref now
   }, [APIService, currentUser?.auth_token, globalContext, queryClient]);
 
-  // Auto-save hook  after 1 seconds and tracks save status
-  const {
-    triggerAutoSave,
-    cancelAutoSave,
-    saveStatus,
-    errorMessage,
-  } = useAutoSave({
-    delay: 1000, // 1 sec wait
+  // Auto-save hook  after 3 seconds
+  const { triggerAutoSave } = useAutoSave({
+    delay: 3000, // 3 sec wait
     onSave: submitFlairPreferences, // this funct will be called  when saving
     enabled: true,
   });
 
   // Tracking first render
-  // so that auto save dont occur in starting
   const isFirstRender = React.useRef(true);
 
   React.useEffect(() => {
@@ -145,22 +130,9 @@ export default function FlairsSettings() {
     triggerAutoSave();
   }, [selectedFlair, triggerAutoSave]);
 
-  // Manual save handler so that user can save manually before or after 1 sec
-
-  const handleManualSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // cancel pending auto, saves prevents showing the
-    // the changes saved automatically for manual saves
-    cancelAutoSave();
-
-    await submitFlairPreferences();
-  };
-
   return (
-    // replacing submitFlairPreferences -> handleManualSave
-    // because now react needs to call this funct on form submit
     <div className="mb-4 donation-flairs-settings">
-      <form className="mb-4" onSubmit={handleManualSave}>
+      <div className="mb-4">
         <ReactTooltip id="flair-tooltip" place="bottom" multiline>
           Every $5 donation unlocks flairs for 1 month,
           <br />
@@ -200,6 +172,12 @@ export default function FlairsSettings() {
             />
           </div>
         )}
+        <p
+          className="border-start border-info border-3 px-3 py-2 mb-3"
+          style={{ backgroundColor: "rgba(248, 249, 250)", fontSize: "1.1em" }}
+        >
+          Changes are saved automatically.
+        </p>
         <div
           className="flex flex-wrap"
           style={{ gap: "1em", alignItems: "center" }}
@@ -240,19 +218,7 @@ export default function FlairsSettings() {
             />
           </div>
         </div>
-        {/* Save status indicator - shows Saving, Saved, or error messages */}
-
-        <div className="mt-3">
-          <SaveStatusIndicator
-            status={saveStatus}
-            errorMessage={errorMessage}
-          />
-        </div>
-
-        <button className="btn btn-success mt-3" type="submit">
-          Save flair
-        </button>
-      </form>
+      </div>
     </div>
   );
 }

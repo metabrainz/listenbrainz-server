@@ -26,7 +26,6 @@ import faInternetArchive from "../../common/icons/faInternetArchive";
 import faFunkwhale from "../../common/icons/faFunkwhale";
 import { faNavidrome } from "../../common/icons/faNavidrome";
 import useAutoSave from "../../hooks/useAutoSave";
-import SaveStatusIndicator from "../../components/SaveStatusIndicator";
 
 export const dataSourcesInfo = {
   youtube: {
@@ -198,48 +197,27 @@ function BrainzPlayerSettings() {
     // Get CURRENT values from ref, not captured values
     const currentSettings = settingsRef.current;
     const { submitBrainzplayerPreferences } = APIService;
-    try {
-      await submitBrainzplayerPreferences(
-        currentUser.auth_token,
-        currentSettings
-      );
 
-      toast.success("Saved your preferences successfully");
-      // Update the global context values
+    await submitBrainzplayerPreferences(
+      currentUser.auth_token,
+      currentSettings
+    );
 
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      if (userPreferences) {
-        userPreferences.brainzplayer = currentSettings;
-      }
-      // console.log("WARNING: userPreferences is undefined!");
-    } catch (error) {
-      toast.error(
-        <ToastMsg
-          title="Error saving preferences"
-          message={
-            <>
-              {error.toString()}
-              <br />
-              Please try again or contact us if the issue persists.
-            </>
-          }
-        />
-      );
+    // Update the global context values
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (userPreferences) {
+      userPreferences.brainzplayer = currentSettings;
     }
   }, [APIService, currentUser?.auth_token, userPreferences]);
 
-  const {
-    triggerAutoSave,
-    cancelAutoSave,
-    saveStatus,
-    errorMessage,
-  } = useAutoSave({
-    delay: 1000,
+  const { triggerAutoSave } = useAutoSave({
+    delay: 3000,
     onSave: saveSettings,
   });
 
   // TO skip the auto save during initial render of screen before
-  // user make change . effectRuns
+  // user make change
 
   // Skip initial hydration passes
   const effectRuns = React.useRef(0);
@@ -267,11 +245,6 @@ function BrainzPlayerSettings() {
     dataSourcesPriority,
     triggerAutoSave,
   ]);
-  // Adding  manual save function
-  const handleManualSave = async () => {
-    cancelAutoSave(); // Cancelling any pending auto-save
-    await saveSettings();
-  };
 
   return (
     <>
@@ -279,6 +252,12 @@ function BrainzPlayerSettings() {
         <title>BrainzPlayer Settings</title>
       </Helmet>
       <h2 className="page-title">BrainzPlayer settings</h2>
+      <p
+        className="border-start border-info border-3 px-3 py-2 mb-3"
+        style={{ backgroundColor: "rgba(248, 249, 250)", fontSize: "1.1em" }}
+      >
+        Changes are saved automatically.
+      </p>
       <Switch
         id="enable-brainzplayer"
         value="brainzplayer"
@@ -644,16 +623,6 @@ function BrainzPlayerSettings() {
           ))}
         </ReactSortable>
       </details>
-      <div className="mt-3">
-        <SaveStatusIndicator status={saveStatus} errorMessage={errorMessage} />
-      </div>
-      <button
-        className="btn btn-lg btn-info"
-        type="button"
-        onClick={handleManualSave}
-      >
-        Save BrainzPlayer settings
-      </button>
       <ReactTooltip id="login-first" aria-haspopup="true" delayHide={500}>
         You must login to this service in the &quot;Connect services&quot;
         section before using it.

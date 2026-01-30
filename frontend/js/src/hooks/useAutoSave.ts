@@ -1,7 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import debounce from "lodash/debounce";
-// possible states
-type SaveStatus = "idle" | "saving" | "saved" | "error";
+import { toast } from "react-toastify";
 
 interface UseAutoSaveOptions {
   delay?: number;
@@ -11,48 +10,27 @@ interface UseAutoSaveOptions {
 
 interface UseAutoSaveReturn {
   triggerAutoSave: () => void;
-  cancelAutoSave: () => void;
-  saveStatus: SaveStatus; // current status
-  errorMessage: string;
 }
 // the main hook
 export default function useAutoSave({
-  delay = 1000,
+  delay = 3000,
   onSave,
   enabled = true,
 }: UseAutoSaveOptions): UseAutoSaveReturn {
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
-  const [errorMessage, setErrorMessage] = useState<string>("");
-  // this funct waits for user to stop making change before
-  // actually saving
   const debouncedSaveRef = useRef(
     debounce(async () => {
-      setSaveStatus("saving");
       try {
         await onSave();
-        setSaveStatus("saved");
-        setErrorMessage("");
-        // hide auto save after 1 sec
-        setTimeout(() => {
-          setSaveStatus("idle");
-        }, 1000);
+        toast.success("Changes Saved", { autoClose: 3000 });
       } catch (error) {
-        // console.error("Auto-save failed:", error);
-        setSaveStatus("error");
         // Displaying the specific error , if not then -> "Save failed"
-        setErrorMessage(error instanceof Error ? error.message : "Save failed");
+        const errorMessage =
+          error instanceof Error ? error.message : "Save failed";
+        toast.error(`Error saving changes: ${errorMessage}`);
       }
     }, delay)
   );
 
-  // if the user changes the screen or navigates away before say 1 sec
-  // then we cancel the save
-
-  useEffect(() => {
-    return () => {
-      debouncedSaveRef.current.cancel();
-    };
-  }, []);
   // whenever user makes change , this function gets called
   const triggerAutoSave = useCallback(() => {
     if (enabled) {
@@ -60,15 +38,22 @@ export default function useAutoSave({
     }
   }, [enabled]);
 
-  const cancelAutoSave = useCallback(() => {
-    debouncedSaveRef.current.cancel();
-    setSaveStatus("idle");
+  // Adding this useEffect : if user refreshes browser before 3 sec or navigates away then changes should
+  // be saved:
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      debouncedSaveRef.current.flush(); // Pending changes are getting saved immediately
+    };
+    // listening for whenever user closes/refreshes browser
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload); // <- cleanup
+      debouncedSaveRef.current.flush();
+    };
   }, []);
 
   return {
     triggerAutoSave, // funct to trigger save countdown
-    cancelAutoSave, // function to cancel pending save
-    saveStatus,
-    errorMessage,
   };
 }
