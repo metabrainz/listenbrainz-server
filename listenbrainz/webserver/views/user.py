@@ -459,8 +459,8 @@ def embed_playing_now(user_name):
         <iframe
             src="https://listenbrainz.org/user/mr_monkey/embed/playing-now"
             frameborder="0"
-            width="650px"
-            height="80px"
+            width="650"
+            height="80"
         ></iframe>
     
     :param user_name: the MusicBrainz ID of the user whose currently playing listen you want to embed.
@@ -569,8 +569,8 @@ def embed_pin(user_name):
         <iframe
             src="https://listenbrainz.org/user/mr_monkey/embed/pin"
             frameborder="0"
-            width="650px"
-            height="150px"
+            width="650"
+            height="155"
         ></iframe>
     
     :param user_name: the MusicBrainz ID of the user whose current pin you want to embed.

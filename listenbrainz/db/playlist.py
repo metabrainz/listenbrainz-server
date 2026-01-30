@@ -1029,3 +1029,29 @@ def get_playlist_count(ts_conn, creator_ids: List[str]) -> dict:
     """)
     result = ts_conn.execute(query, {"creator_ids": tuple(creator_ids)})
     return {row[0]: row[1] for row in result.fetchall()}
+
+
+def delete_playlists_by_user_id(ts_conn, user_id: int) -> int:
+    """Delete all playlists for a given user.
+
+    This deletes playlists where the user is the creator (creator_id = user_id)
+    or where the playlist was created for the user (created_for_id = user_id).
+    It also removes the user from playlist collaborators.
+
+    Arguments:
+        ts_conn: timescale database connection
+        user_id: The user id to delete playlists for
+    """
+    delete_collaborators_query = text("""
+        DELETE FROM playlist.playlist_collaborator
+              WHERE collaborator_id = :user_id
+    """)
+    ts_conn.execute(delete_collaborators_query, {"user_id": user_id})
+
+    delete_playlist_query = text("""
+        DELETE FROM playlist.playlist
+              WHERE creator_id = :user_id
+                 OR created_for_id = :user_id
+    """)
+    ts_conn.execute(delete_playlist_query, {"user_id": user_id})
+    ts_conn.commit()
