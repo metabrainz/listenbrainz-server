@@ -26,6 +26,7 @@ import {
   updateMediaSession,
 } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import { getRecordingMBID } from "../../utils/utils";
 import BrainzPlayerUI from "./BrainzPlayerUI";
 import SoundcloudPlayer from "./SoundcloudPlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
@@ -72,11 +73,16 @@ import useWindowTitle from "./hooks/useWindowTitle";
 import useCrossTabSync from "./hooks/useCrossTabSync";
 import useListenSubmission from "./hooks/useListenSubmission";
 
+const DATASOURCE_URL_MAP: Record<string, RegExp> = {
+  youtube: /(?:https?:\/\/(?:www\.|m\.)?)?(?:youtu\.be|youtube\.com)\//,
+  // TODO: add regex for other sources
+};
+
 export type DataSourceType = {
   name: string;
   icon: IconProp;
   iconColor: string;
-  playListen: (listen: Listen | JSPFTrack) => void;
+  playListen: (listen: Listen | JSPFTrack, streamingUrl?: string) => void;
   togglePlay: () => void;
   stop: () => void;
   seekToPositionMs: (msTimecode: number) => void;
@@ -491,7 +497,8 @@ export default function BrainzPlayer() {
   const playListen = async (
     listen: BrainzPlayerQueueItem,
     nextListenIndex: number,
-    datasourceIndex: number = 0
+    datasourceIndex: number = 0,
+    streamingUrls?: Map<string, string>
   ): Promise<void> => {
     setCurrentListenIndex(nextListenIndex);
     setCurrentListen(listen);
@@ -513,8 +520,75 @@ export default function BrainzPlayer() {
         const { current } = datasourceRef;
         return isListenFromDatasource(listen, current);
       });
-      selectedDatasourceIndex =
-        listenedFromIndex === -1 ? 0 : listenedFromIndex;
+
+      if (listenedFromIndex !== -1) {
+        selectedDatasourceIndex = listenedFromIndex;
+      } else {
+        let urlsToUse = streamingUrls;
+
+        if (!urlsToUse) {
+          // fetch MBID to make metadata call
+          const recordingMbid = getRecordingMBID(listen as Listen);
+          if (recordingMbid) {
+            try {
+              const metadata = await APIService.getRecordingMetadata(
+                [recordingMbid],
+                true
+              );
+
+              if (metadata?.[recordingMbid]?.recording?.url_rels) {
+                const urlRels = metadata[recordingMbid].recording.url_rels;
+
+                const freeStreamingUrls = urlRels.filter(
+                  (rel) => rel.type === "free streaming"
+                  // TODO: include streaming relationships
+                );
+
+                urlsToUse = new Map<string, string>();
+
+                for (const datasourceRef of dataSourceRefs) {
+                  const datasource = datasourceRef.current;
+                  if (!datasource) continue;
+
+                  // check if data source supports "free streaming"
+                  const urlPattern = DATASOURCE_URL_MAP[datasource.name];
+                  if (!urlPattern) continue;
+
+                  // finds first match
+                  // TODO: handle multiple matches
+                  const matchingUrl = freeStreamingUrls.find((rel) =>
+                    urlPattern.test(rel.url)
+                  );
+
+                  if (matchingUrl) {
+                    urlsToUse.set(datasource.name, matchingUrl.url);
+                  }
+                }
+              }
+            } catch (error) {
+              // TODO: add toast
+            }
+          }
+        }
+
+        if (urlsToUse && urlsToUse.size > 0) {
+          const streamingDatasourceIndex = dataSourceRefs.findIndex(
+            (datasourceRef) => {
+              const { current } = datasourceRef;
+              return current && urlsToUse!.has(current.name);
+            }
+          );
+          if (streamingDatasourceIndex !== -1) {
+            selectedDatasourceIndex = streamingDatasourceIndex;
+          } else {
+            selectedDatasourceIndex = 0;
+          }
+        } else {
+          selectedDatasourceIndex = 0;
+        }
+
+        streamingUrls = urlsToUse;
+      }
     } else {
       /** If no matching datasource was found, revert to the default bahaviour
        * (try playing from source 0 or try next source)
@@ -527,7 +601,7 @@ export default function BrainzPlayer() {
       await new Promise((resolve) => {
         setTimeout(resolve, 200);
       });
-      playListen(listen, nextListenIndex, datasourceIndex);
+      playListen(listen, nextListenIndex, datasourceIndex, streamingUrls);
       return;
     }
     // Check if we can play the listen with the selected datasource
@@ -537,7 +611,7 @@ export default function BrainzPlayer() {
       !isListenFromDatasource(listen, dataSource) &&
       !dataSource.canSearchAndPlayTracks()
     ) {
-      playListen(listen, nextListenIndex, datasourceIndex + 1);
+      playListen(listen, nextListenIndex, datasourceIndex + 1, streamingUrls);
       return;
     }
     stopOtherBrainzPlayers();
@@ -567,10 +641,11 @@ export default function BrainzPlayer() {
         }, 500);
       });
     } catch (e) {
-      playListen(listen, nextListenIndex, datasourceIndex + 1);
+      playListen(listen, nextListenIndex, datasourceIndex + 1, streamingUrls);
       return;
     }
-    dataSource.playListen(getCurrentListen() ?? listen);
+    const streamingUrl = streamingUrls?.get(dataSource.name);
+    dataSource.playListen(getCurrentListen() ?? listen, streamingUrl);
   };
 
   const stopPlayerStateTimer = React.useCallback((): void => {
