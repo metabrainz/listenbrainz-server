@@ -222,15 +222,24 @@ export default function UserFeedPage() {
   >([]);
 
   React.useEffect(() => {
-    async function fetchThankedEvents(missingEventsIDs: number[]) {
+    async function fetchThankedEvents(
+      missingEvents: Array<{ id: number; type: string }>
+    ) {
       // Prefetch each missing original event missing from thank you events
       // separately from fetching the feed pages
-      const promises = missingEventsIDs.map((eventId) => {
+      const promises = missingEvents.map(({ id, type }) => {
+        // Use different API endpoint for recording_pin events
+        if (type === EventType.RECORDING_PIN) {
+          return queryClient.ensureQueryData({
+            queryKey: ["pin", id],
+            queryFn: () => APIService.getPin(id),
+          });
+        }
         return queryClient.ensureQueryData({
-          queryKey: ["feed-event", eventId],
+          queryKey: ["feed-event", id],
           queryFn: () =>
             APIService.getFeedEvent(
-              eventId,
+              id,
               currentUser.name,
               currentUser.auth_token as string
             ),
@@ -249,18 +258,21 @@ export default function UserFeedPage() {
       setSeparatelyLoadedEvents(resultsArray);
     }
     const feedEvents = data?.pages.map((page) => page.events).flat();
-    // Extract IDs of events referenced in thank you events currently in cache
-    const thankYouOriginalEventIds = feedEvents
+    // Extract IDs and types of events referenced in thank you events currently in cache
+    const thankYouOriginalEvents = feedEvents
       ?.filter((ev) => ev.event_type === EventType.THANKS)
       .map((ev) => {
         const metadata = ev.metadata as ThanksMetadata;
-        return metadata.original_event_id;
+        return {
+          id: metadata.original_event_id,
+          type: metadata.original_event_type,
+        };
       });
-    const missingEventsIDs = thankYouOriginalEventIds?.filter(
-      (originalEventId) => !feedEvents?.some((ev) => ev.id === originalEventId)
+    const missingEvents = thankYouOriginalEvents?.filter(
+      ({ id }) => !feedEvents?.some((ev) => ev.id === id)
     );
-    if (missingEventsIDs?.length) {
-      fetchThankedEvents(missingEventsIDs);
+    if (missingEvents?.length) {
+      fetchThankedEvents(missingEvents);
     }
   }, [data, APIService, currentUser, queryClient]);
 
