@@ -267,7 +267,7 @@ export default class AppleMusicPlayer
     return false;
   };
 
-  playListen = async (listen: Listen | JSPFTrack): Promise<void> => {
+  playListen = async (listen: Listen | JSPFTrack, streamingUrl?: string): Promise<void> => {
     const apple_music_id = AppleMusicPlayer.getURLFromListen(listen as Listen);
     if (apple_music_id) {
       await this.playAppleMusicId(apple_music_id);
