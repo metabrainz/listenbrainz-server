@@ -23,6 +23,7 @@ Contents
    users/api/index
    users/api-usage
    users/json
+   users/widgets
    users/clients
    users/api-compat
    users/listenbrainz-dumps

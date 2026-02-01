@@ -353,13 +353,14 @@ const removeFeaturingArtists = (artistName: string): string => {
 const performNavidromeSearch = async (
   instanceURL: string,
   authParams: string,
-  query: string
+  query: string,
+  signal?: AbortSignal
 ): Promise<NavidromeTrack | null> => {
   const searchUrl = `${instanceURL}/rest/search3?query=${encodeURIComponent(
     query
   )}&songCount=1&${authParams}`;
 
-  const response = await fetch(searchUrl);
+  const response = await fetch(searchUrl, { signal });
 
   if (!response.ok) {
     let errorBody: any = {};
@@ -392,7 +393,8 @@ const searchForNavidromeTrack = async (
   instanceURL: string,
   authParams: string,
   trackName?: string,
-  artistName?: string
+  artistName?: string,
+  signal?: AbortSignal
 ): Promise<NavidromeTrack | null> => {
   if (!instanceURL || !authParams) {
     throw new Error(
@@ -410,7 +412,8 @@ const searchForNavidromeTrack = async (
     const result = await performNavidromeSearch(
       instanceURL,
       authParams,
-      fullQuery
+      fullQuery,
+      signal
     );
     if (result) {
       return result;
@@ -422,7 +425,8 @@ const searchForNavidromeTrack = async (
     const fallbackResult = await performNavidromeSearch(
       instanceURL,
       authParams,
-      cleanedQuery
+      cleanedQuery,
+      signal
     );
     if (fallbackResult) {
       return fallbackResult;
@@ -430,6 +434,11 @@ const searchForNavidromeTrack = async (
 
     return null;
   } catch (error) {
+    // Allow AbortError to pass through for caller to handle
+    if (error.name === "AbortError") {
+      throw error;
+    }
+
     if (
       error.message ===
         "Missing Navidrome instance URL or authentication parameters" ||
