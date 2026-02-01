@@ -539,9 +539,8 @@ export default function BrainzPlayer() {
               if (metadata?.[recordingMbid]?.recording?.url_rels) {
                 const urlRels = metadata[recordingMbid].recording.url_rels;
 
-                const freeStreamingUrls = urlRels.filter(
-                  (rel) => rel.type === "free streaming"
-                  // TODO: include streaming relationships
+                const streamingUrls = urlRels.filter(
+                  (rel) => rel.type === "free streaming" || rel.type === "streaming"
                 );
 
                 urlsToUse = new Map<string, string>();
@@ -556,7 +555,7 @@ export default function BrainzPlayer() {
 
                   // finds first match
                   // TODO: handle multiple matches
-                  const matchingUrl = freeStreamingUrls.find((rel) =>
+                  const matchingUrl = streamingUrls.find((rel) =>
                     urlPattern.test(rel.url)
                   );
 
