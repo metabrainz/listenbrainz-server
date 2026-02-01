@@ -45,7 +45,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
         if config.USE_MINIMAL_DATASET:
             return [[(uuid.UUID(u),) for u in ('e97f805a-ab48-4c52-855e-07049142113d',
                                                'e95e5009-99b3-42d2-abdd-477967233b08',
-                                               '885ccb38-4057-4d1a-8fb0-52804f79d653')]]
+                                               '97e69767-5d34-4c97-b36a-f3b2b1ef9dae')]]
         else:
             return [[]]
 
