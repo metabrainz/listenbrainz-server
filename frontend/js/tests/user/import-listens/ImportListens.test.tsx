@@ -79,7 +79,15 @@ describe("ImportListensPage", () => {
 
     server = setupServer(
       http.post("/settings/import/", (req) => {
-        return HttpResponse.json({ user_has_email: true });
+        return HttpResponse.json({
+          user_has_email: true,
+          pg_timezones: [
+            ["America/New_York", "UTC-05:00"],
+            ["Europe/London", "UTC+00:00"],
+            ["Asia/Tokyo", "UTC+09:00"],
+          ],
+          user_timezone: "America/New_York",
+        });
       }),
       http.get("/1/import-listens/list/", (req) => {
         return HttpResponse.json(mockImports);
@@ -112,11 +120,38 @@ describe("ImportListensPage", () => {
   it("renders submission form correctly", async () => {
     renderWithProviders(<RouterProvider router={router} />, {}, { wrapper: ReactQueryWrapper }, false);
     await waitFor(() => {
-      expect(screen.getByText(/start import from/i)).toBeInTheDocument();
-      expect(screen.getByText(/end date for import/i)).toBeInTheDocument();
       expect(screen.getByText(/select Service/i)).toBeInTheDocument();
       expect(screen.getByText(/Select your .zip file/i)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /import listens/i })).toBeInTheDocument();
+    });
+
+    const accordionSummary = screen.getByText(/additional options/i);
+    expect(accordionSummary).toBeInTheDocument();
+    await user.click(accordionSummary);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/timezone/i)).toBeInTheDocument();
+      expect(screen.getByText(/start import from/i)).toBeInTheDocument();
+      expect(screen.getByText(/end date for import/i)).toBeInTheDocument();
+    });
+  });
+
+  it("disables timezone selection for non-audioscrobbler services", async () => {
+    renderWithProviders(<RouterProvider router={router} />, {}, { wrapper: ReactQueryWrapper }, false);
+    const accordionSummary = screen.getByText(/additional options/i);
+    await user.click(accordionSummary);
+
+    await waitFor(() => {
+      const timezoneSelect = screen.getByLabelText(/timezone/i);
+      expect(timezoneSelect).toBeDisabled();
+    });
+
+    const serviceSelect = screen.getByLabelText(/select service/i);
+    await user.selectOptions(serviceSelect, "audioscrobbler");
+
+    await waitFor(() => {
+      const timezoneSelect = screen.getByLabelText(/timezone/i);
+      expect(timezoneSelect).not.toBeDisabled();
     });
   });
 
