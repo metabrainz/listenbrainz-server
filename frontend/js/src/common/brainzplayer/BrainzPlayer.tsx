@@ -540,7 +540,8 @@ export default function BrainzPlayer() {
                 const urlRels = metadata[recordingMbid].recording.url_rels;
 
                 const streamingUrls = urlRels.filter(
-                  (rel) => rel.type === "free streaming" || rel.type === "streaming"
+                  (rel) =>
+                    rel.type === "free streaming" || rel.type === "streaming"
                 );
 
                 urlsToUse = new Map<string, string>();
@@ -565,7 +566,10 @@ export default function BrainzPlayer() {
                 }
               }
             } catch (error) {
-              // TODO: add toast
+              handleError(
+                error,
+                "Error fetching streaming URLs from MusicBrainz"
+              );
             }
           }
         }

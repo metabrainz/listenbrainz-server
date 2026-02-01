@@ -328,7 +328,11 @@ export default class SpotifyPlayer
     return true;
   };
 
-  playListen = (listen: Listen | JSPFTrack, streamingUrl?: string, retryCount = 0): void => {
+  playListen = (
+    listen: Listen | JSPFTrack,
+    streamingUrl?: string,
+    retryCount = 0
+  ): void => {
     const { onTrackNotFound } = this.props;
     if (!this.checkRetries(retryCount)) {
       this.debouncedOnTrackNotFound();
