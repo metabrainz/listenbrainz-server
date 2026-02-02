@@ -459,33 +459,20 @@ export default function ImportListens() {
         </div>
       )}
       <p>
-        This page allows you to import your{" "}
-        <span className="strong" data-tip data-for="info-tooltip">
-          listens
-        </span>{" "}
-        from third-party music services by uploading backup files.
-      </p>
-      <ReactTooltip id="info-tooltip" place="top">
-        Fun Fact: The term <strong>scrobble</strong> is a trademarked term by
-        Last.fm, and we cannot use it.
+        This page allows you to import your history backup files from
+        third-party music services.
         <br />
-        Instead, we use the term <strong>listen</strong> for our data.
-      </ReactTooltip>
-      <p className="alert alert-info">
-        To connect to a music service and track{" "}
-        <strong>
-          <em>new</em>
-        </strong>{" "}
-        listens, head to the{" "}
-        <Link to="/settings/music-services/details/">Connect services</Link>{" "}
-        page .<br />
         For submitting listens from your music player or devices, check out the{" "}
         <Link to="/add-data/">Submitting data</Link> page.
       </p>
-      <p>
-        For example if you{" "}
-        <Link to="/settings/music-services/details/">connect to Spotify</Link>{" "}
-        we are limited to retrieving your last 50 listens.
+      <p className="alert alert-info">
+        <strong>Spotify</strong> users: to connect to Spotify and track new
+        listens, head to the{" "}
+        <Link to="/settings/music-services/details/">Connect services</Link>{" "}
+        page.
+        <br />
+        Due to limitations in Spotify&apos;s API, we are limited to retrieving
+        your last 50 listens.
         <br />
         You can however request your{" "}
         <a
@@ -495,10 +482,17 @@ export default function ImportListens() {
         >
           extended streaming history
         </a>
-        , which contains your entire listening history, and upload it here. To
-        avoid duplicates, be sure to set the appropriate limit date and time.
+        , which contains your entire listening history, and upload it below.
       </p>
-
+      <p className="alert alert-info">
+        <strong>Last.FM and Libre.FM</strong> users: to import your history and
+        track new listens, head to the{" "}
+        <Link to="/settings/music-services/details/">Connect services</Link>{" "}
+        page.
+        <br />
+        If you have historical backup files or LFM-style exports from other
+        service, you can import them below.
+      </p>
       <h3 className="card-title">Import from Listening History Files</h3>
       <br />
       <p>
@@ -506,6 +500,9 @@ export default function ImportListens() {
       </p>
       <p>
         We currently support export files from: <b>{humanReadableServices}</b>.
+        <br />
+        To avoid potential duplicates, be sure to set the appropriate limit date
+        and time.
       </p>
       <div className="alert alert-warning fade show" role="alert">
         <p>
