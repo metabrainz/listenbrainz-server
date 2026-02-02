@@ -1,6 +1,3 @@
-from brainzutils import cache
-from brainzutils.ratelimit import set_rate_limits
-from flask import url_for
 from typing import List
 from unittest.mock import patch
 
@@ -17,27 +14,17 @@ from listenbrainz.db.model.pinned_recording import (
 import json
 
 
-def fetch_track_metadata_for_pins(pins: List[PinnedRecording]) -> List[PinnedRecording]:
+def fetch_track_metadata_for_pins(ts_conn, pins: List[PinnedRecording]) -> List[PinnedRecording]:
     return pins
 
 
 class PinnedRecAPITestCase(IntegrationTestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        super(PinnedRecAPITestCase, cls).setUpClass()
-        set_rate_limits(5000, 50000, 10)
-
-    @classmethod
-    def tearDownClass(cls):
-        cache._r.flushdb()
-        super(PinnedRecAPITestCase, cls).tearDownClass()
-
     def setUp(self):
         super(PinnedRecAPITestCase, self).setUp()
-        self.user = db_user.get_or_create(1, "test_user_1")
-        self.followed_user_1 = db_user.get_or_create(2, "followed_user_1")
-        self.followed_user_2 = db_user.get_or_create(3, "followed_user_2")
+        self.user = db_user.get_or_create(self.db_conn, 1, "test_user_1")
+        self.followed_user_1 = db_user.get_or_create(self.db_conn, 2, "followed_user_1")
+        self.followed_user_2 = db_user.get_or_create(self.db_conn, 3, "followed_user_2")
 
         self.pinned_rec_samples = [
             {
@@ -75,6 +62,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
         for data in self.pinned_rec_samples[:limit]:
             db_pinned_rec.pin(
+                self.db_conn,
                 WritablePinnedRecording(
                     user_id=user_id,
                     recording_msid=data["recording_msid"],
@@ -101,13 +89,13 @@ class PinnedRecAPITestCase(IntegrationTestCase):
             blurb_content=self.pinned_rec_samples[index]["blurb_content"],
         )
 
-        db_pinned_rec.pin(recording_to_pin)
+        db_pinned_rec.pin(self.db_conn, recording_to_pin)
         return recording_to_pin
 
     def test_pin(self):
         """Tests that pin endpoint returns 200 when successful"""
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            self.custom_url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
             data=json.dumps(self.pinned_rec_samples[0]),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json",
@@ -120,7 +108,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
     def test_pin_unauthorized(self):
         """Tests that pin endpoint returns 401 when auth token is invalid"""
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            self.custom_url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
             data=json.dumps(self.pinned_rec_samples[0]),
             headers={"Authorization": "Token {}".format("-- This is an invalid auth token --")},
             content_type="application/json",
@@ -137,7 +125,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
             "blurb_content": "Amazing first recording",
         }
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            self.custom_url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
             data=json.dumps(invalid_pin_1),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json",
@@ -155,7 +143,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            self.custom_url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
             data=json.dumps(invalid_pin_1),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json",
@@ -175,7 +163,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            self.custom_url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
             data=json.dumps(invalid_pin_1),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json",
@@ -194,7 +182,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            self.custom_url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
             data=json.dumps(invalid_pin_1),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json",
@@ -207,14 +195,14 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         """Tests that unpin endpoint returns 200 when successful"""
         # pin track before unpinning
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            self.custom_url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
             data=json.dumps(self.pinned_rec_samples[0]),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json",
         )
 
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.unpin_recording_for_user"),
+            self.custom_url_for("pinned_rec_api_bp_v1.unpin_recording_for_user"),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json",
         )
@@ -225,7 +213,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
     def test_unpin_no_pin_found(self):
         """Tests that unpin endpoint returns 404 when no pinned is found to unpin"""
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.unpin_recording_for_user"),
+            self.custom_url_for("pinned_rec_api_bp_v1.unpin_recording_for_user"),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json",
         )
@@ -236,7 +224,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
     def test_unpin_unauthorized(self):
         """Tests that unpin endpoint returns 401 when auth token is invalid"""
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.unpin_recording_for_user"),
+            self.custom_url_for("pinned_rec_api_bp_v1.unpin_recording_for_user"),
             headers={"Authorization": "Token {}".format("-- This is an invalid auth token --")},
             content_type="application/json",
         )
@@ -248,16 +236,16 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         """Tests that unpin endpoint returns 200 when successful"""
         # pin track before deleting
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            self.custom_url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
             data=json.dumps(self.pinned_rec_samples[0]),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json",
         )
 
-        pin_to_delete = db_pinned_rec.get_current_pin_for_user(self.user["id"])
+        pin_to_delete = db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"])
 
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.delete_pin_for_user", row_id=pin_to_delete.row_id),
+            self.custom_url_for("pinned_rec_api_bp_v1.delete_pin_for_user", row_id=pin_to_delete.row_id),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
         )
 
@@ -268,17 +256,17 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         """Tests that delete endpoint returns 401 when auth token is invalid"""
         # pin track for user1
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            self.custom_url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
             data=json.dumps(self.pinned_rec_samples[0]),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json",
         )
 
         # attempt to delete
-        pin_to_delete = db_pinned_rec.get_current_pin_for_user(self.user["id"])
+        pin_to_delete = db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"])
 
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.delete_pin_for_user", row_id=pin_to_delete.row_id),
+            self.custom_url_for("pinned_rec_api_bp_v1.delete_pin_for_user", row_id=pin_to_delete.row_id),
             headers={"Authorization": "Token {}".format("-- This is an invalid auth token --")},
         )
         self.assert401(response)
@@ -287,26 +275,28 @@ class PinnedRecAPITestCase(IntegrationTestCase):
     def test_delete_no_row_id_found(self):
         """Tests that delete endpoint returns 404 when no pin with row_id is found to delete"""
         self.client.post(
-            url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            self.custom_url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
             data=json.dumps(self.pinned_rec_samples[0]),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type="application/json",
         )
 
         response = self.client.post(
-            url_for("pinned_rec_api_bp_v1.delete_pin_for_user", row_id=98764),
+            self.custom_url_for("pinned_rec_api_bp_v1.delete_pin_for_user", row_id=98764),
             headers={"Authorization": "Token {}".format(self.followed_user_1["auth_token"])},
         )
 
         self.assert404(response)
         self.assertEqual(response.json["code"], 404)
 
-    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items', fetch_track_metadata_for_pins)
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items',
+           fetch_track_metadata_for_pins)
     def test_get_pins_for_user(self):
         """Test that valid response is received with 200 code"""
 
         count = self.insert_test_data(self.user["id"], 2)  # pin 2 recordings
-        response = self.client.get(url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"]))
+        response = self.client.get(
+            self.custom_url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"]))
         self.assert200(response)
         data = json.loads(response.data)
 
@@ -328,17 +318,20 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assertEqual(pins[1]["recording_mbid"], self.pinned_rec_samples[0]["recording_mbid"])
         self.assertEqual(pins[1]["blurb_content"], self.pinned_rec_samples[0]["blurb_content"])
 
-    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items', fetch_track_metadata_for_pins)
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items',
+           fetch_track_metadata_for_pins)
     def test_get_current_pin_for_user(self):
         """Test that valid response is received with 200 code"""
-        response = self.client.get(url_for("pinned_rec_api_bp_v1.get_current_pin_for_user", user_name=self.user["musicbrainz_id"]))
+        response = self.client.get(
+            self.custom_url_for("pinned_rec_api_bp_v1.get_current_pin_for_user", user_name=self.user["musicbrainz_id"]))
         self.assert200(response)
         data = json.loads(response.data)
         self.assertEqual(data["pinned_recording"], None)
         self.assertEqual(data["user_name"], self.user["musicbrainz_id"])
 
         self.insert_test_data(self.user["id"], 2)  # pin 2 recordings
-        response = self.client.get(url_for("pinned_rec_api_bp_v1.get_current_pin_for_user", user_name=self.user["musicbrainz_id"]))
+        response = self.client.get(
+            self.custom_url_for("pinned_rec_api_bp_v1.get_current_pin_for_user", user_name=self.user["musicbrainz_id"]))
         self.assert200(response)
         data = json.loads(response.data)
 
@@ -350,18 +343,21 @@ class PinnedRecAPITestCase(IntegrationTestCase):
     def test_get_pins_for_user_invalid_username(self):
         """Tests that endpoint returns 404 when no user with given user_name is found"""
         self.insert_test_data(self.user["id"])  # pin 4 recordings for user
-        response = self.client.get(url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=" -- invalid username -- "))
+        response = self.client.get(
+            self.custom_url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=" -- invalid username -- "))
 
         self.assert404(response)
         self.assertEqual(response.json["code"], 404)
 
-    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items', fetch_track_metadata_for_pins)
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items',
+           fetch_track_metadata_for_pins)
     def test_get_pins_for_user_count_param(self):
         """Tests that valid response is received honoring count parameter"""
         limit = 2
         pinned_count = self.insert_test_data(self.user["id"])  # pin 4 recordings
         response = self.client.get(
-            url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"], count=limit)
+            self.custom_url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"],
+                                count=limit)
         )
         data = json.loads(response.data)
         pins = data["pinned_recordings"]
@@ -376,7 +372,8 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         # double check with different limit
         limit = 3
         response = self.client.get(
-            url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"], count=limit)
+            self.custom_url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"],
+                                count=limit)
         )
         data = json.loads(response.data)
 
@@ -388,25 +385,29 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
         # test with string
         response = self.client.get(
-            url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"], count="-- invalid count --")
+            self.custom_url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"],
+                                count="-- invalid count --")
         )
         self.assert400(response)
         self.assertEqual(response.json["code"], 400)
 
         # test with negative integer
         response = self.client.get(
-            url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"], count=-1)
+            self.custom_url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"],
+                                count=-1)
         )
         self.assert400(response)
         self.assertEqual(response.json["code"], 400)
 
-    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items', fetch_track_metadata_for_pins)
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items',
+           fetch_track_metadata_for_pins)
     def test_get_pins_for_user_offset_param(self):
         """Tests that valid response is received honoring offset parameter"""
         offset = 2
         pinned_count = self.insert_test_data(self.user["id"])  # pin 4 recordings
         response = self.client.get(
-            url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"], offset=offset)
+            self.custom_url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"],
+                                offset=offset)
         )
         data = json.loads(response.data)
         pins = data["pinned_recordings"]
@@ -421,7 +422,8 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         # double check with different limit
         offset = 3
         response = self.client.get(
-            url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"], offset=offset)
+            self.custom_url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"],
+                                offset=offset)
         )
         data = json.loads(response.data)
 
@@ -433,8 +435,9 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
         # test with string
         response = self.client.get(
-            url_for(
-                "pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"], offset="-- invalid offset --"
+            self.custom_url_for(
+                "pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"],
+                offset="-- invalid offset --"
             )
         )
         self.assert400(response)
@@ -442,23 +445,26 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
         # test with negative integer
         response = self.client.get(
-            url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"], offset=-1)
+            self.custom_url_for("pinned_rec_api_bp_v1.get_pins_for_user", user_name=self.user["musicbrainz_id"],
+                                offset=-1)
         )
         self.assert400(response)
         self.assertEqual(response.json["code"], 400)
 
-    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items', fetch_track_metadata_for_pins)
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items',
+           fetch_track_metadata_for_pins)
     def test_get_pins_for_user_following(self):
         """Test that valid response is received with 200 code"""
         # user follows followed_user_1 and followed_user_2
-        db_user_relationship.insert(self.user["id"], self.followed_user_1["id"], "follow")
-        db_user_relationship.insert(self.user["id"], self.followed_user_2["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_1["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_2["id"], "follow")
 
         pin1 = self.pin_single_sample(self.followed_user_1["id"], 0)  # pin recording for followed_user_1
         pin2 = self.pin_single_sample(self.followed_user_2["id"], 1)  # pin recording for followed_user_2
 
         response = self.client.get(
-            url_for("pinned_rec_api_bp_v1.get_pins_for_user_following", user_name=self.user["musicbrainz_id"])
+            self.custom_url_for("pinned_rec_api_bp_v1.get_pins_for_user_following",
+                                user_name=self.user["musicbrainz_id"])
         )
         self.assert200(response)
         data = json.loads(response.data)
@@ -483,24 +489,27 @@ class PinnedRecAPITestCase(IntegrationTestCase):
     def test_get_pins_for_user_following_invalid_username(self):
         """Tests that endpoint returns 404 when no user with given user_name is found"""
         response = self.client.get(
-            url_for("pinned_rec_api_bp_v1.get_pins_for_user_following", user_name=" -- invalid username -- ")
+            self.custom_url_for("pinned_rec_api_bp_v1.get_pins_for_user_following",
+                                user_name=" -- invalid username -- ")
         )
         self.assert404(response)
         self.assertEqual(response.json["code"], 404)
 
-    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items', fetch_track_metadata_for_pins)
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items',
+           fetch_track_metadata_for_pins)
     def test_get_pins_for_user_count_param_2(self):
         """Tests that valid response is received honoring count parameter"""
         # user follows followed_user_1 and followed_user_2
-        db_user_relationship.insert(self.user["id"], self.followed_user_1["id"], "follow")
-        db_user_relationship.insert(self.user["id"], self.followed_user_2["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_1["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_2["id"], "follow")
 
         self.pin_single_sample(self.followed_user_1["id"], 0)  # pin recording for followed_user_1
         included_pin = self.pin_single_sample(self.followed_user_2["id"], 1)  # pin recording for followed_user_2
 
         limit = 1
         response = self.client.get(
-            url_for("pinned_rec_api_bp_v1.get_pins_for_user_following", user_name=self.user["musicbrainz_id"], count=limit)
+            self.custom_url_for("pinned_rec_api_bp_v1.get_pins_for_user_following",
+                                user_name=self.user["musicbrainz_id"], count=limit)
         )
         data = json.loads(response.data)
         pins = data["pinned_recordings"]
@@ -509,7 +518,8 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assertEqual(data["count"], 2 - limit)
 
         # check that only the latest pin was included in returned json
-        self.assertEqual(pins[0]["recording_msid"], included_pin.recording_msid)  # included_pin was pinned most recently
+        self.assertEqual(pins[0]["recording_msid"],
+                         included_pin.recording_msid)  # included_pin was pinned most recently
         self.assertEqual(pins[0]["recording_mbid"], included_pin.recording_mbid)
         self.assertEqual(pins[0]["blurb_content"], included_pin.blurb_content)
         self.assertEqual(pins[0]["user_name"], self.followed_user_2["musicbrainz_id"])
@@ -519,7 +529,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
         # test with string
         response = self.client.get(
-            url_for(
+            self.custom_url_for(
                 "pinned_rec_api_bp_v1.get_pins_for_user_following",
                 user_name=self.user["musicbrainz_id"],
                 count="-- invalid count --",
@@ -530,24 +540,27 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
         # test with negative integer
         response = self.client.get(
-            url_for("pinned_rec_api_bp_v1.get_pins_for_user_following", user_name=self.user["musicbrainz_id"], count=-1)
+            self.custom_url_for("pinned_rec_api_bp_v1.get_pins_for_user_following",
+                                user_name=self.user["musicbrainz_id"], count=-1)
         )
         self.assert400(response)
         self.assertEqual(response.json["code"], 400)
 
-    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items', fetch_track_metadata_for_pins)
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items',
+           fetch_track_metadata_for_pins)
     def test_get_pins_for_user_following_offset_param(self):
         """Tests that valid response is received honoring offset parameter"""
         # user follows followed_user_1 and followed_user_2
-        db_user_relationship.insert(self.user["id"], self.followed_user_1["id"], "follow")
-        db_user_relationship.insert(self.user["id"], self.followed_user_2["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_1["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], self.followed_user_2["id"], "follow")
 
         included_pin = self.pin_single_sample(self.followed_user_1["id"], 0)  # pin recording for followed_user_1
         self.pin_single_sample(self.followed_user_2["id"], 1)  # pin recording for followed_user_2
 
         offset = 1
         response = self.client.get(
-            url_for("pinned_rec_api_bp_v1.get_pins_for_user_following", user_name=self.user["musicbrainz_id"], offset=offset)
+            self.custom_url_for("pinned_rec_api_bp_v1.get_pins_for_user_following",
+                                user_name=self.user["musicbrainz_id"], offset=offset)
         )
         data = json.loads(response.data)
         pins = data["pinned_recordings"]
@@ -556,7 +569,8 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         self.assertEqual(data["count"], 2 - offset)
 
         # check that only the older pin was included in returned JSON
-        self.assertEqual(pins[0]["recording_msid"], included_pin.recording_msid)  # included_pin was pinned most recently
+        self.assertEqual(pins[0]["recording_msid"],
+                         included_pin.recording_msid)  # included_pin was pinned most recently
         self.assertEqual(pins[0]["recording_mbid"], included_pin.recording_mbid)
         self.assertEqual(pins[0]["blurb_content"], included_pin.blurb_content)
         self.assertEqual(pins[0]["user_name"], self.followed_user_1["musicbrainz_id"])
@@ -566,7 +580,7 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
         # test with string
         response = self.client.get(
-            url_for(
+            self.custom_url_for(
                 "pinned_rec_api_bp_v1.get_pins_for_user_following",
                 user_name=self.user["musicbrainz_id"],
                 offset="-- invalid offset --",
@@ -577,7 +591,72 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
         # test with negative integer
         response = self.client.get(
-            url_for("pinned_rec_api_bp_v1.get_pins_for_user_following", user_name=self.user["musicbrainz_id"], offset=-1)
+            self.custom_url_for("pinned_rec_api_bp_v1.get_pins_for_user_following",
+                                user_name=self.user["musicbrainz_id"], offset=-1)
         )
         self.assert400(response)
         self.assertEqual(response.json["code"], 400)
+
+    def test_update_pin_blurb(self):
+        """ Tests that update pin works """
+        response = self.client.post(
+            self.custom_url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            data=json.dumps(self.pinned_rec_samples[0]),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json",
+        )
+        self.assert200(response)
+
+        pin_to_update = db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"])
+
+        response = self.client.post(
+            self.custom_url_for("pinned_rec_api_bp_v1.update_blurb_content_pinned_recording",
+                                row_id=pin_to_update.row_id),
+            data=json.dumps({"blurb_content": "new comment"}),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json",
+        )
+        self.assert200(response)
+
+        pin_to_update = db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"])
+        self.assertEqual(pin_to_update.blurb_content, "new comment")
+
+    def test_update_pin_404(self):
+        """ Test that update pin returns 404 if pin not found """
+        response = self.client.post(
+            self.custom_url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            data=json.dumps(self.pinned_rec_samples[0]),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json",
+        )
+        self.assert200(response)
+
+        pin_to_update = db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"])
+        response = self.client.post(
+            self.custom_url_for("pinned_rec_api_bp_v1.update_blurb_content_pinned_recording",
+                                row_id=7777),
+            data=json.dumps({"blurb_content": "new comment"}),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json",
+        )
+        self.assert404(response)
+
+    def test_update_pin_403(self):
+        """ Test that update pin returns 403 if user tries to update another user's pin  """
+        response = self.client.post(
+            self.custom_url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            data=json.dumps(self.pinned_rec_samples[0]),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json",
+        )
+        self.assert200(response)
+
+        pin_to_update = db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"])
+        response = self.client.post(
+            self.custom_url_for("pinned_rec_api_bp_v1.update_blurb_content_pinned_recording",
+                                row_id=pin_to_update.row_id),
+            data=json.dumps({"blurb_content": "new comment"}),
+            headers={"Authorization": "Token " + self.followed_user_1["auth_token"]},
+            content_type="application/json",
+        )
+        self.assert403(response)

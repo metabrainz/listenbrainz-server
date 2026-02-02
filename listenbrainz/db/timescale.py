@@ -73,3 +73,32 @@ def run_sql_script_without_transaction(sql_file_path):
             finally:
                 connection.connection.set_isolation_level(1)
         return True
+
+
+def run_sql_query_without_transaction(sql_query):
+    with engine.connect() as connection:
+        connection.connection.set_isolation_level(0)
+        try:
+            for line in sql_query:
+                if line and not line.startswith("--"):
+                    connection.execute(text(line))
+                    print("EXECUTE: %s" % line)
+        except sqlalchemy.exc.ProgrammingError as e:
+            print("Error: {}".format(e))
+            return False
+        finally:
+            connection.connection.set_isolation_level(1)
+            connection.close()
+        return True
+
+
+def create_test_timescale_connect_strings():
+    db_name = "listenbrainz_ts_test"
+    db_user = "listenbrainz_ts_test"
+    return {
+        "DB_CONNECT": f"postgresql://{db_user}:listenbrainz_ts@lb_db/{db_name}",
+        "DB_CONNECT_ADMIN": "postgresql://postgres:postgres@lb_db/postgres",
+        "DB_CONNECT_ADMIN_LB": f"postgresql://postgres:postgres@lb_db/{db_name}",
+        "DB_NAME": db_name,
+        "DB_USER": db_user
+    }

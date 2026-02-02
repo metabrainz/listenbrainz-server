@@ -42,21 +42,10 @@ def import_user_similarities(data):
                 values.append((user, orjson.dumps(similar).decode("utf-8")))
                 user_count += 1
                 target_user_count += len(similar.keys())
-                if len(values) == ROWS_PER_BATCH:
-                    execute_values(curs, query, values, template=None)
-                    values = []
-            execute_values(curs, query, values, template=None)
-        conn.commit()
+            execute_values(curs, query, values, page_size=ROWS_PER_BATCH, template=None)
 
-    except psycopg2.errors.OperationalError as err:
-        conn.rollback()
-        current_app.logger.error(
-            "Error: Cannot import user similarites: %s" % str(err))
-        return (0, 0.0, "Error: Cannot import user similarites: %s" % str(err))
 
-    # Next lookup user names and insert them into the new similar_users table
-    try:
-        with conn.cursor() as curs:
+            # Next lookup user names and insert them into the new similar_users table
             curs.execute(
                 """DROP TABLE IF EXISTS recommendation.tmp_similar_user""")
             curs.execute("""CREATE TABLE recommendation.tmp_similar_user
@@ -80,45 +69,23 @@ def import_user_similarities(data):
                             FOREIGN KEY (user_id)
                              REFERENCES "user" (id)
                               ON DELETE CASCADE""" % int(time.time()))
-        conn.commit()
 
-    except psycopg2.errors.OperationalError as err:
-        conn.rollback()
-        current_app.logger.error(
-            "Error: Cannot correlate user similarity user name: %s" % str(err))
-        return (0, 0.0, "Error: Cannot correlate user similarity user name: %s" % str(err))
-
-    # Finally rotate the table into place
-    try:
-        with conn.cursor() as curs:
             curs.execute("""ALTER TABLE recommendation.similar_user
                               RENAME TO delete_similar_user""")
             curs.execute("""ALTER TABLE recommendation.tmp_similar_user
                               RENAME TO similar_user""")
-        conn.commit()
-    except psycopg2.errors.OperationalError as err:
-        conn.rollback()
-        current_app.logger.error(
-            "Error: Failed to rotate similar_users table into place: %s" % str(err))
-        return (0, 0.0, "Error: Failed to rotate similar_users table into place: %s" % str(err))
-
-    # Last, delete the old table
-    try:
-        with conn.cursor() as curs:
-            curs.execute(
-                """DROP TABLE recommendation.delete_similar_user CASCADE""")
+            curs.execute("""DROP TABLE recommendation.delete_similar_user CASCADE""")
         conn.commit()
 
     except psycopg2.errors.OperationalError as err:
         conn.rollback()
-        current_app.logger.error(
-            "Error: Failed to clean up old similar user table: %s" % str(err))
-        return (0, 0.0, "Error: Failed to clean up old similar user table: %s" % str(err))
+        current_app.logger.error("Error: Cannot rotate similar users data: %s" % str(err))
+        return 0, 0.0, "Error: Cannot rotate similar users data: %s" % str(err)
 
-    return (user_count, target_user_count / user_count, "")
+    return user_count, target_user_count / user_count, ""
 
 
-def get_top_similar_users(count: int = 200):
+def get_top_similar_users(db_conn, count: int = 200):
     """
         Fetch the count top similar users and return a tuple(user1, user2, score(0.0-1.0))
         If global_similarity is True, the return the user similarity on a global (not
@@ -126,30 +93,29 @@ def get_top_similar_users(count: int = 200):
     """
     similar_users = {}
     try:
-        with db.engine.connect() as connection:
-            result = connection.execute(text("""
-                SELECT u.musicbrainz_id AS user_name
-                     , ou.musicbrainz_id AS other_user_name
-                     , value->1 AS similarity -- first element of array is similarity, second is global_similarity
-                  FROM recommendation.similar_user r 
-                  JOIN jsonb_each(r.similar_users) j
-                    ON TRUE
-                  JOIN "user" ou
-                    ON j.key::int = ou.id  -- user_name of other user stored in jsonb
-                  JOIN "user" u
-                   ON r.user_id = u.id -- user_name of the user_id stored directly in column
-            """))
-            while True:
-                row = result.fetchone()
-                if not row:
-                    break
-                user = row.user_name
-                other_user = row.other_user_name
-                similarity = "%.3f" % row.similarity
-                if user < other_user:
-                    similar_users[user + other_user] = (user, other_user, similarity)
-                else:
-                    similar_users[other_user + user] = (other_user, user, similarity)
+        result = db_conn.execute(text("""
+            SELECT u.musicbrainz_id AS user_name
+                 , ou.musicbrainz_id AS other_user_name
+                 , value AS similarity -- first element of array is similarity, second is global_similarity
+              FROM recommendation.similar_user r 
+              JOIN jsonb_each(r.similar_users) j
+                ON TRUE
+              JOIN "user" ou
+                ON j.key::int = ou.id  -- user_name of other user stored in jsonb
+              JOIN "user" u
+               ON r.user_id = u.id -- user_name of the user_id stored directly in column
+        """))
+        while True:
+            row = result.fetchone()
+            if not row:
+                break
+            user = row.user_name
+            other_user = row.other_user_name
+            similarity = "%.3f" % row.similarity
+            if user < other_user:
+                similar_users[user + other_user] = (user, other_user, similarity)
+            else:
+                similar_users[other_user + user] = (other_user, user, similarity)
     except psycopg2.errors.OperationalError as err:
         current_app.logger.error("Error: Failed to fetch top similar users %s" % str(err))
         return []

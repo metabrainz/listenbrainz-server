@@ -5,15 +5,13 @@ import listenbrainz.db.user as db_user
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 
-from datetime import datetime
-
 
 class MissingMusicbrainzDataDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
     def setUp(self):
         DatabaseTestCase.setUp(self)
         TimescaleTestCase.setUp(self)
-        self.user = db_user.get_or_create(1, 'vansika')
+        self.user = db_user.get_or_create(self.db_conn, 1, 'vansika')
 
     def tearDown(self):
         TimescaleTestCase.tearDown(self)
@@ -25,6 +23,7 @@ class MissingMusicbrainzDataDatabaseTestCase(DatabaseTestCase, TimescaleTestCase
             missing_musicbrainz_data = json.load(f)
 
         db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(
+            self.db_conn,
             user_id=self.user['id'],
             missing_musicbrainz_data=UserMissingMusicBrainzDataJson(**{'missing_musicbrainz_data': missing_musicbrainz_data}),
             source='cf'
@@ -37,17 +36,22 @@ class MissingMusicbrainzDataDatabaseTestCase(DatabaseTestCase, TimescaleTestCase
             missing_musicbrainz_data = json.load(f)
 
         db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(
+            self.db_conn,
             user_id=self.user['id'],
             missing_musicbrainz_data=UserMissingMusicBrainzDataJson(**{'missing_musicbrainz_data': missing_musicbrainz_data}),
             source='cf'
         )
 
-        result = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(user_id=self.user['id'], source='cf')
+        result = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(
+            self.db_conn, self.ts_conn, user_id=self.user['id'], source='cf'
+        )
         self.assertEqual(missing_musicbrainz_data, result[0])
 
     def test_get_user_missing_musicbrainz_data(self):
         data_inserted = self.insert_test_data()
-        result = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(user_id=self.user['id'], source='cf')
+        result = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(
+            self.db_conn, self.ts_conn, user_id=self.user['id'], source='cf'
+        )
         self.assertEqual(data_inserted, result[0])
 
     def test_multiple_inserts_into_db(self):
@@ -57,16 +61,20 @@ class MissingMusicbrainzDataDatabaseTestCase(DatabaseTestCase, TimescaleTestCase
             missing_musicbrainz_data = json.load(f)
 
         db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(
+            self.db_conn,
             user_id=self.user['id'],
             missing_musicbrainz_data=UserMissingMusicBrainzDataJson(**{'missing_musicbrainz_data': missing_musicbrainz_data}),
             source='cf'
         )
 
         db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(
+            self.db_conn,
             user_id=self.user['id'],
             missing_musicbrainz_data=UserMissingMusicBrainzDataJson(**{'invalid_key': missing_musicbrainz_data}),
             source='cf'
         )
 
-        result = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(user_id=self.user['id'], source='cf')
+        result = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(
+            self.db_conn, self.ts_conn, user_id=self.user['id'], source='cf'
+        )
         self.assertIsNone(result)

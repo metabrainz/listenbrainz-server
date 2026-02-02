@@ -22,28 +22,28 @@ File Descriptions
 
 A ListenBrainz data dump consists of three archives:
 
-#. ``listenbrainz-public-dump.tar.xz``
+#. ``listenbrainz-public-dump.tar.zst``
 
-#. ``listenbrainz-listens-dump.tar.xz``
+#. ``listenbrainz-listens-dump.tar.zst``
 
-#. ``listenbrainz-listens-dump-spark.tar.xz``
+#. ``listenbrainz-listens-dump-spark.tar.zst``
 
 
-listenbrainz-public-dump.tar.xz
+listenbrainz-public-dump.tar.zst
 -------------------------------
 
 This file contains information about ListenBrainz users and statistics derived
 from listens submitted to ListenBrainz calculated from users, artists, recordings etc.
 
 
-listenbrainz-listens-dump.tar.xz
+listenbrainz-listens-dump.tar.zst
 --------------------------------
 
 This is the core ListenBrainz data dump. This file contains all the listens
 submitted to ListenBrainz by its users.
 
 
-listenbrainz-listens-dump-spark.tar.xz
+listenbrainz-listens-dump-spark.tar.zst
 --------------------------------------
 
 This is also a dump of the core ListenBrainz listen data. These dumps are
@@ -67,24 +67,24 @@ data. Inside each year there are listens files with month number as its name:
 Each of the .listens files contains one JSON document per line -- each
 of the JSON documents is one listen, formatted in the standard listens format.
 
-Incremental dumps (BETA)
-========================
-
-.. warning::
-
-    The incremental dumps are in beta. We know of some data consistency issues where
-    incremental dumps have fewer listens than they should. Make
-    sure you use the full dumps if data accuracy is important.
+Incremental dumps
+=================
 
 ListenBrainz provides incremental data dumps that you can use to keep up to date with
 the ListenBrainz dataset without needing to download the full dumps everytime. These
 dumps have the same structure as the corresponding full dumps, but only contain
 data that has been submitted since the creation of the previous dump. We create
-incremental data dumps twice a week.
+incremental data dumps daily.
 
 The basic idea here is that dumps create a linear timeline of the dataset
 based on the time of submission of data. In order to use the incremental dumps,
 you must start with the latest full dump and then, applying all incremental dumps
 since will give you the latest data. The series is consistent, if you
 take a full dump and apply all incremental dumps since that full dump until the
-next full dump, you will have the same data as the next full dump.
+next full dump, you will have all data as the next full dump.
+
+.. warning::
+
+  Deleted listens present a tricky problem in this setup, since they are not included
+  in the incremental dumps. To get a fully accurate list of listens, with deleted
+  listens removed, you'll need to re-import a full dump.

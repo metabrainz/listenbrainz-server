@@ -23,7 +23,7 @@ module.exports = {
     ecmaVersion: 2018,
     sourceType: "module",
   },
-  plugins: ["react", "@typescript-eslint", "prettier"],
+  plugins: ["react", "@typescript-eslint", "prettier", "testing-library"],
   rules: {
     "react/prop-types": "off",
     "react/jsx-filename-extension": "off",
@@ -81,6 +81,7 @@ module.exports = {
         jest: true,
       },
       plugins: ["jest"],
+      extends: ["plugin:testing-library/react"],
       rules: {
         "import/no-extraneous-dependencies": "off",
         "jest/no-disabled-tests": "warn",

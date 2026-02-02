@@ -4,6 +4,12 @@
     "last_updated": 1593539726,
     "listening_activity": [
       {
+        "from_ts": 1413228800,
+        "listen_count": 0,
+        "time_range": "2016",
+        "to_ts": 1514764798
+      },
+      {
         "from_ts": 1483228800,
         "listen_count": 96,
         "time_range": "2017",

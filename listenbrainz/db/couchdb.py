@@ -130,15 +130,76 @@ def fetch_data(prefix: str, user_id: int):
     return None
 
 
+def fetch_exact_data(database: str, document_id: str):
+    """ Retrieve data from couchdb for the exact given database and document id.
+    Args:
+         database: the database name to retrieve data from
+         document_id: the document_id to retrieve data for
+    """
+    base_url = get_base_url()
+    document_url = f"{base_url}/{database}/{document_id}"
+    response = requests.get(document_url)
+    if response.status_code == 404:
+        return None
+    return response.json()
+
+
 def insert_data(database: str, data: list[dict]):
     """ Insert the given data into the specified database. """
-    with start_span(op="serializing", description="serialize data to json"):
+    with start_span(op="serializing", name="serialize data to json"):
         docs = orjson.dumps({"docs": data})
 
-    with start_span(op="http", description="insert docs in couchdb using api"):
+    with start_span(op="http", name="insert docs in couchdb using api"):
         couchdb_url = f"{get_base_url()}/{database}/_bulk_docs"
         response = requests.post(couchdb_url, data=docs, headers={"Content-Type": "application/json"})
         response.raise_for_status()
+
+    with start_span(op="deserializing", name="checking response for conflicts"):
+        conflict_doc_ids = []
+        for doc_status in response.json():
+            if doc_status.get("error") == "conflict":
+                conflict_doc_ids.append(doc_status["id"])
+
+        if not conflict_doc_ids:
+            return
+
+        conflict_docs = orjson.dumps({"docs": [{"id": doc_id} for doc_id in conflict_doc_ids]})
+
+    with start_span(op="http", name="retrieving conflicts from database"):
+        response = requests.post(
+            f"{get_base_url()}/{database}/_bulk_get",
+            data=conflict_docs,
+            headers={"Content-Type": "application/json"}
+        )
+        response.raise_for_status()
+
+    with start_span(op="deserializing", name="processing conflicting revisions"):
+        revs_map = {}
+        for result in response.json()["results"]:
+            existing_doc = result["docs"][0]["ok"]
+            revs_map[existing_doc["_id"]] = existing_doc["_rev"]
+
+        docs_to_update = []
+        for doc in data:
+            if doc["_id"] in revs_map:
+                doc["_rev"] = revs_map[doc["_id"]]
+            docs_to_update.append(doc)
+
+    with start_span(op="serializing", name="serialize conflicting docs to update"):
+        docs_to_update = orjson.dumps({"docs": docs_to_update})
+
+    with start_span(op="http", name="retry updating conflicts in database"):
+        response = requests.post(couchdb_url, data=docs_to_update, headers={"Content-Type": "application/json"})
+        response.raise_for_status()
+
+
+def try_insert_data(database: str, data: list[dict]):
+    """ Try to insert data in the database if it exists, otherwise create the database and try again. """
+    try:
+        insert_data(database, data)
+    except Exception:
+        create_database(database)
+        insert_data(database, data)
 
 
 def delete_data(database: str, doc_id: int | str):
@@ -197,7 +258,7 @@ def _get_requests_session():
     retry_strategy = Retry(
         total=3,
         status_forcelist=[429, 500, 502, 503, 504],
-        method_whitelist=["HEAD", "GET", "OPTIONS"]
+        allowed_methods=["HEAD", "GET", "OPTIONS"]
     )
     adapter = HTTPAdapter(max_retries=retry_strategy)
     http = requests.Session()
@@ -224,7 +285,9 @@ def dump_database(prefix: str, fp: BinaryIO):
     # get the older database for this stat type because it will likely be the complete one
     # the newer one is probably incomplete and that's why the old one has not been cleaned up yet.
     database = databases[-1]
-    lock_database(database)
+    # check if the database is already locked from a previous failed dump attempt
+    if not check_database_lock(database):
+        lock_database(database)
 
     try:
         with _get_requests_session() as http:
@@ -232,17 +295,24 @@ def dump_database(prefix: str, fp: BinaryIO):
             response = http.get(database_url)
             total_docs = response.json()["doc_count"]
 
+            all_docs_url = f"{database_url}/_all_docs"
+
+            startkey_docid = None
             limit = 50
             for skip in range(0, total_docs, limit):
-                response = http.get(f"{database_url}/_all_docs", params={
-                    "skip": skip,
+                params = {
                     "limit": limit,
                     "include_docs": True
-                })
+                }
+                if startkey_docid is not None:
+                    params["startkey_docid"] = startkey_docid
+                    params["skip"] = 1
+                response = http.get(all_docs_url, params=params)
+
                 rows = orjson.loads(response.content)["rows"]
                 for row in rows:
                     doc = row["doc"]
-                    doc.pop("_id", None)
+                    startkey_docid = doc.pop("_id", None)
                     doc.pop("key", None)
                     doc.pop("_rev", None)
                     doc.pop("_revisions", None)

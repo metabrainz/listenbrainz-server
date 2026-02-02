@@ -1,44 +1,53 @@
+{% macro render_lp_image(x, y, width, height, transform, image) %}
+  {% if image.entity_mbid %}
+  <a href="https://listenbrainz.org/release/{{ image.entity_mbid }}" target="_blank">
+  {% endif %}
+    <image
+        x="{{ x }}"
+        y="{{ y }}"
+        width="{{ width }}"
+        height="{{ height }}"
+        preserveAspectRatio="xMidYMid slice"
+        href="{{ image.url }}"
+        transform="{{ transform }}"
+    >
+        {% if image.title and image.artist %}
+        <title>
+          {{- image.title|escape ~ " - " ~ image.artist|escape -}}
+        </title>
+        {% endif %}
+    </image>
+  {% if image.entity_mbid %}
+  </a>
+  {% endif %}
+{% endmacro %}
 <svg version="1.1"
-     xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-     width="{{ width }}" height="{{ height }}">
-    <image x="89"
-           y="318"
-           width="195"
-           height="195"
-           xlink:href="{{ images[2].url }}"
-           preserveAspectRatio="xMidYMid slice"
-           transform="rotate(6.1)"/>
-    <image x="17"
-           y="223"
-           width="193"
-           height="193"
-           xlink:href="{{ images[1].url }}"
-           preserveAspectRatio="xMidYMid slice"
-           transform="rotate(-22.4)"/>
-    <image x="189"
-           y="240"
-           width="189"
-           height="189"
-           xlink:href="{{ images[0].url }}"
-           preserveAspectRatio="xMidYMid slice"
-           transform="rotate(-4)"/>
-    <image x="404"
-           y="480"
-           width="198"
-           height="198"
-           xlink:href="{{ images[4].url }}"
-           preserveAspectRatio="xMidYMid slice"
-           transform="rotate(-11.9)"/>
-    <image x="385"
-           y="488"
-           width="202"
-           height="203"
-           xlink:href="{{ images[3].url }}"
-           preserveAspectRatio="xMidYMid slice"
-           transform="rotate(2.2)"/>
+     xmlns="http://www.w3.org/2000/svg"
+     role="img"
+     width="{{ width }}" height="{{ height }}"
+     viewBox="0 0 {{ width }} {{ height }}"
+     preserveAspectRatio="xMinYMin meet"
+>
+    <title>Top 5 releases {{ metadata["time_range"] }} for {{ metadata["user_name"] }}&#xA;</title>
+    <desc>
+        {%- for release in releases[:5] -%}
+            {{- loop.index -}}. {{ release.release_name }} - {{ release.artist_name }}&#xA;
+        {%- endfor -%}
+    </desc>
+    <style>
+        .background-image {
+            pointer-events: none;
+        }
+    </style>
+    {{ render_lp_image(89, 318, 195, 195, "rotate(6.1)", images[2]) }}
+    {{ render_lp_image(17, 223, 193, 193, "rotate(-22.4)", images[1]) }}
+    {{ render_lp_image(189, 240, 189, 189, "rotate(-4)", images[0]) }}
+    {{ render_lp_image(404, 480, 198, 198, "rotate(-11.9)", images[4]) }}
+    {{ render_lp_image(385, 488, 202, 203, "rotate(2.2)", images[3]) }}
     <image x="0"
            y="0"
            width="{{ width }}"
            height="{{ height }}"
-           xlink:href="{{ cover_art_on_floor_url }}"/>
+           href="{{ cover_art_on_floor_url }}"
+           class="background-image" />
 </svg>

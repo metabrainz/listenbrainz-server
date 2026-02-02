@@ -1,11 +1,10 @@
 import * as React from "react";
-import { mount } from "enzyme";
-
 import Card from "../../src/components/Card";
+import { render, screen } from "@testing-library/react";
 
 describe("Card", () => {
   it("renders correctly", () => {
-    const wrapper = mount(<Card>Test</Card>);
-    expect(wrapper).toMatchSnapshot();
+    render(<Card>Test</Card>);
+    expect(screen.getByText(/Test/)).toBeInTheDocument();
   });
 });

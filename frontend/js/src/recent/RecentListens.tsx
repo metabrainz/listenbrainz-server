@@ -1,171 +1,77 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
 import * as React from "react";
-import { createRoot } from "react-dom/client";
-import * as Sentry from "@sentry/react";
-import { get } from "lodash";
+import { useLoaderData } from "react-router";
+import { Helmet } from "react-helmet";
+import { useSetAtom } from "jotai";
 
-import { Integrations } from "@sentry/tracing";
-import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
-import NiceModal from "@ebay/nice-modal-react";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import {
-  WithAlertNotificationsInjectedProps,
-  withAlertNotifications,
-} from "../notifications/AlertNotificationsHOC";
+import ListenCard from "../common/listens/ListenCard";
+import Card from "../components/Card";
 
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import ListenCard from "../listens/ListenCard";
-
-import {
-  getPageProps,
-  getRecordingMBID,
-  getTrackName,
-  getRecordingMSID,
-} from "../utils/utils";
+import { getTrackName } from "../utils/utils";
+import RecentDonorsCard from "./components/RecentDonors";
+import FlairsExplanationButton from "../common/flairs/FlairsExplanationButton";
+import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
-} & WithAlertNotificationsInjectedProps;
+  globalListenCount: number;
+  globalUserCount: string;
+  recentDonors: Array<DonationInfoWithPinnedRecording>;
+};
+
+type RecentListensLoaderData = RecentListensProps;
 
 export interface RecentListensState {
   listens: Array<Listen>;
   listenCount?: number;
-  recordingMsidFeedbackMap: RecordingFeedbackMap;
-  recordingMbidFeedbackMap: RecordingFeedbackMap;
 }
 
 export default class RecentListens extends React.Component<
   RecentListensProps,
   RecentListensState
 > {
-  static contextType = GlobalAppContext;
-  declare context: React.ContextType<typeof GlobalAppContext>;
-
   constructor(props: RecentListensProps) {
     super(props);
     this.state = {
       listens: props.listens || [],
-      recordingMsidFeedbackMap: {},
-      recordingMbidFeedbackMap: {},
     };
   }
 
-  componentDidMount(): void {
-    this.loadFeedback();
-  }
-
-  getFeedback = async () => {
-    const { newAlert } = this.props;
-    const { APIService, currentUser } = this.context;
-    const { listens } = this.state;
-    let recording_msids = "";
-    let recording_mbids = "";
-
-    if (listens && listens.length && currentUser?.name) {
-      listens.forEach((listen) => {
-        const recordingMsid = getRecordingMSID(listen);
-        if (recordingMsid) {
-          recording_msids += `${recordingMsid},`;
-        }
-        const recordingMBID = getRecordingMBID(listen);
-        if (recordingMBID) {
-          recording_mbids += `${recordingMBID},`;
-        }
-      });
-      try {
-        const data = await APIService.getFeedbackForUserForRecordings(
-          currentUser.name,
-          recording_msids,
-          recording_mbids
-        );
-        return data.feedback;
-      } catch (error) {
-        if (newAlert) {
-          newAlert(
-            "danger",
-            "We could not load love/hate feedback",
-            typeof error === "object" ? error.message : error
-          );
-        }
-      }
-    }
-    return [];
-  };
-
-  loadFeedback = async () => {
-    const feedback = await this.getFeedback();
-    if (!feedback) {
-      return;
-    }
-    const recordingMsidFeedbackMap: RecordingFeedbackMap = {};
-    const recordingMbidFeedbackMap: RecordingFeedbackMap = {};
-    feedback.forEach((fb: FeedbackResponse) => {
-      if (fb.recording_msid) {
-        recordingMsidFeedbackMap[fb.recording_msid] = fb.score;
-      }
-      if (fb.recording_mbid) {
-        recordingMbidFeedbackMap[fb.recording_mbid] = fb.score;
-      }
-    });
-    this.setState({ recordingMsidFeedbackMap, recordingMbidFeedbackMap });
-  };
-
-  updateFeedback = (
-    recordingMbid: string,
-    score: ListenFeedBack | RecommendationFeedBack,
-    recordingMsid?: string
-  ) => {
-    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
-
-    const newMsidFeedbackMap = { ...recordingMsidFeedbackMap };
-    const newMbidFeedbackMap = { ...recordingMbidFeedbackMap };
-
-    if (recordingMsid) {
-      newMsidFeedbackMap[recordingMsid] = score as ListenFeedBack;
-    }
-    if (recordingMbid) {
-      newMbidFeedbackMap[recordingMbid] = score as ListenFeedBack;
-    }
-    this.setState({
-      recordingMsidFeedbackMap: newMsidFeedbackMap,
-      recordingMbidFeedbackMap: newMbidFeedbackMap,
-    });
-  };
-
-  getFeedbackForListen = (listen: BaseListenFormat): ListenFeedBack => {
-    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
-
-    // first check whether the mbid has any feedback available
-    // if yes and the feedback is not zero, return it. if the
-    // feedback is zero or not the mbid is absent from the map,
-    // look for the feedback using the msid.
-
-    const recordingMbid = getRecordingMBID(listen);
-    const mbidFeedback = recordingMbid
-      ? get(recordingMbidFeedbackMap, recordingMbid, 0)
-      : 0;
-
-    if (mbidFeedback) {
-      return mbidFeedback;
-    }
-
-    const recordingMsid = getRecordingMSID(listen);
-
-    return recordingMsid ? get(recordingMsidFeedbackMap, recordingMsid, 0) : 0;
-  };
-
   render() {
     const { listens } = this.state;
-    const { newAlert } = this.props;
-    const { APIService } = this.context;
+    const { globalListenCount, globalUserCount, recentDonors } = this.props;
 
     return (
       <div role="main">
-        <h3>Recent listens</h3>
+        <Helmet>
+          <title>Recent listens</title>
+        </Helmet>
+        <div className="listen-header">
+          <h3 className="header-with-line">Global listens</h3>
+        </div>
         <div className="row">
-          <div className="col-md-8">
+          <div className="col-lg-4 order-lg-2">
+            <Card id="listen-count-card">
+              <div>
+                {globalListenCount?.toLocaleString() ?? "-"}
+                <br />
+                <small className="text-muted">songs played</small>
+              </div>
+            </Card>
+            <Card id="listen-count-card" className="card-user-sn">
+              <div>
+                {globalUserCount ?? "-"}
+                <br />
+                <small className="text-muted">users</small>
+              </div>
+            </Card>
+            <Card className="d-none d-md-block">
+              <RecentDonorsCard donors={recentDonors} />
+            </Card>
+            <FlairsExplanationButton className="d-none d-md-block" />
+          </div>
+          <div className="col-lg-8 order-lg-1">
             {!listens.length && (
               <h5 className="text-center">No listens to show</h5>
             )}
@@ -179,65 +85,26 @@ export default class RecentListens extends React.Component<
                       }`}
                       showTimestamp
                       showUsername
-                      updateFeedbackCallback={this.updateFeedback}
                       listen={listen}
-                      newAlert={newAlert}
-                      currentFeedback={this.getFeedbackForListen(listen)}
                     />
                   );
                 })}
               </div>
             )}
           </div>
-          <div className="col-md-4" />
         </div>
-        <BrainzPlayer
-          listens={listens}
-          newAlert={newAlert}
-          listenBrainzAPIBaseURI={APIService.APIBaseURI}
-          refreshSpotifyToken={APIService.refreshSpotifyToken}
-          refreshYoutubeToken={APIService.refreshYoutubeToken}
-        />
       </div>
     );
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-    optionalAlerts,
-  } = getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-
-  const { listens } = reactProps;
-
-  const RecentListensWithAlertNotifications = withAlertNotifications(
-    RecentListens
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <RecentListensWithAlertNotifications
-            initialAlerts={optionalAlerts}
-            listens={listens}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});
+export function RecentListensWrapper() {
+  const data = useLoaderData() as RecentListensLoaderData;
+  const listens = data.listens || [];
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
+  React.useEffect(() => {
+    setAmbientQueue(listens);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listens]);
+  return <RecentListens {...data} />;
+}

@@ -2,11 +2,13 @@ import * as timeago from "time-ago";
 import {
   formatWSMessageToListen,
   preciseTimestamp,
+  searchForSoundcloudTrack,
   searchForSpotifyTrack,
 } from "../../src/utils/utils";
 
 const spotifySearchResponse = require("../__mocks__/spotifySearchResponse.json");
 const spotifySearchEmptyResponse = require("../__mocks__/spotifySearchEmptyResponse.json");
+const soundcloudSearchResponse = require("../__mocks__/soundcloudSearchResponse.json");
 
 describe("formatWSMessageToListen", () => {
   const mockListen: Listen = {
@@ -122,7 +124,7 @@ describe("searchForSpotifyTrack", () => {
   it("calls fetch with correct parameters", async () => {
     await searchForSpotifyTrack("foobar", "import", "vs", "star");
     expect(window.fetch).toHaveBeenCalledWith(
-      "https://api.spotify.com/v1/search?type=track&q=track:import artist:vs album:star",
+      "https://api.spotify.com/v1/search?type=track&q=import%20artist%3Avs%20album%3Astar",
       {
         method: "GET",
         headers: {
@@ -181,6 +183,72 @@ describe("searchForSpotifyTrack", () => {
     });
     await expect(
       searchForSpotifyTrack("foobar", "import", "vs", "star")
+    ).resolves.toEqual(null);
+  });
+});
+
+describe("searchForSoundcloudTrack", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(soundcloudSearchResponse),
+      });
+    });
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    await searchForSoundcloudTrack("foobar", "import", "vs", "star");
+    expect(window.fetch).toHaveBeenCalledWith(
+      "https://api.soundcloud.com/tracks?q=import%20vs&access=playable",
+      {
+        method: "GET",
+        headers: {
+          Authorization: "OAuth foobar",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  });
+
+  it("returns the first track from the json response", async () => {
+    await expect(
+      searchForSoundcloudTrack("foobar", "import", "vs", "star")
+    ).resolves.toEqual(soundcloudSearchResponse[0].uri);
+  });
+
+  it("skips if any other response code is received", async () => {
+    // Overide mock for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: false,
+        status: 404,
+        // Spotify API returns error body in this format
+        json: () => Promise.resolve({ status: 404, message: "Not found!" }),
+      });
+    });
+    let error;
+    try {
+      await searchForSoundcloudTrack("foobar", "import", "vs", "star");
+    } catch (err) {
+      error = err;
+    }
+    expect(error).toEqual({ status: 404, message: "Not found!" });
+  });
+
+  it("returns null if no track found in the json response", async () => {
+    // Overide mock for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(spotifySearchEmptyResponse),
+      });
+    });
+    await expect(
+      searchForSoundcloudTrack("foobar", "import", "vs", "star")
     ).resolves.toEqual(null);
   });
 });

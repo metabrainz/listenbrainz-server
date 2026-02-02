@@ -1,6 +1,6 @@
 import sys
 
-from listenbrainz_spark.mlhd.setup import hdfs_upload
+from listenbrainz_spark.mlhd.download import hdfs_upload
 from listenbrainz_spark.mlhd.scripts import artist_popularity
 
 

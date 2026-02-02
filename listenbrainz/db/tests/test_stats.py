@@ -14,6 +14,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         super(StatsDatabaseTestCase, self).setUp()
 
     def tearDown(self):
+        super(StatsDatabaseTestCase, self).tearDown()
         delete_all_couch_databases()
 
     def _test_one_stat(self, entity, range_, data_file, model, exclude_count=False):
@@ -42,7 +43,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(received, expected)
 
     def test_user_entity_stats(self):
-        entities = ["artists", "releases", "recordings"]
+        entities = ["artists", "releases", "recordings", "release_groups"]
         ranges = ["week", "month", "year"]
 
         with create_app().app_context():

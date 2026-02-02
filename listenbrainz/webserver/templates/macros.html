@@ -9,33 +9,5 @@
     {% set alert_class="alert-info" %}
   {% endif %}
 
-  <div class="alert {{ alert_class }}">{{ message }}</div>
-{% endmacro %}
-
-{% macro service_permission_button(service, current, value, title, details) %}
-
-    {% if value == "disable" %}
-        {% set class = "music-service-option disable" %}
-    {% else %}
-        {% set class = "music-service-option" %}
-    {% endif %}
-
-    {% if current == value %}
-        {% set check = "checked" %}
-    {% else %}
-        {% set check = "" %}
-    {% endif %}
-
-    <div class="{{ class }}">
-        <input type="radio"
-               id="{{ service }}_{{ value }}"
-               name="{{ service }}" value="{{ value }}"
-               onchange="this.form.submit();"
-               {{ check }}
-        />
-        <label for="{{ service }}_{{ value }}">
-            <div class="title">{{ title }}</div>
-            <div class="details">{{ details }}</div>
-        </label>
-    </div>
+  <div class="alert {{ alert_class }}" style="margin-bottom: 0;">{{ message }}</div>
 {% endmacro %}

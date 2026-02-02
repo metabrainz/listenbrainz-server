@@ -1,40 +1,37 @@
-from datasethoster import Query
-from listenbrainz.mbid_mapping_writer.mbid_mapper import MBIDMapper
+from pydantic import BaseModel
+
+from listenbrainz.labs_api.labs.api.base_mbid_mapping import BaseMBIDMappingQuery, BaseMBIDMappingOutput
 
 
-class MBIDMappingQuery(Query):
+class MBIDMappingInput(BaseModel):
+    artist_credit_name: str
+    recording_name: str
+
+
+class MBIDMappingQuery(BaseMBIDMappingQuery):
     """
        Thin wrapper around the MBIDMapper -- see mbid_mapper.py for details.
     """
 
-    def __init__(self, timeout=10, remove_stop_words=True, debug=False):
-        self.mapper = MBIDMapper(timeout=timeout, remove_stop_words=remove_stop_words, debug=debug)
-
     def names(self):
-        return ("mbid-mapping", "MusicBrainz ID Mapping lookup")
+        return "mbid-mapping", "MusicBrainz ID Mapping lookup"
 
     def inputs(self):
-        return ['[artist_credit_name]', '[recording_name]']
+        return MBIDMappingInput
 
     def introduction(self):
         return """Given the name of an artist and the name of a recording (track)
                   this query will attempt to find a suitable match in MusicBrainz."""
 
-    def outputs(self):
-        return ['index', 'artist_credit_arg', 'recording_arg',
-                'artist_credit_name', 'artist_mbids', 'release_name', 'recording_name',
-                'release_mbid', 'recording_mbid', 'artist_credit_id', 'year']
-
-    def get_debug_log_lines(self):
-        return self.mapper.read_log()
-
-    def fetch(self, params, offset=-1, count=-1):
+    def fetch(self, params, source, offset=-1, count=-1):
         """ Call the MBIDMapper and carry out this mapping search """
+
+        # Disable temporarily 
+        return []
 
         args = []
         for i, param in enumerate(params):
-            args.append((i, param['[artist_credit_name]'],
-                         param['[recording_name]']))
+            args.append((i, param.artist_credit_name, param.recording_name))
 
         results = []
         for index, artist_credit_name, recording_name in args:
@@ -45,4 +42,4 @@ class MBIDMappingQuery(Query):
                 hit["index"] = index
                 results.append(hit)
 
-        return results
+        return [BaseMBIDMappingOutput(**row) for row in results]

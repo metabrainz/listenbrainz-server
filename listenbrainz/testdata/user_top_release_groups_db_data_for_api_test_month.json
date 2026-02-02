@@ -1,0 +1,106 @@
+[
+  {
+    "user_id": 1,
+    "count": 4,
+    "data": [
+      {
+        "artist_mbids": [
+          "89ea85c2-c90a-46ea-93db-9bed95d5c8f8"
+        ],
+        "artist_name": "Surf Curse",
+        "caa_id": 34756426228,
+        "caa_release_mbid": "b4259efc-9d8e-437f-b411-c578428584ca",
+        "listen_count": 72,
+        "release_group_mbid": "70bdc19f-66fb-4adf-9124-925ace531101",
+        "release_group_name": "Buds",
+        "artists": [
+          {
+            "artist_credit_name": "Surf Curse",
+            "join_phrase": "",
+            "artist_mbid": "89ea85c2-c90a-46ea-93db-9bed95d5c8f8"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "2f548675-008d-4332-876c-108b0c7ab9c5"
+        ],
+        "artist_name": "Sia",
+        "caa_id": 12662106026,
+        "caa_release_mbid": "3aa72aec-568f-4f79-a6db-a5464a875c34",
+        "listen_count": 71,
+        "release_group_mbid": "2eb49f55-ad2a-43fa-a54f-90d0759d7f62",
+        "release_group_name": "This Is Acting",
+        "artists": [
+          {
+            "artist_credit_name": "Sia",
+            "join_phrase": "",
+            "artist_mbid": "2f548675-008d-4332-876c-108b0c7ab9c5"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [],
+        "artist_name": "Bahjat",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 71,
+        "release_group_mbid": null,
+        "release_group_name": "3:11 AM",
+        "artists": []
+      },
+      {
+        "artist_mbids": [
+          "62ded9ea-fe82-4606-96f0-8aea96ea12b5"
+        ],
+        "artist_name": "SyKo",
+        "caa_id": 30168119220,
+        "caa_release_mbid": "17405fb5-f111-4f59-8eba-6f32d455c69d",
+        "listen_count": 71,
+        "release_group_mbid": "9393c62e-3755-41be-91ae-fe1081259b6a",
+        "release_group_name": "#BrooklynBloodPop!",
+        "artists": [
+          {
+            "artist_credit_name": "SyKo",
+            "join_phrase": "",
+            "artist_mbid": "62ded9ea-fe82-4606-96f0-8aea96ea12b5"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "user_id": 2,
+    "count": 5,
+    "data": [
+      {
+        "artist_mbids": [
+          "78830f6e-5832-443d-9e93-0e308238406e"
+        ],
+        "artist_name": "Amit Trivedi",
+        "caa_id": 29717381514,
+        "caa_release_mbid": "7ddac155-91e2-4eb7-b08a-4fc584fd60f9",
+        "listen_count": 83,
+        "release_group_mbid": "7cd4086d-e73b-4473-997d-07269af999c9",
+        "release_group_name": "Padman",
+        "artists": [
+          {
+            "artist_credit_name": "Amit Trivedi",
+            "join_phrase": "",
+            "artist_mbid": "78830f6e-5832-443d-9e93-0e308238406e"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [],
+        "artist_name": "Yasser Desai, Neha Kakkar, Rajat Nagpal",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 82,
+        "release_group_mbid": null,
+        "release_group_name": "Dil Ko Karaar Aaya (From \"Sukoon\")",
+        "artists": []
+      }
+    ]
+  }
+]

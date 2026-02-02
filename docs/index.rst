@@ -23,9 +23,16 @@ Contents
    users/api/index
    users/api-usage
    users/json
+   users/widgets
    users/clients
    users/api-compat
    users/listenbrainz-dumps
+
+.. toctree::
+   :maxdepth: 2
+   :caption: ListenBrainz Data Update Intervals
+
+   general/data-update-intervals
 
 .. toctree::
    :maxdepth: 2
@@ -37,6 +44,7 @@ Contents
    developers/spark-architecture
    developers/mapping
    developers/commands
+   developers/troubleshooting
 
 .. toctree::
    :maxdepth: 2
@@ -47,6 +55,7 @@ Contents
    maintainers/dumps
    maintainers/mapping
    maintainers/spotify-reader
+   maintainers/rabbitmq
    maintainers/updating-prod-db-schema
    maintainers/pull-requests
 
@@ -56,4 +65,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

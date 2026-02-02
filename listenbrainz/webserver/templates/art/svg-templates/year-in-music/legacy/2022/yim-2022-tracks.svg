@@ -1,0 +1,73 @@
+<svg
+        width="924"
+        height="924"
+        viewBox="0 0 924 924"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;900');
+        text {
+            fill: #FF0E25;
+            font-family: Inter, sans-serif;
+            font-weight: 900;
+        }
+        .branding {
+            font-size: 20px;
+            letter-spacing: 0em;
+        }
+        .subtitle > tspan {
+            text-anchor: middle;
+            font-size: 32px;
+            letter-spacing: 0.6em;
+        }
+        .track-name {
+            font-size: 20px;
+        }
+        .artist-name {
+            font-size: 20px;
+            font-weight: 500;
+        }
+    </style>
+    <g>
+        <g>
+            <g style="mix-blend-mode:multiply">
+                <rect width="924" height="924" fill="#FFC93D"/>
+                <image id="bg" width="924" height="924" xlink:href="{{ bg_image_url }}" style="mix-blend-mode:overlay"/>
+            </g>
+            <text class="branding" x="750" y="897">LISTENBRAINZ</text>
+            <text class="branding" x="26" y="43">{{user_name}}</text>
+            <text class="branding" font-style="italic" x="26" y="897">#YEARINMUSIC</text>
+            <text class="branding" x="844" y="43">2022</text>
+            <image id="stereo" x="550" y="60" width="92" height="113" xlink:href="{{ stereo_image_url }}" />
+            <text class="subtitle">
+                <tspan x="50%" y="120">THESE</tspan>
+                <tspan x="50%" dy="40">SONGS</tspan>
+            </text>
+            <text class="subtitle">
+                <tspan x="50%" y="735">GOT ME</tspan>
+                <tspan x="50%" y="773">THROUGH</tspan>
+                <tspan x="50%" y="811">2022</tspan>
+            </text>
+        </g>
+        <g>
+            {% set y_start = 240 %}
+            {% set gap = 45 %}
+            {% for track in tracks[:10] %}
+            <text>
+                <tspan class="track-name" x="100" y="{{ y_start + loop.index0 * gap }}">
+                    {% if loop.index == 10 %}
+                        X
+                    {% else %}
+                        {{ loop.index }}
+                    {% endif %}
+                </tspan>
+                <tspan class="track-name" x="125" y="{{ y_start + loop.index0 * gap }}">
+                    {{ track.track_name|upper|e }}
+                </tspan>
+                <tspan class="artist-name" x="125" dy="20">{{ track.artist_name|upper|e }}</tspan>
+            </text>
+            {% endfor %}
+        </g>
+    </g>
+</svg>

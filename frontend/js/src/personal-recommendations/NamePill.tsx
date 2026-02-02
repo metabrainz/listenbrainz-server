@@ -1,7 +1,7 @@
 import * as React from "react";
 import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { isFunction } from "lodash";
-import ListenControl from "../listens/ListenControl";
+import ListenControl from "../common/listens/ListenControl";
 
 export type NamePillProps = {
   title: string;
@@ -14,7 +14,13 @@ function NamePill(props: NamePillProps) {
     <div className="pill secondary active">
       <span>{title}</span>
       {isFunction(closeAction) && (
-        <ListenControl text="" icon={faTimesCircle} action={closeAction} />
+        <ListenControl
+          title="Remove"
+          text=""
+          icon={faTimesCircle}
+          action={closeAction}
+          isDropdown={false}
+        />
       )}
     </div>
   );

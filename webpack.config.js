@@ -1,7 +1,7 @@
 const path = require("path");
 const { WebpackManifestPlugin } = require("webpack-manifest-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
-const LessPluginCleanCSS = require("less-plugin-clean-css");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 const StylelintPlugin = require("stylelint-webpack-plugin");
 const ESLintPlugin = require("eslint-webpack-plugin");
 
@@ -25,6 +25,7 @@ module.exports = function (env, argv) {
   const jsDir = path.join(baseDir, "js");
   const distDir = path.join(baseDir, "dist");
   const cssDir = path.join(baseDir, "css");
+  const sassDir = path.join(cssDir, "sass");
   const plugins = [
     new WebpackManifestPlugin(),
     new ForkTsCheckerWebpackPlugin({
@@ -40,7 +41,7 @@ module.exports = function (env, argv) {
     new StylelintPlugin({
       configFile: ".stylelintrc.js",
       failOnError: isProd,
-      files: "**/static/css/**/*.less",
+      files: "**/static/css/**/*.{less,scss}",
       fix: !isProd,
       threads: true,
     }),
@@ -51,66 +52,14 @@ module.exports = function (env, argv) {
   ];
   return {
     entry: {
-      // Importing main.less file here so that it gets compiled.
+      // Importing main sass entrypoint file here so that it gets compiled.
       // Otherwise with a standalone entrypoint Webpack would generate a superfluous js file.
-      // All the Less/CSS will be exported separately to a main.css file and not appear in the recentListens module
-      recentListens: [
-        path.resolve(jsDir, "src/recent/RecentListens.tsx"),
-        path.resolve(cssDir, "main.less"),
+      // All the Sass/CSS will be exported separately to a main.css/vendor.css files and not appear in the index module
+      indexPage: [
+        path.resolve(jsDir, "src/index.tsx"),
+        path.resolve(sassDir, "main.scss"),
+        path.resolve(sassDir, "vendors.scss"),
       ],
-      listens: [path.resolve(jsDir, "src/user/Listens.tsx")],
-      import: path.resolve(jsDir, "src/lastfm/LastFMImporter.tsx"),
-      userEntityChart: path.resolve(jsDir, "src/stats/UserEntityChart.tsx"),
-      userReports: path.resolve(jsDir, "src/stats/UserReports.tsx"),
-      userPageHeading: path.resolve(jsDir, "src/user/UserPageHeading.tsx"),
-      userTaste: path.resolve(jsDir, "src/user/UserTaste.tsx"),
-      userFeed: path.resolve(jsDir, "src/user-feed/UserFeed.tsx"),
-      playlist: path.resolve(jsDir, "src/playlists/Playlist.tsx"),
-      playlists: path.resolve(jsDir, "src/playlists/Playlists.tsx"),
-      explore: path.resolve(jsDir, "src/explore/ExploreCard.tsx"),
-      huesound: path.resolve(jsDir, "src/explore/huesound/ColorPlay.tsx"),
-      yearInMusic2021: path.resolve(
-        jsDir,
-        "src/explore/year-in-music/2021/YearInMusic.tsx"
-      ),
-      yearInMusic2022: path.resolve(
-        jsDir,
-        "src/explore/year-in-music/2022/YearInMusic.tsx"
-      ),
-      coverArtComposite: path.resolve(
-        jsDir,
-        "src/explore/year-in-music/2022/CoverArtComposite.tsx"
-      ),
-      homepage: path.resolve(jsDir, "src/home/Homepage.tsx"),
-      recommendationsPlayground: path.resolve(
-        jsDir,
-        "src/recommendations/Recommendations.tsx"
-      ),
-      recommendations: path.resolve(
-        jsDir,
-        "src/recommendations/RecommendationsPage.tsx"
-      ),
-      missingMBData: path.resolve(
-        jsDir,
-        "src/missing-mb-data/MissingMBData.tsx"
-      ),
-      playerPage: path.resolve(jsDir, "src/player-pages/PlayerPage.tsx"),
-      metadataViewer: path.resolve(
-        jsDir,
-        "src/metadata-viewer/MetadataViewerPageWrapper.tsx"
-      ),
-      freshReleases: path.resolve(
-        jsDir,
-        "src/explore/fresh-releases/FreshReleases.tsx"
-      ),
-      selectTimezone: path.resolve(
-        jsDir,
-        "src/user-settings/SelectTimezone.tsx"
-      ),
-      selectTroiPreferences: path.resolve(
-        jsDir,
-        "src/user-settings/SelectTroiPreferences.tsx"
-      ),
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
@@ -131,20 +80,35 @@ module.exports = function (env, argv) {
           use: "babel-loader",
         },
         {
-          test: /\.less$/i,
+          test: /\.scss$/i,
           type: "asset/resource",
-          loader: "less-loader",
+          loader: "sass-loader",
           generator: {
             filename: isProd ? "[name].[contenthash].css" : "[name].css",
           },
-          options: {
-            lessOptions: {
-              math: "always",
-              plugins: [new LessPluginCleanCSS({ advanced: true })],
+        },
+        {
+          test: /\.css$/i,
+          use: ["style-loader", "css-loader"],
+        },
+        {
+          // Supportthis library used by markdown-react, needs nodeJS style `process`
+          test: /node_modules\/kleur\/index\.js/,
+          use: [
+            {
+              loader: "imports-loader",
+              options: {
+                type: "commonjs",
+                imports: ["single process/browser process", "kleur"],
+              },
             },
-          },
+          ],
         },
       ],
+    },
+    optimization: {
+      minimize: isProd,
+      minimizer: [new CssMinimizerPlugin()],
     },
     resolve: {
       modules: [

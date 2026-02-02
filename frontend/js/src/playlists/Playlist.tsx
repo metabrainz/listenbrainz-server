@@ -1,389 +1,215 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
+import { findIndex } from "lodash";
 import * as React from "react";
-import { createRoot } from "react-dom/client";
-import { get, findIndex, omit } from "lodash";
 
-import { ActionMeta, InputActionMeta, ValueType } from "react-select";
 import {
   faCog,
-  faPen,
+  faPlayCircle,
   faPlusCircle,
-  faTrashAlt,
+  faRss,
 } from "@fortawesome/free-solid-svg-icons";
-import { faSpotify } from "@fortawesome/free-brands-svg-icons";
 
-import AsyncSelect from "react-select/async";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { ReactSortable } from "react-sortablejs";
-import debounceAsync from "debounce-async";
-import { sanitize } from "dompurify";
 import { sanitizeUrl } from "@braintree/sanitize-url";
-import * as Sentry from "@sentry/react";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import DOMPurify from "dompurify";
+import { ReactSortable } from "react-sortablejs";
+import { toast } from "react-toastify";
 import { io, Socket } from "socket.io-client";
-import { Integrations } from "@sentry/tracing";
+import { Helmet } from "react-helmet";
+import { Link, useLoaderData, useNavigate, useRevalidator } from "react-router";
+import { formatDuration, intervalToDuration } from "date-fns";
 import NiceModal from "@ebay/nice-modal-react";
-import {
-  withAlertNotifications,
-  WithAlertNotificationsInjectedProps,
-} from "../notifications/AlertNotificationsHOC";
-import APIServiceClass from "../utils/APIService";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import SpotifyAPIService from "../utils/SpotifyAPIService";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
+import { useSetAtom } from "jotai";
 import Card from "../components/Card";
-import Loader from "../components/Loader";
-import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
-import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import PlaylistItemCard from "./PlaylistItemCard";
+import { ToastMsg } from "../notifications/Notifications";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import SearchTrackOrMBID from "../utils/SearchTrackOrMBID";
+import PlaylistItemCard from "./components/PlaylistItemCard";
+import PlaylistMenu from "./components/PlaylistMenu";
 import {
-  MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
-  PLAYLIST_TRACK_URI_PREFIX,
-  PLAYLIST_URI_PREFIX,
   getPlaylistExtension,
   getPlaylistId,
   getRecordingMBIDFromJSPFTrack,
-  JSPFTrackToListen,
+  isPlaylistOwner,
+  LISTENBRAINZ_URI_PREFIX,
+  PLAYLIST_TRACK_URI_PREFIX,
+  PLAYLIST_URI_PREFIX,
 } from "./utils";
-import { getPageProps } from "../utils/utils";
+import SyndicationFeedModal from "../components/SyndicationFeedModal";
+import { getBaseUrl } from "../utils/utils";
+import DuplicateTrackModal from "./components/DuplicateTrackModal";
+import {
+  addListenToBottomOfAmbientQueueAtom,
+  moveAmbientQueueItemAtom,
+  removeTrackFromAmbientQueueAtom,
+  setAmbientQueueAtom,
+} from "../common/brainzplayer/BrainzPlayerAtoms";
 
 export type PlaylistPageProps = {
-  labsApiUrl: string;
-  playlist: JSPFObject;
-} & WithAlertNotificationsInjectedProps;
+  playlist: JSPFObject & {
+    cover_art: CoverArtGridOptions;
+  };
+  coverArtGridOptions: CoverArtGridOptions[];
+  coverArt: string;
+};
 
 export interface PlaylistPageState {
   playlist: JSPFPlaylist;
-  recordingFeedbackMap: RecordingFeedbackMap;
   loading: boolean;
-  searchInputValue: string;
-  cachedSearchResults: OptionType[];
 }
 
-type OptionType = { label: string; value: ACRMSearchResult };
+const makeJSPFTrack = (trackMetadata: TrackMetadata): JSPFTrack => {
+  return {
+    identifier: [
+      `${PLAYLIST_TRACK_URI_PREFIX}${
+        trackMetadata.recording_mbid ??
+        trackMetadata.additional_info?.recording_mbid
+      }`,
+    ],
+    title: trackMetadata.track_name,
+    creator: trackMetadata.artist_name,
+  };
+};
 
-export default class PlaylistPage extends React.Component<
-  PlaylistPageProps,
-  PlaylistPageState
-> {
-  static contextType = GlobalAppContext;
+export default function PlaylistPage() {
+  // Context
+  const { currentUser, APIService, websocketsUrl } = React.useContext(
+    GlobalAppContext
+  );
 
-  static makeJSPFTrack(track: ACRMSearchResult): JSPFTrack {
-    return {
-      identifier: `${PLAYLIST_TRACK_URI_PREFIX}${track.recording_mbid}`,
-      title: track.recording_name,
-      creator: track.artist_credit_name,
-    };
-  }
+  // BrainzPlayer Atoms
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
+  const addListenToBottomOfAmbientQueue = useSetAtom(
+    addListenToBottomOfAmbientQueueAtom
+  );
+  const removeTrackFromAmbientQueue = useSetAtom(
+    removeTrackFromAmbientQueueAtom
+  );
+  const moveAmbientQueueItem = useSetAtom(moveAmbientQueueItemAtom);
 
-  declare context: React.ContextType<typeof GlobalAppContext>;
-  private APIService!: APIServiceClass;
+  const revalidator = useRevalidator();
+  const navigate = useNavigate();
+  // Loader data
+  const {
+    playlist: playlistProps,
+    coverArtGridOptions,
+    coverArt,
+  } = useLoaderData() as PlaylistPageProps;
+  // React-SortableJS expects an 'id' attribute and we can't change it, so add it to each object
+  playlistProps?.playlist?.track?.forEach(
+    (jspfTrack: JSPFTrack, index: number) => {
+      // eslint-disable-next-line no-param-reassign
+      jspfTrack.id = getRecordingMBIDFromJSPFTrack(jspfTrack);
+    }
+  );
 
-  private SpotifyAPIService?: SpotifyAPIService;
-  private searchForTrackDebounced: any;
+  const currentCoverArt = playlistProps?.cover_art;
 
-  private socket!: Socket;
+  // Ref
+  const socketRef = React.useRef<Socket | null>(null);
+  const searchInputRef = React.useRef<SearchInputImperativeHandle>(null);
 
-  constructor(props: PlaylistPageProps) {
-    super(props);
+  // States
+  const [playlist, setPlaylist] = React.useState<JSPFPlaylist>(
+    playlistProps?.playlist || {}
+  );
+  const { track: tracks } = playlist;
+  const [dontAskAgain, setDontAskAgain] = React.useState(false);
 
-    // React-SortableJS expects an 'id' attribute and we can't change it, so add it to each object
-    // eslint-disable-next-line no-unused-expressions
-    props.playlist?.playlist?.track?.forEach(
-      (jspfTrack: JSPFTrack, index: number) => {
-        // eslint-disable-next-line no-param-reassign
-        jspfTrack.id = getRecordingMBIDFromJSPFTrack(jspfTrack);
-      }
+  React.useEffect(() => {
+    setPlaylist(playlistProps?.playlist || {});
+  }, [playlistProps?.playlist]);
+
+  // Functions
+  const alertMustBeLoggedIn = () => {
+    toast.error(
+      <ToastMsg
+        title="Error"
+        message="You must be logged in for this operation"
+      />,
+      { toastId: "auth-error" }
     );
-    this.state = {
-      playlist: props.playlist?.playlist || {},
-      recordingFeedbackMap: {},
-      loading: false,
-      searchInputValue: "",
-      cachedSearchResults: [],
-    };
-
-    this.searchForTrackDebounced = debounceAsync(this.searchForTrack, 500, {
-      leading: false,
-    });
-  }
-
-  async componentDidMount(): Promise<void> {
-    const { APIService, spotifyAuth } = this.context;
-    this.APIService = APIService;
-    this.connectWebsockets();
-    const recordingFeedbackMap = await this.loadFeedback();
-    this.setState({ recordingFeedbackMap });
-    if (spotifyAuth) {
-      this.SpotifyAPIService = new SpotifyAPIService(spotifyAuth);
-    }
-  }
-
-  componentWillUnmount(): void {
-    if (this.socket?.connected) {
-      this.socket.disconnect();
-    }
-  }
-
-  connectWebsockets = (): void => {
-    // Do we want to show live updates for everyone, or just owner & collaborators?
-    this.createWebsocketsConnection();
-    this.addWebsocketsHandlers();
   };
 
-  createWebsocketsConnection = (): void => {
-    this.socket = io(`${window.location.origin}`, { path: "/socket.io/" });
+  const alertNotAuthorized = () => {
+    toast.error(
+      <ToastMsg
+        title="Not allowed"
+        message="You are not authorized to modify this playlist"
+      />,
+      { toastId: "auth-error" }
+    );
   };
 
-  addWebsocketsHandlers = (): void => {
-    this.socket.on("connect", () => {
-      const { playlist } = this.state;
-      this.socket.emit("joined", {
-        playlist_id: getPlaylistId(playlist),
-      });
-    });
-    this.socket.on("playlist_changed", (data: JSPFPlaylist) => {
-      this.handlePlaylistChange(data);
+  const handleError = (error: any) => {
+    toast.error(<ToastMsg title="Error" message={error.message} />, {
+      toastId: "error",
     });
   };
 
-  emitPlaylistChanged = (): void => {
-    const { playlist } = this.state;
-    this.socket.emit("change_playlist", playlist);
-  };
-
-  handlePlaylistChange = (data: JSPFPlaylist): void => {
+  const handlePlaylistChange = React.useCallback((data: JSPFPlaylist): void => {
     const newPlaylist = data;
     // rerun fetching metadata for all tracks?
     // or find new tracks and fetch metadata for them, add them to local Map
 
     // React-SortableJS expects an 'id' attribute and we can't change it, so add it to each object
-    // eslint-disable-next-line no-unused-expressions
     newPlaylist?.track?.forEach((jspfTrack: JSPFTrack, index: number) => {
       // eslint-disable-next-line no-param-reassign
       jspfTrack.id = getRecordingMBIDFromJSPFTrack(jspfTrack);
     });
-    this.setState({ playlist: newPlaylist });
-  };
+    setPlaylist(newPlaylist);
+  }, []);
 
-  addTrack = async (
-    track: ValueType<OptionType>,
-    actionMeta: ActionMeta<OptionType>
-  ): Promise<void> => {
-    if (actionMeta.action === "select-option") {
-      if (!track) {
-        return;
-      }
-      const { label, value: selectedRecording } = track as OptionType;
-      const { newAlert } = this.props;
-      const { playlist } = this.state;
-      const { currentUser } = this.context;
-      if (!currentUser?.auth_token) {
-        this.alertMustBeLoggedIn();
-        return;
-      }
-      if (!this.hasRightToEdit()) {
-        this.alertNotAuthorized();
-        return;
-      }
-      try {
-        const jspfTrack = PlaylistPage.makeJSPFTrack(selectedRecording);
-        await this.APIService.addPlaylistItems(
-          currentUser.auth_token,
-          getPlaylistId(playlist),
-          [jspfTrack]
-        );
-        newAlert("success", "Added track", `Added track ${label}`);
-        const recordingFeedbackMap = await this.loadFeedback([
-          selectedRecording.recording_mbid,
-        ]);
-        jspfTrack.id = selectedRecording.recording_mbid;
-        this.setState(
-          {
-            playlist: { ...playlist, track: [...playlist.track, jspfTrack] },
-            recordingFeedbackMap,
-            searchInputValue: "",
-            cachedSearchResults: [],
-          },
-          this.emitPlaylistChanged
-        );
-      } catch (error) {
-        this.handleError(error);
-      }
-    }
-    if (actionMeta.action === "clear") {
-      this.setState({ searchInputValue: "", cachedSearchResults: [] });
-    }
-  };
-
-  searchForTrack = async (inputValue: string): Promise<OptionType[]> => {
-    try {
-      const { labsApiUrl } = this.props;
-      const recordingSearchURI = `${labsApiUrl}${
-        labsApiUrl.endsWith("/") ? "" : "/"
-      }recording-search/json`;
-      const response = await fetch(recordingSearchURI, {
-        method: "POST",
-        body: JSON.stringify([{ query: inputValue }]),
-        headers: {
-          "Content-type": "application/json; charset=UTF-8",
-        },
-      });
-      // Converting to JSON
-      const parsedResponse: ACRMSearchResult[] = await response.json();
-      // Format the received items to a react-select option
-      const results = parsedResponse.map((hit: ACRMSearchResult) => ({
-        label: `${hit.recording_name} — ${hit.artist_credit_name}`,
-        value: hit,
-      }));
-      this.setState({ cachedSearchResults: results });
-      return results;
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.debug(error);
-    }
-    return [];
-  };
-
-  copyPlaylist = async (): Promise<void> => {
-    const { newAlert } = this.props;
-    const { currentUser } = this.context;
-    const { playlist } = this.state;
-    if (!currentUser?.auth_token) {
-      this.alertMustBeLoggedIn();
-      return;
-    }
-    if (!playlist) {
-      newAlert("danger", "Error", "No playlist to copy");
-      return;
-    }
-    try {
-      const newPlaylistId = await this.APIService.copyPlaylist(
-        currentUser.auth_token,
-        getPlaylistId(playlist)
-      );
-      // Fetch the newly created playlist and add it to the state if it's the current user's page
-      const JSPFObject: JSPFObject = await this.APIService.getPlaylist(
-        newPlaylistId,
-        currentUser.auth_token
-      );
-      newAlert(
-        "success",
-        "Duplicated playlist",
-        <>
-          Duplicated to playlist&ensp;
-          <a href={`/playlist/${newPlaylistId}`}>{JSPFObject.playlist.title}</a>
-        </>
-      );
-    } catch (error) {
-      this.handleError(error);
-    }
-  };
-
-  deletePlaylist = async (): Promise<void> => {
-    const { newAlert } = this.props;
-    const { currentUser } = this.context;
-    const { playlist } = this.state;
-    if (!currentUser?.auth_token) {
-      this.alertMustBeLoggedIn();
-      return;
-    }
-    if (!this.isOwner()) {
-      this.alertNotAuthorized();
-      return;
-    }
-    try {
-      await this.APIService.deletePlaylist(
-        currentUser.auth_token,
-        getPlaylistId(playlist)
-      );
-      // redirect
-      newAlert(
-        "success",
-        "Deleted playlist",
-        `Deleted playlist ${playlist.title}`
-      );
-      // Wait 1.5 second before navigating to user playlists page
-      await new Promise((resolve) => {
-        setTimeout(resolve, 1500);
-      });
-      window.location.href = `${window.location.origin}/user/${currentUser.name}/playlists`;
-    } catch (error) {
-      this.handleError(error);
-    }
-  };
-
-  getFeedback = async (mbids?: string[]): Promise<FeedbackResponse[]> => {
-    const { newAlert } = this.props;
-    const { currentUser } = this.context;
-    const { playlist } = this.state;
-    const { track: tracks } = playlist;
-    if (currentUser && tracks) {
-      const recordings = mbids ?? tracks.map(getRecordingMBIDFromJSPFTrack);
-      try {
-        const data = await this.APIService.getFeedbackForUserForMBIDs(
-          currentUser.name,
-          recordings.join(", ")
-        );
-        return data.feedback;
-      } catch (error) {
-        newAlert(
-          "danger",
-          "Playback error",
-          typeof error === "object" ? error.message : error
-        );
-      }
-    }
-    return [];
-  };
-
-  loadFeedback = async (mbids?: string[]): Promise<RecordingFeedbackMap> => {
-    const { recordingFeedbackMap } = this.state;
-    const feedback = await this.getFeedback(mbids);
-    const newRecordingFeedbackMap: RecordingFeedbackMap = {
-      ...recordingFeedbackMap,
-    };
-    feedback.forEach((fb: FeedbackResponse) => {
-      if (fb.recording_mbid) {
-        newRecordingFeedbackMap[fb.recording_mbid] = fb.score;
-      }
+  // Socket
+  React.useEffect(() => {
+    const socket = io(websocketsUrl || window.location.origin, {
+      path: "/socket.io/",
     });
-    return newRecordingFeedbackMap;
+    socketRef.current = socket;
+
+    const connectHandler = () => {
+      socket.emit("joined", {
+        playlist_id: getPlaylistId(playlist),
+      });
+    };
+    const playlistChangeHandler = (data: JSPFPlaylist) => {
+      handlePlaylistChange(data);
+    };
+
+    socket.on("connect", connectHandler);
+    socket.on("playlist_changed", playlistChangeHandler);
+
+    return () => {
+      socket.off("connect", connectHandler);
+      socket.off("playlist_changed", playlistChangeHandler);
+      socket.close();
+    };
+  }, [handlePlaylistChange, playlist, websocketsUrl]);
+
+  const emitPlaylistChanged = (newPlaylist: JSPFPlaylist): void => {
+    socketRef.current?.emit("change_playlist", newPlaylist);
   };
 
-  updateFeedback = (
-    recordingMbid: string,
-    score: ListenFeedBack | RecommendationFeedBack
-  ) => {
-    if (recordingMbid) {
-      const { recordingFeedbackMap } = this.state;
-      recordingFeedbackMap[recordingMbid] = score as ListenFeedBack;
-      this.setState({ recordingFeedbackMap });
-    }
+  const onDeletePlaylist = async (): Promise<void> => {
+    // Wait 1.5 second before navigating to user playlists page
+    await new Promise((resolve) => {
+      setTimeout(resolve, 1500);
+    });
+    navigate(`/user/${encodeURIComponent(currentUser?.name)}/playlists`);
   };
 
-  getFeedbackForRecordingMbid = (
-    recordingMbid?: string | null
-  ): ListenFeedBack => {
-    const { recordingFeedbackMap } = this.state;
-    return recordingMbid ? get(recordingFeedbackMap, recordingMbid, 0) : 0;
+  const onPlaylistSave = (newPlaylist: JSPFPlaylist) => {
+    emitPlaylistChanged(newPlaylist);
+    revalidator.revalidate();
   };
 
-  isOwner = (): boolean => {
-    const { playlist } = this.state;
-    const { currentUser } = this.context;
-    return Boolean(currentUser) && currentUser?.name === playlist.creator;
-  };
-
-  hasRightToEdit = (): boolean => {
-    if (this.isOwner()) {
+  const hasRightToEdit = (): boolean => {
+    const collaborators = getPlaylistExtension(playlist)?.collaborators ?? [];
+    if (isPlaylistOwner(playlist, currentUser)) {
       return true;
     }
-    const { currentUser } = this.context;
-    const { playlist } = this.state;
-    const collaborators = getPlaylistExtension(playlist)?.collaborators ?? [];
     return (
       collaborators.findIndex(
         (collaborator) => collaborator === currentUser?.name
@@ -391,22 +217,83 @@ export default class PlaylistPage extends React.Component<
     );
   };
 
-  deletePlaylistItem = async (trackToDelete: JSPFTrack) => {
-    const { currentUser } = this.context;
-    const { playlist } = this.state;
-    const { track: tracks } = playlist;
-    if (!currentUser?.auth_token) {
-      this.alertMustBeLoggedIn();
+  const addTrack = async (
+    selectedTrackMetadata: TrackMetadata
+  ): Promise<void> => {
+    if (!selectedTrackMetadata) {
       return;
     }
-    if (!this.hasRightToEdit()) {
-      this.alertNotAuthorized();
+    if (!currentUser?.auth_token) {
+      alertMustBeLoggedIn();
+      return;
+    }
+    if (!hasRightToEdit()) {
+      alertNotAuthorized();
+      return;
+    }
+    try {
+      const jspfTrack = makeJSPFTrack(selectedTrackMetadata);
+
+      // check if the track is already in the playlist
+      const trackMBID = getRecordingMBIDFromJSPFTrack(jspfTrack);
+      const isDuplicate = playlist.track.some((track) => {
+        const existingMBID = getRecordingMBIDFromJSPFTrack(track);
+        return existingMBID === trackMBID;
+      });
+      if (isDuplicate && !dontAskAgain) {
+        const [confirmed, dontAskAgainValue] = await NiceModal.show<
+          [boolean, boolean],
+          any
+        >(DuplicateTrackModal, {
+          message:
+            "This track is already in the playlist. Do you want to add it anyway?",
+          dontAskAgain,
+        });
+        setDontAskAgain(dontAskAgainValue);
+        if (!confirmed) {
+          return;
+        }
+      }
+
+      await APIService.addPlaylistItems(
+        currentUser.auth_token,
+        getPlaylistId(playlist),
+        [jspfTrack]
+      );
+      addListenToBottomOfAmbientQueue(jspfTrack);
+
+      toast.success(
+        <ToastMsg
+          title="Added Track"
+          message={`${selectedTrackMetadata.track_name} by ${selectedTrackMetadata.artist_name}`}
+        />,
+        { toastId: "added-track" }
+      );
+      jspfTrack.id = selectedTrackMetadata.recording_mbid;
+      const newPlaylist = {
+        ...playlist,
+        track: [...playlist.track, jspfTrack],
+      };
+      emitPlaylistChanged(newPlaylist);
+      revalidator.revalidate();
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  const deletePlaylistItem = async (trackToDelete: JSPFTrack) => {
+    if (!currentUser?.auth_token) {
+      alertMustBeLoggedIn();
+      return;
+    }
+    if (!hasRightToEdit()) {
+      alertNotAuthorized();
       return;
     }
     const recordingMBID = getRecordingMBIDFromJSPFTrack(trackToDelete);
     const trackIndex = findIndex(tracks, trackToDelete);
     try {
-      const status = await this.APIService.deletePlaylistItems(
+      const status = await APIService.deletePlaylistItems(
         currentUser.auth_token,
         getPlaylistId(playlist),
         recordingMBID,
@@ -414,34 +301,33 @@ export default class PlaylistPage extends React.Component<
       );
       if (status === 200) {
         tracks.splice(trackIndex, 1);
-        this.setState(
-          {
-            playlist: {
-              ...playlist,
-              track: [...tracks],
-            },
-          },
-          this.emitPlaylistChanged
-        );
+        const newPlaylist = {
+          ...playlist,
+          track: [...tracks],
+        };
+        removeTrackFromAmbientQueue({
+          track: trackToDelete,
+          index: -1,
+        });
+        emitPlaylistChanged(newPlaylist);
+        revalidator.revalidate();
       }
     } catch (error) {
-      this.handleError(error);
+      handleError(error);
     }
   };
 
-  movePlaylistItem = async (evt: any) => {
-    const { currentUser } = this.context;
-    const { playlist } = this.state;
+  const movePlaylistItem = async (evt: any) => {
     if (!currentUser?.auth_token) {
-      this.alertMustBeLoggedIn();
+      alertMustBeLoggedIn();
       return;
     }
-    if (!this.hasRightToEdit()) {
-      this.alertNotAuthorized();
+    if (!hasRightToEdit()) {
+      alertNotAuthorized();
       return;
     }
     try {
-      await this.APIService.movePlaylistItem(
+      await APIService.movePlaylistItem(
         currentUser.auth_token,
         getPlaylistId(playlist),
         evt.item.getAttribute("data-recording-mbid"),
@@ -449,9 +335,11 @@ export default class PlaylistPage extends React.Component<
         evt.newIndex,
         1
       );
-      this.emitPlaylistChanged();
+      moveAmbientQueueItem(evt);
+      emitPlaylistChanged(playlist);
+      revalidator.revalidate();
     } catch (error) {
-      this.handleError(error);
+      handleError(error);
       // Revert the move in state.playlist order
       const newTracks = [...playlist.track];
       // The ol' switcheroo !
@@ -459,431 +347,286 @@ export default class PlaylistPage extends React.Component<
       newTracks[evt.newIndex] = newTracks[evt.oldIndex];
       newTracks[evt.oldIndex] = toMoveBack;
 
-      this.setState({ playlist: { ...playlist, track: newTracks } });
+      setPlaylist({ ...playlist, track: newTracks });
     }
   };
 
-  editPlaylist = async (
-    name: string,
-    description: string,
-    isPublic: boolean,
-    collaborators: string[],
-    id?: string
-  ) => {
-    const { newAlert } = this.props;
-    if (!id) {
-      newAlert(
-        "danger",
-        "Error",
-        "Trying to edit a playlist without an id. This shouldn't have happened, please contact us with the error message."
-      );
-      return;
-    }
-    if (!this.isOwner()) {
-      this.alertNotAuthorized();
-      return;
-    }
-    const { currentUser } = this.context;
-    if (!currentUser?.auth_token) {
-      this.alertMustBeLoggedIn();
-      return;
-    }
-    const { playlist } = this.state;
-    // Owner can't be collaborator
-    const collaboratorsWithoutOwner = collaborators.filter(
-      (username) => username.toLowerCase() !== playlist.creator.toLowerCase()
-    );
-    if (
-      description === playlist.annotation &&
-      name === playlist.title &&
-      isPublic ===
-        playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]?.public &&
-      collaboratorsWithoutOwner ===
-        playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]?.collaborators
-    ) {
-      // Nothing changed
-      return;
-    }
-    try {
-      const editedPlaylist: JSPFPlaylist = {
-        ...playlist,
-        annotation: description,
-        title: name,
-        extension: {
-          [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
-            public: isPublic,
-            collaborators: collaboratorsWithoutOwner,
-          },
-        },
-      };
+  const totalDurationMs = tracks
+    .filter((t) => Boolean(t.duration))
+    .reduce((total, track) => total + track.duration!, 0);
 
-      await this.APIService.editPlaylist(currentUser.auth_token, id, {
-        playlist: omit(editedPlaylist, "track") as JSPFPlaylist,
-      });
-      this.setState({ playlist: editedPlaylist }, this.emitPlaylistChanged);
-      newAlert("success", "Saved playlist", "");
-    } catch (error) {
-      this.handleError(error);
-    }
-  };
+  const totalDurationForDisplay = formatDuration(
+    intervalToDuration({ start: 0, end: totalDurationMs }),
+    { format: ["days", "hours", "minutes"] }
+  );
 
-  alertMustBeLoggedIn = () => {
-    const { newAlert } = this.props;
-    newAlert("danger", "Error", "You must be logged in for this operation");
-  };
+  const userHasRightToEdit = hasRightToEdit();
+  const customFields = getPlaylistExtension(playlist);
 
-  alertNotAuthorized = () => {
-    const { newAlert } = this.props;
-    newAlert(
-      "danger",
-      "Not allowed",
-      "You are not authorized to modify this playlist"
-    );
-  };
+  React.useEffect(() => {
+    setAmbientQueue(tracks);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playlistProps]);
 
-  handleError = (error: any) => {
-    const { newAlert } = this.props;
-    newAlert("danger", "Error", error.message);
-  };
-
-  exportToSpotify = async () => {
-    const { newAlert } = this.props;
-    const { playlist } = this.state;
-    const { currentUser } = this.context;
-    if (!playlist || !currentUser.auth_token) {
-      return;
-    }
-    if (!playlist.track.length) {
-      newAlert(
-        "warning",
-        "Empty playlist",
-        "Why don't you fill up the playlist a bit before trying to export it?"
-      );
-      return;
-    }
-    this.setState({ loading: true });
-    try {
-      const playlistId = getPlaylistId(playlist);
-      const result = await this.APIService.exportPlaylistToSpotify(
-        currentUser.auth_token,
-        playlistId
-      );
-      const { external_url } = result;
-      newAlert(
-        "success",
-        "Playlist exported to Spotify",
-        <>
-          Successfully exported playlist:{" "}
-          <a href={external_url} target="_blank" rel="noopener noreferrer">
-            {external_url}
-          </a>
-          Heads up: the new playlist is public on Spotify.
-        </>
-      );
-    } catch (error) {
-      this.handleError(error.error ?? error);
-    }
-    this.setState({ loading: false });
-  };
-
-  handleInputChange = (inputValue: string, params: InputActionMeta) => {
-    /* Prevent clearing the search value on select dropdown close and input blur */
-    if (["menu-close", "set-value", "input-blur"].includes(params.action)) {
-      const { searchInputValue } = this.state;
-      this.setState({ searchInputValue });
-    } else {
-      this.setState({ searchInputValue: inputValue, cachedSearchResults: [] });
-    }
-  };
-
-  render() {
-    const {
-      playlist,
-      loading,
-      searchInputValue,
-      cachedSearchResults,
-    } = this.state;
-    const { APIService, spotifyAuth } = this.context;
-    const { newAlert } = this.props;
-    const { track: tracks } = playlist;
-    const hasRightToEdit = this.hasRightToEdit();
-    const isOwner = this.isOwner();
-
-    const showSpotifyExportButton = spotifyAuth?.permission?.includes(
-      "playlist-modify-public"
-    );
-
-    const customFields = getPlaylistExtension(playlist);
-
-    return (
-      <div role="main">
-        <Loader
-          isLoading={loading}
-          loaderText="Exporting playlist to Spotify"
-          className="full-page-loader"
+  const [showMore, setShowMore] = React.useState(false);
+  const isLongDescription =
+    playlist?.annotation && playlist.annotation.length > 400;
+  return (
+    <div role="main">
+      <Helmet>
+        <title>
+          {playlist.title} by {playlist.creator}
+        </title>
+        <meta property="og:type" content="music.playlist" />
+        <meta
+          property="og:title"
+          content={`${playlist.title} by ${playlist.creator} (${
+            playlist.track?.length ?? 0
+          } tracks) — ListenBrainz`}
         />
-        <div className="row">
-          <div id="playlist" className="col-md-8 col-md-offset-2">
-            <div className="playlist-details row">
-              <h1 className="title">
-                <div>
-                  {playlist.title}
-                  <span className="dropdown pull-right">
-                    <button
-                      className="btn btn-info dropdown-toggle"
-                      type="button"
-                      id="playlistOptionsDropdown"
-                      data-toggle="dropdown"
-                      aria-haspopup="true"
-                      aria-expanded="true"
-                    >
-                      <FontAwesomeIcon
-                        icon={faCog as IconProp}
-                        title="Options"
-                      />
-                      &nbsp;Options
-                    </button>
-                    <ul
-                      className="dropdown-menu dropdown-menu-right"
-                      aria-labelledby="playlistOptionsDropdown"
-                    >
-                      <li>
-                        <a onClick={this.copyPlaylist} role="button" href="#">
-                          Duplicate
-                        </a>
-                      </li>
-                      {isOwner && (
-                        <>
-                          <li role="separator" className="divider" />
-                          <li>
-                            <a
-                              data-toggle="modal"
-                              data-target="#playlistModal"
-                              role="button"
-                              href="#"
-                            >
-                              <FontAwesomeIcon icon={faPen as IconProp} /> Edit
-                            </a>
-                          </li>
-                          <li>
-                            <a
-                              data-toggle="modal"
-                              data-target="#confirmDeleteModal"
-                              role="button"
-                              href="#"
-                            >
-                              <FontAwesomeIcon icon={faTrashAlt as IconProp} />{" "}
-                              Delete
-                            </a>
-                          </li>
-                        </>
-                      )}
-                      {showSpotifyExportButton && (
-                        <>
-                          <li role="separator" className="divider" />
-                          <li>
-                            <a
-                              id="exportPlaylistToSpotify"
-                              role="button"
-                              href="#"
-                              onClick={this.exportToSpotify}
-                            >
-                              <FontAwesomeIcon icon={faSpotify as IconProp} />{" "}
-                              Export to Spotify
-                            </a>
-                          </li>
-                        </>
-                      )}
-                    </ul>
-                  </span>
-                </div>
-                <small>
-                  {customFields?.public ? "Public " : "Private "}
-                  playlist by{" "}
-                  <a href={sanitizeUrl(`/user/${playlist.creator}/playlists`)}>
-                    {playlist.creator}
-                  </a>
-                </small>
-              </h1>
-              <div className="info">
-                <div>{playlist.track?.length} tracks</div>
-                <div>Created: {new Date(playlist.date).toLocaleString()}</div>
-                {customFields?.collaborators &&
-                  Boolean(customFields.collaborators.length) && (
-                    <div>
-                      With the help of:&ensp;
-                      {customFields.collaborators.map((collaborator, index) => (
-                        <React.Fragment key={collaborator}>
-                          <a href={sanitizeUrl(`/user/${collaborator}`)}>
-                            {collaborator}
-                          </a>
-                          {index < customFields.collaborators.length - 1
-                            ? ", "
-                            : ""}
-                        </React.Fragment>
-                      ))}
-                    </div>
-                  )}
-                {customFields?.last_modified_at && (
-                  <div>
-                    Last modified:{" "}
-                    {new Date(customFields.last_modified_at).toLocaleString()}
-                  </div>
+        <meta property="og:description" content={playlist.annotation} />
+        <meta
+          property="music:creator"
+          content={`${LISTENBRAINZ_URI_PREFIX}user/${playlist.creator}`}
+        />
+        {totalDurationMs && (
+          <meta
+            property="music:duration"
+            content={String(totalDurationMs / 1000)}
+          />
+        )}
+        <meta property="og:url" content={playlist.identifier} />
+      </Helmet>
+      <div className="entity-page-header flex">
+        <div
+          className="cover-art"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(
+              coverArt ??
+                "<img src='/static/img/cover-art-placeholder.jpg'></img>"
+            ),
+          }}
+          title={`Cover art for ${playlist.title}`}
+        />
+        <div
+          className="playlist-info"
+          style={showMore ? { maxHeight: "fit-content" } : {}}
+        >
+          <h1>{playlist.title}</h1>
+          <div className="details h4">
+            <div>
+              {customFields?.public ? "Public " : "Private "}
+              playlist by{" "}
+              <Link
+                to={sanitizeUrl(
+                  `/user/${encodeURIComponent(playlist.creator)}/playlists/`
                 )}
-                {customFields?.copied_from && (
-                  <div>
-                    Copied from:
-                    <a href={sanitizeUrl(customFields.copied_from)}>
-                      {customFields.copied_from.substr(
-                        PLAYLIST_URI_PREFIX.length
-                      )}
-                    </a>
-                  </div>
-                )}
-              </div>
-              {playlist.annotation && (
-                <div
-                  // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
-                  // eslint-disable-next-line react/no-danger
-                  dangerouslySetInnerHTML={{
-                    __html: sanitize(playlist.annotation),
-                  }}
-                />
-              )}
-              <hr />
+              >
+                {playlist.creator}
+              </Link>
             </div>
-            {hasRightToEdit && tracks.length > 10 && (
-              <div className="text-center">
-                <a
-                  className="btn btn-primary"
-                  type="button"
-                  href="#add-track"
-                  style={{ marginBottom: "1em" }}
-                >
-                  <FontAwesomeIcon icon={faPlusCircle as IconProp} />
-                  &nbsp;&nbsp;Add a track
-                </a>
-              </div>
+          </div>
+          <div className="details">
+            <div>
+              {customFields?.collaborators &&
+                Boolean(customFields.collaborators.length) && (
+                  <div>
+                    With the help of:&ensp;
+                    {customFields.collaborators.map((collaborator, index) => (
+                      <React.Fragment key={collaborator}>
+                        <Link
+                          to={sanitizeUrl(
+                            `/user/${encodeURIComponent(collaborator)}/`
+                          )}
+                        >
+                          {collaborator}
+                        </Link>
+                        {index < (customFields?.collaborators?.length ?? 0) - 1
+                          ? ", "
+                          : ""}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                )}
+            </div>
+            <div>
+              {playlist.track?.length}{" "}
+              {playlist.track?.length === 1 ? "track" : "tracks"}
+              {totalDurationForDisplay && (
+                <>&nbsp;-&nbsp;{totalDurationForDisplay}</>
+              )}
+            </div>
+            <small className="form-text">
+              Created: {new Date(playlist.date).toLocaleString()}
+            </small>
+            {customFields?.last_modified_at && (
+              <small className="form-text">
+                Last modified:{" "}
+                {new Date(customFields.last_modified_at).toLocaleString()}
+              </small>
             )}
-            <div id="listens row">
-              {tracks.length > 0 ? (
-                <ReactSortable
-                  handle=".drag-handle"
-                  list={tracks as (JSPFTrack & { id: string })[]}
-                  onEnd={this.movePlaylistItem}
-                  setList={(newState: JSPFTrack[]) =>
-                    this.setState({
-                      playlist: { ...playlist, track: newState },
-                    })
-                  }
-                >
-                  {tracks.map((track: JSPFTrack, index) => {
-                    return (
-                      <PlaylistItemCard
-                        key={`${track.id}-${index.toString()}`}
-                        canEdit={hasRightToEdit}
-                        track={track}
-                        currentFeedback={this.getFeedbackForRecordingMbid(
-                          track.id
-                        )}
-                        removeTrackFromPlaylist={this.deletePlaylistItem}
-                        updateFeedbackCallback={this.updateFeedback}
-                        newAlert={newAlert}
-                      />
-                    );
-                  })}
-                </ReactSortable>
-              ) : (
-                <div className="lead text-center">
-                  <p>Nothing in this playlist yet</p>
-                </div>
-              )}
-              {hasRightToEdit && (
-                <Card className="listen-card row" id="add-track">
-                  <span>
-                    <FontAwesomeIcon icon={faPlusCircle as IconProp} />
-                    &nbsp;&nbsp;Add a track
-                  </span>
-                  <AsyncSelect
-                    className="search"
-                    cacheOptions
-                    isClearable
-                    closeMenuOnSelect={false}
-                    loadingMessage={({ inputValue }) =>
-                      `Searching for '${inputValue}'…`
-                    }
-                    loadOptions={this.searchForTrackDebounced}
-                    defaultOptions={cachedSearchResults}
-                    onChange={this.addTrack}
-                    placeholder="Artist followed by track name"
-                    inputValue={searchInputValue}
-                    onInputChange={this.handleInputChange}
-                  />
-                </Card>
-              )}
-            </div>
-            {isOwner && (
-              <>
-                <CreateOrEditPlaylistModal
-                  onSubmit={this.editPlaylist}
-                  playlist={playlist}
-                  newAlert={newAlert}
-                />
-                <DeletePlaylistConfirmationModal
-                  onConfirm={this.deletePlaylist}
-                  playlist={playlist}
-                />
-              </>
+            {customFields?.copied_from && (
+              <small className="form-text">
+                Copied from:
+                <a href={sanitizeUrl(customFields.copied_from)}>
+                  {customFields.copied_from.substr(PLAYLIST_URI_PREFIX.length)}
+                </a>
+              </small>
             )}
           </div>
-          <BrainzPlayer
-            listens={tracks.map(JSPFTrackToListen)}
-            newAlert={newAlert}
-            listenBrainzAPIBaseURI={APIService.APIBaseURI}
-            refreshSpotifyToken={APIService.refreshSpotifyToken}
-            refreshYoutubeToken={APIService.refreshYoutubeToken}
-          />
+          {playlist.annotation && (
+            <div className="description">
+              <div
+                className={`${isLongDescription ? "text-summary long" : ""} ${
+                  showMore ? "expanded" : ""
+                }`}
+                // eslint-disable-next-line react/no-danger
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(playlist.annotation),
+                }}
+              />
+              {isLongDescription && (
+                <button
+                  className="btn btn-link pull-right"
+                  type="button"
+                  onClick={() => setShowMore(!showMore)}
+                >
+                  {showMore ? "Show Less" : "Show More"}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="right-side">
+          <div className="entity-rels">
+            <div className="dropdown">
+              <button
+                className="btn btn-info dropdown-toggle"
+                type="button"
+                id="playlistOptionsDropdown"
+                data-bs-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
+                &nbsp;Options
+              </button>
+              <PlaylistMenu
+                playlist={playlist}
+                coverArtGridOptions={coverArtGridOptions}
+                currentCoverArt={currentCoverArt}
+                onPlaylistSaved={onPlaylistSave}
+                onPlaylistDeleted={onDeletePlaylist}
+                disallowEmptyPlaylistExport
+              />
+            </div>
+            {customFields?.public && (
+              <button
+                type="button"
+                className="btn btn-icon btn-info btn-sm atom-button"
+                title="Subscribe to syndication feed (Atom)"
+                onClick={() => {
+                  NiceModal.show(SyndicationFeedModal, {
+                    feedTitle: `Playlist - ${playlist.title}`,
+                    options: [],
+                    baseUrl: `${getBaseUrl()}/syndication-feed/playlist/${getPlaylistId(
+                      playlist
+                    )}`,
+                  });
+                }}
+              >
+                <FontAwesomeIcon icon={faRss} size="sm" fixedWidth />
+              </button>
+            )}
+          </div>
         </div>
       </div>
-    );
-  }
+      <div
+        id="playlist"
+        data-testid="playlist"
+        className="col-md-8 offset-md-2"
+      >
+        <div className="header">
+          <h3 className="header-with-line">
+            Tracks
+            {Boolean(playlist.track?.length) && (
+              <button
+                type="button"
+                className="btn btn-info btn-rounded play-tracks-button"
+                title="Play all tracks"
+                onClick={() => {
+                  window.postMessage(
+                    {
+                      brainzplayer_event: "play-ambient-queue",
+                      payload: tracks,
+                    },
+                    window.location.origin
+                  );
+                }}
+              >
+                <FontAwesomeIcon icon={faPlayCircle} fixedWidth /> Play all
+              </button>
+            )}
+          </h3>
+        </div>
+        {userHasRightToEdit && tracks && tracks.length > 10 && (
+          <div className="text-center">
+            <button
+              className="btn btn-primary"
+              type="button"
+              style={{ marginBottom: "1em" }}
+              onClick={() => {
+                searchInputRef.current?.focus();
+              }}
+            >
+              <FontAwesomeIcon icon={faPlusCircle as IconProp} />
+              &nbsp;&nbsp;Add a track
+            </button>
+          </div>
+        )}
+        <div id="listens row">
+          {tracks && tracks.length > 0 ? (
+            <ReactSortable
+              handle=".drag-handle"
+              list={tracks as (JSPFTrack & { id: string })[]}
+              onEnd={movePlaylistItem}
+              setList={(newState) =>
+                setPlaylist({ ...playlist, track: newState })
+              }
+            >
+              {tracks.map((track: JSPFTrack, index) => {
+                return (
+                  <PlaylistItemCard
+                    key={`${track.id}-${index.toString()}`}
+                    canEdit={userHasRightToEdit}
+                    track={track}
+                    removeTrackFromPlaylist={deletePlaylistItem}
+                  />
+                );
+              })}
+            </ReactSortable>
+          ) : (
+            <div className="lead text-center">
+              <p>Nothing in this playlist yet</p>
+            </div>
+          )}
+          {userHasRightToEdit && (
+            <Card className="listen-card row" id="add-track">
+              <span>
+                <FontAwesomeIcon icon={faPlusCircle as IconProp} />
+                &nbsp;&nbsp;Add a track
+              </span>
+              <SearchTrackOrMBID
+                ref={searchInputRef}
+                autofocus={false}
+                onSelectRecording={addTrack}
+                expectedPayload="trackmetadata"
+              />
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-    optionalAlerts,
-  } = getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { labs_api_url, playlist } = reactProps;
-
-  const PlaylistPageWithAlertNotifications = withAlertNotifications(
-    PlaylistPage
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <PlaylistPageWithAlertNotifications
-            initialAlerts={optionalAlerts}
-            labsApiUrl={labs_api_url}
-            playlist={playlist}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

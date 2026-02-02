@@ -2,11 +2,11 @@ import logging
 
 from listenbrainz_spark.recommendations.dataframe_utils import get_dates_to_train_data
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_listens_from_dump
+from listenbrainz_spark.listens.data import get_listens_from_dump
 
 logger = logging.getLogger(__name__)
 
-TOP_LISTENS_LIMIT = 200
+TOP_LISTENS_LIMIT = 1000
 
 
 def get_missing_mb_data():

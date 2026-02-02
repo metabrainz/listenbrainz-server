@@ -5,6 +5,7 @@ from typing import Union, Sequence
 from data.model.external_service import ExternalServiceType
 
 from listenbrainz.db import external_service_oauth
+from listenbrainz.webserver import db_conn
 
 
 class ExternalService(ABC):
@@ -34,10 +35,10 @@ class ExternalService(ABC):
         Args:
             user_id (int): the ListenBrainz row ID of the user
         """
-        external_service_oauth.delete_token(user_id=user_id, service=self.service, remove_import_log=True)
+        external_service_oauth.delete_token(db_conn, user_id=user_id, service=self.service, remove_import_log=True)
 
     def get_user(self, user_id: int) -> Union[dict, None]:
-        return external_service_oauth.get_token(user_id=user_id, service=self.service)
+        return external_service_oauth.get_token(db_conn, user_id=user_id, service=self.service)
 
     def user_oauth_token_has_expired(self, user: dict, within_minutes: int = 5) -> bool:
         """Check if a user's oauth token has expired (within a threshold)
@@ -83,4 +84,9 @@ class ExternalServiceInvalidGrantError(ExternalServiceAPIError):
     This usually means that the user has revoked authorization to the ListenBrainz application
     through external means without unlinking the account from ListenBrainz.
     """
+    pass
+
+
+class LastfmUserNotRetryableException(ExternalServiceError):
+    """ Raised when the last.fm user is not found or has privacy mode enabled. """
     pass

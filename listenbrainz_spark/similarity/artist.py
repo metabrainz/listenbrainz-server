@@ -2,12 +2,10 @@ from datetime import datetime, date, time, timedelta
 
 from more_itertools import chunked
 
-import listenbrainz_spark
-from listenbrainz_spark import config
 from listenbrainz_spark.path import RECORDING_LENGTH_DATAFRAME, ARTIST_CREDIT_MBID_DATAFRAME
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_listens_from_dump
-
+from listenbrainz_spark.listens.data import get_listens_from_dump
+from listenbrainz_spark.utils import read_files_from_HDFS
 
 RECORDINGS_PER_MESSAGE = 10000
 # the duration value in seconds to use for track whose duration data in not available in MB
@@ -34,6 +32,7 @@ def build_sessioned_index(listen_table, metadata_table, artist_credit_table, ses
                   JOIN {artist_credit_table} ac
                  USING (artist_credit_id)
                  WHERE l.recording_mbid IS NOT NULL
+                   AND l.recording_mbid != ''
                 WINDOW w AS (PARTITION BY l.user_id, listened_at, l.recording_mbid ORDER BY ac.position)
             ), ordered AS (
                 SELECT user_id
@@ -104,7 +103,7 @@ def build_sessioned_index(listen_table, metadata_table, artist_credit_table, ses
     """
 
 
-def main(days, session, contribution, threshold, limit, skip):
+def main(days, session, contribution, threshold, limit, skip, is_production_dataset):
     """ Generate similar artists based on user listening sessions.
 
     Args:
@@ -117,6 +116,7 @@ def main(days, session, contribution, threshold, limit, skip):
         skip: the minimum threshold in seconds to mark a listen as skipped. we cannot just mark a negative difference
             as skip because there may be a difference in track length in MB and music services and also issues in
             timestamping listens.
+        is_production_dataset: only determines how the dataset is stored in ListenBrainz database.
     """
     to_date = datetime.combine(date.today(), time.min)
     from_date = to_date + timedelta(days=-days)
@@ -127,10 +127,10 @@ def main(days, session, contribution, threshold, limit, skip):
 
     get_listens_from_dump(from_date, to_date).createOrReplaceTempView(table)
 
-    metadata_df = listenbrainz_spark.sql_context.read.parquet(config.HDFS_CLUSTER_URI + RECORDING_LENGTH_DATAFRAME)
+    metadata_df = read_files_from_HDFS(RECORDING_LENGTH_DATAFRAME)
     metadata_df.createOrReplaceTempView(metadata_table)
 
-    artist_credit_df = listenbrainz_spark.sql_context.read.parquet(config.HDFS_CLUSTER_URI + ARTIST_CREDIT_MBID_DATAFRAME)
+    artist_credit_df = read_files_from_HDFS(ARTIST_CREDIT_MBID_DATAFRAME)
     artist_credit_df.createOrReplaceTempView(artist_credit_table)
 
     skip_threshold = -skip
@@ -139,10 +139,23 @@ def main(days, session, contribution, threshold, limit, skip):
 
     algorithm = f"session_based_days_{days}_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_skip_{skip}"
 
+    if is_production_dataset:
+        yield {
+            "type": "similarity_artist_start",
+            "algorithm": algorithm
+        }
+
     for entries in chunked(data, RECORDINGS_PER_MESSAGE):
         items = [row.asDict() for row in entries]
         yield {
-            "type": "similar_artists",
+            "type": "similarity_artist",
             "algorithm": algorithm,
-            "data": items
+            "data": items,
+            "is_production_dataset": is_production_dataset
+        }
+
+    if is_production_dataset:
+        yield {
+            "type": "similarity_artist_end",
+            "algorithm": algorithm
         }

@@ -1,34 +1,14 @@
-import itertools
 import json
-import sys
-from copy import deepcopy
-from datetime import datetime, timezone
-from unittest.mock import patch
 
-import requests
 import orjson
+import requests
+from brainzutils.ratelimit import set_rate_limits
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-import requests_mock
-
-from data.model.user_artist_map import UserArtistMapRecord
-from flask import url_for
-
-from listenbrainz import config
-from listenbrainz.config import LISTENBRAINZ_LABS_API_URL
 from listenbrainz.db import couchdb
+from listenbrainz.spark.handlers import handle_entity_listener
 from listenbrainz.tests.integration import IntegrationTestCase
-from redis import Redis
-from flask import current_app
-
-
-class MockDate(datetime):
-    """ Mock class for datetime which returns epoch """
-
-    @classmethod
-    def now(cls, tzinfo=None):
-        return cls.fromtimestamp(0)
 
 
 class StatsAPITestCase(IntegrationTestCase):
@@ -36,14 +16,23 @@ class StatsAPITestCase(IntegrationTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super(StatsAPITestCase, cls).setUpClass()
-        stats = ["artists", "releases", "recordings", "daily_activity", "listening_activity", "artistmap"]
+
+        stats = [
+            "artists",
+            "releases",
+            "recordings",
+            "release_groups",
+            "daily_activity",
+            "listening_activity",
+            "artist_map",
+            "artist_evolution_activity",
+            "genre_activity",
+            "era_activity"
+        ]
         ranges = ["week", "month", "year", "all_time"]
         for stat in stats:
             for range_ in ranges:
-                if stat == "artistmap":
-                    couchdb.create_database(f"{stat}_{range_}")
-                else:
-                    couchdb.create_database(f"{stat}_{range_}_20220718")
+                couchdb.create_database(f"{stat}_{range_}_20220718")
 
         # we do not clear the couchdb databases after each test. user stats keep working because
         # the user id changes for each test. for sitewide stats this is not the case as the user id
@@ -51,17 +40,19 @@ class StatsAPITestCase(IntegrationTestCase):
         # otherwise we will get an error.
         with open(cls.path_to_data_file('sitewide_top_artists_db_data_for_api_test.json'), 'r') as f:
             cls.sitewide_artist_payload = json.load(f)
-        db_stats.insert_sitewide_stats('artists_all_time_20220718', 0, 5, cls.sitewide_artist_payload)
+        db_stats.insert_sitewide_stats('artists', 'all_time', 0, 5, cls.sitewide_artist_payload)
 
     def setUp(self):
         self.maxDiff = None
+        set_rate_limits(5000, 50000, 10)
+
         # app context
         super(StatsAPITestCase, self).setUp()
         self.app.config["DEBUG"] = True
-        self.user = db_user.get_or_create(1, 'testuserpleaseignore')
-        self.another_user = db_user.get_or_create(1999, 'another_user')
-        self.no_stat_user = db_user.get_or_create(222222, 'nostatuser')
-        
+        self.user = db_user.get_or_create(self.db_conn, 1, 'testuserpleaseignore')
+        self.another_user = db_user.get_or_create(self.db_conn, 1999, 'another_user')
+        self.no_stat_user = db_user.get_or_create(self.db_conn, 222222, 'nostatuser')
+
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
             self.user_artist_payload = json.load(f)
             self.user_artist_payload[0]["user_id"] = self.user["id"]
@@ -74,6 +65,13 @@ class StatsAPITestCase(IntegrationTestCase):
             self.user_release_payload[0]["user_id"] = self.user["id"]
         database = 'releases_all_time_20220718'
         db_stats.insert(database, 0, 5, self.user_release_payload)
+
+        # Insert release data
+        with open(self.path_to_data_file('user_top_release_groups_db_data_for_api_test.json'), 'r') as f:
+            self.user_release_group_payload = json.load(f)
+            self.user_release_group_payload[0]["user_id"] = self.user["id"]
+        database = 'release_groups_all_time_20220718'
+        db_stats.insert(database, 0, 5, self.user_release_group_payload)
 
         # Insert recording data
         with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
@@ -89,6 +87,16 @@ class StatsAPITestCase(IntegrationTestCase):
         database = 'listening_activity_all_time_20220718'
         db_stats.insert(database, 0, 5, self.listening_activity_payload)
 
+        # Insert artist evolution activity data
+        with open(self.path_to_data_file('user_artist_evolution_activity_db_data_for_api_test.json')) as f:
+            self.artist_evolution_activity_payload = json.load(f)
+            self.artist_evolution_activity_payload[0]["user_id"] = self.user["id"]
+            self.artist_evolution_activity_payload[0]["from_ts"] = 0
+            self.artist_evolution_activity_payload[0]["to_ts"] = 5
+            self.artist_evolution_activity_payload[0]["range"] = "all_time"
+        database = 'artist_evolution_activity_all_time_20220718'
+        db_stats.insert(database, 0, 5, self.artist_evolution_activity_payload)
+
         # Insert daily activity data
         with open(self.path_to_data_file('user_daily_activity_db_data_for_api_test.json')) as f:
             self.daily_activity_payload = json.load(f)
@@ -96,11 +104,25 @@ class StatsAPITestCase(IntegrationTestCase):
         database = 'daily_activity_all_time_20220718'
         db_stats.insert(database, 0, 5, self.daily_activity_payload)
 
+        # Insert genre activity data
+        with open(self.path_to_data_file('user_genre_activity_db_data_for_api_test.json')) as f:
+            self.genre_activity_payload = json.load(f)
+            self.genre_activity_payload[0]["user_id"] = self.user["id"]
+        database = 'genre_activity_all_time_20220718'
+        db_stats.insert(database, 0, 5, self.genre_activity_payload)
+
+        # Insert era activity data
+        with open(self.path_to_data_file('user_era_activity_db_data_for_api_test.json')) as f:
+            self.era_activity_payload = json.load(f)
+            self.era_activity_payload[0]["user_id"] = self.user["id"]
+        database = 'era_activity_all_time_20220718'
+        db_stats.insert(database, 0, 5, self.era_activity_payload)
+
         # Insert artist map data
         with open(self.path_to_data_file('user_artist_map_db_data_for_api_test.json')) as f:
             self.artist_map_payload = json.load(f)
             self.artist_map_payload[0]["user_id"] = self.user["id"]
-        database = 'artistmap_all_time'
+        database = 'artist_map_all_time_20220718'
         db_stats.insert(database, 0, 5, self.artist_map_payload)
 
         self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
@@ -115,6 +137,11 @@ class StatsAPITestCase(IntegrationTestCase):
                 "endpoint": "stats_api_v1.get_release",
                 "total_count_key": "total_release_count",
                 "payload": self.user_release_payload
+            },
+            "release_groups": {
+                "endpoint": "stats_api_v1.get_release_group",
+                "total_count_key": "total_release_group_count",
+                "payload": self.user_release_group_payload
             },
             "recordings": {
                 "endpoint": "stats_api_v1.get_recording",
@@ -132,6 +159,18 @@ class StatsAPITestCase(IntegrationTestCase):
                 "endpoint": "stats_api_v1.get_daily_activity",
                 "payload": self.daily_activity_payload
             },
+            "genre_activity": {
+                "endpoint": "stats_api_v1.get_genre_activity",
+                "payload": self.genre_activity_payload
+            },
+            "era_activity": {
+                "endpoint": "stats_api_v1.get_era_activity",
+                "payload": self.era_activity_payload
+            },
+            "artist_evolution_activity": {
+                "endpoint": "stats_api_v1.get_artist_evolution_activity",
+                "payload": self.artist_evolution_activity_payload
+            },
             "artist_map": {
                 "endpoint": "stats_api_v1.get_artist_map",
                 "payload": self.artist_map_payload
@@ -146,11 +185,6 @@ class StatsAPITestCase(IntegrationTestCase):
                 "payload": self.sitewide_artist_payload
             }
         }
-
-    def tearDown(self):
-        r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
-        r.flushall()
-        super(StatsAPITestCase, self).tearDown()
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -172,7 +206,7 @@ class StatsAPITestCase(IntegrationTestCase):
         for stat_type in self.all_endpoints:
             url = self.all_endpoints[stat_type]["endpoint"]
             user_name = self.user['musicbrainz_id']
-            endpoint_user_url = url_for(url, user_name=user_name)
+            endpoint_user_url = self.custom_url_for(url, user_name=user_name)
 
             with self.subTest(f"test 400 is received for invalid range query param on endpoint : {url}", url=url):
                 response = self.client.get(endpoint_user_url, query_string={'range': 'foobar'})
@@ -180,13 +214,13 @@ class StatsAPITestCase(IntegrationTestCase):
                 self.assertEqual("Invalid range: foobar", response.json['error'])
 
             with self.subTest(f"test that the API sends 404 if user does not exist on endpoint : {url}", url=url):
-                response = self.client.get(url_for(url, user_name='nouser'))
+                response = self.client.get(self.custom_url_for(url, user_name='nouser'))
                 self.assert404(response)
                 self.assertEqual('Cannot find user: nouser', response.json['error'])
 
             with self.subTest(f"test to make sure that the API sends 204 if statistics for user have not"
                               f" been calculated yet on endpoint: {url}", url=url):
-                response = self.client.get(url_for(url, user_name=self.no_stat_user['musicbrainz_id']))
+                response = self.client.get(self.custom_url_for(url, user_name=self.no_stat_user['musicbrainz_id']))
                 self.assertEqual(response.status_code, 204)
 
             if stat_type in self.non_entity_endpoints:
@@ -212,7 +246,8 @@ class StatsAPITestCase(IntegrationTestCase):
                 self.assert400(response)
                 self.assertEqual("'count' should be a non-negative integer", response.json['error'])
 
-    def assertUserStatEqual(self, request, response, entity, stats_range, total_count_key, count, offset=0, user_name=None):
+    def assertUserStatEqual(self, request, response, entity, stats_range, total_count_key, count, offset=0,
+                            user_name=None):
         """ Checks the stats response received from the api is valid and then compare the stats payload inserted in db
             with the payload received from the api.
             Many tests insert larger payloads but expect a smaller number of stats to returned so
@@ -240,7 +275,9 @@ class StatsAPITestCase(IntegrationTestCase):
 
         received = orjson.loads(response.data)['payload']
 
-        self.assertEqual(sent['count'], received['count'])
+        singular_entity = entity[:-1] if entity.endswith('s') else entity
+        self.assertEqual(sent[f'total_{singular_entity}_count'], received[f'total_{singular_entity}_count'])
+        self.assertEqual(count, received['count'])
         self.assertEqual(sent['from_ts'], received['from_ts'])
         self.assertEqual(sent['to_ts'], received['to_ts'])
         self.assertEqual(stats_range, received['range'])
@@ -254,6 +291,36 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual(sent['from_ts'], received['from_ts'])
         self.assertEqual(sent['to_ts'], received['to_ts'])
         self.assertEqual(sent['data'], received['listening_activity'])
+        self.assertEqual(self.user['musicbrainz_id'], received['user_id'])
+
+    def assertGenreActivityEqual(self, request, response):
+        self.assert200(response)
+        received = json.loads(response.data)['payload']
+        sent = request[0]
+    
+        self.assertEqual(sent['from_ts'], received['from_ts'])
+        self.assertEqual(sent['to_ts'], received['to_ts'])
+        self.assertEqual(sent['data'], received['genre_activity'])
+        self.assertEqual(self.user['musicbrainz_id'], received['user_id'])
+    
+    def assertEraActivityEqual(self, request, response):
+        self.assert200(response)
+        received = json.loads(response.data)['payload']
+        sent = request[0]
+
+        self.assertEqual(sent['from_ts'], received['from_ts'])
+        self.assertEqual(sent['to_ts'], received['to_ts'])
+        self.assertEqual(sent['data'], received['era_activity'])
+        self.assertEqual(self.user['musicbrainz_id'], received['user_id'])
+
+    def assertArtistEvolutionActivityEqual(self, request, response):
+        self.assert200(response)
+        received = json.loads(response.data)['payload']
+        sent = request[0]
+
+        self.assertEqual(0, received['from_ts'])
+        self.assertEqual(5, received['to_ts'])
+        self.assertEqual(sent['data'], received['artist_evolution_activity'])
         self.assertEqual(self.user['musicbrainz_id'], received['user_id'])
 
     def assertArtistMapEqual(self, request, response):
@@ -282,38 +349,40 @@ class StatsAPITestCase(IntegrationTestCase):
             total_count_key = self.entity_endpoints[entity]["total_count_key"]
             payload = self.entity_endpoints[entity]["payload"]
             with self.subTest(f"test api returns valid response for {entity} stats", entity=entity):
-                response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']))
+                response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']))
                 self.assertUserStatEqual(payload, response, entity, "all_time", total_count_key, 25)
 
             with self.subTest(f"test api returns valid response for {entity} stats when using offset", entity=entity):
-                response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
+                response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                            query_string={'offset': 5})
                 self.assertUserStatEqual(payload, response, entity, "all_time", total_count_key, 25, 5)
 
             with self.subTest(f"test api returns valid response for {entity} stats when using count", entity=entity):
-                response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
+                response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                            query_string={'count': 5})
                 self.assertUserStatEqual(payload, response, entity, "all_time", total_count_key, 5)
 
             # use different user for these subtest because otherwise need to update document
             # in existing database whose data may be needed in other tests.
-            with self.subTest(f"test api returns at most 100 stats in a response for {entity}", entity=entity):
+            with self.subTest(f"test api returns at most 1000 stats in a response for {entity}", entity=entity):
                 with open(self.path_to_data_file(f'user_top_{entity}_db_data_for_api_test_too_many.json'), 'r') as f:
                     payload = json.load(f)
                     payload[0]["user_id"] = self.another_user["id"]
                 db_stats.insert(f"{entity}_all_time_20220718", 0, 5, payload)
-                response = self.client.get(url_for(endpoint, user_name=self.another_user['musicbrainz_id']),
-                                           query_string={'count': 200})
+                response = self.client.get(self.custom_url_for(endpoint, user_name=self.another_user['musicbrainz_id']),
+                                           query_string={'count': 100})
                 self.assertUserStatEqual(payload, response, entity, "all_time", total_count_key, 100,
                                          user_name=self.another_user['musicbrainz_id'])
 
             for range_ in ["week", "month", "year"]:
-                with self.subTest(f"test api returns valid stats response for {range_} {entity}", entity=entity, range_=range_):
-                    with open(self.path_to_data_file(f'user_top_{entity}_db_data_for_api_test_{range_}.json'), 'r') as f:
+                with self.subTest(f"test api returns valid stats response for {range_} {entity}", entity=entity,
+                                  range_=range_):
+                    with open(self.path_to_data_file(f'user_top_{entity}_db_data_for_api_test_{range_}.json'),
+                              'r') as f:
                         payload = json.load(f)
                         payload[0]["user_id"] = self.user["id"]
                     db_stats.insert(f"{entity}_{range_}_20220718", 0, 5, payload)
-                    response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
+                    response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                                query_string={'range': range_})
                     self.assertUserStatEqual(payload, response, entity, range_, total_count_key, payload[0]['count'])
 
@@ -321,23 +390,46 @@ class StatsAPITestCase(IntegrationTestCase):
         endpoint = self.non_entity_endpoints["listening_activity"]["endpoint"]
         with self.subTest(f"test valid response is received for listening_activity stats"):
             payload = self.non_entity_endpoints["listening_activity"]["payload"]
-            response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']))
+            response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']))
             self.assertListeningActivityEqual(payload, response)
 
         for range_ in ["week", "month", "year"]:
             with self.subTest(f"test valid response is received for {range_} listening_activity stats", range_=range_):
-                with open(self.path_to_data_file(f'user_listening_activity_db_data_for_api_test_{range_}.json'), 'r') as f:
+                with open(self.path_to_data_file(f'user_listening_activity_db_data_for_api_test_{range_}.json'),
+                          'r') as f:
                     payload = json.load(f)
                     payload[0]["user_id"] = self.user["id"]
                 db_stats.insert(f"listening_activity_{range_}_20220718", 0, 5, payload)
-                response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
+                response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                            query_string={'range': range_})
                 self.assertListeningActivityEqual(payload, response)
+
+    def test_artist_evolution_activity_stat(self):
+        endpoint = self.non_entity_endpoints["artist_evolution_activity"]["endpoint"]
+        with self.subTest(f"test valid response is received for artist_evolution_activity stats"):
+            payload = self.non_entity_endpoints["artist_evolution_activity"]["payload"]
+            response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']))
+            self.assertArtistEvolutionActivityEqual(payload, response)
+
+        for range_ in ["week", "month", "year"]:
+            with open(self.path_to_data_file(f'user_artist_evolution_activity_db_data_for_api_test_{range_}.json'),
+                      'r') as f:
+                payload = json.load(f)
+                payload[0]["user_id"] = self.user["id"]
+                payload[0]["from_ts"] = 0
+                payload[0]["to_ts"] = 5
+                payload[0]["range"] = range_
+            db_stats.insert(f"artist_evolution_activity_{range_}_20220718", 0, 5, payload)
+            response = self.client.get(
+                self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
+                query_string={'range': range_}
+            )
+            self.assertArtistEvolutionActivityEqual(payload, response)
 
     def test_daily_activity_stat(self):
         endpoint = self.non_entity_endpoints["daily_activity"]["endpoint"]
         with self.subTest(f"test valid response is received for daily_activity stats"):
-            response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']))
+            response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']))
             with open(self.path_to_data_file('user_daily_activity_api_output.json')) as f:
                 expected = json.load(f)["payload"]
                 expected["user_id"] = self.user["id"]
@@ -349,18 +441,51 @@ class StatsAPITestCase(IntegrationTestCase):
                     payload = json.load(f)
                     payload[0]["user_id"] = self.user["id"]
                 db_stats.insert(f"daily_activity_{range_}_20220718", 0, 5, payload)
-                response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
+                response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                            query_string={'range': range_})
                 with open(self.path_to_data_file(f'user_daily_activity_api_output_{range_}.json')) as f:
                     expected = json.load(f)["payload"]
                     expected["user_id"] = self.user["id"]
                 self.assertDailyActivityEqual(expected, response)
 
-    @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
+    def test_genre_activity_stat(self):
+        endpoint = self.non_entity_endpoints["genre_activity"]["endpoint"]
+        with self.subTest(f"test valid response is received for genre_activity stats"):
+            response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']))
+            payload = self.non_entity_endpoints["genre_activity"]["payload"]
+            self.assertGenreActivityEqual(payload, response)
+
+        for range_ in ["week", "month", "year"]:
+            with self.subTest(f"test valid response is received for {range_} genre_activity stats", range_=range_):
+                with open(self.path_to_data_file(f'user_genre_activity_db_data_for_api_test_{range_}.json'), 'r') as f:
+                    payload = json.load(f)
+                    payload[0]["user_id"] = self.user["id"]
+                db_stats.insert(f"genre_activity_{range_}_20220718", 0, 5, payload)
+                response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
+                                           query_string={'range': range_})
+                self.assertGenreActivityEqual(payload, response)
+
+    def test_era_activity_stat(self):
+        endpoint = self.non_entity_endpoints["era_activity"]["endpoint"]
+        with self.subTest(f"test valid response is received for era_activity stats"):
+            response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']))
+            payload = self.non_entity_endpoints["era_activity"]["payload"]
+            self.assertEraActivityEqual(payload, response)
+
+        for range_ in ["week", "month", "year"]:
+            with self.subTest(f"test valid response is received for {range_} era_activity stats", range_=range_):
+                with open(self.path_to_data_file(f'user_era_activity_db_data_for_api_test_{range_}.json'), 'r') as f:
+                    payload = json.load(f)
+                    payload[0]["user_id"] = self.user["id"]
+                db_stats.insert(f"era_activity_{range_}_20220718", 0, 5, payload)
+                response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
+                                           query_string={'range': range_})
+                self.assertEraActivityEqual(payload, response)
+
     def test_artist_map_stat(self):
         endpoint = self.non_entity_endpoints["artist_map"]["endpoint"]
         with self.subTest(f"test valid response is received for artist_map stats"):
-            response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']))
+            response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']))
             payload = self.non_entity_endpoints["artist_map"]["payload"]
             self.assertArtistMapEqual(payload, response)
 
@@ -369,125 +494,140 @@ class StatsAPITestCase(IntegrationTestCase):
                 with open(self.path_to_data_file(f'user_artist_map_db_data_for_api_test_{range_}.json'), 'r') as f:
                     payload = json.load(f)
                     payload[0]["user_id"] = self.user["id"]
-                db_stats.insert(f"artistmap_{range_}", 0, 5, payload)
-                response = self.client.get(url_for(endpoint, user_name=self.user['musicbrainz_id']),
+                db_stats.insert(f"artist_map_{range_}_20220718", 0, 5, payload)
+                response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                            query_string={'range': range_})
                 self.assertArtistMapEqual(payload, response)
-
-    @patch('listenbrainz.webserver.views.stats_api._get_country_wise_counts')
-    def test_artist_map_not_calculated(self, mock_get_country_wise_counts):
-        """ Test to make sure stats are calculated if not present in DB """
-        mock_get_country_wise_counts.return_value = [
-            UserArtistMapRecord(**country) for country in self.artist_map_payload[0]['data']
-        ]
-        couchdb.delete_data("artistmap_all_time", self.user['id'])
-        response = self.client.get(url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
-                                   query_string={'range': 'all_time'})
-        self.assertArtistMapEqual(self.artist_map_payload, response)
-        mock_get_country_wise_counts.assert_called_once()
-
-    @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
-    def test_artist_map_not_calculated_artist_stat_not_present(self):
-        """ Test to make sure that if artist stats and artist_map stats both are missing from DB, we return 204 """
-        response = self.client.get(url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
-                                   query_string={'range': 'this_month'})
-        self.assertEqual(response.status_code, 204)
-
-    def test_artist_map_stat_invalid_force_recalculate(self):
-        """ Test to make sure 400 is received if force_recalculate argument is invalid """
-        response = self.client.get(url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
-                                   query_string={'force_recalculate': 'foobar'})
-        self.assert400(response)
-        self.assertEqual("Invalid value of force_recalculate: foobar", response.json['error'])
-
-    @requests_mock.Mocker(real_http=True)
-    def test_get_country_code(self, mock_requests):
-        """ Test to check if "_get_country_wise_counts" is working correctly """
-        # Mock fetching country data from labs.api.listenbrainz.org
-        with open(self.path_to_data_file("mbid_country_mapping_result.json")) as f:
-            mbid_country_mapping_result = json.load(f)
-        mock_requests.post("{}/artist-country-code-from-artist-mbid/json".format(LISTENBRAINZ_LABS_API_URL),
-                           json=mbid_country_mapping_result)
-
-        response = self.client.get(url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
-                                   query_string={'range': 'all_time', 'force_recalculate': 'true'})
-        data = response.json["payload"]
-        received = data["artist_map"]
-        expected = [
-            {
-                "country": "GBR",
-                'artists': [
-                    {
-                        'artist_mbid': 'cc197bad-dc9c-440d-a5b5-d52ba2e14234',
-                        'artist_name': 'Coldplay',
-                        'listen_count': 321
-                    }
-                ],
-                "artist_count": 1,
-                "listen_count": 321,
-            }
-        ]
-        self.assertListEqual(expected, received)
-
-    @requests_mock.Mocker(real_http=True)
-    def test_get_country_code_mbid_country_mapping_failure(self, mock_requests):
-        """ Test to check if appropriate message is returned if fetching country code fetching fails """
-        # Mock fetching country data from labs.api.listenbrainz.org
-        mock_requests.post("{}/artist-country-code-from-artist-mbid/json".format(LISTENBRAINZ_LABS_API_URL),
-                           status_code=500)
-
-        response = self.client.get(url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
-                                   query_string={'range': 'all_time', 'force_recalculate': 'true'})
-        error_msg = ("An error occurred while calculating artist_map data, "
-                     "try setting 'force_recalculate' to 'false' to get a cached copy if available")
-        self.assert500(response, message=error_msg)
-
-    def test_get_country_code_no_msids_and_mbids(self):
-        """ Test to check if no error is thrown if no msids and mbids are present"""
-        # Overwrite the artist stats so that no artist has msids or mbids present
-        artist_stats = deepcopy(self.user_artist_payload)
-        for artist in artist_stats[0]["data"]:
-            artist['artist_mbid'] = None
-        couchdb.create_database("artists_this_week_20220718")
-        couchdb.create_database("artistmap_this_week")
-        db_stats.insert("artists_this_week_20220718", 0, 5, artist_stats)
-        response = self.client.get(url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
-                                   query_string={'range': 'this_week', 'force_recalculate': 'true'})
-        self.assert200(response)
-        self.assertListEqual([], json.loads(response.data)['payload']['artist_map'])
 
     def test_sitewide_entity_stat(self):
         for entity in self.sitewide_entity_endpoints:
             endpoint = self.sitewide_entity_endpoints[entity]["endpoint"]
             payload = self.sitewide_entity_endpoints[entity]["payload"]
             with self.subTest(f"test api returns valid response for {entity} stats", entity=entity):
-                response = self.client.get(url_for(endpoint))
+                response = self.client.get(self.custom_url_for(endpoint))
                 self.assertSitewideStatEqual(payload, response, entity, "all_time", 25)
 
             with self.subTest(f"test api returns valid response for {entity} stats when using offset", entity=entity):
-                response = self.client.get(url_for(endpoint), query_string={'offset': 5})
+                response = self.client.get(self.custom_url_for(endpoint), query_string={'offset': 5})
                 self.assertSitewideStatEqual(payload, response, entity, "all_time", 25, 5)
 
             with self.subTest(f"test api returns valid response for {entity} stats when using count", entity=entity):
-                response = self.client.get(url_for(endpoint), query_string={'count': 5})
+                response = self.client.get(self.custom_url_for(endpoint), query_string={'count': 5})
                 self.assertSitewideStatEqual(payload, response, entity, "all_time", 5)
 
             for range_ in ["week", "month", "year"]:
-                with self.subTest(f"test api returns valid stats response for {range_} {entity}", entity=entity, range_=range_):
-                    with open(self.path_to_data_file(f'sitewide_top_{entity}_db_data_for_api_test_{range_}.json'), 'r') as f:
+                with self.subTest(f"test api returns valid stats response for {range_} {entity}", entity=entity,
+                                  range_=range_):
+                    with open(self.path_to_data_file(f'sitewide_top_{entity}_db_data_for_api_test_{range_}.json'),
+                              'r') as f:
                         payload = json.load(f)
-                    db_stats.insert_sitewide_stats(f"{entity}_{range_}_20220718", 0, 5, payload)
-                    response = self.client.get(url_for(endpoint), query_string={'range': range_})
+                    db_stats.insert_sitewide_stats(entity, range_, 0, 5, payload)
+                    response = self.client.get(self.custom_url_for(endpoint), query_string={'range': range_})
                     self.assertSitewideStatEqual(payload, response, entity, range_, 25)
 
             with self.subTest(f"test api returns 204 if stat not calculated"):
-                response = self.client.get(url_for(endpoint), query_string={'range': 'this_week'})
+                response = self.client.get(self.custom_url_for(endpoint), query_string={'range': 'this_week'})
                 self.assertEqual(response.status_code, 204)
 
             # week data file has 200 items in it so using it for this test
             with self.subTest(f"test api returns at most 100 stats in a response for {entity}", entity=entity):
                 with open(self.path_to_data_file(f'sitewide_top_{entity}_db_data_for_api_test_week.json'), 'r') as f:
                     payload = json.load(f)
-                db_stats.insert_sitewide_stats(f"{entity}_week_20220718", 0, 5, payload)
-                response = self.client.get(url_for(endpoint), query_string={'count': 200, 'range': 'week'})
-                self.assertSitewideStatEqual(payload, response, entity, "week", 100)
+                db_stats.insert_sitewide_stats(entity, "week", 0, 5, payload)
+                response = self.client.get(self.custom_url_for(endpoint), query_string={'count': 200, 'range': 'week'})
+                self.assertSitewideStatEqual(payload, response, entity, "week", 200)
+
+    def _setup_listener_stats(self, file) -> dict:
+        with open(self.path_to_data_file(file), "r") as f:
+            data = json.load(f)
+        couchdb.create_database(data["database"])
+
+        for entity in data["data"]:
+            for listener in entity["listeners"]:
+                if listener["user_id"] == 1:
+                    listener["user_id"] = self.user["id"]
+                elif listener["user_id"] == 2:
+                    listener["user_id"] = self.another_user["id"]
+
+        handle_entity_listener(data)
+
+        return data
+
+    def test_artist_listeners_stats(self):
+        data = self._setup_listener_stats("artists_listeners_db_data_for_api_test.json")
+
+        response = self.client.get(self.custom_url_for("stats_api_v1.get_artist_listeners",
+                                                       artist_mbid="056e4f3e-d505-4dad-8ec1-d04f521cbb56"))
+        self.assert200(response)
+        self.assertEqual(response.json["payload"], {
+            "artist_mbid": "056e4f3e-d505-4dad-8ec1-d04f521cbb56",
+            "artist_name": "Daft Punk",
+            "listeners": [
+                {
+                    "listen_count": 5,
+                    "user_name": self.another_user["musicbrainz_id"]
+                },
+                {
+                    "listen_count": 3,
+                    "user_name": self.user["musicbrainz_id"]
+                }
+            ],
+            "total_listen_count": 8,
+            "stats_range": "all_time",
+            "from_ts": data["from_ts"],
+            "last_updated": response.json["payload"]["last_updated"],
+            "to_ts": data["to_ts"],
+        })
+
+    def test_release_group_listeners_stats(self):
+        data = self._setup_listener_stats("release_groups_listeners_db_data_for_api_test.json")
+
+        response = self.client.get(self.custom_url_for("stats_api_v1.get_release_group_listeners",
+                                                       release_group_mbid="f53bf269-4601-35a4-8aa7-ed54a1d58eed"))
+        self.assert200(response)
+        self.assertEqual(response.json["payload"], {
+            "total_listen_count": 7,
+            "listeners": [
+                {
+                    "user_name": self.user["musicbrainz_id"],
+                    "listen_count": 4
+                },
+                {
+                    "user_name": self.another_user["musicbrainz_id"],
+                    "listen_count": 3
+                }
+            ],
+            "release_group_mbid": "f53bf269-4601-35a4-8aa7-ed54a1d58eed",
+            "release_group_name": "Mickey Mouse Operation",
+            "artist_name": "Little People",
+            "caa_id": 27037140096,
+            "caa_release_mbid": "85655611-5af0-436c-b00f-6609afa502ff",
+            "artist_mbids": [
+                "78c94cba-761f-4212-8508-a24bda2e57dc"
+            ],
+            "from_ts": data["from_ts"],
+            "stats_range": "all_time",
+            "last_updated": response.json["payload"]["last_updated"],
+            "to_ts": data["to_ts"],
+        })
+
+    def test_entity_listeners_stats(self):
+        response = self.client.get(
+            self.custom_url_for("stats_api_v1.get_artist_listeners", artist_mbid="056e4f3e-d505-4dad-8ec1-d04f521cbb56",
+                                range="this_week"))
+        self.assertStatus(response, 204)
+
+        response = self.client.get(self.custom_url_for("stats_api_v1.get_release_group_listeners",
+                                                       release_group_mbid="f53bf269-4601-35a4-8aa7-ed54a1d58eed",
+                                                       range="this_week"))
+        self.assertStatus(response, 204)
+
+        response = self.client.get(
+            self.custom_url_for("stats_api_v1.get_artist_listeners", artist_mbid="056e4f3e-d505-4dad-8ec1-d04f521cbb56",
+                                range="foobar"))
+        self.assert400(response)
+
+        response = self.client.get(self.custom_url_for("stats_api_v1.get_release_group_listeners",
+                                                       release_group_mbid="f53bf269-4601-35a4-8aa7-ed54a1d58eed",
+                                                       range="foobar"))
+        self.assert400(response)

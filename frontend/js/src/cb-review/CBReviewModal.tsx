@@ -1,19 +1,16 @@
 import * as React from "react";
 
-import { Rating } from "react-simple-star-rating";
 import ReactTooltip from "react-tooltip";
-
-import * as iso from "@cospired/i18n-iso-languages";
-import * as eng from "@cospired/i18n-iso-languages/langs/en.json";
+import { toast } from "react-toastify";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import NiceModal, { useModal } from "@ebay/nice-modal-react";
-import { kebabCase, lowerCase } from "lodash";
+import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
+import { Modal } from "react-bootstrap";
+import { Link, useNavigate } from "react-router";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import {
-  countWords,
   getArtistMBIDs,
   getArtistName,
   getRecordingMBID,
@@ -22,33 +19,37 @@ import {
   getTrackName,
 } from "../utils/utils";
 import Loader from "../components/Loader";
+import { ToastMsg } from "../notifications/Notifications";
+import CBReviewForm from "./CBReviewForm";
 
 export type CBReviewModalProps = {
-  listen: Listen;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
+  listen?: Listen;
+  entityToReview?: ReviewableEntity[];
+  initialRating?: number;
+  initialBlurbContent?: string;
+  initialLanguage?: string;
+  hideForm?: boolean;
+  onReviewSubmitted?: () => void;
 };
 
-iso.registerLocale(eng); // library requires language of the language list to be initiated
-
 const minTextLength = 25;
-const maxBlurbContentLength = 100000;
 
 const CBBaseUrl = "https://critiquebrainz.org"; // only used for href
 const MBBaseUrl = "https://metabrainz.org"; // only used for href
-// gets all iso-639-1 languages and codes for dropdown
-const allLanguagesKeyValue = Object.entries(iso.getNames("en"));
 
-export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
+export default NiceModal.create((props: CBReviewModalProps) => {
+  const {
+    listen,
+    entityToReview: entityToReviewProps,
+    initialRating,
+    initialBlurbContent,
+    initialLanguage,
+    hideForm,
+    onReviewSubmitted,
+  } = props;
+
   const modal = useModal();
-
-  const closeModal = React.useCallback(() => {
-    modal.hide();
-    setTimeout(modal.remove, 500);
-  }, [modal]);
+  const navigate = useNavigate();
 
   const { APIService, currentUser, critiquebrainzAuth } = React.useContext(
     GlobalAppContext
@@ -67,37 +68,28 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
   const [recordingEntity, setRecordingEntity] = React.useState<
     ReviewableEntity
   >();
-  const [blurbContent, setBlurbContent] = React.useState("");
-  const [rating, setRating] = React.useState(0);
-  const [language, setLanguage] = React.useState("en");
+  const [blurbContent, setBlurbContent] = React.useState(
+    initialBlurbContent ?? ""
+  );
+  const [rating, setRating] = React.useState(initialRating ?? 0);
+  const [language, setLanguage] = React.useState(initialLanguage ?? "en");
   const [acceptLicense, setAcceptLicense] = React.useState(false);
 
   const reviewValid = blurbContent.length >= minTextLength;
-
-  const handleBlurbInputChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-      event.preventDefault();
-      // remove excessive line breaks to match formatting to CritiqueBrainz
-      const input = event.target.value.replace(/\n\s*\n\s*\n/g, "\n");
-      if (input.length <= maxBlurbContentLength) {
-        setBlurbContent(input);
-      }
-    },
-    [setBlurbContent]
-  );
 
   const handleError = React.useCallback(
     (error: string | Error, title?: string): void => {
       if (!error) {
         return;
       }
-      newAlert(
-        "danger",
-        title || "Error",
-        typeof error === "object" ? error.message : error
+      toast.error(
+        <ToastMsg
+          title={title || "Error"}
+          message={typeof error === "object" ? error.message : error}
+        />
       );
     },
-    [newAlert]
+    []
   );
 
   const refreshCritiquebrainzToken = React.useCallback(async () => {
@@ -117,7 +109,9 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
   const getGroupMBIDFromRelease = React.useCallback(
     async (mbid: string): Promise<string> => {
       try {
-        const response = await APIService.lookupMBRelease(mbid);
+        const response = (await APIService.lookupMBRelease(
+          mbid
+        )) as MusicBrainzRelease & WithReleaseGroup;
         return response["release-group"].id;
       } catch (error) {
         handleError(error, "Could not fetch release group MBID");
@@ -158,6 +152,9 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
 
   React.useEffect(() => {
     /* determine entity functions */
+    if (!listen) {
+      return;
+    }
     const getAllEntities = async () => {
       if (!listen) {
         return;
@@ -233,29 +230,31 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
     }
   }, [listen, getGroupMBIDFromRelease, getRecordingMBIDFromTrack, handleError]);
 
-  /* input handling */
-  const handleLanguageChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLSelectElement>) => {
-      const { target } = event;
-      const { value } = target;
+  React.useEffect(() => {
+    if (!entityToReviewProps || !entityToReviewProps.length) {
+      return;
+    }
 
-      setLanguage(value);
-    },
-    [setLanguage]
-  );
-  const handleLicenseChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const { target } = event;
-      const { checked } = target;
-      setAcceptLicense(checked);
-    },
-    [setAcceptLicense]
-  );
-  const onRateCallback = React.useCallback(
-    // rate in %age (0 - 100), convert to 0 - 5 scale
-    (rate: number) => setRating(rate / 20),
-    [setRating]
-  );
+    const recordingEntityToSet = entityToReviewProps.find(
+      (entity) => entity.type === "recording"
+    );
+
+    const releaseGroupEntityToSet = entityToReviewProps.find(
+      (entity) => entity.type === "release_group"
+    );
+
+    const artistEntityToSet = entityToReviewProps.find(
+      (entity) => entity.type === "artist"
+    );
+
+    setRecordingEntity(recordingEntityToSet!);
+    setReleaseGroupEntity(releaseGroupEntityToSet!);
+    setArtistEntity(artistEntityToSet!);
+
+    setEntityToReview(
+      recordingEntityToSet! || releaseGroupEntityToSet! || artistEntityToSet!
+    );
+  }, [entityToReviewProps]);
 
   const submitReviewToCB = React.useCallback(
     async (
@@ -300,18 +299,24 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
             reviewToSubmit
           );
           if (response?.metadata?.review_id) {
-            newAlert(
-              "success",
-              "Your review was submitted to CritiqueBrainz!",
-              <a
-                href={`${CBBaseUrl}/review/${response.metadata.review_id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {`${getArtistName(listen)} - ${entityToReview.name}`}
-              </a>
+            toast.success(
+              <ToastMsg
+                title="Your review was submitted to CritiqueBrainz!"
+                message={
+                  <a
+                    href={`${CBBaseUrl}/review/${response.metadata.review_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {`${getArtistName(listen)} - ${entityToReview.name}`}
+                  </a>
+                }
+              />,
+              { toastId: "review-submit-success" }
             );
-            closeModal();
+            modal.hide();
+            // Trigger refetch of reviews if callback is provided
+            onReviewSubmitted?.();
           }
         } catch (error) {
           if (maxRetries > 0 && error.message === "invalid_token") {
@@ -330,20 +335,18 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
       }
     },
     [
-      critiquebrainzAuth,
+      critiquebrainzAuth?.access_token,
+      reviewValid,
+      currentUser,
       entityToReview,
       acceptLicense,
-      currentUser,
-      reviewValid,
-      APIService,
+      rating,
       blurbContent,
       language,
+      APIService,
       listen,
-      rating,
-      setLoading,
+      modal,
       refreshCritiquebrainzToken,
-      newAlert,
-      closeModal,
       handleError,
     ]
   );
@@ -353,9 +356,9 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
         <span
           className="CBInfoButton"
           data-tip={`CritiqueBrainz is a <a href='${MBBaseUrl}/projects'>
-          MetaBrainz project</a> aimed at providing an open platform for music critics
+          MetaBrainz project</a> aimed at providing an open platform </br>for music critics
           and hosting Creative Commons licensed music reviews. </br></br>
-          Your reviews will be independently visible on CritiqueBrainz and appear publicly
+          Your reviews will be independently visible on CritiqueBrainz and appear publicly</br>
           on your CritiqueBrainz profile. To view or delete your reviews, visit your
           <a href='${CBBaseUrl}'>CritiqueBrainz</a>  profile.`}
           data-event="click focus"
@@ -388,10 +391,16 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
           <br />
           <br />
           You can connect to your CritiqueBrainz account by visiting the
-          <a href={`${window.location.origin}/profile/music-services/details/`}>
+          <Link
+            to={`${window.location.origin}/settings/music-services/details/`}
+            onClick={() => {
+              modal.hide();
+              navigate("/settings/music-services/details/");
+            }}
+          >
             {" "}
             music services page.
-          </a>
+          </Link>
         </div>
       );
     }
@@ -416,167 +425,69 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
       );
     }
 
-    /* The default modal body */
-    const allEntities = [recordingEntity, artistEntity, releaseGroupEntity];
+    /* Show warning when recordingEntity is not available */
+    if (!recordingEntity && listen) {
+      return (
+        <div className="alert alert-danger">
+          We could not find a recording for <b>{getTrackName(listen)}</b>.
+        </div>
+      );
+    }
 
     return (
-      <div>
-        {/* Show warning when recordingEntity is not available */}
-        {!recordingEntity && (
-          <div className="alert alert-danger">
-            We could not find a recording for <b>{getTrackName(listen)}</b>.
-          </div>
-        )}
-
-        <div id="dropdown-container">
-          You are reviewing
-          <span className="dropdown">
-            <button
-              className="dropdown-toggle btn-transparent"
-              data-toggle="dropdown"
-              type="button"
-            >
-              {`${entityToReview.name} (${lowerCase(entityToReview.type)})`}
-              <span className="caret" />
-            </button>
-
-            <ul className="dropdown-menu" role="menu">
-              {/* Map entity to dropdown option button */}
-              {allEntities.map((entity) => {
-                if (entity) {
-                  return (
-                    <button
-                      key={entity.mbid}
-                      name={`select-${kebabCase(entityToReview.type)}`}
-                      onClick={() => setEntityToReview(entity)}
-                      type="button"
-                    >
-                      {`${entity.name} (${entity.type.replace("_", " ")})`}
-                    </button>
-                  );
-                }
-                return null;
-              })}
-            </ul>
-          </span>
-          for <a href={CBBaseUrl}>CritiqueBrainz</a>. {CBInfoButton}
-        </div>
-
-        <div className="form-group">
-          <textarea
-            className="form-control"
-            id="review-text"
-            placeholder={`Review length must be at least ${minTextLength} characters.`}
-            value={blurbContent}
-            name="review-text"
-            onChange={handleBlurbInputChange}
-            rows={6}
-            style={{ resize: "vertical" }}
-            spellCheck="false"
-            required
-          />
-        </div>
-        <small
-          className={!reviewValid ? "text-danger" : ""}
-          style={{ display: "block", textAlign: "right" }}
-        >
-          Words: {countWords(blurbContent)} / Characters: {blurbContent.length}
-        </small>
-
-        <div className="rating-container">
-          <b>Rating (optional): </b>
-          <Rating
-            className="rating-stars"
-            onClick={onRateCallback}
-            ratingValue={rating}
-            transition
-            size={20}
-            iconsCount={5}
-          />
-        </div>
-
-        <div className="dropdown">
-          <b>Language of your review: </b>
-          <select
-            id="language-selector"
-            value={language}
-            name="language"
-            onChange={handleLanguageChange}
-          >
-            {allLanguagesKeyValue.map((lang: any) => {
-              return (
-                <option key={lang[0]} value={lang[0]}>
-                  {lang[1]}
-                </option>
-              );
-            })}
-          </select>
-        </div>
-
-        <div className="checkbox">
-          <label>
-            <input
-              id="acceptLicense"
-              type="checkbox"
-              checked={acceptLicense}
-              name="acceptLicense"
-              onChange={handleLicenseChange}
-              required
-            />
-            <small>
-              &nbsp;You acknowledge and agree that your contributed reviews to
-              CritiqueBrainz are licensed under a Creative Commons
-              Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) license. You
-              agree to license your work under this license. You represent and
-              warrant that you own or control all rights in and to the work,
-              that nothing in the work infringes the rights of any third-party,
-              and that you have the permission to use and to license the work
-              under the selected Creative Commons license. Finally, you give the
-              MetaBrainz Foundation permission to license this content for
-              commercial use outside of Creative Commons licenses in order to
-              support the operations of the organization.
-            </small>
-          </label>
-        </div>
-        {!reviewValid && (
-          <div id="text-too-short-alert" className="alert alert-danger">
-            Your review needs to be longer than {minTextLength} characters.
-          </div>
-        )}
-      </div>
+      <CBReviewForm
+        blurbContent={blurbContent}
+        setBlurbContent={setBlurbContent}
+        rating={rating}
+        setRating={setRating}
+        language={language}
+        setLanguage={setLanguage}
+        acceptLicense={acceptLicense}
+        setAcceptLicense={setAcceptLicense}
+        entityToReview={entityToReview}
+        setEntityToReview={setEntityToReview}
+        recordingEntity={recordingEntity}
+        artistEntity={artistEntity}
+        releaseGroupEntity={releaseGroupEntity}
+        CBInfoButton={CBInfoButton}
+        isReviewValid={reviewValid}
+        hideForm={hideForm}
+      />
     );
   }, [
-    CBInfoButton,
     hasPermissions,
-    reviewValid,
     entityToReview,
     recordingEntity,
+    listen,
+    blurbContent,
+    rating,
+    language,
+    acceptLicense,
     artistEntity,
     releaseGroupEntity,
-    blurbContent,
-    language,
-    listen,
-    rating,
-    handleBlurbInputChange,
-    handleLanguageChange,
-    onRateCallback,
-    acceptLicense,
-    handleLicenseChange,
-    setEntityToReview,
+    CBInfoButton,
+    reviewValid,
+    hideForm,
+    modal,
+    navigate,
   ]);
 
   const modalFooter = React.useMemo(() => {
     /* User hasn't logged into CB yet: prompt them to authenticate */
     if (!hasPermissions)
       return (
-        <a
-          href={`${window.location.origin}/profile/music-services/details/`}
+        <Link
+          to={`${window.location.origin}/settings/music-services/details/`}
           className="btn btn-success"
           role="button"
+          onClick={() => {
+            modal.hide();
+            navigate("/settings/music-services/details/");
+          }}
         >
           {" "}
           Connect To CritiqueBrainz{" "}
-        </a>
+        </Link>
       );
 
     /* Submit review button */
@@ -595,74 +506,51 @@ export default NiceModal.create(({ listen, newAlert }: CBReviewModalProps) => {
 
     /* default: close modal button */
     return (
-      <button
-        type="button"
-        className="btn btn-default"
-        data-dismiss="modal"
-        onClick={closeModal}
-      >
+      <button type="button" className="btn btn-secondary" onClick={modal.hide}>
         Cancel
       </button>
     );
-  }, [hasPermissions, entityToReview, reviewValid, acceptLicense, closeModal]);
+  }, [
+    hasPermissions,
+    entityToReview,
+    modal,
+    navigate,
+    reviewValid,
+    acceptLicense,
+  ]);
 
   return (
-    <div
-      className={`modal fade ${modal.visible ? "in" : ""}`}
+    <Modal
+      {...bootstrapDialog(modal)}
+      title="Review on CritiqueBrainz"
       id="CBReviewModal"
-      tabIndex={-1}
-      role="dialog"
-      aria-labelledby="CBReviewModalLabel"
-      data-backdrop="static"
     >
-      <div className="modal-dialog" role="document">
-        <form className="modal-content" onSubmit={submitReviewToCB}>
-          <div className="modal-header">
-            <button
-              type="button"
-              className="close"
-              data-dismiss="modal"
-              aria-label="Close"
-              onClick={closeModal}
-            >
-              <span aria-hidden="true">&times;</span>
-            </button>
-            <h4
-              className="modal-title"
-              id="CBReviewModalLabel"
-              style={{ textAlign: "center" }}
-            >
-              <img
-                src="/static/img/critiquebrainz-logo.svg"
-                height="30"
-                className="cb-img-responsive"
-                alt="CritiqueBrainz Logo"
-                style={{ margin: "8px" }}
-              />
-            </h4>
-          </div>
-
-          <div
-            style={{
-              height: 0,
-              position: "sticky",
-              top: "30%",
-              zIndex: 1,
-            }}
-          >
-            <Loader isLoading={loading} />
-          </div>
-
-          <div
-            className="modal-body"
-            style={{ opacity: loading ? "0.2" : "1" }}
-          >
-            {modalBody}
-          </div>
-
-          <div className="modal-footer">{modalFooter}</div>
-        </form>
+      <Modal.Header closeButton>
+        <Modal.Title style={{ marginLeft: "auto" }}>
+          <img
+            src="/static/img/critiquebrainz-logo.svg"
+            height="30"
+            alt="CritiqueBrainz Logo"
+            style={{ margin: "8px" }}
+          />
+        </Modal.Title>
+      </Modal.Header>
+      <div
+        style={{
+          height: 0,
+          position: "sticky",
+          top: "30%",
+          zIndex: 1,
+        }}
+      >
+        <Loader isLoading={loading} />
       </div>
-    </div>
+      <form onSubmit={submitReviewToCB}>
+        <Modal.Body style={{ opacity: loading ? "0.2" : "1" }}>
+          {modalBody}
+        </Modal.Body>
+        <Modal.Footer>{modalFooter}</Modal.Footer>
+      </form>
+    </Modal>
   );
 });

@@ -1,58 +1,197 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
 import { uniqBy } from "lodash";
 import Spinner from "react-loader-spinner";
-import { withAlertNotifications } from "../../notifications/AlertNotificationsHOC";
+import { toast } from "react-toastify";
+import { Helmet } from "react-helmet";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faRss } from "@fortawesome/free-solid-svg-icons";
+import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-
-import { getPageProps } from "../../utils/utils";
-import ErrorBoundary from "../../utils/ErrorBoundary";
-import ReleaseCard from "./ReleaseCard";
-import ReleaseFilters from "./ReleaseFilters";
-import ReleaseTimeline from "./ReleaseTimeline";
+import { ToastMsg } from "../../notifications/Notifications";
+import ReleaseFilters from "./components/ReleaseFilters";
+import ReleaseTimeline from "./components/ReleaseTimeline";
 import Pill from "../../components/Pill";
+import ReleaseCardsGrid from "./components/ReleaseCardsGrid";
+import { COLOR_LB_ORANGE } from "../../utils/constants";
+import SyndicationFeedModal from "../../components/SyndicationFeedModal";
+import { getBaseUrl } from "../../utils/utils";
 
-export type FreshReleasesProps = {
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
+export enum DisplaySettingsPropertiesEnum {
+  releaseTitle = "Release Title",
+  artist = "Artist",
+  information = "Information",
+  tags = "Tags",
+  listens = "Listens",
+}
+
+export type DisplaySettings = {
+  [key in DisplaySettingsPropertiesEnum]: boolean;
 };
 
-export default function FreshReleases({ newAlert }: FreshReleasesProps) {
+const initialDisplayState: DisplaySettings = {
+  [DisplaySettingsPropertiesEnum.releaseTitle]: true,
+  [DisplaySettingsPropertiesEnum.artist]: true,
+  [DisplaySettingsPropertiesEnum.information]: true,
+  [DisplaySettingsPropertiesEnum.tags]: false,
+  [DisplaySettingsPropertiesEnum.listens]: false,
+};
+
+const SortOptions = {
+  releaseDate: {
+    value: "release_date",
+    label: "Release Date",
+  },
+  artist: {
+    value: "artist_credit_name",
+    label: "Artist",
+  },
+  releaseTitle: {
+    value: "release_name",
+    label: "Release Title",
+  },
+  confidence: {
+    value: "confidence",
+    label: "Confidence",
+  },
+} as const;
+
+export type SortOption = typeof SortOptions[keyof typeof SortOptions]["value"];
+
+const SortDirections = {
+  ascend: {
+    value: "ascend",
+    label: "Ascending",
+  },
+  descend: {
+    value: "descend",
+    label: "Descending",
+  },
+};
+
+export type SortDirection = typeof SortDirections[keyof typeof SortDirections]["value"];
+
+const DefaultSortDirections: Record<SortOption, SortDirection> = {
+  release_date: "descend",
+  artist_credit_name: "ascend",
+  release_name: "ascend",
+  confidence: "descend",
+};
+
+export const filterRangeOptions = {
+  week: {
+    value: 7,
+    key: "week",
+    label: "Week",
+  },
+  month: {
+    value: 30,
+    key: "month",
+    label: "Month",
+  },
+  three_months: {
+    value: 90,
+    key: "three_months",
+    label: "3 Months",
+  },
+} as const;
+
+export const PAGE_TYPE_USER: string = "user";
+export const PAGE_TYPE_SITEWIDE: string = "sitewide";
+
+export type filterRangeOption = keyof typeof filterRangeOptions;
+
+type FreshReleasesData = {
+  releases: Array<FreshReleaseItem>;
+  releaseTypes: Array<string>;
+  releaseTags: Array<string>;
+};
+
+export default function FreshReleases() {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
+  const navigate = useNavigate();
 
   const isLoggedIn: boolean = Object.keys(currentUser).length !== 0;
-  const PAGE_TYPE_USER: string = "user";
-  const PAGE_TYPE_SITEWIDE: string = "sitewide";
 
-  const [releases, setReleases] = React.useState<Array<FreshReleaseItem>>([]);
-  const [filteredList, setFilteredList] = React.useState<
-    Array<FreshReleaseItem>
-  >([]);
-  const [allFilters, setAllFilters] = React.useState<Array<string | undefined>>(
-    []
+  const [pageType, setPageType] = React.useState<string>(
+    isLoggedIn ? PAGE_TYPE_USER : PAGE_TYPE_SITEWIDE
   );
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
-  const [pageType, setPageType] = React.useState<string>(PAGE_TYPE_SITEWIDE);
 
-  React.useEffect(() => {
-    const fetchReleases = async () => {
-      setIsLoading(true);
-      let freshReleases: Array<FreshReleaseItem>;
+  const [range, setRange] = React.useState<filterRangeOption>("week");
+  const [displaySettings, setDisplaySettings] = React.useState<DisplaySettings>(
+    initialDisplayState
+  );
+  const [showPastReleases, setShowPastReleases] = React.useState<boolean>(true);
+  const [showFutureReleases, setShowFutureReleases] = React.useState<boolean>(
+    true
+  );
+  const [sort, setSort] = React.useState<SortOption>("release_date");
+  const [sortDirection, setSortDirection] = React.useState<SortDirection>(
+    "descend"
+  ); // Default sort direction for release_date
+  const [
+    hasSelectedSortDirection,
+    setHasSelectedSortDirection,
+  ] = React.useState(false);
+
+  const releaseCardGridRef = React.useRef(null);
+
+  const availableSortOptions =
+    pageType === PAGE_TYPE_SITEWIDE
+      ? Object.values(SortOptions).filter(
+          (option) => option !== SortOptions.confidence
+        )
+      : Object.values(SortOptions);
+
+  const toggleSettings = (setting: DisplaySettingsPropertiesEnum) => {
+    setDisplaySettings({
+      ...displaySettings,
+      [setting]: !displaySettings[setting],
+    });
+  };
+
+  const queryKey =
+    pageType === PAGE_TYPE_SITEWIDE
+      ? [
+          "fresh-release-sitewide",
+          filterRangeOptions[range].value,
+          showPastReleases,
+          showFutureReleases,
+          sort,
+        ]
+      : [
+          "fresh-release-user",
+          currentUser.name,
+          filterRangeOptions[range].value,
+          showPastReleases,
+          showFutureReleases,
+          sort,
+        ];
+
+  const { data: loaderData, isLoading } = useQuery({
+    queryKey,
+    queryFn: async () => {
       try {
+        let freshReleases: Array<FreshReleaseItem>;
         if (pageType === PAGE_TYPE_SITEWIDE) {
-          freshReleases = await APIService.fetchSitewideFreshReleases(3);
+          const allFreshReleases = await APIService.fetchSitewideFreshReleases(
+            filterRangeOptions[range].value,
+            showPastReleases,
+            showFutureReleases,
+            sort
+          );
+          freshReleases = allFreshReleases.payload.releases;
         } else {
           const userFreshReleases = await APIService.fetchUserFreshReleases(
-            currentUser.name
+            currentUser.name,
+            filterRangeOptions[range].value,
+            showPastReleases,
+            showFutureReleases,
+            sort
           );
           freshReleases = userFreshReleases.payload.releases;
         }
-
         const cleanReleases = uniqBy(freshReleases, (datum) => {
           return (
             /*
@@ -79,145 +218,271 @@ export default function FreshReleases({ newAlert }: FreshReleasesProps) {
               value !== null
           );
 
-        setReleases(cleanReleases);
-        setFilteredList(cleanReleases);
-        setAllFilters(releaseTypes);
-        setIsLoading(false);
+        const uniqueReleaseTagsSet = new Set<string>();
+        cleanReleases?.forEach((item) => {
+          item.release_tags?.forEach((tag) => {
+            uniqueReleaseTagsSet.add(tag);
+          });
+        });
+
+        const releaseTags = Array.from(uniqueReleaseTagsSet);
+        releaseTags.sort();
+
+        return {
+          data: {
+            releases: cleanReleases,
+            releaseTypes,
+            releaseTags,
+          } as FreshReleasesData,
+          hasError: false,
+          errorMessage: "",
+        };
       } catch (error) {
-        newAlert(
-          "danger",
-          "Couldn't fetch fresh releases",
-          typeof error === "object" ? error.message : error.toString()
+        toast.error(
+          <ToastMsg
+            title="Couldn't fetch fresh releases"
+            message={error.message}
+          />,
+          { toastId: "fetch-error" }
         );
+        return {
+          data: {
+            releases: [],
+            releaseTypes: [],
+            releaseTags: [],
+          } as FreshReleasesData,
+          hasError: true,
+          errorMessage: error.message,
+        };
       }
-    };
-    // Call the async function defined above (useEffect can't return a Promise)
-    fetchReleases();
-  }, [pageType]);
+    },
+  });
+
+  const {
+    data: rawData = {
+      releases: [],
+      releaseTypes: [],
+      releaseTags: [],
+    } as FreshReleasesData,
+    hasError = false,
+    errorMessage = "",
+  } = loaderData || {};
+
+  const { releases, releaseTypes, releaseTags } = rawData;
+
+  const [filteredList, setFilteredList] = React.useState<
+    Array<FreshReleaseItem>
+  >(releases);
+
+  let alt;
+  let message;
+  if (hasError) {
+    alt = "Error fetching releases";
+    message = `Error fetching releases: ${errorMessage}`;
+  } else if (releases.length === 0) {
+    alt = "No releases";
+    message = "No releases";
+  } else {
+    alt = "No filtered releases";
+    message = `0/${releases.length} releases match your filters.`;
+  }
+
+  const handleLoginRedirect = () => {
+    toast.warning(
+      <ToastMsg
+        title="You must be logged in to view personalized releases"
+        message="Please log in to view personalized releases"
+      />,
+      { toastId: "login-error" }
+    );
+
+    navigate("/login");
+  };
 
   return (
     <>
-      <h2 id="fr-heading">Fresh Releases</h2>
-      {isLoggedIn ? (
-        <>
-          <h3 id="fr-subheading">
-            Discover new music from artists you listen to
-          </h3>
-          <div id="fr-pill-row">
-            <Pill
-              id="sitewide-releases"
-              onClick={() => setPageType(PAGE_TYPE_SITEWIDE)}
-              active={pageType === PAGE_TYPE_SITEWIDE}
-            >
-              All Releases
-            </Pill>
-            <Pill
-              id="user-releases"
-              onClick={() => setPageType(PAGE_TYPE_USER)}
-              active={pageType === PAGE_TYPE_USER}
-            >
-              Releases For You
-            </Pill>
-          </div>
-        </>
-      ) : (
-        <h3 id="fr-subheading">Discover new music</h3>
-      )}
-      <div className="releases-page row">
-        {isLoading ? (
-          <div className="spinner-container">
-            <Spinner
-              type="Grid"
-              color="#eb743b"
-              height={100}
-              width={100}
-              visible
-            />
-            <div
-              className="text-muted"
-              style={{ fontSize: "2rem", margin: "1rem" }}
-            >
-              Loading Fresh Releases&#8230;
+      <Helmet>
+        <title>Fresh releases</title>
+      </Helmet>
+      <div className="releases-page-container" role="main">
+        <div className="releases-page">
+          <div className="align-items-end fresh-releases-pill-row gap-3">
+            <div className="fresh-releases-row">
+              <Pill
+                id="sitewide-releases"
+                data-testid="sitewide-releases-pill"
+                onClick={() => {
+                  setPageType(PAGE_TYPE_SITEWIDE);
+                  setSort("release_date");
+                }}
+                active={pageType === PAGE_TYPE_SITEWIDE}
+                type="secondary"
+              >
+                All
+              </Pill>
+              <Pill
+                id="user-releases"
+                onClick={() => {
+                  if (isLoggedIn) {
+                    setPageType(PAGE_TYPE_USER);
+                  } else {
+                    handleLoginRedirect();
+                  }
+                }}
+                active={pageType === PAGE_TYPE_USER}
+                type="secondary"
+                className={isLoggedIn ? "" : "disabled"}
+              >
+                For You
+              </Pill>
             </div>
-          </div>
-        ) : (
-          <>
-            <div className="filters-main col-xs-12 col-md-1">
-              <ReleaseFilters
-                allFilters={allFilters}
-                releases={releases}
-                setFilteredList={setFilteredList}
-              />
-            </div>
-            <div
-              id="release-cards-grid"
-              className={
-                pageType === PAGE_TYPE_SITEWIDE
-                  ? "col-xs-12 col-md-10"
-                  : "col-xs-12 col-md-11"
-              }
-            >
-              {filteredList?.map((release) => {
-                return (
-                  <ReleaseCard
-                    key={release.release_mbid}
-                    releaseDate={release.release_date}
-                    releaseMBID={release.release_mbid}
-                    releaseName={release.release_name}
-                    releaseTypePrimary={release.release_group_primary_type}
-                    releaseTypeSecondary={release.release_group_secondary_type}
-                    artistCreditName={release.artist_credit_name}
-                    artistMBIDs={release.artist_mbids}
-                    confidence={release.confidence}
-                    caaID={release.caa_id}
-                    caaReleaseMBID={release.caa_release_mbid}
-                  />
-                );
-              })}
-            </div>
-
-            {pageType === PAGE_TYPE_SITEWIDE ? (
-              <div className="releases-timeline col-xs-12 col-md-1">
-                {releases.length > 0 ? (
-                  <ReleaseTimeline releases={filteredList} />
-                ) : null}
+            <div className="fresh-releases-row align-items-end">
+              <div>
+                <label
+                  className="text-nowrap"
+                  htmlFor="fresh-releases-sort-select"
+                >
+                  Sort By:
+                </label>
+                <select
+                  id="fresh-releases-sort-select"
+                  className="form-select"
+                  value={sort}
+                  onChange={(event) => {
+                    setSort(event.target.value as SortOption);
+                    if (!hasSelectedSortDirection) {
+                      setSortDirection(
+                        DefaultSortDirections[event.target.value as SortOption]
+                      );
+                    }
+                  }}
+                >
+                  {availableSortOptions.map((option) => (
+                    <option value={option.value} key={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </div>
-            ) : null}
-          </>
+              <div>
+                <label htmlFor="fresh-releases-sort-direction-select">
+                  Direction:
+                </label>
+                <select
+                  id="fresh-releases-sort-direction-select"
+                  className="form-select"
+                  value={sortDirection}
+                  onChange={(event) => {
+                    setSortDirection(event.target.value as SortDirection);
+                    setHasSelectedSortDirection(true);
+                  }}
+                >
+                  {Object.entries(SortDirections).map(([_, direction]) => (
+                    <option value={direction.value} key={direction.value}>
+                      {direction.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="button"
+                className="btn btn-icon btn-info atom-button ms-auto"
+                title="Subscribe to syndication feed (Atom)"
+                onClick={() => {
+                  if (pageType === PAGE_TYPE_SITEWIDE) {
+                    NiceModal.show(SyndicationFeedModal, {
+                      feedTitle: `Fresh Releases`,
+                      options: [
+                        {
+                          label: "Days",
+                          key: "days",
+                          type: "number",
+                          min: 1,
+                          max: 30,
+                          defaultValue: 3,
+                          tooltip:
+                            "Select how many days of past releases to include in the feed, starting from today. Only releases that have already been published will be included.",
+                        },
+                      ],
+                      baseUrl: `${getBaseUrl()}/syndication-feed/fresh-releases`,
+                    });
+                  } else if (pageType === PAGE_TYPE_USER) {
+                    NiceModal.show(SyndicationFeedModal, {
+                      feedTitle: `${currentUser.name}'s Fresh Releases`,
+                      options: [],
+                      baseUrl: `${getBaseUrl()}/syndication-feed/user/${encodeURIComponent(
+                        currentUser.name
+                      )}/fresh-releases`,
+                    });
+                  }
+                }}
+              >
+                <FontAwesomeIcon icon={faRss} size="sm" />
+              </button>
+            </div>
+          </div>
+          {isLoading ? (
+            <div className="spinner-container">
+              <Spinner
+                type="Grid"
+                color={COLOR_LB_ORANGE}
+                height={100}
+                width={100}
+                visible
+              />
+              <div
+                className="text-muted"
+                style={{ fontSize: "2rem", margin: "1rem" }}
+              >
+                Loading Fresh Releases&#8230;
+              </div>
+            </div>
+          ) : (
+            <div id="release-card-grids" ref={releaseCardGridRef}>
+              {filteredList.length === 0 ? (
+                <div className="no-release">
+                  <img
+                    src="/static/img/recommendations/no-freshness.png"
+                    alt={alt}
+                  />
+                  <div className="text-muted">{message}</div>
+                </div>
+              ) : (
+                <ReleaseCardsGrid
+                  filteredList={filteredList}
+                  displaySettings={displaySettings}
+                  order={sort}
+                  direction={sortDirection}
+                />
+              )}
+            </div>
+          )}
+        </div>
+        {filteredList.length > 0 && (
+          <ReleaseTimeline
+            releases={filteredList}
+            order={sort}
+            direction={sortDirection}
+          />
         )}
+        <ReleaseFilters
+          releases={releases}
+          releaseTypes={releaseTypes}
+          releaseTags={releaseTags}
+          filteredList={filteredList}
+          setFilteredList={setFilteredList}
+          range={range}
+          handleRangeChange={setRange}
+          displaySettings={displaySettings}
+          toggleSettings={toggleSettings}
+          showPastReleases={showPastReleases}
+          setShowPastReleases={setShowPastReleases}
+          showFutureReleases={showFutureReleases}
+          setShowFutureReleases={setShowFutureReleases}
+          releaseCardGridRef={releaseCardGridRef}
+          pageType={pageType}
+        />
       </div>
     </>
   );
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  const {
-    domContainer,
-    globalAppContext,
-    sentryProps,
-    optionalAlerts,
-  } = getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const FreshReleasesPageWithAlertNotifications = withAlertNotifications(
-    FreshReleases
-  );
-
-  ReactDOM.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <FreshReleasesPageWithAlertNotifications
-          initialAlerts={optionalAlerts}
-        />
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>,
-    domContainer
-  );
-});

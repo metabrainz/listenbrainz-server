@@ -1,10 +1,10 @@
 import orjson
-from flask import Blueprint, render_template, current_app
+from flask import Blueprint, render_template, jsonify
 from psycopg2.extras import DictCursor
 
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
-from listenbrainz.db import timescale
 from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mbids
+from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.views.user import _get_user
 
 recommendations_cf_recording_bp = Blueprint('recommendations_cf_recording', __name__)
@@ -12,116 +12,91 @@ recommendations_cf_recording_bp = Blueprint('recommendations_cf_recording', __na
 SERVER_URL = "https://labs.api.listenbrainz.org/recording-mbid-lookup/json"
 
 
-@recommendations_cf_recording_bp.route("/<user_name>/")
+@recommendations_cf_recording_bp.post("/<mb_username:user_name>/")
 def info(user_name):
     """ Show info about the recommended tracks
     """
 
     user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
 
-    return render_template(
-        "recommendations_cf_recording/info.html",
-        user=user,
-        active_section='info'
-    )
-
-
-@recommendations_cf_recording_bp.route("/<user_name>/top_artist/")
-def top_artist(user_name: str):
-    """ Show top artist user recommendations """
-    user = _get_user(user_name)
-
-    template = _get_template(active_section='top_artist', user=user)
-
-    return template
+    return jsonify({
+        "user": {
+            "id": user.id,
+            "name": user.musicbrainz_id,
+        }
+    })
 
 
-@recommendations_cf_recording_bp.route("/<user_name>/similar_artist/")
-def similar_artist(user_name: str):
-    """ Show similar artist user recommendations """
-    user = _get_user(user_name)
-
-    template = _get_template(active_section='similar_artist', user=user)
-
-    return template
-
-
-@recommendations_cf_recording_bp.route("/<user_name>/raw/")
+@recommendations_cf_recording_bp.post("/<mb_username:user_name>/raw/")
 def raw(user_name: str):
     """ Show raw track recommendations """
     user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
 
-    template = _get_template(active_section='raw', user=user)
+    data = _get_props(active_section='raw', user=user)
 
-    return template
+    return data
 
 
-def _get_template(active_section, user):
-    """ Get template to render based on active section.
+def _get_props(active_section, user):
+    """ Get props required to render based on active section.
 
         Args:
-            active_section (str): Type of recommendation playlist to render i.e top_artist, similar_artist
+            active_section (str): Type of recommendation playlist to render.
             user: Database user object.
 
         Returns:
             Template to render.
     """
 
-    data = db_recommendations_cf_recording.get_user_recommendation(user.id)
-    if active_section == 'top_artist':
-        tracks_type = "Top Artist"
-    elif active_section == 'similar_artist':
-        tracks_type = "Similar Artist"
-    else:
-        tracks_type = "Raw Tracks"
+    data = db_recommendations_cf_recording.get_user_recommendation(db_conn, user.id)
 
     if data is None:
-        return render_template(
-            "recommendations_cf_recording/base.html",
-            active_section=active_section,
-            tracks_type=tracks_type,
-            user=user,
-            error_msg="Looks like the user wasn't active in the last week. Submit your listens and check back after a week!"
-        )
+        return {
+            "user": {
+                "id": user.id,
+                "name": user.musicbrainz_id,
+            },
+            "recommendations": [],
+            "errorMsg": "Looks like the user wasn't active in the last week. Submit your listens and check back after a week!"
+        }
 
     result = data.recording_mbid.dict()[active_section]
 
     if not result:
-        return render_template(
-            "recommendations_cf_recording/base.html",
-            active_section=active_section,
-            tracks_type=tracks_type,
-            user=user,
-            error_msg="Looks like the recommendations weren't generated because of anomalies in our data." \
+        return {
+            "user": {
+                "id": user.id,
+                "name": user.musicbrainz_id,
+            },
+            "recommendations": [],
+            "errorMsg": "Looks like the recommendations weren't generated because of anomalies in our data. "
                       "We are working on it. Check back later."
-        )
+        }
 
     recommendations = _get_playable_recommendations_list(result)
     if not recommendations:
-        return render_template(
-            "recommendations_cf_recording/base.html",
-            active_section=active_section,
-            tracks_type=tracks_type,
-            user=user,
-            error_msg="An error occurred while processing your request. Check back later!"
-        )
+        return {
+            "user": {
+                "id": user.id,
+                "name": user.musicbrainz_id,
+            },
+            "recommendations": [],
+            "errorMsg": "An error occurred while processing your request. Check back later!"
+        }
 
-    props = {
+    return {
         "user": {
             "id": user.id,
             "name": user.musicbrainz_id,
         },
         "recommendations": recommendations,
+        "lastUpdated": data.created.strftime('%d %b %Y'),
+        "errorMsg": ""
     }
-
-    return render_template(
-        "recommendations_cf_recording/base.html",
-        active_section=active_section,
-        tracks_type=tracks_type,
-        props=orjson.dumps(props).decode("utf-8"),
-        user=user,
-        last_updated=data.created.strftime('%d %b %Y')
-    )
 
 
 def _get_playable_recommendations_list(mbids_and_ratings_list):
@@ -150,7 +125,7 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
                 }
     """
     mbids = [r['recording_mbid'] for r in mbids_and_ratings_list]
-    with timescale.engine.connect() as ts_conn, ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_cursor:
+    with ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_cursor:
         data = load_recordings_from_mbids(ts_cursor, mbids)
 
     recommendations = []
@@ -177,3 +152,9 @@ def _get_playable_recommendations_list(mbids_and_ratings_list):
         })
 
     return recommendations
+
+
+@recommendations_cf_recording_bp.get('/', defaults={'path': ''})
+@recommendations_cf_recording_bp.get('/<path:path>/')
+def index(path):
+    return render_template("index.html")

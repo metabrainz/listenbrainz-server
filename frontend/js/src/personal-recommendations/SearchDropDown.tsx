@@ -1,6 +1,6 @@
 import * as React from "react";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
-import ListenControl from "../listens/ListenControl";
+import ListenControl from "../common/listens/ListenControl";
 
 export type SearchDropDownProps = {
   action: (event: string) => void;
@@ -14,6 +14,7 @@ function SearchDropDown(props: SearchDropDownProps) {
       {suggestions?.map((name) => {
         return (
           <ListenControl
+            key={name}
             text={name}
             action={() => {
               action(name);

@@ -1,6 +1,8 @@
 import * as React from "react";
 import { uniq, includes, toLower } from "lodash";
-import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
+import { Modal } from "react-bootstrap";
+import { toast } from "react-toastify";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import NamePill from "./NamePill";
 import {
@@ -10,32 +12,16 @@ import {
   getRecordingMSID,
 } from "../utils/utils";
 import SearchDropDown from "./SearchDropDown";
+import { ToastMsg } from "../notifications/Notifications";
 
 export type PersonalRecommendationModalProps = {
   listenToPersonallyRecommend: Listen;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
 };
 
 export const maxBlurbContentLength = 280;
 
-/** A note about this modal:
- * We use Bootstrap 3 modals, which work with jQuery and data- attributes
- * In order to show the modal properly, including backdrop and visibility,
- * you'll need dataToggle="modal" and dataTarget="#PersonalRecommendationModal"
- * on the buttons that open this modal as well as data-dismiss="modal"
- * on the buttons that close the modal. Modals won't work (be visible) without it
- * until we move to Bootstrap 5 / Bootstrap React which don't require those attributes.
- */
-
 export default NiceModal.create(
-  ({
-    listenToPersonallyRecommend,
-    newAlert,
-  }: PersonalRecommendationModalProps) => {
+  ({ listenToPersonallyRecommend }: PersonalRecommendationModalProps) => {
     // Use a hook to manage the modal state
     const modal = useModal();
     const [users, setUsers] = React.useState<string[]>([]);
@@ -51,13 +37,15 @@ export default NiceModal.create(
         if (!error) {
           return;
         }
-        newAlert(
-          "danger",
-          title || "Error",
-          typeof error === "object" ? error.message : error
+        toast.error(
+          <ToastMsg
+            title={title || "Error"}
+            message={typeof error === "object" ? error.message : error}
+          />,
+          { toastId: "recommended-track-error" }
         );
       },
-      [newAlert]
+      []
     );
 
     /* On load, get the current user's followers */
@@ -105,25 +93,25 @@ export default NiceModal.create(
       [followers]
     );
 
-    const closeModal = () => {
-      modal.hide();
-      setTimeout(modal.remove, 500);
-    };
-
     const submitPersonalRecommendation = React.useCallback(
       async (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
         if (currentUser?.auth_token) {
           const metadata: UserTrackPersonalRecommendationMetadata = {
-            artist_name: getArtistName(listenToPersonallyRecommend),
-            track_name: getTrackName(listenToPersonallyRecommend),
-            release_name: listenToPersonallyRecommend!.track_metadata
-              .release_name,
-            recording_mbid: getRecordingMBID(listenToPersonallyRecommend),
-            recording_msid: getRecordingMSID(listenToPersonallyRecommend),
             users,
             blurb_content: blurbContent,
           };
+
+          const recording_mbid = getRecordingMBID(listenToPersonallyRecommend);
+          if (recording_mbid) {
+            metadata.recording_mbid = recording_mbid;
+          }
+
+          const recording_msid = getRecordingMSID(listenToPersonallyRecommend);
+          if (recording_msid) {
+            metadata.recording_msid = recording_msid;
+          }
+
           try {
             const status = await APIService.submitPersonalRecommendation(
               currentUser.auth_token,
@@ -131,14 +119,18 @@ export default NiceModal.create(
               metadata
             );
             if (status === 200) {
-              newAlert(
-                "success",
-                `You recommended this track to ${users.length} user${
-                  users.length > 1 ? "s" : ""
-                }`,
-                `${metadata.artist_name} - ${metadata.track_name}`
+              toast.success(
+                <ToastMsg
+                  title={`You recommended this track to ${users.length} user${
+                    users.length > 1 ? "s" : ""
+                  }`}
+                  message={`${getArtistName(
+                    listenToPersonallyRecommend
+                  )} - ${getTrackName(listenToPersonallyRecommend)}`}
+                />,
+                { toastId: "recommended-track-success" }
               );
-              closeModal();
+              modal.hide();
             }
           } catch (error) {
             handleError(error, "Error while recommending a track");
@@ -154,89 +146,73 @@ export default NiceModal.create(
     } = listenToPersonallyRecommend.track_metadata;
 
     return (
-      <div
-        className={`modal fade ${modal.visible ? "in" : ""}`}
-        id="PersonalRecommendationModal"
-        tabIndex={-1}
-        role="dialog"
+      <Modal
+        {...bootstrapDialog(modal)}
+        title={`Recommend ${track_name}`}
         aria-labelledby="PersonalRecommendationModalLabel"
-        data-backdrop="static"
+        id="PersonalRecommendationModal"
       >
-        <div className="modal-dialog" role="document">
-          <form className="modal-content">
-            <div className="modal-header">
-              <button
-                type="button"
-                className="close"
-                data-dismiss="modal"
-                aria-label="Close"
-                onClick={closeModal}
-              >
-                <span aria-hidden="true">&times;</span>
-              </button>
-              <h4 className="modal-title" id="PersonalRecommendationModalLabel">
-                Recommend <b>{track_name}</b>
-              </h4>
-            </div>
-            <div className="modal-body">
-              {users.map((user) => {
-                return (
-                  <NamePill
-                    title={user}
-                    // eslint-disable-next-line react/jsx-no-bind
-                    closeAction={removeUser.bind(this, user)}
-                  />
-                );
-              })}
-              <input
-                type="text"
-                className="form-control"
-                onChange={searchUsers}
-                placeholder="Add followers*"
+        <Modal.Header closeButton>
+          <Modal.Title id="PersonalRecommendationModalLabel">
+            Recommend <b>{track_name}</b>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {users.map((user) => {
+            return (
+              <NamePill
+                key={user}
+                title={user}
+                // eslint-disable-next-line react/jsx-no-bind
+                closeAction={removeUser.bind(this, user)}
               />
-              <SearchDropDown suggestions={suggestions} action={addUser} />
-              <p>Leave a message (optional)</p>
-              <div className="form-group">
-                <textarea
-                  className="form-control"
-                  id="blurb-content"
-                  placeholder="You will love this song because..."
-                  value={blurbContent}
-                  name="blurb-content"
-                  rows={4}
-                  style={{ resize: "vertical" }}
-                  onChange={handleBlurbInputChange}
-                />
-              </div>
-              <small className="character-count">
-                {blurbContent.length} / {maxBlurbContentLength}
-                <br />
-                *Can’t find a user? Make sure they are following you, and then
-                try again.
-              </small>
-            </div>
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn btn-default"
-                data-dismiss="modal"
-                onClick={closeModal}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn btn-success"
-                data-dismiss="modal"
-                disabled={users.length === 0}
-                onClick={submitPersonalRecommendation}
-              >
-                Send Recommendation
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+            );
+          })}
+          <input
+            type="text"
+            className="form-control"
+            onChange={searchUsers}
+            placeholder="Add followers*"
+          />
+          <SearchDropDown suggestions={suggestions} action={addUser} />
+          <p className="my-4">Leave a message (optional)</p>
+          <div className="mb-4">
+            <textarea
+              className="form-control"
+              id="blurb-content"
+              placeholder="You will love this song because..."
+              value={blurbContent}
+              name="blurb-content"
+              rows={4}
+              style={{ resize: "vertical" }}
+              onChange={handleBlurbInputChange}
+            />
+          </div>
+          <small className="character-count d-block texty-end">
+            {blurbContent.length} / {maxBlurbContentLength}
+            <br />
+            *Can’t find a user? Make sure they are following you, and then try
+            again.
+          </small>
+        </Modal.Body>
+        <Modal.Footer>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={modal.hide}
+          >
+            Close
+          </button>
+          <button
+            type="submit"
+            className="btn btn-success"
+            disabled={users.length === 0}
+            onClick={submitPersonalRecommendation}
+          >
+            Send Recommendation
+          </button>
+        </Modal.Footer>
+      </Modal>
     );
   }
 );

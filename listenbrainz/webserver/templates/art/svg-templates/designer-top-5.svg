@@ -1,13 +1,24 @@
-<svg id="svg2" 
+{%- from 'art/svg-templates/macros.j2' import render_entity_link -%}
+
+<svg id="svg2"
      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns="http://www.w3.org/2000/svg"
      version="1.1"
      xmlns:cc="http://creativecommons.org/ns#"
      xmlns:xlink="http://www.w3.org/1999/xlink"
+     role="img"
      viewBox="0 0 924 924"
      xmlns:dc="http://purl.org/dc/elements/1.1/"
      height="{{ height }}"
-     width="{{ width }}">
+     width="{{ width }}"
+     preserveAspectRatio="xMinYMin meet"
+>
+  <title>Top 5 artists {{ metadata["time_range"] }} for {{ metadata["user_name"] }}&#xA;</title>
+  <desc>
+   {%- for artist in artists[:5] -%}
+     {{- loop.index -}}. {{ artist.artist_name -}}&#xA;
+   {%- endfor -%}
+  </desc>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900');
   </style>
@@ -29,11 +40,15 @@
    <text id="date"><tspan id="tspan18" y="36" x="773">{{ metadata["date"] }}</tspan></text>
   </g>
   <g font-size="186px">
-   <text id="artist_1"><tspan id="tspan22" y="211" x="-20">{{ artists[0].artist_name|upper|e }}</tspan></text>
-   <text id="artist_2"><tspan id="tspan26" y="375" x="-20">{{ artists[1].artist_name|upper|e }}</tspan></text>
-   <text id="artist_3"><tspan id="tspan30" y="534" x="-20">{{ artists[2].artist_name|upper|e }}</tspan></text>
-   <text id="artist_4"><tspan id="tspan34" y="692" x="-20">{{ artists[3].artist_name|upper|e }}</tspan></text>
-   <text id="artist_5"><tspan id="tspan38" y="849" x="-20">{{ artists[4].artist_name|upper|e }}</tspan></text>
+   {% set y_start = 211 %}
+   {% set gap = 160 %}
+   {% for artist in artists[:5] %}
+   <text id="artist_{{ loop.index }}">
+    <tspan id="tspan2{{ loop.index }}" y="{{ y_start + loop.index0 * gap }}" x="-20">
+     {{ render_entity_link("artist", artist.artist_mbid, artist.artist_name) }}
+    </tspan>
+   </text>
+   {% endfor %}
   </g>
  </g>
 </svg>

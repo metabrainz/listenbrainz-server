@@ -1,0 +1,344 @@
+[
+    {
+        "id": "24",
+        "entity": "Sajna",
+        "entityType": "release-group",
+        "entityMBID": null,
+        "artist": "Yashal Shahid",
+        "artistMBID": [],
+        "idx": 25,
+        "count": 1,
+        "caaID": null,
+        "caaReleaseMBID": null
+    },
+    {
+        "id": "23",
+        "entity": "Seasons of Sartaaj",
+        "entityType": "release-group",
+        "entityMBID": null,
+        "artist": "Satinder Sartaaj",
+        "artistMBID": [],
+        "idx": 24,
+        "count": 1,
+        "caaID": null,
+        "caaReleaseMBID": null
+    },
+    {
+        "id": "22",
+        "entity": "Sochta Hoon Keh Woh Kitne Masoom Teh",
+        "entityType": "release-group",
+        "entityMBID": null,
+        "artist": "Nusrat Fateh Ali Khan",
+        "artistMBID": [],
+        "idx": 23,
+        "count": 1,
+        "caaID": null,
+        "caaReleaseMBID": null
+    },
+    {
+        "id": "21",
+        "entity": "Table No. 21",
+        "entityType": "release-group",
+        "entityMBID": "e98fb052-a99e-4275-99d5-0e9a9a45f5f1",
+        "artist": "Gajendra Verma & Sachin Gupta",
+        "artistMBID": [
+            "4f2ea2cb-923d-487e-a517-a2a03089546b",
+            "b088fe42-db0b-4ef9-9c7d-e546b785c171"
+        ],
+        "idx": 22,
+        "count": 1,
+        "caaID": 3197539768,
+        "caaReleaseMBID": "4f1f8e13-656a-46bf-900e-18b28f3b3991"
+    },
+    {
+        "id": "20",
+        "entity": "Tanu Weds Manu",
+        "entityType": "release-group",
+        "entityMBID": "454dd3a6-3f05-47fa-a284-c27de9fc75f9",
+        "artist": "Krsna",
+        "artistMBID": [
+            "042b6b13-6e02-42c8-a5e5-67abd22a93f4"
+        ],
+        "idx": 21,
+        "count": 1,
+        "caaID": 3186066125,
+        "caaReleaseMBID": "7f5be286-79a8-429e-aac7-e4155c6737c1"
+    },
+    {
+        "id": "19",
+        "entity": "The 20/20 Experience",
+        "entityType": "release-group",
+        "entityMBID": "deae6fc2-a675-4f35-9565-d2aaea4872c7",
+        "artist": "Justin Timberlake",
+        "artistMBID": [
+            "596ffa74-3d08-44ef-b113-765d43d12738"
+        ],
+        "idx": 20,
+        "count": 1,
+        "caaID": 8227935106,
+        "caaReleaseMBID": "bd2a6877-71a3-4819-b2bb-b373deb3a756"
+    },
+    {
+        "id": "18",
+        "entity": "Troubadour",
+        "entityType": "release-group",
+        "entityMBID": "1507bca6-9459-3aa3-9d07-36a7063b3ba7",
+        "artist": "K’naan",
+        "artistMBID": [
+            "ee421ee4-f861-405d-8730-29cb512dfdbd"
+        ],
+        "idx": 19,
+        "count": 1,
+        "caaID": 33619033925,
+        "caaReleaseMBID": "00abc2ed-c874-4a4b-88c0-be6716141b6e"
+    },
+    {
+        "id": "17",
+        "entity": "Vicky Donor",
+        "entityType": "release-group",
+        "entityMBID": "1ce1ed6e-ee15-4891-8bf8-00921b5873ad",
+        "artist": "Abhishek-Akshay",
+        "artistMBID": [
+            "e7e8031d-f232-4883-bb5d-bd97589bc29b"
+        ],
+        "idx": 18,
+        "count": 1,
+        "caaID": 3193866265,
+        "caaReleaseMBID": "3a29d02a-d29a-40f8-86f8-c9dab6eba7ac"
+    },
+    {
+        "id": "16",
+        "entity": "Whenever You Need Somebody",
+        "entityType": "release-group",
+        "entityMBID": "082c6aff-a7cc-36e0-a960-35a578ecd937",
+        "artist": "Rick Astley",
+        "artistMBID": [
+            "db92a151-1ac2-438b-bc43-b82e149ddd50"
+        ],
+        "idx": 17,
+        "count": 1,
+        "caaID": 30721131344,
+        "caaReleaseMBID": "bf9e91ea-8029-4a04-a26a-224e00a83266"
+    },
+    {
+        "id": "15",
+        "entity": "÷",
+        "entityType": "release-group",
+        "entityMBID": "e05f9927-e24b-41c5-928d-d0e008a12444",
+        "artist": "Ed Sheeran",
+        "artistMBID": [
+            "b8a7c51f-362c-4dcb-a259-bc6e0095f0a6"
+        ],
+        "idx": 16,
+        "count": 1,
+        "caaID": 31935928002,
+        "caaReleaseMBID": "14c13329-88f5-426f-90d7-0170b4017e15"
+    },
+    {
+        "id": "14",
+        "entity": "AM",
+        "entityType": "release-group",
+        "entityMBID": "a348ba2f-f8b3-4686-b928-e63d8d94d543",
+        "artist": "Arctic Monkeys",
+        "artistMBID": [
+            "ada7a83c-e3e1-40f1-93f9-3e73dbc9298a"
+        ],
+        "idx": 15,
+        "count": 2,
+        "caaID": 32131848311,
+        "caaReleaseMBID": "55171afe-440e-4c63-947c-e49074f3d5b5"
+    },
+    {
+        "id": "13",
+        "entity": "Greatest Top 30 Hits of Rahat and Nusrat Fateh Ali Khan",
+        "entityType": "release-group",
+        "entityMBID": "111857eb-16f1-4489-8091-1740dfa3d635",
+        "artist": "Rahat Fateh Ali Khan & Nusrat Fateh Ali Khan",
+        "artistMBID": [
+            "014431e3-c5a3-4a57-b86b-fe8f2e3253ff",
+            "5968383c-11c1-4c5b-ada0-504a38cec8e7"
+        ],
+        "idx": 14,
+        "count": 2,
+        "caaID": null,
+        "caaReleaseMBID": null
+    },
+    {
+        "id": "12",
+        "entity": "Her",
+        "entityType": "release-group",
+        "entityMBID": "966d9b30-3937-4aeb-848c-db6b5c9a74ed",
+        "artist": "Shubh",
+        "artistMBID": [
+            "ef2686fe-0bdf-4e0c-b902-cc6609acc95d"
+        ],
+        "idx": 13,
+        "count": 2,
+        "caaID": 34225088247,
+        "caaReleaseMBID": "1af68516-c673-4df5-9b5b-d03cf88352dd"
+    },
+    {
+        "id": "11",
+        "entity": "Mi Amor",
+        "entityType": "release-group",
+        "entityMBID": "eb20f028-6f59-4a64-95f1-1bc56b87dd5c",
+        "artist": "Sharn, 40k & The Paul",
+        "artistMBID": [
+            "cefe551f-33a4-45b2-9c59-abfe741654c7",
+            "b9542aba-c2bd-46c0-8100-4c9b5356a95f",
+            "7569dad3-210b-49ae-9a80-4972798b7fca"
+        ],
+        "idx": 12,
+        "count": 2,
+        "caaID": 34601875426,
+        "caaReleaseMBID": "5460dad9-4dc8-4e0c-8e88-083e23c480f2"
+    },
+    {
+        "id": "10",
+        "entity": "Mohabbatein",
+        "entityType": "release-group",
+        "entityMBID": null,
+        "artist": "Jatin-Lalit, Lata Mangeshkar, Udit Narayan, Udbhav, Manohar Shetty, Ishaan, Shweta Pandit, Sonali Bhatawdekar, Pritha Mazumdar, Shah Rukh Khan, Anand Bakshi",
+        "artistMBID": [],
+        "idx": 11,
+        "count": 2,
+        "caaID": null,
+        "caaReleaseMBID": null
+    },
+    {
+        "id": "9",
+        "entity": "Prequelle",
+        "entityType": "release-group",
+        "entityMBID": "1f25d940-89e2-4813-a86f-955b0e99c391",
+        "artist": "Ghost",
+        "artistMBID": [
+            "2bcf2e02-5bc3-4c76-bf76-41126cb11444"
+        ],
+        "idx": 10,
+        "count": 2,
+        "caaID": 31504962641,
+        "caaReleaseMBID": "e799d36f-3c76-4028-a02d-bc7be77db8ba"
+    },
+    {
+        "id": "8",
+        "entity": "Until I Found You",
+        "entityType": "release-group",
+        "entityMBID": "555f06a8-5d9b-4ec1-9d73-a5a529ab3010",
+        "artist": "Stephen Sanchez",
+        "artistMBID": [
+            "a9c38fd2-04be-4bc6-a3bc-96508b226508"
+        ],
+        "idx": 9,
+        "count": 2,
+        "caaID": 32337530682,
+        "caaReleaseMBID": "f6da0110-0283-441b-a619-efaf5721bda1"
+    },
+    {
+        "id": "7",
+        "entity": "Nusrat - Pyar Ki Hasrat",
+        "entityType": "release-group",
+        "entityMBID": "b7365a6f-fdd7-4f18-8520-8ece5fc1179f",
+        "artist": "Nusrat Fateh Ali Khan",
+        "artistMBID": [
+            "5968383c-11c1-4c5b-ada0-504a38cec8e7"
+        ],
+        "idx": 8,
+        "count": 3,
+        "caaID": null,
+        "caaReleaseMBID": null
+    },
+    {
+        "id": "6",
+        "entity": "21",
+        "entityType": "release-group",
+        "entityMBID": "e4174758-d333-4a8e-a31f-dd0edd51518e",
+        "artist": "Adele",
+        "artistMBID": [
+            "cc2c9c3c-b7bc-4b8b-84d8-4fbd8779e493"
+        ],
+        "idx": 7,
+        "count": 4,
+        "caaID": 34029007881,
+        "caaReleaseMBID": "d0a60bc8-b4e9-4f1c-b9b5-c84c284493c4"
+    },
+    {
+        "id": "5",
+        "entity": "Greatest Hits",
+        "entityType": "release-group",
+        "entityMBID": "3d66159a-5805-4219-b827-814226a5279e",
+        "artist": "Nusrat Fateh Ali Khan",
+        "artistMBID": [
+            "5968383c-11c1-4c5b-ada0-504a38cec8e7"
+        ],
+        "idx": 6,
+        "count": 5,
+        "caaID": null,
+        "caaReleaseMBID": null
+    },
+    {
+        "id": "4",
+        "entity": "Indigo",
+        "entityType": "release-group",
+        "entityMBID": "087b3a7d-d532-44d9-b37a-84427677ddcd",
+        "artist": "Chris Brown",
+        "artistMBID": [
+            "c234fa42-e6a6-443e-937e-2f4b073538a3"
+        ],
+        "idx": 5,
+        "count": 5,
+        "caaID": 23564822587,
+        "caaReleaseMBID": "25f18616-5a9c-470e-964d-4eb8a511435b"
+    },
+    {
+        "id": "3",
+        "entity": "Laundry Service",
+        "entityType": "release-group",
+        "entityMBID": "2dbd0eff-17ce-34da-83f1-c707a199bc1e",
+        "artist": "Shakira",
+        "artistMBID": [
+            "bf24ca37-25f4-4e34-9aec-460b94364cfc"
+        ],
+        "idx": 4,
+        "count": 5,
+        "caaID": 8319144714,
+        "caaReleaseMBID": "46f25a39-1630-4bed-8b5c-5aef1e464757"
+    },
+    {
+        "id": "2",
+        "entity": "Mohabbatein",
+        "entityType": "release-group",
+        "entityMBID": null,
+        "artist": "Jatin-Lalit, Udit Narayan, Jaspinder Narula, Udbhav, Manohar Shetty, Ishaan, Shweta Pandit, Sonali Bhatawdekar, Pritha Mazumdar, Anand Bakshi",
+        "artistMBID": [],
+        "idx": 3,
+        "count": 6,
+        "caaID": null,
+        "caaReleaseMBID": null
+    },
+    {
+        "id": "1",
+        "entity": "Atrangi Re",
+        "entityType": "release-group",
+        "entityMBID": null,
+        "artist": "A.R. Rahman, Arijit Singh, Shashaa Tirupati",
+        "artistMBID": [],
+        "idx": 2,
+        "count": 8,
+        "caaID": null,
+        "caaReleaseMBID": null
+    },
+    {
+        "id": "0",
+        "entity": "Reformed (feat. A1Melodymaster)",
+        "entityType": "release-group",
+        "entityMBID": "f6804962-d5a3-4099-899c-95c360938502",
+        "artist": "Nusrat Fateh Ali Khan",
+        "artistMBID": [
+            "5968383c-11c1-4c5b-ada0-504a38cec8e7"
+        ],
+        "idx": 1,
+        "count": 15,
+        "caaID": null,
+        "caaReleaseMBID": null
+    }
+]

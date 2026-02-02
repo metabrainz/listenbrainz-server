@@ -5,6 +5,14 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel, validator, NonNegativeInt, constr
 from data.model.validators import check_valid_uuid
 
+PLAYLIST_TRACK_URI_PREFIX = "https://musicbrainz.org/recording/"
+PLAYLIST_ARTIST_URI_PREFIX = "https://musicbrainz.org/artist/"
+PLAYLIST_RELEASE_URI_PREFIX = "https://musicbrainz.org/release/"
+PLAYLIST_URI_PREFIX = "https://listenbrainz.org/playlist/"
+PLAYLIST_EXTENSION_URI = "https://musicbrainz.org/doc/jspf#playlist"
+PLAYLIST_TRACK_EXTENSION_URI = "https://musicbrainz.org/doc/jspf#track"
+
+
 class PlaylistRecording(BaseModel):
     """A recording that is part of a playlist"""
     # Internal id of the playlist
@@ -111,6 +119,67 @@ class Playlist(BaseModel):
         if user_id == self.creator_id or user_id in self.collaborator_ids:
             return True
         return False
+
+    def serialize_jspf(self):
+        """ Given a playlist, return a properly formated dict that can be passed to jsonify. """
+
+        pl = {
+            "creator": self.creator,
+            "title": self.name,
+            "identifier": PLAYLIST_URI_PREFIX + str(self.mbid),
+            "date": self.created.astimezone(datetime.timezone.utc).isoformat()
+        }
+        if self.description:
+            pl["annotation"] = self.description
+
+        extension = {"public": self.public, "creator": self.creator}
+        if self.last_updated:
+            extension["last_modified_at"] = self.last_updated.astimezone(datetime.timezone.utc).isoformat()
+        if self.copied_from_id is not None:
+            if self.copied_from_mbid is None:
+                extension['copied_from_deleted'] = True
+            else:
+                extension['copied_from_mbid'] = PLAYLIST_URI_PREFIX + str(self.copied_from_mbid)
+        if self.created_for_id:
+            extension['created_for'] = self.created_for
+        if self.collaborators:
+            extension['collaborators'] = self.collaborators
+        if self.additional_metadata:
+            extension['additional_metadata'] = self.additional_metadata
+
+        pl["extension"] = {PLAYLIST_EXTENSION_URI: extension}
+
+        tracks = []
+        for rec in self.recordings:
+            tr = {"identifier": [PLAYLIST_TRACK_URI_PREFIX + str(rec.mbid)]}
+            if rec.artist_credit:
+                tr["creator"] = rec.artist_credit
+
+            if rec.release_name:
+                tr["album"] = rec.release_name
+
+            if rec.title:
+                tr["title"] = rec.title
+
+            if rec.duration_ms:
+                tr["duration"] = rec.duration_ms
+
+            extension = {"added_by": rec.added_by, "added_at": rec.created.astimezone(datetime.timezone.utc).isoformat()}
+            if rec.artist_mbids:
+                extension["artist_identifiers"] = [PLAYLIST_ARTIST_URI_PREFIX + str(mbid) for mbid in rec.artist_mbids]
+
+            if rec.release_mbid:
+                extension["release_identifier"] = PLAYLIST_RELEASE_URI_PREFIX + str(rec.release_mbid)
+
+            if rec.additional_metadata:
+                extension["additional_metadata"] = rec.additional_metadata
+
+            tr["extension"] = {PLAYLIST_TRACK_EXTENSION_URI: extension}
+            tracks.append(tr)
+
+        pl["track"] = tracks
+
+        return {"playlist": pl}
 
 
 class WritablePlaylist(Playlist):

@@ -19,6 +19,7 @@ on:
       - 'docker/spark-cluster-config/**'
       - 'docs/**'
       - '**.less'
+      - '**.scss'
       - '**.md'
 
 concurrency:
@@ -34,7 +35,7 @@ jobs:
     if: github.event.pull_request.draft == false
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Create configuration file
       run: cp listenbrainz/config.py.sample listenbrainz/config.py
@@ -42,12 +43,6 @@ jobs:
     - name: Login to Docker Hub
       run: echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
       continue-on-error: true
-
-    # by default, docker-compose tries to pull the `listenbrainz` image used by timescale_writer as well.
-    # but this is built locally for the listenbrainz service and reused for timescale writer, hence the pull fails.
-    # to avoid this we specifically mention the services to pull images for here,
-    - name: Pull docker images
-      run: docker-compose -f docker/docker-compose.test.yml pull lb_db redis rabbitmq couchdb
 
     - name: Run tests
       run: ./test.sh

@@ -1,0 +1,143 @@
+{% if branding %}
+    {% set width = 924 %}
+    {% set height = 924 %}
+{% else %}
+    {% set width = 520 %}
+    {% set height = 520 %}
+{% endif %}
+<svg width="{{width}}" height="{{height}}" viewBox="0 0 {{width}} {{height}}" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900');
+        .album-art {
+            preserveAspectRatio: "xMidYMid slice";
+            height: 135px;
+            width: 135px;
+        }
+        .drawing {
+          fill: #F0EEE2;
+        }
+        text {
+            fill: #F0EEE2;
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+        }
+        .branding {
+            font-size: 20px;
+            letter-spacing: 0em;
+            text-transform: uppercase;
+        }
+        .subtitle {
+            text-anchor: middle;
+            font-size: 32px;
+            letter-spacing: 0.6em;
+        }
+        .background {
+            fill: #4C6C52;
+        }
+  </style>
+  {% if branding %}
+  <g id="g297">
+    <rect class="background" width="924" height="924" fill="#4C6C52"/>
+    <text class="branding" x="750" y="897" id="text279">LISTENBRAINZ</text>
+    <text class="branding" x="26" y="43" id="text281">{{user_name}}</text>
+    <text class="branding" font-style="italic" x="26" y="897" id="text283">#YEARINMUSIC</text>
+    <text class="branding" x="844" y="43" id="text285">2023</text>
+    <text x="50%" y="150" id="my-year" class="subtitle">
+        <tspan>M</tspan>
+        <tspan dx="12">Y</tspan>
+        <tspan dx="30">Y</tspan>
+        <tspan dx="12">E</tspan>
+        <tspan dx="12">A</tspan>
+        <tspan dx="12">R</tspan>
+    </text>
+    <text x="50%" y="190" id="in-music" class="subtitle">
+        <tspan>I</tspan>
+        <tspan dx="12">N</tspan>
+        <tspan dx="30">M</tspan>
+        <tspan dx="12">U</tspan>
+        <tspan dx="12">S</tspan>
+        <tspan dx="12">I</tspan>
+        <tspan dx="12">C</tspan>
+    </text>
+    <text x="50%" y="755" id="top-artists" class="subtitle">
+        <tspan>P</tspan>
+        <tspan dx="12">L</tspan>
+        <tspan dx="12">A</tspan>
+        <tspan dx="12">Y</tspan>
+        <tspan dx="12">L</tspan>
+        <tspan dx="12">I</tspan>
+        <tspan dx="12">S</tspan>
+        <tspan dx="12">T</tspan>
+        <tspan dx="12">S</tspan>
+        <tspan dx="12">:</tspan>
+    </text>
+    <text x="50%" y="795" id="top-artists" class="subtitle">
+        <tspan>M</tspan>
+        <tspan dx="12">I</tspan>
+        <tspan dx="12">S</tspan>
+        <tspan dx="12">S</tspan>
+        <tspan dx="12">E</tspan>
+        <tspan dx="12">D</tspan>
+        <tspan dx="30">T</tspan>
+        <tspan dx="12">R</tspan>
+        <tspan dx="12">A</tspan>
+        <tspan dx="12">C</tspan>
+        <tspan dx="12">K</tspan>
+        <tspan dx="12">S</tspan>
+    </text>
+  </g>
+  <g transform="translate(225, 190)">
+  {% else %}
+  <g transform="translate(35, 0)">
+  {% endif %}
+      {% set x_s = [20, 20, 20, 155, 155, 155, 290, 290, 290] %}
+      {% set y_s = [75, 210, 345, 75, 210, 345, 75, 210, 345] %}
+      {% for image in images[:9] %}
+        <a href="https://listenbrainz.org/release/{{ image.entity_mbid }}" target="_blank">
+            <image
+                    class="album-art"
+                    preserveAspectRatio="xMidYMid slice"
+                    x="{{ x_s[loop.index0] }}"
+                    y="{{ y_s[loop.index0] }}"
+                    href="{{ image.url }}">
+                {% if image.title and image.artist %}
+                <title>
+                    {{- image.title|escape ~ " - " ~ image.artist|escape -}}
+                </title>
+                {% endif %}
+            </image>
+        </a>
+        {% endfor %}
+    <g id="arrows" transform="translate(-30 20) scale(0.4)" class="drawing">
+      <path d="M849 1c2 1 8 1 7 5-1 6-3 11-6 16-6 19-14 38-17 58-4 13 10-5 16 1 2 2 8-1 8 3 2 13-14 21-24 27-5 1-4 11-10 7s-30-32-16-35c8-2 14 6 15 0 4-18 3-83 27-82z" id="path2118"/>
+      <path d="M505 1269c-14-7-11-71-21-62-4 4-6 7-11 1-11-10 8-29 15-37 6-10 16-14 24-5 4 5 14 14 5 20-2 2-3 6-7 6s-3 3-3 5c0 19 2 37 6 55 3 10-6 9-6 17h-2z" id="path2120"/>
+      <path d="M998 903c2-15 63-31 54-6-1 4-9 7-3 10 10 7 22 11 31 19 13 12 31 15 44 28 24 19 53 34 69 60 8 12-4 24-12 11-9-21-34-29-49-44-25-19-51-39-80-50-3 0-7-6-9-1-5 8-15 9-19 1-6-13-25-12-26-28z" id="path2122"/>
+      <path d="M870 1035c-2 5 0 11-7 13-5 1-11-3-12-7-3-9-1-18-4-27-12-27-8-36 23-33 13 0 29-2 40 3 4 14-13 17-23 18-24 1 7 32 12 42 19 25 42 47 67 65 18 47-54-23-61-32-13-13-24-28-35-42z" id="path2124"/>
+      <path d="M258 315c-9-1-59 5-44-14 11-8 26 0 39-2 8 3 7-11 1-12-19-3-37-10-56-14-39-15-79-30-113-55-2-2-5-3-3-7 4-8 12-4 18-1 45 29 96 49 148 62 7 1 0-11 7-14 22-9 19 32 29 44 3 12-18 11-26 13z" id="path2126"/>
+      <path d="M983 416c30 0 61-10 89-21 9-4 34-16 32 2 0 2-1 3-3 4-39 16-79 29-121 35l7 4c12 4 7 22-5 21-14-1-25-12-39-16-5-1-9-9-7-15 12-9 23-21 36-29 8-3 24 7 11 15z" id="path2128"/>
+      <path d="M727 244c0 13-12 21-19 30-17 19-39-3-46-20-6-18 17-3 16-17 2-31 7-60 8-90-1-15 0-30 2-45 2-12 24-5 18 7l-1 9c-6 28-4 58-9 87-1 17-7 36-3 52 13-2 15-28 30-22 5 1 3 6 4 9z" id="path2130"/>
+      <path d="M205 705c-24 12-49 18-74 25-19 6-36 16-55 20-26 6-26-13-1-17 29-12 61-19 91-29 13-3 25-14 39-11 5 3 7-4 1-5-10-3-46-17-19-24 17 1 30 15 46 19 15 8-8 19-10 34-2 8-8 0-14 4-8 2-4-11-4-16z" id="path2132"/>
+      <path d="M240 932c-9-6-26-2-32-12 0-12 16-15 24-11 14 8 35 2 44 12 4 12-10 25-12 37-11 18-29 16-22-8 2-3-1-5-3-3-32 14-60 33-90 50-15 8-18-9-7-16 31-21 65-35 98-49zm7 0h-3 3z" id="path2134"/>
+      <path d="M1020 544c39-4 77-18 116-20 6 0 18-1 18 8-1 3-3 3-6 3-38 5-74 17-112 24-6 1-6 1-2 5 5 6 5 17-4 16-43-3-60-12-26-49 6-9 31-2 20 8-2 1-3 2-4 5z" id="path2136"/>
+      <path d="M914 242c-21 1-9-30-8-43 1-11 13-7 19-1 7 5 11-12 18-15l51-49c7-7 15 0 11 8l-55 61c-5 5-2 9 4 7 8-2 16 10 7 15-16 6-31 15-47 17z" id="path2138"/>
+      <path d="M347 1061c-5 5-8 12-15 15-9 6-17-5-12-13 13-12 27-51 50-37 1 12 14 8 16 24 1 13-17 5-20 11-7 14 4 24 0 40 2 16-2 33 7 48 3 11-17 10-18 1-9-28-5-60-8-89z" id="path2140"/>
+      <path d="M142 376c-25 0-49 2-73-2l-60-9c-11-2-8-18 3-16 39 8 78 15 117 15 3 0 4 0 3-3-7-17 18-17 23-4 4 10 26 20 9 29-11 5-20 16-33 18-5 1-7-3-10-5-2-12 15-15 21-23z" id="path2142"/>
+      <path d="M1060 723c36-3 72-11 107-5 5 18-16 13-28 13l-46 5c-10 5-29-2-33 11-1 11-19 1-23-4-5-5-15-3-16-12 0-12 18-16 25-25 8-5 32-26 34-5-5 9-18 12-20 22z" id="path2144"/>
+      <path d="M610 1040c3 21 6 41 11 62 4 14-17 11-19 0-7-19-2-41-12-58-8 6-18 30-29 12-2-10 21-30 26-45 14-15 48 2 49 21-1 7-14 8-20 4-6-3-6-2-6 4z" id="path2146"/>
+      <path d="M120 852c-12-6-7-23 7-18 8 4 17 9 26 11 10 5 2 19 0 27-4 16-16 15-19-1-1-4 4-11-2-13-19 11-43 23-64 36-16 8-29 25-48 27-32-9 25-31 34-40 20-12 45-19 66-29z" id="path2148"/>
+      <path d="M551 150c4-5 2-10 1-15-2-6 0-10 1-15-2-7 0-13 0-20 3-6-6-5-4-10 5-15-17-69 10-70 14 7 4 26 4 38l4 62c-5 48 1 15 19 22 9 31-25 39-47 24-21-14-7-30 12-16zm4 4c1-1-1-2-1-1v1z" id="path2150"/>
+      <path d="M210 482c-8-3-14-15-3-18 14-1 48 18 31 34-7 6-10 19-17 25-21 1-11-8-7-22 0-9-33 2-40 2-22 5-43 5-65 7-13 2-31-8-11-17 35-1 74 0 112-11z" id="path2152"/>
+      <path d="M1151 606c29-8 60-9 90-10 33-1 13 14-6 14-25 2-50 6-74 11-7 1-8 10-14 10h-3c-10 5-17-1-24-7-12-12 8-26 17-33 6-5 17-2 22 2 3 5-6 8-8 13z" id="path2154"/>
+      <path d="M216 1103c-19-9-10-22 9-17 14 3 32-17 35 9 1 12-6 35-18 17-4-8-5-8-10-1-19 18-31 40-46 61-50 14 22-59 30-69z" id="path2156"/>
+      <path d="M1201 403c30-5 54-23 82-31 17 0-12 22-18 23-15 8-30 14-45 19-7 2-8 4-6 11 2 12-29 8-33 2-14-12 2-27 6-40 11-5 24 3 14 16z" id="path2158"/>
+      <path d="M767 1166c2-12-4-22-2-32 0-4-3-6-7-6-24 1-4-19 1-28 7-17 24-5 28 7 4 6-12 9-8 22 2 24 13 45 13 68 1 3-3 4-5 5-1 2-3 4-6 3-13-6-9-28-14-39z" id="path2160"/>
+      <path d="M1230 838c-13 0-26 0-39-2-8 0-19-9-24-1-3 10-17 6-20-1-3-6-16-8-10-17 6-8 60-34 40-6-5 3-4 8 1 7 27 8 55 7 82 10 15 10-25 11-30 10z" id="path2162"/>
+      <path d="M1043 257c6-1 6 9 11 4 13-7 24-17 38-21 32-1-18 25-25 31-3 4-17 8-11 14 17 23-50 28-36 0 8-10 7-29 23-28z" id="path2164"/>
+      <path d="M440 230c6-1 9 10 14 5 6-7 8-26 20-18 9 6 9 6 5 16-8 14-16 42-39 31-8-8-29-18-30-30 3-6 10-7 16-4 5 5 8 5 14 0z" id="path2166"/>
+      <path d="M440 230c-22 0-14-38-22-52l-5-27c-1-13 18-12 20-1 7 26 7 54 18 79-4-2-8-2-11 1z" id="path2168"/>
+      <path d="M293 124c-20 0-27-25-39-37-6-13-26-24-23-38 5-6 17 1 19 7 14 23 30 44 43 68z" id="path2170"/>
+      <path d="M318 127c0 10-10 21-21 18-10 1-27 0-24-14 2-11 23 2 24-9-1-12 0-16 13-13 7 2 7 12 8 18z" id="path2172"/>
+      <path d="M591 153z" id="path2174"/>
+    </g>
+  </g>
+</svg>

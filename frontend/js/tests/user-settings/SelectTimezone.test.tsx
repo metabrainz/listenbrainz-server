@@ -1,110 +1,90 @@
 import * as React from "react";
-import { mount, ReactWrapper } from "enzyme";
-import { act } from "react-dom/test-utils";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import {
+  renderWithProviders,
+  textContentMatcher,
+} from "../test-utils/rtl-test-utils";
 import APIServiceClass from "../../src/utils/APIService";
-import GlobalAppContext from "../../src/utils/GlobalAppContext";
-
-import SelectTimezone, {
-  SelectTimezoneProps,
-  SelectTimezoneState,
-} from "../../src/user-settings/SelectTimezone";
-import { waitForComponentToPaint } from "../test-utils";
+import SelectTimezone from "../../src/settings/select_timezone/SelectTimezone";
 
 const user_timezone = "America/New_York";
 const pg_timezones: Array<[string, string]> = [
   ["Africa/Adnodjan", "+3:00:00 GMT"],
   ["America/Adak", "-9:00:00 GMT"],
+  ["America/New_York", "-4:00:00 GMT"],
 ];
-
-const globalProps = {
-  APIService: new APIServiceClass(""),
-  currentUser: {
-    id: 1,
-    name: "testuser",
-    auth_token: "auth_token",
-  },
-  spotifyAuth: {},
-  youtubeAuth: {},
-};
 
 const props = {
   pg_timezones,
   user_timezone,
-  newAlert: () => {},
 };
+
+jest.unmock("react-toastify");
 
 describe("User settings", () => {
   describe("submitTimezonePage", () => {
-    it("renders correctly", () => {
-      const extraProps = { ...props, newAlert: jest.fn() };
-      const wrapper = mount<SelectTimezone>(
-        <GlobalAppContext.Provider value={globalProps}>
-          <SelectTimezone {...extraProps} />
-        </GlobalAppContext.Provider>
-      );
+    it("renders correctly", async () => {
+      render(<SelectTimezone {...props} />);
 
-      expect(wrapper.html()).toMatchSnapshot();
+      await screen.findByRole("heading", { name: /select your timezone/i });
+      await screen.findByRole("button", { name: /save timezone/i });
+      const defaultOption = await screen.findByRole<HTMLOptionElement>(
+        "option",
+        { name: "Choose an option" }
+      );
+      expect(defaultOption.selected).toBe(false);
+      expect(defaultOption.disabled).toBe(true);
+      expect(
+        screen.getByRole<HTMLOptionElement>("option", {
+          name: "America/New_York (-4:00:00 GMT)",
+        }).selected
+      ).toBe(true);
     });
   });
 
   describe("resetTimezone", () => {
     it("calls API, and sets state + creates a new alert on success", async () => {
-      const wrapper = mount<SelectTimezone>(
-        <GlobalAppContext.Provider value={globalProps}>
-          <SelectTimezone {...{ ...props, newAlert: jest.fn() }} />
-        </GlobalAppContext.Provider>
-      );
-      await waitForComponentToPaint(wrapper);
-
-      const instance = wrapper.instance();
-      expect(instance.props.user_timezone).toEqual("America/New_York");
-      expect(instance.context.currentUser.name).toEqual("testuser");
-
-      await act(() => {
-        // set valid selectZone state
-        instance.setState({
-          selectZone: "America/Denver",
-        });
+      const testAPIService = new APIServiceClass("fnord");
+      renderWithProviders(<SelectTimezone {...props} />, {
+        APIService: testAPIService,
       });
-      await waitForComponentToPaint(wrapper);
-      expect(wrapper.state("selectZone")).toEqual("America/Denver");
+      // render(<SelectTimezone {...props} />);
+
+      expect(
+        screen.getByRole<HTMLOptionElement>("option", {
+          name: "America/New_York (-4:00:00 GMT)",
+        }).selected
+      ).toBe(true);
+
+      await userEvent.selectOptions(
+        screen.getByRole("combobox"),
+        screen.getByRole("option", { name: "America/Adak (-9:00:00 GMT)" })
+      );
+      // Check that we correctly set the select option
+      expect(
+        screen.getByRole<HTMLOptionElement>("option", {
+          name: "America/Adak (-9:00:00 GMT)",
+        }).selected
+      ).toBe(true);
+      // It's not a multiselect, ensure the previous option is not selected anymore
+      expect(
+        screen.getByRole<HTMLOptionElement>("option", {
+          name: "America/New_York (-4:00:00 GMT)",
+        }).selected
+      ).toBe(false);
 
       const spy = jest
-        .spyOn(instance.context.APIService, "resetUserTimezone")
+        .spyOn(testAPIService, "resetUserTimezone")
         .mockImplementation(() => Promise.resolve(200));
-      await act(async () => {
-        await instance.submitTimezone();
-      });
-      await waitForComponentToPaint(wrapper);
+
+      // submit the form
+      await userEvent.click(screen.getByRole("button"));
 
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith("auth_token", "America/Denver");
-
-      // test that state is updated and success alert is displayed
-      expect(wrapper.state("userTimezone")).toEqual("America/Denver");
-      expect(instance.props.newAlert).toHaveBeenCalledTimes(1);
-      expect(instance.props.newAlert).toHaveBeenCalledWith(
-        "success",
-        "Your timezone has been saved.",
-        ""
-      );
-    });
-
-    it("calls newAlert", async () => {
-      const wrapper = mount<SelectTimezone>(
-        <SelectTimezone {...{ ...props, newAlert: jest.fn() }} />
-      );
-      await waitForComponentToPaint(wrapper);
-      const instance = wrapper.instance();
-
-      instance.handleError("error");
-
-      expect(instance.props.newAlert).toHaveBeenCalledTimes(1);
-      expect(instance.props.newAlert).toHaveBeenCalledWith(
-        "danger",
-        "Error",
-        "error"
-      );
+      expect(spy).toHaveBeenCalledWith("never_gonna", "America/Adak");
+      // expect success message
+      screen.getByText(textContentMatcher("Your timezone has been saved."));
     });
   });
 });

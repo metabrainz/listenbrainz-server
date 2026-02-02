@@ -27,7 +27,7 @@ class RedisListenStoreTestCase(DatabaseTestCase):
 
         self.log = logging.getLogger()
         self._redis = init_redis_connection(self.log)
-        self.testuser = db_user.get_or_create(1, "test")
+        self.testuser = db_user.get_or_create(self.db_conn, 1, "test")
 
     def tearDown(self):
         cache._r.flushdb()
@@ -85,7 +85,7 @@ class RedisListenStoreTestCase(DatabaseTestCase):
             self.assertEqual(r.timestamp, listens[i].timestamp)
 
     def test_incr_listen_count_for_day(self):
-        today = datetime.datetime.utcnow()
+        today = datetime.datetime.today()
         # get without setting any value, should return None
         self.assertIsNone(self._redis.get_listen_count_for_day(today))
 

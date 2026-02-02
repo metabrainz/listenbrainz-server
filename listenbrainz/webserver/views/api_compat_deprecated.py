@@ -31,9 +31,10 @@ from hashlib import md5
 from flask import current_app, Blueprint, request, redirect
 from werkzeug.exceptions import BadRequest
 from listenbrainz.db.lastfm_session import Session
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.errors import ListenValidationError
-from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
+from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, LISTEN_TYPE_PLAYING_NOW, \
     is_valid_uuid, check_for_unicode_null_recursively, validate_listened_at
 
@@ -53,7 +54,7 @@ def handshake():
     if request.args.get('hs', '') != 'true':
         return redirect('https://listenbrainz.org/lastfm-proxy')
 
-    user = db_user.get_by_mb_id(request.args.get('u'), fetch_email=True)
+    user = db_user.get_by_mb_id(db_conn, request.args.get('u'), fetch_email=True)
     if user is None:
         return 'BADAUTH\n', 401
 
@@ -68,7 +69,7 @@ def handshake():
     if auth_token != _get_audioscrobbler_auth_token(user['auth_token'], timestamp):
         return 'BADAUTH\n', 401
 
-    session = Session.create_by_user_id(user['id'])
+    session = Session.create_by_user_id(db_conn, user['id'])
     current_app.logger.info('New session created with id: {}'.format(session.sid))
 
     return '\n'.join([
@@ -86,7 +87,7 @@ def submit_now_playing():
     current_app.logger.info(json.dumps(request.form, indent=4))
 
     try:
-        session = _get_session(request.form.get('s', ''))
+        session = _get_session(db_conn, request.form.get('s', ''))
     except BadRequest:
         return 'BADSESSION\n', 401
 
@@ -94,9 +95,8 @@ def submit_now_playing():
     if listen is None:
         return 'FAILED Invalid data submitted!\n', 400
 
-
     listens = [listen]
-    user = db_user.get(session.user_id)
+    user = db_user.get(db_conn, session.user_id)
     user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
     insert_payload(listens, user_metadata, LISTEN_TYPE_PLAYING_NOW)
 
@@ -108,7 +108,7 @@ def submit_listens():
     """ Submit listens received from clients into the listenstore after validating them. """
 
     try:
-        session = _get_session(request.form.get('s', ''))
+        session = _get_session(db_conn, request.form.get('s', ''))
     except BadRequest:
         return 'BADSESSION\n', 401
 
@@ -125,7 +125,9 @@ def submit_listens():
     if not listens:
         return 'FAILED Invalid data submitted!\n', 400
 
-    user = db_user.get(session.user_id)
+    user = db_user.get(db_conn, session.user_id)
+    if user['is_paused']:
+        return REJECT_LISTENS_FROM_PAUSED_USER_ERROR + '\n', 401
     user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
     insert_payload(listens, user_metadata)
 
@@ -200,14 +202,14 @@ def _to_native_api(data, append_key):
     return listen
 
 
-def _get_session(session_id):
+def _get_session(conn, session_id):
     """ Get the session with the passed session id.
 
         Returns: Session object with given session id
                  If session is not present in db, raises BadRequest
     """
 
-    session = Session.load(session_id)
+    session = Session.load(conn, session_id)
     if session is None:
         raise BadRequest("Session not found")
     return session

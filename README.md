@@ -4,6 +4,9 @@
 </h1>
 <h4 align="center">Server for the ListenBrainz project</h4>
 <p align="center">
+    <a href="https://app.readthedocs.org/projects/listenbrainz/">
+    <img src="https://readthedocs.org/projects/listenbrainz/badge/"
+         alt="Readthedocs status"></a>
     <a href="https://github.com/metabrainz/listenbrainz-server/commits/master">
     <img src="https://img.shields.io/github/last-commit/metabrainz/listenbrainz-server.svg?style=flat-square&logo=github&logoColor=white"
          alt="GitHub last commit"></a>
@@ -27,7 +30,7 @@ completely open-source and publish our data as open data.
 
 You can use ListenBrainz to track your music listening habits and
 share your taste with others using our visualizations. We also have an
-[API](https://listenbrainz.readthedocs.io/en/production/dev/api/)
+[API](https://listenbrainz.readthedocs.io/en/latest/users/api/index.html)
 if you want to do more with our data.
 
 ListenBrainz is operated by the [MetaBrainz Foundation](https://metabrainz.org)
@@ -55,7 +58,8 @@ If you are interested in helping out, consider
 
 If you are interested in contributing code or documentation,
 please have a look at the [issue tracker](https://tickets.metabrainz.org/browse/LB)
-or come visit us in the #metabrainz IRC channel on irc.libera.chat.
+or chat with us in [IRC/Matrix/Discord](https://musicbrainz.org/doc/Communication/ChatBrainz)
+on the #metabrainz channel.
 
 ## Development environment
 
@@ -63,10 +67,10 @@ These instructions help you get started with the development process.
 Installation in a production environment may be different.
 
 **Read the [development environment
-documentation](https://listenbrainz.readthedocs.io/en/production/dev/devel-env.html "Setting up a development environment - ListenBrainz documentation")**
+documentation](https://listenbrainz.readthedocs.io/en/latest/developers/devel-env.html  "Setting up a development environment - ListenBrainz documentation")**
 
 In order to work with Spark, you'll have to setup the Spark development environment.
-Read the [documentation](https://listenbrainz.readthedocs.io/en/production/dev/spark-devel-env.html).
+Read the [documentation](https://listenbrainz.readthedocs.io/en/latest/developers/spark-devel-env.html).
 
 ## Documentation
 

@@ -24,9 +24,9 @@ def delete_listens():
     #
     # 1) Delete Mismatch
     #
-    # The listen_delete_metadata table holds the rows to be deleted from listen. We fetch the rows from it and delete
-    # corresponding listens from listen table. After that, we update counts and timestamps in listen_user_metadata table
-    # as necessary. Between the time rows are deleted from listen table and the time we get to clear up the
+    # The listen_delete_metadata table holds the rows to be deleted FROM listen. We fetch the rows from it and delete
+    # corresponding listens FROM listen table. After that, we update counts and timestamps in listen_user_metadata table
+    # as necessary. Between the time rows are deleted FROM listen table and the time we get to clear up the
     # listen_delete_metadata table, new rows may have been inserted in the latter. So, we would have deleted rows from
     # listen_delete_metadata table without deleting the actual listens.
     #
@@ -105,20 +105,25 @@ def delete_listens():
              WHERE ldm.id <= :max_id
                AND l.user_id = ldm.user_id
                AND l.listened_at = ldm.listened_at
-               AND l.data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = ldm.recording_msid::text
-         RETURNING l.user_id, l.created
+               AND l.recording_msid = ldm.recording_msid
+               AND ldm.status = 'pending'
+         RETURNING ldm.id, l.user_id, l.created
         ), update_counts AS (
-            SELECT user_id
-                 , count(*) AS deleted_count
-              FROM deleted_listens dl
-              JOIN listen_user_metadata lm
-             USING (user_id)
-          GROUP BY user_id
-        ) 
             UPDATE listen_user_metadata lm
                SET count = count - deleted_count
-              FROM update_counts uc
+              FROM (
+                        SELECT user_id
+                             , count(*) AS deleted_count
+                          FROM deleted_listens dl
+                      GROUP BY user_id
+                   ) uc
              WHERE lm.user_id = uc.user_id
+        )
+            UPDATE listen_delete_metadata ldm
+               SET status = 'complete'
+                 , listen_created = dl.created
+              FROM deleted_listens dl
+             WHERE ldm.id = dl.id
     """
 
     # check for which users the listen of minimum listened_at was deleted, for those users
@@ -188,7 +193,12 @@ def delete_listens():
               FROM calculate_new_ts mt
              WHERE lm.user_id = mt.user_id
     """
-    delete_user_metadata = "DELETE FROM listen_delete_metadata WHERE id <= :max_id"
+    mark_invalid_rows_query = """
+        UPDATE listen_delete_metadata
+           SET status = 'invalid'
+         WHERE id <= :max_id
+           AND status = 'pending'
+    """
 
     with timescale.engine.begin() as connection:
         result = connection.execute(text(select_max_id))
@@ -210,8 +220,8 @@ def delete_listens():
         logger.info("Update maximum listen timestamp affected by deleted listens")
         connection.execute(text(update_listen_max_ts), {"max_id": max_id})
 
-        logger.info("Clean up listen delete metadata table")
-        connection.execute(text(delete_user_metadata), {"max_id": max_id})
+        logger.info("Cleanup listen delete metadata table")
+        connection.execute(text(mark_invalid_rows_query), {"max_id": max_id})
 
         logger.info("Completed deleting listens and updating affected metadata")
 

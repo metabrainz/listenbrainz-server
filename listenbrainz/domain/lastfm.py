@@ -1,41 +1,49 @@
+import logging
 import uuid
 
 import requests
 from flask import current_app
 from psycopg2.extras import execute_values
+from psycopg2.sql import SQL, Identifier
 from requests.adapters import HTTPAdapter, Retry
 from sqlalchemy import text
 
-from listenbrainz import db
 from brainzutils import musicbrainz_db
 
+from data.model.external_service import ExternalServiceType
+from listenbrainz.db import external_service_oauth
+from listenbrainz.domain.importer_service import ImporterService
+from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.errors import APINotFound
 
+logger = logging.getLogger(__name__)
 
-def bulk_insert_loved_tracks(user_id: int, feedback: list[tuple[int, str]]):
+
+def bulk_insert_loved_tracks(user_id: int, feedback: list[tuple[int, str]], column: str):
     """ Insert loved tracks imported from LFM into feedback table """
     # delete existing feedback for given mbids and then import new in same transaction
-    delete_query = """
-               WITH entries(user_id, recording_mbid) AS (VALUES %s)
+    delete_query = SQL("""
+               WITH entries(user_id, {column}) AS (VALUES %s)
         DELETE FROM recording_feedback rf
               USING entries e
               WHERE e.user_id = rf.user_id
-                AND e.recording_mbid::uuid = rf.recording_mbid
-    """
-    insert_query = """
-        INSERT INTO recording_feedback (user_id, created, recording_mbid, score)
+                AND e.{column}::uuid = rf.{column}
+    """).format(column=Identifier(column))
+    insert_query = SQL("""
+        INSERT INTO recording_feedback (user_id, created, {column}, score)
              VALUES %s
-    """
-    connection = db.engine.raw_connection()
-    with connection.cursor() as cursor:
+    """).format(column=Identifier(column))
+    with db_conn.connection.cursor() as cursor:
         execute_values(cursor, delete_query, [(mbid,) for ts, mbid in feedback], template=f"({user_id}, %s)")
         execute_values(cursor, insert_query, feedback, template=f"({user_id}, to_timestamp(%s), %s, 1)")
-    connection.commit()
+        db_conn.connection.commit()
 
 
 def load_recordings_from_tracks(track_mbids: list) -> dict[str, str]:
     """ Fetch recording mbids corresponding to track mbids. Last.FM uses tracks mbids in loved tracks endpoint
      but we use recording mbids in feedback table so need convert between the two. """
+    if not track_mbids:
+        return {}
     query = """
         SELECT track.gid::text AS track_mbid
              , recording.gid::text AS recording_mbid
@@ -52,7 +60,7 @@ def load_recordings_from_tracks(track_mbids: list) -> dict[str, str]:
 def fetch_lfm_feedback(lfm_user: str):
     """ Retrieve the loved tracks of a user from Last.FM api """
     session = requests.Session()
-    session.mount("https://", HTTPAdapter(max_retries=Retry(total=3, backoff_factor=1, method_whitelist=["GET"])))
+    session.mount("https://", HTTPAdapter(max_retries=Retry(total=3, backoff_factor=1, allowed_methods=["GET"])))
 
     params = {
         "method": "user.getlovedtracks",
@@ -70,10 +78,7 @@ def fetch_lfm_feedback(lfm_user: str):
     total_pages = int(data["totalPages"])
     total_count = int(data["total"])
 
-    missing_mbid_count, invalid_mbid_count = 0, 0
-
-    track_data = []
-    track_mbids = []
+    items = []
 
     for page in range(1, total_pages + 1):
         params["page"] = page
@@ -84,27 +89,44 @@ def fetch_lfm_feedback(lfm_user: str):
 
         tracks = response.json()["lovedtracks"]["track"]
         for track in tracks:
-            if not track["mbid"]:
-                missing_mbid_count += 1
-                continue
+            item: dict = {
+                "timestamp": int(track["date"]["uts"]),
+                "track_name": track["name"],
+                "artist_name": track["artist"]["name"]
+            }
 
             try:
-                track_mbids.append(uuid.UUID(track["mbid"]))
-                track_data.append((int(track["date"]["uts"]), track["mbid"]))
-            except ValueError:
-                invalid_mbid_count += 1
-                continue
+                uuid.UUID(track["mbid"])
+                item["mbid"] = track["mbid"]
+            except (ValueError, TypeError):
+                item["mbid"] = None
 
-    counts = {
-        "total": total_count,
-        "missing_mbid": missing_mbid_count,
-        "invalid_mbid": invalid_mbid_count
-    }
+            items.append(item)
 
-    return track_mbids, track_data, counts
+    return items, total_count
 
 
-def import_feedback(user_id: int, lfm_user: str) -> dict:
+def bulk_get_msids(connection, items):
+    """ Fetch msids for all the specified items (recording, artist_credit) in batches. """
+    query = """
+        SELECT DISTINCT ON (key)
+               lower(s.recording)  || '-' || lower(s.artist_credit) AS key
+             , s.gid::text AS recording_msid
+          FROM messybrainz.submissions s
+         WHERE EXISTS(
+                    SELECT 1
+                      FROM (VALUES %s) AS t(track_name, artist_name)
+                     WHERE lower(s.recording) = lower(t.track_name)
+                       AND lower(s.artist_credit) = lower(t.artist_name)
+               )
+      ORDER BY key, s.submitted, recording_msid 
+    """
+    curs = connection.connection.cursor()
+    result = execute_values(curs, query, [(x["track_name"], x["artist_name"]) for x in items], fetch=True)
+    return {r[0]: r[1] for r in result}
+
+
+def import_feedback(user_id: int, lfm_user: str):
     """ Main entrypoint into importing a user's loved tracks from Last.FM into LB feedback table.
 
     This method first retrieves the entire list of loved tracks for a user from Last.FM, discards
@@ -118,22 +140,49 @@ def import_feedback(user_id: int, lfm_user: str) -> dict:
 
     Returns a dict having various counts associated with the import.
     """
-    track_mbids, track_data, counts = fetch_lfm_feedback(lfm_user)
-    recordings = load_recordings_from_tracks(track_mbids)
+    items, total_count = fetch_lfm_feedback(lfm_user)
 
-    recording_feedback = []
-    mbid_not_found_count = 0
+    all_mbids = [x["mbid"] for x in items if x["mbid"]]
+    recordings_from_tracks = load_recordings_from_tracks(all_mbids)
 
-    for track in track_data:
-        recording_mbid = recordings.get(track[1])
-        if not recording_mbid:
-            mbid_not_found_count += 1
-            continue
-        recording_feedback.append((track[0], recording_mbid))
+    items_with_mbids, items_without_mbids = [], []
+    for item in items:
+        if item["mbid"]:
+            if item["mbid"] in recordings_from_tracks:
+                item["mbid"] = recordings_from_tracks[item["mbid"]]
+            items_with_mbids.append(item)
+        else:
+            items_without_mbids.append(item)
 
-    counts["mbid_not_found"] = mbid_not_found_count
+    mbid_feedback = [(x["timestamp"], x["mbid"]) for x in items_with_mbids]
 
-    bulk_insert_loved_tracks(user_id, recording_feedback)
-    counts["inserted"] = len(recording_feedback)
+    msids_map = bulk_get_msids(ts_conn, items_without_mbids)
+    for item in items_without_mbids:
+        key = f"{item['track_name'].lower()}-{item['artist_name'].lower()}"
+        item["msid"] = msids_map.get(key)
+    msid_feedback = [(x["timestamp"], x["msid"]) for x in items_without_mbids if x["msid"]]
 
-    return counts
+    bulk_insert_loved_tracks(user_id, mbid_feedback, "recording_mbid")
+    bulk_insert_loved_tracks(user_id, msid_feedback, "recording_msid")
+
+    return {
+        "total": total_count,
+        "imported": len(mbid_feedback) + len(msid_feedback),
+    }
+
+
+class BaseLastfmService(ImporterService):
+
+    def add_new_user(self, user_id: int, token: dict) -> bool:
+        external_service_oauth.save_token(
+            db_conn, user_id=user_id, service=self.service, access_token=None, refresh_token=None,
+            token_expires_ts=None, record_listens=True, scopes=[], external_user_id=token["external_user_id"],
+            latest_listened_at=token["latest_listened_at"]
+        )
+        return True
+
+
+class LastfmService(BaseLastfmService):
+
+    def __init__(self):
+        super().__init__(ExternalServiceType.LASTFM)

@@ -1,22 +1,13 @@
+import time
 from typing import Optional
 
+import psycopg2
+import psycopg2.extras
 import sqlalchemy
 from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
-import time
-import psycopg2
-import psycopg2.extras
-
-# The schema version of the core database. This includes data in the "user" database
-# (tables created from ./admin/sql/create-tables.sql) and includes user data,
-# statistics, feedback, and results of user interaction on the site.
-# This value must be incremented after schema changes on tables that are included in the
-# public dump
-SCHEMA_VERSION_CORE = 8
 
 engine: Optional[sqlalchemy.engine.Engine] = None
-
-DUMP_DEFAULT_THREAD_COUNT = 4
 
 # Load the UUID extension
 psycopg2.extras.register_uuid()
@@ -63,3 +54,29 @@ def run_sql_script_without_transaction(sql_file_path):
             connection.close()
         return True
 
+
+def run_sql_query_without_transaction(sql_query):
+    with engine.connect() as connection:
+        connection.connection.set_isolation_level(0)
+        try:
+            for line in sql_query:
+                if line and not line.startswith("--"):
+                    connection.execute(text(line))
+                    print("EXECUTE: %s" % line)
+        except sqlalchemy.exc.ProgrammingError as e:
+            print("Error: {}".format(e))
+            return False
+        finally:
+            connection.connection.set_isolation_level(1)
+            connection.close()
+        return True
+
+
+def create_test_database_connect_strings():
+    db_name = "listenbrainz_test"
+    db_user = "listenbrainz_test"
+    return {"DB_CONNECT": f"postgresql://{db_user}:listenbrainz@lb_db:5432/{db_name}",
+            "DB_CONNECT_ADMIN": "postgresql://postgres:postgres@lb_db/postgres",
+            "DB_CONNECT_ADMIN_LB": f"postgresql://postgres:postgres@lb_db/{db_name}",
+            "DB_NAME": db_name,
+            "DB_USER": db_user}

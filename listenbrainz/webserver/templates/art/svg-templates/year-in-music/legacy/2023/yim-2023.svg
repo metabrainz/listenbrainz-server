@@ -1,0 +1,143 @@
+<svg
+    width="924"
+    height="924"
+    viewBox="0 0 924 924"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;900');
+        text {
+          fill: #4C6C52;
+          font-family: Inter, sans-serif;
+          font-weight: 900;
+        }
+        .branding {
+          font-size: 20px;
+          letter-spacing: 0em;
+        }
+        .heading, .entity-count {
+          font-size: 70px;
+        }
+        .listen-count, .album-name, .artist-name {
+          font-size: 20px;
+        }
+        .album-name, .artist-name {
+          font-family: Inter, sans-serif;
+          font-weight: 900;
+          color: #F0EEE2;
+        }
+        .album-name {
+          margin: 8px;
+        }
+        .artist-name {
+          font-weight: 300;
+          margin: 8px;
+          margin-top: 0;
+        }
+        .entity {
+          font-weight: 300;
+          font-size: 70px;
+        }
+        .genre-count {
+          font-size: 79px;
+        }
+        .dark {
+          fill: #253127;
+        }
+        .overlay {
+          isolation: isolate;
+        }
+        .overlay .genre-count {
+          mix-blend-mode: overlay;
+        }
+        .value {
+          font-weight: 300;
+        }
+    </style>
+    <defs>
+      <mask id="cover-art-mask">
+        <rect x="346" y="373" width="396" height="396" fill="white"/>
+      </mask>
+    </defs>
+    <g>
+        <g>
+            <rect width="924" height="924" fill="#F0EEE2"/>
+            <text class="branding" x="750" y="897">LISTENBRAINZ</text>
+            <text class="branding" x="26" y="43">{{ user_name }}</text>
+            <text class="branding" x="26" y="897" font-style="italic">#YEARINMUSIC</text>
+            <text class="branding" x="844" y="43">2023</text>
+            <text class="heading" font-style="italic">
+                <tspan x="26" y="130">YEAR IN</tspan>
+                <tspan x="26" y="210">MUSIC</tspan>
+            </text>
+            <line x1="26" y1="244" x2="244" y2="244" stroke="#4C6C52" stroke-width="8"/>
+        </g>
+        {%- if album_2 -%}
+            <g>
+                {% if album_2['cover_art'] %}
+                <image x="171" y="291" width="207" height="207" xlink:href="{{ album_2['cover_art'] }}" preserveAspectRatio="xMidYMid slice"/>
+                {% else %}
+                <rect x="171" y="291" width="207" height="207" fill="#FFC93D"/>
+                <foreignObject x="171" y="498" width="207" height="207" style="transform: rotate(-90deg); transform-origin: 171px 498px;">
+                    <div xmlns="http://www.w3.org/1999/xhtml">
+                        <p class="album-name">{{ album_2['title']|upper|e }}</p>
+                        <p class="artist-name">{{ album_2['artist']|upper|e }}</p>
+                    </div>
+                </foreignObject>
+                {% endif %}
+                <text class="listen-count" style="transform: rotate(-90deg); transform-origin: 158px 498px;" x="158" y="498">
+                    <tspan>#2:</tspan>
+                    <tspan class="value">{{ "{:,}".format(album_2['listen_count']) }} Listens</tspan>
+                </text>
+            </g>
+        {%- endif -%}
+        <text text-anchor="end" x="874" y="214">
+            <tspan class="entity-count">{{ "{:,}".format(artists_count) }}</tspan>
+            <tspan class="entity" dx="16">ARTISTS</tspan>
+        </text>
+        <text text-anchor="end" x="874" y="284">
+            <tspan class="entity-count">{{ "{:,}".format(albums_count) }}</tspan>
+            <tspan class="entity" dx="16">ALBUMS</tspan>
+        </text>
+        <text text-anchor="end" x="874" y="354">
+            <tspan class="entity-count">{{ "{:,}".format(songs_count) }}</tspan>
+            <tspan class="entity" dx="16">SONGS</tspan>
+        </text>
+        {%- set y_start = 850 -%}
+        {%- set y_step = 79 -%}
+        {%- for genre in genres -%}
+            <text class="genre-count {% if loop.index0 > 0 %}dark{% endif %}" x="70" y="{{ y_start - y_step * loop.index0 }}">
+                <tspan class="value">{{ genre['genre_count_percent'] }}%</tspan>
+                <tspan dx="6">{{ genre['genre']|upper }}</tspan>
+            </text>
+        {%- endfor -%}
+        {%- if album_1 -%}
+            <g>
+                {% if album_1['cover_art'] %}
+                <g class="overlay" mask="url(#cover-art-mask)">
+                  <image x="346" y="373" width="396" height="396" xlink:href="{{ album_1['cover_art'] }}" preserveAspectRatio="xMidYMid slice"/>
+                  {%- for genre in genres -%}
+                    <text class="genre-count dark" x="70" y="{{ y_start - y_step * loop.index0 }}">
+                        <tspan class="value">{{ genre['genre_count_percent'] }}%</tspan>
+                        <tspan dx="6">{{ genre['genre']|upper }}</tspan>
+                    </text>
+                {%- endfor -%}
+                </g>
+                {% else %}
+                <rect x="346" y="373" width="396" height="396" fill="#EB743B"/>
+                <foreignObject x="742" y="373" width="396" height="396" style="transform: rotate(90deg); transform-origin: 742px 373px;">
+                    <div xmlns="http://www.w3.org/1999/xhtml">
+                        <p class="album-name">{{ album_1['title']|upper|e }}</p>
+                        <p class="artist-name">{{ album_1['artist']|upper|e }}</p>
+                    </div>
+                </foreignObject>
+                {% endif %}
+                <text class="listen-count" style="transform: rotate(90deg); transform-origin: 755px 373px;" x="755" y="373">
+                    <tspan>#1:</tspan>
+                    <tspan class="value">{{ "{:,}".format(album_1['listen_count']) }} Listens</tspan>
+                </text>
+            </g>
+        {%- endif -%}
+    </g>
+</svg>

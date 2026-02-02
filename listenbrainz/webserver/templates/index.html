@@ -1,0 +1,93 @@
+{% from 'macros.html' import print_message %}
+{%
+  set opengraph_title =  og_meta_tags['title'] if og_meta_tags and og_meta_tags['title']
+  else "ListenBrainz"
+%}
+{%
+  set opengraph_description =  og_meta_tags['description'] if og_meta_tags and og_meta_tags['description']
+  else "Track, explore, visualise and share the music you listen to. Follow your favourites and discover great new music."
+%}
+{%
+  set opengraph_type =  og_meta_tags['type'] if og_meta_tags and og_meta_tags['type']
+  else "website"
+%}
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  {%- block head -%}
+  <meta charset="utf-8" />
+  <title>{% block title %}ListenBrainz{% endblock %}</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, target-densityDpi=device-dpi, minimal-ui' />
+
+  <meta
+    name="description"
+    content="{{ opengraph_description }}"
+  />
+  <!-- OpenGraph meta tags -->
+  <meta property="og:site_name" content="ListenBrainz" />
+  <meta property="og:title" content="{{ opengraph_title }}" />
+  <meta property="og:type" content="{{ opengraph_type }}" />
+  <meta property="og:description" content="{{ opengraph_description }}" />
+  {%- if 'image' not in (og_meta_tags or {}) -%}
+    <!--  OpenGraph image meta tags -->
+    <meta
+    property="og:image"
+    content="{{ url_for('static', filename='img/share-header.png', _external=True) }}"
+    />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="640" />
+  {%- endif -%}
+  <!-- Other OpenGraph meta tags (title, type and description are already handled above) -->
+  {%- for tagname, tagvalue in (og_meta_tags or {}).items() if tagname not in ['description', 'title', 'type']-%}
+    <meta property="og:{{ tagname }}" content="{{ tagvalue }}" />
+  {%- endfor -%}
+
+  <!--  Twitter meta tags -->
+  <meta name="twitter:title" content="{{ opengraph_title }}" />
+  <meta property="twitter:description" content="{{ opengraph_description }}"/>
+  <!--  Twitter image meta tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  {%- if 'image' in (og_meta_tags or {}) -%}
+    <meta
+      name="twitter:image"
+      content="{{ og_meta_tags['image'] }}"
+    />
+  {%- else -%}
+    <meta
+      name="twitter:image"
+      content="{{ url_for('static', filename='img/share-header.png', _external=True) }}"
+    />
+  {%- endif -%}
+
+  <link rel="icon" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16.png') }}" type="image/png" />
+  <link rel="icon" sizes="256x256" href="{{ url_for('static', filename='img/favicon-256.png') }}" type="image/png" />
+  <link rel="icon" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32.png') }}" type="image/png" />
+
+  {# The css file has a .less extension in the manifest file entry (due to its original name in Webpack entry) #}
+  <link href="{{ get_static_path('vendors.scss') }}" rel="stylesheet" media="screen" />
+  <link href="{{ get_static_path('main.scss') }}" rel="stylesheet" media="screen" />
+  {%- endblock -%}
+</head>
+
+<body>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      {{ print_message(message, category) }}
+    {% endfor %}
+  {% endwith %}
+
+<div id="react-container">
+  {%- block content -%}
+    <!-- Page content -->
+  {%- endblock -%}
+</div>
+
+<script src="{{ url_for('static', filename='js/lib/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lib/dragscroll.js') }}"></script>
+<script id="global-react-props" type="application/json">{{ global_props|safe }}</script>
+<script id="page-react-props" type="application/json">{{ props|safe }}</script>
+<script src="{{ get_static_path('indexPage.js') }}" type="text/javascript"></script>
+</body>
+</html>

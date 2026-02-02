@@ -1,0 +1,132 @@
+[
+  {
+    "user_id": 1,
+    "count": 3,
+    "data": [
+      {
+        "artist_mbids": [
+          "76693ade-bd4a-4338-b2b7-3a494b1fb5fe"
+        ],
+        "artist_name": "Mo\u011follar",
+        "caa_id": 35370760191,
+        "caa_release_mbid": "b1184d5a-147e-4e5f-bb74-bd6adae76c8c",
+        "listen_count": 16,
+        "release_group_mbid": "6e1062eb-878c-4b01-aefd-627b90922296",
+        "release_group_name": "Anatolian Sun",
+        "artists": [
+          {
+            "artist_credit_name": "Mo\u011follar",
+            "join_phrase": "",
+            "artist_mbid": "76693ade-bd4a-4338-b2b7-3a494b1fb5fe"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "3fc48c3a-0992-4cf6-ac8f-018162c97368"
+        ],
+        "artist_name": "The Ugly Kings",
+        "caa_id": 30133578264,
+        "caa_release_mbid": "27452541-85c9-4e03-b1cb-0ba40259e6fc",
+        "listen_count": 10,
+        "release_group_mbid": "726c7a35-3a66-401e-9eb7-12041d9babe5",
+        "release_group_name": "Strange, Strange Times",
+        "artists": [
+          {
+            "artist_credit_name": "The Ugly Kings",
+            "join_phrase": "",
+            "artist_mbid": "3fc48c3a-0992-4cf6-ac8f-018162c97368"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "3fc48c3a-0992-4cf6-ac8f-018162c97368"
+        ],
+        "artist_name": "The Ugly Kings",
+        "caa_id": 19659757183,
+        "caa_release_mbid": "08c2def6-cb01-4cf8-b1b0-72e56701e2a0",
+        "listen_count": 10,
+        "release_group_mbid": "e92bd291-abf4-4a75-91c2-3e27b2052a2b",
+        "release_group_name": "Darkness Is My Home",
+        "artists": [
+          {
+            "artist_credit_name": "The Ugly Kings",
+            "join_phrase": "",
+            "artist_mbid": "3fc48c3a-0992-4cf6-ac8f-018162c97368"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "user_id": 2,
+    "count": 4,
+    "data": [
+      {
+        "artist_mbids": [],
+        "artist_name": "WEEDIAN",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 7,
+        "release_group_mbid": null,
+        "release_group_name": "Trip to Wisconsin",
+        "artists": []
+      },
+      {
+        "artist_mbids": [
+          "d1ccc60e-45d5-4176-a328-47cd5984e55b"
+        ],
+        "artist_name": "Tidiane Thiam",
+        "caa_id": 26101187098,
+        "caa_release_mbid": "30d789a0-fbfc-4e1d-9afc-a40aad08ca75",
+        "listen_count": 7,
+        "release_group_mbid": "8f53c170-efcd-444a-8fd7-61be514ab7e2",
+        "release_group_name": "Siftorde",
+        "artists": [
+          {
+            "artist_credit_name": "Tidiane Thiam",
+            "join_phrase": "",
+            "artist_mbid": "d1ccc60e-45d5-4176-a328-47cd5984e55b"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "1db4be30-3d1f-4c78-ac7c-4ad2ea724034"
+        ],
+        "artist_name": "Smoke Stack Rhino",
+        "caa_id": 35208403408,
+        "caa_release_mbid": "6d94958d-59f7-425c-8b17-c206b719058c",
+        "listen_count": 7,
+        "release_group_mbid": "f507e98a-5947-426c-a2f0-2b43de10b910",
+        "release_group_name": "Love and Other Monsters",
+        "artists": [
+          {
+            "artist_credit_name": "Smoke Stack Rhino",
+            "join_phrase": "",
+            "artist_mbid": "1db4be30-3d1f-4c78-ac7c-4ad2ea724034"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "b5180f44-f761-4fff-9696-e7917e7b2961"
+        ],
+        "artist_name": "Hollow Ship",
+        "caa_id": 26461855962,
+        "caa_release_mbid": "836c3adf-b20a-4990-9558-1a567ed56059",
+        "listen_count": 6,
+        "release_group_mbid": "5efa0b87-f2dc-4726-92d5-9c2a23dbfa2c",
+        "release_group_name": "Future Remains",
+        "artists": [
+          {
+            "artist_credit_name": "Hollow Ship",
+            "join_phrase": "",
+            "artist_mbid": "b5180f44-f761-4fff-9696-e7917e7b2961"
+          }
+        ]
+      }
+    ]
+  }
+]

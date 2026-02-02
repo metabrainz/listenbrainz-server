@@ -1,0 +1,46 @@
+<svg
+    width="924"
+    height="924"
+    viewBox="0 0 924 924"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900');
+        text {
+          fill: #FF0E25;
+          font-family: 'Inter', sans-serif;
+          font-weight: 900;
+        }
+        .branding {
+          font-size: 20px;
+          letter-spacing: 0em;
+        }
+        .artist-name {
+          font-size: 85px;
+        }
+    </style>
+    <g>
+        <g>
+            <g style="mix-blend-mode:multiply">
+                <rect width="924" height="924" fill="#FFC93D"/>
+                <image id="bg" width="924" height="924" xlink:href="{{ bg_image_url }}" style="mix-blend-mode:overlay"/>
+            </g>
+            <text class="branding" x="750" y="897">LISTENBRAINZ</text>
+            <text class="branding" x="26" y="43">{{user_name}}</text>
+            <text class="branding" text-anchor="middle" x="50%" y="43">TOP TEN ARTISTS LAST YEAR</text>
+            <text class="branding" text-anchor="middle" x="50%" y="897">{{total_artists_count}} ARTISTS</text>
+            <text class="branding" font-style="italic" x="26" y="897">#YEARINMUSIC</text>
+            <text class="branding" x="844" y="43">2022</text>
+        </g>
+        <g>
+            {% set y_start = 155 %}
+            {% set gap = 75 %}
+            {% for artist in artists[:10] %}
+                <text class="artist-name" y="{{ y_start + loop.index0 * gap }}" x="-20">
+                    {{ artist.artist_name|upper|e }}
+                </text>
+            {% endfor %}
+        </g>
+    </g>
+</svg>

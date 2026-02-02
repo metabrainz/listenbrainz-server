@@ -22,10 +22,11 @@ SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_ts:listenbrainz_ts@lb_db/l
 TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@lb_db/postgres"
 TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@lb_db/listenbrainz_ts"
 
-# MessyBrainz
-MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@lb_db:5432/messybrainz"
-MESSYBRAINZ_ADMIN_URI = "postgresql://postgres:postgres@lb_db/postgres"
-MESSYBRAINZ_ADMIN_MSB_URI = "postgresql://postgres:postgres@lb_db/messybrainz"
+# Server address
+# SERVER_NAME = "localhost:8100"
+
+# MetaBrainz - used for retrieving donation info from metabrainz.org
+SQLALCHEMY_METABRAINZ_URI = ""
 
 # MusicBrainz & others
 IS_MUSICBRAINZ_UP = True  # if set to False, login page will be blocked
@@ -65,8 +66,14 @@ SPARK_RESULT_QUEUE = "spark_result"
 SPARK_REQUEST_EXCHANGE = "spark_request"
 SPARK_REQUEST_QUEUE = "spark_request"
 
+REJECTION_EXCHANGE = "rejection"
+REJECTION_QUEUE = "rejection"
+
 EXTERNAL_SERVICES_EXCHANGE = "external_services"
 EXTERNAL_SERVICES_SPOTIFY_CACHE_QUEUE = "external_services_spotify_cache"
+EXTERNAL_SERVICES_APPLE_CACHE_QUEUE = "external_services_apple_cache"
+EXTERNAL_SERVICES_IA_CACHE_QUEUE = "external_services_ia_cache"  
+
 
 # Typesense -- this is only needed if you plan to run the Labs API end point for MBID mapping
 TYPESENSE_HOST = "localhost"
@@ -80,8 +87,12 @@ COUCHDB_USER = "listenbrainz"
 COUCHDB_ADMIN_KEY = "listenbrainz"
 
 # MusicBrainz OAuth
-MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
-MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
+MUSICBRAINZ_BASE_URL = "https://musicbrainz.org"
+OAUTH_CLIENT_ID = "CLIENT_ID"
+OAUTH_CLIENT_SECRET = "CLIENT_SECRET"
+OAUTH_AUTHORIZE_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/authorize"
+OAUTH_TOKEN_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/token"
+OAUTH_INTROSPECTION_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/introspect"
 
 # Lastfm API
 LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/"
@@ -118,17 +129,19 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 #     'traces_sample_rate': 1.0,
 # }
 
+# CRON_SENTRY_DSN = ''
+
 
 # MISCELLANEOUS
 
 
-# MAX file size to be allowed for the lastfm-backup import, default is infinite
+# MAX file size to be allowed for file uploads, default is infinite
 # Size is in bytes
-MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
+MAX_CONTENT_LENGTH = 200 * 1024 * 1024 + 10  # 200MB plus some buffer
 
-# Specify the upload folder where all the lastfm-backup will be stored
+# Specify the upload folder where user uploaded files for import will be stored
 # The path must be absolute path
-UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
+UPLOAD_FOLDER = "/code/listenbrainz/uploads"
 
 # Set to "https://api.listenbrainz.org" if you want to work on frontend for user statistics
 # without going through the process of generating the stats in local environment. Otherwise,
@@ -136,8 +149,8 @@ UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
 API_URL = 'https://api.listenbrainz.org'
 LASTFM_PROXY_URL = 'http://localhost:8101/'
 SERVER_ROOT_URL = 'http://localhost:8100'
-MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
 LISTENBRAINZ_LABS_API_URL = 'https://labs.api.listenbrainz.org'
+WEBSOCKETS_SERVER_URL = 'http://localhost:8102'
 
 # Flask Debug redirect
 # Set to True if you want Flask-Debug to intercept redirects
@@ -154,12 +167,32 @@ WHITELISTED_AUTH_TOKENS = []
 # SPOTIFY
 SPOTIFY_CLIENT_ID = 'needs a non empty default value for tests, change this'
 SPOTIFY_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
-SPOTIFY_CALLBACK_URL = 'http://localhost:8100/profile/music-services/spotify/callback/'
+# Note: Spotify now requires the redirect url to use 127.0.0.1 instead of 'localhost', not using SERVER_ROOT_URL for that reason
+SPOTIFY_CALLBACK_URL = 'http://127.0.0.1:8100/settings/music-services/spotify/callback/'
+
+# SPOTIFY-CACHE
+SPOTIFY_CACHE_CLIENT_ID = 'needs a non empty default value for tests, change this'
+SPOTIFY_CACHE_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
+
+# SOUNDCLOUD
+SOUNDCLOUD_CLIENT_ID = 'needs a non empty default value for tests, change this'
+SOUNDCLOUD_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
+SOUNDCLOUD_REDIRECT_URI = f'{SERVER_ROOT_URL}/settings/music-services/soundcloud/callback/'
 
 # CRITIQUEBRAINZ
 CRITIQUEBRAINZ_CLIENT_ID = 'needs a non empty default value for tests, change this'
 CRITIQUEBRAINZ_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
-CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost:8100/profile/music-services/critiquebrainz/callback/'
+CRITIQUEBRAINZ_REDIRECT_URI = f'{SERVER_ROOT_URL}/settings/music-services/critiquebrainz/callback/'
+
+# APPLE MUSIC
+APPLE_MUSIC_TEAM_ID = 'needs a non empty default value for tests, change this'
+APPLE_MUSIC_KID = 'needs a non empty default value for tests, change this'
+# Please note this is a randomly generated private key for use in tests as a valid key is required
+APPLE_MUSIC_KEY = """-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEILRqPRAVLQp24+C02idpqlpW2AA2cmoYNxJKY8+ITAAAoAoGCCqGSM49
+AwEHoUQDQgAEXnwpW2Tt3ZKPXwwIvLXb04uW3zYlENse7s10aEWsYtd0njkSgUUf
+8Bcx2BRwOPdumSr+fKBsJcAYh/9MHhACMg==
+-----END EC PRIVATE KEY-----"""
 
 # YOUTUBE
 YOUTUBE_API_KEY = 'change me'
@@ -187,3 +220,21 @@ REJECT_LISTENS_WITHOUT_USER_EMAIL = False
 
 # If set to True, do not allow new users without email to register
 REJECT_NEW_USERS_WITHOUT_EMAIL = False
+
+# base directory for user data exports
+USER_DATA_EXPORT_BASE_DIR = "/code/listenbrainz/exports/"
+
+# Service monitoring -- only needed for MetaBrainz production
+SERVICE_MONITOR_TELEGRAM_BOT_TOKEN = ""
+SERVICE_MONITOR_TELEGRAM_CHAT_ID = ""
+
+# Funkwhale configuration
+FUNKWHALE_CALLBACK_URL = f'{SERVER_ROOT_URL}/settings/music-services/funkwhale/callback/'
+
+# Navidrome configuration
+# Set to a base64 encoded key for encryption/decryption of passwords. For example, a key can
+# be generated as follows:
+# from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())
+NAVIDROME_ENCRYPTION_KEY = ""
+
+BACKGROUND_TASKS_SLEEP_TIME = 1

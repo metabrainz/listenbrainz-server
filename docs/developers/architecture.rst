@@ -109,6 +109,8 @@ In production, webservers run uwsgi server to serve the flask application. In de
    * - listenbrainz spark cluster
      - spark cluster to generate statistics and recommendations for LB.
 
+.. _listen-flow:
+
 Listen Flow
 ===========
 
@@ -126,6 +128,8 @@ Playing now listens are ephemeral are only `stored <https://github.com/metabrain
 in Redis, with an expiry time of the duration of the track (if duration is unavailable then a configurable fallback time
 is used). The Playing now queue is consumed by Websockets service. The frontend connects with the Websockets service to
 display listens on the website without manually reloading the page.
+You can get a recording_msid for the purpose of submitting love/hate feedback by submitting a ``playing_now`` listen
+with the parameter :code:`return_msid` set to :json:`true`. See the :ref:`submit-listens` example for more details.
 
 On the other hand, "Permanent" Listens need to be persisted in the database. Timescale Writer service consumes from the
 Incoming queue. It begins with `querying <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/listenbrainz/timescale_writer/timescale_writer.py#L72>`_

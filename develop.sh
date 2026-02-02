@@ -18,22 +18,27 @@ fi
 
 if [[ -f .env ]]; then
     . .env
-    if [ -z $STATIC_BUILD_USER ]; then
-        echo STATIC_BUILD_USER=$(id -u) >> .env
+    if [ -z $LB_DOCKER_USER ]; then
+        echo LB_DOCKER_USER=$(id -u) >> .env
+    fi
+    if [ -z $LB_DOCKER_GROUP ]; then
+        echo LB_DOCKER_GROUP=$(id -g) >> .env
     fi
 else
-    echo STATIC_BUILD_USER=$(id -u) >> .env
+    echo LB_DOCKER_USER=$(id -u) >> .env
+    echo LB_DOCKER_GROUP=$(id -g) >> .env
 fi
 
 
 function invoke_docker_compose {
     exec $DOCKER_COMPOSE_CMD -f docker/docker-compose.yml \
                 -p listenbrainz \
+                --env-file .env \
                 "$@"
 }
 
 function invoke_manage {
-    invoke_docker_compose run --rm web \
+    invoke_docker_compose run  --rm web \
             python3 manage.py \
             "$@"
 }

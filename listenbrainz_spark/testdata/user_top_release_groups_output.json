@@ -1,0 +1,668 @@
+[
+    {
+        "type": "user_entity",
+        "stats_range": "all_time",
+        "from_ts": 1009843200,
+        "to_ts": 1628511763,
+        "entity": "release_groups",
+        "data": [
+            {
+                "user_id": 1,
+                "data": [
+                    {
+                        "listen_count": 6,
+                        "release_group_name": "Third",
+                        "release_group_mbid": "163339ab-813b-3d29-bba8-e1d5acf63cab",
+                        "artist_name": "Portishead",
+                        "artist_mbids": [
+                            "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
+                        ],
+                        "caa_id": 8201679314,
+                        "caa_release_mbid": "f5bfccaf-1816-427a-b03d-b41c8ac155c5",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Portishead",
+                                "join_phrase": "",
+                                "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 5,
+                        "release_group_name": "Protection",
+                        "release_group_mbid": "ded46e46-788d-3c1f-b21b-9f5e9c37b1bc",
+                        "artist_name": "Massive Attack",
+                        "artist_mbids": [
+                            "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
+                        ],
+                        "caa_id": 19647449808,
+                        "caa_release_mbid": "50d1ca93-f6ef-4692-b18d-3e3cc29aba1e",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Massive Attack",
+                                "join_phrase": "",
+                                "artist_mbid": "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 4,
+                        "release_group_name": "Yamanote",
+                        "release_group_mbid": "284b45e3-9076-4585-83c5-6b8c99b58732",
+                        "artist_name": "Aether",
+                        "artist_mbids": [
+                            "c44ff36b-651f-4c20-98ee-519cf4ed07e7"
+                        ],
+                        "caa_id": 32489333474,
+                        "caa_release_mbid": "b812901e-c598-4635-8b98-72eecf161060",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Aether",
+                                "join_phrase": "",
+                                "artist_mbid": "c44ff36b-651f-4c20-98ee-519cf4ed07e7"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 4,
+                        "release_group_name": "Projections",
+                        "release_group_mbid": "b609c28e-5b7c-4b19-8d43-8d3c7323f7d0",
+                        "artist_name": "Romare",
+                        "artist_mbids": [
+                            "b014d579-b549-4b21-b90d-5264e0433988"
+                        ],
+                        "caa_id": 9018227739,
+                        "caa_release_mbid": "95b93c79-f4b0-4f3e-b726-7d3dd51c1054",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Romare",
+                                "join_phrase": "",
+                                "artist_mbid": "b014d579-b549-4b21-b90d-5264e0433988"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 4,
+                        "release_group_name": "Mickey Mouse Operation",
+                        "release_group_mbid": "f53bf269-4601-35a4-8aa7-ed54a1d58eed",
+                        "artist_name": "Little People",
+                        "artist_mbids": [
+                            "78c94cba-761f-4212-8508-a24bda2e57dc"
+                        ],
+                        "caa_id": 27037140096,
+                        "caa_release_mbid": "85655611-5af0-436c-b00f-6609afa502ff",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Little People",
+                                "join_phrase": "",
+                                "artist_mbid": "78c94cba-761f-4212-8508-a24bda2e57dc"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 3,
+                        "release_group_name": "Brazilian Girls",
+                        "release_group_mbid": "df9e8d11-9d68-3e49-b348-8454cfbaa692",
+                        "artist_name": "Brazilian Girls",
+                        "artist_mbids": [
+                            "8b2350de-b682-4fe7-ad8f-4508d7b6c697"
+                        ],
+                        "caa_id": 11778363663,
+                        "caa_release_mbid": "75735819-6bca-42bf-a807-5d456f277dbd",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Brazilian Girls",
+                                "join_phrase": "",
+                                "artist_mbid": "8b2350de-b682-4fe7-ad8f-4508d7b6c697"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 2,
+                        "release_group_name": "Support Network",
+                        "release_group_mbid": null,
+                        "artist_name": "Kalabi",
+                        "artist_mbids": [],
+                        "caa_id": null,
+                        "caa_release_mbid": null,
+                        "artists": null
+                    },
+                    {
+                        "listen_count": 2,
+                        "release_group_name": "Ecozoic",
+                        "release_group_mbid": "51d9f264-ea9c-46a2-8545-e22cd4b085ed",
+                        "artist_name": "The Polish Ambassador",
+                        "artist_mbids": [
+                            "e9787dd2-5857-4b51-8e59-a190a54820fc"
+                        ],
+                        "caa_id": 34328682227,
+                        "caa_release_mbid": "7a2598fb-f6f0-4e4c-947b-317858ee5acf",
+                        "artists": [
+                            {
+                                "artist_credit_name": "The Polish Ambassador",
+                                "join_phrase": "",
+                                "artist_mbid": "e9787dd2-5857-4b51-8e59-a190a54820fc"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 1,
+                        "release_group_name": "The Best of Everything but the Girl",
+                        "release_group_mbid": "f1ceb805-8bf6-3a18-9c07-f29f407abba0",
+                        "artist_name": "Everything but the Girl",
+                        "artist_mbids": [
+                            "959cf5bf-ee29-4af6-a85a-0b480181d988"
+                        ],
+                        "caa_id": 10340680649,
+                        "caa_release_mbid": "91231e74-2674-411e-968f-b188bb67b711",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Everything but the Girl",
+                                "join_phrase": "",
+                                "artist_mbid": "959cf5bf-ee29-4af6-a85a-0b480181d988"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 1,
+                        "release_group_name": "Technique",
+                        "release_group_mbid": "a0902fc4-e3d9-3b2b-bc94-cd4d0e59db29",
+                        "artist_name": "New Order",
+                        "artist_mbids": [
+                            "f1106b17-dcbb-45f6-b938-199ccfab50cc"
+                        ],
+                        "caa_id": 2546509254,
+                        "caa_release_mbid": "01681b1d-3068-3689-b879-efefde1f7b3b",
+                        "artists": [
+                            {
+                                "artist_credit_name": "New Order",
+                                "join_phrase": "",
+                                "artist_mbid": "f1106b17-dcbb-45f6-b938-199ccfab50cc"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 1,
+                        "release_group_name": "Silent Geometry",
+                        "release_group_mbid": "7300a439-8e91-402b-a3b8-09b4cd352fe9",
+                        "artist_name": "Abakus",
+                        "artist_mbids": [
+                            "a8b39181-6939-451e-9641-2db231b73706"
+                        ],
+                        "caa_id": 3984827641,
+                        "caa_release_mbid": "6122ca09-a4ca-4d13-96c5-2b1ea502e7f5",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Abakus",
+                                "join_phrase": "",
+                                "artist_mbid": "a8b39181-6939-451e-9641-2db231b73706"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 1,
+                        "release_group_name": "See You Later",
+                        "release_group_mbid": "4243c89d-d31b-301f-bfd4-76fefd75d03c",
+                        "artist_name": "Vangelis",
+                        "artist_mbids": [
+                            "57fca0e2-f9ad-4ae6-af9d-6a6f50cbcd5f"
+                        ],
+                        "caa_id": 15902858347,
+                        "caa_release_mbid": "71771d40-0236-4cde-b71d-b0eee0270d6c",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Vangelis",
+                                "join_phrase": "",
+                                "artist_mbid": "57fca0e2-f9ad-4ae6-af9d-6a6f50cbcd5f"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 1,
+                        "release_group_name": "Mosaic",
+                        "release_group_mbid": "99725626-809b-4a49-bf8b-9ee93546c557",
+                        "artist_name": "Sounds From the Ground",
+                        "artist_mbids": [
+                            "9806e551-9a63-4a9d-be1b-5297b2ac0e76"
+                        ],
+                        "caa_id": 14187025380,
+                        "caa_release_mbid": "2f7634f3-3bb5-4f2c-9821-d150e8415fb8",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Sounds From the Ground",
+                                "join_phrase": "",
+                                "artist_mbid": "9806e551-9a63-4a9d-be1b-5297b2ac0e76"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 1,
+                        "release_group_name": "Kiasmos",
+                        "release_group_mbid": "8f3d55a7-efea-419b-add8-2a5469c2e014",
+                        "artist_name": "Kiasmos",
+                        "artist_mbids": [
+                            "3252542b-98a7-48ba-9861-7a612b16c227"
+                        ],
+                        "caa_id": 22036362973,
+                        "caa_release_mbid": "73e4a3e9-bb1d-4243-9c1b-f285fc842248",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Kiasmos",
+                                "join_phrase": "",
+                                "artist_mbid": "3252542b-98a7-48ba-9861-7a612b16c227"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 1,
+                        "release_group_name": "Infinite Euphoria",
+                        "release_group_mbid": "030996fb-4388-34a5-8dfa-ddbdb71a2ac4",
+                        "artist_name": "Ferry Corsten",
+                        "artist_mbids": [
+                            "47347cb8-ac34-4916-84b6-d85d4e5e5384"
+                        ],
+                        "caa_id": 8448022908,
+                        "caa_release_mbid": "0efa1563-cbc7-4249-b6ec-fab766c38c81",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Ferry Corsten",
+                                "join_phrase": "",
+                                "artist_mbid": "47347cb8-ac34-4916-84b6-d85d4e5e5384"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 1,
+                        "release_group_name": "Give Life Back to Music",
+                        "release_group_mbid": "111e4cc8-e7b6-437a-af02-a42c757e4e17",
+                        "artist_name": "Daft Punk",
+                        "artist_mbids": [
+                            "056e4f3e-d505-4dad-8ec1-d04f521cbb56"
+                        ],
+                        "caa_id": 28936814610,
+                        "caa_release_mbid": "74fcd7f4-a2c8-4526-b350-558b157942bf",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Daft Punk",
+                                "join_phrase": "",
+                                "artist_mbid": "056e4f3e-d505-4dad-8ec1-d04f521cbb56"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 1,
+                        "release_group_name": "Francesco",
+                        "release_group_mbid": "6e58a533-6847-4ac1-8d0a-8d09abe5278d",
+                        "artist_name": "Vangelis",
+                        "artist_mbids": [
+                            "57fca0e2-f9ad-4ae6-af9d-6a6f50cbcd5f"
+                        ],
+                        "caa_id": null,
+                        "caa_release_mbid": null,
+                        "artists": [
+                            {
+                                "artist_credit_name": "Vangelis",
+                                "join_phrase": "",
+                                "artist_mbid": "57fca0e2-f9ad-4ae6-af9d-6a6f50cbcd5f"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 1,
+                        "release_group_name": "Echo Other",
+                        "release_group_mbid": "02034451-9359-37c5-ab04-b07ff52f298f",
+                        "artist_name": "All India Radio",
+                        "artist_mbids": [
+                            "53d2a4d1-556e-4701-a8ac-5fcb74a8e393"
+                        ],
+                        "caa_id": 11008525379,
+                        "caa_release_mbid": "48d4b42e-ab47-411c-8c8f-3b519832bd87",
+                        "artists": [
+                            {
+                                "artist_credit_name": "All India Radio",
+                                "join_phrase": "",
+                                "artist_mbid": "53d2a4d1-556e-4701-a8ac-5fcb74a8e393"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 1,
+                        "release_group_name": "Brazilian Girls",
+                        "release_group_mbid": null,
+                        "artist_name": "Brazilian Girls",
+                        "artist_mbids": [],
+                        "caa_id": null,
+                        "caa_release_mbid": null,
+                        "artists": null
+                    },
+                    {
+                        "listen_count": 1,
+                        "release_group_name": "Blumenkraft",
+                        "release_group_mbid": "fd7749a8-a579-3059-8dc4-97a99d25e062",
+                        "artist_name": "Ott",
+                        "artist_mbids": [
+                            "1a40f886-0877-4bab-9ab1-761147dadb89"
+                        ],
+                        "caa_id": 6477557415,
+                        "caa_release_mbid": "99e39642-cae5-4061-9800-751108bc650b",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Ott",
+                                "join_phrase": "",
+                                "artist_mbid": "1a40f886-0877-4bab-9ab1-761147dadb89"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 1,
+                        "release_group_name": "Anomic",
+                        "release_group_mbid": "7e8d5285-826c-4b8a-b33b-3a8f3230d6c5",
+                        "artist_name": "Jah Wobble & Marconi Union",
+                        "artist_mbids": [
+                            "904cc1c8-021e-45ac-bbe9-95c01a1f8099",
+                            "3f9b5837-ed1c-413e-bfef-ca4f892dcc59"
+                        ],
+                        "caa_id": 27448523314,
+                        "caa_release_mbid": "39967fee-e436-4f87-b36e-299aae4dc670",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Jah Wobble",
+                                "join_phrase": " & ",
+                                "artist_mbid": "904cc1c8-021e-45ac-bbe9-95c01a1f8099"
+                            },
+                            {
+                                "artist_credit_name": "Marconi Union",
+                                "join_phrase": "",
+                                "artist_mbid": "3f9b5837-ed1c-413e-bfef-ca4f892dcc59"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 1,
+                        "release_group_name": "/Forwards",
+                        "release_group_mbid": "e3decf7e-d480-3abc-9ff9-e00b86338eeb",
+                        "artist_name": "The Egg",
+                        "artist_mbids": [
+                            "6fe91ae9-8ddb-47b0-a2d7-252833ce5500"
+                        ],
+                        "caa_id": 11988727956,
+                        "caa_release_mbid": "00cc6a5a-1051-4b7e-8344-4ec33099eb98",
+                        "artists": [
+                            {
+                                "artist_credit_name": "The Egg",
+                                "join_phrase": "",
+                                "artist_mbid": "6fe91ae9-8ddb-47b0-a2d7-252833ce5500"
+                            }
+                        ]
+                    }
+                ],
+                "count": 22
+            },
+            {
+                "user_id": 2,
+                "data": [
+                    {
+                        "listen_count": 5,
+                        "release_group_name": "Teenage Dream",
+                        "release_group_mbid": null,
+                        "artist_name": "Katy Perry",
+                        "artist_mbids": [
+                            "122d63fc-8671-43e4-9752-34e846d62a9c"
+                        ],
+                        "caa_id": null,
+                        "caa_release_mbid": null,
+                        "artists": null
+                    },
+                    {
+                        "listen_count": 5,
+                        "release_group_name": "Lucifer: Season 5 - Bloody Celestial Karaoke Jam (Special Episode Soundtrack)",
+                        "release_group_mbid": null,
+                        "artist_name": "Lucifer Cast, Tom Ellis",
+                        "artist_mbids": [],
+                        "caa_id": null,
+                        "caa_release_mbid": null,
+                        "artists": null
+                    },
+                    {
+                        "listen_count": 5,
+                        "release_group_name": "And so it Begins",
+                        "release_group_mbid": "3f8ff223-304e-4345-928c-59eec91908e5",
+                        "artist_name": "Klergy",
+                        "artist_mbids": [
+                            "5586fc31-7c41-4a2d-97a2-d358b58b250d"
+                        ],
+                        "caa_id": 27620887370,
+                        "caa_release_mbid": "834d8732-8e2d-42b6-9496-55b067d0748f",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Klergy",
+                                "join_phrase": "",
+                                "artist_mbid": "5586fc31-7c41-4a2d-97a2-d358b58b250d"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 4,
+                        "release_group_name": "Mask Off (Marshmello Remix)",
+                        "release_group_mbid": null,
+                        "artist_name": "Future, Marshmello",
+                        "artist_mbids": [],
+                        "caa_id": null,
+                        "caa_release_mbid": null,
+                        "artists": null
+                    },
+                    {
+                        "listen_count": 3,
+                        "release_group_name": "The Human Condition",
+                        "release_group_mbid": "75f30bf9-2ccd-47c1-851d-e56963695504",
+                        "artist_name": "Jon Bellion",
+                        "artist_mbids": [
+                            "2bd8101a-11c3-42d5-a9bd-6a3b26445f7e"
+                        ],
+                        "caa_id": 14254382904,
+                        "caa_release_mbid": "0fea0f58-f0ea-4ff0-964a-78c1b1e74396",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Jon Bellion",
+                                "join_phrase": "",
+                                "artist_mbid": "2bd8101a-11c3-42d5-a9bd-6a3b26445f7e"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 3,
+                        "release_group_name": "I Am\u2026 Sasha Fierce",
+                        "release_group_mbid": "6f8e8119-de1b-39f0-85ca-b5252cb9211d",
+                        "artist_name": "Beyonc\u00e9",
+                        "artist_mbids": [
+                            "859d0860-d480-4efd-970c-c05d5f1776b8",
+                            "859d0860-d480-4efd-970c-c05d5f1776b8"
+                        ],
+                        "caa_id": 35907722669,
+                        "caa_release_mbid": "c55502f4-8c53-4e80-92e7-38cbae32f6c2",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Beyonc\u00e9",
+                                "join_phrase": "",
+                                "artist_mbid": "859d0860-d480-4efd-970c-c05d5f1776b8"
+                            },
+                            {
+                                "artist_credit_name": "Beyonc\u00e9",
+                                "join_phrase": "",
+                                "artist_mbid": "859d0860-d480-4efd-970c-c05d5f1776b8"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 3,
+                        "release_group_name": "Food & Liquor II: The Great American Rap Album, Part 1",
+                        "release_group_mbid": "b453c9ce-cf94-429d-98a4-289d3bd79bd1",
+                        "artist_name": "Lupe Fiasco",
+                        "artist_mbids": [
+                            "cf15719f-51f9-4db8-a15d-5eed9664ce69"
+                        ],
+                        "caa_id": 4199784147,
+                        "caa_release_mbid": "b0d805e3-2afe-4e3a-a8a5-3f4f8dfde2bb",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Lupe Fiasco",
+                                "join_phrase": "",
+                                "artist_mbid": "cf15719f-51f9-4db8-a15d-5eed9664ce69"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 2,
+                        "release_group_name": "Wicked Game",
+                        "release_group_mbid": "6996c6a9-0eeb-48d2-857d-1a122ba887f9",
+                        "artist_name": "Ursine Vulpine feat. Annaca",
+                        "artist_mbids": [
+                            "43736f76-419a-42a0-816a-830876647ba5",
+                            "93cfee41-b1a6-4604-a01c-91243e6926e6"
+                        ],
+                        "caa_id": 15528924240,
+                        "caa_release_mbid": "1355c8b7-f563-4ddc-8b00-620f4a63d081",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Ursine Vulpine",
+                                "join_phrase": " feat. ",
+                                "artist_mbid": "43736f76-419a-42a0-816a-830876647ba5"
+                            },
+                            {
+                                "artist_credit_name": "Annaca",
+                                "join_phrase": "",
+                                "artist_mbid": "93cfee41-b1a6-4604-a01c-91243e6926e6"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 2,
+                        "release_group_name": "VHS",
+                        "release_group_mbid": "68834e04-745e-4dba-a15f-4e2ac62f1ccc",
+                        "artist_name": "X Ambassadors",
+                        "artist_mbids": [
+                            "298f4089-1948-44b5-b5e8-d5381f42362f"
+                        ],
+                        "caa_id": 23591912180,
+                        "caa_release_mbid": "d852d98b-0851-492f-aa4d-3f32ad01482a",
+                        "artists": [
+                            {
+                                "artist_credit_name": "X Ambassadors",
+                                "join_phrase": "",
+                                "artist_mbid": "298f4089-1948-44b5-b5e8-d5381f42362f"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 2,
+                        "release_group_name": "SOUR",
+                        "release_group_mbid": "2ae2e504-7116-4b4f-b632-9748bb18ccd2",
+                        "artist_name": "Olivia Rodrigo",
+                        "artist_mbids": [
+                            "6925db17-f35e-42f3-a4eb-84ee6bf5d4b0"
+                        ],
+                        "caa_id": 32201040812,
+                        "caa_release_mbid": "6dd75bce-0194-4737-810c-d389689b4759",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Olivia Rodrigo",
+                                "join_phrase": "",
+                                "artist_mbid": "6925db17-f35e-42f3-a4eb-84ee6bf5d4b0"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 2,
+                        "release_group_name": "Inside (The Songs)",
+                        "release_group_mbid": null,
+                        "artist_name": "Bo Burnham",
+                        "artist_mbids": [],
+                        "caa_id": null,
+                        "caa_release_mbid": null,
+                        "artists": null
+                    },
+                    {
+                        "listen_count": 2,
+                        "release_group_name": "Future Nostalgia",
+                        "release_group_mbid": "aa366795-92d7-4d67-91fa-6741f82a4858",
+                        "artist_name": "Dua Lipa",
+                        "artist_mbids": [
+                            "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
+                            "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f"
+                        ],
+                        "caa_id": 25806517352,
+                        "caa_release_mbid": "315bbc48-dea9-463c-bfa9-a6ccab78b990",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Dua Lipa",
+                                "join_phrase": "",
+                                "artist_mbid": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f"
+                            },
+                            {
+                                "artist_credit_name": "Dua Lipa",
+                                "join_phrase": "",
+                                "artist_mbid": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 1,
+                        "release_group_name": "Oral Fixation, Vol. 2",
+                        "release_group_mbid": "daa154b8-34e9-350d-9e1a-e8626f946804",
+                        "artist_name": "Shakira",
+                        "artist_mbids": [
+                            "bf24ca37-25f4-4e34-9aec-460b94364cfc"
+                        ],
+                        "caa_id": 1129595405,
+                        "caa_release_mbid": "0e247e68-9134-3a6b-ba6a-1e2ce5fad35c",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Shakira",
+                                "join_phrase": "",
+                                "artist_mbid": "bf24ca37-25f4-4e34-9aec-460b94364cfc"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 1,
+                        "release_group_name": "No Strings Attached",
+                        "release_group_mbid": "a648d0c2-1438-33d0-87d2-5fbab3c0990a",
+                        "artist_name": "*NSYNC",
+                        "artist_mbids": [
+                            "603ba565-3967-4be1-931e-9cb945394e86"
+                        ],
+                        "caa_id": 13042053778,
+                        "caa_release_mbid": "dec22fe3-01f1-43f3-bd91-11b93c35c1e0",
+                        "artists": [
+                            {
+                                "artist_credit_name": "*NSYNC",
+                                "join_phrase": "",
+                                "artist_mbid": "603ba565-3967-4be1-931e-9cb945394e86"
+                            }
+                        ]
+                    },
+                    {
+                        "listen_count": 1,
+                        "release_group_name": "Fine Line",
+                        "release_group_mbid": "b9990da8-7953-4e64-aea5-065ca9cd3cb7",
+                        "artist_name": "Harry Styles",
+                        "artist_mbids": [
+                            "7eb1ce54-a355-41f9-8d68-e018b096d427"
+                        ],
+                        "caa_id": 24909263406,
+                        "caa_release_mbid": "61210065-4118-43f9-866f-4038cfae5df4",
+                        "artists": [
+                            {
+                                "artist_credit_name": "Harry Styles",
+                                "join_phrase": "",
+                                "artist_mbid": "7eb1ce54-a355-41f9-8d68-e018b096d427"
+                            }
+                        ]
+                    }
+                ],
+                "count": 15
+            }
+        ],
+        "database": "release_groups_all_time"
+    }
+]

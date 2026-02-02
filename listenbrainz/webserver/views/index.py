@@ -1,127 +1,101 @@
-import json
 import locale
 import os
-import requests
-import subprocess
+import time
+from datetime import datetime
+from typing import List
 
 from brainzutils import cache
-from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from typing import List
-from flask import Blueprint, render_template, current_app, redirect, url_for, request, jsonify
+from flask import Blueprint, render_template, current_app, request, jsonify, Response
 from flask_login import current_user, login_required
 from requests.exceptions import HTTPError
-import orjson
 from werkzeug.exceptions import Unauthorized, NotFound
 
+import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+import listenbrainz.db.user_relationship as db_user_relationship
+from data.model.user_entity import EntityRecord
+from listenbrainz.background.background_tasks import add_task
+from listenbrainz.db.donation import get_recent_donors
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
+from listenbrainz.db.pinned_recording import get_current_pin_for_users
+from listenbrainz.domain.musicbrainz import MusicBrainzService
+from listenbrainz.webserver import flash, db_conn, meb_conn, ts_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.webserver import flash
-from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
-from listenbrainz.webserver.views.user import delete_user
+from listenbrainz.webserver.timescale_connection import _ts
+from listenbrainz.webserver.views.status_api import get_service_status
+from listenbrainz.webserver.views.user_timeline_event_api import get_feed_events_for_user
 
 index_bp = Blueprint('index', __name__)
 locale.setlocale(locale.LC_ALL, '')
 
-STATS_PREFIX = 'listenbrainz.stats' # prefix used in key to cache stats
-CACHE_TIME = 10 * 60 # time in seconds we cache the stats
+STATS_PREFIX = 'listenbrainz.stats'  # prefix used in key to cache stats
+CACHE_TIME = 10 * 60  # time in seconds we cache the stats
 NUMBER_OF_RECENT_LISTENS = 50
 
 SEARCH_USER_LIMIT = 100  # max number of users to return in search username results
 
-@index_bp.route("/")
+ROBOTS_TXT_CONTENT = """User-agent: *
+Disallow: /admin/
+Disallow: /login/
+Disallow: /player/
+Disallow: /listening-now/
+Disallow: /settings/
+Disallow: /profile
+Disallow: /explore/
+Disallow: /artist/
+Disallow: /album/
+Disallow: /release/
+Disallow: /release-group/
+Disallow: /recording/
+Disallow: /track/
+Allow: /explore/fresh-releases/
+Allow: /explore/huesound/
+Allow: /explore/cover-art-collage/
+Allow: /explore/art-creator/
+"""
+
+
+@index_bp.get("/robots.txt/")
+def robots_txt():
+    return Response(ROBOTS_TXT_CONTENT, mimetype='text/plain')
+
+
+@index_bp.post("/")
 def index():
     if _ts:
         try:
             listen_count = _ts.get_total_listen_count()
-            user_count = format(int(_get_user_count()), ',d')
         except Exception as e:
             current_app.logger.error('Error while trying to get total listen count: %s', str(e))
-            listen_count = None
-            user_count = 'Unknown'
-
+            listen_count = 0
     else:
-        listen_count = None
-        user_count = 'Unknown'
+        listen_count = 0
 
-    return render_template(
-        "index/index.html",
-        listen_count=format(int(listen_count), ",d") if listen_count else "0",
-        user_count=user_count,
-    )
-
-@index_bp.route("/import/")
-def import_data():
-    if current_user.is_authenticated:
-        return redirect(url_for("profile.import_data"))
-    else:
-        return current_app.login_manager.unauthorized()
-
-
-@index_bp.route("/download/")
-def downloads():
-    return redirect(url_for('index.data'))
-
-
-@index_bp.route("/data/")
-def data():
-    return render_template("index/data.html")
-
-
-@index_bp.route("/add-data/")
-def add_data_info():
-    return render_template("index/add-data.html")
-
-
-@index_bp.route("/import-data/")
-def import_data_info():
-    return render_template("index/import-data.html")
-
-
-@index_bp.route("/lastfm-proxy/")
-def proxy():
-    return render_template("index/lastfm-proxy.html")
-
-
-@index_bp.route("/about/")
-def about():
-    return render_template("index/about.html")
-
-
-@index_bp.route("/terms-of-service/")
-def terms_of_service():
-    return render_template("index/terms-of-service.html")
-
-
-@index_bp.route("/blog-data/")
-def blog_data():
-    """Proxy to the MetaBrainz blog to get recent posts so that user IP addresses are not leaked to wordpress"""
-
-    cache_key = "blog-feed"
-    cache_blog_expires = 60*60
-    cached_blog = cache.get(cache_key)
-    if cached_blog:
-        return jsonify(cached_blog)
-
-    url = "https://public-api.wordpress.com/rest/v1.1/sites/blog.metabrainz.org/posts/"
+    artist_count = 0
     try:
-        r = requests.get(url, timeout=5)
-        r.raise_for_status()
-        blog_data = r.json()
-        cache.set(cache_key, blog_data, cache_blog_expires)
-        return jsonify(blog_data)
-    except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError):
-        return jsonify({}), 503
+        artist_stats = db_stats.get(db_stats.SITEWIDE_STATS_USER_ID, "artists", "all_time", EntityRecord)
+        if artist_stats is not None:
+            artist_count = artist_stats.count
+    except Exception as e:
+        current_app.logger.error('Error while trying to get total artist count: %s', str(e))
+
+    props = {
+        "listenCount": listen_count,
+        "artistCount": artist_count,
+    }
+
+    return jsonify(props)
 
 
-@index_bp.route("/current-status/")
+@index_bp.post("/current-status/")
 @web_listenstore_needed
 def current_status():
-
     load = "%.2f %.2f %.2f" % os.getloadavg()
 
+    service_status = get_service_status()
     listen_count = _ts.get_total_listen_count()
     try:
         user_count = format(int(_get_user_count()), ',d')
@@ -130,91 +104,139 @@ def current_status():
 
     listen_counts_per_day: List[dict] = []
     for delta in range(2):
+        day = datetime.today() - relativedelta(days=delta)
         try:
-            day = datetime.utcnow() - relativedelta(days=delta)
             day_listen_count = _redis.get_listen_count_for_day(day)
         except:
             current_app.logger.error("Could not get %s listen count from redis", day.strftime('%Y-%m-%d'), exc_info=True)
             day_listen_count = None
         listen_counts_per_day.append({
             "date": day.strftime('%Y-%m-%d'),
-            "listen_count": format(day_listen_count, ',d') if day_listen_count else "0",
+            "listenCount": format(day_listen_count, ',d') if day_listen_count else "0",
             "label": "today" if delta == 0 else "yesterday",
         })
 
-    return render_template(
-        "index/current-status.html",
-        load=load,
-        listen_count=format(int(listen_count), ",d") if listen_count else "0",
-        user_count=user_count,
-        listen_counts_per_day=listen_counts_per_day,
-    )
+    data = {
+        "load": load,
+        "service-status": service_status,
+        "listenCount": format(int(listen_count), ",d") if listen_count else "0",
+        "userCount": user_count,
+        "listenCountsPerDay": listen_counts_per_day,
+    }
+
+    return jsonify(data)
 
 
-@index_bp.route("/recent/")
+@index_bp.post("/recent/")
 def recent_listens():
-
     recent = []
     for listen in _redis.get_recent_listens(NUMBER_OF_RECENT_LISTENS):
         recent.append({
-                "track_metadata": listen.data,
-                "user_name" : listen.user_name,
-                "listened_at": listen.ts_since_epoch,
-                "listened_at_iso": listen.timestamp.isoformat() + "Z",
-            })
+            "track_metadata": listen.data,
+            "user_name": listen.user_name,
+            "listened_at": listen.ts_since_epoch,
+            "listened_at_iso": listen.timestamp.isoformat() + "Z",
+        })
+
+    listen_count = _ts.get_total_listen_count()
+    try:
+        user_count = format(int(_get_user_count()), ',d')
+    except DatabaseException as e:
+        user_count = 'Unknown'
+
+    # Get recent donors in production environment only.
+    if current_app.config["SQLALCHEMY_METABRAINZ_URI"]:
+        recent_donors, _ = get_recent_donors(meb_conn, db_conn, 25, 0)
+    else:
+        recent_donors = []
+
+    # Get MusicBrainz IDs for donors who are ListenBrainz users
+    musicbrainz_ids = [donor["musicbrainz_id"] for donor in recent_donors if donor.get('is_listenbrainz_user')]
+
+    # Fetch donor info only if there are valid MusicBrainz IDs
+    donors_info = db_user.get_many_users_by_mb_id(db_conn, musicbrainz_ids) if musicbrainz_ids else {}
+    donor_ids = [donor_info.id for donor_info in donors_info.values()]
+
+    # Get current pinned recordings
+    pinned_recordings_data = {}
+    if donor_ids:
+        pinned_recordings = get_current_pin_for_users(db_conn, donor_ids)
+        if pinned_recordings:
+            pinned_recordings_metadata = fetch_track_metadata_for_items(ts_conn, pinned_recordings)
+            # Map recordings by user_id for quick lookup
+            pinned_recordings_data = {recording.user_id: dict(recording) for recording in pinned_recordings_metadata}
+
+    # Add pinned recordings to recent donors
+    for donor in recent_donors:
+        donor_info = donors_info.get(donor["musicbrainz_id"])
+        donor["pinnedRecording"] = pinned_recordings_data.get(donor_info.id) if donor_info else None
 
     props = {
         "listens": recent,
+        "globalListenCount": listen_count,
+        "globalUserCount": user_count,
+        "recentDonors": recent_donors,
     }
 
-    return render_template("index/recent.html", props=orjson.dumps(props).decode("utf-8"))
-
-@index_bp.route('/feed/', methods=['GET', 'OPTIONS'])
-@login_required
-@web_listenstore_needed
-def feed():
-    return render_template('index/feed.html')
+    return jsonify(props)
 
 
 @index_bp.route('/agree-to-terms/', methods=['GET', 'POST'])
 @login_required
 def gdpr_notice():
     if request.method == 'GET':
-        return render_template('index/gdpr.html', next=request.args.get('next'))
+        return render_template('index.html')
     elif request.method == 'POST':
         if request.form.get('gdpr-options') == 'agree':
             try:
-                db_user.agree_to_gdpr(current_user.musicbrainz_id)
+                db_user.agree_to_gdpr(db_conn, current_user.musicbrainz_id)
             except DatabaseException as e:
                 flash.error('Could not store agreement to GDPR terms')
-            next = request.form.get('next')
-            if next:
-                return redirect(next)
-            return redirect(url_for('index.index'))
-        elif request.form.get('gdpr-options') == 'disagree':
-            return redirect(url_for('profile.delete'))
+            return jsonify({'status': 'agreed'})
         else:
-            flash.error('You must agree to or decline our terms')
-            return render_template('index/gdpr.html', next=request.args.get('next'))
+            return jsonify({'status': 'not_agreed'}), 400
 
 
-@index_bp.route('/search/', methods=['GET', 'OPTIONS'])
+@index_bp.post("/search/")
 def search():
     search_term = request.args.get("search_term")
     user_id = current_user.id if current_user.is_authenticated else None
     if search_term:
-        users = db_user.search(search_term, SEARCH_USER_LIMIT, user_id)
+        users = db_user.search(db_conn, search_term, SEARCH_USER_LIMIT, user_id)
     else:
         users = []
-    return render_template("index/search-users.html", search_term=search_term, users=users)
+
+    return jsonify({"searchTerm": search_term, "users": users})
 
 
-@index_bp.route('/messybrainz/', methods=['GET', 'OPTIONS'])
-def messybrainz():
-    return render_template("index/messybrainz.html")
+@index_bp.post("/feed/")
+@login_required
+def feed():
+    user_id = current_user.id
+    count = request.args.get('count', 25)
+    min_ts = request.args.get('min_ts', 0)
+    max_ts = request.args.get('max_ts', int(time.time()))
+    current_user_data = {
+        "id": current_user.id,
+        "musicbrainz_id": current_user.musicbrainz_id,
+    }
+
+    users_following = db_user_relationship.get_following_for_user(db_conn, user_id)
+
+    user_events = get_feed_events_for_user(user=current_user_data,
+                                           followed_users=users_following,
+                                           min_ts=min_ts,
+                                           max_ts=max_ts,
+                                           count=count)
+
+    user_events = user_events[:count]
+
+    return jsonify({
+        'events': [event.dict() for event in user_events],
+    })
 
 
-@index_bp.route('/delete-user/<int:musicbrainz_row_id>')
+@index_bp.get("/delete-user/<int:musicbrainz_row_id>")
 def mb_user_deleter(musicbrainz_row_id):
     """ This endpoint is used by MusicBrainz to delete accounts once they
     are deleted on MusicBrainz too.
@@ -230,25 +252,18 @@ def mb_user_deleter(musicbrainz_row_id):
         Unauthorized if the MusicBrainz access token provided with the query is invalid
     """
     _authorize_mb_user_deleter(request.args.get('access_token', ''))
-    user = db_user.get_by_mb_row_id(musicbrainz_row_id)
+    user = db_user.get_by_mb_row_id(db_conn, musicbrainz_row_id)
     if user is None:
         raise NotFound('Could not find user with MusicBrainz Row ID: %d' % musicbrainz_row_id)
-    delete_user(user['id'])
+    add_task(user['id'], 'delete_user')
     return jsonify({'status': 'ok'}), 200
 
 
 def _authorize_mb_user_deleter(auth_token):
-    headers = {'Authorization': 'Bearer {}'.format(auth_token)}
-    r = requests.get(current_app.config['MUSICBRAINZ_OAUTH_URL'], headers=headers)
     try:
-        r.raise_for_status()
+        service = MusicBrainzService()
+        data = service.get_user_info(auth_token)
     except HTTPError:
-        raise Unauthorized('Not authorized to use this view')
-
-    data = {}
-    try:
-        data = r.json()
-    except ValueError:
         raise Unauthorized('Not authorized to use this view')
 
     try:
@@ -270,47 +285,16 @@ def _get_user_count():
     if user_count:
         return user_count
     else:
-        try:
-            user_count = db_user.get_user_count()
-        except DatabaseException as e:
-            raise
+        user_count = db_user.get_user_count(db_conn)
         cache.set(user_count_key, int(user_count), CACHE_TIME, encode=False)
         return user_count
 
 
-@index_bp.route("/similar-users/")
-def similar_users():
-    return redirect(url_for("explore.similar_users"))
-
-
-@index_bp.route("/listens-offline/")
-def listens_offline():
-    """
-        Show the "listenstore offline" message.
-    """
-
-    return render_template("index/listens_offline.html")
-
-
-@index_bp.route("/musicbrainz-offline/")
-def musicbrainz_offline():
-    """ Show the "musicbrainz offline" message. """
-    return render_template("index/musicbrainz-offline.html")
-
-
-@index_bp.route("/huesound/")
-def huesound():
-    """ Redirect to /explore/huesound """
-
-    return redirect(url_for("explore.huesound"))
-
-@index_bp.route("/statistics/charts/")
-def charts():
-    """ Show the top sitewide entities. """
-    return render_template("index/charts.html")
-
-
-@index_bp.route("/statistics/")
-def stats():
-    """ Show sitewide stats """
-    return render_template("index/stats.html")
+@index_bp.get("/", defaults={'path': ''})
+@index_bp.get('/<not_api_path:path>/')
+@web_listenstore_needed
+def index_pages(path):
+    # this is a catch-all route, all unmatched urls match this route instead of raising a 404
+    # at least in the case the of API urls, we don't want this behavior. hence detect api urls
+    # in the custom NotApiConverter and raise 404 errors manually
+    return render_template("index.html")

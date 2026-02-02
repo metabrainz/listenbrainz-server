@@ -13,7 +13,14 @@
         "track_name": "Love Me Like You Do - From \"Fifty Shades of Grey\"",
         "listen_count": 25,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ellie Goulding",
+            "join_phrase": "",
+            "artist_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8"
+          }
+        ]
       },
       {
         "artist_name": "The Fray",
@@ -26,7 +33,14 @@
         "track_name": "How to Save a Life",
         "listen_count": 23,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Fray",
+            "join_phrase": "",
+            "artist_mbid": "3b155259-b29e-4515-aa62-cb0b917f4cfd"
+          }
+        ]
       },
       {
         "artist_name": "Ritviz",
@@ -39,7 +53,14 @@
         "track_name": "Udd Gaye - Bacardi House Party Sessions",
         "listen_count": 20,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ritviz",
+            "join_phrase": "",
+            "artist_mbid": "49ec6dae-0bd3-43f5-9acf-f3462fb3ff8f"
+          }
+        ]
       },
       {
         "artist_name": "OneRepublic",
@@ -52,7 +73,14 @@
         "track_name": "Counting Stars",
         "listen_count": 18,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "OneRepublic",
+            "join_phrase": "",
+            "artist_mbid": "67f4ae2e-260e-4020-b957-f2df5b719501"
+          }
+        ]
       },
       {
         "artist_name": "Ellie Goulding",
@@ -65,7 +93,14 @@
         "track_name": "Burn",
         "listen_count": 16,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ellie Goulding",
+            "join_phrase": "",
+            "artist_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8"
+          }
+        ]
       },
       {
         "artist_name": "Taylor Swift",
@@ -78,7 +113,14 @@
         "track_name": "Blank Space",
         "listen_count": 16,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Taylor Swift",
+            "join_phrase": "",
+            "artist_mbid": "cc0f643d-cba9-4a5e-876f-cb3d70cdf5ea"
+          }
+        ]
       },
       {
         "artist_name": "Christina Perri",
@@ -91,7 +133,14 @@
         "track_name": "A Thousand Years",
         "listen_count": 16,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Christina Perri",
+            "join_phrase": "",
+            "artist_mbid": "bad9c78a-cbe3-4a6f-b7c0-f2009cecaabb"
+          }
+        ]
       },
       {
         "artist_name": "Vance Joy",
@@ -104,7 +153,14 @@
         "track_name": "Riptide",
         "listen_count": 15,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Vance Joy",
+            "join_phrase": "",
+            "artist_mbid": "8cb3fd5a-2194-4c3b-8eb8-3e538d109991"
+          }
+        ]
       },
       {
         "artist_name": "Ed Sheeran",
@@ -112,12 +168,19 @@
           "6817e85a-f5ae-4479-b73d-e8e320e1b927"
         ],
         "recording_mbid": "73107785-12f0-4ae7-8faa-1b0188212e91",
-        "release_name": "÷ (Deluxe)",
+        "release_name": "\u00f7 (Deluxe)",
         "release_mbid": "aec9a871-cd3b-467f-a53d-4ef5bc3bbafe",
         "track_name": "Castle on the Hill",
         "listen_count": 14,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ed Sheeran",
+            "join_phrase": "",
+            "artist_mbid": "6817e85a-f5ae-4479-b73d-e8e320e1b927"
+          }
+        ]
       },
       {
         "artist_name": "OneRepublic",
@@ -130,7 +193,14 @@
         "track_name": "Start Again (feat. Logic)",
         "listen_count": 13,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "OneRepublic",
+            "join_phrase": "",
+            "artist_mbid": "67f4ae2e-260e-4020-b957-f2df5b719501"
+          }
+        ]
       },
       {
         "artist_name": "George Ezra",
@@ -143,7 +213,14 @@
         "track_name": "Shotgun",
         "listen_count": 12,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "George Ezra",
+            "join_phrase": "",
+            "artist_mbid": "52f911d4-8f73-4fc9-9145-a99aff057524"
+          }
+        ]
       },
       {
         "artist_name": "Tommee Profitt",
@@ -156,7 +233,14 @@
         "track_name": "In The End - Mellen Gi Remix",
         "listen_count": 12,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Tommee Profitt",
+            "join_phrase": "",
+            "artist_mbid": "4e202a9c-c976-4e9e-8c9f-b0b96916f6a5"
+          }
+        ]
       },
       {
         "artist_name": "The Script",
@@ -169,7 +253,14 @@
         "track_name": "Hall of Fame",
         "listen_count": 12,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Script",
+            "join_phrase": "",
+            "artist_mbid": "1871df1a-93b7-4e25-9d60-64102ba89913"
+          }
+        ]
       },
       {
         "artist_name": "Maroon 5",
@@ -182,7 +273,14 @@
         "track_name": "Moves Like Jagger - Studio Recording From The Voice Performance",
         "listen_count": 11,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Maroon 5",
+            "join_phrase": "",
+            "artist_mbid": "9d5adabb-9775-4535-93eb-12b485aed8bf"
+          }
+        ]
       },
       {
         "artist_name": "Of Monsters and Men",
@@ -195,7 +293,14 @@
         "track_name": "Little Talks",
         "listen_count": 11,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Of Monsters and Men",
+            "join_phrase": "",
+            "artist_mbid": "8f119e29-922e-42da-a5bf-b062f5261a3d"
+          }
+        ]
       },
       {
         "artist_name": "Sia",
@@ -208,7 +313,14 @@
         "track_name": "Cheap Thrills (feat. Sean Paul)",
         "listen_count": 11,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Sia",
+            "join_phrase": "",
+            "artist_mbid": "ac6f4804-6215-4e1b-bb47-3672f085dde6"
+          }
+        ]
       },
       {
         "artist_name": "Maroon 5",
@@ -221,7 +333,14 @@
         "track_name": "Payphone",
         "listen_count": 10,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Maroon 5",
+            "join_phrase": "",
+            "artist_mbid": "9d5adabb-9775-4535-93eb-12b485aed8bf"
+          }
+        ]
       },
       {
         "artist_name": "M.I.A.",
@@ -234,7 +353,14 @@
         "track_name": "Paper Planes",
         "listen_count": 10,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "M.I.A.",
+            "join_phrase": "",
+            "artist_mbid": "1024e884-3a17-4729-9e59-a026fe8a07ba"
+          }
+        ]
       },
       {
         "artist_name": "Linkin Park",
@@ -247,7 +373,14 @@
         "track_name": "Battle Symphony",
         "listen_count": 10,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Linkin Park",
+            "join_phrase": "",
+            "artist_mbid": "1b173852-64e9-4c7f-8ed7-01ce6158a6fd"
+          }
+        ]
       },
       {
         "artist_name": "Backstreet Boys",
@@ -260,7 +393,14 @@
         "track_name": "I Want It That Way",
         "listen_count": 8,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Backstreet Boys",
+            "join_phrase": "",
+            "artist_mbid": "3dc53e0f-7090-44d2-8500-3012102f29a6"
+          }
+        ]
       },
       {
         "artist_name": "Lenka",
@@ -273,7 +413,14 @@
         "track_name": "Everything at Once",
         "listen_count": 8,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Lenka",
+            "join_phrase": "",
+            "artist_mbid": "ba64b195-01dd-4613-9534-bb87dc44cffb"
+          }
+        ]
       },
       {
         "artist_name": "The Local train",
@@ -286,7 +433,14 @@
         "track_name": "Choo Lo",
         "listen_count": 8,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Local train",
+            "join_phrase": "",
+            "artist_mbid": "d340853d-7408-4a0d-89c2-6ff13e568815"
+          }
+        ]
       },
       {
         "artist_name": "Coldplay",
@@ -299,7 +453,14 @@
         "track_name": "Up&Up",
         "listen_count": 6,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_name": "Imagine Dragons",
@@ -312,7 +473,14 @@
         "track_name": "On Top of the World",
         "listen_count": 6,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Imagine Dragons",
+            "join_phrase": "",
+            "artist_mbid": "fecda98e-0533-4b87-a9d1-c89b4521918b"
+          }
+        ]
       },
       {
         "artist_name": "Ellie Goulding",
@@ -325,7 +493,14 @@
         "track_name": "Close to Me (with Diplo) (feat. Swae Lee)",
         "listen_count": 6,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ellie Goulding",
+            "join_phrase": "",
+            "artist_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8"
+          }
+        ]
       },
       {
         "artist_name": "Lenka",
@@ -338,7 +513,14 @@
         "track_name": "We Belong",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Lenka",
+            "join_phrase": "",
+            "artist_mbid": "ba64b195-01dd-4613-9534-bb87dc44cffb"
+          }
+        ]
       },
       {
         "artist_name": "Ellie Goulding",
@@ -351,7 +533,14 @@
         "track_name": "Sixteen",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ellie Goulding",
+            "join_phrase": "",
+            "artist_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8"
+          }
+        ]
       },
       {
         "artist_name": "Coldplay",
@@ -364,7 +553,14 @@
         "track_name": "Ink",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_name": "Train",
@@ -377,7 +573,14 @@
         "track_name": "Hey, Soul Sister",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Train",
+            "join_phrase": "",
+            "artist_mbid": "fbe59c7e-3a75-459b-8fc8-07abaa6d1d2c"
+          }
+        ]
       },
       {
         "artist_name": "Maroon 5",
@@ -390,7 +593,14 @@
         "track_name": "Girls Like You (feat. Cardi B)",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Maroon 5",
+            "join_phrase": "",
+            "artist_mbid": "9d5adabb-9775-4535-93eb-12b485aed8bf"
+          }
+        ]
       },
       {
         "artist_name": "Within Temptation",
@@ -403,7 +613,14 @@
         "track_name": "Faster",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Within Temptation",
+            "join_phrase": "",
+            "artist_mbid": "50751cf3-40c6-454e-99d9-3d5777e4ad4f"
+          }
+        ]
       },
       {
         "artist_name": "Coldplay",
@@ -416,7 +633,14 @@
         "track_name": "Everglow",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_name": "Coldplay",
@@ -429,7 +653,14 @@
         "track_name": "Champion of the World",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_name": "The Weeknd",
@@ -442,7 +673,14 @@
         "track_name": "Blinding Lights",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Weeknd",
+            "join_phrase": "",
+            "artist_mbid": "2b0646af-f3f0-4a5b-b629-6c31301c1c29"
+          }
+        ]
       },
       {
         "artist_name": "Lenka",
@@ -455,7 +693,14 @@
         "track_name": "Blinded By Love",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Lenka",
+            "join_phrase": "",
+            "artist_mbid": "ba64b195-01dd-4613-9534-bb87dc44cffb"
+          }
+        ]
       },
       {
         "artist_name": "American Authors",
@@ -468,7 +713,14 @@
         "track_name": "Best Day of My Life",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "American Authors",
+            "join_phrase": "",
+            "artist_mbid": "0c115c8a-fc71-4649-aa75-aaef5f09d6d1"
+          }
+        ]
       },
       {
         "artist_name": "Imagine Dragons",
@@ -481,7 +733,14 @@
         "track_name": "Believer",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Imagine Dragons",
+            "join_phrase": "",
+            "artist_mbid": "fecda98e-0533-4b87-a9d1-c89b4521918b"
+          }
+        ]
       },
       {
         "artist_name": "Coldplay",
@@ -494,7 +753,14 @@
         "track_name": "Viva la Vida",
         "listen_count": 4,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_name": "The Chainsmokers",
@@ -507,7 +773,14 @@
         "track_name": "Something Just Like This",
         "listen_count": 4,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Chainsmokers",
+            "join_phrase": "",
+            "artist_mbid": "0daecabb-f76d-4914-8726-82cefbecca52"
+          }
+        ]
       },
       {
         "artist_name": "Imagine Dragons",
@@ -520,7 +793,14 @@
         "track_name": "Radioactive",
         "listen_count": 4,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Imagine Dragons",
+            "join_phrase": "",
+            "artist_mbid": "fecda98e-0533-4b87-a9d1-c89b4521918b"
+          }
+        ]
       },
       {
         "artist_name": "Coldplay",
@@ -533,7 +813,14 @@
         "track_name": "Paradise",
         "listen_count": 4,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_name": "Maroon 5",
@@ -546,7 +833,14 @@
         "track_name": "Memories",
         "listen_count": 4,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Maroon 5",
+            "join_phrase": "",
+            "artist_mbid": "9d5adabb-9775-4535-93eb-12b485aed8bf"
+          }
+        ]
       },
       {
         "artist_name": "Coldplay",
@@ -559,7 +853,14 @@
         "track_name": "Hymn for the Weekend",
         "listen_count": 4,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_name": "The Lumineers",
@@ -572,7 +873,14 @@
         "track_name": "Ho Hey",
         "listen_count": 4,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Lumineers",
+            "join_phrase": "",
+            "artist_mbid": "1588d970-c277-44bc-8c6d-dc858a82f647"
+          }
+        ]
       },
       {
         "artist_name": "Coldplay",
@@ -585,7 +893,14 @@
         "track_name": "Fix You",
         "listen_count": 4,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_name": "Imagine Dragons",
@@ -598,7 +913,14 @@
         "track_name": "Demons",
         "listen_count": 4,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Imagine Dragons",
+            "join_phrase": "",
+            "artist_mbid": "fecda98e-0533-4b87-a9d1-c89b4521918b"
+          }
+        ]
       },
       {
         "artist_name": "Lenka",
@@ -611,7 +933,14 @@
         "track_name": "Blue Skies",
         "listen_count": 4,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Lenka",
+            "join_phrase": "",
+            "artist_mbid": "ba64b195-01dd-4613-9534-bb87dc44cffb"
+          }
+        ]
       },
       {
         "artist_name": "The Local train",
@@ -624,7 +953,14 @@
         "track_name": "Aaftaab",
         "listen_count": 4,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Local train",
+            "join_phrase": "",
+            "artist_mbid": "d340853d-7408-4a0d-89c2-6ff13e568815"
+          }
+        ]
       },
       {
         "artist_name": "Lenka",
@@ -637,7 +973,14 @@
         "track_name": "Trouble Is a Friend",
         "listen_count": 3,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Lenka",
+            "join_phrase": "",
+            "artist_mbid": "ba64b195-01dd-4613-9534-bb87dc44cffb"
+          }
+        ]
       },
       {
         "artist_name": "The Weeknd",
@@ -650,7 +993,14 @@
         "track_name": "Starboy",
         "listen_count": 3,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Weeknd",
+            "join_phrase": "",
+            "artist_mbid": "2b0646af-f3f0-4a5b-b629-6c31301c1c29"
+          }
+        ]
       },
       {
         "artist_name": "Imagine Dragons",
@@ -663,7 +1013,14 @@
         "track_name": "It's Time",
         "listen_count": 3,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Imagine Dragons",
+            "join_phrase": "",
+            "artist_mbid": "fecda98e-0533-4b87-a9d1-c89b4521918b"
+          }
+        ]
       },
       {
         "artist_name": "The Chainsmokers",
@@ -676,7 +1033,14 @@
         "track_name": "Don't Let Me Down (feat. Daya)",
         "listen_count": 3,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Chainsmokers",
+            "join_phrase": "",
+            "artist_mbid": "0daecabb-f76d-4914-8726-82cefbecca52"
+          }
+        ]
       },
       {
         "artist_name": "The Fray",
@@ -689,7 +1053,14 @@
         "track_name": "You Found Me",
         "listen_count": 2,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Fray",
+            "join_phrase": "",
+            "artist_mbid": "3b155259-b29e-4515-aa62-cb0b917f4cfd"
+          }
+        ]
       },
       {
         "artist_name": "Coldplay",
@@ -702,7 +1073,14 @@
         "track_name": "Yellow - Live In Buenos Aires",
         "listen_count": 2,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_name": "Coldplay",
@@ -715,7 +1093,14 @@
         "track_name": "Up&Up - Live In Buenos Aires",
         "listen_count": 2,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_name": "Post Malone",
@@ -728,7 +1113,14 @@
         "track_name": "Sunflower - Spider-Man: Into the Spider-Verse",
         "listen_count": 2,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Post Malone",
+            "join_phrase": "",
+            "artist_mbid": "efc1ae68-f406-4430-8d94-a00b7280d822"
+          }
+        ]
       },
       {
         "artist_name": "Magic!",
@@ -741,7 +1133,14 @@
         "track_name": "Rude",
         "listen_count": 2,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Magic!",
+            "join_phrase": "",
+            "artist_mbid": "77e59c9c-cbb3-4566-abe9-5ccf8a92c28f"
+          }
+        ]
       },
       {
         "artist_name": "Joel Adams",
@@ -754,7 +1153,14 @@
         "track_name": "Please Don't Go",
         "listen_count": 2,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Joel Adams",
+            "join_phrase": "",
+            "artist_mbid": "4cd95528-7c4f-4ba8-a66f-a3f571e7a002"
+          }
+        ]
       },
       {
         "artist_name": "Coldplay",
@@ -767,7 +1173,14 @@
         "track_name": "Orphans",
         "listen_count": 2,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_name": "OneRepublic",
@@ -780,7 +1193,14 @@
         "track_name": "No Vacancy",
         "listen_count": 2,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "OneRepublic",
+            "join_phrase": "",
+            "artist_mbid": "67f4ae2e-260e-4020-b957-f2df5b719501"
+          }
+        ]
       },
       {
         "artist_name": "The Fray",
@@ -793,7 +1213,14 @@
         "track_name": "Never Say Never",
         "listen_count": 2,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Fray",
+            "join_phrase": "",
+            "artist_mbid": "3b155259-b29e-4515-aa62-cb0b917f4cfd"
+          }
+        ]
       },
       {
         "artist_name": "Ritviz",
@@ -806,7 +1233,14 @@
         "track_name": "Liggi",
         "listen_count": 2,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ritviz",
+            "join_phrase": "",
+            "artist_mbid": "49ec6dae-0bd3-43f5-9acf-f3462fb3ff8f"
+          }
+        ]
       },
       {
         "artist_name": "The Lumineers",
@@ -819,7 +1253,14 @@
         "track_name": "Ho Hey",
         "listen_count": 2,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Lumineers",
+            "join_phrase": "",
+            "artist_mbid": "1588d970-c277-44bc-8c6d-dc858a82f647"
+          }
+        ]
       },
       {
         "artist_name": "Ed Sheeran",
@@ -827,12 +1268,19 @@
           "6817e85a-f5ae-4479-b73d-e8e320e1b927"
         ],
         "recording_mbid": "cab6930c-42b6-4394-92fe-5a2d30540c1d",
-        "release_name": "÷ (Deluxe)",
+        "release_name": "\u00f7 (Deluxe)",
         "release_mbid": "aec9a871-cd3b-467f-a53d-4ef5bc3bbafe",
         "track_name": "Happier",
         "listen_count": 2,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ed Sheeran",
+            "join_phrase": "",
+            "artist_mbid": "6817e85a-f5ae-4479-b73d-e8e320e1b927"
+          }
+        ]
       },
       {
         "artist_name": "Vance Joy",
@@ -845,7 +1293,14 @@
         "track_name": "Georgia",
         "listen_count": 2,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Vance Joy",
+            "join_phrase": "",
+            "artist_mbid": "8cb3fd5a-2194-4c3b-8eb8-3e538d109991"
+          }
+        ]
       },
       {
         "artist_name": "Coldplay",
@@ -858,7 +1313,14 @@
         "track_name": "Fix You - Live In Buenos Aires",
         "listen_count": 2,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_name": "The Chainsmokers",
@@ -871,7 +1333,14 @@
         "track_name": "Don't Let Me Down",
         "listen_count": 2,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Chainsmokers",
+            "join_phrase": "",
+            "artist_mbid": "0daecabb-f76d-4914-8726-82cefbecca52"
+          }
+        ]
       },
       {
         "artist_name": "George Ezra",
@@ -884,7 +1353,14 @@
         "track_name": "Budapest",
         "listen_count": 2,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "George Ezra",
+            "join_phrase": "",
+            "artist_mbid": "52f911d4-8f73-4fc9-9145-a99aff057524"
+          }
+        ]
       },
       {
         "artist_name": "Coldplay",
@@ -897,7 +1373,14 @@
         "track_name": "A Sky Full of Stars",
         "listen_count": 2,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_name": "James Blunt",
@@ -910,7 +1393,14 @@
         "track_name": "You're Beautiful",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "James Blunt",
+            "join_phrase": "",
+            "artist_mbid": "291bca64-8c93-4790-85db-cf25baacb49e"
+          }
+        ]
       },
       {
         "artist_name": "Avicii",
@@ -918,12 +1408,19 @@
           "e568204b-c382-48cf-bfbc-04d11cbf8765"
         ],
         "recording_mbid": "48658b7c-851d-4683-a983-db282a3a4c47",
-        "release_name": "AVĪCI (01)",
+        "release_name": "AV\u012aCI (01)",
         "release_mbid": "504bcccd-803e-4ee4-bcbc-2af3da80fdd1",
         "track_name": "Without You (feat. Sandro Cavazza)",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Avicii",
+            "join_phrase": "",
+            "artist_mbid": "e568204b-c382-48cf-bfbc-04d11cbf8765"
+          }
+        ]
       },
       {
         "artist_name": "Taylor Swift",
@@ -936,7 +1433,14 @@
         "track_name": "Wildest Dreams",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Taylor Swift",
+            "join_phrase": "",
+            "artist_mbid": "cc0f643d-cba9-4a5e-876f-cb3d70cdf5ea"
+          }
+        ]
       },
       {
         "artist_name": "Anirudh Ravichander",
@@ -949,7 +1453,14 @@
         "track_name": "Why This Kolaveri Di? - The Soup of Love",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Anirudh Ravichander",
+            "join_phrase": "",
+            "artist_mbid": "80daf28c-5198-454a-9f74-4a1300f544ac"
+          }
+        ]
       },
       {
         "artist_name": "OneRepublic",
@@ -962,7 +1473,14 @@
         "track_name": "Wherever I Go",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "OneRepublic",
+            "join_phrase": "",
+            "artist_mbid": "67f4ae2e-260e-4020-b957-f2df5b719501"
+          }
+        ]
       },
       {
         "artist_name": "One Direction",
@@ -975,7 +1493,14 @@
         "track_name": "What Makes You Beautiful",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "One Direction",
+            "join_phrase": "",
+            "artist_mbid": "1c498eab-998f-4975-b52b-72243e89c0ba"
+          }
+        ]
       },
       {
         "artist_name": "Charlie Puth",
@@ -988,7 +1513,14 @@
         "track_name": "We Don't Talk Anymore",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Charlie Puth",
+            "join_phrase": "",
+            "artist_mbid": "bf8d0eb5-a94c-496a-a4a5-6d370e0c30e9"
+          }
+        ]
       },
       {
         "artist_name": "Taylor Swift",
@@ -1001,7 +1533,14 @@
         "track_name": "We Are Never Ever Getting Back Together",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Taylor Swift",
+            "join_phrase": "",
+            "artist_mbid": "cc0f643d-cba9-4a5e-876f-cb3d70cdf5ea"
+          }
+        ]
       },
       {
         "artist_name": "Avicii",
@@ -1014,7 +1553,14 @@
         "track_name": "Wake Me Up",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Avicii",
+            "join_phrase": "",
+            "artist_mbid": "e568204b-c382-48cf-bfbc-04d11cbf8765"
+          }
+        ]
       },
       {
         "artist_name": "Avicii",
@@ -1027,7 +1573,14 @@
         "track_name": "Waiting For Love",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Avicii",
+            "join_phrase": "",
+            "artist_mbid": "e568204b-c382-48cf-bfbc-04d11cbf8765"
+          }
+        ]
       },
       {
         "artist_name": "The Fray",
@@ -1040,7 +1593,14 @@
         "track_name": "Ungodly Hour",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Fray",
+            "join_phrase": "",
+            "artist_mbid": "3b155259-b29e-4515-aa62-cb0b917f4cfd"
+          }
+        ]
       },
       {
         "artist_name": "Katy Perry",
@@ -1053,7 +1613,14 @@
         "track_name": "Unconditionally",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Katy Perry",
+            "join_phrase": "",
+            "artist_mbid": "b650167d-3f75-4a39-a0b5-7cf4e65b7205"
+          }
+        ]
       },
       {
         "artist_name": "P!nk",
@@ -1066,7 +1633,14 @@
         "track_name": "Try",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "P!nk",
+            "join_phrase": "",
+            "artist_mbid": "0dee16fe-2b7f-4781-8f71-1e4357603ef1"
+          }
+        ]
       },
       {
         "artist_name": "Colbie Caillat",
@@ -1079,7 +1653,14 @@
         "track_name": "Try",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Colbie Caillat",
+            "join_phrase": "",
+            "artist_mbid": "b09db02b-5438-4360-a73f-7a3a5b88358f"
+          }
+        ]
       },
       {
         "artist_name": "Shawn Mendes",
@@ -1092,7 +1673,14 @@
         "track_name": "Treat You Better",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Shawn Mendes",
+            "join_phrase": "",
+            "artist_mbid": "7bb2fcd0-1edb-4c35-bde2-052f9c8efd2f"
+          }
+        ]
       },
       {
         "artist_name": "Tyrone Wells",
@@ -1105,7 +1693,14 @@
         "track_name": "Time of Our Lives",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Tyrone Wells",
+            "join_phrase": "",
+            "artist_mbid": "bce2e04f-e3f3-4c91-bd09-115455c43d37"
+          }
+        ]
       },
       {
         "artist_name": "Imagine Dragons",
@@ -1118,7 +1713,14 @@
         "track_name": "Thunder",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Imagine Dragons",
+            "join_phrase": "",
+            "artist_mbid": "fecda98e-0533-4b87-a9d1-c89b4521918b"
+          }
+        ]
       },
       {
         "artist_name": "Shawn Mendes",
@@ -1131,7 +1733,14 @@
         "track_name": "There's Nothing Holdin' Me Back",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Shawn Mendes",
+            "join_phrase": "",
+            "artist_mbid": "7bb2fcd0-1edb-4c35-bde2-052f9c8efd2f"
+          }
+        ]
       },
       {
         "artist_name": "Coldplay",
@@ -1144,7 +1753,14 @@
         "track_name": "The Scientist - Live In Buenos Aires",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_name": "Avicii",
@@ -1157,7 +1773,14 @@
         "track_name": "The Nights",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Avicii",
+            "join_phrase": "",
+            "artist_mbid": "e568204b-c382-48cf-bfbc-04d11cbf8765"
+          }
+        ]
       },
       {
         "artist_name": "Bruno Mars",
@@ -1170,7 +1793,14 @@
         "track_name": "The Lazy Song",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Bruno Mars",
+            "join_phrase": "",
+            "artist_mbid": "abf274d4-a1f8-4477-b5c6-8c1121a13cf6"
+          }
+        ]
       },
       {
         "artist_name": "Ed Sheeran",
@@ -1183,7 +1813,14 @@
         "track_name": "The A Team",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ed Sheeran",
+            "join_phrase": "",
+            "artist_mbid": "6817e85a-f5ae-4479-b73d-e8e320e1b927"
+          }
+        ]
       },
       {
         "artist_name": "Ritviz",
@@ -1196,7 +1833,14 @@
         "track_name": "Thandi Hawa",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ritviz",
+            "join_phrase": "",
+            "artist_mbid": "49ec6dae-0bd3-43f5-9acf-f3462fb3ff8f"
+          }
+        ]
       },
       {
         "artist_name": "Hozier",
@@ -1209,7 +1853,14 @@
         "track_name": "Take Me to Church",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Hozier",
+            "join_phrase": "",
+            "artist_mbid": "530d057e-f444-4e24-ba21-0e88d830fe67"
+          }
+        ]
       },
       {
         "artist_name": "Clean Bandit",
@@ -1222,7 +1873,14 @@
         "track_name": "Symphony (feat. Zara Larsson)",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Clean Bandit",
+            "join_phrase": "",
+            "artist_mbid": "f0676957-e3d7-4ca6-baf8-ffecaa01f415"
+          }
+        ]
       },
       {
         "artist_name": "The Script",
@@ -1235,7 +1893,14 @@
         "track_name": "Superheroes",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Script",
+            "join_phrase": "",
+            "artist_mbid": "1871df1a-93b7-4e25-9d60-64102ba89913"
+          }
+        ]
       },
       {
         "artist_name": "Maroon 5",
@@ -1248,7 +1913,14 @@
         "track_name": "Sugar",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Maroon 5",
+            "join_phrase": "",
+            "artist_mbid": "9d5adabb-9775-4535-93eb-12b485aed8bf"
+          }
+        ]
       },
       {
         "artist_name": "Coldplay",
@@ -1261,7 +1933,14 @@
         "track_name": "Strawberry Swing",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_name": "One Direction",
@@ -1274,7 +1953,14 @@
         "track_name": "Story of My Life",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "One Direction",
+            "join_phrase": "",
+            "artist_mbid": "1c498eab-998f-4975-b52b-72243e89c0ba"
+          }
+        ]
       },
       {
         "artist_name": "Shawn Mendes",
@@ -1287,7 +1973,14 @@
         "track_name": "Stitches",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Shawn Mendes",
+            "join_phrase": "",
+            "artist_mbid": "7bb2fcd0-1edb-4c35-bde2-052f9c8efd2f"
+          }
+        ]
       },
       {
         "artist_name": "Gym Class Heroes",
@@ -1300,7 +1993,14 @@
         "track_name": "Stereo Hearts (feat. Adam Levine)",
         "listen_count": 1,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Gym Class Heroes",
+            "join_phrase": "",
+            "artist_mbid": "c2007446-79e3-476a-868f-876e48a60893"
+          }
+        ]
       }
     ],
     "user_id": 1

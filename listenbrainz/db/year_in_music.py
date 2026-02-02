@@ -1,21 +1,18 @@
-import json
 import smtplib
+from collections import defaultdict
 from email.message import EmailMessage
 from email.utils import make_msgid
-import os
 
 import psycopg2
-import sqlalchemy
 import orjson
 from flask import current_app, render_template
-from psycopg2.extras import execute_values, DictCursor
-from brainzutils import musicbrainz_db
-from psycopg2.sql import SQL, Literal
+from psycopg2.extras import execute_values
+from psycopg2.sql import SQL, Literal, Identifier
+from sqlalchemy import text
 
 from listenbrainz.db.model.user_timeline_event import NotificationMetadata
-from listenbrainz import db
 from listenbrainz.db import timescale
-from listenbrainz.db.msid_mbid_mapping import load_recordings_from_mbids
+from listenbrainz.db.user import get_all_usernames
 from listenbrainz.db.user_timeline_event import create_user_notification_event
 
 # Year in Music data element defintions
@@ -25,6 +22,8 @@ from listenbrainz.db.user_timeline_event import create_user_notification_event
 # day_of_week
 # listens_per_day
 # most_listened_year
+# artist_evolution_activity
+# genre_activity
 # most_prominent_color
 # new_releases_of_top_artists
 # playlist-top-discoveries-for-year-playlists
@@ -38,219 +37,202 @@ from listenbrainz.db.user_timeline_event import create_user_notification_event
 # top_releases_coverart
 # total_listen_count
 
+LAST_FM_FOUNDING_YEAR = 2002
+MAX_YEAR_IN_MUSIC_YEAR = 2025
 
-def get(user_id, year):
+
+def get(user_id, year: int, legacy: bool = False):
     """ Get year in music data for requested user """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT data FROM statistics.year_in_music WHERE user_id = :user_id AND year = :year
-        """), {"user_id": user_id, "year": year})
+    if year < LAST_FM_FOUNDING_YEAR or year > MAX_YEAR_IN_MUSIC_YEAR:
+        return None
+
+    table = "year_in_music_" + str(year)
+    if legacy:
+        table = "legacy_" + table
+    qualified_table = "statistics." + table
+
+    with timescale.engine.connect() as connection:
+        result = connection.execute(
+            text("SELECT data FROM " + qualified_table + " WHERE user_id = :user_id"),
+            {"user_id": user_id}
+        )
         row = result.fetchone()
-        return row["data"] if row else None
+        return row.data if row else None
 
 
-def insert(key, year, data):
-    connection = db.engine.raw_connection()
+def insert(key, year, data, cast_to_jsonb):
+    table = "year_in_music_" + str(year) + "_tmp"
+    connection = timescale.engine.raw_connection()
     query = SQL("""
-        INSERT INTO statistics.year_in_music(user_id, year, data)
-             SELECT "user".id
-                  , {year}
-                  , jsonb_build_object({key}, value)
-               FROM (VALUES %s) AS t(user_id, value)
-               JOIN "user"
-                 ON "user".id = user_id::int
-        ON CONFLICT (user_id, year)
-      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
-    """).format(year=Literal(year), key=Literal(key))
+        INSERT INTO {table} AS yim
+                    (VALUES %s)
+        ON CONFLICT (user_id)
+      DO UPDATE SET data = COALESCE(yim.data, '{{}}'::jsonb) || EXCLUDED.data
+    """).format(table=Identifier("statistics", table), key=Literal(key))
+    if cast_to_jsonb:
+        template = f"(%s, jsonb_build_object('{key}', %s::jsonb))"
+    else:
+        template = f"(%s, jsonb_build_object('{key}', %s))"
     try:
         with connection.cursor() as cursor:
-            execute_values(cursor, query, orjson.loads(data).items())
+            execute_values(cursor, query, data, template)
         connection.commit()
     except psycopg2.errors.OperationalError:
         connection.rollback()
         current_app.logger.error(f"Error while inserting {key}:", exc_info=True)
 
 
-def insert_new_releases_of_top_artists(user_id, year, data):
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO statistics.year_in_music (user_id, year, data)
-                 VALUES (:user_id ::int, :year, jsonb_build_object('new_releases_of_top_artists', :data :: jsonb))
-            ON CONFLICT (user_id, year)
-          DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{}'::jsonb) || EXCLUDED.data
-        """), {"user_id": user_id, "year": year, "data": orjson.dumps(data).decode("utf-8")})
-
-
-def insert_similar_recordings(year, data):
-    connection = db.engine.raw_connection()
-    query = SQL("""
-        INSERT INTO statistics.year_in_music (user_id, year, data)
-             SELECT "user".id
-                  , {year}
-                  , jsonb_build_object('similar_users', jsonb_object_agg(other_user.musicbrainz_id, similar_user.score::float))
-               FROM (VALUES %s) AS t(user_id, data)
-               JOIN "user"
-                 ON "user".id = user_id::int
-       JOIN LATERAL jsonb_each(t.data::jsonb) AS similar_user(user_id, score)
-                 ON TRUE
-               JOIN "user" other_user
-                 ON other_user.id = similar_user.user_id::int
-           GROUP BY "user".id
-        ON CONFLICT (user_id, year)
-      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
-    """).format(year=Literal(year))
-    try:
-        with connection.cursor() as cursor:
-            values = [(k, json.dumps(v, ensure_ascii=False)) for k, v in data.items()]
-            execute_values(cursor, query, values)
-        connection.commit()
-    except psycopg2.errors.OperationalError:
-        connection.rollback()
-        current_app.logger.error("Error while inserting similar users:", exc_info=True)
-
-
-def handle_multi_large_insert(key, year, data):
-    connection = db.engine.raw_connection()
-    query = SQL("""
-        INSERT INTO statistics.year_in_music (user_id, year, data)
-             SELECT "user".id
-                  , {year}
-                  , jsonb_build_object({key}, data::jsonb)
-               FROM (VALUES %s) AS t(user_id, data)
-               JOIN "user"
-                 ON "user".id = user_id::int
-        ON CONFLICT (user_id, year)
-      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
-    """).format(key=Literal(key), year=Literal(year))
-    try:
-        with connection.cursor() as cursor:
-            values = [(user["user_id"], orjson.dumps(user["data"]).decode("utf-8")) for user in data]
-            execute_values(cursor, query, values)
-        connection.commit()
-    except psycopg2.errors.OperationalError:
-        connection.rollback()
-        current_app.logger.error("Error while inserting top stats:", exc_info=True)
-
-
-def handle_insert_top_stats(entity, year, data):
-    connection = db.engine.raw_connection()
-    query = SQL("""
-        INSERT INTO statistics.year_in_music (user_id, year, data)
-             SELECT "user".id
-                  , {year}
-                  , jsonb_build_object({key}, data::jsonb, {count_key}, count)
-               FROM (VALUES %s) AS t(user_id, count, data)
-               JOIN "user"
-                 ON "user".id = user_id::int
-        ON CONFLICT (user_id, year)
-      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
-    """).format(key=Literal(f"top_{entity}"), count_key=Literal(f"total_{entity}_count"), year=Literal(year))
-    try:
-        with connection.cursor() as cursor:
-            values = [(user["user_id"], user["count"], orjson.dumps(user["data"]).decode("utf-8")) for user in data]
-            execute_values(cursor, query, values)
-        connection.commit()
-    except psycopg2.errors.OperationalError:
-        connection.rollback()
-        current_app.logger.error("Error while inserting top stats:", exc_info=True)
-
-
-def insert_playlists_cover_art(year, data):
-    """ Insert cover art for YIM playlists. This is used to lookup cover art for the first 5 tracks of each playlist
-     preview and for the SVG cover on YIM page. """
-    all_mbids = set()
-    for (user_id, slug, playlist) in data:
-        for track in playlist["track"]:
-            mbid = track["identifier"].split("/")[-1]
-            all_mbids.add(mbid)
-
-    with timescale.engine.connect() as ts_conn, ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_cursor:
-        recordings = load_recordings_from_mbids(ts_cursor, all_mbids)
-
-    cover_art_data = []
-    for (user_id, slug, playlist) in data:
-        cover_arts = {}
-        for track in playlist["track"]:
-            mbid = track["identifier"].split("/")[-1]
-            r = recordings.get(mbid)
-            if r:
-                caa_release_mbid = r["caa_release_mbid"]
-                caa_id = r["caa_id"]
-                if caa_id and caa_release_mbid:
-                    url = f"https://archive.org/download/mbid-{caa_release_mbid}/mbid-{caa_release_mbid}-{caa_id}_thumb500.jpg"
-                    cover_arts[mbid] = url
-
-        cover_art_data.append((user_id, f"{slug}-coverart", cover_arts))
-
-    insert_playlists(year, cover_art_data)
-
-
-def insert_playlists(year, data):
-    """ Insert playlists data for the year in music """
-    connection = db.engine.raw_connection()
-    query = SQL("""
-        INSERT INTO statistics.year_in_music(user_id, year, data)
-             SELECT user_id
-                  , {year}
-                  , jsonb_object_agg(slug, playlist::jsonb)
-               FROM (VALUES %s) AS t(user_id, slug, playlist)
-           GROUP BY user_id
-        ON CONFLICT (user_id, year)
-      DO UPDATE SET data = COALESCE(statistics.year_in_music.data, '{{}}'::jsonb) || EXCLUDED.data
-    """).format(year=Literal(year))
-
-    try:
-        with connection.cursor() as cursor:
-            execute_values(cursor, query, [(user, slug, orjson.dumps(playlist).decode("utf-8")) for user, slug, playlist in data])
-        connection.commit()
-    except psycopg2.errors.OperationalError:
-        connection.rollback()
-        current_app.logger.error(f"Error while inserting playlists:", exc_info=True)
-
-
-def create_tracks_of_the_year(year):
+def insert_light(key, year, data):
+    table = "year_in_music_" + str(year) + "_tmp"
     connection = timescale.engine.raw_connection()
     query = SQL("""
-        CREATE TABLE IF NOT EXISTS mapping.tracks_of_the_year_{year} (
-            user_id             INTEGER     NOT NULL,
-            recording_mbid      UUID        NOT NULL,
-            recording_name      TEXT        NOT NULL,
-            artist_name         TEXT        NOT NULL,
-            artist_credit_mbids TEXT[],
-            listen_count        INTEGER     NOT NULL
+        INSERT INTO {table} AS yim
+             SELECT user_id::int
+                  , jsonb_build_object({key}, value) AS data
+               FROM jsonb_each(%s::jsonb) AS t(user_id, value)
+        ON CONFLICT (user_id)
+      DO UPDATE SET data = COALESCE(yim.data, '{{}}'::jsonb) || EXCLUDED.data
+    """).format(table=Identifier("statistics", table), key=Literal(key))
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(query, (data,))
+        connection.commit()
+    except psycopg2.errors.OperationalError:
+        connection.rollback()
+        current_app.logger.error(f"Error while inserting {key}:", exc_info=True)
+
+
+def insert_heavy(key, year, data):
+    insert(key, year, [(user["user_id"], orjson.dumps(user["data"]).decode("utf-8")) for user in data], True)
+
+
+def insert_similar_users(year, data):
+    user_ids = get_all_usernames()
+
+    similar_user_data = [
+        {
+            "user_id": int(user_id),
+            "data": {
+                user_ids[int(other_user_id)]: score
+                for other_user_id, score in similar_users.items()
+                if int(other_user_id) in user_ids
+            }
+        }
+        for user_id, similar_users in data.items()
+    ]
+
+    insert_heavy("similar_users", year, similar_user_data)
+
+
+def insert_top_stats(entity, year, data):
+    insert_heavy(f"top_{entity}", year, [
+        {"user_id": user["user_id"], "data": user[entity]}
+        for user in data
+    ])
+    insert(f"total_{entity}_count", year, [
+        (user["user_id"], user[f"{entity}_count"])
+        for user in data
+    ], False)
+
+
+def create_yim_table(year):
+    """ Create a new year in music unlogged table for the specified year """
+    table = "statistics.year_in_music_" + str(year) + "_tmp"
+    drop_sql = "DROP TABLE IF EXISTS " + table
+    create_sql = """
+        CREATE UNLOGGED TABLE """ + table + """ (
+            user_id INTEGER NOT NULL PRIMARY KEY,
+            data JSONB NOT NULL
         )
-    """).format(year=Literal(year))
-    truncate_query = SQL("TRUNCATE TABLE mapping.tracks_of_the_year_{year}").format(year=Literal(year))
-    drop_query = SQL("DROP INDEX IF EXISTS tracks_of_the_year_{year}_user_id_idx").format(year=Literal(year))
-    with connection.cursor() as curs:
-        curs.execute(query)
-        curs.execute(truncate_query)
-        curs.execute(drop_query)
-    connection.commit()
+    """
+    with timescale.engine.begin() as connection:
+        connection.execute(text(drop_sql))
+        connection.execute(text(create_sql))
 
 
-def finalise_tracks_of_the_year(year):
-    connection = timescale.engine.raw_connection()
-    query = SQL("""
-        CREATE INDEX IF NOT EXISTS tracks_of_the_year_{year}_user_id_idx ON mapping.tracks_of_the_year_{year} (user_id)
-    """).format(year=Literal(year))
-    with connection.cursor() as curs:
-        curs.execute(query)
-    connection.commit()
+def populate_yim_cover_table(connection, year, table):
+    """ Populate year_in_music_cover table with the topmost album cover for each user.
+
+    For each user with YIM data for the given year, find the first release group
+    that has caa_id and caa_release_mbid. If none found, use NULL for both.
+    """
+    delete_query = text("""
+        DELETE FROM statistics.year_in_music_cover WHERE year = :year
+    """)
+
+    # Query to extract the first release group with cover art for each user
+    # Uses LATERAL join to find the first matching entry in the top_release_groups array
+    insert_query = text("""
+        INSERT INTO statistics.year_in_music_cover (user_id, year, caa_id, caa_release_mbid)
+        SELECT
+            yim.user_id,
+            :year AS year,
+            (cover_info->>'caa_id')::BIGINT AS caa_id,
+            (cover_info->>'caa_release_mbid')::UUID AS caa_release_mbid
+        FROM """ + table + """ yim
+        LEFT JOIN LATERAL (
+            SELECT elem AS cover_info
+              FROM jsonb_array_elements(yim.data->'top_release_groups') WITH ORDINALITY AS t(elem, ord)
+             WHERE elem->>'caa_id' IS NOT NULL
+               AND elem->>'caa_release_mbid' IS NOT NULL
+          ORDER BY ord
+             LIMIT 1
+        ) cover ON true
+    """)
+
+    connection.execute(delete_query, {"year": year})
+    connection.execute(insert_query, {"year": year})
 
 
-def insert_tracks_of_the_year(year, data):
-    query = SQL("""
-        INSERT INTO mapping.tracks_of_the_year_{year} (user_id, recording_name, recording_mbid, artist_name, artist_credit_mbids, listen_count) VALUES %s
-    """).format(year=Literal(year))
-    connection = timescale.engine.raw_connection()
-    with connection.cursor() as curs:
-        values = [(r["user_id"], r["recording_name"], r["recording_mbid"], r["artist_name"], r["artist_credit_mbids"], r["listen_count"]) for r in data]
-        execute_values(curs, query, values, page_size=5000)
-    connection.commit()
+def get_yim_covers_for_user(user_id):
+    """ Get all year in music cover data for a user.
+
+    Returns a list of dicts with year, caa_id, and caa_release_mbid for each year.
+    """
+    query = text("""
+        SELECT year, caa_id, caa_release_mbid
+          FROM statistics.year_in_music_cover
+         WHERE user_id = :user_id
+      ORDER BY year DESC
+    """)
+
+    with timescale.engine.connect() as connection:
+        result = connection.execute(query, {"user_id": user_id})
+        return [
+            {
+                "year": row.year,
+                "cover_art": {
+                    "caa_id": row.caa_id,
+                    "caa_release_mbid": row.caa_release_mbid,
+                },
+            }
+            for row in result.fetchall()
+        ]
 
 
-def send_mail(subject, to_name, to_email, text, html, logo, logo_cid):
+def swap_yim_tables(year):
+    """ Swap the year in music tables """
+    table_without_schema = "year_in_music_" + str(year)
+    table = "statistics." + table_without_schema
+    tmp_table = table + "_tmp"
+
+    drop_sql = "DROP TABLE IF EXISTS " + table
+    rename_sql = "ALTER TABLE IF EXISTS " + tmp_table + " RENAME TO " + table_without_schema
+    logged_sql = "ALTER TABLE IF EXISTS " + table + " SET LOGGED"
+    vacuum_sql = "VACUUM ANALYZE " + tmp_table
+    with timescale.engine.connect() as connection:
+        connection.connection.set_isolation_level(0)
+        connection.execute(text(vacuum_sql))
+
+        populate_yim_cover_table(connection, year, tmp_table)
+
+    with timescale.engine.begin() as connection:
+        connection.execute(text(drop_sql))
+        connection.execute(text(rename_sql))
+        connection.execute(text(logged_sql))
+
+
+def send_mail(subject, to_name, to_email, content, html, logo, logo_cid, filename):
     if not to_email:
         return
 
@@ -259,10 +241,11 @@ def send_mail(subject, to_name, to_email, text, html, logo, logo_cid):
     message["To"] = f"{to_name} <{to_email}>"
     message["Subject"] = subject
 
-    message.set_content(text)
+    message.set_content(content)
     message.add_alternative(html, subtype="html")
 
-    message.get_payload()[1].add_related(logo, 'image', 'png', cid=logo_cid, filename="year-in-music-2022-logo.png")
+    message.get_payload()[1].add_related(
+        logo, 'image', 'png', cid=logo_cid, filename=filename)
     if current_app.config["TESTING"]:  # Not sending any emails during the testing process
         return
 
@@ -272,50 +255,131 @@ def send_mail(subject, to_name, to_email, text, html, logo, logo_cid):
     current_app.logger.info("Email sent to %s", to_name)
 
 
-def notify_yim_users(year):
+def sanitize_username(username):
+    username.replace('\\','\\\\')
+    username.replace('"','\\"')
+    return f'"{username}"'
+
+
+def notify_yim_users(db_conn, ts_conn, year):
     logo_cid = make_msgid()
-    with open("/static/img/year-in-music-22/yim-22-logo-small-compressed.png", "rb") as img:
+    with open("/static/img/year-in-music/yim-email-header.png", "rb") as img:
         logo = img.read()
 
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT user_id
-                 , musicbrainz_id
-                 , email
-              FROM statistics.year_in_music yim
-              JOIN "user"
-                ON "user".id = yim.user_id
-             WHERE year = :year
-        """), {"year": year})
-        rows = result.mappings().fetchall()
+    if year not in [2021, 2022, 2023, 2024, 2025]:
+        return None
+
+    table = "statistics.year_in_music_" + str(year)
+
+    result = ts_conn.execute(text("SELECT user_id FROM " + table + " WHERE data IS NOT NULL"))
+    user_ids = [row.user_id for row in result.fetchall()]
+
+    result = db_conn.execute(
+        text('SELECT id AS user_id, email, musicbrainz_id FROM "user" WHERE id = ANY(:user_ids)'),
+        {"user_ids": user_ids}
+    )
+    rows = result.fetchall()
 
     for row in rows:
-        user_name = row["musicbrainz_id"]
-
         # cannot use url_for because we do not set SERVER_NAME and
         # a request_context will not be available in this script.
         base_url = "https://listenbrainz.org"
-        year_in_music = f"{base_url}/user/{user_name}/year-in-music/"
+        link_to_year_in_music = f"{base_url}/user/{row.musicbrainz_id}/year-in-music/{year}/"
         params = {
-            "user_name": user_name,
+            "user_name": row.musicbrainz_id,
+            "year": year,
+            "link_to_year_in_music": link_to_year_in_music,
             "logo_cid": logo_cid[1:-1]
         }
 
         try:
             send_mail(
                 subject=f"Year In Music {year}",
-                text=render_template("emails/year_in_music.txt", **params),
-                to_email=row["email"],
-                to_name=user_name,
+                content=render_template("emails/year_in_music.txt", **params),
+                to_email=row.email,
+                to_name=sanitize_username(row.musicbrainz_id),
                 html=render_template("emails/year_in_music.html", **params),
                 logo_cid=logo_cid,
-                logo=logo
+                logo=logo,
+                filename="yim-email-header.png"
             )
         except Exception:
-            current_app.logger.error("Could not send YIM email to %s", user_name, exc_info=True)
+            current_app.logger.error("Could not send YIM email to %s", row.musicbrainz_id, exc_info=True)
 
         # create timeline event too
         timeline_message = f'ListenBrainz\' very own retrospective on {year} has just dropped: Check out ' \
-                           f'your own <a href="{year_in_music}">Year in Music</a> now!'
+                           f'your own <a href="{link_to_year_in_music}">Year in Music</a> now!'
         metadata = NotificationMetadata(creator="troi-bot", message=timeline_message)
-        create_user_notification_event(row["user_id"], metadata)
+        create_user_notification_event(db_conn, row.user_id, metadata)
+
+    return None
+
+
+def process_genre_data(yim_top_genre: list, data: list, user_name: str):
+    if not yim_top_genre or not data:
+        return {}
+
+    yim_data_dict = {genre["genre"]: genre["genre_count"] for genre in yim_top_genre}
+
+    adj_matrix = defaultdict(list)
+    is_head = defaultdict(lambda: True)
+    id_name_map = {}
+    parent_map = defaultdict(lambda: None)
+
+    for row in data:
+        genre_id = row["genre_gid"]
+        is_head[genre_id]
+        id_name_map[genre_id] = row.get("genre")
+
+        subgenre_id = row["subgenre_gid"]
+        if subgenre_id:
+            is_head[subgenre_id] = False
+            id_name_map[subgenre_id] = row.get("subgenre")
+            parent_map[subgenre_id] = genre_id
+            adj_matrix[genre_id].append(subgenre_id)
+        else:
+            adj_matrix[genre_id] = []
+
+    visited = set()
+    root_nodes = [node for node in is_head if is_head[node]]
+
+    def create_node(id):
+        if id in visited:
+            return None
+        visited.add(id)
+
+        genre_count = yim_data_dict.get(id_name_map[id], 0)
+        children = []
+
+        for sub_genre in sorted(adj_matrix[id]):
+            child_node = create_node(sub_genre)
+            if isinstance(child_node, list):
+                children.extend(child_node)
+            elif child_node is not None:
+                children.append(child_node)
+
+        if genre_count == 0:
+            if len(children) == 0:
+                return None
+            return children
+
+        node = {"id": id, "name": id_name_map[id], "children": children, "loc": genre_count}
+
+        if len(children) == 0:
+            del node["children"]
+
+        return node
+
+    output = []
+    for root_node in root_nodes:
+        node = create_node(root_node)
+        if isinstance(node, list):
+            output.extend(node)
+        elif node is not None:
+            output.append(node)
+
+    return {
+        "name": user_name,
+        "color": "transparent",
+        "children": output
+    }

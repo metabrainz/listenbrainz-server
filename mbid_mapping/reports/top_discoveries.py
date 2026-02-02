@@ -85,15 +85,15 @@ def fetch_top_discoveries_for_users(lb_conn, mb_conn, year):
             # a track was listened to. This data directly is not useful for anything directly, but from this 
             # a few types of playlists can be generated.
             query = """SELECT user_name
-                            , track_name
-                            , data->'track_metadata'->>'artist_name' AS artist_name
+                            , data->>'track_name' AS track_name
+                            , data->>'artist_name' AS artist_name
                             , array_agg(extract(year from to_timestamp(listened_at))::INT ORDER BY
                                         extract(year from to_timestamp(listened_at))::INT) AS years
                             , m.recording_mbid
                             , mm.artist_mbids
-                         FROM listen
+                         FROM listen l
               FULL OUTER JOIN mbid_mapping m
-                           ON (data->'track_metadata'->'additional_info'->>'recording_msid')::uuid = m.recording_msid
+                           ON l.recording_msid = m.recording_msid
               FULL OUTER JOIN mbid_mapping_metadata mm
                               ON mm.recording_mbid = m.recording_mbid
                         WHERE user_name in %s

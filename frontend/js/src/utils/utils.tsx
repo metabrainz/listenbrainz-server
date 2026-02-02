@@ -1,17 +1,25 @@
 import * as React from "react";
 import * as _ from "lodash";
+import { isFinite, isUndefined, deburr, escapeRegExp } from "lodash";
 import * as timeago from "time-ago";
-import { isFinite, isUndefined, castArray } from "lodash";
 import { Rating } from "react-simple-star-rating";
-import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
-import YoutubePlayer from "../brainzplayer/YoutubePlayer";
-import SpotifyAPIService from "./SpotifyAPIService";
+import { toast } from "react-toastify";
+import { Link } from "react-router";
+import ReactMarkdown from "react-markdown";
+import SpotifyPlayer from "../common/brainzplayer/SpotifyPlayer";
+import YoutubePlayer from "../common/brainzplayer/YoutubePlayer";
 import NamePill from "../personal-recommendations/NamePill";
 import { GlobalAppContextT } from "./GlobalAppContext";
 import APIServiceClass from "./APIService";
+import { ToastMsg } from "../notifications/Notifications";
+import RecordingFeedbackManager from "./RecordingFeedbackManager";
+import { Flair } from "./constants";
+import { getCoverArtCache, setCoverArtCache } from "./coverArtCache";
 
 const originalFetch = window.fetch;
 const fetchWithRetry = require("fetch-retry")(originalFetch);
+
+let APIServiceInstance = new APIServiceClass(`${window.location.origin}/1`);
 
 const searchForSpotifyTrack = async (
   spotifyToken?: string,
@@ -28,13 +36,13 @@ const searchForSpotifyTrack = async (
   }
   let queryString = `type=track&q=`;
   if (trackName) {
-    queryString += `track:${encodeURIComponent(trackName)}`;
+    queryString += encodeURIComponent(trackName);
   }
   if (artistName) {
-    queryString += ` artist:${encodeURIComponent(artistName)}`;
+    queryString += encodeURIComponent(` artist:${artistName}`);
   }
   if (releaseName) {
-    queryString += ` album:${encodeURIComponent(releaseName)}`;
+    queryString += encodeURIComponent(` album:${releaseName}`);
   }
 
   const response = await fetch(
@@ -131,6 +139,319 @@ const searchForYoutubeTrack = async (
   return null;
 };
 
+const searchForSoundcloudTrack = async (
+  soundcloudToken: string,
+  trackName?: string,
+  artistName?: string,
+  releaseName?: string
+): Promise<string | null> => {
+  let query = trackName ?? "";
+  if (artistName) {
+    query += ` ${artistName}`;
+  }
+  // Considering we cannot tell the Soundcloud API that this should match only an album title,
+  // results are paradoxically sometimes worse if we add it to the query
+  // if (releaseName) {
+  //   query += ` ${releaseName}`;
+  // }
+  if (!query) {
+    return null;
+  }
+
+  const response = await fetch(
+    `https://api.soundcloud.com/tracks?q=${encodeURIComponent(
+      query
+    )}&access=playable`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `OAuth ${soundcloudToken}`,
+      },
+    }
+  );
+  const responseBody = await response.json();
+  if (!response.ok) {
+    throw responseBody;
+  }
+  return responseBody?.[0]?.uri ?? null;
+};
+
+const searchForFunkwhaleTrack = async (
+  funkwhaleToken: string,
+  instanceURL: string,
+  trackName?: string,
+  artistName?: string
+): Promise<FunkwhaleTrack | null> => {
+  const query = trackName ?? "";
+  if (!query) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      `${instanceURL}/api/v1/tracks?q=${encodeURIComponent(query)}&limit=10`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${funkwhaleToken}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      const error = new Error(errorBody.detail || response.statusText);
+      (error as any).status = response.status;
+      throw error;
+    }
+
+    const responseBody = await response.json();
+    const tracks = responseBody?.results ?? [];
+
+    if (tracks.length === 0) {
+      return null;
+    }
+
+    // Filter only playable tracks
+    const playableTracks = tracks.filter(
+      (track: any) => track.is_playable === true
+    );
+
+    if (playableTracks.length === 0) {
+      return null;
+    }
+
+    if (!trackName) {
+      // If no track name to match against, return first playable track
+      return playableTracks[0] || null;
+    }
+
+    // Remove accents from track name for better matching
+    const trackNameWithoutAccents = deburr(trackName);
+
+    // https://docs.funkwhale.audio/specs/multi-artist/mb-content.html
+    // using multi-artist approch for better matching of tracks
+    const candidateMatches = playableTracks.map((candidate: any) => {
+      // Get artist name from multiple possible sources:
+      // 1. New multi-artist format: artist_credit array
+      // 2. Legacy format: artist object
+      // 3. Fallback: artist_credit as single object (if not array)
+      let candidateArtistName = "";
+      let artistCredits: any[] = [];
+
+      if (
+        candidate.artist_credit &&
+        Array.isArray(candidate.artist_credit) &&
+        candidate.artist_credit.length > 0
+      ) {
+        // New multi-artist format: preserve artist_credit structure
+        artistCredits = candidate.artist_credit;
+        // For search purposes, combine artist credits (without joinphrases)
+        candidateArtistName = candidate.artist_credit
+          .map((credit: any) => credit.credit || credit.artist.name || "")
+          .filter((name: string) => name.trim())
+          .join(" ");
+      } else if (
+        candidate.artist_credit &&
+        !Array.isArray(candidate.artist_credit)
+      ) {
+        // Single artist_credit object format
+        artistCredits = [candidate.artist_credit];
+        candidateArtistName =
+          candidate.artist_credit.credit ||
+          candidate.artist_credit.artist.name ||
+          "";
+      } else if (candidate.artist?.name) {
+        // Legacy artist format - convert to artist_credit-like structure
+        artistCredits = [
+          {
+            artist_id: candidate.artist.id,
+            credit: candidate.artist.name,
+            joinphrase: "",
+          },
+        ];
+        candidateArtistName = candidate.artist.name;
+      }
+
+      return {
+        ...candidate,
+        normalizedTitle: deburr(candidate.title || ""),
+        normalizedArtist: deburr(candidateArtistName),
+        artistCredits, // Preserve original structure for proper display
+      };
+    });
+
+    // If artist name is provided, try to filter by artist first
+    let filteredCandidates = candidateMatches;
+    if (artistName) {
+      const artistNameWithoutAccents = deburr(artistName);
+      const artistMatches = candidateMatches.filter((candidate: any) =>
+        candidate.normalizedArtist
+          .toLowerCase()
+          .includes(artistNameWithoutAccents.toLowerCase())
+      );
+
+      // If we found tracks by the right artist, use those for matching
+      if (artistMatches.length > 0) {
+        filteredCandidates = artistMatches;
+      }
+    }
+
+    // After artist filtering, check for exact title match first
+    const exactMatch = filteredCandidates.find((candidate: any) =>
+      new RegExp(escapeRegExp(trackNameWithoutAccents), "igu").test(
+        candidate.normalizedTitle
+      )
+    );
+
+    if (exactMatch) {
+      return exactMatch;
+    }
+
+    // If no exact match, return the first artist-filtered result
+    // (since artist filtering already gave us the right artist)
+    if (filteredCandidates.length > 0) {
+      return filteredCandidates[0];
+    }
+
+    // No good match found, return the first playable track as fallback
+    return playableTracks[0] || null;
+  } catch (error) {
+    // Log the error and return null instead of throwing
+    // eslint-disable-next-line no-console
+    console.error("Funkwhale search failed:", error);
+    return null;
+  }
+};
+
+/**
+ * Remove featuring artists from artist name to improve search matching.
+ * Based on MusicBrainz's battle-tested regex pattern:
+ * https://github.com/metabrainz/musicbrainz-server/blob/master/root/static/scripts/edit/utility/guessFeat.js
+ */
+const removeFeaturingArtists = (artistName: string): string => {
+  if (!artistName) return artistName;
+
+  // MusicBrainz-based regex for featuring artists
+  // Matches: feat./ft./featuring with optional punctuation and fullwidth variants
+  const featRegex = /(?:^\s*|[,，－-]\s*|\s+)((?:ft|feat|ｆｔ|ｆｅａｔ)(?:[.．]|(?=\s))|(?:featuring|ｆｅａｔｕｒｉｎｇ)(?=\s))\s*.+$/i;
+
+  let cleaned = artistName.replace(featRegex, "");
+
+  // Also handle featuring artists in brackets/parentheses at the end
+  // e.g., "Artist (feat. Guest)" or "Artist [ft. Someone]"
+  cleaned = cleaned.replace(
+    /\s*[[（(].*?(?:ft|feat|ｆｔ|ｆｅａｔ)(?:[.．]|(?=\s))|(?:featuring|ｆｅａｔｕｒｉｎｇ).*?[\]）)\s]*$/i,
+    ""
+  );
+
+  return cleaned.trim();
+};
+
+const performNavidromeSearch = async (
+  instanceURL: string,
+  authParams: string,
+  query: string,
+  signal?: AbortSignal
+): Promise<NavidromeTrack | null> => {
+  const searchUrl = `${instanceURL}/rest/search3?query=${encodeURIComponent(
+    query
+  )}&songCount=1&${authParams}`;
+
+  const response = await fetch(searchUrl, { signal });
+
+  if (!response.ok) {
+    let errorBody: any = {};
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      errorBody = await response.json().catch(() => ({}));
+    }
+    const error = new Error(errorBody.detail || response.statusText);
+    (error as any).status = response.status;
+    throw error;
+  }
+
+  let data;
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    data = await response.json();
+  } else {
+    throw new Error("Server returned non-JSON response");
+  }
+
+  const searchResult = data["subsonic-response"]?.searchResult3;
+  if (searchResult?.song && searchResult.song.length > 0) {
+    return searchResult.song[0];
+  }
+
+  return null;
+};
+
+const searchForNavidromeTrack = async (
+  instanceURL: string,
+  authParams: string,
+  trackName?: string,
+  artistName?: string,
+  signal?: AbortSignal
+): Promise<NavidromeTrack | null> => {
+  if (!instanceURL || !authParams) {
+    throw new Error(
+      "Missing Navidrome instance URL or authentication parameters"
+    );
+  }
+
+  if (!trackName || !artistName) {
+    throw new Error("Both track name and artist name are required for search");
+  }
+
+  try {
+    // Try with full artist name first to avoid unnecessary regex processing
+    const fullQuery = `${trackName} ${artistName}`.trim();
+    const result = await performNavidromeSearch(
+      instanceURL,
+      authParams,
+      fullQuery,
+      signal
+    );
+    if (result) {
+      return result;
+    }
+
+    // Fall back to cleaned artist name (without featuring artists)
+    const cleanedArtistName = removeFeaturingArtists(artistName);
+    const cleanedQuery = `${trackName} ${cleanedArtistName}`.trim();
+    const fallbackResult = await performNavidromeSearch(
+      instanceURL,
+      authParams,
+      cleanedQuery,
+      signal
+    );
+    if (fallbackResult) {
+      return fallbackResult;
+    }
+
+    return null;
+  } catch (error) {
+    // Allow AbortError to pass through for caller to handle
+    if (error.name === "AbortError") {
+      throw error;
+    }
+
+    if (
+      error.message ===
+        "Missing Navidrome instance URL or authentication parameters" ||
+      error.message === "No search terms provided"
+    ) {
+      throw error;
+    }
+    const newError = new Error(`Navidrome search failed: ${error.message}`);
+    (newError as any).status = error.status || 500;
+    throw newError;
+  }
+};
+
 const getAdditionalContent = (metadata: EventMetadata): string =>
   _.get(metadata, "blurb_content") ?? _.get(metadata, "text") ?? "";
 
@@ -167,59 +488,89 @@ const getRecordingMBID = (listen: Listen): string | undefined =>
 
 const getReleaseMBID = (listen: Listen): string | undefined =>
   _.get(listen, "track_metadata.additional_info.release_mbid") ??
+  _.get(listen, "track_metadata.release_mbid") ??
   _.get(listen, "track_metadata.mbid_mapping.release_mbid");
 
 const getReleaseGroupMBID = (listen: Listen): string | undefined =>
   _.get(listen, "track_metadata.additional_info.release_group_mbid") ??
   _.get(listen, "track_metadata.mbid_mapping.release_group_mbid");
 
+const getReleaseName = (listen: Listen): string =>
+  _.get(listen, "track_metadata.mbid_mapping.release_name", "") ||
+  _.get(listen, "track_metadata.release_name", "") ||
+  _.get(listen, "track_metadata.mbid_mapping.release_group_name", "");
+
 const getTrackName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
-  _.get(listen, "track_metadata.track_name", "") || _.get(listen, "title", "");
+  _.get(listen, "track_metadata.mbid_mapping.recording_name", "") ||
+  _.get(listen, "track_metadata.track_name", "") ||
+  _.get(listen, "title", "");
 
 const getTrackDurationInMs = (listen?: Listen | JSPFTrack): number =>
   _.get(listen, "track_metadata.additional_info.duration_ms", "") ||
   _.get(listen, "track_metadata.additional_info.duration", "") * 1000 ||
   _.get(listen, "duration", "");
 
-const getArtistName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
-  _.get(listen, "track_metadata.artist_name", "") ||
-  _.get(listen, "creator", "");
+const getArtistName = (
+  listen?: Listen | JSPFTrack | PinnedRecording,
+  firstArtistOnly: boolean = false
+): string => {
+  const artists: MBIDMappingArtist[] = _.get(
+    listen,
+    "track_metadata.mbid_mapping.artists",
+    []
+  );
+  if (artists?.length) {
+    if (firstArtistOnly) {
+      return artists[0].artist_credit_name;
+    }
+    return artists
+      .map((artist) => `${artist.artist_credit_name}${artist.join_phrase}`)
+      .join("");
+  }
+  return (
+    _.get(listen, "track_metadata.artist_name", "") ||
+    _.get(listen, "creator", "")
+  );
+};
+
+const getMBIDMappingArtistLink = (artists: MBIDMappingArtist[]) => {
+  return (
+    <>
+      {artists.map((artist) => (
+        <React.Fragment key={artist.artist_mbid}>
+          <Link
+            to={`/artist/${artist.artist_mbid}/`}
+            title={artist.artist_credit_name}
+          >
+            {artist.artist_credit_name}
+          </Link>
+          {artist.join_phrase}
+        </React.Fragment>
+      ))}
+    </>
+  );
+};
+
+const getStatsArtistLink = (
+  artists?: MBIDMappingArtist[],
+  artist_name?: string,
+  artist_mbids?: string[]
+) => {
+  if (artists?.length) {
+    return getMBIDMappingArtistLink(artists);
+  }
+  const firstArtist = _.first(artist_mbids);
+  if (firstArtist) {
+    return <Link to={`/artist/${firstArtist}/`}>{artist_name}</Link>;
+  }
+  return artist_name;
+};
 
 const getArtistLink = (listen: Listen) => {
   const artists = listen.track_metadata?.mbid_mapping?.artists;
-  if (artists?.length) {
-    return (
-      <>
-        {artists.map((artist) => (
-          <>
-            <a
-              href={`https://musicbrainz.org/artist/${artist.artist_mbid}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {artist.artist_credit_name}
-            </a>
-            {artist.join_phrase}
-          </>
-        ))}
-      </>
-    );
-  }
-  const artistName = getArtistName(listen);
-  const artistMbids = getArtistMBIDs(listen);
-  const firstArtist = _.first(artistMbids);
-  if (firstArtist) {
-    return (
-      <a
-        href={`https://musicbrainz.org/artist/${firstArtist}`}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {artistName}
-      </a>
-    );
-  }
-  return artistName;
+  const artist_name = getArtistName(listen);
+  const artist_mbids = getArtistMBIDs(listen);
+  return getStatsArtistLink(artists, artist_name, artist_mbids);
 };
 
 const getTrackLink = (listen: Listen): JSX.Element | string => {
@@ -227,18 +578,37 @@ const getTrackLink = (listen: Listen): JSX.Element | string => {
   const recordingMbid = getRecordingMBID(listen);
 
   if (recordingMbid) {
-    return (
-      <a
-        href={`https://musicbrainz.org/recording/${recordingMbid}`}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {trackName}
-      </a>
-    );
+    return <Link to={`/track/${recordingMbid}`}>{trackName}</Link>;
   }
   return trackName;
 };
+
+const getAlbumLink = (listen: Listen): JSX.Element | string => {
+  const releaseName = getReleaseName(listen);
+  const releaseGroupMBID = getReleaseGroupMBID(listen);
+  const releaseMBID = getReleaseMBID(listen);
+
+  if (releaseGroupMBID) {
+    return <Link to={`/album/${releaseGroupMBID}`}>{releaseName}</Link>;
+  }
+  if (releaseMBID) {
+    return <Link to={`/release/${releaseMBID}`}>{releaseName}</Link>;
+  }
+  return releaseName;
+};
+
+const getListenCardKey = (listen: Listen): string =>
+  `${listen.listened_at}-${listen.user_name}-${getRecordingMSID(
+    listen
+  )}-${getTrackName(listen)}-${getArtistName(listen)}-${getReleaseName(
+    listen
+  )}-${
+    listen.track_metadata?.mbid_mapping?.release_group_name
+  }-${getRecordingMBID(listen)}-${getArtistMBIDs(listen)?.join(
+    ","
+  )}-${getReleaseMBID(listen)}-${getReleaseGroupMBID(listen)}-${
+    listen.track_metadata?.mbid_mapping?.caa_id
+  }-${listen.track_metadata?.mbid_mapping?.caa_release_mbid}`;
 
 const formatWSMessageToListen = (wsMsg: any): Listen | null => {
   const json = wsMsg;
@@ -303,7 +673,7 @@ const formatWSMessageToListen = (wsMsg: any): Listen | null => {
 
 // recieves or unix epoch timestamp int or ISO datetime string
 const preciseTimestamp = (
-  listened_at: number | string,
+  listened_at: number | string | Date,
   displaySetting?: "timeAgo" | "includeYear" | "excludeYear"
 ): string => {
   const listenDate: Date = new Date(listened_at);
@@ -361,7 +731,7 @@ const preciseTimestamp = (
 };
 // recieves or unix epoch timestamp int or ISO datetime string
 const fullLocalizedDateFromTimestampOrISODate = (
-  unix_epoch_timestamp: number | string | undefined | null
+  unix_epoch_timestamp: number | string | Date | undefined | null
 ): string => {
   if (!unix_epoch_timestamp) {
     return "";
@@ -382,7 +752,7 @@ const fullLocalizedDateFromTimestampOrISODate = (
 const convertDateToUnixTimestamp = (date: Date): number => {
   const newDate = new Date(date);
   const timestampInMs = newDate.getTime();
-  const unixTimestamp = Math.floor(newDate.getTime() / 1000);
+  const unixTimestamp = Math.floor(timestampInMs / 1000);
   return unixTimestamp;
 };
 
@@ -395,19 +765,61 @@ export function loadScriptAsync(document: any, scriptSrc: string): void {
   el.src = scriptSrc;
   container.appendChild(el);
 }
+export async function fetchMusicBrainzGenres() {
+  // Fetch and save the list of MusicBrainz genres
+  try {
+    const response = await fetch(
+      "https://musicbrainz.org/ws/2/genre/all?fmt=txt"
+    );
+    const genresList = await response.text();
+    const fetchedGenres = Array.from(genresList.split("\n"));
+    if (fetchedGenres.length) {
+      localStorage?.setItem(
+        "musicbrainz-genres",
+        JSON.stringify({
+          creation_date: Date.now(),
+          genre_list: fetchedGenres,
+        })
+      );
+      return fetchedGenres;
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(error);
+  }
+  return [];
+}
 
-const createAlert = (
-  type: AlertType,
-  title: string,
-  message: string | JSX.Element
-): Alert => {
-  return {
-    id: new Date().getTime(),
-    type,
-    headline: title,
-    message,
-  };
-};
+async function getOrFetchMBGenres(forceExpiry = false) {
+  try {
+    // Try to load genres from local storage, fetch them otherwise
+    const localStorageString = localStorage?.getItem("musicbrainz-genres");
+    if (!localStorageString) {
+      // nothing saved, fetch the genres and save them
+      const fetchedGenres = await fetchMusicBrainzGenres();
+      return fetchedGenres;
+    }
+    const localStorageObject = JSON.parse(localStorageString);
+    // expire the list after 2 weeks
+    if (
+      forceExpiry ||
+      !localStorageObject ||
+      Date.now() > localStorageObject.creation_date + 1209000000
+    ) {
+      // If the item is expired, fetch them afresh and save them
+      const fetchedGenres = await fetchMusicBrainzGenres();
+      return fetchedGenres;
+    }
+    return localStorageObject.genre_list;
+  } catch (error) {
+    // Cookies disabled or localStorage error, for example in Firefox Enhanced Tracking Protection mode
+    console.error(
+      "Cookie or storage error, some feature may not work as expected",
+      error
+    );
+    return [];
+  }
+}
 
 type SentryProps = {
   sentry_dsn: string;
@@ -415,21 +827,27 @@ type SentryProps = {
 };
 type GlobalAppProps = {
   api_url: string;
+  websockets_url: string;
   current_user: ListenBrainzUser;
   spotify?: SpotifyUser;
   youtube?: YoutubeUser;
-  critiquebrainz?: CritiqueBrainzUser;
+  soundcloud?: SoundCloudUser;
+  critiquebrainz?: MetaBrainzProjectUser;
+  musicbrainz?: MetaBrainzProjectUser;
+  appleMusic?: AppleMusicUser;
+  funkwhale?: FunkwhaleUser;
+  navidrome?: NavidromeUser;
   user_preferences?: UserPreferences;
+  flair?: Flair;
 };
 type GlobalProps = GlobalAppProps & SentryProps;
 
-const getPageProps = (): {
+const getPageProps = async (): Promise<{
   domContainer: HTMLElement;
   reactProps: Record<string, any>;
   sentryProps: SentryProps;
-  optionalAlerts: Alert[];
   globalAppContext: GlobalAppContextT;
-} => {
+}> => {
   let domContainer = document.getElementById("react-container");
   const propsElement = document.getElementById("page-react-props");
   const globalPropsElement = document.getElementById("global-react-props");
@@ -437,7 +855,6 @@ const getPageProps = (): {
   let globalReactProps = {} as GlobalProps;
   let sentryProps = {} as SentryProps;
   let globalAppContext = {} as GlobalAppContextT;
-  const optionalAlerts = [];
   if (!domContainer) {
     // Ensure there is a container for React rendering
     // We should always have on on the page already, but displaying errors to the user relies on there being one
@@ -461,57 +878,94 @@ const getPageProps = (): {
     const {
       current_user,
       api_url,
+      websockets_url,
       spotify,
       youtube,
+      soundcloud,
       critiquebrainz,
+      musicbrainz,
+      appleMusic,
+      funkwhale,
+      navidrome,
       sentry_traces_sample_rate,
       sentry_dsn,
+      user_preferences,
+      flair,
     } = globalReactProps;
 
-    let { user_preferences } = globalReactProps;
-
-    user_preferences = { ...user_preferences, saveData: false };
+    const userPreferences = {
+      ...user_preferences,
+      saveData: false,
+    };
 
     if ("connection" in navigator) {
       // @ts-ignore
       if (navigator.connection?.saveData === true) {
-        user_preferences.saveData = true;
+        userPreferences.saveData = true;
       }
     }
 
     const apiService = new APIServiceClass(
       api_url || `${window.location.origin}/1`
     );
+    APIServiceInstance = apiService;
     globalAppContext = {
       APIService: apiService,
+      websocketsUrl: websockets_url,
       currentUser: current_user,
       spotifyAuth: spotify,
       youtubeAuth: youtube,
+      soundcloudAuth: soundcloud,
       critiquebrainzAuth: critiquebrainz,
-      userPreferences: user_preferences,
+      appleAuth: appleMusic,
+      funkwhaleAuth: funkwhale,
+      navidromeAuth: navidrome,
+      musicbrainzAuth: {
+        ...musicbrainz,
+        refreshMBToken: async function refreshMBToken() {
+          try {
+            const newToken = await apiService.refreshMusicbrainzToken();
+            _.set(globalAppContext, "musicbrainzAuth.access_token", newToken);
+            return newToken;
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error(
+              "Could not refresh MusicBrainz auth token:",
+              err.toString()
+            );
+          }
+          return undefined;
+        },
+      },
+      userPreferences,
+      musicbrainzGenres: await getOrFetchMBGenres(),
+      recordingFeedbackManager: new RecordingFeedbackManager(
+        apiService,
+        current_user
+      ),
+      flair,
     };
     sentryProps = {
       sentry_dsn,
       sentry_traces_sample_rate,
     };
   } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err);
     // Show error to the user and ask to reload page
     const errorMessage = `Please refresh the page.
 	If the problem persists, please contact us.
 	Reason: ${err}`;
-    const newAlert = createAlert(
-      "danger",
-      "Error loading the page",
-      errorMessage
+    toast.error(
+      <ToastMsg title="Error loading the Page" message={errorMessage} />,
+      { toastId: "page-load-error" }
     );
-    optionalAlerts.push(newAlert);
   }
   return {
     domContainer,
     reactProps,
     sentryProps,
     globalAppContext,
-    optionalAlerts,
   };
 };
 
@@ -552,52 +1006,161 @@ const pinnedRecordingToListen = (pinnedRecording: PinnedRecording): Listen => {
 
 const generateAlbumArtThumbnailLink = (
   caaId: number | string,
-  releaseMBID: string
+  releaseMBID: string,
+  size: CAAThumbnailSizes = 250
 ): string => {
-  return `https://archive.org/download/mbid-${releaseMBID}/mbid-${releaseMBID}-${caaId}_thumb250.jpg`;
+  return `https://archive.org/download/mbid-${releaseMBID}/mbid-${releaseMBID}-${caaId}_thumb${size}.jpg`;
 };
 
-const getAlbumArtFromReleaseMBID = async (
-  userSubmittedReleaseMBID: string
+export type CAAThumbnailSizes = 250 | 500 | 1200 | "small" | "large";
+
+const getThumbnailFromCAAResponse = (
+  body: CoverArtArchiveResponse,
+  size: CAAThumbnailSizes = 250,
+  frontOnly = false
+): string | undefined => {
+  if (!body.images?.length) {
+    return undefined;
+  }
+  const { release } = body;
+  const regexp = /musicbrainz.org\/release\/(?<mbid>[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12})/g;
+  const releaseMBID = regexp.exec(release)?.groups?.mbid;
+
+  const frontImage = body.images.find((image) => image.front);
+
+  if (frontImage?.id && releaseMBID) {
+    // CAA links are http redirects instead of https, causing LB-1067 (mixed content warning).
+    // We also don't need or want the redirect from CAA, instead we can reconstruct
+    // the link to the underlying archive.org resource directly
+    // Also see https://github.com/metabrainz/listenbrainz-server/commit/9e40ad440d0b280b6c53d13e804f911657469c8b
+    const { id } = frontImage;
+    return generateAlbumArtThumbnailLink(id, releaseMBID);
+  }
+  if (frontImage) {
+    const { thumbnails, image } = frontImage;
+    return thumbnails[size] ?? thumbnails.small ?? image;
+  }
+  if (frontOnly) {
+    // We don't have a front image in the response, and are expecting a front image only, so return
+    return undefined;
+  }
+
+  // No front image? Fallback to whatever the first image is
+  const { thumbnails, image } = body.images[0];
+  return thumbnails[size] ?? thumbnails.small ?? image;
+};
+
+const retryParams = {
+  retries: 4,
+  retryOn: [429],
+  retryDelay(attempt: number) {
+    // Exponential backoff at random interval between maxRetryTime and minRetryTime,
+    // adding minRetryTime for every attempt. `attempt` starts at 0
+    const maxRetryTime = 2500;
+    const minRetryTime = 1800;
+    const clampedRandomTime =
+      Math.random() * (maxRetryTime - minRetryTime) + minRetryTime;
+    // Make it exponential
+    return Math.floor(clampedRandomTime) * 2 ** attempt;
+  },
+};
+
+const getAlbumArtFromReleaseGroupMBID = async (
+  releaseGroupMBID: string,
+  optionalSize?: CAAThumbnailSizes
 ): Promise<string | undefined> => {
   try {
+    const cacheKey = `rag:${releaseGroupMBID}-${optionalSize}`;
+    const cachedCoverArt = await getCoverArtCache(cacheKey);
+    if (cachedCoverArt) {
+      return cachedCoverArt;
+    }
     const CAAResponse = await fetchWithRetry(
-      `https://coverartarchive.org/release/${userSubmittedReleaseMBID}`,
-      {
-        retries: 4,
-        retryOn: [429],
-        retryDelay(attempt: number) {
-          // Exponential backoff at random interval between maxRetryTime and minRetryTime,
-          // adding minRetryTime for every attempt. `attempt` starts at 0
-          const maxRetryTime = 2500;
-          const minRetryTime = 1800;
-          const clampedRandomTime =
-            Math.random() * (maxRetryTime - minRetryTime) + minRetryTime;
-          // Make it exponential
-          return Math.floor(clampedRandomTime) * 2 ** attempt;
-        },
-      }
+      `https://coverartarchive.org/release-group/${releaseGroupMBID}`,
+      retryParams
     );
     if (CAAResponse.ok) {
       const body: CoverArtArchiveResponse = await CAAResponse.json();
-      if (!body.images?.length) {
+      const coverArt = getThumbnailFromCAAResponse(body, optionalSize, true);
+      if (coverArt) {
+        // Cache the successful result
+        await setCoverArtCache(cacheKey, coverArt);
+      }
+      return coverArt;
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `Couldn't fetch Cover Art Archive entry for ${releaseGroupMBID}`,
+      error
+    );
+  }
+  return undefined;
+};
+
+const getAlbumArtFromReleaseMBID = async (
+  userSubmittedReleaseMBID: string | undefined | null,
+  userSubmittedReleaseGroupMBID: string | undefined | null,
+  optionalSize?: CAAThumbnailSizes,
+  frontOnly?: boolean
+): Promise<string | undefined> => {
+  try {
+    // Check cache first
+    const cacheKey = `ca:${userSubmittedReleaseMBID}-${optionalSize}-${userSubmittedReleaseGroupMBID}`;
+    const cachedCoverArt = await getCoverArtCache(cacheKey);
+    if (cachedCoverArt) {
+      return cachedCoverArt;
+    }
+    if (userSubmittedReleaseMBID) {
+      const CAAResponse = await fetchWithRetry(
+        `https://coverartarchive.org/release/${userSubmittedReleaseMBID}`,
+        retryParams
+      );
+      if (CAAResponse.ok) {
+        const body: CoverArtArchiveResponse = await CAAResponse.json();
+        const coverArt = getThumbnailFromCAAResponse(
+          body,
+          optionalSize,
+          frontOnly
+        );
+        // Here, make sure there is a front image, otherwise discard the hit.
+        if (coverArt) {
+          // Cache the successful result
+          await setCoverArtCache(cacheKey, coverArt);
+        }
+        return coverArt;
+      }
+    }
+
+    /*
+      Fallback to fetching cover art for the Release Group.
+      If no RG MBID is available, first hit the MusicBrainz API
+      with the release MBID to get the RG MBID
+    */
+    if (userSubmittedReleaseMBID || userSubmittedReleaseGroupMBID) {
+      let releaseGroupMBID = userSubmittedReleaseGroupMBID;
+      if (
+        !_.isString(userSubmittedReleaseGroupMBID) &&
+        _.isString(userSubmittedReleaseMBID)
+      ) {
+        const releaseGroupResponse = (await APIServiceInstance.lookupMBRelease(
+          userSubmittedReleaseMBID,
+          "release-groups"
+        )) as MusicBrainzRelease & WithReleaseGroup;
+        releaseGroupMBID = releaseGroupResponse["release-group"].id;
+      }
+      if (!_.isString(releaseGroupMBID)) {
         return undefined;
       }
 
-      const frontImage = body.images.find((image) => image.front);
-
-      if (frontImage?.id) {
-        // CAA links are http redirects instead of https, causing LB-1067 (mixed content warning).
-        // We also don't need or want the redirect from CAA, instead we can reconstruct
-        // the link to the underlying archive.org resource directly
-        // Also see https://github.com/metabrainz/listenbrainz-server/commit/9e40ad440d0b280b6c53d13e804f911657469c8b
-        const { id } = frontImage;
-        return generateAlbumArtThumbnailLink(id, userSubmittedReleaseMBID);
+      const fallbackCoverArt = await getAlbumArtFromReleaseGroupMBID(
+        releaseGroupMBID
+      );
+      if (fallbackCoverArt) {
+        // Cache the fallback result
+        await setCoverArtCache(cacheKey, fallbackCoverArt);
       }
-
-      // No front image? Fallback to whatever the first image is
-      const { thumbnails, image } = body.images[0];
-      return thumbnails[250] ?? thumbnails.small ?? image;
+      return fallbackCoverArt;
     }
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -609,102 +1172,137 @@ const getAlbumArtFromReleaseMBID = async (
   return undefined;
 };
 
+const fetchSpotifyTrackInfo = async (
+  spotifyTrackId: string,
+  accessToken: string
+): Promise<Response | undefined> => {
+  try {
+    return await fetch(`https://api.spotify.com/v1/tracks/${spotifyTrackId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+  } catch (error) {
+    return undefined;
+  }
+};
+
+const getAlbumArtFromSpotifyTrackID = async (
+  spotifyTrackID: string,
+  spotifyUser?: SpotifyUser
+): Promise<string | undefined> => {
+  if (!spotifyUser || !spotifyTrackID) {
+    return undefined;
+  }
+  let response = await fetchSpotifyTrackInfo(
+    spotifyTrackID,
+    spotifyUser.access_token!!
+  );
+  if (response?.status === 401) {
+    try {
+      const newToken = await APIServiceInstance.refreshSpotifyToken();
+      if (newToken) {
+        response = await fetchSpotifyTrackInfo(spotifyTrackID, newToken);
+      }
+    } catch (error) {
+      return undefined;
+    }
+  }
+
+  if (response?.ok) {
+    try {
+      const track: SpotifyTrack = await response.json();
+      return track.album?.images?.[0]?.url;
+    } catch (error) {
+      return undefined;
+    }
+  }
+  return undefined;
+};
+
+const getAlbumArtFromListenMetadataKey = (
+  listen: BaseListenFormat,
+  spotifyUser?: SpotifyUser
+): string | undefined => {
+  if (
+    SpotifyPlayer.isListenFromThisService(listen) &&
+    SpotifyPlayer.hasPermissions(spotifyUser)
+  ) {
+    return `spotify:${SpotifyPlayer.getSpotifyTrackIDFromListen(listen)}`;
+  }
+  if (YoutubePlayer.isListenFromThisService(listen)) {
+    return `youtube:${YoutubePlayer.getVideoIDFromListen(listen)}`;
+  }
+  const userSubmittedReleaseMBID =
+    listen.track_metadata?.release_mbid ??
+    listen.track_metadata?.additional_info?.release_mbid;
+  const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
+  const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
+
+  return `ca:${userSubmittedReleaseMBID ?? ""}:${caaId ?? ""}:${
+    caaReleaseMbid ?? ""
+  }`;
+};
+
 const getAlbumArtFromListenMetadata = async (
   listen: BaseListenFormat,
   spotifyUser?: SpotifyUser
 ): Promise<string | undefined> => {
+  if (!listen) {
+    return undefined;
+  }
   // if spotifyListen
   if (
     SpotifyPlayer.isListenFromThisService(listen) &&
     SpotifyPlayer.hasPermissions(spotifyUser)
   ) {
     const trackID = SpotifyPlayer.getSpotifyTrackIDFromListen(listen);
-    return new SpotifyAPIService(spotifyUser).getAlbumArtFromSpotifyTrackID(
-      trackID
+    const spotifyAlbumArt = await getAlbumArtFromSpotifyTrackID(
+      trackID,
+      spotifyUser
     );
-  }
-  if (YoutubePlayer.isListenFromThisService(listen)) {
-    const videoId = YoutubePlayer.getVideoIDFromListen(listen);
-    const images = YoutubePlayer.getThumbnailsFromVideoid(videoId);
-    return images?.[0].src;
+    if (spotifyAlbumArt) {
+      return spotifyAlbumArt;
+    }
   }
   /** Could not load image from music service, fetching from CoverArtArchive if MBID is available */
   // directly access additional_info.release_mbid instead of using getReleaseMBID because we only want
   // to query CAA for user submitted mbids.
   const userSubmittedReleaseMBID =
+    listen.track_metadata?.release_mbid ??
     listen.track_metadata?.additional_info?.release_mbid;
-  if (userSubmittedReleaseMBID) {
+  const userSubmittedReleaseGroupMBID =
+    listen.track_metadata?.additional_info?.release_group_mbid;
+  const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
+  const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
+  if (userSubmittedReleaseMBID || userSubmittedReleaseGroupMBID) {
+    // try getting the cover art using user submitted release mbid. if user submitted release mbid
+    // does not have a cover art and the mapper matched to a different release, try to fallback to
+    // release group cover art of the user submitted release mbid next
     const userSubmittedReleaseAlbumArt = await getAlbumArtFromReleaseMBID(
-      userSubmittedReleaseMBID
+      userSubmittedReleaseMBID,
+      userSubmittedReleaseGroupMBID,
+      undefined,
+      true // we only want front images, otherwise skip
     );
-    // if user submitted release mbid does not have a cover art, we will try to fallback to release group cover art next
     if (userSubmittedReleaseAlbumArt) {
       return userSubmittedReleaseAlbumArt;
     }
   }
   // user submitted release mbids not found, check if there is a match from mbid mapper.
-  const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
-  const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
   if (caaId && caaReleaseMbid) {
     return generateAlbumArtThumbnailLink(caaId, caaReleaseMbid);
   }
+  /* We are putting Youtube thumbnails as last resort fallback as the quality
+  and format is usually not very good, user preferring proper cover art. */
+  if (YoutubePlayer.isListenFromThisService(listen)) {
+    const videoId = YoutubePlayer.getVideoIDFromListen(listen);
+    const images = YoutubePlayer.getThumbnailsFromVideoid(videoId);
+    return images?.[0].src;
+  }
   return undefined;
 };
-
-/** Courtesy of Matt Zimmerman
- * https://codepen.io/influxweb/pen/LpoXba
- */
-/* eslint-disable no-bitwise */
-function getAverageRGBOfImage(
-  imgEl: HTMLImageElement | null
-): { r: number; g: number; b: number } {
-  const defaultRGB = { r: 0, g: 0, b: 0 }; // for non-supporting envs
-  if (!imgEl) {
-    return defaultRGB;
-  }
-  const blockSize = 5; // only visit every 5 pixels
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext && canvas.getContext("2d");
-  let data;
-  let i = -4;
-  const rgb = { r: 0, g: 0, b: 0 };
-  let count = 0;
-
-  if (!context) {
-    return defaultRGB;
-  }
-
-  const height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;
-  const width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;
-  canvas.height = height;
-  canvas.width = width;
-  context.drawImage(imgEl, 0, 0);
-
-  try {
-    data = context.getImageData(0, 0, width, height);
-  } catch (e) {
-    /* security error, img on diff domain */
-    return defaultRGB;
-  }
-
-  const { length } = data.data;
-
-  // eslint-disable-next-line no-cond-assign
-  while ((i += blockSize * 4) < length) {
-    count += 1;
-    rgb.r += data.data[i];
-    rgb.g += data.data[i + 1];
-    rgb.b += data.data[i + 2];
-  }
-
-  // ~~ used to floor values
-  rgb.r = ~~(rgb.r / count);
-  rgb.g = ~~(rgb.g / count);
-  rgb.b = ~~(rgb.b / count);
-
-  return rgb;
-}
-/* eslint-enable no-bitwise */
 
 export function feedReviewEventToListen(
   eventMetadata: CritiqueBrainzReview
@@ -722,10 +1320,6 @@ export function feedReviewEventToListen(
     artist_mbids = [entity_id] as string[];
   }
   if (entity_type === "release_group" && entity_id) {
-    // currently releaseGroupName isn't displayed by the ListenCard
-    // so also assign trackName and recording_mbid
-    trackName = entity_name;
-    recording_mbid = entity_id;
     releaseGroupName = entity_name;
     release_group_mbid = entity_id;
   }
@@ -753,48 +1347,64 @@ export function personalRecommendationEventToListen(
 ): BaseListenFormat {
   return {
     listened_at: -1,
-    track_metadata: {
-      track_name: eventMetadata.track_name,
-      artist_name: eventMetadata.artist_name,
-      release_name: eventMetadata.release_name ?? "",
-      additional_info: {
-        recording_mbid: eventMetadata.recording_mbid,
-        recording_msid: eventMetadata.recording_msid,
-      },
-    },
-  };
+    track_metadata: eventMetadata.track_metadata,
+  } as BaseListenFormat;
 }
 
 export function getReviewEventContent(
-  eventMetadata: CritiqueBrainzReview
+  eventMetadata: CritiqueBrainzReview | CritiqueBrainzReviewAPI
 ): JSX.Element {
-  const additionalContent = getAdditionalContent(eventMetadata);
+  const additionalContent = getAdditionalContent(
+    eventMetadata as CritiqueBrainzReview
+  );
+  const reviewID =
+    _.get(eventMetadata, "review_mbid") ?? _.get(eventMetadata, "id");
+  const userName =
+    _.get(eventMetadata, "user_name") ??
+    _.get(eventMetadata, "user.display_name");
+  const publishedOn = _.get(eventMetadata, "published_on");
   return (
-    <>
-      <a
-        href={`https://critiquebrainz.org/review/${eventMetadata.review_mbid}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="pull-right"
-      >
-        See this review on CritiqueBrainz
-      </a>
+    <div className="review">
       {!isUndefined(eventMetadata.rating) && isFinite(eventMetadata.rating) && (
-        <div className="rating-container">
-          <b>Rating: </b>
-          <Rating
-            readonly
-            onClick={() => {}}
-            className="rating-stars"
-            ratingValue={eventMetadata.rating * 20} // CB stores ratings in 0 - 5 scale but the component requires 0 - 100
-            transition
-            size={20}
-            iconsCount={5}
-          />
+        <div className="review-card-header">
+          <div>
+            <b>Rating: </b>
+            <Rating
+              readonly
+              onClick={() => {}}
+              className="rating-stars"
+              ratingValue={eventMetadata.rating}
+              transition
+              size={20}
+              iconsCount={5}
+            />
+          </div>
+          <span className="review-card-header-author">
+            {publishedOn &&
+              ` on ${preciseTimestamp(publishedOn, "includeYear")}`}
+          </span>
         </div>
       )}
-      {additionalContent}
-    </>
+      <div className="text">
+        <ReactMarkdown
+          disallowedElements={["h1", "h2", "h3", "h4", "h5", "h6"]}
+          unwrapDisallowed
+        >
+          {additionalContent}
+        </ReactMarkdown>
+      </div>
+      <div className="review-card-footer">
+        by {userName}
+        <a
+          href={`https://critiquebrainz.org/review/${reviewID}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="pull-right read-more-link"
+        >
+          Read on CritiqueBrainz
+        </a>
+      </div>
+    </div>
   );
 }
 
@@ -818,17 +1428,36 @@ export function getPersonalRecommendationEventContent(
   );
 }
 
+export function getObjectForURLSearchParams(
+  urlSearchParams: URLSearchParams
+): Record<string, string> {
+  const object: Record<string, string> = {};
+  urlSearchParams.forEach((value, key) => {
+    object[key] = value;
+  });
+  return object;
+}
+
+export function getBaseUrl(): string {
+  return window.location.origin;
+}
+
 export {
   searchForSpotifyTrack,
+  searchForSoundcloudTrack,
+  searchForFunkwhaleTrack,
+  searchForNavidromeTrack,
+  getMBIDMappingArtistLink,
+  getStatsArtistLink,
   getArtistLink,
   getTrackLink,
+  getAlbumLink,
   formatWSMessageToListen,
   preciseTimestamp,
   fullLocalizedDateFromTimestampOrISODate,
   convertDateToUnixTimestamp,
   getPageProps,
   searchForYoutubeTrack,
-  createAlert,
   getListenablePin,
   countWords,
   handleNavigationClickEvent,
@@ -839,11 +1468,14 @@ export {
   getArtistMBIDs,
   getArtistName,
   getTrackName,
+  getReleaseName,
   getTrackDurationInMs,
+  getListenCardKey,
   pinnedRecordingToListen,
   getAlbumArtFromReleaseMBID,
+  getAlbumArtFromReleaseGroupMBID,
+  getAlbumArtFromListenMetadataKey,
   getAlbumArtFromListenMetadata,
-  getAverageRGBOfImage,
   getAdditionalContent,
   generateAlbumArtThumbnailLink,
 };

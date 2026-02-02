@@ -1,618 +1,543 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
-import * as React from "react";
-import { createRoot } from "react-dom/client";
-import * as Sentry from "@sentry/react";
-
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import {
   faBell,
-  faBullhorn,
   faCircle,
+  faComments,
+  faEye,
+  faEyeSlash,
+  faHandHoldingHeart,
   faHeadphones,
   faHeart,
+  faPaperPlane,
+  faPlayCircle,
   faQuestion,
+  faRefresh,
+  faRss,
   faThumbsUp,
+  faThumbtack,
+  faTrash,
   faUserPlus,
   faUserSecret,
   faUserSlash,
-  faThumbtack,
-  faTrash,
-  faEye,
-  faEyeSlash,
-  faComments,
-  faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { get as _get, reject as _reject } from "lodash";
-import { sanitize } from "dompurify";
-import { Integrations } from "@sentry/tracing";
-import * as _ from "lodash";
+import DOMPurify from "dompurify";
+import { reject as _reject } from "lodash";
+import * as React from "react";
+import { Helmet } from "react-helmet";
+import { toast } from "react-toastify";
+
 import NiceModal from "@ebay/nice-modal-react";
 import {
-  WithAlertNotificationsInjectedProps,
-  withAlertNotifications,
-} from "../notifications/AlertNotificationsHOC";
-
+  InfiniteData,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { useParams } from "react-router";
+import { faCalendarPlus } from "@fortawesome/free-regular-svg-icons";
+import { useSetAtom } from "jotai";
+import ListenCard from "../common/listens/ListenCard";
+import ListenControl from "../common/listens/ListenControl";
+import Username from "../common/Username";
+import SyndicationFeedModal from "../components/SyndicationFeedModal";
+import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import BrainzPlayer from "../brainzplayer/BrainzPlayer";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import Loader from "../components/Loader";
-import ListenCard from "../listens/ListenCard";
 import {
-  getPageProps,
-  preciseTimestamp,
-  getAdditionalContent,
   feedReviewEventToListen,
-  getReviewEventContent,
-  getRecordingMBID,
-  getRecordingMSID,
-  personalRecommendationEventToListen,
+  getAdditionalContent,
   getPersonalRecommendationEventContent,
+  getReviewEventContent,
+  personalRecommendationEventToListen,
+  preciseTimestamp,
 } from "../utils/utils";
-import UserSocialNetwork from "../follow/UserSocialNetwork";
-import ListenControl from "../listens/ListenControl";
+import ThanksModal from "./ThanksModal";
+import type { FeedFetchParams } from "./types";
+import { EventType } from "./types";
+import Card from "../components/Card";
+import {
+  addMultipleListensToBottomOfAmbientQueueAtom,
+  setAmbientQueueAtom,
+} from "../common/brainzplayer/BrainzPlayerAtoms";
 
-export enum EventType {
-  RECORDING_RECOMMENDATION = "recording_recommendation",
-  PERSONAL_RECORDING_RECOMMENDATION = "personal_recording_recommendation",
-  RECORDING_PIN = "recording_pin",
-  LIKE = "like",
-  LISTEN = "listen",
-  FOLLOW = "follow",
-  STOP_FOLLOW = "stop_follow",
-  BLOCK_FOLLOW = "block_follow",
-  NOTIFICATION = "notification",
-  REVIEW = "critiquebrainz_review",
+enum EventTypeinMessage {
+  personal_recording_recommendation = "personally recommending a track",
+  recording_recommendation = "recommending a track",
+  recording_pin = "pinning a track",
 }
 
-export type UserFeedPageProps = {
-  events: TimelineEvent[];
-} & WithAlertNotificationsInjectedProps;
-
-export type UserFeedPageState = {
-  nextEventTs?: number;
-  previousEventTs?: number;
-  earliestEventTs?: number;
-  events: TimelineEvent[];
-  loading: boolean;
-  recordingMsidFeedbackMap: RecordingFeedbackMap;
-  recordingMbidFeedbackMap: RecordingFeedbackMap;
+type UserFeedPageProps = {
+  events: TimelineEvent<EventMetadata>[];
 };
 
-export default class UserFeedPage extends React.Component<
-  UserFeedPageProps,
-  UserFeedPageState
-> {
-  static contextType = GlobalAppContext;
-
-  static isEventListenable(event: TimelineEvent): boolean {
-    const { event_type } = event;
-    return (
-      event_type === EventType.RECORDING_RECOMMENDATION ||
-      event_type === EventType.RECORDING_PIN ||
-      event_type === EventType.LIKE ||
-      event_type === EventType.LISTEN ||
-      event_type === EventType.REVIEW ||
-      event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION
-    );
+function isEventListenable(event?: TimelineEvent<EventMetadata>): boolean {
+  if (!event) {
+    return false;
   }
+  const { event_type } = event;
+  return (
+    event_type === EventType.RECORDING_RECOMMENDATION ||
+    event_type === EventType.RECORDING_PIN ||
+    event_type === EventType.LIKE ||
+    event_type === EventType.LISTEN ||
+    event_type === EventType.REVIEW ||
+    event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION
+  );
+}
 
-  declare context: React.ContextType<typeof GlobalAppContext>;
-
-  static getEventTypeIcon(eventType: EventTypeT) {
-    switch (eventType) {
-      case EventType.RECORDING_RECOMMENDATION:
-        return faThumbsUp;
-      case EventType.LISTEN:
-        return faHeadphones;
-      case EventType.LIKE:
-        return faHeart;
-      case EventType.FOLLOW:
-        return faUserPlus;
-      case EventType.STOP_FOLLOW:
-        return faUserSlash;
-      case EventType.BLOCK_FOLLOW:
-        return faUserSecret;
-      case EventType.NOTIFICATION:
-        return faBell;
-      case EventType.RECORDING_PIN:
-        return faThumbtack;
-      case EventType.REVIEW:
-        return faComments;
-      case EventType.PERSONAL_RECORDING_RECOMMENDATION:
-        return faPaperPlane;
-      default:
-        return faQuestion;
-    }
+function getEventTypeIcon(eventType: EventTypeT) {
+  switch (eventType) {
+    case EventType.RECORDING_RECOMMENDATION:
+      return faThumbsUp;
+    case EventType.LISTEN:
+      return faHeadphones;
+    case EventType.LIKE:
+      return faHeart;
+    case EventType.FOLLOW:
+      return faUserPlus;
+    case EventType.STOP_FOLLOW:
+      return faUserSlash;
+    case EventType.BLOCK_FOLLOW:
+      return faUserSecret;
+    case EventType.NOTIFICATION:
+      return faBell;
+    case EventType.RECORDING_PIN:
+      return faThumbtack;
+    case EventType.REVIEW:
+      return faComments;
+    case EventType.PERSONAL_RECORDING_RECOMMENDATION:
+      return faPaperPlane;
+    case EventType.THANKS:
+      return faHandHoldingHeart;
+    default:
+      return faQuestion;
   }
+}
 
-  static getReviewEntityName(entity_type: ReviewableEntityType): string {
-    switch (entity_type) {
-      case "artist":
-        return "an artist";
-      case "recording":
-        return "a track";
-      case "release_group":
-        return "an album";
-      default:
-        return entity_type;
-    }
+function getReviewEntityName(entity_type: ReviewableEntityType): string {
+  switch (entity_type) {
+    case "artist":
+      return "an artist";
+    case "recording":
+      return "a track";
+    case "release_group":
+      return "an album";
+    default:
+      return entity_type;
   }
+}
 
-  static getEventTypePhrase(event: TimelineEvent): string {
-    const { event_type } = event;
-    let review: CritiqueBrainzReview;
-    switch (event_type) {
-      case EventType.RECORDING_RECOMMENDATION:
-        return "recommended a track";
-      case EventType.LISTEN:
-        return "listened to a track";
-      case EventType.LIKE:
-        return "added a track to their favorites";
-      case EventType.RECORDING_PIN:
-        return "pinned a track";
-      case EventType.REVIEW: {
-        review = event.metadata as CritiqueBrainzReview;
-        return `reviewed ${UserFeedPage.getReviewEntityName(
-          review.entity_type
-        )}`;
-      }
-      case EventType.PERSONAL_RECORDING_RECOMMENDATION:
-        return "personally recommended a track";
-      default:
-        return "";
+function getEventTypePhrase(event: TimelineEvent<EventMetadata>): string {
+  const { event_type } = event;
+  let review: CritiqueBrainzReview;
+  switch (event_type) {
+    case EventType.RECORDING_RECOMMENDATION:
+      return "recommended a track";
+    case EventType.LISTEN:
+      return "listened to a track";
+    case EventType.LIKE:
+      return "added a track to their favorites";
+    case EventType.RECORDING_PIN:
+      return "pinned a track";
+    case EventType.REVIEW: {
+      review = event.metadata as CritiqueBrainzReview;
+      return `reviewed ${getReviewEntityName(review.entity_type)}`;
     }
+    case EventType.PERSONAL_RECORDING_RECOMMENDATION:
+      return "personally recommended a track";
+    case EventType.THANKS:
+      return `thanked a ${event.event_type}`;
+    default:
+      return "";
   }
+}
+type UserFeedLoaderData = UserFeedPageProps;
+export default function UserFeedPage() {
+  const { currentUser, APIService } = React.useContext(GlobalAppContext);
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
+  const addListensToBottomOfAmbientQueue = useSetAtom(
+    addMultipleListensToBottomOfAmbientQueueAtom
+  );
 
-  constructor(props: UserFeedPageProps) {
-    super(props);
-    this.state = {
-      recordingMsidFeedbackMap: {},
-      recordingMbidFeedbackMap: {},
-      nextEventTs: props.events?.[props.events.length - 1]?.created,
-      previousEventTs: props.events?.[0]?.created,
-      events: props.events || [],
-      loading: false,
-    };
-  }
+  const prevListens = React.useRef<Listen[]>([]);
 
-  async componentDidMount(): Promise<void> {
-    const { currentUser } = this.context;
-    // Listen to browser previous/next events and load page accordingly
-    window.addEventListener("popstate", this.handleURLChange);
-    // Fetch initial events from API
-    // TODO: Pass the required data in the props and remove this initial API call
-    await this.getFeedFromAPI();
-    await this.loadFeedback();
-  }
+  const params = useParams();
+  const queryClient = useQueryClient();
 
-  componentWillUnmount() {
-    window.removeEventListener("popstate", this.handleURLChange);
-  }
+  const queryKey = ["feed", params];
 
-  handleURLChange = async (): Promise<void> => {
-    const url = new URL(window.location.href);
-    let maxTs;
-    let minTs;
-    if (url.searchParams.get("max_ts")) {
-      maxTs = Number(url.searchParams.get("max_ts"));
-    }
-    if (url.searchParams.get("min_ts")) {
-      minTs = Number(url.searchParams.get("min_ts"));
-    }
-    await this.getFeedFromAPI(minTs, maxTs);
-  };
-
-  handleClickOlder = async (event?: React.MouseEvent) => {
-    if (event) {
-      event.preventDefault();
-    }
-    const { nextEventTs } = this.state;
-    // No more events to fetch
-    if (!nextEventTs) {
-      return;
-    }
-    await this.getFeedFromAPI(undefined, nextEventTs, () => {
-      window.history.pushState(null, "", `?max_ts=${nextEventTs}`);
-    });
-  };
-
-  handleClickNewer = async (event?: React.MouseEvent) => {
-    if (event) {
-      event.preventDefault();
-    }
-    const { previousEventTs, earliestEventTs } = this.state;
-    // No more events to fetch
-    if (
-      !previousEventTs ||
-      (earliestEventTs && previousEventTs >= earliestEventTs)
-    ) {
-      return;
-    }
-    await this.getFeedFromAPI(previousEventTs, undefined, () => {
-      window.history.pushState(null, "", `?min_ts=${previousEventTs}`);
-    });
-  };
-
-  getFeedFromAPI = async (
-    minTs?: number,
-    maxTs?: number,
-    successCallback?: () => void
-  ) => {
-    const { newAlert } = this.props;
-    const { earliestEventTs } = this.state;
-    const { APIService, currentUser } = this.context;
-    this.setState({ loading: true });
-    let newEvents: TimelineEvent[] = [];
-    try {
-      newEvents = await APIService.getFeedForUser(
+  const fetchEvents = React.useCallback(
+    async ({ pageParam }: any) => {
+      const { minTs, maxTs } = pageParam;
+      const newEvents = await APIService.getFeedForUser(
         currentUser.name,
-        currentUser.auth_token as string,
+        currentUser.auth_token!,
         minTs,
         maxTs
       );
-    } catch (error) {
-      newAlert(
-        "warning",
-        "Could not load timeline events",
-        <>
-          Something went wrong when we tried to load your events, please try
-          again or contact us if the problem persists.
-          <br />
-          <strong>
-            {error.name}: {error.message}
-          </strong>
-        </>
-      );
-      this.setState({ loading: false });
-      return;
-    }
-    if (!newEvents.length) {
-      // No more listens to fetch
-      if (minTs !== undefined) {
-        this.setState({
-          loading: false,
-          previousEventTs: undefined,
+      return { events: newEvents };
+    },
+    [APIService, currentUser]
+  );
+
+  const {
+    refetch,
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    fetchPreviousPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+  } = useInfiniteQuery<
+    UserFeedLoaderData,
+    unknown,
+    InfiniteData<UserFeedLoaderData>,
+    unknown[],
+    FeedFetchParams
+  >({
+    queryKey,
+    initialPageParam: { maxTs: Math.ceil(Date.now() / 1000) },
+    queryFn: fetchEvents,
+    getNextPageParam: (lastPage, allPages, lastPageParam) => ({
+      maxTs:
+        lastPage.events[lastPage.events.length - 1]?.created ??
+        lastPageParam.maxTs,
+    }),
+    getPreviousPageParam: (lastPage, allPages, lastPageParam) => ({
+      minTs: lastPage?.events?.length
+        ? lastPage.events[0].created + 1
+        : lastPageParam.minTs ?? Math.ceil(Date.now() / 1000),
+    }),
+  });
+
+  const { pages } = data || {}; // safe destructuring of possibly undefined data object
+  // Flatten the pages of events from the infite query
+  const events = pages?.map((page) => page.events).flat() ?? [];
+
+  // Events mentioned in thank you events but not part of current cache, fetched separately as needed
+  const [separatelyLoadedEvents, setSeparatelyLoadedEvents] = React.useState<
+    TimelineEvent<EventMetadata>[]
+  >([]);
+
+  React.useEffect(() => {
+    async function fetchThankedEvents(missingEventsIDs: number[]) {
+      // Prefetch each missing original event missing from thank you events
+      // separately from fetching the feed pages
+      const promises = missingEventsIDs.map((eventId) => {
+        return queryClient.ensureQueryData({
+          queryKey: ["feed-event", eventId],
+          queryFn: () =>
+            APIService.getFeedEvent(
+              eventId,
+              currentUser.name,
+              currentUser.auth_token as string
+            ),
         });
-      } else {
-        this.setState({
-          loading: false,
-          nextEventTs: undefined,
-        });
-      }
-      return;
-    }
-    const optionalProps: { earliestEventTs?: number } = {};
-    if (!earliestEventTs || newEvents[0].created > earliestEventTs) {
-      // We can use the newest event's timestamp to determine if the previous button should be disabled.
-      // Also refresh the earlierst event timestamp if we have received events newer than at first page load.
-      optionalProps.earliestEventTs = newEvents[0].created;
-    }
-    this.setState(
-      {
-        loading: false,
-        events: newEvents,
-        nextEventTs: newEvents[newEvents.length - 1].created,
-        previousEventTs: newEvents[0].created,
-        ...optionalProps,
-      },
-      async () => {
-        if (successCallback) {
-          successCallback();
-        }
-        await this.loadFeedback();
-      }
-    );
-
-    // Scroll window back to the top of the events container element
-    const eventContainerElement = document.querySelector("#timeline");
-    if (eventContainerElement) {
-      eventContainerElement.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
-  /** User feedback mechanism (love/hate button) */
-  getFeedback = async () => {
-    const { currentUser, APIService } = this.context;
-    const { events, newAlert } = this.props;
-    let recording_msids = "";
-    let recording_mbids = "";
-
-    if (currentUser?.name && events) {
-      events.forEach((event) => {
-        const recordingMsid = _get(
-          event,
-          "metadata.track_metadata.additional_info.recording_msid"
-        );
-        const recordingMbid = _get(
-          event,
-          "metadata.track_metadata.additional_info.recording_mbid"
-        );
-        if (recordingMsid) {
-          recording_msids += `${recordingMsid},`;
-        }
-        if (recordingMbid) {
-          recording_mbids += `${recordingMbid},`;
+      });
+      const resultsArray: TimelineEvent<EventMetadata>[] = [];
+      const promiseResults = await Promise.allSettled(promises);
+      promiseResults.forEach((res, idx) => {
+        if (res.status === "fulfilled") {
+          resultsArray.push(res.value);
+        } else {
+          // eslint-disable-next-line no-console
+          console.error(res.reason);
         }
       });
+      setSeparatelyLoadedEvents(resultsArray);
+    }
+    const feedEvents = data?.pages.map((page) => page.events).flat();
+    // Extract IDs of events referenced in thank you events currently in cache
+    const thankYouOriginalEventIds = feedEvents
+      ?.filter((ev) => ev.event_type === EventType.THANKS)
+      .map((ev) => {
+        const metadata = ev.metadata as ThanksMetadata;
+        return metadata.original_event_id;
+      });
+    const missingEventsIDs = thankYouOriginalEventIds?.filter(
+      (originalEventId) => !feedEvents?.some((ev) => ev.id === originalEventId)
+    );
+    if (missingEventsIDs?.length) {
+      fetchThankedEvents(missingEventsIDs);
+    }
+  }, [data, APIService, currentUser, queryClient]);
+
+  const listens = events
+    ?.filter(isEventListenable)
+    .map((event) => event?.metadata) as Listen[];
+
+  React.useEffect(() => {
+    // Since we're using infinite queries, we need to manually set the ambient queue and also ensure
+    // that only the newly fetched listens are added to the botom of the queue.
+    // But on first load, we need to add replace the entire queue with the listens
+
+    if (!prevListens.current?.length) {
+      setAmbientQueue(listens);
+    } else {
+      const newListens = listens.filter(
+        (listen) => !prevListens.current?.includes(listen)
+      );
+      addListensToBottomOfAmbientQueue(newListens);
+    }
+
+    prevListens.current = listens;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listens]);
+
+  const changeEventVisibility = React.useCallback(
+    async (event: TimelineEvent<EventMetadata>) => {
+      const { hideFeedEvent, unhideFeedEvent } = APIService;
+      // if the event was previously hidden, unhide it. Otherwise, hide the event
+      const action = event.hidden ? unhideFeedEvent : hideFeedEvent;
       try {
-        const data = await APIService.getFeedbackForUserForRecordings(
-          currentUser.name,
-          recording_msids,
-          recording_mbids
-        );
-        return data.feedback;
-      } catch (error) {
-        if (newAlert) {
-          newAlert(
-            "danger",
-            "We could not load love/hate feedback",
-            typeof error === "object" ? error.message : error
-          );
-        }
-      }
-    }
-    return [];
-  };
-
-  loadFeedback = async () => {
-    const feedback = await this.getFeedback();
-    if (!feedback) {
-      return;
-    }
-    const recordingMsidFeedbackMap: RecordingFeedbackMap = {};
-    const recordingMbidFeedbackMap: RecordingFeedbackMap = {};
-
-    feedback.forEach((item: FeedbackResponse) => {
-      if (item.recording_msid) {
-        recordingMsidFeedbackMap[item.recording_msid] = item.score;
-      }
-      if (item.recording_mbid) {
-        recordingMbidFeedbackMap[item.recording_mbid] = item.score;
-      }
-    });
-    this.setState({ recordingMsidFeedbackMap, recordingMbidFeedbackMap });
-  };
-
-  getFeedbackForListen = (listen: BaseListenFormat): ListenFeedBack => {
-    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
-
-    // first check whether the mbid has any feedback available
-    // if yes and the feedback is not zero, return it. if the
-    // feedback is zero or not the mbid is absent from the map,
-    // look for the feedback using the msid.
-
-    const recordingMbid = getRecordingMBID(listen);
-    const mbidFeedback = recordingMbid
-      ? _.get(recordingMbidFeedbackMap, recordingMbid, 0)
-      : 0;
-
-    if (mbidFeedback) {
-      return mbidFeedback;
-    }
-
-    const recordingMsid = getRecordingMSID(listen);
-
-    return recordingMsid
-      ? _.get(recordingMsidFeedbackMap, recordingMsid, 0)
-      : 0;
-  };
-
-  updateFeedback = (
-    recordingMbid: string,
-    score: ListenFeedBack | RecommendationFeedBack,
-    recordingMsid?: string
-  ) => {
-    const { recordingMsidFeedbackMap, recordingMbidFeedbackMap } = this.state;
-
-    const newMsidFeedbackMap = { ...recordingMsidFeedbackMap };
-    const newMbidFeedbackMap = { ...recordingMbidFeedbackMap };
-
-    if (recordingMsid) {
-      newMsidFeedbackMap[recordingMsid] = score as ListenFeedBack;
-    }
-    if (recordingMbid) {
-      newMbidFeedbackMap[recordingMbid] = score as ListenFeedBack;
-    }
-    this.setState({
-      recordingMsidFeedbackMap: newMsidFeedbackMap,
-      recordingMbidFeedbackMap: newMbidFeedbackMap,
-    });
-  };
-
-  deleteFeedEvent = async (event: TimelineEvent) => {
-    const { currentUser, APIService } = this.context;
-    const { newAlert } = this.props;
-    const { events } = this.state;
-    if (
-      event.event_type === EventType.RECORDING_RECOMMENDATION ||
-      event.event_type === EventType.NOTIFICATION
-    ) {
-      try {
-        const status = await APIService.deleteFeedEvent(
+        const status = await action(
           event.event_type,
           currentUser.name,
           currentUser.auth_token as string,
           event.id!
         );
+
         if (status === 200) {
-          newAlert("success", "", <>Successfully deleted!</>);
-          const new_events = _reject(events, (element) => {
-            // Making sure the event that is getting deleted is either a recommendation or notification
-            // Since, recommendation and notification are in same db, and might have same id as a pin
-            // Similarly we later on filter by id and event_type for pin deletion
-            return (
-              element?.id === event.id &&
-              (element.event_type === EventType.RECORDING_RECOMMENDATION ||
-                element.event_type === EventType.NOTIFICATION)
-            );
-          });
-          this.setState({ events: new_events });
+          return event;
         }
       } catch (error) {
-        newAlert(
-          "danger",
-          "Could not delete event",
-          <>
-            Something went wrong when we tried to delete your event, please try
-            again or contact us if the problem persists.
-            <br />
-            <strong>
-              {error.name}: {error.message}
-            </strong>
-          </>
+        toast.error(
+          <ToastMsg
+            title="Could not hide or unhide event"
+            message={error.toString()}
+          />,
+          { toastId: "hide-error" }
         );
       }
-    } else if (event.event_type === EventType.RECORDING_PIN) {
-      try {
-        const status = await APIService.deletePin(
-          currentUser.auth_token as string,
-          event.id as number
-        );
-        if (status === 200) {
-          newAlert("success", "", <>Successfully deleted!</>);
-          const new_events = _reject(events, (element) => {
-            return (
-              element?.id === event.id &&
-              element.event_type === EventType.RECORDING_PIN
-            );
-          });
-          this.setState({ events: new_events });
+      return undefined;
+    },
+    [APIService, currentUser]
+  );
+
+  // When this mutation succeeds, modify the query cache accordingly to avoid refetching all the content
+  const { mutate: hideEventMutation } = useMutation({
+    mutationFn: changeEventVisibility,
+    onSuccess: (modifiedEvent, variables, context) => {
+      queryClient.setQueryData<InfiniteData<UserFeedLoaderData, unknown>>(
+        queryKey,
+        (oldData) => {
+          const newPages = oldData?.pages.map((page) => ({
+            events: page.events.map((traversedEvent) => {
+              if (
+                traversedEvent.event_type === modifiedEvent?.event_type &&
+                traversedEvent.id === modifiedEvent?.id
+              ) {
+                return { ...traversedEvent, hidden: !modifiedEvent.hidden };
+              }
+              return traversedEvent;
+            }),
+          }));
+          return { pages: newPages ?? [], pageParams: queryKey };
         }
-      } catch (error) {
-        newAlert(
-          "danger",
-          "Could not delete event",
-          <>
-            Something went wrong when we tried to delete your event, please try
-            again or contact us if the problem persists.
-            <br />
-            <strong>
-              {error.name}: {error.message}
-            </strong>
-          </>
-        );
-      }
-    }
-  };
-
-  hideFeedEvent = async (event: TimelineEvent) => {
-    const { currentUser, APIService } = this.context;
-    const { newAlert } = this.props;
-    const { events } = this.state;
-
-    try {
-      const status = await APIService.hideFeedEvent(
-        event.event_type,
-        currentUser.name,
-        currentUser.auth_token as string,
-        event.id!
       );
+    },
+  });
 
-      if (status === 200) {
-        const new_events = events.map((traversedEvent) => {
-          if (
-            traversedEvent.event_type === event.event_type &&
-            traversedEvent.id === event.id
-          ) {
-            // eslint-disable-next-line no-param-reassign
-            traversedEvent.hidden = true;
+  const deleteFeedEvent = React.useCallback(
+    async (event: TimelineEvent<EventMetadata>) => {
+      if (
+        event.event_type === EventType.RECORDING_RECOMMENDATION ||
+        event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
+        event.event_type === EventType.NOTIFICATION
+      ) {
+        try {
+          const status = await APIService.deleteFeedEvent(
+            event.event_type,
+            currentUser.name,
+            currentUser.auth_token as string,
+            event.id!
+          );
+          if (status === 200) {
+            toast.success(
+              <ToastMsg title="Successfully deleted!" message="" />,
+              {
+                toastId: "deleted",
+              }
+            );
+            return event;
           }
-          return traversedEvent;
-        });
-        this.setState({ events: new_events });
-      }
-    } catch (error) {
-      newAlert("danger", error.toString(), <>Could not hide event</>);
-    }
-  };
-
-  unhideFeedEvent = async (event: TimelineEvent) => {
-    const { currentUser, APIService } = this.context;
-    const { newAlert } = this.props;
-    const { events } = this.state;
-
-    try {
-      const status = await APIService.unhideFeedEvent(
-        event.event_type,
-        currentUser.name,
-        currentUser.auth_token as string,
-        event.id!
-      );
-
-      if (status === 200) {
-        const new_events = events.map((traversedEvent) => {
-          if (
-            traversedEvent.event_type === event.event_type &&
-            traversedEvent.id === event.id
-          ) {
-            // eslint-disable-next-line no-param-reassign
-            traversedEvent.hidden = false;
+        } catch (error) {
+          toast.error(
+            <ToastMsg
+              title="Could not delete event"
+              message={
+                <>
+                  Something went wrong when we tried to delete your event,
+                  please try again or contact us if the problem persists.
+                  <br />
+                  <strong>
+                    {error.name}: {error.message}
+                  </strong>
+                </>
+              }
+            />,
+            { toastId: "delete-error" }
+          );
+        }
+      } else if (event.event_type === EventType.RECORDING_PIN) {
+        try {
+          const status = await APIService.deletePin(
+            currentUser.auth_token as string,
+            event.id as number
+          );
+          if (status === 200) {
+            toast.success(
+              <ToastMsg title="Successfully deleted!" message="" />,
+              {
+                toastId: "deleted",
+              }
+            );
+            return event;
           }
-          return traversedEvent;
-        });
-        this.setState({ events: new_events });
+        } catch (error) {
+          toast.error(
+            <ToastMsg
+              title="Could not delete event"
+              message={
+                <>
+                  Something went wrong when we tried to delete your event,
+                  please try again or contact us if the problem persists.
+                  <br />
+                  <strong>
+                    {error.name}: {error.message}
+                  </strong>
+                </>
+              }
+            />,
+            { toastId: "delete-error" }
+          );
+        }
       }
-    } catch (error) {
-      newAlert("danger", "", <>Could not unhide event</>);
-    }
-  };
-
-  renderEventActionButton(event: TimelineEvent) {
-    const { currentUser } = this.context;
-    if (
-      ((event.event_type === EventType.RECORDING_RECOMMENDATION ||
-        event.event_type === EventType.RECORDING_PIN) &&
-        event.user_name === currentUser.name) ||
-      event.event_type === EventType.NOTIFICATION
-    ) {
-      return (
-        <ListenControl
-          title="Delete Event"
-          text=""
-          icon={faTrash}
-          buttonClassName="btn btn-link btn-xs"
-          // eslint-disable-next-line react/jsx-no-bind
-          action={this.deleteFeedEvent.bind(this, event)}
-        />
+      return undefined;
+    },
+    [APIService, currentUser]
+  );
+  // When this mutation succeeds, modify the query cache accordingly to avoid refetching all the content
+  const { mutate: deleteEventMutation } = useMutation({
+    mutationFn: deleteFeedEvent,
+    onSuccess: (deletedEvent) => {
+      queryClient.setQueryData<InfiniteData<UserFeedLoaderData>>(
+        queryKey,
+        (oldData) => {
+          if (!oldData) return oldData;
+          const newPagesArray = oldData?.pages.map((page) => ({
+            events: _reject(page.events, (traversedEvent) => {
+              return (
+                traversedEvent.event_type === deletedEvent?.event_type &&
+                traversedEvent.id === deletedEvent?.id
+              );
+            }),
+          }));
+          return { pages: newPagesArray, pageParams: queryKey };
+        }
       );
-    }
-    if (
-      (event.event_type === EventType.RECORDING_PIN ||
-        event.event_type === EventType.RECORDING_RECOMMENDATION) &&
-      event.user_name !== currentUser.name
-    ) {
-      if (event.hidden) {
-        return (
+    },
+  });
+
+  const renderEventActionButton = (
+    event: TimelineEvent<EventMetadata>,
+    isSubEvent = false
+  ) => {
+    const { event_type, hidden } = event;
+    const isOwnEvent = event.user_name === currentUser.name;
+    const isDeletable =
+      isOwnEvent &&
+      [
+        EventType.NOTIFICATION,
+        EventType.RECORDING_RECOMMENDATION,
+        EventType.PERSONAL_RECORDING_RECOMMENDATION,
+        EventType.RECORDING_PIN,
+        EventType.THANKS,
+      ].includes(event_type as EventType);
+    const isThankable =
+      !isSubEvent &&
+      !isOwnEvent &&
+      [
+        EventType.RECORDING_RECOMMENDATION,
+        EventType.PERSONAL_RECORDING_RECOMMENDATION,
+        EventType.RECORDING_PIN,
+        EventType.REVIEW,
+      ].includes(event_type as EventType);
+    const isHidable =
+      !isSubEvent &&
+      !isOwnEvent &&
+      ![
+        EventType.FOLLOW,
+        EventType.BLOCK_FOLLOW,
+        EventType.STOP_FOLLOW,
+      ].includes(event_type as EventType);
+
+    return (
+      <>
+        {isThankable && (
+          <ListenControl
+            title="Say thanks"
+            text=""
+            icon={faHandHoldingHeart}
+            iconSize="lg"
+            buttonClassName="btn btn-link btn-sm"
+            action={() => {
+              NiceModal.show(ThanksModal, {
+                original_event_id: event.id!,
+                original_event_type: event.event_type,
+              });
+            }}
+            isDropdown={false}
+          />
+        )}
+        {hidden && (
           <ListenControl
             title="Unhide Event"
             text=""
             icon={faEye}
-            buttonClassName="btn btn-link btn-xs"
-            // eslint-disable-next-line react/jsx-no-bind
-            action={this.unhideFeedEvent.bind(this, event)}
+            iconSize="lg"
+            buttonClassName="btn btn-link btn-sm"
+            action={() => {
+              hideEventMutation(event);
+            }}
+            isDropdown={false}
           />
-        );
-      }
-      return (
-        <ListenControl
-          title="Hide Event"
-          text=""
-          icon={faEyeSlash}
-          buttonClassName="btn btn-link btn-xs"
-          // eslint-disable-next-line react/jsx-no-bind
-          action={this.hideFeedEvent.bind(this, event)}
-        />
-      );
-    }
-    return null;
-  }
+        )}
+        {!hidden && isHidable && (
+          <ListenControl
+            title="Hide Event"
+            text=""
+            icon={faEyeSlash}
+            iconSize="lg"
+            buttonClassName="btn btn-link btn-sm"
+            action={() => {
+              hideEventMutation(event);
+            }}
+            isDropdown={false}
+          />
+        )}
+        {isDeletable && (
+          <ListenControl
+            title="Delete Event"
+            text=""
+            icon={faTrash}
+            iconSize="lg"
+            buttonClassName="btn btn-link btn-sm"
+            action={() => {
+              deleteEventMutation(event);
+            }}
+            isDropdown={false}
+          />
+        )}
+      </>
+    );
+  };
 
-  renderEventContent(event: TimelineEvent) {
-    if (UserFeedPage.isEventListenable(event) && !event.hidden) {
+  const renderEventContent = (event: TimelineEvent<EventMetadata>) => {
+    if (isEventListenable(event) && !event.hidden) {
       const { metadata, event_type } = event;
-      const { currentUser } = this.context;
-      const { newAlert } = this.props;
       let listen: Listen;
       let additionalContent: string | JSX.Element;
       if (event_type === EventType.REVIEW) {
@@ -634,7 +559,9 @@ export default class UserFeedPage extends React.Component<
       let additionalMenuItems;
       if (
         (event.event_type === EventType.RECORDING_RECOMMENDATION ||
-          event.event_type === EventType.RECORDING_PIN) &&
+          event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
+          event.event_type === EventType.RECORDING_PIN ||
+          event.event_type === EventType.THANKS) &&
         event.user_name === currentUser.name
       ) {
         additionalMenuItems = [
@@ -643,30 +570,41 @@ export default class UserFeedPage extends React.Component<
             title="Delete Event"
             text="Delete Event"
             // eslint-disable-next-line react/jsx-no-bind
-            action={this.deleteFeedEvent.bind(this, event)}
+            action={() => {
+              deleteEventMutation(event);
+            }}
           />,
         ];
       }
       return (
         <div className="event-content">
           <ListenCard
-            updateFeedbackCallback={this.updateFeedback}
-            currentFeedback={this.getFeedbackForListen(listen)}
             showUsername={false}
             showTimestamp={false}
             listen={listen}
             additionalContent={additionalContent}
-            newAlert={newAlert}
             additionalMenuItems={additionalMenuItems}
           />
         </div>
       );
     }
+    if (event.event_type === EventType.THANKS && !event.hidden) {
+      const { metadata } = event as TimelineEvent<ThanksMetadata>;
+      if (!metadata?.blurb_content?.length) {
+        return null;
+      }
+      return (
+        <div className="event-content">
+          <Card className="listen-card">
+            <div className="main-content">{metadata?.blurb_content}</div>
+          </Card>
+        </div>
+      );
+    }
     return null;
-  }
+  };
 
-  renderEventText(event: TimelineEvent) {
-    const { currentUser } = this.context;
+  const renderEventText = (event: TimelineEvent<EventMetadata>) => {
     const { event_type, user_name, metadata } = event;
     if (event.hidden) {
       return (
@@ -685,23 +623,21 @@ export default class UserFeedPage extends React.Component<
       if (currentUserFollows) {
         return (
           <span className="event-description-text">
-            You are now following{" "}
-            <a href={`/user/${user_name_1}`}>{user_name_1}</a>
+            You are now following <Username username={user_name_1} />
           </span>
         );
       }
       if (currentUserFollowed) {
         return (
           <span className="event-description-text">
-            <a href={`/user/${user_name_0}`}>{user_name_0}</a> is now following
-            you
+            <Username username={user_name_0} /> is now following you
           </span>
         );
       }
       return (
         <span className="event-description-text">
-          <a href={`/user/${user_name_0}`}>{user_name_0}</a> is now following{" "}
-          <a href={`/user/${user_name_1}`}>{user_name_1}</a>
+          <Username username={user_name_0} /> is now following{" "}
+          <Username username={user_name_1} />
         </span>
       );
     }
@@ -713,95 +649,225 @@ export default class UserFeedPage extends React.Component<
           // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
-            __html: sanitize(message),
+            __html: DOMPurify.sanitize(message),
           }}
         />
       );
+    }
+    if (event_type === EventType.THANKS) {
+      const {
+        original_event_type,
+        thanker_username,
+        thankee_username,
+      } = metadata as ThanksMetadata;
+
+      if (thanker_username === currentUser.name) {
+        return (
+          <span className="event-description-text">
+            You thanked <Username username={thankee_username} /> for{" "}
+            {
+              EventTypeinMessage[
+                original_event_type as keyof typeof EventTypeinMessage
+              ]
+            }
+          </span>
+        );
+      }
+      if (thankee_username === currentUser.name) {
+        return (
+          <span className="event-description-text">
+            <Username username={thanker_username} /> thanked you for{" "}
+            {
+              EventTypeinMessage[
+                original_event_type as keyof typeof EventTypeinMessage
+              ]
+            }
+          </span>
+        );
+      }
     }
 
     const userLinkOrYou =
       user_name === currentUser.name ? (
         "You"
       ) : (
-        <a
-          href={`/user/${user_name}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {user_name}
-        </a>
+        <Username username={user_name} />
       );
     return (
       <span className="event-description-text">
-        {userLinkOrYou} {UserFeedPage.getEventTypePhrase(event)}
+        {userLinkOrYou} {getEventTypePhrase(event)}
       </span>
     );
-  }
+  };
 
-  render() {
-    const { currentUser, APIService } = this.context;
-    const { newAlert } = this.props;
-    const {
-      events,
-      previousEventTs,
-      nextEventTs,
-      earliestEventTs,
-      loading,
-    } = this.state;
+  const renderSubEvent = (
+    subEvent: TimelineEvent<EventMetadata> | undefined
+  ) => {
+    if (!subEvent)
+      return (
+        <div className="muted">This event was deleted or cannot be loaded</div>
+      );
 
-    const listens = events
-      .filter(UserFeedPage.isEventListenable)
-      .map((event) => event.metadata) as Listen[];
-
-    const isNewerButtonDisabled =
-      !previousEventTs ||
-      (earliestEventTs && events?.[0]?.created >= earliestEventTs);
     return (
-      <>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            justifyContent: "space-between",
-          }}
-        >
-          <h2>Latest activity</h2>
-          <a
-            id="feedback-button"
-            href="mailto:support@listenbrainz.org?subject=Feed%20page%20feedback"
-            type="button"
-            className="btn btn-primary"
-          >
-            <span className="fa-layers icon">
-              <FontAwesomeIcon
-                icon={faCircle as IconProp}
-                transform="grow-10"
-              />
-              <FontAwesomeIcon
-                icon={faBullhorn as IconProp}
-                transform="rotate--20"
-              />
-            </span>{" "}
-            Feedback
-          </a>
-        </div>
-        <div role="main">
-          <div className="row">
-            <div className="col-md-7 col-xs-12">
-              <div
-                style={{
-                  height: 0,
-                  position: "sticky",
-                  top: "50%",
-                  zIndex: 1,
-                }}
-              >
-                <Loader isLoading={loading} />
+      <div>
+        <details>
+          <summary className="event-description">
+            <span className={`event-icon ${subEvent.event_type}`} />
+            {renderEventText(subEvent)}
+
+            <span className="event-time">
+              {preciseTimestamp(subEvent.created * 1000)}
+              {renderEventActionButton(subEvent, true)}
+            </span>
+          </summary>
+          {renderEventContent(subEvent)}
+        </details>
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <Helmet>
+        <title>Feed</title>
+      </Helmet>
+      <div className="row">
+        <div className="col-lg-9">
+          <div className="listen-header">
+            <h3 className="header-with-line">Latest activity</h3>
+            {/* Commented out as new OAuth is not merged yet. */}
+            {/* <button
+              type="button"
+              className="btn btn-icon btn-info atom-button"
+              title="Subscribe to syndication feed (Atom)"
+              onClick={() => {
+                NiceModal.show(SyndicationFeedModal, {
+                  feedTitle: `Latest activity`,
+                  options: [
+                    {
+                      label: "Time range",
+                      key: "minutes",
+                      type: "dropdown",
+                      tooltip:
+                        "Select the time range for the feed. For instance, choosing '30 minutes' will include events from the last 30 minutes. It's recommended to set your feed reader's refresh interval to match this time range for optimal updates.",
+                      values: [
+                        {
+                          id: "10minutes",
+                          value: "10",
+                          displayValue: "10 minutes",
+                        },
+                        {
+                          id: "30minutes",
+                          value: "30",
+                          displayValue: "30 minutes",
+                        },
+                        {
+                          id: "1hour",
+                          value: "60",
+                          displayValue: "1 hour",
+                        },
+                        {
+                          id: "2hours",
+                          value: "120",
+                          displayValue: "2 hours",
+                        },
+                        {
+                          id: "4hours",
+                          value: "240",
+                          displayValue: "4 hours",
+                        },
+                        {
+                          id: "8hours",
+                          value: "480",
+                          displayValue: "8 hours",
+                        },
+                      ],
+                    },
+                  ],
+                  baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                    encodeURIComponent(currentUser.name)
+                  }/events`,
+                });
+              }}
+            >
+              <FontAwesomeIcon icon={faRss} size="sm" />
+            </button> */}
+            <button
+              type="button"
+              className="btn btn-info btn-rounded play-tracks-button text-nowrap"
+              title="Play all"
+              onClick={() => {
+                window.postMessage(
+                  {
+                    brainzplayer_event: "play-ambient-queue",
+                    payload: listens,
+                  },
+                  window.location.origin
+                );
+              }}
+            >
+              <FontAwesomeIcon icon={faPlayCircle} fixedWidth /> Play all
+            </button>
+          </div>
+          {isError ? (
+            <>
+              <div className="alert alert-warning text-center">
+                There was an error while trying to load your feed. Please try
+                again
               </div>
-              <div id="timeline" style={{ opacity: loading ? "0.4" : "1" }}>
+              <div className="text-center">
+                <button
+                  type="button"
+                  className="btn btn-warning"
+                  onClick={() => {
+                    refetch();
+                  }}
+                >
+                  Reload feed
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-center mb-4">
+                <button
+                  type="button"
+                  className="btn btn-outline-info"
+                  onClick={() => {
+                    fetchPreviousPage();
+                  }}
+                  disabled={isFetching}
+                >
+                  <FontAwesomeIcon icon={faRefresh} />
+                  &nbsp;
+                  {isLoading || isFetching ? "Refreshing..." : "Refresh"}
+                </button>
+              </div>
+              <div
+                id="timeline"
+                data-testid="timeline"
+                style={{ opacity: isLoading ? "0.4" : "1" }}
+              >
                 <ul>
-                  {events.map((event) => {
-                    const { created, event_type, user_name } = event;
+                  {events?.map((event) => {
+                    const { created, event_type, user_name, metadata } = event;
+                    let subEventElement;
+                    if (event_type === EventType.THANKS && !event.hidden) {
+                      const {
+                        original_event_id,
+                        original_event_type,
+                      } = metadata as ThanksMetadata;
+                      const filterMethod = (
+                        evt: TimelineEvent<EventMetadata> | undefined
+                      ) =>
+                        evt?.id === original_event_id &&
+                        evt?.event_type === original_event_type;
+                      const subEvent =
+                        events?.find(filterMethod) ||
+                        separatelyLoadedEvents?.find(filterMethod);
+                      subEventElement = renderSubEvent(subEvent);
+                    }
+
                     return (
                       <li
                         className="timeline-event"
@@ -813,125 +879,65 @@ export default class UserFeedPage extends React.Component<
                               <FontAwesomeIcon
                                 icon={faCircle as IconProp}
                                 transform="grow-8"
+                                fixedWidth
                               />
                               <FontAwesomeIcon
-                                icon={
-                                  UserFeedPage.getEventTypeIcon(
-                                    event_type
-                                  ) as IconProp
-                                }
+                                icon={getEventTypeIcon(event_type) as IconProp}
                                 inverse
-                                transform="shrink-4"
+                                transform="shrink-3"
+                                fixedWidth
                               />
                             </span>
                           </span>
-                          {this.renderEventText(event)}
+                          {renderEventText(event)}
 
                           <span className="event-time">
                             {preciseTimestamp(created * 1000)}
-                            {this.renderEventActionButton(event)}
+                            {renderEventActionButton(event)}
                           </span>
                         </div>
 
-                        {this.renderEventContent(event)}
+                        {renderEventContent(event)}
+
+                        {subEventElement && (
+                          <ul>
+                            <li className="timeline-event timeline-sub-event">
+                              {subEventElement}
+                            </li>
+                          </ul>
+                        )}
                       </li>
                     );
                   })}
                 </ul>
               </div>
-              <ul
-                className="pager"
-                style={{ marginRight: "-1em", marginLeft: "1.5em" }}
-              >
-                <li
-                  className={`previous ${
-                    isNewerButtonDisabled ? "disabled" : ""
-                  }`}
+              {Boolean(events?.length) && (
+                <div
+                  className="text-center mb-4"
+                  style={{
+                    width: "50%",
+                    marginLeft: "auto",
+                    marginRight: "auto",
+                  }}
                 >
-                  <a
-                    role="button"
-                    onClick={this.handleClickNewer}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") this.handleClickNewer();
-                    }}
-                    tabIndex={0}
-                    href={
-                      isNewerButtonDisabled
-                        ? undefined
-                        : `?min_ts=${previousEventTs}`
-                    }
+                  <button
+                    type="button"
+                    className="btn btn-outline-info w-100"
+                    onClick={() => fetchNextPage()}
+                    disabled={!hasNextPage || isFetchingNextPage}
                   >
-                    &larr; Newer
-                  </a>
-                </li>
-                <li
-                  className={`next ${!nextEventTs ? "disabled" : ""}`}
-                  style={{ marginLeft: "auto" }}
-                >
-                  <a
-                    role="button"
-                    onClick={this.handleClickOlder}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") this.handleClickOlder();
-                    }}
-                    tabIndex={0}
-                    href={!nextEventTs ? undefined : `?max_ts=${nextEventTs}`}
-                  >
-                    Older &rarr;
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div className="col-md-offset-1 col-md-4">
-              <UserSocialNetwork user={currentUser} newAlert={newAlert} />
-            </div>
-          </div>
-          <BrainzPlayer
-            listens={listens}
-            newAlert={newAlert}
-            listenBrainzAPIBaseURI={APIService.APIBaseURI}
-            refreshSpotifyToken={APIService.refreshSpotifyToken}
-            refreshYoutubeToken={APIService.refreshYoutubeToken}
-          />
+                    <FontAwesomeIcon icon={faCalendarPlus} />
+                    &nbsp;
+                    {(isLoading || isFetchingNextPage) && "Loading more..."}
+                    {!(isLoading || isFetchingNextPage) &&
+                      (hasNextPage ? "Load More" : "Nothing more to load")}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
-      </>
-    );
-  }
+      </div>
+    </>
+  );
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-    optionalAlerts,
-  } = getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { events } = reactProps;
-
-  const UserFeedPageWithAlertNotifications = withAlertNotifications(
-    UserFeedPage
-  );
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <UserFeedPageWithAlertNotifications
-            initialAlerts={optionalAlerts}
-            events={events}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

@@ -1,0 +1,23 @@
+{{- define "KEY" -}}
+    {{ key (printf "docker-server-configs/LB/uwsgi.%s.json/%s" (env "DEPLOY_ENV") .) }}
+{{- end -}}
+[uwsgi]
+uid = www-data
+gid = www-data
+master = true
+socket = 0.0.0.0:3031
+module = listenbrainz.server
+callable = application
+chdir = /code/listenbrainz
+enable-threads = true
+processes = {{template "KEY" "processes"}}
+threads = {{template "KEY" "threads"}}
+listen = 2048
+log-x-forwarded-for=true
+disable-logging = true
+; quit uwsgi if the python app fails to load
+need-app = true
+; increase buffer size for requests that send a lot of mbids in query params
+buffer-size = 8192
+die-on-term = true
+safe-pidfile = /tmp/uwsgi.pid

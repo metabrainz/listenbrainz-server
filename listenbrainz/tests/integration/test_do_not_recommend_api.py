@@ -1,30 +1,16 @@
 from datetime import datetime, timedelta
 
-from brainzutils import cache
-from brainzutils.ratelimit import set_rate_limits
-from flask import url_for
-from typing import List
-from unittest.mock import patch
-
 import listenbrainz.db.user as db_user
-import listenbrainz.db.pinned_recording as db_pinned_rec
-import listenbrainz.db.user_relationship as db_user_relationship
 from listenbrainz.db import do_not_recommend
 
 from listenbrainz.tests.integration import IntegrationTestCase
-from listenbrainz.db.model.pinned_recording import (
-    PinnedRecording,
-    WritablePinnedRecording,
-    MAX_BLURB_CONTENT_LENGTH,
-)
-import json
 
 
 class DoNotRecommendAPITestCase(IntegrationTestCase):
 
     def setUp(self):
         super(DoNotRecommendAPITestCase, self).setUp()
-        self.user = db_user.get_or_create(1, "test_user_1")
+        self.user = db_user.get_or_create(self.db_conn, 1, "test_user_1")
 
         self.items = [
             {
@@ -54,7 +40,7 @@ class DoNotRecommendAPITestCase(IntegrationTestCase):
             limit = len(self.items)
 
         for item in self.items[:limit]:
-            do_not_recommend.insert(self.user["id"], item["entity"], item["entity_mbid"], item["until"])
+            do_not_recommend.insert(self.db_conn, self.user["id"], item["entity"], item["entity_mbid"], item["until"])
 
     def _check_response(self, response, expected, offset=0, total_count=None):
         self.assert200(response)
@@ -71,13 +57,15 @@ class DoNotRecommendAPITestCase(IntegrationTestCase):
 
     def test_get_do_not_recommends(self):
         self.insert_test_data()
-        url = url_for("do_not_recommend_api_v1.get_do_not_recommends", user_name=self.user["musicbrainz_id"])
+        url = self.custom_url_for("do_not_recommend_api_v1.get_do_not_recommends",
+                                  user_name=self.user["musicbrainz_id"])
         response = self.client.get(url)
         self._check_response(response, self.items)
 
     def test_delete_do_not_recommend(self):
         self.insert_test_data()
-        url = url_for("do_not_recommend_api_v1.delete_do_not_recommend", user_name=self.user["musicbrainz_id"])
+        url = self.custom_url_for("do_not_recommend_api_v1.delete_do_not_recommend",
+                                  user_name=self.user["musicbrainz_id"])
         response = self.client.post(
             url,
             json={"entity": self.items[3]["entity"], "entity_mbid": self.items[3]["entity_mbid"]},
@@ -85,11 +73,12 @@ class DoNotRecommendAPITestCase(IntegrationTestCase):
         )
         self.assert200(response)
 
-        response = self.client.get(url_for("do_not_recommend_api_v1.get_do_not_recommends", user_name=self.user["musicbrainz_id"]))
+        response = self.client.get(
+            self.custom_url_for("do_not_recommend_api_v1.get_do_not_recommends", user_name=self.user["musicbrainz_id"]))
         self._check_response(response, self.items[:3])
 
     def test_add_do_not_recommend(self):
-        url = url_for("do_not_recommend_api_v1.add_do_not_recommend", user_name=self.user["musicbrainz_id"])
+        url = self.custom_url_for("do_not_recommend_api_v1.add_do_not_recommend", user_name=self.user["musicbrainz_id"])
         response = self.client.post(
             url,
             json=self.items[0],
@@ -106,29 +95,34 @@ class DoNotRecommendAPITestCase(IntegrationTestCase):
         self.assert200(response)
         new_item["until"] = None
 
-        response = self.client.get(url_for("do_not_recommend_api_v1.get_do_not_recommends", user_name=self.user["musicbrainz_id"]))
+        response = self.client.get(
+            self.custom_url_for("do_not_recommend_api_v1.get_do_not_recommends", user_name=self.user["musicbrainz_id"]))
         self._check_response(response, [self.items[0], new_item])
 
     def test_invalid_username(self):
         user_name = " -- invalid username -- "
-        response = self.client.get(url_for("do_not_recommend_api_v1.get_do_not_recommends", user_name=user_name))
+        response = self.client.get(
+            self.custom_url_for("do_not_recommend_api_v1.get_do_not_recommends", user_name=user_name))
         self.assert404(response)
         self.assertEqual(response.json["code"], 404)
 
     def test_unauthorized(self):
-        response = self.client.post(url_for("do_not_recommend_api_v1.delete_do_not_recommend", user_name=self.user["musicbrainz_id"]))
+        response = self.client.post(self.custom_url_for("do_not_recommend_api_v1.delete_do_not_recommend",
+                                                        user_name=self.user["musicbrainz_id"]))
         self.assert401(response)
         self.assertEqual(response.json["code"], 401)
 
-        response = self.client.post(url_for("do_not_recommend_api_v1.add_do_not_recommend", user_name=self.user["musicbrainz_id"]))
+        response = self.client.post(
+            self.custom_url_for("do_not_recommend_api_v1.add_do_not_recommend", user_name=self.user["musicbrainz_id"]))
         self.assert401(response)
         self.assertEqual(response.json["code"], 401)
 
     def test_invalid_entity(self):
         invalid_entity_error = "Value 'label' for entity key is invalid"
         urls = [
-            url_for("do_not_recommend_api_v1.delete_do_not_recommend", user_name=self.user["musicbrainz_id"]),
-            url_for("do_not_recommend_api_v1.add_do_not_recommend", user_name=self.user["musicbrainz_id"])
+            self.custom_url_for("do_not_recommend_api_v1.delete_do_not_recommend",
+                                user_name=self.user["musicbrainz_id"]),
+            self.custom_url_for("do_not_recommend_api_v1.add_do_not_recommend", user_name=self.user["musicbrainz_id"])
         ]
         for url in urls:
             response = self.client.post(
@@ -143,8 +137,9 @@ class DoNotRecommendAPITestCase(IntegrationTestCase):
     def test_invalid_entity_mbid(self):
         invalid_entity_mbid_error = "Value 'foobar' for entity_mbid key is not a valid uuid"
         urls = [
-            url_for("do_not_recommend_api_v1.delete_do_not_recommend", user_name=self.user["musicbrainz_id"]),
-            url_for("do_not_recommend_api_v1.add_do_not_recommend", user_name=self.user["musicbrainz_id"])
+            self.custom_url_for("do_not_recommend_api_v1.delete_do_not_recommend",
+                                user_name=self.user["musicbrainz_id"]),
+            self.custom_url_for("do_not_recommend_api_v1.add_do_not_recommend", user_name=self.user["musicbrainz_id"])
         ]
         for url in urls:
             response = self.client.post(
@@ -157,7 +152,7 @@ class DoNotRecommendAPITestCase(IntegrationTestCase):
             self.assertTrue(response.json["error"].startswith(invalid_entity_mbid_error))
 
     def test_invalid_until(self):
-        url = url_for("do_not_recommend_api_v1.add_do_not_recommend", user_name=self.user["musicbrainz_id"])
+        url = self.custom_url_for("do_not_recommend_api_v1.add_do_not_recommend", user_name=self.user["musicbrainz_id"])
 
         response = self.client.post(
             url,
@@ -186,10 +181,12 @@ class DoNotRecommendAPITestCase(IntegrationTestCase):
     def test_count_offset_get(self):
         self.insert_test_data()
         response = self.client.get(
-            url_for("do_not_recommend_api_v1.get_do_not_recommends", user_name=self.user["musicbrainz_id"], count=2)
+            self.custom_url_for("do_not_recommend_api_v1.get_do_not_recommends", user_name=self.user["musicbrainz_id"],
+                                count=2)
         )
         self._check_response(response, self.items[:2], total_count=4)
         response = self.client.get(
-            url_for("do_not_recommend_api_v1.get_do_not_recommends", user_name=self.user["musicbrainz_id"], offset=2)
+            self.custom_url_for("do_not_recommend_api_v1.get_do_not_recommends", user_name=self.user["musicbrainz_id"],
+                                offset=2)
         )
         self._check_response(response, self.items[2:], total_count=4, offset=2)

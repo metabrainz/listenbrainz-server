@@ -357,7 +357,6 @@
   ],
   "totalCount": 50,
   "profileUrl": "/user/jdaok/",
-  "newAlert": "ƒ () {}",
   "spotify": {
     "access_token": "access token",
     "permission": ["streaming", "user-read-email", "user-read-private"]

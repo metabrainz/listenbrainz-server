@@ -24,7 +24,6 @@
 import orjson
 import sqlalchemy
 
-from listenbrainz import db
 from flask import current_app
 from pydantic import ValidationError
 
@@ -32,45 +31,46 @@ from data.model.user_cf_recommendations_recording_message import (UserRecommenda
                                                                   UserRecommendationsJson)
 
 
-def get_timestamp_for_last_recording_recommended():
+def get_timestamp_for_last_recording_recommended(db_conn):
     """ Get the time when recommendation_cf_recording table was last updated
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT MAX(created) as created_ts
-              FROM recommendation.cf_recording
-            """)
-        )
-        row = result.fetchone()
-        return row.created_ts if row else None
+    result = db_conn.execute(sqlalchemy.text("""
+        SELECT MAX(created) as created_ts
+          FROM recommendation.cf_recording
+        """)
+    )
+    row = result.fetchone()
+    return row.created_ts if row else None
 
 
-def insert_user_recommendation(user_id: int, recommendations: UserRecommendationsJson):
+def insert_user_recommendation(db_conn, user_id: int, recommendations: UserRecommendationsJson):
     """ Insert recommended recording for a user in the db.
 
         Args:
+            db_conn: database connection
             user_id (int): row id of the user.
             recommendations (dict): User recommendations.
     """
-    with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO recommendation.cf_recording (user_id, recording_mbid)
-                 VALUES (:user_id, :recommendation)
-            ON CONFLICT (user_id)
-          DO UPDATE SET user_id = :user_id,
-                        recording_mbid = :recommendation,
-                        created = NOW()
-            """), {
-                'user_id': user_id,
-                'recommendation': orjson.dumps(recommendations.dict()).decode("utf-8"),
-            }
-        )
+    db_conn.execute(sqlalchemy.text("""
+        INSERT INTO recommendation.cf_recording (user_id, recording_mbid)
+             VALUES (:user_id, :recommendation)
+        ON CONFLICT (user_id)
+      DO UPDATE SET user_id = :user_id,
+                    recording_mbid = :recommendation,
+                    created = NOW()
+        """), {
+            'user_id': user_id,
+            'recommendation': orjson.dumps(recommendations.dict()).decode("utf-8"),
+        }
+    )
+    db_conn.commit()
 
 
-def get_user_recommendation(user_id):
+def get_user_recommendation(db_conn, user_id):
     """ Get recommendations for a user with the given row ID.
 
         Args:
+            db_conn: database connection
             user_id (int): the row ID of the user in the DB
 
         Returns:
@@ -83,20 +83,18 @@ def get_user_recommendation(user_id):
             }
 
             recording_mbid = {
-                'top_artist_recording': [],
-                'similar_artist_recording': []
+                'raw': []
             }
     """
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, recording_mbid, created
-              FROM recommendation.cf_recording
-             WHERE user_id = :user_id
-            """), {
-                    'user_id': user_id
-                }
-        )
-        row = result.mappings().first()
+    result = db_conn.execute(sqlalchemy.text("""
+        SELECT user_id, recording_mbid, created
+          FROM recommendation.cf_recording
+         WHERE user_id = :user_id
+        """), {
+                'user_id': user_id
+            }
+    )
+    row = result.mappings().first()
 
     try:
         return UserRecommendationsData(**row) if row else None

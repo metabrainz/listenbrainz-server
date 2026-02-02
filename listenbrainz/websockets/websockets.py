@@ -1,23 +1,16 @@
 import eventlet
-from threading import Thread
 
-from brainzutils import sentry
 from flask_login import current_user
 from flask_socketio import SocketIO, join_room, emit, disconnect
 from werkzeug.exceptions import BadRequest
 
-from listenbrainz.webserver import create_app
 from listenbrainz.db import playlist as db_playlist
+from listenbrainz.webserver import ts_conn, db_conn
 from listenbrainz.websockets.listens_dispatcher import ListensDispatcher
 
-eventlet.monkey_patch()
+eventlet.monkey_patch(all=False, socket=True)
 
-app = create_app()
-sentry_config = app.config.get('LOG_SENTRY')
-if sentry_config:
-    sentry.init_sentry(**sentry_config)
-
-socketio = SocketIO(app, cors_allowed_origins='*', logger=True, engineio_logger=True)
+socketio = SocketIO(cors_allowed_origins='*', logger=True, engineio_logger=True)
 
 
 @socketio.on('json')
@@ -42,7 +35,7 @@ def joined(data):
     if 'playlist_id' not in data:
         raise BadRequest("Missing key 'playlist_id'")
     playlist_mbid = data['playlist_id']
-    playlist = db_playlist.get_by_mbid(playlist_mbid)
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid)
     if current_user.is_authenticated and playlist.is_modifiable_by(current_user.id):
         join_room(playlist_mbid)
         emit('joined', {'status': 'success'}, to=playlist_mbid)
@@ -50,7 +43,8 @@ def joined(data):
         disconnect()
 
 
-def run_websockets(host='0.0.0.0', port=7082, debug=True):
+def run_websockets(app, host='0.0.0.0', port=7082, debug=True):
+    socketio.init_app(app)
     dispatcher = ListensDispatcher(app, socketio)
-    Thread(target=dispatcher.start).start()
+    socketio.start_background_task(dispatcher.start)
     socketio.run(app, debug=debug, host=host, port=port)

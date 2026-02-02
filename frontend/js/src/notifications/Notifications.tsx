@@ -1,3 +1,19 @@
+import * as React from "react";
+
+export type ToastMsgProps = {
+  title: string;
+  message: string | JSX.Element;
+};
+
+export function ToastMsg({ title, message }: ToastMsgProps) {
+  return (
+    <div aria-roledescription="alert" role="alert">
+      <b>{title}</b>
+      <p>{message}</p>
+    </div>
+  );
+}
+
 /**
  * Older implementations and Safari use the deprecated callback signature
  * of Notification.requestPermission instead of the Promise-based signature

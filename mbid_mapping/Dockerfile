@@ -1,4 +1,4 @@
-FROM metabrainz/python:3.10-20220315 as mbid-mapping-base
+FROM metabrainz/python:3.13-20250313 as mbid-mapping-base
 
 RUN apt-get update && apt-get install -y ca-certificates python3-pip netpbm git && \
         pip install --upgrade pip
@@ -28,3 +28,6 @@ RUN chmod 0644 /etc/cron.d/mapper
 COPY --chown=listenbrainz:listenbrainz requirements.txt /code/mapper
 RUN python -m pip install --no-cache-dir -r requirements.txt
 COPY --chown=listenbrainz:listenbrainz . /code/mapper
+
+# Ensure we use the right files and folders by removing duplicates
+RUN rm -f /code/mapper/config.py /code/mapper/config.pyc

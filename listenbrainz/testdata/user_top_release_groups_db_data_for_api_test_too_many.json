@@ -1,0 +1,1918 @@
+[
+  {
+    "data": [
+      {
+        "artist_mbids": [
+          "89ad4ac3-39f7-470e-963a-56509c546377"
+        ],
+        "artist_name": "Various Artists",
+        "caa_id": 34648001921,
+        "caa_release_mbid": "bea81d78-4642-4e04-ae48-51c5140d06e4",
+        "listen_count": 527,
+        "release_group_mbid": "61536216-34fe-48df-b1dd-1a6fac92346d",
+        "release_group_name": "Mismatched: Season 2",
+        "artists": [
+          {
+            "artist_credit_name": "Various Artists",
+            "join_phrase": "",
+            "artist_mbid": "89ad4ac3-39f7-470e-963a-56509c546377"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "62162215-b023-4f0e-84bd-1e9412d5b32c",
+          "faf4cefb-036c-4c88-b93a-5b03dd0a0e6b",
+          "e07d9474-00ea-4460-ac27-88b46b3d976e"
+        ],
+        "artist_name": "All Time Low ft. Demi Lovato & blackbear",
+        "caa_id": 29179588350,
+        "caa_release_mbid": "ee65192d-31f3-437a-b170-9158d2172dbc",
+        "listen_count": 456,
+        "release_group_mbid": "326b4a29-dff5-4fab-87dc-efc1494001c6",
+        "release_group_name": "Monsters",
+        "artists": [
+          {
+            "artist_credit_name": "All Time Low",
+            "join_phrase": " ft. ",
+            "artist_mbid": "62162215-b023-4f0e-84bd-1e9412d5b32c"
+          },
+          {
+            "artist_credit_name": "Demi Lovato",
+            "join_phrase": " & ",
+            "artist_mbid": "faf4cefb-036c-4c88-b93a-5b03dd0a0e6b"
+          },
+          {
+            "artist_credit_name": "blackbear",
+            "join_phrase": "",
+            "artist_mbid": "e07d9474-00ea-4460-ac27-88b46b3d976e"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "c8b03190-306c-4120-bb0b-6f2ebfc06ea9"
+        ],
+        "artist_name": "The Weeknd",
+        "caa_id": 25720993837,
+        "caa_release_mbid": "19e4f6cc-ca0c-4897-8dfc-a36914b7f998",
+        "listen_count": 381,
+        "release_group_mbid": "78570bea-2a26-467c-a3db-c52723ceb394",
+        "release_group_name": "After Hours",
+        "artists": [
+          {
+            "artist_credit_name": "The Weeknd",
+            "join_phrase": "",
+            "artist_mbid": "c8b03190-306c-4120-bb0b-6f2ebfc06ea9"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "20a69a45-8fc0-4abb-84a9-f4e0515695f9"
+        ],
+        "artist_name": "The Bilz and Kashif",
+        "caa_id": 34454611184,
+        "caa_release_mbid": "f132db0b-3aaa-41a0-a4b6-4ae395ec213d",
+        "listen_count": 353,
+        "release_group_mbid": "43bda4b1-b273-463c-bc00-00ecbf4c0e92",
+        "release_group_name": "The Trinity",
+        "artists": [
+          {
+            "artist_credit_name": "The Bilz and Kashif",
+            "join_phrase": "",
+            "artist_mbid": "20a69a45-8fc0-4abb-84a9-f4e0515695f9"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "0ab49580-c84f-44d4-875f-d83760ea2cfe"
+        ],
+        "artist_name": "Maroon 5",
+        "caa_id": 29219656848,
+        "caa_release_mbid": "ba7d3297-35c0-4c77-b946-dde5feef0773",
+        "listen_count": 342,
+        "release_group_mbid": "7ed5ba22-98c6-4688-8ab9-2099bac4dffe",
+        "release_group_name": "JORDI",
+        "artists": [
+          {
+            "artist_credit_name": "Maroon 5",
+            "join_phrase": "",
+            "artist_mbid": "0ab49580-c84f-44d4-875f-d83760ea2cfe"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387"
+        ],
+        "artist_name": "Ariana Grande",
+        "caa_id": 11225605379,
+        "caa_release_mbid": "ed6f1f75-38e3-4b0c-bbca-0cb2cff056ec",
+        "listen_count": 327,
+        "release_group_mbid": "17fd3576-b584-4f32-8ff0-12206d4cb66c",
+        "release_group_name": "My Everything",
+        "artists": [
+          {
+            "artist_credit_name": "Ariana Grande",
+            "join_phrase": "",
+            "artist_mbid": "f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "89ad4ac3-39f7-470e-963a-56509c546377"
+        ],
+        "artist_name": "Various Artists",
+        "caa_id": 29519759582,
+        "caa_release_mbid": "05889ac0-bbf4-4b49-91c1-2fcffef3098b",
+        "listen_count": 326,
+        "release_group_mbid": "73d17b01-10d0-44ed-befa-bee3418c7368",
+        "release_group_name": "Lucifer \u201cBloody Celestial Karaoke Jam\u201d Season 5: Special Episode Soundtrack",
+        "artists": [
+          {
+            "artist_credit_name": "Various Artists",
+            "join_phrase": "",
+            "artist_mbid": "89ad4ac3-39f7-470e-963a-56509c546377"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "7eb1ce54-a355-41f9-8d68-e018b096d427"
+        ],
+        "artist_name": "Harry Styles",
+        "caa_id": 24909263406,
+        "caa_release_mbid": "61210065-4118-43f9-866f-4038cfae5df4",
+        "listen_count": 311,
+        "release_group_mbid": "b9990da8-7953-4e64-aea5-065ca9cd3cb7",
+        "release_group_name": "Fine Line",
+        "artists": [
+          {
+            "artist_credit_name": "Harry Styles",
+            "join_phrase": "",
+            "artist_mbid": "7eb1ce54-a355-41f9-8d68-e018b096d427"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "6925db17-f35e-42f3-a4eb-84ee6bf5d4b0"
+        ],
+        "artist_name": "Olivia Rodrigo",
+        "caa_id": 32201040812,
+        "caa_release_mbid": "6dd75bce-0194-4737-810c-d389689b4759",
+        "listen_count": 306,
+        "release_group_mbid": "2ae2e504-7116-4b4f-b632-9748bb18ccd2",
+        "release_group_name": "SOUR",
+        "artists": [
+          {
+            "artist_credit_name": "Olivia Rodrigo",
+            "join_phrase": "",
+            "artist_mbid": "6925db17-f35e-42f3-a4eb-84ee6bf5d4b0"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "0b30341b-b59d-4979-8130-b66c0e475321"
+        ],
+        "artist_name": "Lil Nas X",
+        "caa_id": 32131912528,
+        "caa_release_mbid": "b46119ac-079f-49d4-863d-cd4b49f9d843",
+        "listen_count": 285,
+        "release_group_mbid": "5ff232ca-d9c8-459b-9253-9374ec07777e",
+        "release_group_name": "MONTERO",
+        "artists": [
+          {
+            "artist_credit_name": "Lil Nas X",
+            "join_phrase": "",
+            "artist_mbid": "0b30341b-b59d-4979-8130-b66c0e475321"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "ed29f721-0d40-4a90-9f25-a91c2ccccd5e",
+          "56743d2c-b315-4d01-a444-fa42088182c0",
+          "f903e686-a5f4-40e1-8fa8-c8132369c51e"
+        ],
+        "artist_name": "AP Dhillon, Gurinder Gill, Intense",
+        "caa_id": 31899892362,
+        "caa_release_mbid": "b6bb2693-5482-40e5-91e2-d87ac4cf896b",
+        "listen_count": 273,
+        "release_group_mbid": "db309423-e72d-4f1b-854d-37e0556f2354",
+        "release_group_name": "Excuses",
+        "artists": [
+          {
+            "artist_credit_name": "AP Dhillon",
+            "join_phrase": ", ",
+            "artist_mbid": "ed29f721-0d40-4a90-9f25-a91c2ccccd5e"
+          },
+          {
+            "artist_credit_name": "Gurinder Gill",
+            "join_phrase": ", ",
+            "artist_mbid": "56743d2c-b315-4d01-a444-fa42088182c0"
+          },
+          {
+            "artist_credit_name": "Intense",
+            "join_phrase": "",
+            "artist_mbid": "f903e686-a5f4-40e1-8fa8-c8132369c51e"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "b0e4bc50-3062-4d31-afad-def6a6b7a8e9"
+        ],
+        "artist_name": "Alan Walker",
+        "caa_id": 33297304671,
+        "caa_release_mbid": "7cef7719-a6ea-4016-96ba-1a7e6f7f4421",
+        "listen_count": 273,
+        "release_group_mbid": "1a44e489-aea4-43db-aa92-d4e9f6e93dc1",
+        "release_group_name": "Different World",
+        "artists": [
+          {
+            "artist_credit_name": "Alan Walker",
+            "join_phrase": "",
+            "artist_mbid": "b0e4bc50-3062-4d31-afad-def6a6b7a8e9"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "122d63fc-8671-43e4-9752-34e846d62a9c"
+        ],
+        "artist_name": "Katy Perry",
+        "caa_id": 7837226137,
+        "caa_release_mbid": "3486bc5b-93c2-4e3f-b3c0-d34a665882a9",
+        "listen_count": 270,
+        "release_group_mbid": "e6f683c9-fc85-412c-a352-d6e411fc2603",
+        "release_group_name": "Teenage Dream",
+        "artists": [
+          {
+            "artist_credit_name": "Katy Perry",
+            "join_phrase": "",
+            "artist_mbid": "122d63fc-8671-43e4-9752-34e846d62a9c"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "e0bba708-bdd3-478d-84ea-c706413bedab"
+        ],
+        "artist_name": "A. R. Rahman",
+        "caa_id": 13007261956,
+        "caa_release_mbid": "9aa17de3-9496-421c-a97a-1cba83969815",
+        "listen_count": 257,
+        "release_group_mbid": "7eca899a-8309-3180-8802-9e14068cd675",
+        "release_group_name": "Jaane Tu Ya Jaane Na",
+        "artists": [
+          {
+            "artist_credit_name": "A. R. Rahman",
+            "join_phrase": "",
+            "artist_mbid": "e0bba708-bdd3-478d-84ea-c706413bedab"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "28aee606-d7a9-4b8d-b234-dd5e0d99c259"
+        ],
+        "artist_name": "Rixton",
+        "caa_id": 11928545824,
+        "caa_release_mbid": "44ef15ac-603e-465d-b4c1-a16c565cb1d1",
+        "listen_count": 256,
+        "release_group_mbid": "4c90b4a6-b3dd-4da5-86ea-63886db8fca7",
+        "release_group_name": "Let the Road",
+        "artists": [
+          {
+            "artist_credit_name": "Rixton",
+            "join_phrase": "",
+            "artist_mbid": "28aee606-d7a9-4b8d-b234-dd5e0d99c259"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f"
+        ],
+        "artist_name": "Dua Lipa",
+        "caa_id": 25806517352,
+        "caa_release_mbid": "315bbc48-dea9-463c-bfa9-a6ccab78b990",
+        "listen_count": 243,
+        "release_group_mbid": "aa366795-92d7-4d67-91fa-6741f82a4858",
+        "release_group_name": "Future Nostalgia",
+        "artists": [
+          {
+            "artist_credit_name": "Dua Lipa",
+            "join_phrase": "",
+            "artist_mbid": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "0ab49580-c84f-44d4-875f-d83760ea2cfe"
+        ],
+        "artist_name": "Maroon 5",
+        "caa_id": 33632889799,
+        "caa_release_mbid": "e8fe33d4-31a6-4394-941c-45fac8834322",
+        "listen_count": 237,
+        "release_group_mbid": "3622c71c-c674-46bc-8fc2-24d182f7684a",
+        "release_group_name": "V",
+        "artists": [
+          {
+            "artist_credit_name": "Maroon 5",
+            "join_phrase": "",
+            "artist_mbid": "0ab49580-c84f-44d4-875f-d83760ea2cfe"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "ba0e7638-0cd6-4ff4-8987-c3e224d22c23"
+        ],
+        "artist_name": "Kygo",
+        "caa_id": 18247512094,
+        "caa_release_mbid": "ae76a998-1754-4f5e-b795-0fb1700cd9e3",
+        "listen_count": 230,
+        "release_group_mbid": "7e77a230-faed-4d31-8c97-6cbfaeb9a4e1",
+        "release_group_name": "Kids in Love",
+        "artists": [
+          {
+            "artist_credit_name": "Kygo",
+            "join_phrase": "",
+            "artist_mbid": "ba0e7638-0cd6-4ff4-8987-c3e224d22c23"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "89ad4ac3-39f7-470e-963a-56509c546377"
+        ],
+        "artist_name": "Various Artists",
+        "caa_id": 26373181981,
+        "caa_release_mbid": "5e673b7a-ee7a-4db6-89a2-2546d0ea199b",
+        "listen_count": 216,
+        "release_group_mbid": "abdd7a25-6f8e-476b-aca0-dd2f77e5cfe7",
+        "release_group_name": "BBC Radio 1\u2019s Live Lounge 2018",
+        "artists": [
+          {
+            "artist_credit_name": "Various Artists",
+            "join_phrase": "",
+            "artist_mbid": "89ad4ac3-39f7-470e-963a-56509c546377"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "e3d5b5ec-101a-4529-9f2d-01dca64cf44e"
+        ],
+        "artist_name": "Anne\u2010Marie",
+        "caa_id": 20860144321,
+        "caa_release_mbid": "dbf04fcd-3c2b-48fb-b13a-5ed0b56fe2db",
+        "listen_count": 213,
+        "release_group_mbid": "80ac0e04-edfe-4c37-af08-18bedad2ca81",
+        "release_group_name": "Speak Your Mind",
+        "artists": [
+          {
+            "artist_credit_name": "Anne\u2010Marie",
+            "join_phrase": "",
+            "artist_mbid": "e3d5b5ec-101a-4529-9f2d-01dca64cf44e"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "ef2686fe-0bdf-4e0c-b902-cc6609acc95d"
+        ],
+        "artist_name": "Shubh",
+        "caa_id": 31858773067,
+        "caa_release_mbid": "6b8c348a-e04a-496f-8821-1e24e1124519",
+        "listen_count": 204,
+        "release_group_mbid": "763da29e-150a-444b-bfb1-9845cff080f4",
+        "release_group_name": "No Love",
+        "artists": [
+          {
+            "artist_credit_name": "Shubh",
+            "join_phrase": "",
+            "artist_mbid": "ef2686fe-0bdf-4e0c-b902-cc6609acc95d"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [],
+        "artist_name": "Madhur Sharma",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 200,
+        "release_group_mbid": null,
+        "release_group_name": "Kiven Mukhde",
+        "artists": []
+      },
+      {
+        "artist_mbids": [
+          "525f1f1c-03f0-4bc8-8dfd-e7521f87631b"
+        ],
+        "artist_name": "Charlie Puth",
+        "caa_id": 19827744116,
+        "caa_release_mbid": "3b8ce7ae-ff41-4dc6-a694-2e2b2edc24ae",
+        "listen_count": 199,
+        "release_group_mbid": "b2cc73b2-0b80-4f59-8782-244b086830e2",
+        "release_group_name": "Voicenotes",
+        "artists": [
+          {
+            "artist_credit_name": "Charlie Puth",
+            "join_phrase": "",
+            "artist_mbid": "525f1f1c-03f0-4bc8-8dfd-e7521f87631b"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "89ad4ac3-39f7-470e-963a-56509c546377"
+        ],
+        "artist_name": "Various Artists",
+        "caa_id": 32765390890,
+        "caa_release_mbid": "25e19f39-2054-4ab0-a295-ee04b03b7a5e",
+        "listen_count": 199,
+        "release_group_mbid": "f71b7692-fb51-49e7-8646-3169689035fa",
+        "release_group_name": "The \u201cSelma\u201d Album: A Musical Tribute to Dr. Martin Luther King, Jr.",
+        "artists": [
+          {
+            "artist_credit_name": "Various Artists",
+            "join_phrase": "",
+            "artist_mbid": "89ad4ac3-39f7-470e-963a-56509c546377"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "80609a00-b394-4a49-975b-2db6b543fa97"
+        ],
+        "artist_name": "The Kid LAROI",
+        "caa_id": 27882748683,
+        "caa_release_mbid": "27fdd420-d5ba-49d3-8b24-9518be056c65",
+        "listen_count": 190,
+        "release_group_mbid": "892a1351-c58c-4b51-9218-a82c8bf6d7ff",
+        "release_group_name": "FUCK LOVE",
+        "artists": [
+          {
+            "artist_credit_name": "The Kid LAROI",
+            "join_phrase": "",
+            "artist_mbid": "80609a00-b394-4a49-975b-2db6b543fa97"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "bf24ca37-25f4-4e34-9aec-460b94364cfc"
+        ],
+        "artist_name": "Shakira",
+        "caa_id": 1129595405,
+        "caa_release_mbid": "0e247e68-9134-3a6b-ba6a-1e2ce5fad35c",
+        "listen_count": 186,
+        "release_group_mbid": "daa154b8-34e9-350d-9e1a-e8626f946804",
+        "release_group_name": "Oral Fixation, Vol. 2",
+        "artists": [
+          {
+            "artist_credit_name": "Shakira",
+            "join_phrase": "",
+            "artist_mbid": "bf24ca37-25f4-4e34-9aec-460b94364cfc"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "afb680f2-b6eb-4cd7-a70b-a63b25c763d5"
+        ],
+        "artist_name": "Bruno Mars",
+        "caa_id": 999227495,
+        "caa_release_mbid": "3d2b148e-8c0a-42b6-baae-c3ee7322a569",
+        "listen_count": 177,
+        "release_group_mbid": "b3d1fbf7-dd1c-4119-a16e-58c2feb5bcb0",
+        "release_group_name": "Doo-Wops & Hooligans",
+        "artists": [
+          {
+            "artist_credit_name": "Bruno Mars",
+            "join_phrase": "",
+            "artist_mbid": "afb680f2-b6eb-4cd7-a70b-a63b25c763d5"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "62162215-b023-4f0e-84bd-1e9412d5b32c"
+        ],
+        "artist_name": "All Time Low",
+        "caa_id": 25842435271,
+        "caa_release_mbid": "b8385f5d-da1b-4ae4-b9cc-db8bdb483132",
+        "listen_count": 175,
+        "release_group_mbid": "69de01a5-99f0-4b0c-9abb-74cab631ed2c",
+        "release_group_name": "Wake Up, Sunshine",
+        "artists": [
+          {
+            "artist_credit_name": "All Time Low",
+            "join_phrase": "",
+            "artist_mbid": "62162215-b023-4f0e-84bd-1e9412d5b32c"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "122d63fc-8671-43e4-9752-34e846d62a9c"
+        ],
+        "artist_name": "Katy Perry",
+        "caa_id": 30866346889,
+        "caa_release_mbid": "5b463a2d-f719-4744-acab-c06e22ed1022",
+        "listen_count": 172,
+        "release_group_mbid": "f81a75f0-ee3a-4e10-9d27-701e654d901b",
+        "release_group_name": "Smile",
+        "artists": [
+          {
+            "artist_credit_name": "Katy Perry",
+            "join_phrase": "",
+            "artist_mbid": "122d63fc-8671-43e4-9752-34e846d62a9c"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "add5f522-25df-41c4-815e-0ca9f60b83e4"
+        ],
+        "artist_name": "Ava Max",
+        "caa_id": 29105589141,
+        "caa_release_mbid": "841d8d35-9a2c-4de6-af22-cfab2271f75f",
+        "listen_count": 165,
+        "release_group_mbid": "4408ebbd-eb68-43e0-a41a-d3155509fc92",
+        "release_group_name": "TO THE MAX",
+        "artists": [
+          {
+            "artist_credit_name": "Ava Max",
+            "join_phrase": "",
+            "artist_mbid": "add5f522-25df-41c4-815e-0ca9f60b83e4"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "5586fc31-7c41-4a2d-97a2-d358b58b250d"
+        ],
+        "artist_name": "Klergy",
+        "caa_id": 27620887370,
+        "caa_release_mbid": "834d8732-8e2d-42b6-9496-55b067d0748f",
+        "listen_count": 162,
+        "release_group_mbid": "3f8ff223-304e-4345-928c-59eec91908e5",
+        "release_group_name": "And so it Begins",
+        "artists": [
+          {
+            "artist_credit_name": "Klergy",
+            "join_phrase": "",
+            "artist_mbid": "5586fc31-7c41-4a2d-97a2-d358b58b250d"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "e4bc69e2-a064-4f93-ada1-f7f209cc1cc3"
+        ],
+        "artist_name": "Selena Gomez",
+        "caa_id": 17195556121,
+        "caa_release_mbid": "78e4c425-4ea5-4a7d-8d07-e0af921d4f0e",
+        "listen_count": 161,
+        "release_group_mbid": "794ce738-1562-4dc8-be73-7923a8961618",
+        "release_group_name": "For You",
+        "artists": [
+          {
+            "artist_credit_name": "Selena Gomez",
+            "join_phrase": "",
+            "artist_mbid": "e4bc69e2-a064-4f93-ada1-f7f209cc1cc3"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "cefe551f-33a4-45b2-9c59-abfe741654c7",
+          "b9542aba-c2bd-46c0-8100-4c9b5356a95f",
+          "7569dad3-210b-49ae-9a80-4972798b7fca"
+        ],
+        "artist_name": "Sharn, 40k & The Paul",
+        "caa_id": 34601875426,
+        "caa_release_mbid": "5460dad9-4dc8-4e0c-8e88-083e23c480f2",
+        "listen_count": 160,
+        "release_group_mbid": "eb20f028-6f59-4a64-95f1-1bc56b87dd5c",
+        "release_group_name": "Mi Amor",
+        "artists": [
+          {
+            "artist_credit_name": "Selena Gomez",
+            "join_phrase": "",
+            "artist_mbid": "e4bc69e2-a064-4f93-ada1-f7f209cc1cc3"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "43736f76-419a-42a0-816a-830876647ba5",
+          "93cfee41-b1a6-4604-a01c-91243e6926e6"
+        ],
+        "artist_name": "Ursine Vulpine feat. Annaca",
+        "caa_id": 15528924240,
+        "caa_release_mbid": "1355c8b7-f563-4ddc-8b00-620f4a63d081",
+        "listen_count": 156,
+        "release_group_mbid": "6996c6a9-0eeb-48d2-857d-1a122ba887f9",
+        "release_group_name": "Wicked Game",
+        "artists": [
+          {
+            "artist_credit_name": "Ursine Vulpine",
+            "join_phrase": " feat. ",
+            "artist_mbid": "43736f76-419a-42a0-816a-830876647ba5"
+          },
+          {
+            "artist_credit_name": "Annaca",
+            "join_phrase": "",
+            "artist_mbid": "93cfee41-b1a6-4604-a01c-91243e6926e6"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [],
+        "artist_name": "Lupe Fiasco, Guy Sebastian",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 155,
+        "release_group_mbid": null,
+        "release_group_name": "Food & Liquor II: The Great American Rap Album, Pt. 1",
+        "artists": []
+      },
+      {
+        "artist_mbids": [],
+        "artist_name": "Suchetha Basrur",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 152,
+        "release_group_mbid": null,
+        "release_group_name": "KGF Chapter 2",
+        "artists": []
+      },
+      {
+        "artist_mbids": [
+          "20244d07-534f-4eff-b4d4-930878889970"
+        ],
+        "artist_name": "Taylor Swift",
+        "caa_id": 30972212603,
+        "caa_release_mbid": "22cdc2ff-de42-4286-af9c-0917720ea92d",
+        "listen_count": 147,
+        "release_group_mbid": "a73cecde-0923-40ad-aad1-e8c24ba6c3d2",
+        "release_group_name": "Red",
+        "artists": [
+          {
+            "artist_credit_name": "Taylor Swift",
+            "join_phrase": "",
+            "artist_mbid": "20244d07-534f-4eff-b4d4-930878889970"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "afbdfac9-2955-4404-ae22-c08bf1c1b51e"
+        ],
+        "artist_name": "Don Omar",
+        "caa_id": 1462896727,
+        "caa_release_mbid": "6975a43b-49ad-4aa8-8e60-3ed5aff42488",
+        "listen_count": 141,
+        "release_group_mbid": "d767b3c9-82df-4a55-b6bb-eb730843d9d3",
+        "release_group_name": "Don Omar Presents: Meet the Orphans",
+        "artists": [
+          {
+            "artist_credit_name": "Don Omar",
+            "join_phrase": "",
+            "artist_mbid": "afbdfac9-2955-4404-ae22-c08bf1c1b51e"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "525f1f1c-03f0-4bc8-8dfd-e7521f87631b"
+        ],
+        "artist_name": "Charlie Puth",
+        "caa_id": 27097768474,
+        "caa_release_mbid": "23aa7223-bf01-432c-aebb-94ca9bddae1e",
+        "listen_count": 138,
+        "release_group_mbid": "3c82ff29-b9f1-4348-b20e-11d24d295845",
+        "release_group_name": "Nine Track Mind",
+        "artists": [
+          {
+            "artist_credit_name": "Charlie Puth",
+            "join_phrase": "",
+            "artist_mbid": "525f1f1c-03f0-4bc8-8dfd-e7521f87631b"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "1a425bbd-cca4-4b2c-aeb7-71cb176c828a"
+        ],
+        "artist_name": "One Direction",
+        "caa_id": 11803721369,
+        "caa_release_mbid": "188e2c25-e790-49d4-8ea3-5e770fb680d6",
+        "listen_count": 134,
+        "release_group_mbid": "8dcbc499-2325-47bf-9e92-30bc5b0603e2",
+        "release_group_name": "Made in the A.M.",
+        "artists": [
+          {
+            "artist_credit_name": "One Direction",
+            "join_phrase": "",
+            "artist_mbid": "1a425bbd-cca4-4b2c-aeb7-71cb176c828a"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "b7d92248-97e3-4450-8057-6fe06738f735"
+        ],
+        "artist_name": "Shawn Mendes",
+        "caa_id": 16998661524,
+        "caa_release_mbid": "50f33857-ff6c-442f-a3be-a7bd4a719bb3",
+        "listen_count": 131,
+        "release_group_mbid": "3d59017f-bb26-4095-8a78-c9d372cc64f4",
+        "release_group_name": "Illuminate",
+        "artists": [
+          {
+            "artist_credit_name": "Shawn Mendes",
+            "join_phrase": "",
+            "artist_mbid": "b7d92248-97e3-4450-8057-6fe06738f735"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "119a6864-622b-4e6c-8aab-a422080530c6",
+          "172e980e-ba97-4adb-acb0-d59733c599b6"
+        ],
+        "artist_name": "Sidhu Moose Wala & KK",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 127,
+        "release_group_mbid": "e0f01972-ef00-4e53-b8fe-3b21e7c97f17",
+        "release_group_name": "Goodbye KK and Sidhu Moosewala",
+        "artists": [
+          {
+            "artist_credit_name": "Sidhu Moose Wala",
+            "join_phrase": " & ",
+            "artist_mbid": "119a6864-622b-4e6c-8aab-a422080530c6"
+          },
+          {
+            "artist_credit_name": "KK",
+            "join_phrase": "",
+            "artist_mbid": "172e980e-ba97-4adb-acb0-d59733c599b6"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "89ad4ac3-39f7-470e-963a-56509c546377"
+        ],
+        "artist_name": "Various Artists",
+        "caa_id": 4653252004,
+        "caa_release_mbid": "ab960442-661b-40f6-9c09-0f89f92e52a1",
+        "listen_count": 126,
+        "release_group_mbid": "84331feb-08e0-42c3-bdb6-eca4ee948272",
+        "release_group_name": "I, Me Aur Main",
+        "artists": [
+          {
+            "artist_credit_name": "Various Artists",
+            "join_phrase": "",
+            "artist_mbid": "89ad4ac3-39f7-470e-963a-56509c546377"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "b7d92248-97e3-4450-8057-6fe06738f735"
+        ],
+        "artist_name": "Shawn Mendes",
+        "caa_id": 27961577465,
+        "caa_release_mbid": "9cbbdc38-80d4-4105-bf5f-b39e9b2d9989",
+        "listen_count": 124,
+        "release_group_mbid": "10cda8bd-0880-46c4-a696-df6d46f35227",
+        "release_group_name": "Wonder",
+        "artists": [
+          {
+            "artist_credit_name": "Shawn Mendes",
+            "join_phrase": "",
+            "artist_mbid": "b7d92248-97e3-4450-8057-6fe06738f735"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "33559088-9899-4889-a3ac-c57503e83eaa",
+          "fdf25d7c-d8f4-4736-ad24-bf2286a61254",
+          "375ee74a-91f0-46b2-bca0-6afddb92f24c"
+        ],
+        "artist_name": "Manan Bhardwaj, Sachin Jigar, Gourov Dasgupta",
+        "caa_id": 31960269207,
+        "caa_release_mbid": "ca7cb331-95ab-4fb4-9a88-53a4f0b504af",
+        "listen_count": 123,
+        "release_group_mbid": "c6c3db2a-01ee-4f24-8a53-39b75af9bd6d",
+        "release_group_name": "Shiddat",
+        "artists": [
+          {
+            "artist_credit_name": "Manan Bhardwaj",
+            "join_phrase": ", ",
+            "artist_mbid": "33559088-9899-4889-a3ac-c57503e83eaa"
+          },
+          {
+            "artist_credit_name": "Sachin Jigar",
+            "join_phrase": ", ",
+            "artist_mbid": "fdf25d7c-d8f4-4736-ad24-bf2286a61254"
+          },
+          {
+            "artist_credit_name": "Manan Bhardwaj",
+            "join_phrase": "",
+            "artist_mbid": "375ee74a-91f0-46b2-bca0-6afddb92f24c"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "f4d4b515-0b74-423f-a161-db184330c37c"
+        ],
+        "artist_name": "Gym Class Heroes",
+        "caa_id": 1766999354,
+        "caa_release_mbid": "57373190-ea25-4908-92b6-93d84bd468ae",
+        "listen_count": 121,
+        "release_group_mbid": "d3b2709c-6535-47a4-9ec9-d826ba9276cb",
+        "release_group_name": "The Papercut Chronicles II",
+        "artists": [
+          {
+            "artist_credit_name": "Gym Class Heroes",
+            "join_phrase": "",
+            "artist_mbid": "f4d4b515-0b74-423f-a161-db184330c37c"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "e3d5b5ec-101a-4529-9f2d-01dca64cf44e"
+        ],
+        "artist_name": "Anne\u2010Marie",
+        "caa_id": 29822169070,
+        "caa_release_mbid": "95444f0a-39e8-4e03-aa59-2a070d37fdb5",
+        "listen_count": 120,
+        "release_group_mbid": "74ca4eed-1584-4c73-ba7b-2416de730465",
+        "release_group_name": "Therapy",
+        "artists": [
+          {
+            "artist_credit_name": "Anne\u2010Marie",
+            "join_phrase": "",
+            "artist_mbid": "e3d5b5ec-101a-4529-9f2d-01dca64cf44e"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "2bd8101a-11c3-42d5-a9bd-6a3b26445f7e"
+        ],
+        "artist_name": "Jon Bellion",
+        "caa_id": 27950849585,
+        "caa_release_mbid": "9521f8d0-1a81-4c8c-af17-117f2df0c10a",
+        "listen_count": 120,
+        "release_group_mbid": "75f30bf9-2ccd-47c1-851d-e56963695504",
+        "release_group_name": "The Human Condition",
+        "artists": [
+          {
+            "artist_credit_name": "Jon Bellion",
+            "join_phrase": "",
+            "artist_mbid": "2bd8101a-11c3-42d5-a9bd-6a3b26445f7e"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "add5f522-25df-41c4-815e-0ca9f60b83e4"
+        ],
+        "artist_name": "Ava Max",
+        "caa_id": 27296898821,
+        "caa_release_mbid": "775305f6-7ad3-4de3-bf6c-491353493995",
+        "listen_count": 120,
+        "release_group_mbid": "dab43958-f33f-481b-901d-d4ba5fea4935",
+        "release_group_name": "Heaven & Hell",
+        "artists": [
+          {
+            "artist_credit_name": "Ava Max",
+            "join_phrase": "",
+            "artist_mbid": "add5f522-25df-41c4-815e-0ca9f60b83e4"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "1dd8b80b-f507-4958-9067-b971310f2bbf"
+        ],
+        "artist_name": "Mitraz",
+        "caa_id": 34412166571,
+        "caa_release_mbid": "b9a4ceeb-78ae-480b-a1be-7d168e15bb33",
+        "listen_count": 119,
+        "release_group_mbid": "6e4674ba-03b3-42da-9b38-2d2471e353c1",
+        "release_group_name": "Junoon",
+        "artists": [
+          {
+            "artist_credit_name": "Mitraz",
+            "join_phrase": "",
+            "artist_mbid": "1dd8b80b-f507-4958-9067-b971310f2bbf"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "255e2420-5b02-452b-9771-0512ebe78090"
+        ],
+        "artist_name": "Basshunter",
+        "caa_id": 29640422246,
+        "caa_release_mbid": "270e8186-9ff5-3e82-b594-5917f6e7fbb9",
+        "listen_count": 118,
+        "release_group_mbid": "54eb90f2-b71a-3b3e-8fcf-65f7bd7ffdfb",
+        "release_group_name": "Now You're Gone - The Album",
+        "artists": [
+          {
+            "artist_credit_name": "Basshunter",
+            "join_phrase": "",
+            "artist_mbid": "255e2420-5b02-452b-9771-0512ebe78090"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "ea4c3e59-f2bc-4880-942e-fbeaa64d8573"
+        ],
+        "artist_name": "Imran Khan",
+        "caa_id": 26701284060,
+        "caa_release_mbid": "dc32e721-36f2-4fd2-b4e9-2035ff7d1a12",
+        "listen_count": 117,
+        "release_group_mbid": "eab5bb43-3fe2-4320-8658-d73bd4a2609c",
+        "release_group_name": "Unforgettable",
+        "artists": [
+          {
+            "artist_credit_name": "Imran Khan",
+            "join_phrase": "",
+            "artist_mbid": "ea4c3e59-f2bc-4880-942e-fbeaa64d8573"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "c85cfd6b-b1e9-4a50-bd55-eb725f04f7d5"
+        ],
+        "artist_name": "Avicii",
+        "caa_id": 20479929741,
+        "caa_release_mbid": "549485c5-f1c3-4473-9cf7-91425248087a",
+        "listen_count": 115,
+        "release_group_mbid": "74d25ab8-22c5-4c4d-989d-9b7d37abbe9f",
+        "release_group_name": "Stories",
+        "artists": [
+          {
+            "artist_credit_name": "Avicii",
+            "join_phrase": "",
+            "artist_mbid": "c85cfd6b-b1e9-4a50-bd55-eb725f04f7d5"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "4c98aa1b-34eb-4336-987f-5e50aa059c00"
+        ],
+        "artist_name": "The Script",
+        "caa_id": 11530847296,
+        "caa_release_mbid": "833bf97f-3fd5-44c1-b2bd-8d21ba3f84ae",
+        "listen_count": 114,
+        "release_group_mbid": "5e084a94-8228-4a81-81b5-7579e03291e9",
+        "release_group_name": "No Sound Without Silence",
+        "artists": [
+          {
+            "artist_credit_name": "The Script",
+            "join_phrase": "",
+            "artist_mbid": "4c98aa1b-34eb-4336-987f-5e50aa059c00"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "e0140a67-e4d1-4f13-8a01-364355bee46e"
+        ],
+        "artist_name": "Justin Bieber",
+        "caa_id": 28893220636,
+        "caa_release_mbid": "60a65f6e-02e1-46db-a065-33908b7cea49",
+        "listen_count": 114,
+        "release_group_mbid": "0f9d5103-dd09-4fcd-8fe1-223612668f09",
+        "release_group_name": "Justice",
+        "artists": [
+          {
+            "artist_credit_name": "Justin Bieber",
+            "join_phrase": "",
+            "artist_mbid": "e0140a67-e4d1-4f13-8a01-364355bee46e"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "48262e82-db9f-4a92-b650-dfef979b73ec"
+        ],
+        "artist_name": "Future",
+        "caa_id": 15972020319,
+        "caa_release_mbid": "ee884f13-5cef-4ea1-954c-2925cf8594e2",
+        "listen_count": 114,
+        "release_group_mbid": "98c84b94-3445-4dcc-ad01-9e5e3e1271e2",
+        "release_group_name": "FUTURE",
+        "artists": [
+          {
+            "artist_credit_name": "Future",
+            "join_phrase": "",
+            "artist_mbid": "48262e82-db9f-4a92-b650-dfef979b73ec"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "589ef702-7f3a-4a1c-8f2c-4727005cfc0e"
+        ],
+        "artist_name": "John Newman",
+        "caa_id": 5388136596,
+        "caa_release_mbid": "4d324e6d-ad93-4c51-8927-371fc54a6e64",
+        "listen_count": 110,
+        "release_group_mbid": "4f43a558-0559-4cfd-9851-a3dea9bbab04",
+        "release_group_name": "Tribute",
+        "artists": [
+          {
+            "artist_credit_name": "John Newman",
+            "join_phrase": "",
+            "artist_mbid": "589ef702-7f3a-4a1c-8f2c-4727005cfc0e"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "c33c2065-b1c3-4406-b066-d33a9e2ea71a"
+        ],
+        "artist_name": "OneRepublic",
+        "caa_id": 25658458628,
+        "caa_release_mbid": "11de5412-ba04-4e0a-b180-a89e02469ed1",
+        "listen_count": 110,
+        "release_group_mbid": "e9f839ee-eef7-41f4-8b07-442b0382c952",
+        "release_group_name": "Human",
+        "artists": [
+          {
+            "artist_credit_name": "OneRepublic",
+            "join_phrase": "",
+            "artist_mbid": "c33c2065-b1c3-4406-b066-d33a9e2ea71a"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [],
+        "artist_name": "Yashal Shahid",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 109,
+        "release_group_mbid": null,
+        "release_group_name": "Sajna",
+        "artists": []
+      },
+      {
+        "artist_mbids": [
+          "e3d5b5ec-101a-4529-9f2d-01dca64cf44e",
+          "55e6074f-ef78-4ec3-8fff-bd1b8cc8c14a"
+        ],
+        "artist_name": "Anne\u2010Marie & Niall Horan",
+        "caa_id": 30479103446,
+        "caa_release_mbid": "24fbc5e9-570d-40d0-8221-c80b56cb20a4",
+        "listen_count": 109,
+        "release_group_mbid": "f2f7430d-8e8b-4c27-b570-f00213b4c003",
+        "release_group_name": "Our Song (acoustic)",
+        "artists": [
+          {
+            "artist_credit_name": "Anne‐Marie",
+            "join_phrase": " & ",
+            "artist_mbid": "e3d5b5ec-101a-4529-9f2d-01dca64cf44e"
+          },
+          {
+            "artist_credit_name": "Niall Horan",
+            "join_phrase": "",
+            "artist_mbid": "55e6074f-ef78-4ec3-8fff-bd1b8cc8c14a"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "0ab49580-c84f-44d4-875f-d83760ea2cfe"
+        ],
+        "artist_name": "Maroon 5",
+        "caa_id": 15433725645,
+        "caa_release_mbid": "49694f0c-77e8-4d80-86b6-3f6a491fcc04",
+        "listen_count": 108,
+        "release_group_mbid": "ed3c55b6-e49d-4d4e-a338-62b823b1e2d4",
+        "release_group_name": "Overexposed",
+        "artists": [
+          {
+            "artist_credit_name": "Maroon 5",
+            "join_phrase": "",
+            "artist_mbid": "0ab49580-c84f-44d4-875f-d83760ea2cfe"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "5968383c-11c1-4c5b-ada0-504a38cec8e7"
+        ],
+        "artist_name": "Nusrat Fateh Ali Khan",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 107,
+        "release_group_mbid": "f6804962-d5a3-4099-899c-95c360938502",
+        "release_group_name": "Reformed (feat. A1Melodymaster)",
+        "artists": [
+          {
+            "artist_credit_name": "Nusrat Fateh Ali Khan",
+            "join_phrase": "",
+            "artist_mbid": "5968383c-11c1-4c5b-ada0-504a38cec8e7"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "092552b9-ea6d-4ead-b424-cf8b07da5877",
+          "6ae6bde5-3727-4202-9298-e2f3de2235cd"
+        ],
+        "artist_name": "Tegi Pannu & Manni Sandhu",
+        "caa_id": 32474934281,
+        "caa_release_mbid": "89e40884-fc0b-447e-be2d-77184c586cd5",
+        "listen_count": 105,
+        "release_group_mbid": "b712a46f-abf3-49ce-af0b-1f8df6e2790b",
+        "release_group_name": "Untouchable",
+        "artists": [
+          {
+            "artist_credit_name": "Tegi Pannu",
+            "join_phrase": " & ",
+            "artist_mbid": "092552b9-ea6d-4ead-b424-cf8b07da5877"
+          },
+          {
+            "artist_credit_name": "Manni Sandhu",
+            "join_phrase": "",
+            "artist_mbid": "6ae6bde5-3727-4202-9298-e2f3de2235cd"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [],
+        "artist_name": "Satinder Sartaaj",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 105,
+        "release_group_mbid": null,
+        "release_group_name": "Seasons of Sartaaj",
+        "artists": []
+      },
+      {
+        "artist_mbids": [
+          "c33c2065-b1c3-4406-b066-d33a9e2ea71a"
+        ],
+        "artist_name": "OneRepublic",
+        "caa_id": 3882273894,
+        "caa_release_mbid": "203a92a8-2e72-402a-9f69-a928c693077d",
+        "listen_count": 102,
+        "release_group_mbid": "294ecdcd-7dd3-4392-87fa-edeb1349bfd0",
+        "release_group_name": "Native",
+        "artists": [
+          {
+            "artist_credit_name": "OneRepublic",
+            "join_phrase": "",
+            "artist_mbid": "c33c2065-b1c3-4406-b066-d33a9e2ea71a"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "20395131-fbde-43ce-b141-b700cfdae99c"
+        ],
+        "artist_name": "Glass Animals",
+        "caa_id": 26951466603,
+        "caa_release_mbid": "bd0fd9c6-5b86-46f8-8d68-1b6640cce223",
+        "listen_count": 102,
+        "release_group_mbid": "1ccd441a-a906-4773-8e72-e4055732a784",
+        "release_group_name": "Dreamland",
+        "artists": [
+          {
+            "artist_credit_name": "Glass Animals",
+            "join_phrase": "",
+            "artist_mbid": "20395131-fbde-43ce-b141-b700cfdae99c"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "0b4ce616-79c3-471c-9792-1b8767eca03a",
+          "add5f522-25df-41c4-815e-0ca9f60b83e4"
+        ],
+        "artist_name": "Witt Lowry feat. Ava Max",
+        "caa_id": 20095548135,
+        "caa_release_mbid": "cc0ae3db-aa84-4358-b710-f55b197cc1dd",
+        "listen_count": 100,
+        "release_group_mbid": "3d55af77-49ae-4ff6-8db5-681bf677fb7d",
+        "release_group_name": "Into Your Arms",
+        "artists": [
+          {
+            "artist_credit_name": "Witt Lowry",
+            "join_phrase": " feat. ",
+            "artist_mbid": "0b4ce616-79c3-471c-9792-1b8767eca03a"
+          },
+          {
+            "artist_credit_name": "Ava Max",
+            "join_phrase": "",
+            "artist_mbid": "add5f522-25df-41c4-815e-0ca9f60b83e4"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "f4d5cc07-3bc9-4836-9b15-88a08359bc63"
+        ],
+        "artist_name": "P!nk",
+        "caa_id": 34177008508,
+        "caa_release_mbid": "1983fe15-ea84-4e67-80bf-ed786e91a386",
+        "listen_count": 99,
+        "release_group_mbid": "74a65aea-6e59-477a-b48c-5e4d9c53dfb2",
+        "release_group_name": "The Truth About Love",
+        "artists": [
+          {
+            "artist_credit_name": "P!nk",
+            "join_phrase": "",
+            "artist_mbid": "f4d5cc07-3bc9-4836-9b15-88a08359bc63"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [],
+        "artist_name": "Sehar Gul Khan, Shahbaz Fayaz qawal, Various Artists",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 99,
+        "release_group_mbid": null,
+        "release_group_name": "Bol Kaffara - Season 1",
+        "artists": []
+      },
+      {
+        "artist_mbids": [
+          "1a425bbd-cca4-4b2c-aeb7-71cb176c828a"
+        ],
+        "artist_name": "One Direction",
+        "caa_id": 28578348761,
+        "caa_release_mbid": "40d3d03d-ec8f-4862-a74c-f4bd8253ba69",
+        "listen_count": 98,
+        "release_group_mbid": "efba7763-a237-4bba-85e7-ba94f59f8c2c",
+        "release_group_name": "Up All Night",
+        "artists": [
+          {
+            "artist_credit_name": "One Direction",
+            "join_phrase": "",
+            "artist_mbid": "1a425bbd-cca4-4b2c-aeb7-71cb176c828a"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "aa25521e-3848-4ff7-ab09-545cc95b8a36"
+        ],
+        "artist_name": "MKTO",
+        "caa_id": 6614349877,
+        "caa_release_mbid": "29536b42-b4ee-4478-8699-c7a9296d233a",
+        "listen_count": 98,
+        "release_group_mbid": "41866276-da8e-4a63-b9dc-0af2904343ec",
+        "release_group_name": "MKTO",
+        "artists": [
+          {
+            "artist_credit_name": "MKTO",
+            "join_phrase": "",
+            "artist_mbid": "aa25521e-3848-4ff7-ab09-545cc95b8a36"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "e1564e98-978b-4947-8698-f6fd6f8b0181"
+        ],
+        "artist_name": "Fort Minor",
+        "caa_id": 5679595607,
+        "caa_release_mbid": "8ab9e724-027c-35f3-a941-29efcf935528",
+        "listen_count": 96,
+        "release_group_mbid": "7000572e-05be-3380-9e2e-fbabdc7baf02",
+        "release_group_name": "The Rising Tied",
+        "artists": [
+          {
+            "artist_credit_name": "Fort Minor",
+            "join_phrase": "",
+            "artist_mbid": "e1564e98-978b-4947-8698-f6fd6f8b0181"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "596ffa74-3d08-44ef-b113-765d43d12738"
+        ],
+        "artist_name": "Justin Timberlake",
+        "caa_id": 8227935106,
+        "caa_release_mbid": "bd2a6877-71a3-4819-b2bb-b373deb3a756",
+        "listen_count": 94,
+        "release_group_mbid": "deae6fc2-a675-4f35-9565-d2aaea4872c7",
+        "release_group_name": "The 20/20 Experience",
+        "artists": [
+          {
+            "artist_credit_name": "Justin Timberlake",
+            "join_phrase": "",
+            "artist_mbid": "596ffa74-3d08-44ef-b113-765d43d12738"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "25227c04-3b4a-4f9b-a159-a77cdf4e3513"
+        ],
+        "artist_name": "New Hope Club",
+        "caa_id": 35068757013,
+        "caa_release_mbid": "59ed2008-e68d-4ae0-8b17-5788961e94f8",
+        "listen_count": 93,
+        "release_group_mbid": "d84a60c2-dd3b-4565-882a-f8223e73352e",
+        "release_group_name": "New Hope Club",
+        "artists": [
+          {
+            "artist_credit_name": "New Hope Club",
+            "join_phrase": "",
+            "artist_mbid": "25227c04-3b4a-4f9b-a159-a77cdf4e3513"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "2f522f5c-111c-4ce8-8bd0-d82e97c227ad"
+        ],
+        "artist_name": "Daddy Yankee",
+        "caa_id": 23799841256,
+        "caa_release_mbid": "46ec27da-1ebc-44ec-8dea-f3a590d991ef",
+        "listen_count": 93,
+        "release_group_mbid": "bdf01f0d-6d5e-47a2-85f8-cc7863a539d2",
+        "release_group_name": "Con calma & mis grandes \u00e9xitos",
+        "artists": [
+          {
+            "artist_credit_name": "Daddy Yankee",
+            "join_phrase": "",
+            "artist_mbid": "2f522f5c-111c-4ce8-8bd0-d82e97c227ad"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "cc197bad-dc9c-440d-a5b5-d52ba2e14234"
+        ],
+        "artist_name": "Coldplay",
+        "caa_id": 2833397499,
+        "caa_release_mbid": "8150971b-e254-4e57-9cd9-8300b2727df5",
+        "listen_count": 92,
+        "release_group_mbid": "61b7b6cd-86a6-4728-9478-b58c93bca8fd",
+        "release_group_name": "Mylo Xyloto",
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "70e6fee5-36b1-4cdb-b573-2132f9566dad"
+        ],
+        "artist_name": "Alexandra Stan",
+        "caa_id": 11269896981,
+        "caa_release_mbid": "433611ca-f503-483e-84dc-bca1fdad771f",
+        "listen_count": 91,
+        "release_group_mbid": "3f380066-4a83-4c16-9240-eea14de2a539",
+        "release_group_name": "Saxobeats",
+        "artists": [
+          {
+            "artist_credit_name": "Alexandra Stan",
+            "join_phrase": "",
+            "artist_mbid": "70e6fee5-36b1-4cdb-b573-2132f9566dad"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "603ba565-3967-4be1-931e-9cb945394e86"
+        ],
+        "artist_name": "*NSYNC",
+        "caa_id": 8059714826,
+        "caa_release_mbid": "5f68e32a-ccc1-4b01-a4de-daa880bf3864",
+        "listen_count": 91,
+        "release_group_mbid": "a648d0c2-1438-33d0-87d2-5fbab3c0990a",
+        "release_group_name": "No Strings Attached",
+        "artists": [
+          {
+            "artist_credit_name": "*NSYNC",
+            "join_phrase": "",
+            "artist_mbid": "603ba565-3967-4be1-931e-9cb945394e86"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "084308bd-1654-436f-ba03-df6697104e19"
+        ],
+        "artist_name": "Green Day",
+        "caa_id": 4783139448,
+        "caa_release_mbid": "dd7cbde9-bffc-467f-8a39-bda4ea2d0633",
+        "listen_count": 90,
+        "release_group_mbid": "de9bf827-a9b0-348b-a7c9-556c03c3fb07",
+        "release_group_name": "American Idiot",
+        "artists": [
+          {
+            "artist_credit_name": "Green Day",
+            "join_phrase": "",
+            "artist_mbid": "084308bd-1654-436f-ba03-df6697104e19"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "f4d5cc07-3bc9-4836-9b15-88a08359bc63"
+        ],
+        "artist_name": "P!nk",
+        "caa_id": 29289682675,
+        "caa_release_mbid": "f6097acd-245b-45b2-89b1-8b471c55b9ac",
+        "listen_count": 88,
+        "release_group_mbid": "51d78c54-992a-40ca-bdac-01160a235377",
+        "release_group_name": "All I Know So Far: Setlist",
+        "artists": [
+          {
+            "artist_credit_name": "P!nk",
+            "join_phrase": "",
+            "artist_mbid": "f4d5cc07-3bc9-4836-9b15-88a08359bc63"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "bda9891c-f6a4-442b-8f1c-65429c3347d8"
+        ],
+        "artist_name": "King",
+        "caa_id": 34624858128,
+        "caa_release_mbid": "18f3b5a6-6097-49a5-87ee-173532dbe1a1",
+        "listen_count": 87,
+        "release_group_mbid": "3c0546ed-b263-4f1b-931b-8d75c1bc5b2a",
+        "release_group_name": "The Carnival",
+        "artists": [
+          {
+            "artist_credit_name": "King",
+            "join_phrase": "",
+            "artist_mbid": "bda9891c-f6a4-442b-8f1c-65429c3347d8"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "850a8b03-98a7-4fd3-afbd-5e5520b4ef5f"
+        ],
+        "artist_name": "Conan Gray",
+        "caa_id": 32543941055,
+        "caa_release_mbid": "1f450c63-132f-4eb5-b176-22d78a4e2611",
+        "listen_count": 87,
+        "release_group_mbid": "be23a8a0-de10-4fab-9d78-1687823a0b28",
+        "release_group_name": "Superache",
+        "artists": [
+          {
+            "artist_credit_name": "Conan Gray",
+            "join_phrase": "",
+            "artist_mbid": "850a8b03-98a7-4fd3-afbd-5e5520b4ef5f"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "20faff08-d3b7-45ca-a8aa-a85f6bb9eb78"
+        ],
+        "artist_name": "Duncan Laurence",
+        "caa_id": 27896326274,
+        "caa_release_mbid": "a6e2ec9b-dd54-49c4-842c-ad0df5a306e0",
+        "listen_count": 83,
+        "release_group_mbid": "e0fd2c46-57ec-4f99-8a32-4849af47f8d9",
+        "release_group_name": "Small Town Boy",
+        "artists": [
+          {
+            "artist_credit_name": "Duncan Laurence",
+            "join_phrase": "",
+            "artist_mbid": "20faff08-d3b7-45ca-a8aa-a85f6bb9eb78"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "78830f6e-5832-443d-9e93-0e308238406e"
+        ],
+        "artist_name": "Amit Trivedi",
+        "caa_id": 29717381514,
+        "caa_release_mbid": "7ddac155-91e2-4eb7-b08a-4fc584fd60f9",
+        "listen_count": 83,
+        "release_group_mbid": "7cd4086d-e73b-4473-997d-07269af999c9",
+        "release_group_name": "Padman",
+        "artists": [
+          {
+            "artist_credit_name": "Amit Trivedi",
+            "join_phrase": "",
+            "artist_mbid": "78830f6e-5832-443d-9e93-0e308238406e"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [],
+        "artist_name": "Yasser Desai, Neha Kakkar, Rajat Nagpal",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 82,
+        "release_group_mbid": null,
+        "release_group_name": "Dil Ko Karaar Aaya (From \"Sukoon\")",
+        "artists": []
+      },
+      {
+        "artist_mbids": [
+          "b458fc3f-b9b5-4ff3-ba6a-748c9a1aac83"
+        ],
+        "artist_name": "Sanam",
+        "caa_id": 16789420179,
+        "caa_release_mbid": "32c388ff-5123-4430-8ba7-62657eea41f8",
+        "listen_count": 81,
+        "release_group_mbid": "ec392a36-92d3-4833-80f6-360acd53bb9f",
+        "release_group_name": "Revisited: Sanam",
+        "artists": [
+          {
+            "artist_credit_name": "Sanam",
+            "join_phrase": "",
+            "artist_mbid": "b458fc3f-b9b5-4ff3-ba6a-748c9a1aac83"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "ef2686fe-0bdf-4e0c-b902-cc6609acc95d"
+        ],
+        "artist_name": "Shubh",
+        "caa_id": 34225088247,
+        "caa_release_mbid": "1af68516-c673-4df5-9b5b-d03cf88352dd",
+        "listen_count": 79,
+        "release_group_mbid": "966d9b30-3937-4aeb-848c-db6b5c9a74ed",
+        "release_group_name": "Her",
+        "artists": [
+          {
+            "artist_credit_name": "Shubh",
+            "join_phrase": "",
+            "artist_mbid": "ef2686fe-0bdf-4e0c-b902-cc6609acc95d"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "24281f14-3150-4f05-a995-0e69059c38f1",
+          "07517d74-ace2-4683-b24f-ac96c2c9f354"
+        ],
+        "artist_name": "Bhalwaan & Signature By Sb",
+        "caa_id": 32186954513,
+        "caa_release_mbid": "85b62e73-2785-4194-8e72-226e987d031e",
+        "listen_count": 78,
+        "release_group_mbid": "526f6918-66d4-4823-ba08-f05f6b80103e",
+        "release_group_name": "Priceless",
+        "artists": [
+          {
+            "artist_credit_name": "Bhalwaan",
+            "join_phrase": " & ",
+            "artist_mbid": "24281f14-3150-4f05-a995-0e69059c38f1"
+          },
+          {
+            "artist_credit_name": "Signature By Sb",
+            "join_phrase": "",
+            "artist_mbid": "07517d74-ace2-4683-b24f-ac96c2c9f354"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "6bc658ea-005f-486b-8f94-33a2e40f7a72"
+        ],
+        "artist_name": "Pat Benatar",
+        "caa_id": 3775052593,
+        "caa_release_mbid": "57f46cb8-3b1b-4952-9922-46aaddb27e2b",
+        "listen_count": 78,
+        "release_group_mbid": "f952ac94-468c-34c6-bb6e-281bf878d2a3",
+        "release_group_name": "In the Heat of the Night",
+        "artists": [
+          {
+            "artist_credit_name": "Pat Benatar",
+            "join_phrase": "",
+            "artist_mbid": "6bc658ea-005f-486b-8f94-33a2e40f7a72"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "859d0860-d480-4efd-970c-c05d5f1776b8"
+        ],
+        "artist_name": "Beyonc\u00e9",
+        "caa_id": 11244279619,
+        "caa_release_mbid": "cc011639-f606-46ee-887c-87ee12677d80",
+        "listen_count": 78,
+        "release_group_mbid": "6f8e8119-de1b-39f0-85ca-b5252cb9211d",
+        "release_group_name": "I Am\u2026 Sasha Fierce",
+        "artists": [
+          {
+            "artist_credit_name": "Beyonc\u00e9",
+            "join_phrase": "",
+            "artist_mbid": "859d0860-d480-4efd-970c-c05d5f1776b8"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "a9abe28b-5774-41ea-8393-8b26903fee72"
+        ],
+        "artist_name": "Ben Liebrand",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 78,
+        "release_group_mbid": "e96cad0b-75e0-4e72-aca9-d27eff61f96c",
+        "release_group_name": "Grandmix 2013",
+        "artists": [
+          {
+            "artist_credit_name": "Ben Liebrand",
+            "join_phrase": "",
+            "artist_mbid": "a9abe28b-5774-41ea-8393-8b26903fee72"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [],
+        "artist_name": "Darshan Raval",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 77,
+        "release_group_mbid": null,
+        "release_group_name": "Hawa Banke",
+        "artists": []
+      },
+      {
+        "artist_mbids": [
+          "b8a7c51f-362c-4dcb-a259-bc6e0095f0a6"
+        ],
+        "artist_name": "Ed Sheeran",
+        "caa_id": 31041377805,
+        "caa_release_mbid": "41467f5e-8295-424e-807d-43dd069bb2fc",
+        "listen_count": 77,
+        "release_group_mbid": "51182052-d6d4-49a0-bd87-a88cdb211bed",
+        "release_group_name": "=",
+        "artists": [
+          {
+            "artist_credit_name": "Ed Sheeran",
+            "join_phrase": "",
+            "artist_mbid": "b8a7c51f-362c-4dcb-a259-bc6e0095f0a6"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "21a14ee3-cede-420a-9d6d-a33517d2f952"
+        ],
+        "artist_name": "Alec Benjamin",
+        "caa_id": 22113031187,
+        "caa_release_mbid": "534056a1-b641-46b5-b74e-2b41a6818d7e",
+        "listen_count": 76,
+        "release_group_mbid": "439fe53e-6ba4-426f-a97b-269d934cb6a6",
+        "release_group_name": "Narrated for You",
+        "artists": [
+          {
+            "artist_credit_name": "Alec Benjamin",
+            "join_phrase": "",
+            "artist_mbid": "21a14ee3-cede-420a-9d6d-a33517d2f952"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "f7ba7fbe-c6bd-4ac0-bee9-c25c558d7d62"
+        ],
+        "artist_name": "T.I.",
+        "caa_id": 31805291508,
+        "caa_release_mbid": "368c964d-4373-4221-8640-e6555a283907",
+        "listen_count": 75,
+        "release_group_mbid": "5f31bfcb-d817-3cf9-8376-237e1f8ecbe9",
+        "release_group_name": "Paper Trail",
+        "artists": [
+          {
+            "artist_credit_name": "T.I.",
+            "join_phrase": "",
+            "artist_mbid": "f7ba7fbe-c6bd-4ac0-bee9-c25c558d7d62"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "1a425bbd-cca4-4b2c-aeb7-71cb176c828a"
+        ],
+        "artist_name": "One Direction",
+        "caa_id": 11439994255,
+        "caa_release_mbid": "10bf9cc2-bbbd-40cc-8e75-bafe3f815b21",
+        "listen_count": 75,
+        "release_group_mbid": "1a59a87b-24b1-41fa-8d84-ee7ebcb6f0af",
+        "release_group_name": "Four",
+        "artists": [
+          {
+            "artist_credit_name": "One Direction",
+            "join_phrase": "",
+            "artist_mbid": "1a425bbd-cca4-4b2c-aeb7-71cb176c828a"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "80609a00-b394-4a49-975b-2db6b543fa97"
+        ],
+        "artist_name": "The Kid LAROI",
+        "caa_id": 34530754691,
+        "caa_release_mbid": "ff4eddc0-528a-4789-8f1e-0285c36b4d95",
+        "listen_count": 75,
+        "release_group_mbid": "b9946bd5-4472-42fb-92ca-0d1f429a1c2c",
+        "release_group_name": "F*CK LOVE 3: OVER YOU",
+        "artists": [
+          {
+            "artist_credit_name": "The Kid LAROI",
+            "join_phrase": "",
+            "artist_mbid": "80609a00-b394-4a49-975b-2db6b543fa97"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387"
+        ],
+        "artist_name": "Ariana Grande",
+        "caa_id": 27788950394,
+        "caa_release_mbid": "9ad6641b-e9c6-462e-a039-f3255ded0c2c",
+        "listen_count": 74,
+        "release_group_mbid": "7db1808d-53bc-4bde-9ee2-5dfc96cfeb45",
+        "release_group_name": "Positions",
+        "artists": [
+          {
+            "artist_credit_name": "Ariana Grande",
+            "join_phrase": "",
+            "artist_mbid": "f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "91a81925-92f9-4fc9-b897-93cf01226282"
+        ],
+        "artist_name": "The Chainsmokers",
+        "caa_id": 16750106265,
+        "caa_release_mbid": "c4630cf4-0e9d-4907-9653-8bb8825f73ff",
+        "listen_count": 72,
+        "release_group_mbid": "b4deecbb-2b7d-42ac-b7df-9ae7439d532b",
+        "release_group_name": "Memories\u2026Do Not Open",
+        "artists": [
+          {
+            "artist_credit_name": "The Chainsmokers",
+            "join_phrase": "",
+            "artist_mbid": "91a81925-92f9-4fc9-b897-93cf01226282"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "89ea85c2-c90a-46ea-93db-9bed95d5c8f8"
+        ],
+        "artist_name": "Surf Curse",
+        "caa_id": 34756426228,
+        "caa_release_mbid": "b4259efc-9d8e-437f-b411-c578428584ca",
+        "listen_count": 72,
+        "release_group_mbid": "70bdc19f-66fb-4adf-9124-925ace531101",
+        "release_group_name": "Buds",
+        "artists": [
+          {
+            "artist_credit_name": "Surf Curse",
+            "join_phrase": "",
+            "artist_mbid": "89ea85c2-c90a-46ea-93db-9bed95d5c8f8"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "2f548675-008d-4332-876c-108b0c7ab9c5"
+        ],
+        "artist_name": "Sia",
+        "caa_id": 12662106026,
+        "caa_release_mbid": "3aa72aec-568f-4f79-a6db-a5464a875c34",
+        "listen_count": 71,
+        "release_group_mbid": "2eb49f55-ad2a-43fa-a54f-90d0759d7f62",
+        "release_group_name": "This Is Acting",
+        "artists": [
+          {
+            "artist_credit_name": "Sia",
+            "join_phrase": "",
+            "artist_mbid": "2f548675-008d-4332-876c-108b0c7ab9c5"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [],
+        "artist_name": "Bahjat",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 71,
+        "release_group_mbid": null,
+        "release_group_name": "3:11 AM",
+        "artists": []
+      },
+      {
+        "artist_mbids": [
+          "62ded9ea-fe82-4606-96f0-8aea96ea12b5"
+        ],
+        "artist_name": "SyKo",
+        "caa_id": 30168119220,
+        "caa_release_mbid": "17405fb5-f111-4f59-8eba-6f32d455c69d",
+        "listen_count": 71,
+        "release_group_mbid": "9393c62e-3755-41be-91ae-fe1081259b6a",
+        "release_group_name": "#BrooklynBloodPop!",
+        "artists": [
+          {
+            "artist_credit_name": "SyKo",
+            "join_phrase": "",
+            "artist_mbid": "62ded9ea-fe82-4606-96f0-8aea96ea12b5"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "83fd7495-a02f-4254-9cfb-6753cb87c73e"
+        ],
+        "artist_name": "Prem Dhillon",
+        "caa_id": 33269283421,
+        "caa_release_mbid": "e6a9490f-49ad-42d3-99ad-0067893cb36d",
+        "listen_count": 69,
+        "release_group_mbid": "985f046f-b5d9-441c-ba82-9f48aa6a2896",
+        "release_group_name": "No Lookin' Back",
+        "artists": [
+          {
+            "artist_credit_name": "Prem Dhillon",
+            "join_phrase": "",
+            "artist_mbid": "83fd7495-a02f-4254-9cfb-6753cb87c73e"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "db48610c-6d8f-4d10-90ca-c4d14bb1a8b1"
+        ],
+        "artist_name": "G\u2010Eazy",
+        "caa_id": 23703139859,
+        "caa_release_mbid": "29fc7037-7ef0-4396-9a79-4a150515eace",
+        "listen_count": 68,
+        "release_group_mbid": "27d7122f-77d9-4515-81c0-3a5d5df6c922",
+        "release_group_name": "The Beautiful & Damned",
+        "artists": [
+          {
+            "artist_credit_name": "G\u2010Eazy",
+            "join_phrase": "",
+            "artist_mbid": "db48610c-6d8f-4d10-90ca-c4d14bb1a8b1"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "720c46ba-a0e4-4b58-aee2-3bd70c70901f"
+        ],
+        "artist_name": "Rema",
+        "caa_id": 32327933282,
+        "caa_release_mbid": "1226a0ce-13a2-498e-bd95-ee810995f334",
+        "listen_count": 68,
+        "release_group_mbid": "d9ce5deb-37e5-4fc6-997d-484ea4711836",
+        "release_group_name": "Rave & Roses",
+        "artists": [
+          {
+            "artist_credit_name": "Rema",
+            "join_phrase": "",
+            "artist_mbid": "720c46ba-a0e4-4b58-aee2-3bd70c70901f"
+          }
+        ]
+      }
+    ],
+    "count": 107,
+    "user_id": 1999
+  }
+]

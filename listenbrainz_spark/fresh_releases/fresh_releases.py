@@ -9,12 +9,12 @@ import listenbrainz_spark
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.schema import fresh_releases_schema
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_latest_listen_ts, get_listens_from_dump
+from listenbrainz_spark.listens.data import get_listens_from_dump, get_latest_listen_ts
 
 USERS_PER_MESSAGE = 5
 
 
-FRESH_RELEASES_ENDPOINT = "https://api.listenbrainz.org/1/explore/fresh-releases/"
+FRESH_RELEASES_ENDPOINT = "https://api.listenbrainz.org/1/explore/fresh-releases/?days=90"
 
 
 def load_all_releases():
@@ -22,7 +22,7 @@ def load_all_releases():
     data = response.json()
 
     releases = []
-    for release in data:
+    for release in data["payload"]["releases"]:
         releases.append(Row(
             release_date=release["release_date"],
             artist_credit_name=release["artist_credit_name"],
@@ -32,32 +32,27 @@ def load_all_releases():
             release_group_mbid=release["release_group_mbid"],
             release_group_primary_type=release.get("release_group_primary_type"),
             release_group_secondary_type=release.get("release_group_secondary_type"),
+            release_tags=release.get("release_tags"),
+            listen_count=release.get("listen_count"),
             caa_id=release.get("caa_id"),
-            caa_release_mbid=release.get("caa_release_mbid")
+            caa_release_mbid=release.get("caa_release_mbid"),
         ))
 
     return listenbrainz_spark.session.createDataFrame(releases, schema=fresh_releases_schema)
 
 
-def get_query():
-    return """
-        WITH artists AS (
-            SELECT DISTINCT explode(artist_mbids) AS artist_mbid
-              FROM fresh_releases
+def get_query(threshold):
+    return f"""
+        WITH exploded_fresh_releases AS (
+            SELECT rr.*
+                 , explode(artist_mbids) AS artist_mbid
+              FROM fresh_releases rr
         ), exploded_listens AS (
             SELECT user_id
                  , explode(artist_credit_mbids) AS artist_mbid
               FROM fresh_releases_listens
-        ), artist_discovery AS (
-            SELECT user_id
-                 , artist_mbid
-                 , count(*) AS partial_confidence
-              FROM exploded_listens
-              JOIN artists
-             USING (artist_mbid)
-          GROUP BY user_id, artist_mbid
         ), filtered_releases AS (
-            SELECT ad.user_id
+            SELECT el.user_id
                  , rr.release_name
                  , rr.release_mbid
                  , rr.release_group_mbid
@@ -68,11 +63,13 @@ def get_query():
                  , rr.release_group_secondary_type
                  , rr.caa_id
                  , rr.caa_release_mbid
-                 , SUM(partial_confidence) AS confidence
-              FROM artist_discovery ad
-              JOIN fresh_releases rr
-                ON array_contains(rr.artist_mbids, ad.artist_mbid)
-          GROUP BY ad.user_id
+                 , rr.release_tags
+                 , rr.listen_count
+                 , count(*) AS confidence
+              FROM exploded_listens el
+              JOIN exploded_fresh_releases rr
+             USING (artist_mbid)
+          GROUP BY el.user_id
                  , rr.release_name
                  , rr.release_mbid
                  , rr.release_group_mbid
@@ -83,6 +80,8 @@ def get_query():
                  , rr.release_group_secondary_type
                  , rr.caa_id
                  , rr.caa_release_mbid
+                 , rr.release_tags
+                 , rr.listen_count
         )
         SELECT user_id
              , array_sort(
@@ -98,6 +97,8 @@ def get_query():
                           , release_group_secondary_type
                           , caa_id
                           , caa_release_mbid
+                          , release_tags
+                          , listen_count
                           , confidence
                         )
                     )
@@ -109,11 +110,12 @@ def get_query():
                     -- sort in descending order of confidence              
                ) AS releases
           FROM filtered_releases
+         WHERE confidence >= {threshold}
       GROUP BY user_id      
     """
 
 
-def main(days: Optional[int], database: str):
+def main(days: Optional[int], database: str, threshold: int):
     to_date = get_latest_listen_ts()
     if days:
         from_date = to_date + timedelta(days=-days)
@@ -129,7 +131,7 @@ def main(days: Optional[int], database: str):
         "database": database
     }
 
-    itr = run_query(get_query()).toLocalIterator()
+    itr = run_query(get_query(threshold)).toLocalIterator()
     for rows in chunked(itr, USERS_PER_MESSAGE):
         entries = []
         for row in rows:

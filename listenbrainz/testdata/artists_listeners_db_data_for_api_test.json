@@ -1,0 +1,36 @@
+{
+  "type": "entity_listener",
+  "stats_range": "all_time",
+  "from_ts": 1009843200,
+  "to_ts": 1628511763,
+  "data": [
+    {
+      "artist_mbid": "056e4f3e-d505-4dad-8ec1-d04f521cbb56",
+      "artist_name": "Daft Punk",
+      "total_listen_count": 8,
+      "listeners": [
+        {
+          "user_id": 2,
+          "listen_count": 5
+        },
+        {
+          "user_id": 1,
+          "listen_count": 3
+        }
+      ]
+    },
+    {
+      "artist_mbid": "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8",
+      "artist_name": "Massive Attack",
+      "total_listen_count": 6,
+      "listeners": [
+        {
+          "user_id": 1,
+          "listen_count": 6
+        }
+      ]
+    }
+  ],
+  "database": "artists_listeners_all_time_20230419",
+  "entity": "artists"
+}

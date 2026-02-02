@@ -2,15 +2,8 @@ BEGIN;
 
 ALTER TABLE "user" ADD CONSTRAINT user_pkey PRIMARY KEY (id);
 ALTER TABLE api_compat.session ADD CONSTRAINT session_pkey PRIMARY KEY (sid);
-ALTER TABLE spotify_auth ADD CONSTRAINT spotify_auth_pkey PRIMARY KEY (user_id);
 ALTER TABLE external_service_oauth ADD CONSTRAINT external_service_oauth_pkey PRIMARY KEY (id);
 ALTER TABLE listens_importer ADD CONSTRAINT listens_importer_pkey PRIMARY KEY (id);
-
-ALTER TABLE statistics.artist ADD CONSTRAINT stats_artist_pkey PRIMARY KEY (id);
-ALTER TABLE statistics.release ADD CONSTRAINT stats_release_pkey PRIMARY KEY (id);
-ALTER TABLE statistics.recording ADD CONSTRAINT stats_recording_pkey PRIMARY KEY (id);
-ALTER TABLE statistics.user ADD CONSTRAINT stats_user_pkey PRIMARY KEY (id);
-ALTER TABLE statistics.year_in_music ADD CONSTRAINT stats_year_in_music_pkey PRIMARY KEY (id);
 
 ALTER TABLE recommendation.cf_recording ADD CONSTRAINT rec_cf_recording_pkey PRIMARY KEY (id);
 ALTER TABLE recommendation.recommender ADD CONSTRAINT rec_recommender_pkey PRIMARY KEY (id);
@@ -35,5 +28,19 @@ ALTER TABLE release_color ADD CONSTRAINT release_color_pkey PRIMARY KEY (id);
 ALTER TABLE user_setting ADD CONSTRAINT user_setting_pkey PRIMARY KEY (id);
 
 ALTER TABLE recommendation.do_not_recommend ADD CONSTRAINT rec_do_not_recommend_pkey PRIMARY KEY (id);
+
+ALTER TABLE background_tasks ADD CONSTRAINT background_tasks_id_pkey PRIMARY KEY (id);
+
+ALTER TABLE user_data_export ADD CONSTRAINT user_data_export_id_pkey PRIMARY KEY (id);
+
+ALTER TABLE user_data_import ADD CONSTRAINT user_data_import_id_pkey PRIMARY KEY (id);
+
+ALTER TABLE funkwhale_servers ADD CONSTRAINT funkwhale_servers_id_pkey PRIMARY KEY (id);
+
+ALTER TABLE funkwhale_tokens ADD CONSTRAINT funkwhale_tokens_id_pkey PRIMARY KEY (id);
+
+ALTER TABLE navidrome_servers ADD CONSTRAINT navidrome_servers_id_pkey PRIMARY KEY (id);
+
+ALTER TABLE navidrome_tokens ADD CONSTRAINT navidrome_tokens_id_pkey PRIMARY KEY (id);
 
 COMMIT;

@@ -1,0 +1,160 @@
+[
+  {
+    "user_id": 1,
+    "count": 4,
+    "data": [
+      {
+        "artist_mbids": [],
+        "artist_name": "Jatin-Lalit, Udit Narayan, Jaspinder Narula, Udbhav, Manohar Shetty, Ishaan, Shweta Pandit, Sonali Bhatawdekar, Pritha Mazumdar, Anand Bakshi",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 3,
+        "release_group_mbid": null,
+        "release_group_name": "Mohabbatein",
+        "artists": []
+      },
+      {
+        "artist_mbids": [
+          "5968383c-11c1-4c5b-ada0-504a38cec8e7"
+        ],
+        "artist_name": "Nusrat Fateh Ali Khan",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 3,
+        "release_group_mbid": "3d66159a-5805-4219-b827-814226a5279e",
+        "release_group_name": "Greatest Hits",
+        "artists": [
+          {
+            "artist_credit_name": "Nusrat Fateh Ali Khan",
+            "join_phrase": "",
+            "artist_mbid": "5968383c-11c1-4c5b-ada0-504a38cec8e7"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "a9c38fd2-04be-4bc6-a3bc-96508b226508"
+        ],
+        "artist_name": "Stephen Sanchez",
+        "caa_id": 32337530682,
+        "caa_release_mbid": "f6da0110-0283-441b-a619-efaf5721bda1",
+        "listen_count": 2,
+        "release_group_mbid": "555f06a8-5d9b-4ec1-9d73-a5a529ab3010",
+        "release_group_name": "Until I Found You",
+        "artists": [
+          {
+            "artist_credit_name": "Stephen Sanchez",
+            "join_phrase": "",
+            "artist_mbid": "a9c38fd2-04be-4bc6-a3bc-96508b226508"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "2bcf2e02-5bc3-4c76-bf76-41126cb11444"
+        ],
+        "artist_name": "Ghost",
+        "caa_id": 31504962641,
+        "caa_release_mbid": "e799d36f-3c76-4028-a02d-bc7be77db8ba",
+        "listen_count": 2,
+        "release_group_mbid": "1f25d940-89e2-4813-a86f-955b0e99c391",
+        "release_group_name": "Prequelle",
+        "artists": [
+          {
+            "artist_credit_name": "Ghost",
+            "join_phrase": "",
+            "artist_mbid": "2bcf2e02-5bc3-4c76-bf76-41126cb11444"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "user_id": 2,
+    "count": 5,
+    "data": [
+      {
+        "artist_mbids": [],
+        "artist_name": "Yashal Shahid",
+        "caa_id": null,
+        "caa_release_mbid": null,
+        "listen_count": 1,
+        "release_group_mbid": null,
+        "release_group_name": "Sajna",
+        "artists": []
+      },
+      {
+        "artist_mbids": [
+          "2df4ce6a-87d6-49e5-b140-4e71066f996c"
+        ],
+        "artist_name": "Vishal and Shekhar",
+        "caa_id": 31641764790,
+        "caa_release_mbid": "953002b4-1665-4342-b066-f27eafd0611a",
+        "listen_count": 1,
+        "release_group_mbid": "6700b6bd-8cb1-4565-a07e-d1cf71c3435d",
+        "release_group_name": "Ra.One",
+        "artists": [
+          {
+            "artist_credit_name": "Vishal and Shekhar",
+            "join_phrase": "",
+            "artist_mbid": "2df4ce6a-87d6-49e5-b140-4e71066f996c"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "83fd7495-a02f-4254-9cfb-6753cb87c73e"
+        ],
+        "artist_name": "Prem Dhillon",
+        "caa_id": 33269283421,
+        "caa_release_mbid": "e6a9490f-49ad-42d3-99ad-0067893cb36d",
+        "listen_count": 1,
+        "release_group_mbid": "985f046f-b5d9-441c-ba82-9f48aa6a2896",
+        "release_group_name": "No Lookin' Back",
+        "artists": [
+          {
+            "artist_credit_name": "Prem Dhillon",
+            "join_phrase": "",
+            "artist_mbid": "83fd7495-a02f-4254-9cfb-6753cb87c73e"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "89ad4ac3-39f7-470e-963a-56509c546377"
+        ],
+        "artist_name": "Various Artists",
+        "caa_id": 34648001921,
+        "caa_release_mbid": "bea81d78-4642-4e04-ae48-51c5140d06e4",
+        "listen_count": 1,
+        "release_group_mbid": "61536216-34fe-48df-b1dd-1a6fac92346d",
+        "release_group_name": "Mismatched: Season 2",
+        "artists": [
+          {
+            "artist_credit_name": "Various Artists",
+            "join_phrase": "",
+            "artist_mbid": "89ad4ac3-39f7-470e-963a-56509c546377"
+          }
+        ]
+      },
+      {
+        "artist_mbids": [
+          "0278f30f-266b-4261-ba3a-67491555eab0"
+        ],
+        "artist_name": "Rahul Dev Burman",
+        "caa_id": 21508449553,
+        "caa_release_mbid": "41447e71-bed0-4b62-9b09-da633998e2fc",
+        "listen_count": 1,
+        "release_group_mbid": "e4434e28-38a8-4cb9-ba96-4cc2615a9d2f",
+        "release_group_name": "Mere Jeevan Saathi / Apna Desh",
+        "artists": [
+          {
+            "artist_credit_name": "Rahul Dev Burman",
+            "join_phrase": "",
+            "artist_mbid": "0278f30f-266b-4261-ba3a-67491555eab0"
+          }
+        ]
+      }
+    ]
+  }
+]

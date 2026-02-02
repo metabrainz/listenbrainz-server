@@ -14,7 +14,14 @@
         "track_name": "We Belong",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Lenka",
+            "join_phrase": "",
+            "artist_mbid": "ba64b195-01dd-4613-9534-bb87dc44cffb"
+          }
+        ]
       },
       {
         "artist_name": "Ellie Goulding",
@@ -27,7 +34,14 @@
         "track_name": "Sixteen",
         "listen_count": 5,
         "caa_id": 26757092434,
-        "caa_release_mbid": "b024416c-a8ef-43cb-bbd5-6e98fe0197bf"
+        "caa_release_mbid": "b024416c-a8ef-43cb-bbd5-6e98fe0197bf",
+        "artists": [
+          {
+            "artist_credit_name": "Ellie Goulding",
+            "join_phrase": "",
+            "artist_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8"
+          }
+        ]
       },
       {
         "artist_name": "Coldplay",
@@ -40,7 +54,14 @@
         "track_name": "Ink",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_name": "Train",
@@ -53,7 +74,14 @@
         "track_name": "Hey, Soul Sister",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Train",
+            "join_phrase": "",
+            "artist_mbid": "fbe59c7e-3a75-459b-8fc8-07abaa6d1d2c"
+          }
+        ]
       },
       {
         "artist_name": "Maroon 5",
@@ -66,7 +94,14 @@
         "track_name": "Girls Like You (feat. Cardi B)",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Maroon 5",
+            "join_phrase": "",
+            "artist_mbid": "9d5adabb-9775-4535-93eb-12b485aed8bf"
+          }
+        ]
       },
       {
         "artist_name": "Within Temptation",
@@ -79,7 +114,14 @@
         "track_name": "Faster",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Within Temptation",
+            "join_phrase": "",
+            "artist_mbid": "50751cf3-40c6-454e-99d9-3d5777e4ad4f"
+          }
+        ]
       }
     ]
   },
@@ -98,7 +140,14 @@
         "track_name": "Everglow",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_name": "The Weeknd",
@@ -111,7 +160,14 @@
         "track_name": "Blinding Lights",
         "listen_count": 5,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Weeknd",
+            "join_phrase": "",
+            "artist_mbid": "2b0646af-f3f0-4a5b-b629-6c31301c1c29"
+          }
+        ]
       }
     ]
   }

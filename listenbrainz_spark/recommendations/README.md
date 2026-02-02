@@ -8,7 +8,7 @@ The component uses collaborative filtering to recommend recordings to users base
 
 **Note**:  
 - The listening history and supporting data used by ListenBrainz is heavy for the local environment. Releasing small test datasets to make the development experience smoother is on our roadmap.
-- Spark sends the generated recommendations to ListenBrainz webserver containers as Rabbit MQ messages. Therefore before generating the recommendations, the `spark_reader` container should be running. For details, see the [Spark Architecture](https://listenbrainz.readthedocs.io/en/production/dev/spark-architecture/) document.
+- Spark sends the generated recommendations to ListenBrainz webserver containers as Rabbit MQ messages. Therefore before generating the recommendations, the `spark_reader` container should be running. For details, see the [Spark Architecture](https://listenbrainz.readthedocs.io/en/latest/developers/spark-architecture.html) document.
 
 
 ## Production environment
@@ -72,7 +72,7 @@ The recommendation generation process has been divided into four stages.
 
   By default, alpha = 3.0
 
-  For more information on model parameters refer to the [official documentation](https://spark.apache.org/docs/2.1.0/mllib-collaborative-filtering.html).
+  For more information on model parameters refer to the [official documentation](https://spark.apache.org/docs/latest/mllib-collaborative-filtering.html).
 
 
 - **Stage 3**: Generate candidate sets.

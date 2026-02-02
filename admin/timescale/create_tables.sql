@@ -1,31 +1,38 @@
 BEGIN;
 
 CREATE TABLE listen (
-        listened_at     BIGINT                   NOT NULL,
-        track_name      TEXT                     NOT NULL,
-        user_name       TEXT                     NOT NULL,
-        user_id         INTEGER                  NOT NULL,
-        created         TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-        data            JSONB                    NOT NULL
+    listened_at     TIMESTAMP WITH TIME ZONE NOT NULL,
+    created         TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+    user_id         INTEGER                  NOT NULL,
+    recording_msid  UUID                     NOT NULL,
+    data            JSONB                    NOT NULL
 );
 
 CREATE TABLE listen_delete_metadata (
     id                  SERIAL                      NOT NULL,
     user_id             INTEGER                     NOT NULL,
-    listened_at         BIGINT                      NOT NULL,
-    recording_msid      UUID                        NOT NULL
+    listened_at         TIMESTAMP WITH TIME ZONE    NOT NULL,
+    recording_msid      UUID                        NOT NULL,
+    status              listen_delete_metadata_status_enum NOT NULL DEFAULT 'pending',
+    listen_created      TIMESTAMP WITH TIME ZONE
+    CHECK ( status = 'invalid' OR status = 'pending' OR (status = 'complete' AND listen_created IS NOT NULL) )
 );
 
 CREATE TABLE listen_user_metadata (
     user_id             INTEGER                     NOT NULL,
     count               BIGINT                      NOT NULL, -- count of listens the user has earlier than `created`
-    min_listened_at     BIGINT, -- minimum listened_at timestamp seen for the user in listens till `created`
-    max_listened_at     BIGINT, -- maximum listened_at timestamp seen for the user in listens till `created`
+    min_listened_at     TIMESTAMP WITH TIME ZONE, -- minimum listened_at timestamp seen for the user in listens till `created`
+    max_listened_at     TIMESTAMP WITH TIME ZONE, -- maximum listened_at timestamp seen for the user in listens till `created`
     created             TIMESTAMP WITH TIME ZONE    NOT NULL  -- the created timestamp when data for this user was updated last
 );
 
--- 86400 seconds * 5 = 432000 seconds = 5 days
-SELECT create_hypertable('listen', 'listened_at', chunk_time_interval => 432000);
+SELECT create_hypertable('listen', 'listened_at', chunk_time_interval => INTERVAL '30 days');
+
+CREATE TABLE deleted_user_listen_history (
+    id                          INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    user_id                     INTEGER NOT NULL,
+    max_created                 TIMESTAMP WITH TIME ZONE NOT NULL
+);
 
 -- Playlists
 
@@ -96,19 +103,46 @@ ALTER TABLE mbid_mapping_metadata
 -- there. this definition is only for tests and local development. remember to keep both in sync.
 CREATE TABLE mapping.mb_metadata_cache (
     dirty               BOOLEAN DEFAULT FALSE,
+    last_updated        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     recording_mbid      UUID NOT NULL,
+    recording_id        INTEGER NOT NULL,
     artist_mbids        UUID[] NOT NULL,
+    artist_ids          INTEGER[] NOT NULL,
     release_mbid        UUID,
+    release_id          INTEGER,
     recording_data      JSONB NOT NULL,
     artist_data         JSONB NOT NULL,
     tag_data            JSONB NOT NULL,
     release_data        JSONB NOT NULL
 );
 
--- postgres does not enforce dimensionality of arrays. add explicit check to avoid regressions (once burnt, twice shy!).
 ALTER TABLE mapping.mb_metadata_cache
-    ADD CONSTRAINT mb_metadata_cache_artist_mbids_check
-    CHECK ( array_ndims(artist_mbids) = 1 );
+        ADD CONSTRAINT mb_metadata_cache_artist_mbids_check
+        CHECK ( array_ndims(artist_mbids) = 1 );
+
+ALTER TABLE mapping.mb_metadata_cache
+        ADD CONSTRAINT mb_metadata_cache_artist_ids_check
+        CHECK ( array_ndims(artist_ids) = 1 );
+
+CREATE TABLE mapping.mb_release_group_cache (
+    dirty                   BOOLEAN DEFAULT FALSE,
+    last_updated            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    release_group_mbid      UUID NOT NULL,
+    artist_mbids            UUID[] NOT NULL,
+    artist_data             JSONB NOT NULL,
+    tag_data                JSONB NOT NULL,
+    release_group_data      JSONB NOT NULL,
+    recording_data          JSONB NOT NULL
+);
+
+CREATE TABLE mapping.mb_artist_metadata_cache (
+    dirty                   BOOLEAN DEFAULT FALSE,
+    last_updated            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    artist_mbid             UUID NOT NULL,
+    artist_data             JSONB NOT NULL,
+    tag_data                JSONB NOT NULL,
+    release_group_data      JSONB NOT NULL
+);
 
 -- the various mapping columns should only be null if the match_type is no_match, otherwise the columns should be
 -- non null. we have had bugs where we completely forgot to insert values for a column and it went unchecked because
@@ -138,19 +172,14 @@ CREATE TABLE messybrainz.submissions (
     submitted       TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-
-
-CREATE TABLE spotify_cache.raw_cache_data (
-    id              INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
-    album_id        TEXT NOT NULL,
-    data            JSONB,
-    last_refresh    TIMESTAMP WITH TIME ZONE NOT NULL,
-    expires_at      TIMESTAMP WITH TIME ZONE NOT NULL
+CREATE TABLE messybrainz.submissions_redirect (
+    duplicate_msid UUID NOT NULL,
+    original_msid UUID NOT NULL
 );
 
 CREATE TABLE spotify_cache.album (
     id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
-    spotify_id              TEXT   NOT NULL,
+    album_id                TEXT   NOT NULL,
     name                    TEXT   NOT NULL,
     type                    TEXT   NOT NULL,
     release_date            TEXT   NOT NULL,
@@ -161,14 +190,14 @@ CREATE TABLE spotify_cache.album (
 
 CREATE TABLE spotify_cache.artist (
     id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
-    spotify_id              TEXT NOT NULL,
+    artist_id               TEXT NOT NULL,
     name                    TEXT NOT NULL,
     data                    JSONB NOT NULL
 );
 
 CREATE TABLE spotify_cache.track (
     id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
-    spotify_id              TEXT NOT NULL,
+    track_id                TEXT NOT NULL,
     name                    TEXT NOT NULL,
     track_number            INTEGER NOT NULL,
     album_id                TEXT NOT NULL,
@@ -189,6 +218,79 @@ CREATE TABLE spotify_cache.rel_track_artist (
     position        INTEGER NOT NULL
 );
 
+CREATE TABLE apple_cache.album (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    album_id                TEXT   NOT NULL,
+    name                    TEXT   NOT NULL,
+    type                    TEXT   NOT NULL,
+    release_date            TEXT   NOT NULL,
+    last_refresh            TIMESTAMP WITH TIME ZONE NOT NULL,
+    expires_at              TIMESTAMP WITH TIME ZONE NOT NULL,
+    data                    JSONB  NOT NULL
+);
+
+CREATE TABLE apple_cache.artist (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    artist_id               TEXT NOT NULL,
+    name                    TEXT NOT NULL,
+    data                    JSONB NOT NULL
+);
+
+CREATE TABLE apple_cache.track (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    track_id                TEXT NOT NULL,
+    name                    TEXT NOT NULL,
+    track_number            INTEGER NOT NULL,
+    album_id                TEXT NOT NULL,
+    data                    JSONB NOT NULL
+);
+
+CREATE TABLE apple_cache.rel_album_artist (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    album_id        TEXT NOT NULL,
+    artist_id       TEXT NOT NULL,
+    position        INTEGER NOT NULL
+);
+
+CREATE TABLE apple_cache.rel_track_artist (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    track_id        TEXT NOT NULL,
+    artist_id       TEXT NOT NULL,
+    position        INTEGER NOT NULL
+);
+
+CREATE TABLE soundcloud_cache.artist (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    artist_id               TEXT NOT NULL,
+    name                    TEXT NOT NULL,
+    data                    JSONB NOT NULL
+);
+
+CREATE TABLE soundcloud_cache.track (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    track_id                TEXT NOT NULL,
+    name                    TEXT NOT NULL,
+    artist_id               TEXT NOT NULL,
+    release_year            INTEGER,
+    release_month           INTEGER,
+    release_day             INTEGER,
+    data                    JSONB NOT NULL
+);
+
+
+CREATE TABLE internetarchive_cache.track (
+    id            INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    track_id      TEXT UNIQUE NOT NULL,
+    name          TEXT NOT NULL,
+    artist        TEXT[] NOT NULL,
+    album         TEXT,
+    stream_urls   TEXT[] NOT NULL,
+    artwork_url   TEXT,
+    data          JSONB NOT NULL,
+    last_updated  TIMESTAMPTZ DEFAULT NOW()
+);
+
+
 CREATE TABLE background_worker_state (
     key     TEXT NOT NULL,
     value   TEXT
@@ -196,16 +298,142 @@ CREATE TABLE background_worker_state (
 COMMENT ON TABLE background_worker_state IS 'This table is used to store miscellaneous data by various background processes or the ListenBrainz webserver. Use it when storing the data is redis is not reliable enough.';
 
 
-CREATE TABLE similarity.recording (
+CREATE TABLE similarity.recording_dev (
     mbid0 UUID NOT NULL,
     mbid1 UUID NOT NULL,
     metadata JSONB NOT NULL
 );
 
-CREATE TABLE similarity.artist_credit_mbids (
+CREATE TABLE similarity.recording (
+    mbid0 UUID NOT NULL,
+    mbid1 UUID NOT NULL,
+    score INT NOT NULL
+);
+
+CREATE TABLE similarity.artist_credit_mbids_dev (
     mbid0 UUID NOT NULL,
     mbid1 UUID NOT NULL,
     metadata JSONB NOT NULL
+);
+
+
+CREATE TABLE similarity.artist_credit_mbids (
+    mbid0 UUID NOT NULL,
+    mbid1 UUID NOT NULL,
+    score INT NOT NULL
+);
+
+CREATE TABLE similarity.overhyped_artists (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    artist_mbid             UUID NOT NULL,
+    factor                  FLOAT
+);
+
+CREATE TABLE tags.lb_tag_radio (
+    tag                     TEXT NOT NULL,
+    recording_mbid          UUID NOT NULL,
+    tag_count               INTEGER NOT NULL,
+    percent                 DOUBLE PRECISION NOT NULL,
+    source                  lb_tag_radio_source_type_enum NOT NULL
+);
+
+CREATE TABLE popularity.recording (
+    recording_mbid          UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_recording (
+    recording_mbid          UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.artist (
+    artist_mbid             UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_artist (
+    artist_mbid             UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.release (
+    release_mbid            UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_release (
+    release_mbid            UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.release_group (
+    release_group_mbid      UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_release_group (
+    release_group_mbid      UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.top_recording (
+    artist_mbid             UUID NOT NULL,
+    recording_mbid          UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_top_recording (
+    artist_mbid             UUID NOT NULL,
+    recording_mbid          UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.top_release (
+    artist_mbid             UUID NOT NULL,
+    release_mbid            UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_top_release (
+    artist_mbid             UUID NOT NULL,
+    release_mbid            UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+
+CREATE TABLE popularity.top_release_group (
+    artist_mbid             UUID NOT NULL,
+    release_group_mbid      UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_top_release_group (
+    artist_mbid             UUID NOT NULL,
+    release_group_mbid      UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE statistics.year_in_music_cover (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    user_id             INTEGER NOT NULL,
+    year                SMALLINT NOT NULL,
+    caa_id              BIGINT,
+    caa_release_mbid    UUID
 );
 
 COMMIT;

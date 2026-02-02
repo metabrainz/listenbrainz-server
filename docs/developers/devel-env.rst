@@ -19,7 +19,12 @@ Clone listenbrainz-server
 -------------------------
 
 ListenBrainz is hosted on GitHub at https://github.com/metabrainz/listenbrainz-server/.
-You can use ``git`` to clone it (or your own fork) to your computer
+You can use ``git`` to clone it (or your own fork) to your computer.
+
+.. note::
+    Windows users are advised to clone the repository in their WSL2 file system to avoid code watcher issues.
+    Please refer to :ref:`run docker inside WSL <Windows Docker Installation>` for more
+    information.
 
 .. code-block:: bash
 
@@ -54,8 +59,8 @@ option to `register`_ your application. Fill out the form with the following dat
 After entering this information, you'll have an OAuth client ID and OAuth client
 secret. You'll use these for configuring ListenBrainz.
 
-.. _MusicBrainz applications page: https://musicbrainz.org/account/applications
-.. _register: https://musicbrainz.org/account/applications/register
+.. _MusicBrainz applications page: https://musicbrainz.org/new-oauth2/client/list
+.. _register: https://musicbrainz.org/new-oauth2/client/create
 
 
 Update config.py
@@ -70,17 +75,34 @@ configuration.
     cp listenbrainz/config.py.sample listenbrainz/config.py
 
 Now, open the new config.py file (don’t change config.py.sample) with your favorite
-text editor and look for this section.
+text editor.
+
+.. note::
+
+     If you are accessing your development server using a port other than ``8100``,
+     ensure that you update the ``SERVER_ROOT_URL`` to reflect the appropriate port number.
+     If you are accessing your development server using a host other than ``localhost`` (e.g., GitHub Codespaces),
+     ensure that you uncomment and update ``SERVER_NAME``, and ensure ``SERVER_ROOT_URL`` is updated
+     accordingly to maintain consistency and support the appropriate host details.
+
+Next look for this section in the file.
 
 .. code-block:: yaml
 
     # MusicBrainz OAuth
-    MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
-    MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
+    OAUTH_CLIENT_ID = "CLIENT_ID"
+    OAUTH_CLIENT_SECRET = "CLIENT_SECRET"
 
 Update the strings with your client ID and secret. After doing this, your
 ListenBrainz development environment is able to authenticate and log in from
 your MusicBrainz login.
+
+.. note:: 
+    Make sure the ``OAUTH_CLIENT_ID`` and ``OAUTH_CLIENT_SECRET`` parameters are set properly,
+    failing to do so will result in a basic browser auth popup like the one below:
+.. image:: ../images/auth-popup.png
+    :width: 200
+    :alt: Screenshot showing the auth popup.
 
 To use the Last.fm importer you need an API account at Last.fm. You can
 register for one at the `Last.fm API page`_. Look for the following section in ``config.py``.
@@ -96,7 +118,7 @@ Update the ``LASTFM_API_KEY`` field with your Last.fm API key.
 You also need to update the ``API_URL`` field value to ``http://localhost:8100``.
 
 To use the Spotify importer you need to register an application on the
-`Spotify Developer Dashboard`_. Use ``http://localhost:8100/profile/music-services/spotify/callback/``
+`Spotify Developer Dashboard`_. Use ``http://127.0.0.1:8100/settings/music-services/spotify/callback/``
 as the callback URL.
 
 After that, fill out the Spotify client ID and client secret in the following
@@ -119,7 +141,7 @@ section of the file.
 
 
 To use the CritiqueBrainz reviewer, you'll need to visit the `CritiqueBrainz applications page`_
-and create/register an application. Use ``http://localhost:8100/`` as the homepage URL and ``http://localhost:8100/profile/music-services/critiquebrainz/callback/``
+and create/register an application. Use ``http://localhost:8100/`` as the homepage URL and ``http://localhost:8100/settings/music-services/critiquebrainz/callback/``
 as the callback URL.
 
 After registering, update the CritiqueBrainz section of the file with the client ID and client secret
@@ -130,7 +152,7 @@ you obtained.
     # CRITIQUEBRAINZ
     CRITIQUEBRAINZ_CLIENT_ID = ''
     CRITIQUEBRAINZ_CLIENT_SECRET = ''
-    CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost:8100/profile/music-services/critiquebrainz/callback/'
+    CRITIQUEBRAINZ_REDIRECT_URI = f'{SERVER_ROOT_URL}/settings/music-services/critiquebrainz/callback/'
 
 .. note::
 
@@ -138,6 +160,43 @@ you obtained.
     you should update the ``homepage`` and ``Authorization callback URL`` fields accordingly when registering on CritiqueBrainz.
 
 .. _CritiqueBrainz applications page: https://critiquebrainz.org/profile/applications/
+
+
+To use Funkwhale for music playback and scrobbling, you need to set up the
+callback URL in the configuration file. Funkwhale uses OAuth for authentication
+with each Funkwhale instance independently.
+
+
+.. code-block:: yaml
+
+    # FUNKWHALE
+    FUNKWHALE_CALLBACK_URL = f'{SERVER_ROOT_URL}/settings/music-services/funkwhale/callback/'
+
+
+
+To use Navidrome for music playback, you need to set up an encryption key for
+securely storing Navidrome passwords. Generate a base64 encoded encryption key
+and add it to the configuration.
+
+To generate an encryption key, run the following Python command:
+
+.. code-block:: bash
+
+    python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+
+
+.. code-block:: yaml
+
+    # NAVIDROME
+    NAVIDROME_ENCRYPTION_KEY = ""
+
+Update the ``NAVIDROME_ENCRYPTION_KEY`` field with the generated key.
+
+.. note::
+
+    The encryption key is used to securely encrypt and decrypt Navidrome passwords stored
+    in the database. Make sure you do not change this key, or you will have to disconnect 
+    and reconnect to your Navidrome account.
 
 
 Initialize ListenBrainz containers
@@ -256,15 +315,15 @@ This builds and runs the containers needed for the tests. This script configures
 test-specific data volumes so that test data is isolated from your development
 data. Note that all tests are run: Unit tests and integration tests.
 
-To run tests faster, you can use some options to start up the test infrastructure
+To run tests faster, you can use some options to start up the test infrastructure 
 once so that subsequent running of the tests is faster:
 
 .. code-block:: bash
 
-   ./test.sh -u # build unit test containers, start up and initialise the database
-   ./test.sh    # run tests, do this as often as you need to
-   ./test.sh -s # stop test containers, but don't remove them
-   ./test.sh -d # stop and remove all test containers
+   ./test.sh -u                                 # build unit test containers, start up and initialise the database
+   ./test.sh [path-to-tests-file-or-directory]  # run specific tests, do this as often as you need to
+   ./test.sh -s                                 # stop test containers, but don't remove them
+   ./test.sh -d                                 # stop and remove all test containers
 
 If you made any changes to the frontend, you can run the tests for frontend using
 

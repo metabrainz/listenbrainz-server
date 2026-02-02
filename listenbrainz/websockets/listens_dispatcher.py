@@ -60,15 +60,14 @@ class ListensDispatcher(ConsumerMixin):
         )
 
     def start(self):
-        with self.app.app_context():
-            while True:
-                try:
-                    self.app.logger.info("Starting player writer...")
-                    self.init_rabbitmq_connection()
-                    self.run()
-                except KeyboardInterrupt:
-                    self.app.logger.error("Keyboard interrupt!")
-                    break
-                except Exception:
-                    self.app.logger.error("Error in PlayerWriter:", exc_info=True)
-                    time.sleep(3)
+        while True:
+            try:
+                self.app.logger.info("Starting player writer...")
+                self.init_rabbitmq_connection()
+                self.run()
+            except KeyboardInterrupt:
+                self.app.logger.error("Keyboard interrupt!")
+                break
+            except Exception:
+                self.app.logger.error("Error in PlayerWriter:", exc_info=True)
+                time.sleep(3)

@@ -8,15 +8,15 @@ from pydantic.generics import GenericModel
 
 
 class StatisticsRange(Enum):
-    week = 'week'
-    month = 'month'
-    quarter = 'quarter'
-    half_yearly = 'half_yearly'
-    year = 'year'
-    all_time = 'all_time'
     this_week = 'this_week'
     this_month = 'this_month'
     this_year = 'this_year'
+    week = 'week'
+    month = 'month'
+    quarter = 'quarter'
+    year = 'year'
+    half_yearly = 'half_yearly'
+    all_time = 'all_time'
 
 
 #: list of allowed value for range param accepted by various statistics endpoints
@@ -37,17 +37,13 @@ class StatRecordList(GenericModel, Generic[StatT]):
     __root__: List[StatT]
 
 
-class StatRange(GenericModel, Generic[StatT]):
-    """Generic base model representing a stat when it is inserted into the database."""
-    to_ts: int
-    from_ts: int
-    count: Optional[int]
-    stats_range: str
-    data: StatRecordList[StatT]
-
-
-class StatApi(StatRange[StatT], Generic[StatT]):
-    """ Generic base mode for representing a stat retrieved from the database and
+class StatApi(GenericModel, Generic[StatT]):
+    """ Generic base mode for representing a user/sitewide stat retrieved from the database and
     to send using the api."""
     user_id: int
+    count: Optional[int]
+    to_ts: int
+    from_ts: int
+    stats_range: str
+    data: StatRecordList[StatT]
     last_updated: int

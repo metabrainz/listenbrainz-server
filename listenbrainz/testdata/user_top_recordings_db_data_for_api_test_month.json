@@ -14,7 +14,14 @@
         "track_name": "Start Again (feat. Logic)",
         "listen_count": 9,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "OneRepublic",
+            "join_phrase": "",
+            "artist_mbid": "67f4ae2e-260e-4020-b957-f2df5b719501"
+          }
+        ]
       },
       {
         "artist_name": "The Fray",
@@ -27,7 +34,14 @@
         "track_name": "How to Save a Life",
         "listen_count": 8,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Fray",
+            "join_phrase": "",
+            "artist_mbid": "3b155259-b29e-4515-aa62-cb0b917f4cfd"
+          }
+        ]
       },
       {
         "artist_name": "Christina Perri",
@@ -40,7 +54,14 @@
         "track_name": "A Thousand Years",
         "listen_count": 8,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Christina Perri",
+            "join_phrase": "",
+            "artist_mbid": "bad9c78a-cbe3-4a6f-b7c0-f2009cecaabb"
+          }
+        ]
       },
       {
         "artist_name": "Maroon 5",
@@ -53,7 +74,14 @@
         "track_name": "Payphone",
         "listen_count": 7,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Maroon 5",
+            "join_phrase": "",
+            "artist_mbid": "9d5adabb-9775-4535-93eb-12b485aed8bf"
+          }
+        ]
       }
     ]
   },
@@ -72,7 +100,14 @@
         "track_name": "Burn",
         "listen_count": 16,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ellie Goulding",
+            "join_phrase": "",
+            "artist_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8"
+          }
+        ]
       },
       {
         "artist_name": "Ed Sheeran",
@@ -85,7 +120,14 @@
         "track_name": "Castle on the Hill",
         "listen_count": 13,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ed Sheeran",
+            "join_phrase": "",
+            "artist_mbid": "6817e85a-f5ae-4479-b73d-e8e320e1b927"
+          }
+        ]
       },
       {
         "artist_name": "The Script",
@@ -98,7 +140,14 @@
         "track_name": "Hall of Fame",
         "listen_count": 10,
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Script",
+            "join_phrase": "",
+            "artist_mbid": "1871df1a-93b7-4e25-9d60-64102ba89913"
+          }
+        ]
       }
     ]
   }

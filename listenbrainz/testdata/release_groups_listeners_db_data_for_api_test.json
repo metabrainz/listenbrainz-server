@@ -1,0 +1,31 @@
+{
+  "type": "entity_listener",
+  "stats_range": "all_time",
+  "from_ts": 1009843200,
+  "to_ts": 1628511763,
+  "data": [
+    {
+      "total_listen_count": 7,
+      "listeners": [
+        {
+          "user_id": 1,
+          "listen_count": 4
+        },
+        {
+          "user_id": 2,
+          "listen_count": 3
+        }
+      ],
+      "release_group_mbid": "f53bf269-4601-35a4-8aa7-ed54a1d58eed",
+      "release_group_name": "Mickey Mouse Operation",
+      "artist_name": "Little People",
+      "caa_id": 27037140096,
+      "caa_release_mbid": "85655611-5af0-436c-b00f-6609afa502ff",
+      "artist_mbids": [
+        "78c94cba-761f-4212-8508-a24bda2e57dc"
+      ]
+    }
+  ],
+  "database": "release_groups_listeners_all_time_20230419",
+  "entity": "release_groups"
+}

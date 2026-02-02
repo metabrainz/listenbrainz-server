@@ -16,7 +16,6 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-from flask import url_for
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, \
     CRITIQUEBRAINZ_REVIEW_FETCH_URL
@@ -38,12 +37,13 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(UserTimelineAPITestCase, self).setUp()
-        self.user = db_user.get_or_create(199, 'friendly neighborhood spider-man')
-        CritiqueBrainzService().add_new_user(self.user['id'], {
-            "access_token": "foobar",
-            "refresh_token": "foobar",
-            "expires_in": 3600
-        })
+        self.user = db_user.get_or_create(self.db_conn, 199, 'friendly neighborhood spider-man')
+        with self.app.app_context():
+            CritiqueBrainzService().add_new_user(self.user['id'], {
+                "access_token": "foobar",
+                "refresh_token": "foobar",
+                "expires_in": 3600
+            })
         self.review_metadata = {
             "entity_name": "Heart Shaker",
             "entity_id": str(uuid.uuid4()),
@@ -52,58 +52,49 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             "language": "en",
             "text": "Review text goes here ...",
         }
-
-        events = db_user_timeline_event.get_user_track_recommendation_events(
-            user_id=self.user['id'],
-            count=1,
-        )
-        self.assertListEqual([], events)
         # by default this is True, we set to False so that the Flask handler to automatically
         # catch uncaught exceptions works and wraps those in a 500.
         self.app.config["TESTING"] = False
 
     def test_recommendation_writes_an_event_to_the_database(self):
-        metadata = {
-            'artist_name': 'Kanye West',
-            'track_name': 'Fade',
-            'recording_msid': str(uuid.uuid4()),
-        }
+        metadata = {'recording_msid': str(uuid.uuid4())}
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
         self.assert200(r)
 
-        events = db_user_timeline_event.get_user_track_recommendation_events(
-            user_id=self.user['id'],
+        events = db_user_timeline_event.get_recording_recommendation_events_for_feed(
+            self.db_conn,
+            user_ids=[self.user['id']],
+            min_ts=0,
+            max_ts=int(time.time()) + 1000,
             count=1,
         )
         self.assertEqual(1, len(events))
-        self.assertEqual('Kanye West', events[0].metadata.artist_name)
-        self.assertEqual('Fade', events[0].metadata.track_name)
+        self.assertEqual(metadata["recording_msid"], events[0].metadata.recording_msid)
 
     def test_recommendation_mbid_only(self):
         """ Test recommendation with mbid only works """
-        metadata = {
-            'artist_name': 'Kanye West',
-            'track_name': 'Fade',
-            'recording_mbid': str(uuid.uuid4()),
-        }
+        metadata = {'recording_mbid': str(uuid.uuid4())}
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
         self.assert200(r)
 
-        events = db_user_timeline_event.get_user_track_recommendation_events(
-            user_id=self.user['id'],
+        events = db_user_timeline_event.get_recording_recommendation_events_for_feed(
+            self.db_conn,
+            user_ids=[self.user['id']],
+            min_ts=0,
+            max_ts=int(time.time()) + 1000,
             count=1,
         )
         self.assertEqual(1, len(events))
-        self.assertEqual('Kanye West', events[0].metadata.artist_name)
-        self.assertEqual('Fade', events[0].metadata.track_name)
         self.assertEqual(metadata['recording_mbid'], events[0].metadata.recording_mbid)
 
     def test_recommendation_checks_auth_token_for_authorization(self):
@@ -115,22 +106,27 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # send a request without a token
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata}),
         )
         self.assert401(r)
 
         # send a request with an incorrect token
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata}),
             headers={'Authorization': 'Token plsnohack'},
         )
         self.assert401(r)
 
         # check that no events were created in the database
-        events = db_user_timeline_event.get_user_track_recommendation_events(
-            user_id=self.user['id'],
+        events = db_user_timeline_event.get_recording_recommendation_events_for_feed(
+            self.db_conn,
+            user_ids=[self.user['id']],
+            min_ts=0,
+            max_ts=int(time.time()) + 1000,
             count=1,
         )
         self.assertListEqual([], events)
@@ -140,13 +136,15 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # empty metadata should 400
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
         self.assert400(r)
 
-    @mock.patch('listenbrainz.db.user_timeline_event.create_user_track_recommendation_event', side_effect=DatabaseException)
+    @mock.patch('listenbrainz.db.user_timeline_event.create_user_track_recommendation_event',
+                side_effect=DatabaseException)
     def test_recommendation_handles_database_exceptions(self, mock_create_event):
         # see test_unhide_events_for_database_exception for details on this
         self.app.config["TESTING"] = False
@@ -156,7 +154,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             'recording_msid': str(uuid.uuid4()),
         }
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
@@ -171,11 +170,12 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             'recording_msid': str(uuid.uuid4()),
         }
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event', user_name='notthemainuser'),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event',
+                                user_name='notthemainuser'),
             data=json.dumps({'metadata': metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
-        self.assert401(r)
+        self.assert403(r)
         data = json.loads(r.data)
         self.assertEqual("You don't have permissions to post to this user's timeline.", data['error'])
 
@@ -185,7 +185,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             "link": "http://localhost"
         }
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_notification_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_notification_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
@@ -195,9 +196,10 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     def test_post_notification_success(self):
         metadata = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
-        approved_user = db_user.get_or_create(11, "troi-bot")
+        approved_user = db_user.get_or_create(self.db_conn, 11, "troi-bot")
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_notification_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_notification_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata}),
             headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
         )
@@ -205,17 +207,21 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     def test_get_notification_event(self):
         metadata = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
-        approved_user = db_user.get_or_create(11, "troi-bot")
-        self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_notification_event', user_name=self.user['musicbrainz_id']),
+        approved_user = db_user.get_or_create(self.db_conn, 11, "troi-bot")
+        r = self.client.post(
+            self.custom_url_for('user_timeline_event_api_bp.create_user_notification_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata}),
             headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
         )
+        self.assert200(r)
+        time.sleep(1)
+
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.user['musicbrainz_id']),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
-
+        self.assert200(r)
         payload = r.json['payload']
         self.assertEqual(1, payload['count'])
         self.assertEqual(self.user['musicbrainz_id'], payload['user_id'])
@@ -229,24 +235,25 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_delete_feed_events(self):
         # Adding notification to the db
         metadata_not = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
-        approved_user = db_user.get_or_create(11, "troi-bot")
+        approved_user = db_user.get_or_create(self.db_conn, 11, "troi-bot")
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_notification_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_notification_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata_not}),
             headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
         )
         self.assert200(r)
         notification_event_id = r.json["id"]
         # Adding recording recommendation to db
-        new_user = db_user.get_or_create(202, "riksucks")
+        new_user = db_user.get_or_create(self.db_conn, 202, "riksucks")
         metadata_rec = {
             'artist_name': 'Nujabes',
             'track_name': 'Aruarian Dance',
             'recording_msid': str(uuid.uuid4()),
         }
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event',
-                    user_name=new_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event',
+                                user_name=new_user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata_rec}),
             headers={'Authorization': 'Token {}'.format(new_user['auth_token'])},
         )
@@ -254,7 +261,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         rec_event_id = r.json["id"]
         # Deleting notification
         r_del_not = self.client.post(
-            url_for('user_timeline_event_api_bp.delete_feed_events', user_name=self.user["musicbrainz_id"]),
+            self.custom_url_for('user_timeline_event_api_bp.delete_feed_events', user_name=self.user["musicbrainz_id"]),
             data=json.dumps({'event_type': UserTimelineEventType.NOTIFICATION.value, 'id': notification_event_id}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
@@ -262,7 +269,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # Checking if notification still exists
         r_not = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.user['musicbrainz_id']),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
         payload_not = r_not.json["payload"]
@@ -271,7 +278,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # Deleting recommendation event
         r_del_rec = self.client.post(
-            url_for('user_timeline_event_api_bp.delete_feed_events', user_name=new_user["musicbrainz_id"]),
+            self.custom_url_for('user_timeline_event_api_bp.delete_feed_events', user_name=new_user["musicbrainz_id"]),
             data=json.dumps({'event_type': UserTimelineEventType.RECORDING_RECOMMENDATION.value, 'id': rec_event_id}),
             headers={'Authorization': 'Token {}'.format(new_user['auth_token'])}
         )
@@ -279,7 +286,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # Checking if recording recommendation still exists
         r_rec = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=new_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=new_user['musicbrainz_id']),
             headers={'Authorization': 'Token {}'.format(new_user['auth_token'])}
         )
         payload_rec = r_rec.json["payload"]
@@ -289,37 +296,37 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_delete_feed_events_token_for_authorization(self):
         # Adding notification to the db
         metadata_not = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
-        approved_user = db_user.get_or_create(11, "troi-bot")
+        approved_user = db_user.get_or_create(self.db_conn, 11, "troi-bot")
         self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_notification_event',
-            user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_notification_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata_not}),
             headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
         )
         # Attempt to delete notifications by passing no Auth header
         r_not = self.client.post(
-            url_for('user_timeline_event_api_bp.delete_feed_events',
-            user_name=self.user["musicbrainz_id"]),
+            self.custom_url_for('user_timeline_event_api_bp.delete_feed_events',
+                                user_name=self.user["musicbrainz_id"]),
             data=json.dumps({'event_type': UserTimelineEventType.NOTIFICATION.value, 'id': 1}),
         )
         self.assert401(r_not)
         # Adding recording recommendation to db
-        new_user = db_user.get_or_create(2, "riksucks")
+        new_user = db_user.get_or_create(self.db_conn, 2, "riksucks")
         metadata_rec = {
             'artist_name': 'Nujabes',
             'track_name': 'Aruarian Dance',
             'recording_msid': str(uuid.uuid4()),
         }
         self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event',
-            user_name=new_user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event',
+                                user_name=new_user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata_rec}),
             headers={'Authorization': 'Token {}'.format(new_user['auth_token'])},
         )
         # Deleting recommendation event
         r_rec = self.client.post(
-            url_for('user_timeline_event_api_bp.delete_feed_events',
-            user_name=new_user["musicbrainz_id"]),
+            self.custom_url_for('user_timeline_event_api_bp.delete_feed_events',
+                                user_name=new_user["musicbrainz_id"]),
             data=json.dumps({'event_type': UserTimelineEventType.RECORDING_RECOMMENDATION.value, 'id': 2}),
             headers={'Authorization': 'Token l33thaxors'}
         )
@@ -332,17 +339,17 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # Adding notification to the db
         metadata_not = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
-        approved_user = db_user.get_or_create(11, "troi-bot")
+        approved_user = db_user.get_or_create(self.db_conn, 11, "troi-bot")
         self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_notification_event',
-            user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_notification_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata_not}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
         # Attempt to delete notification
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.delete_feed_events',
-            user_name=self.user["musicbrainz_id"]),
+            self.custom_url_for('user_timeline_event_api_bp.delete_feed_events',
+                                user_name=self.user["musicbrainz_id"]),
             data=json.dumps({'event_type': UserTimelineEventType.NOTIFICATION.value, 'id': 1}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
@@ -353,17 +360,17 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_delete_feed_events_for_bad_request(self):
         # Adding notification to the db
         metadata_not = {"message": 'You have a <a href="https://listenbrainz.org/non-existent-playlist">playlist</a>'}
-        approved_user = db_user.get_or_create(11, "troi-bot")
+        approved_user = db_user.get_or_create(self.db_conn, 11, "troi-bot")
         self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_notification_event',
-            user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_notification_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata_not}),
             headers={'Authorization': 'Token {}'.format(approved_user['auth_token'])}
         )
         # Attempt to delete notification with empty JSON, should throw bad request error
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.delete_feed_events',
-            user_name=self.user["musicbrainz_id"]),
+            self.custom_url_for('user_timeline_event_api_bp.delete_feed_events',
+                                user_name=self.user["musicbrainz_id"]),
             data=json.dumps({}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
@@ -371,9 +378,10 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     def test_hide_events(self):
         # creating a new user
-        new_user = db_user.get_or_create(2, 'riksucks')
+        new_user = db_user.get_or_create(self.db_conn, 2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            self.db_conn,
             user_id=new_user['id'],
             metadata=RecordingRecommendationMetadata(
                 track_name="All Caps",
@@ -383,18 +391,18 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
 
         # user starts following riksucks
-        db_user_relationship.insert(self.user['id'], new_user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, self.user['id'], new_user['id'], 'follow')
 
         # send request to hide event
         r = self.client.post(
-            url_for(
+            self.custom_url_for(
                 'user_timeline_event_api_bp.hide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
             data=json.dumps({
                 "event_type": event_rec.event_type.value,
                 "event_id": event_rec.id
-                }
+            }
             ),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
@@ -402,9 +410,10 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     def test_hide_events_tokens_for_authorization(self):
         # creating a new user
-        new_user = db_user.get_or_create(2, 'riksucks')
+        new_user = db_user.get_or_create(self.db_conn, 2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            self.db_conn,
             user_id=new_user['id'],
             metadata=RecordingRecommendationMetadata(
                 track_name="All Caps",
@@ -414,27 +423,28 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
 
         # user starts following riksucks
-        db_user_relationship.insert(self.user['id'], new_user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, self.user['id'], new_user['id'], 'follow')
 
         # send request to hide event
         r = self.client.post(
-            url_for(
+            self.custom_url_for(
                 'user_timeline_event_api_bp.hide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
             data=json.dumps({
                 "event_type": event_rec.event_type.value,
                 "event_id": event_rec.id
-                }
+            }
             ),
         )
         self.assert401(r)
 
     def test_hide_events_for_non_followed_users(self):
         # creating a new user
-        new_user = db_user.get_or_create(2, 'riksucks')
+        new_user = db_user.get_or_create(self.db_conn, 2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            self.db_conn,
             user_id=new_user['id'],
             metadata=RecordingRecommendationMetadata(
                 track_name="All Caps",
@@ -445,14 +455,14 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # send request to hide event
         r = self.client.post(
-            url_for(
+            self.custom_url_for(
                 'user_timeline_event_api_bp.hide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
             data=json.dumps({
                 "event_type": event_rec.event_type.value,
                 "event_id": event_rec.id
-                }
+            }
             ),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
@@ -461,15 +471,16 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     @mock.patch(
         "listenbrainz.db.user_timeline_event.hide_user_timeline_event",
         side_effect=DatabaseException
-        )
+    )
     def test_hide_events_for_database_exception(self, mock_create_event):
         # see test_unhide_events_for_database_exception for details on this
         self.app.config["TESTING"] = False
 
         # creating a new user
-        new_user = db_user.get_or_create(2, 'riksucks')
+        new_user = db_user.get_or_create(self.db_conn, 2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            self.db_conn,
             user_id=new_user['id'],
             metadata=RecordingRecommendationMetadata(
                 track_name="All Caps",
@@ -479,18 +490,18 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
 
         # user starts following riksucks
-        db_user_relationship.insert(self.user['id'], new_user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, self.user['id'], new_user['id'], 'follow')
 
         # send request to hide event
         r = self.client.post(
-            url_for(
+            self.custom_url_for(
                 'user_timeline_event_api_bp.hide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
             data=json.dumps({
                 "event_type": event_rec.event_type.value,
                 "event_id": event_rec.id
-                }
+            }
             ),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])}
         )
@@ -498,9 +509,10 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     def test_hide_events_for_bad_request(self):
         # creating a new user
-        new_user = db_user.get_or_create(2, 'riksucks')
+        new_user = db_user.get_or_create(self.db_conn, 2, 'riksucks')
         # creating an event
         event_rec = db_user_timeline_event.create_user_track_recommendation_event(
+            self.db_conn,
             user_id=new_user['id'],
             metadata=RecordingRecommendationMetadata(
                 track_name="All Caps",
@@ -510,11 +522,11 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
 
         # user starts following riksucks
-        db_user_relationship.insert(self.user['id'], new_user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, self.user['id'], new_user['id'], 'follow')
 
         # send request to hide event
         r = self.client.post(
-            url_for(
+            self.custom_url_for(
                 'user_timeline_event_api_bp.hide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
@@ -526,6 +538,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_unhide_events(self):
         # add dummy event
         db_user_timeline_event.hide_user_timeline_event(
+            self.db_conn,
             self.user['id'],
             UserTimelineEventType.RECORDING_RECOMMENDATION.value,
             1
@@ -533,7 +546,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # send request to hide event
         r = self.client.post(
-            url_for(
+            self.custom_url_for(
                 'user_timeline_event_api_bp.unhide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
@@ -548,6 +561,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_unhide_events_for_authorization(self):
         # add dummy event
         db_user_timeline_event.hide_user_timeline_event(
+            self.db_conn,
             self.user['id'],
             UserTimelineEventType.RECORDING_RECOMMENDATION.value,
             1
@@ -555,7 +569,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # send request to hide event
         r = self.client.post(
-            url_for(
+            self.custom_url_for(
                 'user_timeline_event_api_bp.unhide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
@@ -569,6 +583,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_unhide_events_for_bad_request(self):
         # add dummy event
         db_user_timeline_event.hide_user_timeline_event(
+            self.db_conn,
             self.user['id'],
             UserTimelineEventType.RECORDING_RECOMMENDATION.value,
             1
@@ -576,7 +591,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # send request to hide event
         r = self.client.post(
-            url_for(
+            self.custom_url_for(
                 'user_timeline_event_api_bp.unhide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
@@ -588,7 +603,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     @mock.patch(
         "listenbrainz.db.user_timeline_event.unhide_timeline_event",
         side_effect=DatabaseException
-        )
+    )
     def test_unhide_events_for_database_exception(self, mock_create_event):
         # in prod, we have registered error handlers to return 500 response
         # on all uncaught exceptions. if TESTING is set to True, flask will
@@ -600,6 +615,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # add dummy event
         db_user_timeline_event.hide_user_timeline_event(
+            self.db_conn,
             self.user['id'],
             UserTimelineEventType.RECORDING_RECOMMENDATION.value,
             1
@@ -607,7 +623,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # send request to hide event
         r = self.client.post(
-            url_for(
+            self.custom_url_for(
                 'user_timeline_event_api_bp.unhide_user_timeline_event',
                 user_name=self.user['musicbrainz_id']
             ),
@@ -625,7 +641,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         mock_requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, status_code=200, json={'id': review_id})
 
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_cb_review_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': self.review_metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
@@ -637,6 +654,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(review_id, data["metadata"]["review_id"])
 
         events = db_user_timeline_event.get_cb_review_events(
+            self.db_conn,
             user_ids=[self.user['id']],
             min_ts=0,
             max_ts=int(time.time()) + 10,
@@ -649,14 +667,16 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_critiquebrainz_checks_auth_token_for_authorization(self):
         # send a request without a token
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_cb_review_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': self.review_metadata}),
         )
         self.assert401(r)
 
         # send a request with an incorrect token
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_cb_review_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': self.review_metadata}),
             headers={'Authorization': 'Token DSdsa asdasd sad asd'},
         )
@@ -664,6 +684,7 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # check that no events were created in the database
         events = db_user_timeline_event.get_cb_review_events(
+            self.db_conn,
             user_ids=[self.user['id']],
             min_ts=0,
             max_ts=int(time.time()) + 10,
@@ -676,7 +697,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
         # empty metadata should 400
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_cb_review_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
@@ -688,7 +710,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         review_id = str(uuid.uuid4())
         mock_requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, status_code=200, json={'id': review_id})
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_cb_review_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': self.review_metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
@@ -704,8 +727,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             json={'code': 500, 'description': 'Internal Server Error'}
         )
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_cb_review_event',
-                    user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_cb_review_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': self.review_metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
@@ -717,12 +740,14 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
     def test_get_cb_review_events(self, mock_requests):
         self.maxDiff = None
 
-        user_2 = db_user.get_or_create(201, 'not your friendly neighborhood spider-man')
-        CritiqueBrainzService().add_new_user(user_2['id'], {
-            "access_token": "bazbar",
-            "refresh_token": "bazfoo",
-            "expires_in": 3600
-        })
+        user_2 = db_user.get_or_create(self.db_conn, 201, 'not your friendly neighborhood spider-man')
+        with self.app.app_context():
+            CritiqueBrainzService().add_new_user(user_2['id'], {
+                "access_token": "bazbar",
+                "refresh_token": "bazfoo",
+                "expires_in": 3600
+            })
+
         metadata_1 = {
             "entity_name": "Heart Shaker",
             "entity_id": "cea67a92-db08-4950-bdc6-6d52fc622243",
@@ -758,7 +783,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         ])
 
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_cb_review_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata_1}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
@@ -767,7 +793,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         review_event_id_1 = r.json["id"]
 
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_cb_review_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({'metadata': metadata_2}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
@@ -775,7 +802,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         review_event_id_2 = r.json["id"]
 
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_user_cb_review_event', user_name=user_2['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_user_cb_review_event',
+                                user_name=user_2['musicbrainz_id']),
             data=json.dumps({'metadata': metadata_3}),
             headers={'Authorization': 'Token {}'.format(user_2['auth_token'])},
         )
@@ -800,10 +828,10 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
             }
         })
 
-        db_user_relationship.insert(self.user['id'], user_2['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, self.user['id'], user_2['id'], 'follow')
 
         r = self.client.get(
-            url_for('user_timeline_event_api_bp.user_feed', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.user['musicbrainz_id']),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
             query_string={'min_ts': 0, 'max_ts': int(time.time()) + 1000}
         )
@@ -834,15 +862,12 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
 
     def test_personal_recommendation_writes_to_db(self):
         # Let's create 2 users, who follow the request sender
-        user_one = db_user.get_or_create(2, "riksucks")
-        user_two = db_user.get_or_create(3, "hrik2001")
+        user_one = db_user.get_or_create(self.db_conn, 2, "riksucks")
+        user_two = db_user.get_or_create(self.db_conn, 3, "hrik2001")
 
-        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
-        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_two['id'], self.user['id'], 'follow')
         metadata = {
-            "track_name": "Natkhat",
-            "artist_name": "Seedhe Maut",
-            "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
             "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
@@ -850,36 +875,32 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         }
 
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_personal_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
         self.assert200(r)
 
         events = db_user_timeline_event.get_personal_recommendation_events_for_feed(
+            self.db_conn,
             user_id=self.user['id'],
             min_ts=0,
-            max_ts=int(time.time())+10,
+            max_ts=int(time.time()) + 10,
             count=50
         )
 
         self.assertEqual(1, len(events))
 
-        received = events[0].metadata.dict()
-        self.assertEqual(metadata["track_name"], received["track_name"])
-        self.assertEqual(metadata["artist_name"], received["artist_name"])
-        self.assertEqual(metadata["release_name"], received["release_name"])
-        self.assertEqual(metadata["recording_mbid"], received["recording_mbid"])
-        self.assertEqual(metadata["recording_msid"], received["recording_msid"])
-        self.assertEqual(metadata["blurb_content"], received["blurb_content"])
-        self.assertCountEqual(metadata["users"], received["users"])
+        received = events[0].metadata.dict(exclude_none=True)
+        self.assertEqual(metadata, received)
 
     def test_personal_recommendation_checks_auth_token(self):
-        user_one = db_user.get_or_create(2, "riksucks")
-        user_two = db_user.get_or_create(3, "hrik2001")
+        user_one = db_user.get_or_create(self.db_conn, 2, "riksucks")
+        user_two = db_user.get_or_create(self.db_conn, 3, "hrik2001")
 
-        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
-        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_two['id'], self.user['id'], 'follow')
         metadata = {
             "track_name": "Natkhat",
             "artist_name": "Seedhe Maut",
@@ -891,37 +912,37 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         }
 
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_personal_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata}),
         )
         self.assert401(r)
 
     def test_personal_recommendation_checks_json_metadata(self):
-        user_one = db_user.get_or_create(2, "riksucks")
-        user_two = db_user.get_or_create(3, "hrik2001")
+        user_one = db_user.get_or_create(self.db_conn, 2, "riksucks")
+        user_two = db_user.get_or_create(self.db_conn, 3, "hrik2001")
 
-        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
-        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_two['id'], self.user['id'], 'follow')
         metadata = {}
 
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_personal_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
         self.assert400(r)
 
-    @mock.patch('listenbrainz.db.user_timeline_event.create_personal_recommendation_event', side_effect=DatabaseException)
+    @mock.patch('listenbrainz.db.user_timeline_event.create_personal_recommendation_event',
+                side_effect=DatabaseException)
     def test_personal_recommendation_handles_db_exceptions(self, mock_create_event):
-        user_one = db_user.get_or_create(2, "riksucks")
-        user_two = db_user.get_or_create(3, "hrik2001")
+        user_one = db_user.get_or_create(self.db_conn, 2, "riksucks")
+        user_two = db_user.get_or_create(self.db_conn, 3, "hrik2001")
 
-        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
-        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_two['id'], self.user['id'], 'follow')
         metadata = {
-            "track_name": "Natkhat",
-            "artist_name": "Seedhe Maut",
-            "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
             "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
@@ -929,7 +950,8 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         }
 
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_personal_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
@@ -938,15 +960,12 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual('Something went wrong, please try again.', data['error'])
 
     def test_personal_recommendation_errors_when_different_token_used(self):
-        user_one = db_user.get_or_create(2, "riksucks")
-        user_two = db_user.get_or_create(3, "hrik2001")
+        user_one = db_user.get_or_create(self.db_conn, 2, "riksucks")
+        user_two = db_user.get_or_create(self.db_conn, 3, "hrik2001")
 
-        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
-        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_two['id'], self.user['id'], 'follow')
         metadata = {
-            "track_name": "Natkhat",
-            "artist_name": "Seedhe Maut",
-            "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
             "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
@@ -954,25 +973,23 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         }
 
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_personal_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata}),
             headers={'Authorization': 'Token {}'.format(user_one['auth_token'])},
         )
-        self.assert401(r)
+        self.assert403(r)
         data = json.loads(r.data)
         self.assertEqual("You don't have permissions to post to this user's timeline.", data['error'])
 
     def test_personal_recommendation_not_for_non_followers(self):
-        user_one = db_user.get_or_create(2, "riksucks")
-        user_two = db_user.get_or_create(3, "hrik2001")
+        user_one = db_user.get_or_create(self.db_conn, 2, "riksucks")
+        user_two = db_user.get_or_create(self.db_conn, 3, "hrik2001")
 
         # Only riksucks is following
-        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
 
         metadata = {
-            "track_name": "Natkhat",
-            "artist_name": "Seedhe Maut",
-            "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
             "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
@@ -980,25 +997,23 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         }
 
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_personal_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
         self.assert400(r)
         data = json.loads(r.data)
-        self.assertEqual("You cannot recommend tracks to non-followers! These people don't follow you ['hrik2001']", data['error'])
-
+        self.assertEqual("You cannot recommend tracks to non-followers! These people don't follow you ['hrik2001']",
+                         data['error'])
 
     def test_personal_recommendation_not_for_non_followers_peter_k(self):
-        user_one = db_user.get_or_create(2, "riksucks")
-        user_two = db_user.get_or_create(3, "hrik2001")
+        user_one = db_user.get_or_create(self.db_conn, 2, "riksucks")
+        user_two = db_user.get_or_create(self.db_conn, 3, "hrik2001")
 
-        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
 
         metadata = {
-            "track_name": "Natkhat",
-            "artist_name": "seedhe Maut",
-            "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
             "users": ["peter k"],
@@ -1006,25 +1021,24 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         }
 
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_personal_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
         self.assert400(r)
         data = json.loads(r.data)
-        self.assertEqual("You cannot recommend tracks to non-followers! These people don't follow you ['peter k']", data['error'])
+        self.assertEqual("You cannot recommend tracks to non-followers! These people don't follow you ['peter k']",
+                         data['error'])
 
     def test_personal_recommendation_stays_after_unfollowing(self):
-        user_one = db_user.get_or_create(2, "riksucks")
-        user_two = db_user.get_or_create(3, "hrik2001")
+        user_one = db_user.get_or_create(self.db_conn, 2, "riksucks")
+        user_two = db_user.get_or_create(self.db_conn, 3, "hrik2001")
 
-        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
-        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_two['id'], self.user['id'], 'follow')
 
         metadata = {
-            "track_name": "Natkhat",
-            "artist_name": "Seedhe Maut",
-            "release_name": "न",
             "recording_mbid": str(uuid.uuid4()),
             "recording_msid": str(uuid.uuid4()),
             "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
@@ -1032,70 +1046,100 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         }
 
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_personal_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
 
         self.assert200(r)
-        db_user_relationship.delete(user_two['id'], self.user['id'], 'follow')
+        db_user_relationship.delete(self.db_conn, user_two['id'], self.user['id'], 'follow')
 
         events = db_user_timeline_event.get_personal_recommendation_events_for_feed(
+            self.db_conn,
             user_id=self.user['id'],
             min_ts=0,
-            max_ts=int(time.time())+10,
+            max_ts=int(time.time()) + 10,
             count=50
         )
 
         self.assertEqual(1, len(events))
 
-        received = events[0].metadata.dict()
-        self.assertEqual(metadata["track_name"], received["track_name"])
-        self.assertEqual(metadata["artist_name"], received["artist_name"])
-        self.assertEqual(metadata["release_name"], received["release_name"])
-        self.assertEqual(metadata["recording_mbid"], received["recording_mbid"])
-        self.assertEqual(metadata["recording_msid"], received["recording_msid"])
+        received = events[0].metadata.dict(exclude_none=True)
         self.assertEqual(metadata["blurb_content"], received["blurb_content"])
+        self.assertEqual(metadata["recording_msid"], received["recording_msid"])
+        self.assertEqual(metadata["recording_mbid"], received["recording_mbid"])
         self.assertCountEqual(metadata["users"], received["users"])
+
+    def test_personal_recommendation_user_deleted(self):
+        user_one = db_user.get_or_create(self.db_conn, 2, "riksucks")
+
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
+
+        metadata = {
+            "recording_mbid": str(uuid.uuid4()),
+            "recording_msid": str(uuid.uuid4()),
+            "users": [user_one['musicbrainz_id']],
+            "blurb_content": "Try out these new people in Indian Hip-Hop!"
+        }
+
+        r = self.client.post(
+            self.custom_url_for('user_timeline_event_api_bp.create_personal_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+
+        self.assert200(r)
+        db_user.delete(self.db_conn, user_one['id'])
+
+        events = db_user_timeline_event.get_personal_recommendation_events_for_feed(
+            self.db_conn,
+            user_id=self.user['id'],
+            min_ts=0,
+            max_ts=int(time.time()) + 10,
+            count=50
+        )
+
+        self.assertEqual(1, len(events))
+
+        received = events[0].metadata.dict(exclude_none=True)
+        self.assertEqual(metadata["blurb_content"], received["blurb_content"])
+        self.assertEqual(metadata["recording_msid"], received["recording_msid"])
+        self.assertEqual(metadata["recording_mbid"], received["recording_mbid"])
+        self.assertCountEqual([], received["users"])
 
     def test_personal_recommendation_mbid_only(self):
         """ Test that we can recommend a recording with only mbid """
         # Let's create 2 users, who follow the request sender
-        user_one = db_user.get_or_create(2, "riksucks")
-        user_two = db_user.get_or_create(3, "hrik2001")
+        user_one = db_user.get_or_create(self.db_conn, 2, "riksucks")
+        user_two = db_user.get_or_create(self.db_conn, 3, "hrik2001")
 
-        db_user_relationship.insert(user_one['id'], self.user['id'], 'follow')
-        db_user_relationship.insert(user_two['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_one['id'], self.user['id'], 'follow')
+        db_user_relationship.insert(self.db_conn, user_two['id'], self.user['id'], 'follow')
         metadata = {
-            "track_name": "Natkhat",
-            "artist_name": "Seedhe Maut",
-            "release_name": "न",
-            "recording_mbid": str(uuid.uuid4()),
+            "recording_mbid": "34c208ee-2de7-4d38-b47e-907074866dd3",
             "users": [user_one['musicbrainz_id'], user_two['musicbrainz_id']],
             "blurb_content": "Try out these new people in Indian Hip-Hop!"
         }
 
         r = self.client.post(
-            url_for('user_timeline_event_api_bp.create_personal_recommendation_event', user_name=self.user['musicbrainz_id']),
+            self.custom_url_for('user_timeline_event_api_bp.create_personal_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
         self.assert200(r)
 
         events = db_user_timeline_event.get_personal_recommendation_events_for_feed(
+            self.db_conn,
             user_id=self.user['id'],
             min_ts=0,
-            max_ts=int(time.time())+10,
+            max_ts=int(time.time()) + 10,
             count=50
         )
 
         self.assertEqual(1, len(events))
 
-        received = events[0].metadata.dict()
-        self.assertEqual(metadata["track_name"], received["track_name"])
-        self.assertEqual(metadata["artist_name"], received["artist_name"])
-        self.assertEqual(metadata["release_name"], received["release_name"])
-        self.assertEqual(metadata["recording_mbid"], received["recording_mbid"])
-        self.assertEqual(None, received["recording_msid"])
-        self.assertEqual(metadata["blurb_content"], received["blurb_content"])
-        self.assertCountEqual(metadata["users"], received["users"])
+        received = events[0].metadata.dict(exclude_none=True)
+        self.assertDictEqual(received, metadata)

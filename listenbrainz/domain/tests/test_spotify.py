@@ -9,17 +9,17 @@ import listenbrainz.db.user as db_user
 from listenbrainz.domain.external_service import ExternalServiceAPIError, ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService, OAUTH_TOKEN_URL
 
-from listenbrainz.tests.integration import IntegrationTestCase
+from listenbrainz.tests.integration import NonAPIIntegrationTestCase
 
 
-class SpotifyServiceTestCase(IntegrationTestCase):
+class SpotifyServiceTestCase(NonAPIIntegrationTestCase):
 
     def setUp(self):
         super(SpotifyServiceTestCase, self).setUp()
-        self.user_id = db_user.create(312, 'spotify_user')
+        self.user_id = db_user.create(self.db_conn, 312, 'spotify_user')
         self.service = SpotifyService()
         
-        with mock.patch.object(spotipy.Spotify, 'current_user', return_value = {"id": "test_user_id"}):
+        with mock.patch.object(spotipy.Spotify, 'current_user', return_value={"id": "test_user_id"}):
             self.service.add_new_user(self.user_id, {
                 'access_token': 'old-token',
                 'refresh_token': 'old-refresh-token',
@@ -33,9 +33,9 @@ class SpotifyServiceTestCase(IntegrationTestCase):
     def test_get_active_users(self, mock_current_user):
         mock_current_user.return_value = {"id": "test_user_id"}
 
-        user_id_1 = db_user.create(333, 'user-1')
-        user_id_2 = db_user.create(666, 'user-2')
-        user_id_3 = db_user.create(999, 'user-3')
+        user_id_1 = db_user.create(self.db_conn, 333, 'user-1')
+        user_id_2 = db_user.create(self.db_conn, 666, 'user-2')
+        user_id_3 = db_user.create(self.db_conn, 999, 'user-3')
 
         self.service.add_new_user(user_id_2, {
             'access_token': 'access-token',
@@ -50,7 +50,11 @@ class SpotifyServiceTestCase(IntegrationTestCase):
             'expires_in': 3600,
             'scope': 'user-read-currently-playing user-read-recently-played',
         })
-        self.service.update_user_import_status(user_id_3, error="add an error and check this user doesn't get selected")
+        self.service.update_user_import_status(
+            user_id_3,
+            error="add an error and check this user doesn't get selected",
+            retry=False
+        )
 
         self.service.add_new_user(user_id_1, {
             'access_token': 'access-token333',
@@ -134,7 +138,6 @@ class SpotifyServiceTestCase(IntegrationTestCase):
         self.assertEqual(user['refresh_token'], 'old-refresh-token')
         self.assertIsNotNone(user['last_updated'])
 
-    
     @mock.patch.object(spotipy.Spotify, 'current_user')
     @mock.patch('time.time')
     def test_add_new_user(self, mock_time, mock_current_user):

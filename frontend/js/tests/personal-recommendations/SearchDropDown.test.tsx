@@ -1,39 +1,41 @@
 import * as React from "react";
-import { mount } from "enzyme";
-
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import SearchDropDown, {
   SearchDropDownProps,
 } from "../../src/personal-recommendations/SearchDropDown";
 
 const mockAction = jest.fn();
-
 const props: SearchDropDownProps = {
   action: mockAction,
   suggestions: ["hrik2001", "riksucks"],
 };
 
-describe("<SearchDropDown />", () => {
-  beforeAll(() => {
-    // Font Awesome generates a random hash ID for each icon everytime.
-    // Mocking Math.random() fixes this
-    // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
-    jest.spyOn(global.Math, "random").mockImplementation(() => 0);
+describe("SearchDropDown", () => {
+  it("renders a list of suggestions as buttons", () => {
+    render(<SearchDropDown {...props} />);
+
+    const suggestionButtons = screen.getAllByRole("menuitem");
+    expect(suggestionButtons).toHaveLength(2);
+    expect(suggestionButtons.at(0)).toHaveTextContent("hrik2001");
+    expect(suggestionButtons.at(1)).toHaveTextContent("riksucks");
   });
 
-  it("renders correctly", () => {
-    const wrapper = mount(<SearchDropDown {...props} />);
-    expect(wrapper).toMatchSnapshot();
-  });
+  it("calls the action with the correct name when a suggestion is clicked", async () => {
+    const user = userEvent.setup();
+    render(<SearchDropDown {...props} />);
 
-  it("renders suggestions", () => {
-    const wrapper = mount(<SearchDropDown {...props} />);
-    expect(wrapper.find("button").at(0).contains("hrik2001")).toBeTruthy();
-    expect(wrapper.find("button").at(1).contains("riksucks")).toBeTruthy();
-  });
+    const firstSuggestion = screen.getByRole("menuitem", {
+      name: /hrik2001/i,
+    });
+    await user.click(firstSuggestion);
 
-  it("clicks work on suggestions", () => {
-    const wrapper = mount(<SearchDropDown {...props} />);
-    wrapper.find("button").at(0).simulate("click");
     expect(mockAction).toHaveBeenCalledTimes(1);
+    expect(mockAction).toHaveBeenCalledWith("hrik2001");
+  });
+
+  it("renders nothing if suggestions are not provided", () => {
+    render(<SearchDropDown action={mockAction} suggestions={[]} />);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 });

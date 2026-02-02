@@ -15,61 +15,27 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
-from listenbrainz.db import year_in_music, couchdb
+from listenbrainz.db import year_in_music
 from listenbrainz.db.fresh_releases import insert_fresh_releases
-from listenbrainz.db import similarity
 from listenbrainz.db.similar_users import import_user_similarities
-from listenbrainz.troi.troi_bot import run_post_recommendation_troi_bot
-from listenbrainz.troi.year_in_music import yim_patch_runner
+from listenbrainz.troi.daily_jams import run_post_recommendation_troi_bot
+from listenbrainz.troi.weekly_playlists import process_weekly_playlists, process_weekly_playlists_end
+from listenbrainz.troi.year_in_music import process_yim_playlists, process_yim_playlists_end
+from listenbrainz.webserver import db_conn
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
 
 
-def handle_couchdb_data_start(message):
-    match = couchdb.DATABASE_NAME_PATTERN.match(message["database"])
-    if not match:
-        return
-    try:
-        couchdb.create_database(match[1] + "_" + match[2] + "_" + match[3])
-        if match[1] == "artists":
-            couchdb.create_database("artistmap" + "_" + match[2] + "_" + match[3])
-    except HTTPError as e:
-        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
-
-
-def handle_couchdb_data_end(message):
-    # database names are of the format, prefix_YYYYMMDD. calculate and pass the prefix to the
-    # method to delete all database of the type except the latest one.
-    match = couchdb.DATABASE_NAME_PATTERN.match(message["database"])
-    # if the database name does not match pattern, abort to avoid deleting any data inadvertently
-    if not match:
-        return
-    try:
-        _, retained = couchdb.delete_database(match[1] + "_" + match[2])
-        if retained:
-            current_app.logger.info(f"Databases: {retained} matched but weren't deleted because"
-                                    f" _LOCK file existed")
-
-        # when new artist stats received, also invalidate old artist map stats
-        if match[1] == "artists":
-            _, retained = couchdb.delete_database("artistmap" + "_" + match[2])
-            if retained:
-                current_app.logger.info(f"Databases: {retained} matched but weren't deleted because"
-                                        f" _LOCK file existed")
-
-    except HTTPError as e:
-        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
-
-
-def _handle_stats(message, stats_type):
+def _handle_stats(message, stats_type, key):
     try:
         with start_transaction(op="insert", name=f'insert {stats_type} - {message["stats_range"]} stats'):
             db_stats.insert(
                 message["database"],
                 message["from_ts"],
                 message["to_ts"],
-                message["data"]
+                message["data"],
+                key
             )
     except HTTPError as e:
         current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
@@ -77,27 +43,45 @@ def _handle_stats(message, stats_type):
 
 def handle_user_entity(message):
     """ Take entity stats for a user and save it in the database. """
-    _handle_stats(message, message["entity"])
+    _handle_stats(message, f'user {message["entity"]}', "user_id")
+
+
+def handle_entity_listener(message):
+    """ Take listener stats for an entity and save it in the database """
+    if message["entity"] == "artists":
+        key = "artist_mbid"
+    elif message["entity"] == "releases":
+        key = "release_mbid"
+    elif message["entity"] == "release_groups":
+        key = "release_group_mbid"
+    else:
+        key = "recording_mbid"
+    _handle_stats(message, f'{message["entity"]} listeners', key)
 
 
 def handle_user_listening_activity(message):
     """ Take listening activity stats for user and save it in database. """
-    _handle_stats(message, "listening_activity")
+    _handle_stats(message, "listening_activity", "user_id")
 
 
 def handle_user_daily_activity(message):
     """ Take daily activity stats for user and save it in database. """
-    _handle_stats(message, "daily_activity")
+    _handle_stats(message, "daily_activity", "user_id")
 
+def handle_user_genre_activity(message):
+    """ Take genre activity stats for user and save it in database. """
+    _handle_stats(message, "genre_activity", "user_id")
+
+def handle_user_artist_evolution_activity(message):
+    """ Take artist evolution activity stats for user and save it in database. """
+    _handle_stats(message, "artist_evolution_activity", "user_id")
+
+def handle_user_era_activity(message):
+    """ Take daily activity stats for user and save it in database. """
+    _handle_stats(message, "era_activity", "user_id")
 
 def _handle_sitewide_stats(message, stat_type, has_count=False):
     try:
-        stats_range = message["stats_range"]
-        databases = couchdb.list_databases(f"{stat_type}_{stats_range}")
-        if not databases:
-            current_app.logger.error(f"No database found to insert {stats_range} sitewide {stat_type} stats")
-            return
-
         stats = {
             "data": message["data"]
         }
@@ -105,7 +89,8 @@ def _handle_sitewide_stats(message, stat_type, has_count=False):
             stats["count"] = message["count"]
 
         db_stats.insert_sitewide_stats(
-            databases[0],
+            stat_type,
+            message["stats_range"],
             message["from_ts"],
             message["to_ts"],
             stats
@@ -119,8 +104,20 @@ def handle_sitewide_entity(message):
     _handle_sitewide_stats(message, message["entity"], has_count=True)
 
 
+def handle_sitewide_artist_map(message):
+    _handle_sitewide_stats(message, "artist_map")
+
+
 def handle_sitewide_listening_activity(message):
     _handle_sitewide_stats(message, "listening_activity")
+
+
+def handle_sitewide_era_activity(message):
+    _handle_sitewide_stats(message, "era_activity")
+
+
+def handle_sitewide_artist_evolution_activity(message):
+    _handle_sitewide_stats(message, "artist_evolution_activity")
 
 
 def handle_dump_imported(data):
@@ -168,7 +165,7 @@ def handle_missing_musicbrainz_data(data):
     """ Insert user missing musicbrainz data i.e data submitted to ListenBrainz but not MusicBrainz.
     """
     user_id = data['user_id']
-    user = db_user.get(user_id)
+    user = db_user.get(db_conn, user_id)
 
     if not user:
         return
@@ -180,6 +177,7 @@ def handle_missing_musicbrainz_data(data):
 
     try:
         db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(
+            db_conn,
             user['id'],
             UserMissingMusicBrainzDataJson(missing_musicbrainz_data=missing_musicbrainz_data),
             source
@@ -234,7 +232,7 @@ def handle_recommendations(data):
     """ Take recommended recordings for a user and save it in the db.
     """
     user_id = data['user_id']
-    user = db_user.get(user_id)
+    user = db_user.get(db_conn, user_id)
     if not user:
         current_app.logger.info(f"Generated recommendations for a user that doesn't exist in the Postgres database: {user_id}")
         return
@@ -244,6 +242,7 @@ def handle_recommendations(data):
 
     try:
         db_recommendations_cf_recording.insert_user_recommendation(
+            db_conn,
             user_id,
             UserRecommendationsJson(**recommendations)
         )
@@ -283,27 +282,6 @@ def notify_mapping_import(data):
     )
 
 
-def notify_artist_relation_import(data):
-    """ Send an email after artist relation has been sucessfully imported into the cluster.
-    """
-    if current_app.config['TESTING']:
-        return
-
-    artist_relation_name = data['imported_artist_relation']
-    import_time = data['import_time']
-    time_taken_to_import = data['time_taken_to_import']
-
-    send_mail(
-        subject='Artist relation has been imported into the Spark cluster',
-        text=render_template('emails/artist_relation_import_notification.txt',
-                             artist_relation_name=artist_relation_name, import_time=import_time,
-                             time_taken_to_import=time_taken_to_import),
-        recipients=['listenbrainz-observability@metabrainz.org'],
-        from_name='ListenBrainz',
-        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
-    )
-
-
 def cf_recording_recommendations_complete(data):
     """
     Run any troi scripts necessary now that recommendations have been generated and
@@ -316,13 +294,10 @@ def cf_recording_recommendations_complete(data):
 
     active_user_count = data['active_user_count']
     total_time = data['total_time']
-    top_artist_user_count = data['top_artist_user_count']
-    similar_artist_user_count = data['similar_artist_user_count']
     send_mail(
         subject='Recommendations have been generated and pushed to the queue.',
         text=render_template('emails/cf_recording_recommendation_notification.txt',
-                             active_user_count=active_user_count, total_time=total_time,
-                             top_artist_user_count=top_artist_user_count, similar_artist_user_count=similar_artist_user_count),
+                             active_user_count=active_user_count, total_time=total_time),
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
@@ -356,67 +331,77 @@ def handle_similar_users(message):
 
 
 def handle_yim_similar_users(message):
-    year_in_music.insert_similar_recordings(message["year"], message["data"])
+    year_in_music.insert_similar_users(message["year"], message["data"])
 
 
 def handle_yim_new_releases_of_top_artists(message):
-    user_id = message["user_id"]
-    # need to check whether user exists before inserting otherwise possible FK error.
-    user = db_user.get(user_id)
-    if not user:
-        return
-    year_in_music.insert_new_releases_of_top_artists(user_id, message["year"], message["data"])
+    year_in_music.insert_heavy("new_releases_of_top_artists", message["year"], message["data"])
 
 
 def handle_yim_day_of_week(message):
-    year_in_music.insert("day_of_week", message["year"], message["data"])
+    year_in_music.insert_light("day_of_week", message["year"], message["data"])
 
 
 def handle_yim_most_listened_year(message):
-    year_in_music.handle_multi_large_insert("most_listened_year", message["year"], message["data"])
+    year_in_music.insert_heavy("most_listened_year", message["year"], message["data"])
+
+
+def handle_yim_artist_evolution_activity(message):
+    year_in_music.insert_heavy("artist_evolution_activity", message["year"], message["data"])
 
 
 def handle_yim_top_stats(message):
-    year_in_music.handle_insert_top_stats(message["entity"], message["year"], message["data"])
+    year_in_music.insert_top_stats(message["entity"], message["year"], message["data"])
 
 
 def handle_yim_listens_per_day(message):
-    year_in_music.handle_multi_large_insert("listens_per_day", message["year"], message["data"])
+    year_in_music.insert_heavy("listens_per_day", message["year"], message["data"])
 
 
 def handle_yim_listen_counts(message):
-    year_in_music.insert("total_listen_count", message["year"], message["data"])
+    year_in_music.insert_light("total_listen_count", message["year"], message["data"])
 
 
 def handle_yim_listening_time(message):
-    year_in_music.insert("total_listening_time", message["year"], message["data"])
+    year_in_music.insert_light("total_listening_time", message["year"], message["data"])
 
 
 def handle_yim_artist_map(message):
-    year_in_music.handle_multi_large_insert("artist_map", message["year"], message["data"])
+    year_in_music.insert_heavy("artist_map", message["year"], message["data"])
 
 
-def handle_new_artists_discovered_count(message):
-    year_in_music.insert("total_new_artists_discovered", message["year"], message["data"])
+def handle_yim_new_artists_discovered_count(message):
+    year_in_music.insert_light("total_new_artists_discovered", message["year"], message["data"])
 
 
-def handle_yim_tracks_of_the_year_start(message):
-    year_in_music.create_tracks_of_the_year(message["year"])
+def handle_yim_top_genres(message):
+    year_in_music.insert_heavy("top_genres", message["year"], message["data"])
 
 
-def handle_yim_tracks_of_the_year_data(message):
-    year_in_music.insert_tracks_of_the_year(message["year"], message["data"])
+def handle_yim_genre_activity(message):
+    year_in_music.insert_heavy("genre_activity", message["year"], message["data"])
 
 
-def handle_yim_tracks_of_the_year_end(message):
-    # all of the tracks data has been inserted, now we can generate the playlists
-    year_in_music.finalise_tracks_of_the_year(message["year"])
-    yim_patch_runner(message["year"])
+def handle_yim_playlists(message):
+    process_yim_playlists(message["slug"], message["year"], message["data"])
 
 
-def handle_similar_recordings(message):
-    similarity.insert("recording", message["data"], message["algorithm"])
+def handle_yim_playlists_end(message):
+    process_yim_playlists_end(message["slug"], message["year"])
 
 
-def handle_similar_artists(message):
-    similarity.insert("artist_credit_mbids", message["data"], message["algorithm"])
+def handle_troi_playlists(message):
+    process_weekly_playlists(message["slug"], message["data"])
+
+
+def handle_troi_playlists_end(message):
+    process_weekly_playlists_end(message["slug"])
+
+
+def handle_echo(message):
+    if message["message"]["action"] == "year_in_music_start":
+        year_in_music.create_yim_table(message["message"]["year"])
+    elif message["message"]["action"] == "year_in_music_end":
+        year_in_music.swap_yim_tables(message["message"]["year"])
+    else:
+        current_app.logger.info("message with unknown action: %s", json.dumps(message))

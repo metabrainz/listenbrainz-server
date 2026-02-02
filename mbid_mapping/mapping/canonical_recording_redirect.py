@@ -9,8 +9,8 @@ class CanonicalRecordingRedirect(BulkInsertTable):
         to the BulkInsertTable docs.
     """
 
-    def __init__(self, mb_conn, lb_conn=None, batch_size=None):
-        super().__init__("mapping.canonical_recording_redirect", mb_conn, lb_conn, batch_size)
+    def __init__(self, select_conn, insert_conn=None, batch_size=None, unlogged=False):
+        super().__init__("mapping.canonical_recording_redirect", select_conn, insert_conn, batch_size, unlogged)
 
     def get_create_table_columns(self):
         return [("id",                       "SERIAL"),

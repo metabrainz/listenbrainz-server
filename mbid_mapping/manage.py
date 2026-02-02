@@ -6,21 +6,34 @@ import subprocess
 
 import click
 
-from mapping.canonical_musicbrainz_data import create_canonical_musicbrainz_data
-from mapping.typesense_index import build_index as action_build_index
+from mapping.canonical_musicbrainz_data import create_canonical_musicbrainz_data, update_canonical_release_data
+from mapping.mb_artist_metadata_cache import create_mb_artist_metadata_cache, \
+    incremental_update_mb_artist_metadata_cache
+from mapping.soundcloud_metadata_index import create_soundcloud_metadata_index
+from mapping.typesense_index import build_all as action_build_index
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
 from mapping.utils import log, CRON_LOG_FILE
-from mapping.release_colors import sync_release_color_table, incremental_update_release_color_table
+from mapping.release_colors import sync_release_color_table
 from reports.tracks_of_the_year import calculate_tracks_of_the_year
 from reports.top_discoveries import calculate_top_discoveries
 from mapping.mb_metadata_cache import create_mb_metadata_cache, incremental_update_mb_metadata_cache, \
     cleanup_mbid_mapping_table
+from mapping.mb_release_group_cache import create_mb_release_group_cache, \
+    incremental_update_mb_release_group_cache
 from mapping.spotify_metadata_index import create_spotify_metadata_index
+from mapping.apple_metadata_index import create_apple_metadata_index
+from similar.tag_similarity import create_tag_similarity
+from manage_cron import cli as cron_cli
 
 
 @click.group()
 def cli():
     pass
+
+
+# Add the "cron" submenu
+cron_cli.short_help = "cron jobs -- do not invoke manually."
+cli.add_command(cron_cli, name="cron")
 
 
 @cli.command()
@@ -39,6 +52,15 @@ def canonical_data(use_lb_conn):
         Create the MBID Mapping tables. (mbid_mapping, mbid_mapping_release, canonical_recording, recording_canonical_release)
     """
     create_canonical_musicbrainz_data(use_lb_conn)
+
+
+@cli.command()
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def update_canonical_releases(use_lb_conn):
+    """
+        Update only the canonical releases table
+    """
+    update_canonical_release_data(use_lb_conn)
 
 
 @cli.command()
@@ -63,26 +85,6 @@ def sync_coverart():
         Force a re-sync of the release_color table, in case it has gone out of sync.
     """
     sync_release_color_table()
-
-
-@cli.command()
-def update_coverart():
-    """
-        Update the release_color table incrementally. Designed to be called hourly by cron.
-    """
-    incremental_update_release_color_table()
-
-
-@cli.command()
-def cron_log():
-    """
-        Print the internal cron log file for debugging purposes.
-    """
-    if os.path.exists(CRON_LOG_FILE):
-        log("Current cron job log file:")
-        subprocess.run(["cat", CRON_LOG_FILE])
-    else:
-        log("Log file is empty")
 
 
 @cli.command()
@@ -116,6 +118,24 @@ def build_mb_metadata_cache(use_lb_conn):
 
 @cli.command()
 @click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def build_mb_release_group_cache(use_lb_conn):
+    """
+        Build the MB release group cache that LB uses
+    """
+    create_mb_release_group_cache(use_lb_conn)
+
+
+@cli.command()
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def build_mb_artist_metadata_cache(use_lb_conn):
+    """
+        Build the MB release group cache that LB uses
+    """
+    create_mb_artist_metadata_cache(use_lb_conn)
+
+
+@cli.command()
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
 def update_mb_metadata_cache(use_lb_conn):
     """
         Update the MB metadata cache that LB uses incrementally.
@@ -124,13 +144,21 @@ def update_mb_metadata_cache(use_lb_conn):
 
 
 @cli.command()
-def cron_build_mb_metadata_cache():
-    """ Build the mb metadata cache and tables it depends on in production in appropriate databases.
-     After building the cache, cleanup mbid_mapping table.
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def update_mb_release_group_cache(use_lb_conn):
     """
-    create_canonical_musicbrainz_data(False)
-    create_mb_metadata_cache(True)
-    cleanup_mbid_mapping_table()
+        Update the MB metadata cache that LB uses incrementally.
+    """
+    incremental_update_mb_release_group_cache(use_lb_conn)
+
+
+@cli.command()
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def update_mb_artist_metadata_cache(use_lb_conn):
+    """
+        Update the MB metadata cache that LB uses incrementally.
+    """
+    incremental_update_mb_artist_metadata_cache(use_lb_conn)
 
 
 @cli.command()
@@ -140,6 +168,32 @@ def build_spotify_metadata_index(use_lb_conn):
         Build the spotify metadata index that LB uses
     """
     create_spotify_metadata_index(use_lb_conn)
+
+
+@cli.command()
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def build_apple_metadata_index(use_lb_conn):
+    """
+        Build the Apple Music metadata index that LB uses
+    """
+    create_apple_metadata_index(use_lb_conn)
+
+
+@cli.command()
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def build_soundcloud_metadata_index(use_lb_conn):
+    """
+        Build the Soundcloud Music metadata index that LB uses
+    """
+    create_soundcloud_metadata_index(use_lb_conn)
+
+
+@cli.command()
+def build_tag_similarity():
+    """
+        Build the tag similarity data
+    """
+    create_tag_similarity()
 
 
 def usage(command):

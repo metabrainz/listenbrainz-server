@@ -1,0 +1,188 @@
+@import "variables";
+@import "lobes5/scss/bootstrap";
+@import "utilities";
+@import "buttons";
+@import "homepage";
+@import "donations";
+@import "donors-page";
+@import "pill";
+@import "listen-card";
+@import "pinned-recordings";
+@import "playlists";
+@import "user-feed";
+@import "follow";
+@import "recommendation-page";
+@import "date-picker";
+@import "music-services";
+@import "cb-review";
+@import "huesound";
+@import "legacy-year-in-music";
+@import "year-in-music";
+@import "brainzplayer";
+@import "metadata-viewer";
+@import "preferences";
+@import "fresh-releases";
+@import "rc-slider";
+@import "add-listen-modal";
+@import "explore";
+@import "search-track";
+@import "stats";
+@import "toggle-switch";
+@import "new-navbar";
+@import "sidebar";
+@import "tags";
+@import "music-neighborhood";
+@import "stats-art-creator";
+@import "entity-pages";
+@import "release-card";
+@import "search";
+@import "scroll-container";
+@import "flairs";
+@import "footer";
+@import "similarity";
+@import "dashboard";
+@import "cover-art-grids";
+
+// pre is used in a tooltip with a different background color
+pre {
+  background-color: inherit;
+  border: none;
+}
+// For use with highlight.js
+pre code.hljs {
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+b,
+.strong {
+  font-weight: $font-weight-bold;
+}
+
+.form-control:read-only {
+  background-color: $input-disabled-bg;
+}
+
+.card-header {
+  border-color: $border-color-translucent;
+}
+
+html {
+  font-size: 10px;
+  -webkit-tap-highlight-color: black;
+}
+
+h1,
+h2,
+h3 {
+  margin-top: $spacer;
+}
+h4,
+h5,
+h6 {
+  margin-top: $headings-margin-bottom;
+}
+// Unordered and Ordered lists
+ul,
+ol {
+  padding-left: revert;
+  margin-top: 0;
+  margin-bottom: $spacer * 0.5;
+  ul,
+  ol {
+    margin-bottom: 0;
+  }
+}
+
+.panel {
+  margin-bottom: 2rem;
+  .panel-heading {
+    background-color: #fafafa;
+  }
+}
+
+.form-text {
+  color: #8c8674;
+}
+
+.container-react-main {
+  min-height: 70vh;
+  padding-left: $grid-gutter-width * 0.5;
+  padding-right: $grid-gutter-width * 0.5;
+}
+
+input[type="range"] {
+  accent-color: $blue;
+}
+
+/* Custom indicator for details/summary expanded indicator */
+details > summary {
+  &::marker {
+    display: none;
+    content: "";
+  }
+  .summary-indicator {
+    transition: rotate 0.2s ease-in-out;
+    rotate: 0deg;
+    margin-right: 0.5em;
+  }
+  &:hover .summary-indicator {
+    rotate: 90deg;
+  }
+}
+details[open] > summary .summary-indicator {
+  rotate: 90deg;
+}
+
+.atom-button {
+  width: 1.4em;
+  height: 1.4em;
+  aspect-ratio: 1;
+  padding: 0.25em;
+  margin: 0;
+  margin-left: 5px;
+}
+
+.pagination {
+  margin: 20px 0;
+  .page-link {
+    padding: 5px 14px;
+    font-size: 14px;
+  }
+}
+
+.modal {
+  .modal-dialog {
+    max-width: 600px;
+  }
+
+  .modal-header {
+    padding: 5px 15px;
+
+    .btn-close {
+      font-size: 1rem;
+    }
+  }
+
+  .modal-body {
+    padding: 20px;
+
+    .form-check {
+      margin: 10px 0;
+    }
+  }
+
+  .modal-footer {
+    padding: 20px;
+  }
+}
+.badge {
+  // Not sure why we need to do this to
+  // override the --bs-badge-font-size CSS variable value
+  font-size: $badge-font-size;
+}
+
+.capitalize-bold {
+  font-weight: 700;
+  text-transform: capitalize;
+}

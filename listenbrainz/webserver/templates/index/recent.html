@@ -1,8 +1,0 @@
-{%- extends 'base-react.html' -%}
-
-{%- block title -%}Recent listens - ListenBrainz{%- endblock -%}
-
-{% block scripts %}
-  {{ super() }}
-  <script src="{{ get_static_path('recentListens.js') }}" type="text/javascript"></script>
-{% endblock %}

@@ -1,10 +1,41 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from pyspark.sql import Row
 from pyspark.sql.types import StructField, StructType, ArrayType, StringType, TimestampType, FloatType, \
     IntegerType, LongType
 
+listens_metadata_schema = StructType([
+    StructField('location', StringType(), False),
+    StructField('max_listened_at', TimestampType(), False),
+    StructField('max_created', TimestampType(), False),
+    StructField('updated_at', TimestampType(), False),
+])
+
+# Keeping track of the from_date and the to_date used to create the partial aggressive from full dump listens.
+# Assuming dumps are imported twice a month, the aggregates for weekly stats need to be refreshed (generated from
+# different range of listens in the full dump) sooner. The existing_aggrrgate_usable method reads this from/to date
+# from bookkeeping path and compares it with current day's request to determine if the aggregate needs to be recreated.
+BOOKKEEPING_SCHEMA = StructType([
+    StructField('from_date', TimestampType(), nullable=False),
+    StructField('to_date', TimestampType(), nullable=False),
+    StructField('updated_at', TimestampType(), nullable=False),
+])
+
+INCREMENTAL_BOOKKEEPING_SCHEMA = StructType([
+    StructField('created', TimestampType(), nullable=False),
+    StructField('updated_at', TimestampType(), nullable=False),
+])
+
+mlhd_schema = StructType([
+    StructField('user_id', StringType(), nullable=False),
+    StructField('listened_at', IntegerType(), nullable=False),
+    StructField('artist_credit_mbids', ArrayType(StringType()), nullable=False),
+    StructField('release_mbid', StringType(), nullable=False),
+    StructField('recording_mbid', StringType(), nullable=False)
+])
+
 listens_new_schema = StructType([
     StructField('listened_at', TimestampType(), nullable=False),
+    StructField('created', TimestampType(), nullable=False),
     StructField('user_id', IntegerType(), nullable=False),
     StructField('recording_msid', StringType(), nullable=False),
     StructField('artist_name', StringType(), nullable=False),
@@ -16,6 +47,12 @@ listens_new_schema = StructType([
     StructField('artist_credit_mbids', ArrayType(StringType()), nullable=True),
 ])
 
+artists_column_schema = ArrayType(StructType([
+    StructField('artist_credit_name', StringType(), nullable=False),
+    StructField('join_phrase', StringType(), nullable=False),
+    StructField('artist_mbid', StringType(), nullable=False),
+]))
+
 fresh_releases_schema = StructType([
     StructField('release_date', StringType(), nullable=False),
     StructField('artist_credit_name', StringType(), nullable=False),
@@ -25,6 +62,8 @@ fresh_releases_schema = StructType([
     StructField('release_group_mbid', StringType(), nullable=False),
     StructField('release_group_primary_type', StringType(), nullable=True),
     StructField('release_group_secondary_type', StringType(), nullable=True),
+    StructField('release_tags', ArrayType(StringType()), nullable=True),
+    StructField('listen_count', IntegerType(), nullable=True),
     StructField('caa_id', LongType(), nullable=True),
     StructField('caa_release_mbid', StringType(), nullable=True)
 ])
@@ -65,15 +104,6 @@ model_metadata_schema = [
 ]
 
 
-artist_relation_schema = [
-    StructField('id_0', IntegerType(), nullable=False), # artist credit
-    StructField('name_1', StringType(), nullable=False), # artist name
-    StructField('name_0', StringType(), nullable=False),
-    StructField('id_1', IntegerType(), nullable=False),
-    StructField('score', FloatType(), nullable=False),
-]
-
-
 dataframe_metadata_schema = [
     StructField('dataframe_created', TimestampType(), nullable=False),  # Timestamp when dataframes are created and saved in HDFS.
     StructField('dataframe_id', StringType(), nullable=False),  # dataframe id or identification string of dataframe.
@@ -100,7 +130,6 @@ import_metadata_schema = [
 # Although, we try to keep it sorted in the actual definition itself, we
 # also sort it programmatically just in case
 model_metadata_schema = StructType(sorted(model_metadata_schema, key=lambda field: field.name))
-artist_relation_schema = StructType(sorted(artist_relation_schema, key=lambda field: field.name))
 dataframe_metadata_schema = StructType(sorted(dataframe_metadata_schema, key=lambda field: field.name))
 import_metadata_schema = StructType(sorted(import_metadata_schema, key=lambda field: field.name))
 
@@ -116,7 +145,7 @@ def convert_model_metadata_to_row(meta):
     """
     return Row(
         dataframe_id=meta.get('dataframe_id'),
-        model_created=datetime.utcnow(),
+        model_created=datetime.now(tz=timezone.utc),
         model_html_file=meta.get('model_html_file'),
         model_id=meta.get('model_id'),
         model_param=Row(
@@ -140,7 +169,7 @@ def convert_dataframe_metadata_to_row(meta):
             pyspark.sql.Row object - a Spark SQL Row based on the defined dataframe metadata schema.
     """
     return Row(
-        dataframe_created=datetime.utcnow(),
+        dataframe_created=datetime.now(tz=timezone.utc),
         dataframe_id=meta.get('dataframe_id'),
         from_date=meta.get('from_date'),
         listens_count=meta.get('listens_count'),

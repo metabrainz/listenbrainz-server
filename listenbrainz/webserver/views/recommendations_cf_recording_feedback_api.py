@@ -3,6 +3,8 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.recommendations_cf_recording_feedback as db_feedback
 
 from flask import Blueprint, current_app, jsonify, request
+
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIInternalServerError,
                                            APINotFound,
@@ -25,12 +27,12 @@ from pydantic import ValidationError
 recommendation_feedback_api_bp = Blueprint('recommendation_feedback_api_v1', __name__)
 
 
-@recommendation_feedback_api_bp.route("submit", methods=["POST", "OPTIONS"])
+@recommendation_feedback_api_bp.post("submit")
 @crossdomain
 @ratelimit()
 def submit_recommendation_feedback():
     """
-    Submit recommendation feedback. A user token (found on  https://listenbrainz.org/profile/ )
+    Submit recommendation feedback. A user token (found on  https://listenbrainz.org/settings/ )
     must be provided in the Authorization header! Each request should contain only one feedback in the payload.
 
     A sample feedback may look like:
@@ -66,7 +68,7 @@ def submit_recommendation_feedback():
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "), data)
 
     try:
-        db_feedback.insert(feedback_submit)
+        db_feedback.insert(db_conn, feedback_submit)
     except Exception as e:
         current_app.logger.error("Error while inserting recommendation feedback: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
@@ -74,12 +76,12 @@ def submit_recommendation_feedback():
     return jsonify({'status': 'ok'})
 
 
-@recommendation_feedback_api_bp.route("delete", methods=["POST", "OPTIONS"])
+@recommendation_feedback_api_bp.post("delete")
 @crossdomain
 @ratelimit()
 def delete_recommendation_feedback():
     """
-    Delete feedback for a user. A user token (found on  https://listenbrainz.org/profile/ )
+    Delete feedback for a user. A user token (found on  https://listenbrainz.org/settings/ )
     must be provided in the Authorization header! Each request should contain only one recording mbid in the payload.
     A sample feedback may look like:
 
@@ -111,7 +113,7 @@ def delete_recommendation_feedback():
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "), data)
 
     try:
-        db_feedback.delete(feedback_delete)
+        db_feedback.delete(db_conn, feedback_delete)
     except Exception as e:
         current_app.logger.error("Error while deleting recommendation feedback: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
@@ -119,7 +121,7 @@ def delete_recommendation_feedback():
     return jsonify({'status': 'ok'})
 
 
-@recommendation_feedback_api_bp.route("/user/<user_name>", methods=["GET"])
+@recommendation_feedback_api_bp.get("/user/<mb_username:user_name>")
 @crossdomain
 @ratelimit()
 def get_feedback_for_user(user_name):
@@ -161,7 +163,7 @@ def get_feedback_for_user(user_name):
     :statuscode 400: Bad request, check ``response['error']`` for more details
     :resheader Content-Type: *application/json*
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: {}".format(user_name))
 
@@ -177,8 +179,13 @@ def get_feedback_for_user(user_name):
 
     count = min(count, MAX_ITEMS_PER_GET)
 
-    feedback = db_feedback.get_feedback_for_user(user_id=user["id"], limit=count, offset=offset, rating=rating)
-    total_count = db_feedback.get_feedback_count_for_user(user["id"])
+    feedback = db_feedback.get_feedback_for_user(
+        db_conn, user_id=user["id"], limit=count, offset=offset, rating=rating
+    )
+    total_count = db_feedback.get_feedback_count_for_user(
+        db_conn,
+        user["id"]
+    )
 
     feedback = [_format_feedback(fb) for fb in feedback]
 
@@ -191,7 +198,7 @@ def get_feedback_for_user(user_name):
     })
 
 
-@recommendation_feedback_api_bp.route("/user/<user_name>/recordings", methods=["GET"])
+@recommendation_feedback_api_bp.get("/user/<mb_username:user_name>/recordings")
 @crossdomain
 @ratelimit()
 def get_feedback_for_recordings_for_user(user_name):
@@ -227,7 +234,7 @@ def get_feedback_for_recordings_for_user(user_name):
     :statuscode 404: User not found.
     :resheader Content-Type: *application/json*
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
@@ -241,7 +248,9 @@ def get_feedback_for_recordings_for_user(user_name):
         raise APIBadRequest("Please provide comma separated recording mbids!")
 
     try:
-        feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(user_id=user["id"], recording_list=recording_list)
+        feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(
+            db_conn, user_id=user["id"], recording_list=recording_list
+        )
     except ValidationError as e:
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
                       request.args)

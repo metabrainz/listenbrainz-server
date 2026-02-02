@@ -1,7 +1,7 @@
 from pydantic import BaseModel, validator, NonNegativeInt, constr
 from data.model.validators import check_valid_uuid
 
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 
 class ReleaseRecord(BaseModel):
@@ -12,6 +12,7 @@ class ReleaseRecord(BaseModel):
     release_name: str
     listen_count: NonNegativeInt
     artist_name: str
+    artists: Optional[List[Dict]]
     caa_id: Optional[NonNegativeInt]
     caa_release_mbid: Optional[str]
 

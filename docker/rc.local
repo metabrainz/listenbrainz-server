@@ -19,6 +19,12 @@ then
     rm -f /etc/service/timescale_writer/down
 fi
 
+if [ "${CONTAINER_NAME}" = "listenbrainz-background-tasks-${DEPLOY_ENV}" ]
+then
+    log Enabling background tasks
+    rm -f /etc/service/background_tasks/down
+fi
+
 if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat-${DEPLOY_ENV}" ]
 then
     log Enabling api compat
@@ -35,6 +41,18 @@ if [ "${CONTAINER_NAME}" = "listenbrainz-spotify-reader-${DEPLOY_ENV}" ]
 then
     log Enabling spotify reader
     rm -f /etc/service/spotify_reader/down
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-lastfm-reader-${DEPLOY_ENV}" ]
+then
+    log Enabling last.fm importer
+    rm -f /etc/service/lastfm_importer/down
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-librefm-reader-${DEPLOY_ENV}" ]
+then
+    log Enabling libre.fm importer
+    rm -f /etc/service/librefm_importer/down
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-spark-reader-${DEPLOY_ENV}" ]
@@ -61,7 +79,24 @@ then
     rm -f /etc/service/mbid_mapping_writer/down
 fi
 
+if [ "${CONTAINER_NAME}" = "listenbrainz-internetarchive-metadata-cache-${DEPLOY_ENV}" ]
+then
+    log Enabling internet archive metadata cache
+    rm -f /etc/service/internetarchive_metadata_cache/down
+fi
+
 if [ "${CONTAINER_NAME}" = "listenbrainz-spotify-metadata-cache-${DEPLOY_ENV}" ]
 then
     rm -f /etc/service/spotify_metadata_cache/down
 fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-apple-metadata-cache-${DEPLOY_ENV}" ]
+then
+    rm -f /etc/service/apple_metadata_cache/down
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-soundcloud-metadata-cache-${DEPLOY_ENV}" ]
+then
+    rm -f /etc/service/soundcloud_metadata_cache/down
+fi
+

@@ -10,7 +10,14 @@
         "listen_count": 26,
         "artist_name": "Coldplay",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -21,7 +28,14 @@
         "listen_count": 25,
         "artist_name": "Ellie Goulding",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ellie Goulding",
+            "join_phrase": "",
+            "artist_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -32,7 +46,14 @@
         "listen_count": 25,
         "artist_name": "The Fray",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Fray",
+            "join_phrase": "",
+            "artist_mbid": "3b155259-b29e-4515-aa62-cb0b917f4cfd"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -43,7 +64,14 @@
         "listen_count": 20,
         "artist_name": "Ritviz",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ritviz",
+            "join_phrase": "",
+            "artist_mbid": "49ec6dae-0bd3-43f5-9acf-f3462fb3ff8f"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -54,7 +82,14 @@
         "listen_count": 18,
         "artist_name": "OneRepublic",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "OneRepublic",
+            "join_phrase": "",
+            "artist_mbid": "67f4ae2e-260e-4020-b957-f2df5b719501"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -65,7 +100,14 @@
         "listen_count": 18,
         "artist_name": "Vance Joy",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Vance Joy",
+            "join_phrase": "",
+            "artist_mbid": "8cb3fd5a-2194-4c3b-8eb8-3e538d109991"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -76,18 +118,32 @@
         "listen_count": 17,
         "artist_name": "Imagine Dragons",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Imagine Dragons",
+            "join_phrase": "",
+            "artist_mbid": "fecda98e-0533-4b87-a9d1-c89b4521918b"
+          }
+        ]
       },
       {
         "artist_mbids": [
           "6817e85a-f5ae-4479-b73d-e8e320e1b927"
         ],
         "release_mbid": "aec9a871-cd3b-467f-a53d-4ef5bc3bbafe",
-        "release_name": "÷ (Deluxe)",
+        "release_name": "\u00f7 (Deluxe)",
         "listen_count": 17,
         "artist_name": "Ed Sheeran",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ed Sheeran",
+            "join_phrase": "",
+            "artist_mbid": "6817e85a-f5ae-4479-b73d-e8e320e1b927"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -98,7 +154,14 @@
         "listen_count": 17,
         "artist_name": "Taylor Swift",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Taylor Swift",
+            "join_phrase": "",
+            "artist_mbid": "cc0f643d-cba9-4a5e-876f-cb3d70cdf5ea"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -109,7 +172,14 @@
         "listen_count": 16,
         "artist_name": "Christina Perri",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Christina Perri",
+            "join_phrase": "",
+            "artist_mbid": "bad9c78a-cbe3-4a6f-b7c0-f2009cecaabb"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -120,7 +190,14 @@
         "listen_count": 16,
         "artist_name": "Coldplay",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -131,7 +208,14 @@
         "listen_count": 16,
         "artist_name": "Ellie Goulding",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ellie Goulding",
+            "join_phrase": "",
+            "artist_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -142,7 +226,14 @@
         "listen_count": 15,
         "artist_name": "George Ezra",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "George Ezra",
+            "join_phrase": "",
+            "artist_mbid": "52f911d4-8f73-4fc9-9145-a99aff057524"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -153,7 +244,14 @@
         "listen_count": 13,
         "artist_name": "Lenka",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Lenka",
+            "join_phrase": "",
+            "artist_mbid": "ba64b195-01dd-4613-9534-bb87dc44cffb"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -164,7 +262,14 @@
         "listen_count": 13,
         "artist_name": "OneRepublic",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "OneRepublic",
+            "join_phrase": "",
+            "artist_mbid": "67f4ae2e-260e-4020-b957-f2df5b719501"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -175,7 +280,14 @@
         "listen_count": 12,
         "artist_name": "Tommee Profitt",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Tommee Profitt",
+            "join_phrase": "",
+            "artist_mbid": "4e202a9c-c976-4e9e-8c9f-b0b96916f6a5"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -186,7 +298,14 @@
         "listen_count": 12,
         "artist_name": "The Script",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Script",
+            "join_phrase": "",
+            "artist_mbid": "1871df1a-93b7-4e25-9d60-64102ba89913"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -197,7 +316,14 @@
         "listen_count": 11,
         "artist_name": "Of Monsters and Men",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Of Monsters and Men",
+            "join_phrase": "",
+            "artist_mbid": "8f119e29-922e-42da-a5bf-b062f5261a3d"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -208,7 +334,14 @@
         "listen_count": 11,
         "artist_name": "Maroon 5",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Maroon 5",
+            "join_phrase": "",
+            "artist_mbid": "9d5adabb-9775-4535-93eb-12b485aed8bf"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -219,7 +352,14 @@
         "listen_count": 11,
         "artist_name": "Maroon 5",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Maroon 5",
+            "join_phrase": "",
+            "artist_mbid": "9d5adabb-9775-4535-93eb-12b485aed8bf"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -230,7 +370,14 @@
         "listen_count": 11,
         "artist_name": "Sia",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Sia",
+            "join_phrase": "",
+            "artist_mbid": "ac6f4804-6215-4e1b-bb47-3672f085dde6"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -241,7 +388,14 @@
         "listen_count": 10,
         "artist_name": "M.I.A.",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "M.I.A.",
+            "join_phrase": "",
+            "artist_mbid": "1024e884-3a17-4729-9e59-a026fe8a07ba"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -252,7 +406,14 @@
         "listen_count": 10,
         "artist_name": "Linkin Park",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Linkin Park",
+            "join_phrase": "",
+            "artist_mbid": "1b173852-64e9-4c7f-8ed7-01ce6158a6fd"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -263,7 +424,14 @@
         "listen_count": 9,
         "artist_name": "The Local train",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Local train",
+            "join_phrase": "",
+            "artist_mbid": "d340853d-7408-4a0d-89c2-6ff13e568815"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -274,7 +442,14 @@
         "listen_count": 8,
         "artist_name": "Backstreet Boys",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Backstreet Boys",
+            "join_phrase": "",
+            "artist_mbid": "3dc53e0f-7090-44d2-8500-3012102f29a6"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -285,7 +460,14 @@
         "listen_count": 7,
         "artist_name": "Coldplay",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -296,7 +478,14 @@
         "listen_count": 7,
         "artist_name": "Coldplay",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -307,7 +496,14 @@
         "listen_count": 6,
         "artist_name": "Ellie Goulding",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ellie Goulding",
+            "join_phrase": "",
+            "artist_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -318,7 +514,14 @@
         "listen_count": 6,
         "artist_name": "Imagine Dragons",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Imagine Dragons",
+            "join_phrase": "",
+            "artist_mbid": "fecda98e-0533-4b87-a9d1-c89b4521918b"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -329,7 +532,14 @@
         "listen_count": 5,
         "artist_name": "Ellie Goulding",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ellie Goulding",
+            "join_phrase": "",
+            "artist_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -340,7 +550,14 @@
         "listen_count": 5,
         "artist_name": "The Fray",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Fray",
+            "join_phrase": "",
+            "artist_mbid": "3b155259-b29e-4515-aa62-cb0b917f4cfd"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -351,7 +568,14 @@
         "listen_count": 5,
         "artist_name": "Train",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Train",
+            "join_phrase": "",
+            "artist_mbid": "fbe59c7e-3a75-459b-8fc8-07abaa6d1d2c"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -362,7 +586,14 @@
         "listen_count": 5,
         "artist_name": "Coldplay",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -373,7 +604,14 @@
         "listen_count": 5,
         "artist_name": "Within Temptation",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Within Temptation",
+            "join_phrase": "",
+            "artist_mbid": "50751cf3-40c6-454e-99d9-3d5777e4ad4f"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -384,7 +622,14 @@
         "listen_count": 5,
         "artist_name": "Maroon 5",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Maroon 5",
+            "join_phrase": "",
+            "artist_mbid": "9d5adabb-9775-4535-93eb-12b485aed8bf"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -395,7 +640,14 @@
         "listen_count": 5,
         "artist_name": "The Weeknd",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Weeknd",
+            "join_phrase": "",
+            "artist_mbid": "2b0646af-f3f0-4a5b-b629-6c31301c1c29"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -406,7 +658,14 @@
         "listen_count": 5,
         "artist_name": "Coldplay",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -417,7 +676,14 @@
         "listen_count": 5,
         "artist_name": "The Chainsmokers",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Chainsmokers",
+            "join_phrase": "",
+            "artist_mbid": "0daecabb-f76d-4914-8726-82cefbecca52"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -428,7 +694,14 @@
         "listen_count": 5,
         "artist_name": "Lenka",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Lenka",
+            "join_phrase": "",
+            "artist_mbid": "ba64b195-01dd-4613-9534-bb87dc44cffb"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -439,7 +712,14 @@
         "listen_count": 5,
         "artist_name": "American Authors",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "American Authors",
+            "join_phrase": "",
+            "artist_mbid": "0c115c8a-fc71-4649-aa75-aaef5f09d6d1"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -450,7 +730,14 @@
         "listen_count": 4,
         "artist_name": "Coldplay",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Coldplay",
+            "join_phrase": "",
+            "artist_mbid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -461,7 +748,14 @@
         "listen_count": 4,
         "artist_name": "The Lumineers",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Lumineers",
+            "join_phrase": "",
+            "artist_mbid": "1588d970-c277-44bc-8c6d-dc858a82f647"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -472,7 +766,14 @@
         "listen_count": 4,
         "artist_name": "Lenka",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Lenka",
+            "join_phrase": "",
+            "artist_mbid": "ba64b195-01dd-4613-9534-bb87dc44cffb"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -483,7 +784,14 @@
         "listen_count": 4,
         "artist_name": "Bruno Mars",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Bruno Mars",
+            "join_phrase": "",
+            "artist_mbid": "abf274d4-a1f8-4477-b5c6-8c1121a13cf6"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -494,7 +802,14 @@
         "listen_count": 4,
         "artist_name": "The Local train",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Local train",
+            "join_phrase": "",
+            "artist_mbid": "d340853d-7408-4a0d-89c2-6ff13e568815"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -505,7 +820,14 @@
         "listen_count": 4,
         "artist_name": "Maroon 5",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Maroon 5",
+            "join_phrase": "",
+            "artist_mbid": "9d5adabb-9775-4535-93eb-12b485aed8bf"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -516,7 +838,14 @@
         "listen_count": 3,
         "artist_name": "Imagine Dragons",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Imagine Dragons",
+            "join_phrase": "",
+            "artist_mbid": "fecda98e-0533-4b87-a9d1-c89b4521918b"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -527,7 +856,14 @@
         "listen_count": 3,
         "artist_name": "The Weeknd",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Weeknd",
+            "join_phrase": "",
+            "artist_mbid": "2b0646af-f3f0-4a5b-b629-6c31301c1c29"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -538,7 +874,14 @@
         "listen_count": 3,
         "artist_name": "Lenka",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Lenka",
+            "join_phrase": "",
+            "artist_mbid": "ba64b195-01dd-4613-9534-bb87dc44cffb"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -549,7 +892,14 @@
         "listen_count": 3,
         "artist_name": "The Chainsmokers",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Chainsmokers",
+            "join_phrase": "",
+            "artist_mbid": "0daecabb-f76d-4914-8726-82cefbecca52"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -560,7 +910,14 @@
         "listen_count": 2,
         "artist_name": "P!nk",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "P!nk",
+            "join_phrase": "",
+            "artist_mbid": "0dee16fe-2b7f-4781-8f71-1e4357603ef1"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -571,7 +928,14 @@
         "listen_count": 2,
         "artist_name": "Avicii",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Avicii",
+            "join_phrase": "",
+            "artist_mbid": "e568204b-c382-48cf-bfbc-04d11cbf8765"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -582,7 +946,14 @@
         "listen_count": 2,
         "artist_name": "Maroon 5",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Maroon 5",
+            "join_phrase": "",
+            "artist_mbid": "9d5adabb-9775-4535-93eb-12b485aed8bf"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -593,7 +964,14 @@
         "listen_count": 2,
         "artist_name": "Maroon 5",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Maroon 5",
+            "join_phrase": "",
+            "artist_mbid": "9d5adabb-9775-4535-93eb-12b485aed8bf"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -604,7 +982,14 @@
         "listen_count": 2,
         "artist_name": "Post Malone",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Post Malone",
+            "join_phrase": "",
+            "artist_mbid": "efc1ae68-f406-4430-8d94-a00b7280d822"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -615,7 +1000,14 @@
         "listen_count": 2,
         "artist_name": "Joel Adams",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Joel Adams",
+            "join_phrase": "",
+            "artist_mbid": "4cd95528-7c4f-4ba8-a66f-a3f571e7a002"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -626,7 +1018,14 @@
         "listen_count": 2,
         "artist_name": "Magic!",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Magic!",
+            "join_phrase": "",
+            "artist_mbid": "77e59c9c-cbb3-4566-abe9-5ccf8a92c28f"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -637,7 +1036,14 @@
         "listen_count": 2,
         "artist_name": "Charlie Puth",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Charlie Puth",
+            "join_phrase": "",
+            "artist_mbid": "bf8d0eb5-a94c-496a-a4a5-6d370e0c30e9"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -648,7 +1054,14 @@
         "listen_count": 2,
         "artist_name": "George Ezra",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "George Ezra",
+            "join_phrase": "",
+            "artist_mbid": "52f911d4-8f73-4fc9-9145-a99aff057524"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -659,7 +1072,14 @@
         "listen_count": 2,
         "artist_name": "Ritviz",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ritviz",
+            "join_phrase": "",
+            "artist_mbid": "49ec6dae-0bd3-43f5-9acf-f3462fb3ff8f"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -670,7 +1090,14 @@
         "listen_count": 2,
         "artist_name": "Maroon 5",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Maroon 5",
+            "join_phrase": "",
+            "artist_mbid": "9d5adabb-9775-4535-93eb-12b485aed8bf"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -681,7 +1108,14 @@
         "listen_count": 2,
         "artist_name": "Katy Perry",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Katy Perry",
+            "join_phrase": "",
+            "artist_mbid": "b650167d-3f75-4a39-a0b5-7cf4e65b7205"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -692,7 +1126,14 @@
         "listen_count": 2,
         "artist_name": "The Chainsmokers",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Chainsmokers",
+            "join_phrase": "",
+            "artist_mbid": "0daecabb-f76d-4914-8726-82cefbecca52"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -703,7 +1144,14 @@
         "listen_count": 2,
         "artist_name": "The Lumineers",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Lumineers",
+            "join_phrase": "",
+            "artist_mbid": "1588d970-c277-44bc-8c6d-dc858a82f647"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -714,7 +1162,14 @@
         "listen_count": 2,
         "artist_name": "Shawn Mendes",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Shawn Mendes",
+            "join_phrase": "",
+            "artist_mbid": "7bb2fcd0-1edb-4c35-bde2-052f9c8efd2f"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -725,7 +1180,14 @@
         "listen_count": 2,
         "artist_name": "OneRepublic",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "OneRepublic",
+            "join_phrase": "",
+            "artist_mbid": "67f4ae2e-260e-4020-b957-f2df5b719501"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -736,7 +1198,14 @@
         "listen_count": 1,
         "artist_name": "Ayushmann Khurrana",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ayushmann Khurrana",
+            "join_phrase": "",
+            "artist_mbid": "b982577e-02da-4e04-beb7-3cb4577f4aad"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -747,7 +1216,14 @@
         "listen_count": 1,
         "artist_name": "Vance Joy",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Vance Joy",
+            "join_phrase": "",
+            "artist_mbid": "8cb3fd5a-2194-4c3b-8eb8-3e538d109991"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -758,7 +1234,14 @@
         "listen_count": 1,
         "artist_name": "Ellie Goulding",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ellie Goulding",
+            "join_phrase": "",
+            "artist_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -769,7 +1252,14 @@
         "listen_count": 1,
         "artist_name": "Tyrone Wells",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Tyrone Wells",
+            "join_phrase": "",
+            "artist_mbid": "bce2e04f-e3f3-4c91-bd09-115455c43d37"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -780,7 +1270,14 @@
         "listen_count": 1,
         "artist_name": "The Script",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Script",
+            "join_phrase": "",
+            "artist_mbid": "1871df1a-93b7-4e25-9d60-64102ba89913"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -791,7 +1288,14 @@
         "listen_count": 1,
         "artist_name": "Walk the Moon",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Walk the Moon",
+            "join_phrase": "",
+            "artist_mbid": "18abe6d6-0e0c-430e-b5b5-e9894af74b6a"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -802,7 +1306,14 @@
         "listen_count": 1,
         "artist_name": "Goo Goo Dolls",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Goo Goo Dolls",
+            "join_phrase": "",
+            "artist_mbid": "7888bddc-9b9c-46a2-9125-521a5738cda8"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -813,7 +1324,14 @@
         "listen_count": 1,
         "artist_name": "Train",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Train",
+            "join_phrase": "",
+            "artist_mbid": "fbe59c7e-3a75-459b-8fc8-07abaa6d1d2c"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -824,7 +1342,14 @@
         "listen_count": 1,
         "artist_name": "Echosmith",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Echosmith",
+            "join_phrase": "",
+            "artist_mbid": "e6a05347-56f6-4f5b-8f05-1b37b33fd5da"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -835,7 +1360,14 @@
         "listen_count": 1,
         "artist_name": "Ed Sheeran",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ed Sheeran",
+            "join_phrase": "",
+            "artist_mbid": "6817e85a-f5ae-4479-b73d-e8e320e1b927"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -846,7 +1378,14 @@
         "listen_count": 1,
         "artist_name": "Lady Gaga",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Lady Gaga",
+            "join_phrase": "",
+            "artist_mbid": "260a4dc3-19c5-4fae-9f2f-d495a8baa13d"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -857,18 +1396,32 @@
         "listen_count": 1,
         "artist_name": "Carly Rae Jepsen",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Carly Rae Jepsen",
+            "join_phrase": "",
+            "artist_mbid": "98184d50-f63d-4232-8a81-c06fa53b1082"
+          }
+        ]
       },
       {
         "artist_mbids": [
           "e568204b-c382-48cf-bfbc-04d11cbf8765"
         ],
         "release_mbid": "504bcccd-803e-4ee4-bcbc-2af3da80fdd1",
-        "release_name": "AVĪCI (01)",
+        "release_name": "AV\u012aCI (01)",
         "listen_count": 1,
         "artist_name": "Avicii",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Avicii",
+            "join_phrase": "",
+            "artist_mbid": "e568204b-c382-48cf-bfbc-04d11cbf8765"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -879,7 +1432,14 @@
         "listen_count": 1,
         "artist_name": "Taylor Swift",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Taylor Swift",
+            "join_phrase": "",
+            "artist_mbid": "cc0f643d-cba9-4a5e-876f-cb3d70cdf5ea"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -890,7 +1450,14 @@
         "listen_count": 1,
         "artist_name": "Jasleen Royal",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Jasleen Royal",
+            "join_phrase": "",
+            "artist_mbid": "485029d6-bcdc-44a1-bf9f-8863915e43db"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -901,7 +1468,14 @@
         "listen_count": 1,
         "artist_name": "Alesso",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Alesso",
+            "join_phrase": "",
+            "artist_mbid": "5a93bfdf-f0df-4b8a-be5e-81d712ba6dbc"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -912,7 +1486,14 @@
         "listen_count": 1,
         "artist_name": "Kodaline",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Kodaline",
+            "join_phrase": "",
+            "artist_mbid": "19a05a11-e927-4327-be0d-27dc37278de6"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -923,7 +1504,14 @@
         "listen_count": 1,
         "artist_name": "Arko",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Arko",
+            "join_phrase": "",
+            "artist_mbid": "465edcc5-d7d9-418e-8c6e-45ee5bd07d70"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -934,7 +1522,14 @@
         "listen_count": 1,
         "artist_name": "Elton John",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Elton John",
+            "join_phrase": "",
+            "artist_mbid": "fe56af47-9fb9-4a68-a09e-1b3d0d43e803"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -945,7 +1540,14 @@
         "listen_count": 1,
         "artist_name": "Owl City",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Owl City",
+            "join_phrase": "",
+            "artist_mbid": "38814daf-cc14-410a-a4e9-6b61cf295c10"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -956,7 +1558,14 @@
         "listen_count": 1,
         "artist_name": "Rock City",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Rock City",
+            "join_phrase": "",
+            "artist_mbid": "c50b5258-792d-4e33-beed-e5b3c4b9cf64"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -967,7 +1576,14 @@
         "listen_count": 1,
         "artist_name": "Shawn Mendes",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Shawn Mendes",
+            "join_phrase": "",
+            "artist_mbid": "7bb2fcd0-1edb-4c35-bde2-052f9c8efd2f"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -978,7 +1594,14 @@
         "listen_count": 1,
         "artist_name": "Taylor Swift",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Taylor Swift",
+            "join_phrase": "",
+            "artist_mbid": "cc0f643d-cba9-4a5e-876f-cb3d70cdf5ea"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -989,7 +1612,14 @@
         "listen_count": 1,
         "artist_name": "Ellie Goulding",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Ellie Goulding",
+            "join_phrase": "",
+            "artist_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -1000,7 +1630,14 @@
         "listen_count": 1,
         "artist_name": "Boyce Avenue",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Boyce Avenue",
+            "join_phrase": "",
+            "artist_mbid": "f5e64189-e742-4143-a290-da0c1d6bd988"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -1011,7 +1648,14 @@
         "listen_count": 1,
         "artist_name": "Demi Lovato",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Demi Lovato",
+            "join_phrase": "",
+            "artist_mbid": "6141d63c-719d-4866-94a8-720b7ed812af"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -1022,7 +1666,14 @@
         "listen_count": 1,
         "artist_name": "Foster the People",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Foster the People",
+            "join_phrase": "",
+            "artist_mbid": "f9f122c1-422f-4985-8536-7d9eb2e832d9"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -1033,7 +1684,14 @@
         "listen_count": 1,
         "artist_name": "Shawn Mendes",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Shawn Mendes",
+            "join_phrase": "",
+            "artist_mbid": "7bb2fcd0-1edb-4c35-bde2-052f9c8efd2f"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -1044,7 +1702,14 @@
         "listen_count": 1,
         "artist_name": "Paul McCartney",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Paul McCartney",
+            "join_phrase": "",
+            "artist_mbid": "f82637b3-5d12-4e35-b1a9-e3d401f8162d"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -1055,7 +1720,14 @@
         "listen_count": 1,
         "artist_name": "The Script",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Script",
+            "join_phrase": "",
+            "artist_mbid": "1871df1a-93b7-4e25-9d60-64102ba89913"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -1066,7 +1738,14 @@
         "listen_count": 1,
         "artist_name": "The Chainsmokers",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "The Chainsmokers",
+            "join_phrase": "",
+            "artist_mbid": "0daecabb-f76d-4914-8726-82cefbecca52"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -1077,7 +1756,14 @@
         "listen_count": 1,
         "artist_name": "Kodaline",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Kodaline",
+            "join_phrase": "",
+            "artist_mbid": "19a05a11-e927-4327-be0d-27dc37278de6"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -1088,7 +1774,14 @@
         "listen_count": 1,
         "artist_name": "Amit Trivedi",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Amit Trivedi",
+            "join_phrase": "",
+            "artist_mbid": "d8696b51-1a16-4543-b9a2-8e9c6b91b42c"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -1099,7 +1792,14 @@
         "listen_count": 1,
         "artist_name": "OneRepublic",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "OneRepublic",
+            "join_phrase": "",
+            "artist_mbid": "67f4ae2e-260e-4020-b957-f2df5b719501"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -1110,7 +1810,14 @@
         "listen_count": 1,
         "artist_name": "OneRepublic",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "OneRepublic",
+            "join_phrase": "",
+            "artist_mbid": "67f4ae2e-260e-4020-b957-f2df5b719501"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -1121,7 +1828,14 @@
         "listen_count": 1,
         "artist_name": "Kodaline",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Kodaline",
+            "join_phrase": "",
+            "artist_mbid": "19a05a11-e927-4327-be0d-27dc37278de6"
+          }
+        ]
       },
       {
         "artist_mbids": [
@@ -1132,7 +1846,14 @@
         "listen_count": 1,
         "artist_name": "Amit Trivedi",
         "caa_id": null,
-        "caa_release_mbid": null
+        "caa_release_mbid": null,
+        "artists": [
+          {
+            "artist_credit_name": "Amit Trivedi",
+            "join_phrase": "",
+            "artist_mbid": "d8696b51-1a16-4543-b9a2-8e9c6b91b42c"
+          }
+        ]
       }
     ],
     "count": 103,

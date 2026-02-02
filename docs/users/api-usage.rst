@@ -19,7 +19,7 @@ All the examples assume you have a development version of the ListenBrainz
 server set up on :code:`localhost`. Remember to set :code:`DEBUG` to :py:`True`
 in the config. When in production, you can replace :code:`localhost` with
 :code:`api.listenbrainz.org` to use the real API. In order to use either one,
-you'll need a token. You can find it under :code:`ROOT/profile/` when signed
+you'll need a token. You can find it under :code:`ROOT/settings/` when signed
 in, with :code:`ROOT` being either :code:`localhost` for the dev version or
 :code:`listenbrainz.org` for the real API.
 
@@ -120,8 +120,10 @@ you to start sending release information if you have it.
 Love/hate feedback
 ------------------
 
-To provide love/hate feedback on listens, you need a recording mbid. If you do not
-have a recording mbid, you can look it up using the metadata endpoints. See `Lookup MBIDs`_
+To provide love/hate feedback on listens, you need a recording MBID or a recording MSID.
+If you submit a playing_now listen, you can set the parameter :code:`return_msid` to
+:true: to get the recording_msid in the response body. See the :ref:`submit-listens` example for more details.
+If you have neither, you can look up the MBID using the metadata endpoints. See `Lookup MBIDs`_
 for an example of the same. Here is an example of how to submit love/hate feedback using
 the ListenBrainz API. Refer to :ref:`feedback-api` for more details.
 

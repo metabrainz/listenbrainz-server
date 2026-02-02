@@ -7,17 +7,17 @@ import sqlalchemy
 
 from listenbrainz import db
 from listenbrainz import webserver
+from listenbrainz.background import export
 from listenbrainz.db import timescale as ts, do_not_recommend
-from listenbrainz.listenstore import timescale_fill_userid
+
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
     update_user_listen_data as ts_update_user_listen_data, \
     add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata,\
     delete_listens as ts_delete_listens, \
-    delete_listens_and_update_user_listen_data as ts_delete_listens_and_update_user_listen_data, \
     refresh_top_manual_mappings as ts_refresh_top_manual_mappings
-from listenbrainz.messybrainz import transfer_to_timescale, update_msids_from_mapping
-from listenbrainz.spotify_metadata_cache.seeder import submit_new_releases_to_cache
-from listenbrainz.troi.troi_bot import run_daily_jams_troi_bot
+from listenbrainz.messybrainz import update_msids_from_mapping
+from listenbrainz.metadata_cache.seeder import submit_new_releases_to_cache
+from listenbrainz.troi.daily_jams import run_daily_jams_troi_bot
 from listenbrainz.webserver import create_app
 
 
@@ -26,21 +26,23 @@ def cli():
     pass
 
 
-ADMIN_SQL_DIR = os.path.join(os.path.dirname(
-    os.path.realpath(__file__)), '..', 'admin', 'sql')
-TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(
-    os.path.realpath(__file__)), '..', 'admin', 'timescale')
+ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'admin', 'sql')
+TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'admin', 'timescale')
 
 
 @cli.command(name="run_websockets")
 @click.option("--host", "-h", default="0.0.0.0", show_default=True)
 @click.option("--port", "-p", default=7082, show_default=True)
-@click.option("--debug", "-d", is_flag=True,
+@click.option("--debug",
+              "-d",
+              is_flag=True,
               help="Turns debugging mode on or off. If specified, overrides "
-                   "'DEBUG' value in the config file.")
+              "'DEBUG' value in the config file.")
 def run_websockets(host, port, debug=True):
     from listenbrainz.websockets.websockets import run_websockets
-    run_websockets(host=host, port=port, debug=debug)
+    application = webserver.create_app()
+    with application.app_context():
+        run_websockets(application, host=host, port=port, debug=debug)
 
 
 @cli.command(name="init_db")
@@ -55,27 +57,46 @@ def init_db(force, create_db):
         3. Indexes are created.
     """
     from listenbrainz import config
-    db.init_db_connection(config.POSTGRES_ADMIN_URI)
+    if "PYTHON_TESTS_RUNNING" in os.environ:
+        db_connect = db.create_test_database_connect_strings()
+        db.init_db_connection(db_connect["DB_CONNECT_ADMIN"])
+        config.PYTHON_TESTS_RUNNING = True
+    else:
+        db_connect = {"DB_NAME": "listenbrainz", "DB_USER": "listenbrainz"}
+        db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
-        res = db.run_sql_script_without_transaction(
-            os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'))
+        res = db.run_sql_query_without_transaction(
+            [f"DROP DATABASE IF EXISTS {db_connect['DB_NAME']}", f"DROP USER IF EXISTS {db_connect['DB_USER']}"])
         if not res:
-            raise Exception(
-                'Failed to drop existing database and user! Exit code: %i' % res)
+            raise Exception('Failed to drop existing database/user! Exit code: %i' % res)
 
     if create_db or force:
         print('PG: Creating user and a database...')
-        res = db.run_sql_script_without_transaction(
-            os.path.join(ADMIN_SQL_DIR, 'create_db.sql'))
-        if not res:
-            raise Exception(
-                'Failed to create new database and user! Exit code: %i' % res)
 
-        db.init_db_connection(config.POSTGRES_ADMIN_LB_URI)
+        if "PYTHON_TESTS_RUNNING" in os.environ:
+            res = db.run_sql_query_without_transaction([
+                f"CREATE USER {db_connect['DB_USER']} NOCREATEDB NOSUPERUSER",
+                f"ALTER USER {db_connect['DB_USER']} WITH PASSWORD 'listenbrainz'",
+                f"CREATE DATABASE {db_connect['DB_NAME']} WITH OWNER = {db_connect['DB_USER']} TEMPLATE template0 ENCODING = 'UNICODE'"
+            ])
+        else:
+            res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_db.sql'))
+        if not res:
+            raise Exception('Failed to create new database and user! Exit code: %i' % res)
+
+        if "PYTHON_TESTS_RUNNING" in os.environ:
+            db.init_db_connection(db_connect["DB_CONNECT_ADMIN_LB"])
+        else:
+            db.init_db_connection(config.POSTGRES_ADMIN_LB_URI)
+
         print('PG: Creating database extensions...')
-        res = db.run_sql_script_without_transaction(
-            os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
-    # Don't raise an exception if the extension already exists
+        # Don't raise an exception if the extension already exists
+        res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
+
+        res = db.run_sql_query_without_transaction(
+            [f"ALTER DATABASE {db_connect['DB_NAME']} SET pg_trgm.word_similarity_threshold = 0.1"])
+        if not res:
+            raise Exception('Failed to create to set pg_trgm.word_similarity_threshold! Exit code: %i' % res)
 
     application = webserver.create_app()
     with application.app_context():
@@ -87,15 +108,38 @@ def init_db(force, create_db):
 
         print('PG: Creating tables...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
+        res = db.run_sql_query_without_transaction(
+            [f"GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO {db_connect['DB_NAME']}"])
+        if not res:
+            raise Exception('Failed to set table priviledges! Exit code: %i' % res)
 
         print('PG: Creating primary and foreign keys...')
-        db.run_sql_script(os.path.join(
-            ADMIN_SQL_DIR, 'create_primary_keys.sql'))
-        db.run_sql_script(os.path.join(
-            ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
 
         print('PG: Creating indexes...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
+
+        print("Done!")\
+
+@cli.command(name="update_db")
+@click.argument('filename', type=click.Path(exists=True, dir_okay=False))
+def update_db(filename):
+    """Updates the datbase by running the specified SQL file at FILENAME
+    """
+    from listenbrainz import config
+    if "PYTHON_TESTS_RUNNING" in os.environ:
+        db_connect = db.create_test_database_connect_strings()
+        db.init_db_connection(db_connect["DB_CONNECT_ADMIN"])
+        config.PYTHON_TESTS_RUNNING = True
+    else:
+        db_connect = {"DB_NAME": "listenbrainz", "DB_USER": "listenbrainz"}
+        db.init_db_connection(config.POSTGRES_ADMIN_URI)
+
+    application = webserver.create_app()
+    with application.app_context():
+        print('PG: Running DB migration script %s...' % filename)
+        db.run_sql_script(filename)
 
         print("Done!")
 
@@ -112,21 +156,32 @@ def init_ts_db(force, create_db):
         3. Views are created
     """
     from listenbrainz import config
-    ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
+    if "PYTHON_TESTS_RUNNING" in os.environ:
+        ts_connect = ts.create_test_timescale_connect_strings()
+        ts.init_db_connection(ts_connect["DB_CONNECT_ADMIN"])
+        config.PYTHON_TESTS_RUNNING = True
+    else:
+        ts_connect = {"DB_NAME": "listenbrainz_ts", "DB_USER": "listenbrainz_ts"}
+        ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
     if force:
-        res = ts.run_sql_script_without_transaction(
-            os.path.join(TIMESCALE_SQL_DIR, 'drop_db.sql'))
+        res = ts.run_sql_query_without_transaction(
+            [f"DROP DATABASE IF EXISTS {ts_connect['DB_NAME']}", f"DROP USER IF EXISTS {ts_connect['DB_USER']}"])
         if not res:
-            raise Exception(
-                'Failed to drop existing database and user! Exit code: %i' % res)
+            raise Exception('Failed to drop existing database/user! Exit code: %i' % res)
 
     if create_db or force:
         print('TS: Creating user and a database...')
         retries = 0
         while True:
             try:
-                res = ts.run_sql_script_without_transaction(
-                    os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
+                if "PYTHON_TESTS_RUNNING" in os.environ:
+                    res = ts.run_sql_query_without_transaction([
+                        f"CREATE USER {ts_connect['DB_USER']} NOCREATEDB NOSUPERUSER",
+                        f"ALTER USER {ts_connect['DB_USER']} WITH PASSWORD 'listenbrainz_ts'",
+                        f"CREATE DATABASE {ts_connect['DB_NAME']} WITH OWNER = {ts_connect['DB_USER']} TEMPLATE template0 ENCODING = 'UNICODE'"
+                    ])
+                else:
+                    res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
                 break
             except sqlalchemy.exc.OperationalError:
                 print("Trapped template1 access error, FFS! Sleeping, trying again.")
@@ -137,21 +192,35 @@ def init_ts_db(force, create_db):
                 continue
 
         if not res:
-            raise Exception(
-                'Failed to create new database and user! Exit code: %i' % res)
+            raise Exception('Failed to create new database and user! Exit code: %i' % res)
 
-        ts.init_db_connection(config.TIMESCALE_ADMIN_LB_URI)
+        if "PYTHON_TESTS_RUNNING" in os.environ:
+            ts.init_db_connection(ts_connect["DB_CONNECT_ADMIN_LB"])
+        else:
+            ts.init_db_connection(config.TIMESCALE_ADMIN_LB_URI)
+
         print('TS: Creating database extensions...')
-        res = ts.run_sql_script_without_transaction(
-            os.path.join(TIMESCALE_SQL_DIR, 'create_extensions.sql'))
-    # Don't raise an exception if the extension already exists
+        res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_extensions.sql'))
+        # Don't raise an exception if the extension already exists
+        # TODO fix this
+        if not res:
+            raise Exception('Failed to create ts extension! Exit code: %i' % res)
 
-    ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
+        res = ts.run_sql_query_without_transaction(
+            [f"ALTER DATABASE {ts_connect['DB_NAME']} SET pg_trgm.word_similarity_threshold = 0.1"])
+        if not res:
+            raise Exception('Failed to create to set pg_trgm.word_similarity_threshold! Exit code: %i' % res)
+
+
+    if "PYTHON_TESTS_RUNNING" in os.environ:
+        ts.init_db_connection(ts_connect["DB_CONNECT"])
+    else:
+        ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
+
     application = webserver.create_app()
     with application.app_context():
         print('TS: Creating Schemas...')
-        ts.run_sql_script(os.path.join(
-            TIMESCALE_SQL_DIR, 'create_schemas.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_schemas.sql'))
 
         print('TS: Creating Types...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_types.sql'))
@@ -159,21 +228,18 @@ def init_ts_db(force, create_db):
         print('TS: Creating tables...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
 
+        print('TS: Insert default rows...')
+        res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'insert_default_data.sql'))
+
         print('TS: Creating views...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
-
-        print('TS: Creating Functions...')
-        ts.run_sql_script(os.path.join(
-            TIMESCALE_SQL_DIR, 'create_functions.sql'))
 
         print('TS: Creating indexes...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
 
         print('TS: Creating Primary and Foreign Keys...')
-        ts.run_sql_script(os.path.join(
-            TIMESCALE_SQL_DIR, 'create_primary_keys.sql'))
-        ts.run_sql_script(os.path.join(
-            TIMESCALE_SQL_DIR, 'create_foreign_keys.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_primary_keys.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_foreign_keys.sql'))
 
         print("Done!")
 
@@ -257,7 +323,7 @@ def submit_release(user, token, releasembid):
         import listenbrainz.db.user
         application = webserver.create_app()
         with application.app_context():
-            user_ob = listenbrainz.db.user.get_by_mb_id(user)
+            user_ob = listenbrainz.db.user.get_by_mb_id(webserver.db_conn, user)
             if user_ob is None:
                 raise click.ClickException(f"No such user: {user}")
             token = user_ob["auth_token"]
@@ -272,41 +338,25 @@ def notify_yim_users(year: int):
     application = webserver.create_app()
     with application.app_context():
         from listenbrainz.db import year_in_music
-        year_in_music.notify_yim_users(year)
+        year_in_music.notify_yim_users(webserver.db_conn, webserver.ts_conn, year)
 
 
 @cli.command()
-def listen_add_userid():
-    """
-        Fill in the listen.user_id field based on user_name.
-    """
-    app = create_app()
-    with app.app_context():
-        timescale_fill_userid.fill_userid()
-
-
-@cli.command()
-def msb_transfer_db():
-    """ Transfer MsB tables from MsB DB to TS DB"""
-    with create_app().app_context():
-        transfer_to_timescale.run()
-
-
-@cli.command()
-@click.option("--create-all", is_flag=True, help="Create the daily jams for all users. if false (default), only for users according to timezone.")
+@click.option("--create-all",
+              is_flag=True,
+              help="Create the daily jams for all users. if false (default), only for users according to timezone.")
 def run_daily_jams(create_all):
     """ Generate daily playlists for users soon after the new day begins in their timezone. This is an internal LB
     method and not a core function of troi.
     """
     with create_app().app_context():
-        run_daily_jams_troi_bot(create_all)
+        run_daily_jams_troi_bot(webserver.db_conn, webserver.ts_conn, create_all)
 
 
 @cli.command()
-def run_spotify_metadata_cache_seeder():
-    """ Query spotify new releases api for new releases and submit those to our cache as seeds """
-    with create_app().app_context():
-        submit_new_releases_to_cache()
+def run_metadata_cache_seeder():
+    """ Query external services' new releases api for new releases and submit those to our cache as seeds """
+    submit_new_releases_to_cache()
 
 
 @cli.command()
@@ -322,7 +372,7 @@ def clear_expired_do_not_recommends():
     app = create_app()
     with app.app_context():
         app.logger.info("Starting process to clean up expired do not recommends")
-        do_not_recommend.clear_expired()
+        do_not_recommend.clear_expired(webserver.db_conn)
         app.logger.info("Completed process to clean up expired do not recommends")
 
 
@@ -334,3 +384,13 @@ def refresh_top_manual_mappings():
         app.logger.info("Starting process to refresh top manual mappings")
         ts_refresh_top_manual_mappings()
         app.logger.info("Completed process to refresh top manual mappings")
+
+
+@cli.command()
+def delete_old_user_data_exports():
+    """ Delete old and expired user data exports """
+    app = create_app()
+    with app.app_context():
+        app.logger.info("Deleting old and expired user data exports")
+        export.cleanup_old_exports(webserver.db_conn)
+        app.logger.info("Completed deleting old and expired user data exports")
