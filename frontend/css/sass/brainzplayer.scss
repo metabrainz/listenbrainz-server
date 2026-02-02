@@ -1,6 +1,8 @@
 @use "sass:map";
 @use "sass:color";
 
+@import "~react-resizable/css/styles.css";
+
 $primary-color: $listenbrainz-blue;
 $brainzplayer-height: 60px;
 $brainzplayer-padding: 0px;
@@ -60,7 +62,7 @@ $youtube-expanded-width: 1280px;
         height: $cover-art-size;
         width: $cover-art-size;
         position: absolute;
-        // transition: height, width 0.4s;
+        transition: height, width 0.4s;
         bottom: 0;
       }
 
@@ -76,15 +78,43 @@ $youtube-expanded-width: 1280px;
         position: absolute;
         bottom: $brainzplayer-height + 10px;
         right: 10px;
-        height: $youtube-player-height + $youtube-button-size;
-        width: $youtube-player-width;
+        height: auto;
+        width: auto;
         max-width: calc(100vw - 20px);
         @media (min-width: $offscreen-sidenav-breakpoint) {
           max-width: calc(100vw - 200px - 20px);
         }
         z-index: 4;
         text-align: right; // to align the move and reduce buttons
-        transition: $youtube-resize-transition;
+
+        .react-resizable-handle {
+          z-index: 100;
+          position: absolute;
+
+          &.react-resizable-handle-nw {
+            top: 0;
+            left: 0;
+            cursor: nw-resize;
+            width: 20px;
+            height: 20px;
+            z-index: 2;
+            position: absolute;
+            &::after {
+              content: "";
+              width: 12px;
+              height: 12px;
+              transform: rotate(180deg);
+              top: 4px;
+              left: 4px;
+              position: absolute;
+              border-left: 2px solid rgba(255, 255, 255, 0.978);
+              border-top: 2px solid rgba(255, 255, 255, 0.978);
+            }
+            &:hover::after {
+              border-color: #fff;
+            }
+          }
+        }
 
         &.reduced {
           height: $youtube-button-size;
@@ -94,15 +124,18 @@ $youtube-expanded-width: 1280px;
         }
 
         &.expanded {
-          width: min(#{$youtube-expanded-width}, 100%);
-          height: calc(min(70vw, 700px) + #{$youtube-button-size});
-          .youtube-player {
-            height: min(70vw, 700px);
+          .react-resizable-handle {
+            display: none;
           }
         }
 
+        .no-video-interaction {
+          pointer-events: none;
+        }
+
         .youtube-player {
-          height: $youtube-player-height;
+          height: 100%;
+          width: 100%;
           border-radius: 8px;
           border-top-right-radius: 0; // intersection with the square drag handle
           overflow: hidden;
@@ -129,6 +162,13 @@ $youtube-expanded-width: 1280px;
           }
         }
 
+        .youtube-resizable-container {
+          position: relative;
+          > div {
+            height: 100%;
+            width: 100%;
+          }
+        }
       }
     }
   }
