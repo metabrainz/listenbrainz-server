@@ -20,6 +20,8 @@ import Loader from "../../components/Loader";
 
 type ImportListensLoaderData = {
   user_has_email: boolean;
+  pg_timezones: Array<[string, string]>;
+  user_timezone: string;
 };
 
 enum ImportStatus {
@@ -36,6 +38,7 @@ enum Services {
   librefm = "Libre.fm",
   panoscrobbler = "PanoScrobbler",
   maloja = "Maloja",
+  audioscrobbler = "Audioscrobbler/Rockbox",
 }
 const acceptedFileTypes = {
   [Services.spotify]: ".zip",
@@ -44,6 +47,7 @@ const acceptedFileTypes = {
   [Services.librefm]: ".csv",
   [Services.panoscrobbler]: ".jsonl",
   [Services.maloja]: ".json",
+  [Services.audioscrobbler]: ".log",
 };
 type ImportMetadata = {
   filename: string;
@@ -252,7 +256,7 @@ function renderImport(
 
 export default function ImportListens() {
   const data = useLoaderData() as ImportListensLoaderData;
-  const { user_has_email: userHasEmail } = data;
+  const { user_has_email: userHasEmail, pg_timezones, user_timezone } = data;
 
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
 
@@ -511,9 +515,9 @@ export default function ImportListens() {
           <br />
           For <b>{nonZipServices.join(", ")}</b>: please upload single files
           directly (
-          {nonZipServices.map((s) => (
-            <mark>{acceptedFileTypes[s]}, </mark>
-          ))}{" "}
+          <mark>
+            {nonZipServices.map((s) => acceptedFileTypes[s]).join(", ")}
+          </mark>{" "}
           respectively).
         </p>
       </div>
@@ -560,44 +564,84 @@ export default function ImportListens() {
                   onChange={(e) => setFileSelected(!!e.target.files?.length)}
                 />
               </div>
+            </div>
 
-              <div style={{ minWidth: "15em" }}>
-                <label className="form-label" htmlFor="start-datetime">
-                  Start import from (optional):
-                </label>
-                <input
-                  type="date"
-                  id="start-datetime"
-                  className="form-control"
-                  max={new Date().toISOString()}
-                  name="from_date"
-                  title="Date and time to start import at"
+            <details className="mt-3">
+              <summary>
+                <FontAwesomeIcon
+                  icon={faChevronCircleRight}
+                  size="sm"
+                  className="summary-indicator"
                 />
-              </div>
+                Additional options
+              </summary>
+              <div className="flex flex-wrap mt-3" style={{ gap: "1em" }}>
+                <div style={{ minWidth: "15em" }}>
+                  <label className="form-label" htmlFor="start-datetime">
+                    Start import from (optional):
+                  </label>
+                  <input
+                    type="date"
+                    id="start-datetime"
+                    className="form-control"
+                    max={new Date().toISOString()}
+                    name="from_date"
+                    title="Date and time to start import at"
+                  />
+                </div>
 
-              <div style={{ minWidth: "15em" }}>
-                <label className="form-label" htmlFor="end-datetime">
-                  End date for import (optional):
-                </label>
-                <input
-                  type="date"
-                  id="end-datetime"
-                  className="form-control"
-                  max={new Date().toISOString()}
-                  name="to_date"
-                  title="Date and time to end import at"
-                />
-              </div>
+                <div style={{ minWidth: "15em" }}>
+                  <label className="form-label" htmlFor="end-datetime">
+                    End date for import (optional):
+                  </label>
+                  <input
+                    type="date"
+                    id="end-datetime"
+                    className="form-control"
+                    max={new Date().toISOString()}
+                    name="to_date"
+                    title="Date and time to end import at"
+                  />
+                </div>
 
-              <div style={{ flex: 0, alignSelf: "end", minWidth: "15em" }}>
-                <button
-                  type="submit"
-                  className="btn btn-success"
-                  disabled={hasAnImportInProgress || !fileSelected}
-                >
-                  Import Listens
-                </button>
+                <div style={{ minWidth: "15em" }}>
+                  <label className="form-label" htmlFor="timezone">
+                    Timezone (optional):
+                  </label>
+                  <select
+                    className="form-select"
+                    id="timezone"
+                    name="timezone"
+                    defaultValue={user_timezone}
+                    title="Timezone fallback for ambiguous timestamps"
+                    disabled={selectedService !== "audioscrobbler"}
+                  >
+                    <option value="">
+                      Use profile timezone ({user_timezone})
+                    </option>
+                    {pg_timezones.map((zone: string[]) => {
+                      return (
+                        <option key={zone[0]} value={zone[0]}>
+                          {zone[0]} ({zone[1]})
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
               </div>
+            </details>
+
+            <div className="mt-4" style={{ minWidth: "15em" }}>
+              <button
+                type="submit"
+                className="btn btn-success"
+                style={{
+                  padding: "1rem 2.5rem",
+                }}
+                disabled={hasAnImportInProgress || !fileSelected}
+              >
+                Import Listens
+              </button>
             </div>
           </form>
         </div>

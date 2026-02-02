@@ -4,7 +4,7 @@ const feedProps = require("../__mocks__/feedProps.json");
 const pinProps = require("../__mocks__/pinProps.json");
 const freshReleasesSitewideData = require("../__mocks__/freshReleasesSitewideData.json");
 
-const apiService = new APIService("foobar");
+const apiService = new APIService("localhost:1234");
 
 describe("submitListens", () => {
   beforeEach(() => {
@@ -28,25 +28,28 @@ describe("submitListens", () => {
         },
       },
     ]);
-    expect(window.fetch).toHaveBeenCalledWith("foobar/1/submit-listens", {
-      method: "POST",
-      headers: {
-        Authorization: "Token foobar",
-        "Content-Type": "application/json;charset=UTF-8",
-      },
-      body: JSON.stringify({
-        listen_type: "import",
-        payload: [
-          {
-            listened_at: 1000,
-            track_metadata: {
-              artist_name: "foobar",
-              track_name: "bazfoo",
+    expect(window.fetch).toHaveBeenCalledWith(
+      new URL(`${apiService.APIBaseURI}/submit-listens`),
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Token foobar",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({
+          listen_type: "import",
+          payload: [
+            {
+              listened_at: 1000,
+              track_metadata: {
+                artist_name: "foobar",
+                track_name: "bazfoo",
+              },
             },
-          },
-        ],
-      }),
-    });
+          ],
+        }),
+      }
+    );
   });
 
   it("retries if network error / submit fails", async () => {
@@ -206,7 +209,7 @@ describe("submitListens", () => {
     };
     await apiService.submitListens("foobar", "playing_now", listensToSubmit);
     expect(fetchMock).toHaveBeenCalledWith(
-      `${apiService.APIBaseURI}/submit-listens`,
+      new URL(`${apiService.APIBaseURI}/submit-listens?return_msid=true`),
       expect.objectContaining({
         body: JSON.stringify(expectedBody),
       })
@@ -298,21 +301,21 @@ describe("getUserEntity", () => {
   it("calls fetch correctly when optional parameters are passed", async () => {
     await apiService.getUserEntity("foobar", "release", "all_time", 10, 5);
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/stats/user/foobar/releases?offset=10&range=all_time&count=5"
+      `${apiService.APIBaseURI}/stats/user/foobar/releases?offset=10&range=all_time&count=5`
     );
   });
 
   it("calls fetch correctly when username is not passed", async () => {
     await apiService.getUserEntity(undefined, "release", "all_time", 10, 5);
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/stats/sitewide/releases?offset=10&range=all_time&count=5"
+      `${apiService.APIBaseURI}/stats/sitewide/releases?offset=10&range=all_time&count=5`
     );
   });
 
   it("calls fetch correctly when optional parameters are not passed", async () => {
     await apiService.getUserEntity("foobar", "artist");
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/stats/user/foobar/artists?offset=0&range=all_time"
+      `${apiService.APIBaseURI}/stats/user/foobar/artists?offset=0&range=all_time`
     );
   });
 
@@ -353,21 +356,21 @@ describe("getUserListeningActivity", () => {
   it("calls fetch correctly when optional parameters are passed", async () => {
     await apiService.getUserListeningActivity("foobar", "week");
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/stats/user/foobar/listening-activity?range=week"
+      `${apiService.APIBaseURI}/stats/user/foobar/listening-activity?range=week`
     );
   });
 
   it("calls fetch correctly when username is not passed", async () => {
     await apiService.getUserListeningActivity(undefined);
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/stats/sitewide/listening-activity?range=all_time"
+      `${apiService.APIBaseURI}/stats/sitewide/listening-activity?range=all_time`
     );
   });
 
   it("calls fetch correctly when optional parameters are not passed", async () => {
     await apiService.getUserListeningActivity("foobar");
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/stats/user/foobar/listening-activity?range=all_time"
+      `${apiService.APIBaseURI}/stats/user/foobar/listening-activity?range=all_time`
     );
   });
 
@@ -408,14 +411,14 @@ describe("getUserDailyActivity", () => {
   it("calls fetch correctly when optional parameters are passed", async () => {
     await apiService.getUserDailyActivity("foobar", "week");
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/stats/user/foobar/daily-activity?range=week"
+      `${apiService.APIBaseURI}/stats/user/foobar/daily-activity?range=week`
     );
   });
 
   it("calls fetch correctly when optional parameters are not passed", async () => {
     await apiService.getUserDailyActivity("foobar");
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/stats/user/foobar/daily-activity?range=all_time"
+      `${apiService.APIBaseURI}/stats/user/foobar/daily-activity?range=all_time`
     );
   });
 
@@ -456,21 +459,21 @@ describe("getUserArtistMap", () => {
   it("calls fetch correctly when optional parameters are passed", async () => {
     await apiService.getUserArtistMap("foobar", "week", true);
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/stats/user/foobar/artist-map?range=week&force_recalculate=true"
+      `${apiService.APIBaseURI}/stats/user/foobar/artist-map?range=week&force_recalculate=true`
     );
   });
 
   it("calls fetch correctly when optional parameters are not passed", async () => {
     await apiService.getUserArtistMap("foobar");
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/stats/user/foobar/artist-map?range=all_time&force_recalculate=false"
+      `${apiService.APIBaseURI}/stats/user/foobar/artist-map?range=all_time&force_recalculate=false`
     );
   });
 
   it("calls fetch correctly when username is not passed", async () => {
     await apiService.getUserArtistMap(undefined);
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/stats/sitewide/artist-map?range=all_time&force_recalculate=false"
+      `${apiService.APIBaseURI}/stats/sitewide/artist-map?range=all_time&force_recalculate=false`
     );
   });
 
@@ -511,7 +514,7 @@ describe("getUserListenCount", () => {
   it("calls fetch correctly", async () => {
     await apiService.getUserListenCount("fnord");
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/user/fnord/listen-count",
+      `${apiService.APIBaseURI}/user/fnord/listen-count`,
       {
         method: "GET",
       }
@@ -559,7 +562,7 @@ describe("getLatestImport", () => {
   it("encodes url correctly", async () => {
     await apiService.getLatestImport("ईशान", "lastfm");
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/latest-import?user_name=%E0%A4%88%E0%A4%B6%E0%A4%BE%E0%A4%A8&service=lastfm",
+      `${apiService.APIBaseURI}/latest-import?user_name=%E0%A4%88%E0%A4%B6%E0%A4%BE%E0%A4%A8&service=lastfm`,
       {
         method: "GET",
       }
@@ -594,14 +597,17 @@ describe("setLatestImport", () => {
 
   it("calls fetch with correct parameters", async () => {
     await apiService.setLatestImport("foobar", "lastfm", 0);
-    expect(window.fetch).toHaveBeenCalledWith("foobar/1/latest-import", {
-      method: "POST",
-      headers: {
-        Authorization: "Token foobar",
-        "Content-Type": "application/json;charset=UTF-8",
-      },
-      body: JSON.stringify({ ts: 0, service: "lastfm" }),
-    });
+    expect(window.fetch).toHaveBeenCalledWith(
+      `${apiService.APIBaseURI}/latest-import`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Token foobar",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({ ts: 0, service: "lastfm" }),
+      }
+    );
   });
 
   it("calls checkStatus once", async () => {
@@ -633,7 +639,7 @@ describe("submitFeedback", () => {
   it("calls fetch with correct parameters", async () => {
     await apiService.submitFeedback("foobar", 1, "foo", "foombid");
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/feedback/recording-feedback",
+      `${apiService.APIBaseURI}/feedback/recording-feedback`,
       {
         method: "POST",
         headers: {
@@ -652,7 +658,7 @@ describe("submitFeedback", () => {
   it("fetches correclty if called with MBID only", async () => {
     await apiService.submitFeedback("foobar", 1, undefined, "foombid");
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/feedback/recording-feedback",
+      `${apiService.APIBaseURI}/feedback/recording-feedback`,
       {
         method: "POST",
         headers: {
@@ -695,7 +701,7 @@ describe("getFeedbackForUserForRecordings", () => {
       ["new", "old"]
     );
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/feedback/user/foo/get-feedback-for-recordings",
+      `${apiService.APIBaseURI}/feedback/user/foo/get-feedback-for-recordings`,
       {
         method: "POST",
         headers: {
@@ -732,14 +738,17 @@ describe("deleteListen", () => {
 
   it("calls fetch with correct parameters", async () => {
     await apiService.deleteListen("foobar", "foo", 0);
-    expect(window.fetch).toHaveBeenCalledWith("foobar/1/delete-listen", {
-      method: "POST",
-      headers: {
-        Authorization: "Token foobar",
-        "Content-Type": "application/json;charset=UTF-8",
-      },
-      body: JSON.stringify({ listened_at: 0, recording_msid: "foo" }),
-    });
+    expect(window.fetch).toHaveBeenCalledWith(
+      `${apiService.APIBaseURI}/delete-listen`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Token foobar",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({ listened_at: 0, recording_msid: "foo" }),
+      }
+    );
   });
 
   it("calls checkStatus once", async () => {
@@ -773,7 +782,7 @@ describe("getFeedForUser", () => {
   it("calls fetch with correct parameters", async () => {
     await apiService.getFeedForUser("fnord", "shhh", 12345, undefined, 25);
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/user/fnord/feed/events?min_ts=12345&count=25",
+      `${apiService.APIBaseURI}/user/fnord/feed/events?min_ts=12345&count=25`,
       {
         headers: {
           Authorization: "Token shhh",
@@ -830,7 +839,7 @@ describe("recommendTrackToFollowers", () => {
       metadata
     );
     expect(window.fetch).toHaveBeenCalledWith(
-      `foobar/1/user/clark_kent/timeline-event/create/recording`,
+      `${apiService.APIBaseURI}/user/clark_kent/timeline-event/create/recording`,
       {
         method: "POST",
         headers: {
@@ -897,30 +906,36 @@ describe("recommendTrackToFollowers", () => {
 
     it("calls fetch with correct parameters", async () => {
       await apiService.submitPinRecording("foobar", "MSID", "MBID", "BLURB");
-      expect(window.fetch).toHaveBeenCalledWith("foobar/1/pin", {
-        method: "POST",
-        headers: {
-          Authorization: "Token foobar",
-          "Content-Type": "application/json;charset=UTF-8",
-        },
-        body: JSON.stringify({
-          recording_msid: "MSID",
-          recording_mbid: "MBID",
-          blurb_content: "BLURB",
-        }),
-      });
+      expect(window.fetch).toHaveBeenCalledWith(
+        `${apiService.APIBaseURI}/pin`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: "Token foobar",
+            "Content-Type": "application/json;charset=UTF-8",
+          },
+          body: JSON.stringify({
+            recording_msid: "MSID",
+            recording_mbid: "MBID",
+            blurb_content: "BLURB",
+          }),
+        }
+      );
     });
 
     it("calls fetch with correct parameters when parameters are missing", async () => {
       await apiService.submitPinRecording("foobar", "MSID");
-      expect(window.fetch).toHaveBeenCalledWith("foobar/1/pin", {
-        method: "POST",
-        headers: {
-          Authorization: "Token foobar",
-          "Content-Type": "application/json;charset=UTF-8",
-        },
-        body: JSON.stringify({ recording_msid: "MSID" }),
-      });
+      expect(window.fetch).toHaveBeenCalledWith(
+        `${apiService.APIBaseURI}/pin`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: "Token foobar",
+            "Content-Type": "application/json;charset=UTF-8",
+          },
+          body: JSON.stringify({ recording_msid: "MSID" }),
+        }
+      );
     });
 
     it("calls checkStatus once", async () => {
@@ -951,13 +966,16 @@ describe("recommendTrackToFollowers", () => {
 
     it("calls fetch with user token", async () => {
       await apiService.unpinRecording("foobar");
-      expect(window.fetch).toHaveBeenCalledWith("foobar/1/pin/unpin", {
-        method: "POST",
-        headers: {
-          Authorization: "Token foobar",
-          "Content-Type": "application/json;charset=UTF-8",
-        },
-      });
+      expect(window.fetch).toHaveBeenCalledWith(
+        `${apiService.APIBaseURI}/pin/unpin`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: "Token foobar",
+            "Content-Type": "application/json;charset=UTF-8",
+          },
+        }
+      );
     });
 
     it("calls checkStatus once", async () => {
@@ -986,13 +1004,16 @@ describe("recommendTrackToFollowers", () => {
 
     it("calls fetch with correct parameters", async () => {
       await apiService.deletePin("foobar", 1337);
-      expect(window.fetch).toHaveBeenCalledWith("foobar/1/pin/delete/1337", {
-        method: "POST",
-        headers: {
-          Authorization: "Token foobar",
-          "Content-Type": "application/json;charset=UTF-8",
-        },
-      });
+      expect(window.fetch).toHaveBeenCalledWith(
+        `${apiService.APIBaseURI}/pin/delete/1337`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: "Token foobar",
+            "Content-Type": "application/json;charset=UTF-8",
+          },
+        }
+      );
     });
 
     it("calls checkStatus once", async () => {
@@ -1025,7 +1046,7 @@ describe("getPinsForUser", () => {
   it("calls fetch with correct parameters", async () => {
     await apiService.getPinsForUser("jdaok", 25, 25);
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/jdaok/pins?offset=25&count=25",
+      `${apiService.APIBaseURI}/jdaok/pins?offset=25&count=25`,
       {
         method: "GET",
       }
@@ -1078,7 +1099,7 @@ describe("submitReviewToCB", () => {
   it("calls fetch with correct parameters", async () => {
     await apiService.submitReviewToCB("fnord", "baz", reviewToSubmit);
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/user/fnord/timeline-event/create/review",
+      `${apiService.APIBaseURI}/user/fnord/timeline-event/create/review`,
       {
         method: "POST",
         headers: {
@@ -1132,7 +1153,7 @@ describe("deleteFeedEvent", () => {
       1337
     );
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/user/riksucks/feed/events/delete",
+      `${apiService.APIBaseURI}/user/riksucks/feed/events/delete`,
       {
         method: "POST",
         headers: {
@@ -1201,7 +1222,7 @@ describe("hideFeedEvent", () => {
       1337
     );
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/user/riksucks/feed/events/hide",
+      `${apiService.APIBaseURI}/user/riksucks/feed/events/hide`,
       {
         method: "POST",
         headers: {
@@ -1270,7 +1291,7 @@ describe("unhideFeedEvent", () => {
       1337
     );
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/user/riksucks/feed/events/unhide",
+      `${apiService.APIBaseURI}/user/riksucks/feed/events/unhide`,
       {
         method: "POST",
         headers: {
@@ -1334,16 +1355,19 @@ describe("resetUserTimezone", () => {
 
   it("calls fetch with correct parameters", async () => {
     await apiService.resetUserTimezone("foobar", "America/Denver");
-    expect(window.fetch).toHaveBeenCalledWith("foobar/1/settings/timezone", {
-      method: "POST",
-      headers: {
-        Authorization: "Token foobar",
-        "Content-Type": "application/json;charset=UTF-8",
-      },
-      body: JSON.stringify({
-        zonename: "America/Denver",
-      }),
-    });
+    expect(window.fetch).toHaveBeenCalledWith(
+      `${apiService.APIBaseURI}/settings/timezone`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Token foobar",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({
+          zonename: "America/Denver",
+        }),
+      }
+    );
   });
 
   it("calls checkStatus once", async () => {
@@ -1376,7 +1400,7 @@ describe("exportPlaylistToSpotify", () => {
       apiService.exportPlaylistToSpotify("auth", "bar")
     ).resolves.toEqual(response);
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/playlist/bar/export/spotify",
+      `${apiService.APIBaseURI}/playlist/bar/export/spotify`,
       {
         method: "POST",
         headers: {
@@ -1409,7 +1433,7 @@ describe("Fresh Releases", () => {
       )
     ).resolves.toEqual(freshReleasesSitewideData);
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/explore/fresh-releases/?days=2&release_date=2020-12-27"
+      `${apiService.APIBaseURI}/explore/fresh-releases/?days=2&release_date=2020-12-27`
     );
   });
 
@@ -1437,7 +1461,7 @@ describe("Fresh Releases", () => {
       )
     ).resolves.toEqual(response);
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/explore/fresh-releases/?release_date=12-31-1988"
+      `${apiService.APIBaseURI}/explore/fresh-releases/?release_date=12-31-1988`
     );
   });
 
@@ -1456,7 +1480,7 @@ describe("Fresh Releases", () => {
       response
     );
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/explore/fresh-releases/?days=120"
+      `${apiService.APIBaseURI}/explore/fresh-releases/?days=120`
     );
   });
 
@@ -1484,7 +1508,7 @@ describe("Fresh Releases", () => {
       )
     ).resolves.toEqual(response);
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/explore/fresh-releases/?days=50&sort=confidence"
+      `${apiService.APIBaseURI}/explore/fresh-releases/?days=50&sort=confidence`
     );
   });
 });
