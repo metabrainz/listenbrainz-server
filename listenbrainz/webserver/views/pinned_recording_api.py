@@ -172,15 +172,15 @@ def get_pin_by_id(row_id):
     if pin is None:
         raise APINotFound("Cannot find pin with row_id '%s'" % row_id)
 
-    user = db_user.get_by_id(db_conn, pin.user_id)
-    if user is None:
+    user_map = db_user.get_users_by_id(db_conn, [pin.user_id])
+    if pin.user_id not in user_map:
         raise APINotFound("Cannot find user for pin with row_id '%s'" % row_id)
 
     pins_with_metadata = fetch_track_metadata_for_items(ts_conn, [pin])
     pin = pins_with_metadata[0] if pins_with_metadata else pin
 
     pin_data = pin.to_api()
-    pin_data["user_name"] = user["musicbrainz_id"]
+    pin_data["user_name"] = user_map[pin.user_id]
 
     return jsonify({"pinned_recording": pin_data})
 
