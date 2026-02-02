@@ -979,7 +979,7 @@ export default class APIService {
     return response.status;
   };
 
-  undoDeleteListen = async (
+  cancelDeleteListen = async (
     userToken: string,
     recordingMSID: string,
     listenedAt: number
