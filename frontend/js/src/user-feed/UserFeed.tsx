@@ -240,9 +240,12 @@ export default function UserFeedPage() {
                 event_type: EventType.RECORDING_PIN,
                 user_name: pin.user_name,
                 created: pin.created,
-                metadata: pin,
+                metadata: {
+                  ...pin,
+                  listened_at: pin.created,
+                },
                 hidden: false,
-              } as TimelineEvent<EventMetadata>;
+              } as TimelineEvent<PinEventMetadata>;
             },
           });
         }
