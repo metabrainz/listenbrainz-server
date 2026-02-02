@@ -116,14 +116,14 @@ export default function ExplorePage() {
             <h3>Archived</h3>
             <hr />
           </div>
-          <div className="row" style="opacity:0.5;">
+          <div className="row" style={{ opacity: "0.5" }}>
             <ExploreCard
               name="Cover Art Collage"
               desc="Discover"
               img_name="cover-art-collage.jpg"
               url="/explore/cover-art-collage/"
             />
-            
+
             <ExploreCard
               name="Your Year in Music 2024"
               desc="Archival version of Year In Music 2024"
