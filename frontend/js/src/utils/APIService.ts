@@ -1634,7 +1634,7 @@ export default class APIService {
     return result.payload.events?.[0];
   };
 
-  getPin = async (pinId: number): Promise<TimelineEvent<EventMetadata>> => {
+  getPin = async (pinId: number): Promise<PinnedRecording> => {
     if (!pinId) {
       throw new SyntaxError("Pin ID not present");
     }
@@ -1644,16 +1644,7 @@ export default class APIService {
     });
     await this.checkStatus(response);
     const result = await response.json();
-    const pin = result.pinned_recording;
-    // Format as a TimelineEvent for consistency with other feed events
-    return {
-      id: pin.row_id,
-      event_type: "recording_pin" as EventTypeT,
-      user_name: pin.user_name,
-      created: pin.created,
-      metadata: pin,
-      hidden: false,
-    };
+    return result.pinned_recording;
   };
 
   deleteFeedEvent = async (

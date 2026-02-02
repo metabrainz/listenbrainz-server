@@ -228,11 +228,22 @@ export default function UserFeedPage() {
       // Prefetch each missing original event missing from thank you events
       // separately from fetching the feed pages
       const promises = missingEvents.map(({ id, type }) => {
-        // Use different API endpoint for recording_pin events
+        // recording_pin events are not regular timeline events but rather pins from a separate database table
         if (type === EventType.RECORDING_PIN) {
           return queryClient.ensureQueryData({
             queryKey: ["pin", id],
-            queryFn: () => APIService.getPin(id),
+            queryFn: async () => {
+              const pin = await APIService.getPin(id);
+              // Format as a TimelineEvent for consistency with other feed events
+              return {
+                id: pin.row_id,
+                event_type: EventType.RECORDING_PIN,
+                user_name: pin.user_name,
+                created: pin.created,
+                metadata: pin,
+                hidden: false,
+              } as TimelineEvent<EventMetadata>;
+            },
           });
         }
         return queryClient.ensureQueryData({
