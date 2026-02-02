@@ -425,6 +425,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
               {!isMobile && (
                 <FontAwesomeIcon
                   icon={getVolumeIcon()}
+                  fixedWidth
                   style={{ color: showVolume ? "green" : "" }}
                   onClick={() => setShowVolume(!showVolume)}
                   className="d-none d-md-block"
