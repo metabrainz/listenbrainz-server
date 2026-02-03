@@ -66,6 +66,7 @@ import {
   replaceQueueAndResetAtom,
   isActivatedAtom,
   clearQueuesBeforeListenAndSetQueuesAtom,
+  showVolumeSliderAtom,
 } from "./BrainzPlayerAtoms";
 
 import useWindowTitle from "./hooks/useWindowTitle";
@@ -193,7 +194,8 @@ export default function BrainzPlayer() {
   };
 
   // Context Atoms - Values
-  const volume = useAtomValue(volumeAtom);
+  const [volume, setVolume] = useAtom(volumeAtom);
+  const lastVolumeRef = React.useRef(100);
   const queueRepeatMode = useAtomValue(queueRepeatModeAtom);
 
   // Context Atoms - Setters
@@ -225,7 +227,17 @@ export default function BrainzPlayer() {
   const addOrSkipToListenInQueue = useSetAtom(
     clearQueuesBeforeListenAndSetQueuesAtom
   );
-
+  const setShowVolumeSlider = useSetAtom(showVolumeSliderAtom);
+  const volumeSliderTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const showVolumeBriefly = React.useCallback(() => {
+    setShowVolumeSlider(true);
+    if (volumeSliderTimeoutRef.current) {
+      clearTimeout(volumeSliderTimeoutRef.current);
+    }
+    volumeSliderTimeoutRef.current = setTimeout(() => {
+      setShowVolumeSlider(false);
+    }, 2000);
+  }, [setShowVolumeSlider]);
   const getProgressMs = () => store.get(progressMsAtom);
   const getQueue = () => store.get(queueAtom);
   const getAmbientQueue = () => store.get(ambientQueueAtom);
@@ -277,7 +289,7 @@ export default function BrainzPlayer() {
 
   // Constants
   // By how much should we seek in the track?
-  const SEEK_TIME_MILLISECONDS = 5000;
+  const SEEK_TIME_MILLISECONDS = 10000;
   // Wait X milliseconds between start of song and sending a full listen
   const SUBMIT_LISTEN_AFTER_MS = 30000;
   // Check if it's time to submit the listen every X milliseconds
@@ -759,18 +771,12 @@ export default function BrainzPlayer() {
   const seekBackward = (): void => {
     seekToPositionMs(getProgressMs() - SEEK_TIME_MILLISECONDS);
   };
+  const increaseVolume = (): void => {
+    setVolume((prev) => Math.min(100, Math.ceil((prev + 5) / 5) * 5));
+  };
 
-  const mediaSessionHandlers = [
-    { action: "previoustrack", handler: playPreviousTrack },
-    { action: "nexttrack", handler: playNextTrack },
-    { action: "seekbackward", handler: seekBackward },
-    { action: "seekforward", handler: seekForward },
-  ];
-
-  const activatePlayerAndPlay = async () => {
-    await activatePlayer();
-    overwriteMediaSession(mediaSessionHandlers);
-    playNextTrack();
+  const decreaseVolume = (): void => {
+    setVolume((prev) => Math.max(0, Math.floor((prev - 5) / 5) * 5));
   };
 
   const togglePlay = () => {
@@ -787,6 +793,105 @@ export default function BrainzPlayer() {
     } catch (error) {
       handleError(error, "Could not play");
     }
+  };
+
+  const handleNumberKeySkip = React.useCallback(
+    (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+      if (event.code === "Space") {
+        event.preventDefault();
+        togglePlay();
+        return;
+      }
+      if (event.key === "m" || event.key === "M") {
+        event.preventDefault();
+        if (volume > 0) {
+          lastVolumeRef.current = volume;
+          setVolume(0);
+        } else {
+          setVolume(lastVolumeRef.current || 100);
+        }
+        return;
+      }
+
+      const durationMs = store.get(durationMsAtom);
+      if (!durationMs) {
+        return;
+      }
+      if (event.code === "ArrowLeft") {
+        event.preventDefault();
+        seekBackward();
+        return;
+      }
+      if (event.code === "ArrowRight") {
+        event.preventDefault();
+        seekForward();
+        return;
+      }
+      if (event.code === "ArrowUp") {
+        event.preventDefault();
+        increaseVolume();
+        showVolumeBriefly();
+        return;
+      }
+      if (event.code === "ArrowDown") {
+        event.preventDefault();
+        decreaseVolume();
+        showVolumeBriefly();
+        return;
+      }
+      const keyAsNumber = Number(event.key);
+      if (
+        Number.isInteger(keyAsNumber) &&
+        keyAsNumber >= 0 &&
+        keyAsNumber <= 9
+      ) {
+        event.preventDefault();
+        const seekToMs = (durationMs * keyAsNumber * 10) / 100;
+        seekToPositionMs(seekToMs);
+      }
+    },
+    [
+      store,
+      seekToPositionMs,
+      dataSourceRefs,
+      volume,
+      setVolume,
+      togglePlay,
+      seekBackward,
+      seekForward,
+      increaseVolume,
+      decreaseVolume,
+      showVolumeBriefly,
+    ]
+  );
+
+  React.useEffect(() => {
+    window.addEventListener("keydown", handleNumberKeySkip, true);
+    return () => {
+      window.removeEventListener("keydown", handleNumberKeySkip, true);
+    };
+  }, [handleNumberKeySkip]);
+
+  const mediaSessionHandlers = [
+    { action: "previoustrack", handler: playPreviousTrack },
+    { action: "nexttrack", handler: playNextTrack },
+    { action: "seekbackward", handler: seekBackward },
+    { action: "seekforward", handler: seekForward },
+  ];
+
+  const activatePlayerAndPlay = async () => {
+    await activatePlayer();
+    overwriteMediaSession(mediaSessionHandlers);
+    playNextTrack();
   };
 
   /* Listeners for datasource events */
