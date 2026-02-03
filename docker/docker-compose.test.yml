@@ -5,7 +5,7 @@
 services:
 
   lb_db:
-    image: timescale/timescaledb:2.6.0-pg12
+    image: timescale/timescaledb:latest-pg14
     command: postgres -F
     environment:
       POSTGRES_PASSWORD: 'postgres'
