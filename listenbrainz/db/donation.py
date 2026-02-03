@@ -124,7 +124,6 @@ def get_recent_donors(meb_conn, db_conn, count: int, offset: int):
           FROM payment
          WHERE editor_id IS NOT NULL
            AND is_donation = 't'
-           AND (anonymous != 't' OR anonymous IS NULL)
            AND payment_date >= (NOW() - INTERVAL '1 year')
       ORDER BY payment_date DESC
     """
@@ -152,7 +151,6 @@ def get_biggest_donors(meb_conn, db_conn, count: int, offset: int):
           FROM payment
          WHERE editor_id IS NOT NULL
            AND is_donation = 't'
-           AND (anonymous != 't' OR anonymous IS NULL)
            AND payment_date >= (NOW() - INTERVAL '1 year')
         )
         SELECT editor_name
@@ -209,7 +207,6 @@ def are_users_eligible_donors(meb_conn, musicbrainz_row_ids: list[int]):
                   FROM payment
                  WHERE editor_id = e.editor_id
                    AND is_donation = 't'
-                   AND (anonymous != 't' OR anonymous IS NULL)
                    AND payment_date >= (NOW() - INTERVAL '1 year')
                ) AS show_flair
           FROM unnest(:editor_ids) as e (editor_id)

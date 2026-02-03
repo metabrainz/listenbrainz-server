@@ -35,6 +35,7 @@ interface AddAlbumListensProps {
   onPayloadChange: (listens: Listen[]) => void;
   switchMode: (text: string) => void;
   initialText?: string;
+  onSearchTextChange?: (text: string) => void;
 }
 
 export type MBReleaseWithMetadata = MusicBrainzRelease &
@@ -98,7 +99,12 @@ export function TrackRow({ track, isChecked, onClickCheckbox }: TrackRowProps) {
 }
 
 const AddAlbumListens = forwardRef(function AddAlbumListens(
-  { onPayloadChange, switchMode, initialText }: AddAlbumListensProps,
+  {
+    onPayloadChange,
+    switchMode,
+    initialText,
+    onSearchTextChange,
+  }: AddAlbumListensProps,
   ref
 ) {
   const { APIService } = useContext(GlobalAppContext);
@@ -260,6 +266,8 @@ const AddAlbumListens = forwardRef(function AddAlbumListens(
         switchMode={switchMode}
         ref={searchInputRef}
         requiredInput={selectedAlbumMBID === undefined}
+        defaultValue={initialText}
+        onSearchTextChange={onSearchTextChange}
       />
       <div className="track-info">
         {selectedAlbum && (

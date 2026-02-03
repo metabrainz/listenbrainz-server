@@ -1,7 +1,7 @@
 import * as React from "react";
 import "external-svg-loader";
 
-type PreviewProps = {
+type PreviewProps = React.SVGProps<SVGSVGElement> & {
   size?: number;
   url: string;
   showCaption?: boolean;
@@ -17,7 +17,7 @@ const Preview = React.forwardRef(function PreviewComponent(
   ref: React.ForwardedRef<SVGSVGElement>
 ) {
   const [error, setError] = React.useState<string>();
-  const { url, styles, size = 750, showCaption } = props;
+  const { url, styles, size = 750, showCaption, ...svgProps } = props;
   const { textColor, bgColor1, bgColor2 } = styles;
 
   React.useEffect(() => {
@@ -61,6 +61,7 @@ const Preview = React.forwardRef(function PreviewComponent(
       viewBox={`0 0 ${size} ${size}`}
       height={size}
       width={size}
+      {...svgProps}
     >
       <style>
         {!showCaption
@@ -70,26 +71,32 @@ const Preview = React.forwardRef(function PreviewComponent(
           ? `
           text > tspan,
           .accent-color {
-          fill: ${textColor};
+          fill: ${textColor} !important;
         }
         .accent-color-stroke {
-          stroke: ${textColor};
+          stroke: ${textColor} !important;
         }
           `
           : ""}
         {bgColor1
           ? `
-          stop:first-child { stop-color: ${bgColor1}; }
-          .bg-color-1 { fill: ${bgColor1}; }
+          stop:first-child { stop-color: ${bgColor1} !important; }
+          .bg-color-1 { fill: ${bgColor1} !important; }
         `
           : ""}
         {bgColor2
           ? `
-          stop:nth-child(2) { stop-color: ${bgColor2}; }
-          .bg-color-2 { fill: ${bgColor2}; }`
+          stop:nth-child(2) { stop-color: ${bgColor2} !important; }
+          .bg-color-2 { fill: ${bgColor2} !important; }`
           : ""}
       </style>
-      <svg data-src={url} data-js="enabled" data-cache="21600" />
+      <svg
+        data-src={url}
+        data-js="enabled"
+        data-cache="21600"
+        height={size}
+        width={size}
+      />
     </svg>
   );
 });

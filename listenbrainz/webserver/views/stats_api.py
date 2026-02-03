@@ -2,6 +2,7 @@ import calendar
 import heapq
 from typing import Dict, Tuple, Optional
 
+import psycopg2.extras
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, jsonify, request
 
@@ -16,7 +17,6 @@ from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_era_activity import EraActivityRecord
 from data.model.user_artist_evolution_activity import ArtistEvolutionActivityRecord
 from listenbrainz.db import year_in_music as db_year_in_music
-from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.db.year_in_music import LAST_FM_FOUNDING_YEAR, MAX_YEAR_IN_MUSIC_YEAR
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
@@ -46,17 +46,17 @@ def get_artist(user_name):
             "payload": {
                 "artists": [
                     {
-                       "artist_mbids": ["93e6118e-7fa8-49f6-9e02-699a1ebce105"],
+                       "artist_mbid": "93e6118e-7fa8-49f6-9e02-699a1ebce105",
                        "artist_name": "The Local train",
                        "listen_count": 385
                     },
                     {
-                       "artist_mbids": ["ae9ed5e2-4caf-4b3d-9cb3-2ad626b91714"],
+                       "artist_mbid": "ae9ed5e2-4caf-4b3d-9cb3-2ad626b91714",
                        "artist_name": "Lenka",
                        "listen_count": 333
                     },
                     {
-                       "artist_mbids": ["cc197bad-dc9c-440d-a5b5-d52ba2e14234"],
+                       "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234",
                        "artist_name": "Coldplay",
                        "listen_count": 321
                     }
@@ -72,7 +72,7 @@ def get_artist(user_name):
         }
 
     .. note::
-        ``artist_mbids`` is an optional field and may not be present in all the responses
+        ``artist_mbid`` is an optional field and may not be present in all the responses
 
 
     :param count: Optional, number of artists to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
@@ -459,15 +459,22 @@ def _get_artist_activity(release_groups_list):
 
     artist_mbids = [x["artist_mbid"] for x in top_results if x["artist_mbid"] is not None]
     if artist_mbids:
-        metadata = get_metadata_for_artist(ts_conn, artist_mbids)
+        query = """
+        SELECT
+            artist_mbid,
+            artist_data->>'name' AS artist_name
+        FROM mapping.mb_artist_metadata_cache
+        WHERE artist_mbid IN %s
+        """
+        artist_mbid_tuple = tuple(artist_mbids)
+        with ts_conn.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+            curs.execute(query, (artist_mbid_tuple,))
+            artist_mbid_name_map = {str(row["artist_mbid"]): row["artist_name"] for row in curs.fetchall() if row["artist_name"]}
+
         # replace credited artist name on release group with artist name where possible
-        artist_mbid_name_map: dict[str, str] = {
-            str(item.artist_mbid): item.artist_data["name"]
-            for item in metadata
-        }
         for result in top_results:
             artist_mbid = result["artist_mbid"]
-            if artist_mbid in artist_mbid_name_map:
+            if artist_mbid and artist_mbid in artist_mbid_name_map:
                 result["artist_name"] = artist_mbid_name_map[artist_mbid]
 
     return top_results
@@ -737,9 +744,9 @@ def get_artist_evolution_activity(user_name: str):
 
     .. note::
         - ``time_unit`` depends on the stats range:
-            * ``week``  → weekday names (Monday..Sunday)
-            * ``month`` → day numbers as strings ("1".."31")
-            * ``year``  → month names (January..December)
+            * ``week``, ``this_week``  → weekday names (Monday..Sunday)
+            * ``month``, ``this_month`` → day numbers as strings ("1".."31")
+            * ``year``, ``this_year``, ``half_yearly``, ``quarter``  → month names (January..December)
             * ``all_time`` → calendar years as strings ("2019", "2020", ...)
         - ``artist_mbid`` may be null/omitted if unavailable.
 
@@ -1099,12 +1106,12 @@ def get_sitewide_artist():
             "payload": {
                 "artists": [
                     {
-                        "artist_mbids": [],
+                        "artist_mbid": null,
                         "artist_name": "Kanye West",
                         "listen_count": 1305
                     },
                     {
-                        "artist_mbids": ["0b30341b-b59d-4979-8130-b66c0e475321"],
+                        "artist_mbid": "0b30341b-b59d-4979-8130-b66c0e475321",
                         "artist_name": "Lil Nas X",
                         "listen_count": 1267
                     }
@@ -1120,7 +1127,7 @@ def get_sitewide_artist():
         }
 
     .. note::
-        - ``artist_mbids`` is optional field and may not be present in all the entries
+        - ``artist_mbid`` is optional field and may not be present in all the entries
         - We only calculate the top 1000 artists for each time period.
 
     :param count: Optional, number of artists to return for each time range,
@@ -1640,9 +1647,9 @@ def get_sitewide_artist_evolution_activity():
 
     .. note::
         - ``time_unit`` depends on the stats range:
-            * ``week``  → weekday names (Monday..Sunday)
-            * ``month`` → day numbers as strings ("1".."31")
-            * ``year``  → month names (January..December)
+            * ``week``, ``this_week``  → weekday names (Monday..Sunday)
+            * ``month``, ``this_month`` → day numbers as strings ("1".."31")
+            * ``year``, ``this_year``, ``half_yearly``, ``quarter``  → month names (January..December)
             * ``all_time`` → calendar years as strings ("2019", "2020", ...)
         - ``artist_mbid`` may be null/omitted if unavailable.
         - Shape matches ``/user/<user_name>/artist-evolution-activity`` for easy client reuse.
@@ -1740,33 +1747,225 @@ def get_sitewide_artist_map():
     })
 
 
-@stats_api_bp.get("/user/<mb_username:user_name>/year-in-music/legacy/<int:year>")
-@crossdomain
-@ratelimit()
-def legacy_year_in_music(user_name: str, year: int):
-    """ Get data for legacy year in music stuff """
-    if year < 2021 or year > 2024:
-        raise APINotFound(f"Cannot find legacy Year in Music report for year: {year}")
-
-    user = db_user.get_by_mb_id(db_conn, user_name)
-    if user is None:
-        raise APINotFound(f"Cannot find user: {user_name}")
-
-    return jsonify({
-        "payload": {
-            "user_name": user_name,
-            "data": db_year_in_music.get(user["id"], year, legacy=True) or {}
-        }
-    })
-
-
-
 @stats_api_bp.get("/user/<mb_username:user_name>/year-in-music")
 @stats_api_bp.get("/user/<mb_username:user_name>/year-in-music/<int:year>")
 @crossdomain
 @ratelimit()
-def year_in_music(user_name: str, year: int = 2024):
-    """ Get data for year in music stuff """
+def year_in_music(user_name: str, year: int = 2025):
+    """
+    Get the Year in Music data for specific user. It returns a JSON object containing all calculated Year in Music
+    statistics for the specified user and year.
+
+    A sample response from the endpoint may look like:
+ 
+    .. code-block:: json
+
+        {
+            "payload": {
+                "user_name": "example_user",
+                "year": 2025,
+                "data": {
+                    "artist_evolution_activity": [
+                        {
+                            "artist_mbid": "artist_mbid_example",
+                            "artist_name": "Example Artist",
+                            "listen_count": 7,
+                            "time_unit": "September"
+                        }
+                    ],
+                    "artist_map": [
+                        {
+                            "country": "USA",
+                            "artist_count": 3,
+                            "listen_count": 920,
+                            "artists": [
+                                {
+                                    "artist_mbid": "artist_mbid_1",
+                                    "artist_name": "Artist One",
+                                    "listen_count": 191
+                                },
+                                ...,
+                            ]
+                        }
+                    ],
+                    "day_of_week": "Monday",
+                    "genre_activity": [
+                        {
+                            "genre": "alternative pop",
+                            "hour": 21,
+                            "listen_count": 13
+                        },
+                        ...,
+                    ],
+                    "listens_per_day": [
+                        {
+                            "from_ts": 1735689600,
+                            "to_ts": 1735775999,
+                            "time_range": "01 January 2025",
+                            "listen_count": 0
+                        },
+                        ...,
+                    ],
+                    "most_listened_year": {
+                        "1957": 2,
+                        "1928": 1,
+                        ...,
+                    },
+                    "new_releases_of_top_artists": [
+                        {
+                            "title": "Example Release Title",
+                            "release_group_mbid": "release_group_mbid_example",
+                            "caa_id": 123456789,
+                            "caa_release_mbid": "caa_release_mbid_example",
+                            "artist_credit_mbids": [
+                                "artist_mbid_example"
+                            ],
+                            "artist_credit_name": "Example Artist",
+                            "artists": [
+                                {
+                                    "artist_credit_name": "Example Artist",
+                                    "artist_mbid": "artist_mbid_example",
+                                    "join_phrase": ""
+                                }
+                            ]
+                        },
+                        ...,
+                    ],
+                    "playlist-top-discoveries-for-year": {
+                        "title": "Top Discoveries of 2025 for example_user",
+                        "creator": "listenbrainz",
+                        "date": "2025-01-01T00:00:00+00:00",
+                        "identifier": "https://listenbrainz.org/playlist/example",
+                        "annotation": "<p>Example annotation</p>",
+                        "extension": {
+                            "https://musicbrainz.org/doc/jspf#playlist": {
+                                "created_for": "example_user",
+                                "creator": "listenbrainz",
+                                "public": true
+                            }
+                        },
+                        "track": [
+                            {
+                                "title": "Example Track",
+                                "creator": "Example Artist",
+                                "album": "Example Album",
+                                "duration": 180000,
+                                "identifier": [
+                                    "https://musicbrainz.org/recording/recording_mbid_example"
+                                ],
+                                "extension": {
+                                    "https://musicbrainz.org/doc/jspf#track": {
+                                        "added_at": "2025-01-01T00:00:00+00:00",
+                                        "added_by": "listenbrainz",
+                                        "artist_identifiers": [
+                                            "https://musicbrainz.org/artist/artist_mbid_example"
+                                        ],
+                                        "additional_metadata": {
+                                            "caa_id": 123456789,
+                                            "caa_release_mbid": "caa_release_mbid_example",
+                                            "artists": [
+                                                {
+                                                    "artist_credit_name": "Example Artist",
+                                                    "artist_mbid": "artist_mbid_example",
+                                                    "join_phrase": ""
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            },
+                            ...,
+                        ]
+                    },
+                    "playlist-top-missed-recordings-for-year": {
+                        "..." : "Same structure as playlist-top-discoveries-for-year"
+                    },
+                    "similar_users": {
+                        "user_a": 0.05,
+                        "user_b": 0.06,
+                        ...,
+                    },
+                    "top_artists": [
+                        {
+                            "artist_mbid": "artist_mbid_example",
+                            "artist_name": "Example Artist",
+                            "listen_count": 507
+                        },
+                        ...,
+                    ],
+                    "top_genres": [
+                        {
+                            "genre": "rock",
+                            "genre_count": 13483,
+                            "genre_count_percent": 6.02
+                        },
+                        ...,
+                    ],
+                    "top_recordings": [
+                        {
+                            "track_name": "Example Track",
+                            "artist_name": "Example Artist",
+                            "listen_count": 55,
+                            "recording_mbid": "recording_mbid_example",
+                            "release_name": "Example Release",
+                            "release_mbid": "release_mbid_example",
+                            "caa_id": null,
+                            "caa_release_mbid": null,
+                            "artist_mbids": [],
+                            "artists": [  
+                              {  
+                                "artist_credit_name": "Example Artist",  
+                                "artist_mbid": "artist_mbid_example",  
+                                "join_phrase": " & "  
+                              },  
+                              ...,
+                            ]  
+                        },
+                        ...,
+                    ],
+                    "top_release_groups": [
+                        {
+                            "release_group_name": "Example Release Group",
+                            "release_group_mbid": "release_group_mbid_example",
+                            "artist_name": "Example Artist",
+                            "artist_mbids": [
+                                "artist_mbid_example"
+                            ],
+                            "listen_count": 210,
+                            "caa_id": 123456789,
+                            "caa_release_mbid": "caa_release_mbid_example",
+                            "artists": [
+                                {
+                                    "artist_credit_name": "Example Artist",
+                                    "artist_mbid": "artist_mbid_example",
+                                    "join_phrase": ""
+                                }
+                            ]
+                        },
+                        ...,
+                    ],
+                    "total_artists_count": 2059,
+                    "total_listen_count": 20989,
+                    "total_listening_time": 4154743.722,
+                    "total_new_artists_discovered": 1227,
+                    "total_recordings_count": 12716,
+                    "total_release_groups_count": 1861
+                }
+            }
+        }
+
+    .. warning::
+        The Year in Music payload can be significantly larger than other stats 
+        endpoints, as it may include full playlist data.
+
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Year in Music data for the user hasn't been calculated,
+        empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found or Year in Music data not available for the given year
+
+    :resheader Content-Type: *application/json*
+    """
     if year < LAST_FM_FOUNDING_YEAR or year > MAX_YEAR_IN_MUSIC_YEAR:
         raise APINotFound(f"Cannot find Year in Music report for year: {year}")
 
@@ -1777,7 +1976,250 @@ def year_in_music(user_name: str, year: int = 2024):
     return jsonify({
         "payload": {
             "user_name": user_name,
+            "year": year,
             "data": db_year_in_music.get(user["id"], year, legacy=False) or {}
+        }
+    })
+
+
+@stats_api_bp.get("/user/<mb_username:user_name>/year-in-music/legacy/<int:year>")
+@crossdomain
+@ratelimit()
+def legacy_year_in_music(user_name: str, year: int):
+    """
+    Get legacy Year in Music data for a specific user and year. This endpoint returns historical 
+    Year in Music payloads that were generated by earlier data pipelines. The response structure 
+    is not stable across years and should be treated as archival data.
+
+    Payload structure varies by year.
+
+    **2021**
+
+    - Payload structure differs significantly from later years.
+    - Playlist entries are wrapped in a JSPF structure under the ``jspf`` key.
+    - Each playlist includes an associated ``mbid``.
+    - Playlist cover art URLs are provided separately via ``*-coverart`` mappings.
+    - Several fields present in payloads of later years are not included.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "user_name": "example_user",
+                "year": 2021,
+                "data": {
+                    "day_of_week": "Friday",
+                    "listens_per_day": [
+                        {
+                        "from_ts": 1609459200,
+                        "to_ts": 1609545599,
+                        "time_range": "01 January 2021",
+                        "listen_count": 0
+                        },
+                        ...,
+                    ],
+                    "most_listened_year": {
+                        "1995": 12,
+                        "2005": 30,
+                        "...": "..."
+                    },
+                    "most_prominent_color": "(165, 166, 156)",
+                    "new_releases_of_top_artists": [
+                        {
+                            "title": "Example Release Title",
+                            "type": "Album",
+                            "first_release_date": "2021-03-05",
+                            "release_mbid": "release_mbid_example",
+                            "artist_credit_names": [
+                                "Example Artist A",
+                                "Example Artist B"
+                            ],
+                            "artist_credit_mbids": [
+                                "artist_mbid_a",
+                                "artist_mbid_b"
+                            ]
+                        },
+                        ...,
+                    ],
+                    "playlist-top-discoveries-for-year": {
+                        "jspf": {
+                            "playlist": {
+                                "title": "Top Discoveries of 2021 for example_user",
+                                "creator": "listenbrainz",
+                                "annotation": "<p>Example annotation</p>",
+                                "extension": {
+                                    "https://musicbrainz.org/doc/jspf#playlist": {
+                                        "public": true,
+                                        "algorithm_metadata": {
+                                            "source_patch": "top-discoveries-for-year"
+                                        }
+                                    }
+                                },
+                                "track": [
+                                    {
+                                        "title": "Example Track",
+                                        "creator": "Example Artist",
+                                        "album": "Example Album",
+                                        "identifier": "https://musicbrainz.org/recording/example_recording_mbid",
+                                        "extension": {
+                                            "https://musicbrainz.org/recording/": {
+                                                "artist_mbids": [
+                                                "example_artist_mbid"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    ...,
+                                ]
+                            }
+                        },
+                        "mbid": "playlist_mbid_example"
+                    },
+                    "playlist-top-discoveries-for-year-coverart": {
+                        "example_recording_mbid":
+                        "https://archive.org/download/example_coverart.jpg",
+                        "...": "..."
+                    },
+                    "playlist-top-missed-recordings-for-year": {
+                        "..." : "Same structure as playlist-top-discoveries-for-year"
+                    }
+                    "playlist-top-missed-recordings-for-year-coverart": {
+                        "..." : "Same structure as playlist-top-discoveries-for-year-coverart"
+                    }
+                    "playlist-top-new-recordings-for-year": {
+                        "..." : "Same structure as playlist-top-discoveries-for-year"
+                    },
+                    "playlist-top-new-recordings-for-year-coverart": {
+                        "..." : "Same structure as playlist-top-discoveries-for-year-coverart"
+                    },
+                    "playlist-top-recordings-for-year": {
+                        "..." : "Same structure as playlist-top-discoveries-for-year"
+                    },
+                    "playlist-top-recordings-for-year-coverart": {
+                        "..." : "Same structure as playlist-top-discoveries-for-year-coverart"
+                    },
+                    "similar_users": {
+                        "example_user_a": 0.12,
+                        "example_user_b": 0.27,
+                        "...": "..."
+                    },
+                    "top_artists": [
+                        {
+                            "artist_name": "Example Artist",
+                            "artist_mbids": [
+                                "example_artist_mbid"
+                            ],
+                            "listen_count": 507
+                        },
+                        ...,
+                    ],
+                    "top_recordings": [
+                        {
+                            "track_name": "Example Track",
+                            "artist_name": "Example Artist",
+                            "recording_mbid": "example_recording_mbid",
+                            "release_name": "Example Release",
+                            "release_mbid": "example_release_mbid",
+                            "artist_mbids": [
+                                "example_artist_mbid"
+                            ],
+                            "listen_count": 55
+                        },
+                        ...,
+                    ],
+                    "top_releases": [
+                        {
+                            "release_name": "Example Release",
+                            "artist_name": "Example Artist",
+                            "release_mbid": "example_release_mbid",
+                            "artist_mbids": [
+                                "example_artist_mbid"
+                            ],
+                            "listen_count": 210
+                        },
+                        ...,
+                    ],
+                    "top_releases_coverart": {
+                        "example_release_mbid":
+                        "https://archive.org/download/example_release_coverart.jpg",
+                        "...": "..."
+                    },
+                    "total_listen_count": 12731
+                }
+            }
+        }
+
+    **2022**
+
+    - Core payload structure matches the non-legacy Year in Music endpoint.
+    - Playlist objects are no longer wrapped in JSPF.
+    - Some playlists have been removed, leaving ``playlist-top-discoveries-for-year`` and ``playlist-top-missed-recordings-for-year``.  
+    - Playlist cover art is provided via additional ``*-coverart`` mappings.  
+
+    **2023 and later**
+
+    - Payload structure matches the non-legacy endpoint.
+    - Playlist cover art mappings (``playlist-*-coverart``) are no longer included.
+      Instead, cover art information is provided per track using the ``caa_id`` and ``caa_release_mbid`` 
+      fields in ``track.extension["https://musicbrainz.org/doc/jspf#track"].additional_metadata``.
+
+    A sample response from the endpoint may look like (top-level fields only):
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "user_name": "example_user",
+                "year": 2023,
+                "data": {
+                    "artist_map": [ ... ],
+                    "day_of_week": "Tuesday",
+                    "listens_per_day": [ ... ],
+                    "most_listened_year": { ... },
+                    "new_releases_of_top_artists": [ ... ],
+                    "playlist-top-discoveries-for-year": { ... },
+                    "playlist-top-missed-recordings-for-year": { ... },
+                    "similar_users": { ... },
+                    "top_artists": [ ... ],
+                    "top_genres": [ ... ],
+                    "top_recordings": [ ... ],
+                    "top_release_groups": [ ... ],
+                    "total_artists_count": 1555,
+                    "total_listen_count": 7476,
+                    "total_listening_time": 2011192.0139999997,
+                    "total_new_artists_discovered": 686,
+                    "total_recordings_count": 4674,
+                    "total_release_groups_count": 1896
+                }
+            }
+        }
+
+
+    .. warning::
+        The legacy Year in Music payload can be significantly larger than other stats 
+        endpoints, as it may include full playlist data and cover art mappings.
+
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Year in Music data for the user hasn't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found or Year in Music data not available for the given year
+
+    :resheader Content-Type: *application/json*
+    """
+    if year < 2021 or year > 2024:
+        raise APINotFound(f"Cannot find legacy Year in Music report for year: {year}")
+
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if user is None:
+        raise APINotFound(f"Cannot find user: {user_name}")
+
+    return jsonify({
+        "payload": {
+            "user_name": user_name,
+            "year": year,
+            "data": db_year_in_music.get(user["id"], year, legacy=True) or {}
         }
     })
 

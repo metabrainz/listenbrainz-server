@@ -53,10 +53,13 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
 
         query = """
             INSERT INTO mapping.mb_metadata_cache
-               (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
+               (recording_mbid, recording_id, artist_mbids, artist_ids, release_mbid, release_id, recording_data, artist_data, tag_data, release_data, dirty)
                 VALUES ('2f3d422f-8890-41a1-9762-fbe16f107c31'
+                      , 1
                       , '{8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11}'::UUID[]
+                      , '{1}'::INTEGER[]
                       , '76df3287-6cda-33eb-8e9a-044b5e15ffdd'
+                      , 1
                       , '{"name": "Strangers", "rels": [], "length": 291160}'
                       , '{"name": "Portishead", "artist_credit_id": 204, "artists": [{"area": "United Kingdom", "rels": {"lyrics": "https://muzikum.eu/en/122-6105/portishead/lyrics.html", "youtube": "https://www.youtube.com/user/portishead1002", "wikidata": "https://www.wikidata.org/wiki/Q191352", "streaming": "https://tidal.com/artist/27441", "free streaming": "https://www.deezer.com/artist/1069", "social network": "https://www.facebook.com/portishead", "official homepage": "http://www.portishead.co.uk/", "purchase for download": "https://www.junodownload.com/artists/Portishead/releases/"}, "type": "Group", "begin_year": 1991}]}'
                       , '{"artist": [], "recording": [], "release_group": []}'
@@ -64,8 +67,11 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
                       , 'f'
                        ),
                        ('2cfad207-3f55-4aec-8120-86cf66e34d59'
+                      , 2
                       , '{678d88b2-87b0-403b-b63d-5da7465aecc3}'::UUID[]
+                      , '{2}'::INTEGER[]
                       , '93ac1812-d38d-4125-88e8-8440e3e89072'
+                      , 2
                       , '{"name": "Immigrant Song", "rels": [], "length": 145426}'
                       , '{"name": "Led Zeppelin", "artists": [{"area": "United Kingdom", "name": "Led Zeppelin", "rels": {"lyrics": "https://genius.com/artists/Led-zeppelin", "youtube": "https://www.youtube.com/@ledzeppelin", "wikidata": "https://www.wikidata.org/wiki/Q2331", "streaming": "https://tidal.com/artist/67522", "free streaming": "https://www.deezer.com/artist/848", "social network": "https://www.facebook.com/ledzeppelin", "official homepage": "http://www.ledzeppelin.com/", "purchase for download": "https://www.7digital.com/artist/led-zeppelin"}, "type": "Group", "end_year": 1980, "begin_year": 1968, "join_phrase": ""}], "artist_credit_id": 388}'
                       , '{"artist": [], "recording": [], "release_group": []}'

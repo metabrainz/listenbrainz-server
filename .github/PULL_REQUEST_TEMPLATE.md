@@ -9,6 +9,8 @@
 
     Ensure that you've read through and followed the Contributing Guidelines, in
     ./github/CONTRIBUTING.md.
+    
+    Dont skip our AI usage policy if you plan on using AI tooling.
 -->
 
 # Problem

@@ -5,6 +5,8 @@ from markupsafe import Markup
 import listenbrainz.db.user as db_user
 import listenbrainz.db.year_in_music as db_yim
 import listenbrainz.db.playlist as db_playlist
+from listenbrainz.db import popularity
+from listenbrainz.db.metadata import get_metadata_for_artist
 
 from brainzutils.ratelimit import ratelimit
 from flask import request, render_template, Blueprint, current_app
@@ -251,6 +253,113 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
                            }
 
 
+@art_api_bp.get("/artist-grid/<uuid:artist_mbid>/<int:dimension>/<int:layout>/<int:image_size>")
+@crossdomain
+@ratelimit()
+def cover_art_artist_grid(artist_mbid, dimension, layout, image_size):
+    """
+    Create a cover art grid SVG file from the release groups of a given artist.
+
+    :param artist_mbid: MusicBrainz ID of the artist.
+    :type artist_mbid: ``uuid``
+    :param dimension: The dimension to use for this grid. A grid of dimension 3 has 3 images across
+                      and 3 images down, for a total of 9 images.
+    :type dimension: ``int``
+    :param layout: The layout to be used for this grid. Layout 0 is always a simple grid, but other layouts
+                   may have image images be of different sizes. See https://art.listenbrainz.org for examples
+                   of the available layouts.
+    :type layout: ``int``
+    :param image_size: The size of the cover art image. See constants at the bottom of this document.
+    :type image_size: ``int``
+    :param caption: Whether to show the release group name and artist overlayed on each cover art image.
+                    Default True.
+    :type caption: ``boolean``
+    :param skip-missing: Whether to skip release groups that don't have cover art, or show a placeholder.
+                         Default True.
+    :type skip-missing: ``boolean``
+
+    :statuscode 200: Cover art grid SVG generated successfully.
+    :statuscode 400: Invalid parameters or insufficient cover art.
+    :statuscode 404: Artist not found in metadata cache.
+    :resheader Content-Type: *image/svg+xml*
+    """
+    
+    show_caption = _parse_bool_arg("caption", True)
+    skip_missing = _parse_bool_arg("skip-missing", True)
+
+    try:
+        grid_design = CoverArtGenerator.GRID_TILE_DESIGNS[dimension][layout]
+    except (IndexError, KeyError):
+        raise APIBadRequest(f"layout {layout} is not available for dimension {dimension}")
+
+    artist_data = get_metadata_for_artist(ts_conn, [str(artist_mbid)])
+    if not artist_data:
+        raise APINotFound(f"Artist {artist_mbid} not found")
+
+    release_groups = artist_data[0].release_group_data
+    release_group_mbids = [rg["mbid"] for rg in release_groups]
+
+    popularity_data, _ = popularity.get_counts(ts_conn, "release_group", release_group_mbids)
+
+    for rg, pop in zip(release_groups, popularity_data):
+        rg["total_listen_count"] = pop["total_listen_count"]
+
+    release_groups.sort(key=lambda rg: rg.get("total_listen_count") or 0, reverse=True)
+
+    release_groups = release_groups[:100]
+
+    images = []
+    for rg in release_groups:
+        if rg.get("caa_id") and rg.get("caa_release_mbid"):
+            images.append({
+                "entity_mbid": rg["mbid"],
+                "title": rg["name"],
+                "artist": rg["artist_credit_name"],
+                "caa_id": rg["caa_id"],
+                "caa_release_mbid": rg["caa_release_mbid"],
+            })
+
+    if not images:
+        raise APIBadRequest("Not enough cover art to generate artist grid")
+
+    images = _repeat_images(images, len(grid_design))
+
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"],
+        dimension,
+        image_size,
+        background="transparent",
+        skip_missing=skip_missing,
+        show_caa_image_for_missing_covers=False,
+        show_caption=show_caption,
+        server_root_url=current_app.config["SERVER_ROOT_URL"],
+    )
+
+    if (err := cac.validate_parameters()) is not None:
+        raise APIBadRequest(err)
+
+    cover_art_images = cac.generate_from_caa_ids(images, layout=layout, cover_art_size=250 if image_size < 1000 else 500)
+    
+    artist_name = artist_data[0].artist_data.get("name", artist_mbid)
+    title = f"Top {len(cover_art_images)} Release Groups for {artist_name}\n"
+    desc = ""
+    for i, image in enumerate(cover_art_images):
+        desc += f"{i + 1}. {image.get('title')} - {image.get('artist')}\n"
+
+    return render_template(
+        "art/svg-templates/simple-grid.svg",
+        background="transparent",
+        images=cover_art_images,
+        title=title,
+        desc=desc,
+        entity="release_group",
+        width=image_size,
+        height=image_size,
+        show_caption=show_caption), 200, {
+        "Content-Type": "image/svg+xml"
+    }
+
+
 @art_api_bp.get("/<custom_name>/<mb_username:user_name>/<time_range>/<int:image_size>")
 @crossdomain
 @ratelimit()
@@ -322,11 +431,267 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
     raise APIBadRequest(f"Unkown custom cover art type {custom_name}")
 
 
+def _cover_art_yim_stats(user_name, stats, year, options, styles):
+    """ Create the SVG using YIM statistics for the given year. """
+    if stats.get("day_of_week") is None or stats.get("most_listened_year") is None or \
+        stats.get("total_listen_count") is None or stats.get("total_new_artists_discovered") is None or \
+            stats.get("total_artists_count") is None:
+        return None
+
+    match stats["day_of_week"]:
+        case "Monday": most_played_day_message = 'I SURVIVED <tspan class="user-stat">MONDAYS</tspan> WITH MUSIC'
+        case "Tuesday": most_played_day_message = 'I CHILLED WITH MUSIC ON <tspan class="user-stat">TUESDAY</tspan>'
+        case "Wednesday": most_played_day_message = 'I GOT THROUGH <tspan class="user-stat">WEDNESDAYS</tspan> WITH MUSIC'
+        case "Thursday": most_played_day_message = 'I SPENT TIME WITH MY TUNES ON <tspan class="user-stat">THURSDAYS</tspan>'
+        case "Friday": most_played_day_message = 'I CELEBRATED <tspan class="user-stat">FRIDAYS</tspan> WITH MUSIC'
+        case "Saturday": most_played_day_message = 'I PARTIED HARD (OR HARDLY!) ON <tspan class="user-stat">SATURDAYS</tspan>'
+        case "Sunday": most_played_day_message = 'I LOVED SPENDING <tspan class="user-stat">SUNDAYS</tspan> WITH MUSIC'
+        case other: most_played_day_message = f'I CRANKED TUNES ON <tspan class="user-stat">{other}</tspan>'
+
+    most_listened_year = max(stats["most_listened_year"], key=stats["most_listened_year"].get)
+
+
+    return render_template(
+        "art/svg-templates/year-in-music/yim-stats.svg",
+        user_name=user_name,
+        most_played_day_message=Markup(most_played_day_message),
+        most_listened_year=most_listened_year,
+        total_listen_count=stats["total_listen_count"],
+        total_new_artists_discovered=stats["total_new_artists_discovered"],
+        total_artists_count=stats["total_artists_count"],
+        year=year,
+        **options,
+        **styles,
+    )
+
+
+def _cover_art_yim_albums(user_name, stats, year, options, styles):
+    """ Create the SVG using YIM top albums for the given year. """
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"], 3, 750,
+        server_root_url=current_app.config["SERVER_ROOT_URL"],
+        show_caption=True)
+    images = []
+
+    if stats.get("top_release_groups") is None:
+        return None
+
+    for release_group in stats["top_release_groups"]:
+        if "caa_id" in release_group and "caa_release_mbid" in release_group:
+            image = {
+                "title": release_group["release_group_name"],
+                "artist": release_group["artist_name"],
+                "entity_mbid": release_group["release_group_mbid"],
+                "caa_id": release_group["caa_id"], 
+                "caa_release_mbid": release_group["caa_release_mbid"]
+            }
+            images.append(image)
+
+    if len(images) == 0:
+        return None
+
+    images = _repeat_images(images, size=9)
+
+    # Generate the cover art images
+    images = cac.generate_from_caa_ids(
+        images, layout=0, cover_art_size=250)
+
+    return render_template(
+        "art/svg-templates/year-in-music/yim-albums.svg",
+        user_name=user_name,
+        images=images,
+        year=year,
+        **options,
+        **styles,
+    )
+
+
+def _cover_art_yim_tracks(user_name, stats, year, options, styles):
+    """ Create the SVG using top tracks for the given user. """
+    if stats.get("top_recordings") is None:
+        return None
+
+    return render_template(
+        "art/svg-templates/year-in-music/yim-tracks.svg",
+        user_name=user_name,
+        tracks=stats["top_recordings"],
+        year=year,
+        **options,
+        **styles,
+    )
+
+
+def _cover_art_yim_artists(user_name, stats, year, options, styles):
+    """ Create the SVG using top artists for the given user. """
+    if stats.get("top_artists") is None:
+        return None
+
+    return render_template(
+        "art/svg-templates/year-in-music/yim-artists.svg",
+        user_name=user_name,
+        artists=stats["top_artists"],
+        total_artists_count=stats["total_artists_count"],
+        year=year,
+        **options,
+        **styles,
+    )
+
+
+def _cover_art_yim_playlist(user_name, stats, key, year, options, styles):
+    """ Create the SVG using playlist tracks' cover arts for the given YIM playlist. """
+    if stats.get(key) is None:
+        return None
+
+    images = []
+    selected_urls = set()
+
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"], dimension=3, image_size=500,
+        server_root_url=current_app.config["SERVER_ROOT_URL"])
+
+    for track in stats[key]["track"]:
+        additional_metadata = track["extension"][PLAYLIST_TRACK_EXTENSION_URI].get("additional_metadata")
+        if additional_metadata.get("caa_id") and additional_metadata.get("caa_release_mbid"):
+            caa_id = additional_metadata.get("caa_id")
+            caa_release_mbid = additional_metadata.get("caa_release_mbid")
+            # check existence in set to avoid duplicates
+            if caa_id not in selected_urls:
+                images.append({
+                    "caa_id": caa_id,
+                    "caa_release_mbid": caa_release_mbid,
+                    "title": track.get("title"),
+                    "entity_mbid": track["identifier"][0].split("/")[-1],
+                    "artist": track.get("creator")
+                })
+                selected_urls.add(caa_id)
+    
+    if len(images) == 0:
+        return None
+
+    images = _repeat_images(images)
+
+    cover_art_images = cac.generate_from_caa_ids(
+        images, layout=0, cover_art_size=250)
+
+    if not options.get("branding"):
+        # Return a simple grid for use on the YIM page
+        return render_template(
+            "art/svg-templates/simple-grid.svg",
+            background="transparent",
+            images=cover_art_images,
+            title=stats[key].get("title"),
+            desc=stats[key].get("annotation"),
+            entity="track",
+            width=500,
+            height=500,
+            **options,
+            **styles,
+        )
+
+    match key:
+        case "playlist-top-discoveries-for-year":
+            target_svg = "art/svg-templates/year-in-music/yim-discovery-playlist.svg"
+        case "playlist-top-missed-recordings-for-year":
+            target_svg = "art/svg-templates/year-in-music/yim-missed-tracks-playlist.svg"
+        case other:
+            raise APIBadRequest(f"Invalid playlist type {key}. Playlist type should be one of (playlist-top-discoveries-for-year, playlist-top-missed-recordings-for-year)")
+
+    return render_template(
+        target_svg,
+        user_name=user_name,
+        images=cover_art_images,
+        year=year,
+        width=924,
+        height=924,
+        entity="track",
+        **options,
+        **styles,
+    )
+
+
+def _cover_art_yim_overview(user_name, stats, year, options, styles):
+    """ Create the SVG using top stats for the overview YIM image. """
+    filtered_genres = []
+    total_filtered_genre_count = 0
+    number_of_genres =  6
+    for genre in stats.get("top_genres", []):
+        # In 2023 we filtered out the most popular genres
+        if year > 2023 or genre["genre"] not in ("pop", "rock", "electronic", "hip hop"):
+            filtered_genres.append(genre)
+            total_filtered_genre_count += genre["genre_count"]
+
+    filtered_top_genres = []
+    for genre in filtered_genres[:number_of_genres]:
+        genre_count_percent = round(genre["genre_count"] / total_filtered_genre_count * 100)
+        filtered_top_genres.append({"genre": genre["genre"], "genre_count_percent": genre_count_percent})
+
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"], 3, 250,
+        server_root_url=current_app.config["SERVER_ROOT_URL"])
+
+    albums = []
+    for release_group in stats.get("top_release_groups", [])[:2]:
+        if release_group.get("caa_id") and release_group.get("caa_release_mbid"):
+            cover_art = cac.resolve_cover_art(release_group["caa_id"], release_group["caa_release_mbid"], 250)
+        else:
+            cover_art = None
+        albums.append({
+            "artist": release_group["artist_name"],
+            "title": release_group["release_group_name"],
+            "listen_count": release_group["listen_count"],
+            "cover_art": cover_art
+        })
+
+    if len(albums) == 2:
+        album_1, album_2 = albums[0], albums[1]
+    elif len(albums) == 1:
+        album_1, album_2 = albums[0], None
+    else:
+        album_1, album_2 = None, None
+
+    props = {
+        "artists_count": stats.get("total_artists_count", 0),
+        "albums_count": stats.get("total_release_groups_count", 0),
+        "songs_count": stats.get("total_recordings_count", 0),
+        "genres": filtered_top_genres,
+        "user_name": user_name,
+        "album_1": album_1,
+        "album_2": album_2,
+        "year":year,
+    }
+
+    return render_template("art/svg-templates/year-in-music/yim-overview.svg", **props, **options, **styles)
+
+
 @art_api_bp.get("/year-in-music/<int:year>/<mb_username:user_name>")
 @crossdomain
 @ratelimit()
-def cover_art_yim(user_name, year: int = 2024):
-    """ Create the shareable svg image using YIM stats """
+def cover_art_yim(user_name, year: int = 2025):
+    """ Create shareable SVG images using Year In Music stats
+    
+    :param year: The selected year for which to create the Year In Music cover art.
+    :type year: ``int``
+    :param user_name: The name of the user for whom to create the cover art.
+    :type user_name: ``str``
+    :param branding: Show or hide the LsitenBrainz branding on the image. Default True.
+    :type branding: ``bool``
+    :param show-caption: For cover art grids, show or hide the album title and artist name. Default True.
+    :type show-caption: ``bool``
+    :param anonymous: Show or hide the user's name. Default False (shows user name).
+    :type anonymous: ``bool``
+    :param bg-color-1: Background color 1 to use in the image. Default #2f6368.
+    :type bg-color-1: ``str``
+    :param bg-color-2: Background color 2 to use in the image. Default #463f62.
+    :type bg-color-2: ``str``
+    :param accent-color: Accent color to use in the image. Default #F1F2E1.
+    :type accent-color: ``str``
+    :param legacy: Generate images from archived previous versions of YIM. Deprecated. Default False.
+    :type legacy: ``bool``
+    :statuscode 200: Image created successfully.
+    :statuscode 204: Missing enough data to generate an image for the selected year and user.
+    :statuscode 400: Invalid JSON or invalid options in JSON passed. See error message for details.
+    :resheader Content-Type: *image/svg+xml*
+    """
     user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APIBadRequest(f"User {user_name} not found")
@@ -338,6 +703,8 @@ def cover_art_yim(user_name, year: int = 2024):
 
     branding = _parse_bool_arg("branding", True)
     legacy = _parse_bool_arg("legacy", False)
+    show_caption = _parse_bool_arg("show-caption", True)
+    anonymous = _parse_bool_arg("anonymous", False)
 
     if legacy:
         if year < 2021 or year > 2024:
@@ -347,17 +714,27 @@ def cover_art_yim(user_name, year: int = 2024):
     stats = db_yim.get(user["id"], year, legacy=False)
     if stats is None:
         raise APIBadRequest(f"Year In Music {year} report for user {user_name} not found")
-    
-    svg = None
-    # match image:
-    #     case "overview": svg = _cover_art_yim_overview(user_name, stats, year)
-    #     case "stats": svg = _cover_art_yim_stats(user_name, stats, year)
-    #     case "albums": svg = _cover_art_yim_albums(user_name, stats, year)
-    #     case "tracks": svg = _cover_art_yim_tracks(user_name, stats, year)
-    #     case "artists": svg = _cover_art_yim_artists(user_name, stats, year)
-    #     case "discovery-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-discoveries-for-year", year, branding)
-    #     case "missed-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-missed-recordings-for-year", year, branding)
-    #     case other: raise APIBadRequest(f"Invalid image type {other}. Image type should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
+
+    options = {
+        "anonymous": anonymous,
+        "branding": branding,
+        "show_caption": show_caption
+    }
+    styles = {
+        "background_color_1": request.args.get("bg-color-1", "#2f6368"),
+        "background_color_2": request.args.get("bg-color-2", "#463f62"),
+        "accent_color": request.args.get("accent-color", "#F1F2E1"),
+    }
+
+    match image:
+        case "overview": svg = _cover_art_yim_overview(user_name, stats, year, options, styles)
+        case "stats": svg = _cover_art_yim_stats(user_name, stats, year, options, styles)
+        case "albums": svg = _cover_art_yim_albums(user_name, stats, year, options, styles)
+        case "tracks": svg = _cover_art_yim_tracks(user_name, stats, year, options, styles)
+        case "artists": svg = _cover_art_yim_artists(user_name, stats, year, options, styles)
+        case "discovery-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-discoveries-for-year", year, options, styles)
+        case "missed-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-missed-recordings-for-year", year, options, styles)
+        case other: raise APIBadRequest(f"Invalid image type {other}. Image type should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
 
     if svg is None:
         return "", 204

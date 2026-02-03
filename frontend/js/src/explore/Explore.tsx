@@ -61,6 +61,12 @@ export default function ExplorePage() {
           url="/explore/fresh-releases/"
         />
         <ExploreCard
+          name="Year in Music"
+          desc="Yearly breakdown of your listening habits"
+          img_name="year-in-music.png"
+          url="/my/year-in-music/"
+        />
+        <ExploreCard
           name="Link listens"
           desc="Fix your unlinked listens"
           img_name="link-listens.jpg"
@@ -71,12 +77,6 @@ export default function ExplorePage() {
           desc="Discover"
           img_name="huesound.jpg"
           url="/explore/huesound/"
-        />
-        <ExploreCard
-          name="Cover Art Collage"
-          desc="Discover"
-          img_name="cover-art-collage.jpg"
-          url="/explore/cover-art-collage/"
         />
         <ExploreCard
           name="Music Neighborhood"
@@ -102,6 +102,13 @@ export default function ExplorePage() {
           img_name="lb-radio-beta.jpg"
           url="/explore/lb-radio/"
         />
+
+        <ExploreCard
+          name="Widgets"
+          desc="Embed ListenBrainz elements into your website"
+          img_name="lb-widgets-beta.jpg"
+          url="https://listenbrainz.readthedocs.io/en/latest/users/widgets.html"
+        />
       </div>
       {currentUser?.name && (
         <>
@@ -109,7 +116,14 @@ export default function ExplorePage() {
             <h3>Archived</h3>
             <hr />
           </div>
-          <div className="row">
+          <div className="row" style={{ opacity: "0.5" }}>
+            <ExploreCard
+              name="Cover Art Collage"
+              desc="Discover"
+              img_name="cover-art-collage.jpg"
+              url="/explore/cover-art-collage/"
+            />
+
             <ExploreCard
               name="Your Year in Music 2024"
               desc="Archival version of Year In Music 2024"

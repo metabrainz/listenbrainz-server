@@ -20,20 +20,21 @@ logger = logging.getLogger(__name__)
 class ArtistEvolutionActivityUserStatsQueryEntity(UserStatsQueryProvider):
     """ See base class QueryProvider for details. """
 
-    def __init__(self, selector: ListenRangeSelector):
+    def __init__(self, selector: ListenRangeSelector, top_n: int):
         super().__init__(selector)
         self.stats_range = selector.stats_range
+        self.top_n = top_n
 
     @property
     def entity(self):
         return "artist_evolution_activity"
 
     def _get_time_field_expression(self):
-        if "week" in self.stats_range:
+        if self.stats_range in ("week", "this_week"):
             return "date_format(listened_at, 'EEEE')"
-        elif "month" in self.stats_range:
+        elif self.stats_range in ("month", "this_month"):
             return "day(listened_at)"
-        elif "year" in self.stats_range:
+        elif self.stats_range in ("year", "half_yearly", "quarter", "this_year"):
             return "date_format(listened_at, 'MMMM')"
         else:
             return "year(listened_at)"
@@ -88,20 +89,38 @@ class ArtistEvolutionActivityUserStatsQueryEntity(UserStatsQueryProvider):
 
     def get_stats_query(self, final_aggregate):
         return f"""
-             SELECT user_id
-                  , sort_array(
-                       collect_list(
-                            struct(
-                                  time_unit
-                                , artist_mbid
-                                , artist_name
-                                , listen_count
-                            )
-                        ), false
-                    ) AS artist_evolution_activity
-               FROM {final_aggregate}
-           GROUP BY user_id
-        """
+               WITH total_artist_listens AS (
+                    SELECT user_id
+                         , artist_mbid
+                         , artist_name
+                         , SUM(listen_count) AS total_listens
+                      FROM {final_aggregate}
+                  GROUP BY user_id, artist_mbid, artist_name
+                ), top_artists AS (
+                    SELECT user_id
+                         , artist_mbid
+                         , artist_name
+                         , ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY total_listens DESC) AS rank
+                      FROM total_artist_listens
+                )    SELECT f.user_id
+                          , sort_array(
+                                   collect_list(
+                                        struct(
+                                              f.time_unit
+                                            , f.artist_mbid
+                                            , f.artist_name
+                                            , f.listen_count
+                                        )
+                                    ), false
+                            ) AS artist_evolution_activity
+                       FROM {final_aggregate} f
+                       JOIN top_artists ta 
+                         ON f.user_id = ta.user_id 
+                        AND (f.artist_mbid = ta.artist_mbid OR (f.artist_mbid IS NULL AND ta.artist_mbid IS NULL))
+                        AND f.artist_name = ta.artist_name
+                      WHERE ta.rank <= {self.top_n}
+                   GROUP BY f.user_id
+         """
 
 class ArtistEvolutionActivityUserMessageCreator(UserStatsMessageCreator):
 

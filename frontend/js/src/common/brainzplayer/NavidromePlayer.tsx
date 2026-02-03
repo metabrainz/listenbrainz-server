@@ -51,6 +51,7 @@ export default class NavidromePlayer
   declare context: React.ContextType<typeof GlobalAppContext>;
 
   debouncedOnTrackEnd: () => void;
+  abortController: AbortController | null = null;
 
   constructor(props: NavidromePlayerProps) {
     super(props);
@@ -82,6 +83,9 @@ export default class NavidromePlayer
 
   componentWillUnmount(): void {
     this.cleanupAudioListeners();
+    if (this.abortController) {
+      this.abortController.abort();
+    }
   }
 
   stop = () => {
@@ -120,8 +124,14 @@ export default class NavidromePlayer
 
   onLoadedMetadata = (event: Event): void => {
     const { onDurationChange } = this.props;
+    const { currentTrack } = this.state;
     const audioElement = event.target as HTMLAudioElement;
-    onDurationChange(audioElement.duration * 1000);
+    if (currentTrack?.duration) {
+      onDurationChange(currentTrack.duration * 1000);
+    } else {
+      // fallback: Use browser duration but round it to avoid floating point errors
+      onDurationChange(Math.round(audioElement.duration * 1000));
+    }
   };
 
   onTimeUpdate = (event: Event): void => {
@@ -233,9 +243,20 @@ export default class NavidromePlayer
   };
 
   playListen = async (listen: Listen | JSPFTrack): Promise<void> => {
+    if (this.abortController) {
+      this.abortController.abort();
+    }
+    // Create new AbortController for this search to prevent race conditions
+    this.abortController = new AbortController();
+    const searchController = this.abortController;
+
     // For Navidrome, we always search for tracks by name since
     // listens don't contain direct track IDs or URLs
-    await this.searchAndPlayTrack(listen);
+    await this.searchAndPlayTrack(
+      listen,
+      this.abortController.signal,
+      searchController
+    );
   };
 
   getNavidromeInstanceURL = (): string => {
@@ -294,7 +315,11 @@ export default class NavidromePlayer
     return `${instanceURL}/rest/stream?id=${trackId}&${authParams}`;
   };
 
-  searchAndPlayTrack = async (listen: Listen | JSPFTrack): Promise<void> => {
+  searchAndPlayTrack = async (
+    listen: Listen | JSPFTrack,
+    signal: AbortSignal,
+    searchController: AbortController
+  ): Promise<void> => {
     const trackName = getTrackName(listen);
     const artistName = getArtistName(listen);
     const { handleError, handleWarning, onTrackNotFound } = this.props;
@@ -325,8 +350,15 @@ export default class NavidromePlayer
         this.getNavidromeInstanceURL(),
         authParams,
         trackName,
-        artistName
+        artistName,
+        signal
       );
+
+      // Check if returned controller is still active
+      // Handles the case where the search has failed before the abort signal is sent
+      if (searchController !== this.abortController) {
+        return;
+      }
 
       if (track) {
         this.setState({ currentTrack: track });
@@ -339,8 +371,16 @@ export default class NavidromePlayer
         }
       }
 
+      if (signal.aborted) {
+        return;
+      }
+
       onTrackNotFound();
     } catch (errorObject) {
+      if (errorObject.name === "AbortError") {
+        return;
+      }
+
       if (errorObject.status === 401) {
         this.handleAuthenticationError();
         return;

@@ -73,6 +73,49 @@ class CoverArtGenerator:
         "this_year": "this year"
     }
 
+    @staticmethod
+    def get_layout_options(image_count):
+        """
+        Given the number of available images, return all valid dimension and layout combinations.
+        Returns a list of dicts, each with 'dimension' and 'layout' keys.
+        Returns empty list if no valid options exist.
+        """
+        if image_count == 0:
+            return []
+
+        options = []
+        for dimension, designs in CoverArtGenerator.GRID_TILE_DESIGNS.items():
+            for layout_idx, design in enumerate(designs):
+                required_images = len(design)
+                if image_count >= required_images:
+                    options.append({
+                        "dimension": dimension,
+                        "layout": layout_idx
+                    })
+
+        return options
+
+    @staticmethod
+    def select_best_layout(image_count):
+        """
+        Given the number of available images, return the best dimension and layout.
+        Returns a dict with 'dimension' and 'layout' keys, or None if no images.
+
+        Prioritizes larger dimensions and simpler layouts (lower layout index).
+        """
+        options = CoverArtGenerator.get_layout_options(image_count)
+
+        if not options:
+            return None
+
+        # Sort by dimension (desc), then layout (asc)
+        sorted_options = sorted(
+            options,
+            key=lambda x: (-x["dimension"], x["layout"])
+        )
+
+        return sorted_options[0]
+
     def __init__(self,
                  mb_db_connection_str,
                  dimension,

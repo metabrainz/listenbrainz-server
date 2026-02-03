@@ -32,7 +32,9 @@ CREATE UNIQUE INDEX recording_mbid_ndx_mbid_mapping_metadata ON mbid_mapping_met
 -- these indexes are defined in listenbrainz/mbid_mapping/mapping/mb_metadata_cache.py and created in production
 -- there. this definition is only for tests and local development. remember to keep both in sync.
 CREATE UNIQUE INDEX mb_metadata_cache_idx_recording_mbid ON mapping.mb_metadata_cache (recording_mbid);
+CREATE INDEX mb_metadata_cache_idx_recording_id ON mapping.mb_metadata_cache (recording_id);
 CREATE INDEX mb_metadata_cache_idx_artist_mbids ON mapping.mb_metadata_cache USING gin(artist_mbids);
+CREATE INDEX mb_metadata_cache_idx_artist_ids ON mapping.mb_metadata_cache USING gin(artist_ids);
 CREATE INDEX mb_metadata_cache_idx_dirty ON mapping.mb_metadata_cache (dirty);
 
 CREATE UNIQUE INDEX recording_msid_ndx_mbid_mapping ON mbid_mapping (recording_msid);
@@ -111,5 +113,7 @@ CREATE INDEX popularity_top_release_artist_mbid_listen_count_idx ON popularity.t
 CREATE INDEX popularity_top_release_artist_mbid_user_count_idx ON popularity.top_release (artist_mbid, total_user_count) INCLUDE (release_mbid);
 
 CREATE INDEX tags_lb_tag_radio_percent_idx ON tags.lb_tag_radio (tag, percent) INCLUDE (source, recording_mbid, tag_count);
+
+CREATE UNIQUE INDEX year_in_music_cover_user_id_idx ON statistics.year_in_music_cover (user_id, year);
 
 COMMIT;

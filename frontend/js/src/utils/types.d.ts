@@ -532,6 +532,7 @@ declare type PinnedRecording = {
   recording_mbid: string | null;
   recording_msid?: string;
   track_metadata: TrackMetadata;
+  user_name?: string | null;
 };
 
 /** For recommending a track from the front-end */

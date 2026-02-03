@@ -55,9 +55,14 @@ class RecordingLookupBaseQuery(Query, ABC):
         lookup_strings = []
         string_index = {}
         for i, param in enumerate(params):
-            cleaned = unidecode(re.sub(r'[^\w]+', '', self.get_lookup_string(param)).lower())
+            cleaned = unidecode(re.sub(r'\W+', '', self.get_lookup_string(param)).lower())
+            if not cleaned:
+                continue
             lookup_strings.append(cleaned)
             string_index[cleaned] = i
+
+        if not lookup_strings:
+            return []
 
         lookup_strings = tuple(lookup_strings)
 

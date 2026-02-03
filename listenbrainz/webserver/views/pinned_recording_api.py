@@ -131,6 +131,60 @@ def delete_pin_for_user(row_id):
     return jsonify({"status": "ok"})
 
 
+@pinned_recording_api_bp.get("/pin/<int:row_id>")
+@crossdomain
+@ratelimit()
+def get_pin_by_id(row_id):
+    """
+    Get a pinned recording by its row_id. Returns the pin with track metadata.
+    The JSON returned by the API will look like the following:
+
+    .. code-block:: json
+
+        {
+            "pinned_recording": {
+                "blurb_content": "Awesome recording!",
+                "created": 1623997168,
+                "row_id": 10,
+                "pinned_until": 1623997485,
+                "recording_mbid": "af60273b-3c3f-4b07-8e91-1f9f4aa9d627",
+                "recording_msid": "fd7d9162-a284-4a10-906c-faae4f1e166b",
+                "track_metadata": {
+                    "artist_name": "Rick Astley",
+                    "track_name": "Never Gonna Give You Up"
+                },
+                "user_name": "-- the MusicBrainz ID of the user who pinned this recording --"
+            }
+        }
+
+    :param row_id: the row_id of the pinned recording.
+    :type row_id: ``int``
+    :statuscode 200: Yay, you have data!
+    :statuscode 404: The requested pin was not found.
+    :resheader Content-Type: *application/json*
+    """
+    try:
+        pin = db_pinned_rec.get_pin_by_id(db_conn, row_id)
+    except Exception as e:
+        current_app.logger.error("Error while fetching pin: {}".format(e))
+        raise APIInternalServerError("Something went wrong. Please try again.")
+
+    if pin is None:
+        raise APINotFound("Cannot find pin with row_id '%s'" % row_id)
+
+    user_map = db_user.get_users_by_id(db_conn, [pin.user_id])
+    if pin.user_id not in user_map:
+        raise APINotFound("Cannot find user for pin with row_id '%s'" % row_id)
+
+    pins_with_metadata = fetch_track_metadata_for_items(ts_conn, [pin])
+    pin = pins_with_metadata[0] if pins_with_metadata else pin
+
+    pin_data = pin.to_api()
+    pin_data["user_name"] = user_map[pin.user_id]
+
+    return jsonify({"pinned_recording": pin_data})
+
+
 @pinned_recording_api_bp.get("/<mb_username:user_name>/pins")
 @crossdomain
 @ratelimit()

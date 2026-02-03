@@ -17,6 +17,11 @@ export default class APIService {
 
   MAX_LISTEN_SIZE: number = 10000; // Maximum size of listens that can be sent
 
+  // Centralized token refresh for Spotify to ensure only one refresh call at a time
+  private static pendingSpotifyTokenRefresh: Promise<string> | null = null;
+  private static spotifyTokenRefreshTime: number | null = null;
+  private static readonly SPOTIFY_TOKEN_CACHE_DURATION = 5 * 60 * 1000;
+
   constructor(APIBaseURI: string) {
     let finalUri = APIBaseURI;
     if (finalUri.endsWith("/")) {
@@ -259,7 +264,30 @@ export default class APIService {
   };
 
   refreshSpotifyToken = async (): Promise<string> => {
-    return this.refreshAccessToken("spotify");
+    const now = Date.now();
+    // If there's a pending refresh within the cache duration,
+    // return that promise
+    if (
+      APIService.pendingSpotifyTokenRefresh &&
+      APIService.spotifyTokenRefreshTime &&
+      now - APIService.spotifyTokenRefreshTime <
+        APIService.SPOTIFY_TOKEN_CACHE_DURATION
+    ) {
+      return APIService.pendingSpotifyTokenRefresh;
+    }
+
+    APIService.spotifyTokenRefreshTime = now;
+    APIService.pendingSpotifyTokenRefresh = this.refreshAccessToken(
+      "spotify"
+    ).catch((err) => {
+      // If the refresh fails, clear the cache so the
+      // next attempt can try again immediately.
+      APIService.pendingSpotifyTokenRefresh = null;
+      APIService.spotifyTokenRefreshTime = null;
+      throw err;
+    });
+
+    return APIService.pendingSpotifyTokenRefresh;
   };
 
   refreshCritiquebrainzToken = async (): Promise<string> => {
@@ -426,11 +454,14 @@ export default class APIService {
     retries: number = 3
   ): Promise<Response> => {
     let processedPayload = payload;
-    // When submitting playing_now listens, listened_at must NOT be present
+    const params = new URLSearchParams();
     if (listenType === "playing_now") {
+      // When submitting playing_now listens, listened_at must NOT be present
       processedPayload = payload.map(
         (listen) => omit(listen, "listened_at") as Listen
       );
+      // Get MSID in response for playing_now listens so users can send love/hate feedback straight away
+      params.append("return_msid", "true");
     }
     if (JSON.stringify(processedPayload).length <= this.MAX_LISTEN_SIZE) {
       // Payload is within submission limit, submit directly
@@ -439,7 +470,8 @@ export default class APIService {
         payload: processedPayload,
       } as SubmitListensPayload;
 
-      const url = `${this.APIBaseURI}/submit-listens`;
+      const url = new URL(`${this.APIBaseURI}/submit-listens`);
+      url.search = params.toString();
 
       try {
         const response = await fetch(url, {
@@ -1602,6 +1634,19 @@ export default class APIService {
     return result.payload.events?.[0];
   };
 
+  getPin = async (pinId: number): Promise<PinnedRecording> => {
+    if (!pinId) {
+      throw new SyntaxError("Pin ID not present");
+    }
+    const query = `${this.APIBaseURI}/pin/${pinId}`;
+    const response = await fetch(query, {
+      method: "GET",
+    });
+    await this.checkStatus(response);
+    const result = await response.json();
+    return result.pinned_recording;
+  };
+
   deleteFeedEvent = async (
     eventType: string,
     userName: string,
@@ -1706,11 +1751,12 @@ export default class APIService {
   };
 
   lookupRecordingMetadata = async (
+    userToken: string,
     trackName: string,
     artistName: string,
     metadata: boolean = true
   ): Promise<MetadataLookup | null> => {
-    if (!trackName) {
+    if (!trackName || !userToken) {
       return null;
     }
     const queryParams: any = {
@@ -1731,7 +1777,11 @@ export default class APIService {
       url.searchParams.append("inc", "artist tag release");
     }
 
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
     await this.checkStatus(response);
     return response.json();
   };
@@ -2003,6 +2053,7 @@ export default class APIService {
 
   fetchUserFreshReleases = async (
     userName: string,
+    days?: number,
     past?: boolean,
     future?: boolean,
     sort?: SortOption
@@ -2015,6 +2066,9 @@ export default class APIService {
     )}/fresh_releases`;
 
     const queryParams: Array<string> = [];
+    if (days) {
+      queryParams.push(`days=${days}`);
+    }
     if (sort) {
       queryParams.push(`sort=${sort}`);
     }

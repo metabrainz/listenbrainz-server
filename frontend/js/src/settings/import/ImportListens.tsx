@@ -2,7 +2,6 @@ import * as React from "react";
 
 import { Link, useLoaderData } from "react-router";
 import { Helmet } from "react-helmet";
-import ReactTooltip from "react-tooltip";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -14,12 +13,15 @@ import {
 import { format, isValid } from "date-fns";
 import { useMemo } from "react";
 import { initial, last, partition } from "lodash";
+import { faLastfmSquare, faSpotify } from "@fortawesome/free-brands-svg-icons";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import Loader from "../../components/Loader";
 
 type ImportListensLoaderData = {
   user_has_email: boolean;
+  pg_timezones: Array<[string, string]>;
+  user_timezone: string;
 };
 
 enum ImportStatus {
@@ -37,6 +39,7 @@ enum Services {
   panoscrobbler = "PanoScrobbler",
   maloja = "Maloja",
   youtubemusic = "Youtube Music",
+  audioscrobbler = "Audioscrobbler/Rockbox",
 }
 const acceptedFileTypes = {
   [Services.spotify]: ".zip",
@@ -46,6 +49,7 @@ const acceptedFileTypes = {
   [Services.panoscrobbler]: ".jsonl",
   [Services.maloja]: ".json",
   [Services.youtubemusic]: ".json",
+  [Services.audioscrobbler]: ".log",
 };
 type ImportMetadata = {
   filename: string;
@@ -254,7 +258,7 @@ function renderImport(
 
 export default function ImportListens() {
   const data = useLoaderData() as ImportListensLoaderData;
-  const { user_has_email: userHasEmail } = data;
+  const { user_has_email: userHasEmail, pg_timezones, user_timezone } = data;
 
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
 
@@ -457,33 +461,21 @@ export default function ImportListens() {
         </div>
       )}
       <p>
-        This page allows you to import your{" "}
-        <span className="strong" data-tip data-for="info-tooltip">
-          listens
-        </span>{" "}
-        from third-party music services by uploading backup files.
-      </p>
-      <ReactTooltip id="info-tooltip" place="top">
-        Fun Fact: The term <strong>scrobble</strong> is a trademarked term by
-        Last.fm, and we cannot use it.
+        This page allows you to import your history backup files from
+        third-party streaming platforms and music services.
         <br />
-        Instead, we use the term <strong>listen</strong> for our data.
-      </ReactTooltip>
-      <p className="alert alert-info">
-        To connect to a music service and track{" "}
-        <strong>
-          <em>new</em>
-        </strong>{" "}
-        listens, head to the{" "}
-        <Link to="/settings/music-services/details/">Connect services</Link>{" "}
-        page .<br />
         For submitting listens from your music player or devices, check out the{" "}
         <Link to="/add-data/">Submitting data</Link> page.
       </p>
-      <p>
-        For example if you{" "}
-        <Link to="/settings/music-services/details/">connect to Spotify</Link>{" "}
-        we are limited to retrieving your last 50 listens.
+      <p className="alert alert-info">
+        <FontAwesomeIcon icon={faSpotify} className="me-2" />
+        <strong>Spotify</strong> users: to connect to Spotify and track new
+        listens, head to the{" "}
+        <Link to="/settings/music-services/details/">Connect Services</Link>{" "}
+        page.
+        <br />
+        Due to limitations in Spotify&apos;s API, we are limited to retrieving
+        your last 50 listens.
         <br />
         You can however request your{" "}
         <a
@@ -493,17 +485,24 @@ export default function ImportListens() {
         >
           extended streaming history
         </a>
-        , which contains your entire listening history, and upload it here. To
-        avoid duplicates, be sure to set the appropriate limit date and time.
+        , which contains your entire listening history, and upload it below.
       </p>
-
-      <h3 className="card-title">Import from Listening History Files</h3>
-      <br />
-      <p>
-        Migrate your listens from different streaming services to Listenbrainz!
+      <p className="alert alert-info">
+        <FontAwesomeIcon icon={faLastfmSquare} className="me-2" />
+        <strong>Last.FM and Libre.FM</strong> users: to import your history and
+        track new listens, head to the{" "}
+        <Link to="/settings/music-services/details/">Connect Services</Link>{" "}
+        page.
+        <br />
+        If you have historical backup files or LFM-style exports from other
+        service, you can import them below.
       </p>
       <p>
-        We currently support export files from: <b>{humanReadableServices}</b>.
+        We currently support history export files from:{" "}
+        <b>{humanReadableServices}</b>.
+        <br />
+        To avoid potential duplicates, be sure to set the appropriate limit date
+        and time.
       </p>
       <div className="alert alert-warning fade show" role="alert">
         <p>
@@ -513,9 +512,9 @@ export default function ImportListens() {
           <br />
           For <b>{nonZipServices.join(", ")}</b>: please upload single files
           directly (
-          {nonZipServices.map((s) => (
-            <mark>{acceptedFileTypes[s]}, </mark>
-          ))}{" "}
+          <mark>
+            {nonZipServices.map((s) => acceptedFileTypes[s]).join(", ")}
+          </mark>{" "}
           respectively).
         </p>
       </div>
@@ -562,50 +561,90 @@ export default function ImportListens() {
                   onChange={(e) => setFileSelected(!!e.target.files?.length)}
                 />
               </div>
+            </div>
 
-              <div style={{ minWidth: "15em" }}>
-                <label className="form-label" htmlFor="start-datetime">
-                  Start import from (optional):
-                </label>
-                <input
-                  type="date"
-                  id="start-datetime"
-                  className="form-control"
-                  max={new Date().toISOString()}
-                  name="from_date"
-                  title="Date and time to start import at"
+            <details className="mt-3">
+              <summary>
+                <FontAwesomeIcon
+                  icon={faChevronCircleRight}
+                  size="sm"
+                  className="summary-indicator"
                 />
-              </div>
+                Additional options
+              </summary>
+              <div className="flex flex-wrap mt-3" style={{ gap: "1em" }}>
+                <div style={{ minWidth: "15em" }}>
+                  <label className="form-label" htmlFor="start-datetime">
+                    Start import from (optional):
+                  </label>
+                  <input
+                    type="date"
+                    id="start-datetime"
+                    className="form-control"
+                    max={new Date().toISOString()}
+                    name="from_date"
+                    title="Date and time to start import at"
+                  />
+                </div>
 
-              <div style={{ minWidth: "15em" }}>
-                <label className="form-label" htmlFor="end-datetime">
-                  End date for import (optional):
-                </label>
-                <input
-                  type="date"
-                  id="end-datetime"
-                  className="form-control"
-                  max={new Date().toISOString()}
-                  name="to_date"
-                  title="Date and time to end import at"
-                />
-              </div>
+                <div style={{ minWidth: "15em" }}>
+                  <label className="form-label" htmlFor="end-datetime">
+                    End date for import (optional):
+                  </label>
+                  <input
+                    type="date"
+                    id="end-datetime"
+                    className="form-control"
+                    max={new Date().toISOString()}
+                    name="to_date"
+                    title="Date and time to end import at"
+                  />
+                </div>
 
-              <div style={{ flex: 0, alignSelf: "end", minWidth: "15em" }}>
-                <button
-                  type="submit"
-                  className="btn btn-success"
-                  disabled={hasAnImportInProgress || !fileSelected}
-                >
-                  Import Listens
-                </button>
+                <div style={{ minWidth: "15em" }}>
+                  <label className="form-label" htmlFor="timezone">
+                    Timezone (optional):
+                  </label>
+                  <select
+                    className="form-select"
+                    id="timezone"
+                    name="timezone"
+                    defaultValue={user_timezone}
+                    title="Timezone fallback for ambiguous timestamps"
+                    disabled={selectedService !== "audioscrobbler"}
+                  >
+                    <option value="">
+                      Use profile timezone ({user_timezone})
+                    </option>
+                    {pg_timezones.map((zone: string[]) => {
+                      return (
+                        <option key={zone[0]} value={zone[0]}>
+                          {zone[0]} ({zone[1]})
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
               </div>
+            </details>
+
+            <div className="mt-4" style={{ minWidth: "15em" }}>
+              <button
+                type="submit"
+                className="btn btn-success"
+                style={{
+                  padding: "1rem 2.5rem",
+                }}
+                disabled={hasAnImportInProgress || !fileSelected}
+              >
+                Import Listens
+              </button>
             </div>
           </form>
         </div>
       </div>
-
-      <section id="import-buttons">
+      <section id="imports">
+        <h3>Your imports</h3>
         <Loader isLoading={loading} style={{ margin: "0 1em" }} />
         {imports &&
           imports.map((im) => renderImport(im, cancelImport, fetchImport))}

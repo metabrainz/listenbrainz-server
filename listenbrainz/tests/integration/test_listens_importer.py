@@ -535,20 +535,28 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         import_id = response.json["import_id"]
 
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
-        response = self.wait_for_query_to_have_items(url, num_items=2, attempts=20)
+        response = self.wait_for_query_to_have_items(url, num_items=3, attempts=20)
         listens = response.json["payload"]["listens"]
-        self.assertEqual(len(listens), 2)
+        self.assertEqual(len(listens), 3)
 
-        self.assertEqual(listens[0]["listened_at"], 1690348225)
+        self.assertEqual(listens[0]["listened_at"], 1704067200)
         track_metadata = listens[0]["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "Oasis")
+        self.assertEqual(track_metadata["track_name"], "Wonderwall")
+        self.assertEqual(track_metadata["release_name"], "(What's the Story) Morning Glory?")
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+
+        self.assertEqual(listens[1]["listened_at"], 1690348225)
+        track_metadata = listens[1]["track_metadata"]
         self.assertEqual(track_metadata["artist_name"], "Sweet Garden")
         self.assertEqual(track_metadata["track_name"], "Altered State")
         self.assertNotIn("release_name", track_metadata)
         additional_info = track_metadata["additional_info"]
         self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
 
-        self.assertEqual(listens[1]["listened_at"], 1690347960)
-        track_metadata = listens[1]["track_metadata"]
+        self.assertEqual(listens[2]["listened_at"], 1690347960)
+        track_metadata = listens[2]["track_metadata"]
         self.assertEqual(track_metadata["artist_name"], "The Horrors")
         self.assertEqual(track_metadata["track_name"], "New Ice Age")
         self.assertEqual(track_metadata["release_name"], "Primary Colours")
@@ -563,7 +571,99 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         metadata = response.json["metadata"]
         self.assertIn("attempted_count", metadata)
         self.assertIn("success_count", metadata)
+        self.assertEqual(metadata["attempted_count"], 3)
+        self.assertEqual(metadata["success_count"], 3)
+
+    def test_import_librefm_without_album_column(self):
+        data = {
+            "service": "librefm",
+            "file": open(self.path_to_data_file("librefm_no_album_column.csv"), "rb"),
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert200(response)
+        import_id = response.json["import_id"]
+
+        url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
+        response = self.wait_for_query_to_have_items(url, num_items=2, attempts=20)
+        listens = response.json["payload"]["listens"]
+        self.assertEqual(len(listens), 2)
+
+        first_listen = listens[0]
+        self.assertEqual(first_listen["listened_at"], 1762874400)
+        track_metadata = first_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "Rick Astley")
+        self.assertEqual(track_metadata["track_name"], "Never Gonna Give You Up")
+        self.assertNotIn("release_name", track_metadata)
+        self.assertEqual(track_metadata["additional_info"]["submission_client"], "ListenBrainz Archive Importer")
+
+        second_listen = listens[1]
+        self.assertEqual(second_listen["listened_at"], 1609459200)
+        track_metadata = second_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "Nina Simone")
+        self.assertEqual(track_metadata["track_name"], "Feeling Good")
+        self.assertNotIn("release_name", track_metadata)
+        self.assertEqual(track_metadata["additional_info"]["submission_client"], "ListenBrainz Archive Importer")
+
+        response = self.client.get(
+            self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+        )
+        self.assert200(response)
+        metadata = response.json["metadata"]
         self.assertEqual(metadata["attempted_count"], 2)
+        self.assertEqual(metadata["success_count"], 2)
+
+    def test_import_librefm_with_date_range(self):
+        data = {
+            "service": "librefm",
+            "file": open(self.path_to_data_file("librefm.csv"), "rb"),
+            "from_date": datetime(2023, 1, 1, tzinfo=timezone.utc).isoformat(),
+            "to_date": datetime(2023, 12, 1, tzinfo=timezone.utc).isoformat(),
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert200(response)
+        import_id = response.json["import_id"]
+
+        url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
+        response = self.wait_for_query_to_have_items(url, num_items=2, attempts=20)
+        listens = response.json["payload"]["listens"]
+        self.assertEqual(len(listens), 2)
+
+        first_listen = listens[0]
+        self.assertEqual(first_listen["listened_at"], 1690348225)
+        track_metadata = first_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "Sweet Garden")
+        self.assertEqual(track_metadata["track_name"], "Altered State")
+        self.assertNotIn("release_name", track_metadata)
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+
+        second_listen = listens[1]
+        self.assertEqual(second_listen["listened_at"], 1690347960)
+        track_metadata = second_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "The Horrors")
+        self.assertEqual(track_metadata["track_name"], "New Ice Age")
+        self.assertEqual(track_metadata["release_name"], "Primary Colours")
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+
+        response = self.client.get(
+            self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+        )
+        self.assert200(response)
+        metadata = response.json["metadata"]
+        self.assertEqual(metadata["attempted_count"], 3)
         self.assertEqual(metadata["success_count"], 2)
 
     def test_import_librefm_via_maloja(self):
@@ -1017,3 +1117,59 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
 
         self.assertEqual(metadata["status"], "failed")
         self.assertEqual(metadata["progress"], "Unsupported service: foobar")
+
+    def test_import_audioscrobbler(self):
+        data = {
+            "service": "audioscrobbler",
+            "file": open(self.path_to_data_file(".scrobbler.log"), "rb"),
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert200(response)
+        import_id = response.json["import_id"]
+
+        url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
+        response = self.wait_for_query_to_have_items(url, num_items=2, attempts=20)
+        listens = response.json["payload"]["listens"]
+        self.assertEqual(len(listens), 2)
+
+        first_listen = listens[0]
+        self.assertEqual(first_listen["listened_at"], 1577840400)
+        track_metadata = first_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "今堀恒雄")
+        self.assertEqual(track_metadata["track_name"], "YELLOW ALERT")
+        self.assertEqual(track_metadata["release_name"], "trigun the first donuts")
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "Audioscrobbler Archive Importer")
+        self.assertEqual(additional_info["original_submission_client"], "Rockbox sansae200")
+        self.assertEqual(additional_info["duration"], 185)
+        self.assertEqual(additional_info["tracknumber"], "18")
+        self.assertNotIn("track_mbid", additional_info)
+
+        second_listen = listens[1]
+        self.assertEqual(second_listen["listened_at"], 1577836800)
+        track_metadata = second_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "The Beatles")
+        self.assertEqual(track_metadata["track_name"], "Come Together")
+        self.assertEqual(track_metadata["release_name"], "Abbey Road")
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "Audioscrobbler Archive Importer")
+        self.assertEqual(additional_info["original_submission_client"], "Rockbox sansae200")
+        self.assertEqual(additional_info["duration"], 259)
+        self.assertEqual(additional_info["tracknumber"], "1")
+        self.assertEqual(additional_info["track_mbid"], "d5e4fb56-e457-4684-aa31-63ce70ee5a8c")
+
+        response = self.client.get(
+            self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+        )
+        self.assert200(response)
+        metadata = response.json["metadata"]
+        self.assertIn("attempted_count", metadata)
+        self.assertIn("success_count", metadata)
+        self.assertEqual(metadata["attempted_count"], 3)
+        self.assertEqual(metadata["success_count"], 2)

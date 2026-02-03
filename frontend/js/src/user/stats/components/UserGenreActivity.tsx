@@ -15,6 +15,10 @@ export type UserGenreActivityProps = {
   user?: ListenBrainzUser;
 };
 
+export type UserGenreActivityGraphProps = {
+  rawData: GenreHourData[];
+};
+
 type ProcessedTimeframeData = {
   timeOfDay: string;
   timeRange: string;
@@ -129,67 +133,18 @@ function TimeMarker({
   );
 }
 
-export default function UserGenreActivity({
-  user,
-  range,
-}: UserGenreActivityProps) {
-  const { APIService } = React.useContext(GlobalAppContext);
+export function UserGenreActivityGraph({
+  rawData,
+}: UserGenreActivityGraphProps) {
   const colorScale = scaleSequential(interpolateRainbow).domain([0, 24]);
   const timezoneOffset = React.useMemo(() => getRoundedTimezoneOffset(), []);
 
   // Detect mobile screen size
   const isMobile = useMediaQuery("(max-width: 767px)");
 
-  const { data: loaderData, isLoading: loading } = useQuery({
-    queryKey: ["userGenreActivity", user?.name, range],
-    queryFn: async () => {
-      try {
-        if (!user?.name) throw new Error("User name is required");
-        const queryData = await APIService.getUserGenreActivity(
-          user.name,
-          range
-        );
-        return { data: queryData, hasError: false, errorMessage: "" };
-      } catch (error) {
-        return {
-          data: {
-            payload: {
-              genre_activity: [],
-              from_ts: 0,
-              to_ts: 0,
-              last_updated: 0,
-              user_id: user?.name ?? "",
-              range,
-            },
-          },
-          hasError: true,
-          errorMessage: error?.message ?? "Failed to load genre activity",
-        };
-      }
-    },
-    enabled: !!user?.name,
-  });
-
-  const {
-    data: rawData = {
-      payload: {
-        genre_activity: [],
-        from_ts: 0,
-        to_ts: 0,
-        last_updated: 0,
-        user_id: user?.name ?? "",
-        range,
-      },
-    },
-    hasError = false,
-    errorMessage = "",
-  } = loaderData || {};
-
   const chartData = React.useMemo(() => {
-    const { payload } = rawData as UserGenreActivityResponse;
-    const genre_activity: GenreHourData[] = payload?.genre_activity ?? [];
-    if (!genre_activity.length) return [];
-    const groupedData = groupDataByTimePeriod(genre_activity, timezoneOffset);
+    if (!rawData.length) return [];
+    const groupedData = groupDataByTimePeriod(rawData, timezoneOffset);
 
     return groupedData.flatMap((timeframe) => {
       // Calculate the total number of listens for all genres in this time period.
@@ -294,6 +249,106 @@ export default function UserGenreActivity({
   const timeMarkersConfig = getTimeMarkersConfig();
 
   return (
+    <div
+      style={{
+        position: "relative",
+        height: `${chartConfig.height}px`,
+        width: "100%",
+        margin: "0 auto",
+        overflow: "hidden",
+      }}
+    >
+      {timeMarkersConfig.map((marker, index) => (
+        <TimeMarker
+          key={marker.label}
+          position={marker.position}
+          label={marker.label}
+          isMobile={isMobile}
+        />
+      ))}
+      <ResponsivePie
+        data={chartData}
+        margin={chartConfig.margin}
+        innerRadius={chartConfig.innerRadius}
+        padAngle={0.7}
+        activeOuterRadiusOffset={isMobile ? 4 : 8}
+        cornerRadius={isMobile ? 6 : 10}
+        colors={(d) => d.data.color}
+        arcLabel={(d) => `${d.data.actualValue}`}
+        arcLinkLabel={(d) => d.data.displayName}
+        arcLabelsSkipAngle={chartConfig.arcLabelsSkipAngle}
+        arcLabelsTextColor="#333333"
+        arcLinkLabelsSkipAngle={isMobile ? 20 : 10}
+        arcLinkLabelsTextColor="#333333"
+        arcLinkLabelsThickness={isMobile ? 1 : 2}
+        arcLinkLabelsOffset={isMobile ? -5 : 0}
+        tooltip={CustomTooltip}
+        animate
+        motionConfig="gentle"
+        legends={[]}
+      />
+    </div>
+  );
+}
+
+export function UserGenreActivityStats({
+  user,
+  range,
+}: UserGenreActivityProps) {
+  const { APIService } = React.useContext(GlobalAppContext);
+  const isMobile = useMediaQuery("(max-width: 767px)");
+
+  const { data: loaderData, isLoading: loading } = useQuery({
+    queryKey: ["userGenreActivity", user?.name, range],
+    queryFn: async () => {
+      try {
+        if (!user?.name) throw new Error("User name is required");
+        const queryData = await APIService.getUserGenreActivity(
+          user.name,
+          range
+        );
+        return { data: queryData, hasError: false, errorMessage: "" };
+      } catch (error) {
+        return {
+          data: {
+            payload: {
+              genre_activity: [],
+              from_ts: 0,
+              to_ts: 0,
+              last_updated: 0,
+              user_id: user?.name ?? "",
+              range,
+            },
+          },
+          hasError: true,
+          errorMessage: error?.message ?? "Failed to load genre activity",
+        };
+      }
+    },
+    enabled: !!user?.name,
+  });
+
+  const {
+    data: rawData = {
+      payload: {
+        genre_activity: [],
+        from_ts: 0,
+        to_ts: 0,
+        last_updated: 0,
+        user_id: user?.name ?? "",
+        range,
+      },
+    },
+    hasError = false,
+    errorMessage = "",
+  } = loaderData || {};
+
+  const genreActivityData = React.useMemo(() => {
+    const { payload } = rawData as UserGenreActivityResponse;
+    return payload?.genre_activity ?? [];
+  }, [rawData]);
+
+  return (
     <Card className="user-stats-card" data-testid="user-genre-activity">
       <div className="row">
         <div className="col-xs-10">
@@ -317,45 +372,7 @@ export default function UserGenreActivity({
         ) : (
           <div className="row">
             <div className="col-xs-12">
-              <div
-                style={{
-                  position: "relative",
-                  height: `${chartConfig.height}px`,
-                  width: "100%",
-                  margin: "0 auto",
-                  overflow: "hidden",
-                }}
-              >
-                {timeMarkersConfig.map((marker, index) => (
-                  <TimeMarker
-                    key={marker.label}
-                    position={marker.position}
-                    label={marker.label}
-                    isMobile={isMobile}
-                  />
-                ))}
-                <ResponsivePie
-                  data={chartData}
-                  margin={chartConfig.margin}
-                  innerRadius={chartConfig.innerRadius}
-                  padAngle={0.7}
-                  activeOuterRadiusOffset={isMobile ? 4 : 8}
-                  cornerRadius={isMobile ? 6 : 10}
-                  colors={(d) => d.data.color}
-                  arcLabel={(d) => `${d.data.actualValue}`}
-                  arcLinkLabel={(d) => d.data.displayName}
-                  arcLabelsSkipAngle={chartConfig.arcLabelsSkipAngle}
-                  arcLabelsTextColor="#333333"
-                  arcLinkLabelsSkipAngle={isMobile ? 20 : 10}
-                  arcLinkLabelsTextColor="#333333"
-                  arcLinkLabelsThickness={isMobile ? 1 : 2}
-                  arcLinkLabelsOffset={isMobile ? -5 : 0}
-                  tooltip={CustomTooltip}
-                  animate
-                  motionConfig="gentle"
-                  legends={[]}
-                />
-              </div>
+              <UserGenreActivityGraph rawData={genreActivityData} />
             </div>
           </div>
         )}
@@ -363,3 +380,5 @@ export default function UserGenreActivity({
     </Card>
   );
 }
+
+export default UserGenreActivityStats;

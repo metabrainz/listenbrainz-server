@@ -58,18 +58,23 @@ def create_import_task():
         raise APIBadRequest("No service selected!")
     service = service.lower()
 
-    allowed_services = ["spotify", "listenbrainz", "librefm", "maloja", "panoscrobbler", "youtubemusic"]
+    allowed_services = ["spotify", "listenbrainz", "librefm",
+                        "maloja", "panoscrobbler", "audioscrobbler",  "youtubemusic"]
     if service not in allowed_services:
         raise APIBadRequest("This service is not supported!")
 
     from_date = _validate_datetime_param("from_date", datetime.fromtimestamp(0, timezone.utc))
     to_date = _validate_datetime_param("to_date", datetime.now(timezone.utc))
 
+    user_timezone = request.form.get("timezone", "").strip()
+    if not user_timezone:
+        user_timezone = None
+
     filename = uploaded_file.filename
     if not filename:
         raise APIBadRequest("Invalid file name!")
 
-    allowed_extensions = [".zip", ".csv", ".json", ".jsonl"]
+    allowed_extensions = [".zip", ".csv", ".json", ".jsonl", ".log"]
     extension = os.path.splitext(filename)[1].lower()
     if extension not in allowed_extensions:
         raise APIBadRequest("File type not allowed!")
@@ -84,6 +89,8 @@ def create_import_task():
         raise APIBadRequest("Only JSON files are allowed for this service!")
     if service == "youtubemusic" and extension != ".json":
         raise APIBadRequest("Only JSON files are allowed for this service!")
+    if service == "audioscrobbler" and extension != ".log":
+        raise APIBadRequest("Only .log files are allowed for this service!")
 
     # add a unique ID to the filename to avoid collisions
     saved_filename = str(uuid.uuid4()) + "-" + secure_filename(filename)
@@ -110,6 +117,7 @@ def create_import_task():
             from_date=from_date,
             to_date=to_date,
             save_path=save_path,
+            user_timezone=user_timezone,
             filename=filename
         )
         if result is not None:

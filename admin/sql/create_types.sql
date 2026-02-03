@@ -8,7 +8,7 @@ CREATE TYPE recommendation_feedback_type_enum AS ENUM('like', 'love', 'dislike',
 
 CREATE TYPE user_timeline_event_type_enum AS ENUM('recording_recommendation', 'notification', 'critiquebrainz_review', 'personal_recording_recommendation', 'thanks');
 
-CREATE TYPE hide_user_timeline_event_type_enum AS ENUM('recording_recommendation', 'personal_recording_recommendation', 'recording_pin');
+CREATE TYPE hide_user_timeline_event_type_enum AS ENUM('recording_recommendation', 'notification', 'critiquebrainz_review', 'personal_recording_recommendation', 'thanks', 'recording_pin');
 
 CREATE TYPE external_service_oauth_type AS ENUM ('spotify', 'youtube', 'critiquebrainz', 'lastfm', 'librefm', 'musicbrainz', 'soundcloud', 'apple', 'musicbrainz-prod', 'musicbrainz-beta', 'musicbrainz-test');
 
@@ -25,6 +25,6 @@ CREATE TYPE user_data_export_status_type AS ENUM ('in_progress', 'waiting', 'com
 
 CREATE TYPE user_data_export_type_type AS ENUM ('export_all_user_data');
 
-CREATE TYPE user_data_import_service_type AS ENUM ('spotify', 'applemusic', 'listenbrainz', 'librefm', 'maloja', 'panoscrobbler', 'youtubemusic');
+CREATE TYPE user_data_import_service_type AS ENUM ('spotify', 'applemusic', 'listenbrainz', 'librefm', 'maloja', 'panoscrobbler', 'audioscrobbler', 'youtubemusic');
 
 CREATE TYPE data_dump_type_type AS ENUM ('incremental', 'full');
