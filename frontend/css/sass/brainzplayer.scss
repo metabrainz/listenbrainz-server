@@ -103,7 +103,6 @@ $youtube-expanded-width: 1280px;
               content: "";
               width: 12px;
               height: 12px;
-              transform: rotate(180deg);
               top: 4px;
               left: 4px;
               position: absolute;
@@ -120,12 +119,6 @@ $youtube-expanded-width: 1280px;
           height: $youtube-button-size;
           .youtube-player {
             height: 0;
-          }
-        }
-
-        &.expanded {
-          .react-resizable-handle {
-            display: none;
           }
         }
 

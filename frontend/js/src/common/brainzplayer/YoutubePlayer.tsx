@@ -11,7 +11,6 @@ import {
 } from "lodash";
 import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
 import { ResizableBox, ResizeCallbackData } from "react-resizable";
-import "react-resizable/css/styles.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowsAlt,
@@ -540,27 +539,22 @@ export default class YoutubePlayer
       height: "100%",
     };
 
-    const maxAvailableWidth = this.getMaxAvailableWidth();
-    const dynamicMaxWidth = Math.min(EXPANDED_WIDTH, maxAvailableWidth);
-    const dynamicMaxHeight = Math.min(
-      EXPANDED_HEIGHT + BUTTON_HEIGHT,
-      window.innerHeight - (PLAYER_HEIGHT + BUTTON_HEIGHT + PADDING_TOP)
-    );
-
     const draggableBoundPadding = 10;
     // width of screen - padding on each side - youtube player width
     const leftBound =
       document.body.clientWidth - draggableBoundPadding * 2 - width;
-
     const isCurrentDataSource =
       store.get(currentDataSourceNameAtom) === this.name;
     const isPlayerVisible = isCurrentDataSource && !hidePlayer;
+    const maxResizableWidth = this.getMaxAvailableWidth();
+    const maxResizableHeight =
+      window.innerHeight - PLAYER_HEIGHT - BUTTON_HEIGHT - PADDING_TOP;
 
     return (
       <Draggable
         handle=".youtube-drag-handle"
         position={{ x, y }}
-        disabled={isExpanded || isInteracting}
+        disabled={isInteracting}
         cancel=".react-resizable-handle"
         onDrag={this.onDrag}
         onStart={this.onInteractionStart}
@@ -572,10 +566,7 @@ export default class YoutubePlayer
         }}
       >
         <div
-          className={`youtube-wrapper${!isPlayerVisible ? " hidden" : ""}${
-            isExpanded ? " expanded" : ""
-          }
-          `}
+          className={`youtube-wrapper${!isPlayerVisible ? " hidden" : ""}`}
           data-testid="youtube-wrapper"
         >
           <button
@@ -608,8 +599,8 @@ export default class YoutubePlayer
             onResizeStop={this.onInteractionStop}
             resizeHandles={["nw"]}
             minConstraints={[DEFAULT_WIDTH, DEFAULT_HEIGHT]}
-            maxConstraints={[dynamicMaxWidth, dynamicMaxHeight]}
-            axis={isExpanded ? "none" : "both"}
+            maxConstraints={[maxResizableWidth, maxResizableHeight]}
+            axis="both"
             className="youtube-resizable-container"
           >
             <YouTube
