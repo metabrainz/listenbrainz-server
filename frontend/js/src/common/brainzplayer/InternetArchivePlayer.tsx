@@ -173,7 +173,7 @@ export default class InternetArchivePlayer
     }
   };
 
-  playListen = (listen: any) => {
+  playListen = (listen: any, streamingUrl?: string) => {
     this.searchAndPlayTrack(listen);
   };
 

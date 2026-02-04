@@ -242,7 +242,10 @@ export default class NavidromePlayer
     );
   };
 
-  playListen = async (listen: Listen | JSPFTrack): Promise<void> => {
+  playListen = async (
+    listen: Listen | JSPFTrack,
+    streamingUrl?: string
+  ): Promise<void> => {
     if (this.abortController) {
       this.abortController.abort();
     }
