@@ -99,7 +99,7 @@ export default NiceModal.create(() => {
     SubmitListenType.track
   );
   const [selectedListens, setSelectedListens] = useState<Listen[]>([]);
-  const [customTimestamp, setCustomTimestamp] = useState(false);
+  const [useNow, setUseNow] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [invertOrder, setInvertOrder] = useState(false);
   const [keepModalOpen, setKeepModalOpen] = useState(false);
@@ -131,8 +131,8 @@ export default NiceModal.create(() => {
         let payload: Listen[] = [];
         const listenType: ListenType =
           selectedListens?.length <= 1 ? "single" : "import";
-        // Use the user-selected date, default to "now"
-        const date = customTimestamp ? selectedDate : new Date();
+        // Use the user-selected date, or "now" if useNow is true
+        const date = useNow ? new Date() : selectedDate;
         if (selectedListens?.length) {
           let orderedSelectedListens = [...selectedListens];
           if (invertOrder) {
@@ -219,7 +219,7 @@ export default NiceModal.create(() => {
     [
       auth_token,
       selectedListens,
-      customTimestamp,
+      useNow,
       selectedDate,
       invertOrder,
       APIService,
@@ -309,58 +309,29 @@ export default NiceModal.create(() => {
             <h5>Timestamp</h5>
             <div className="timestamp-entities">
               <Pill
-                active={customTimestamp === false}
+                active={invertOrder === false}
                 onClick={() => {
-                  setCustomTimestamp(false);
-                  setSelectedDate(new Date());
+                  setInvertOrder(false);
                 }}
                 type="secondary"
               >
-                Now
+                Starts at:
               </Pill>
               <Pill
-                active={customTimestamp === true}
+                active={invertOrder === true}
                 onClick={() => {
-                  setCustomTimestamp(true);
-                  setSelectedDate(new Date());
+                  setInvertOrder(true);
                 }}
                 type="secondary"
               >
-                Custom
+                Finishes at:
               </Pill>
               <div className="timestamp-date-picker">
-                <div>
-                  <label className="form-label" htmlFor="starts-at">
-                    <input
-                      name="invert-timestamp"
-                      type="radio"
-                      checked={invertOrder === false}
-                      id="starts-at"
-                      aria-label="Set the time of the beginning of the album"
-                      onChange={() => {
-                        setInvertOrder(false);
-                      }}
-                    />
-                    &nbsp;Starts at:
-                  </label>
-                  <label className="form-label" htmlFor="ends-at">
-                    <input
-                      name="invert-timestamp"
-                      type="radio"
-                      checked={invertOrder === true}
-                      id="ends-at"
-                      aria-label="Set the time of the end of the album"
-                      onChange={() => {
-                        setInvertOrder(true);
-                      }}
-                    />
-                    &nbsp;Finishes at:
-                  </label>
-                </div>
                 <DateTimePicker
                   value={selectedDate}
                   onChange={(newDateTimePickerValue: Date) => {
                     setSelectedDate(newDateTimePickerValue);
+                    setUseNow(false);
                   }}
                   calendarIcon={
                     <FontAwesomeIcon icon={faCalendar as IconProp} />
@@ -370,9 +341,18 @@ export default NiceModal.create(() => {
                   format={userLocale ? undefined : "yyyy-MM-dd hh:mm:ss"}
                   locale={userLocale}
                   maxDetail="second"
-                  disabled={!customTimestamp}
                 />
               </div>
+              <Pill
+                active={useNow}
+                onClick={() => {
+                  setUseNow(true);
+                  setSelectedDate(new Date());
+                }}
+                type="secondary"
+              >
+                Now
+              </Pill>
             </div>
           </div>
         </Modal.Body>
