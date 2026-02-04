@@ -14,6 +14,7 @@ class PinnedRecording(MsidMbidModel):
     """Represents a pinned recording object.
     Args:
         user_id: the row id of the user in the DB
+        user_name: (Optional) the name of the user associated with the user_id
         row_id: the row id of the pinned_recording in the DB
         recording_mbid: the MusicBrainz ID of the recording
         blurb_content: (Optional) the custom text content of the pinned recording
