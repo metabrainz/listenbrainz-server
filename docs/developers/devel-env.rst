@@ -49,20 +49,17 @@ environment with your MusicBrainz account.
 To register, visit the `MusicBrainz applications page`_. There, look for the
 option to `register`_ your application. Fill out the form with the following data:
 
-- **Name**: (any name that you want and will recognize, e.g.
+- **Name**: any name that you want and will recognize (e.g.
   ``listenbrainz-server-devel``)
-
-- **Type**: ``Web Application``
-
-- **Callback URL**: ``http://localhost:8100/login/musicbrainz/post/``
+- **Description**: optional, short description of the application
+- **Homepage**: ``http://localhost:8100``
+- **Redirect URI**: ``http://localhost:8100/login/musicbrainz/post/``
 
 After entering this information, you'll have an OAuth client ID and OAuth client
 secret. You'll use these for configuring ListenBrainz.
 
 .. _MusicBrainz applications page: https://musicbrainz.org/new-oauth2/client/list
 .. _register: https://musicbrainz.org/new-oauth2/client/create
-
-
 Update config.py
 ^^^^^^^^^^^^^^^^
 
