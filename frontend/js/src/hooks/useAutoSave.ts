@@ -2,25 +2,24 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import debounce from "lodash/debounce";
 import { toast } from "react-toastify";
 
-interface UseAutoSaveOptions {
+interface UseAutoSaveOptions<T> {
   delay?: number;
-  onSave: () => Promise<void>; // function that actually saves data
-  enabled?: boolean;
+  onSave: (value: T) => Promise<void>; // function that actually saves data
 }
 
-interface UseAutoSaveReturn {
-  triggerAutoSave: () => void;
+interface UseAutoSaveReturn<T> {
+  triggerAutoSave: (value: T) => void;
 }
 // the main hook
-export default function useAutoSave({
+export default function useAutoSave<T>({
   delay = 3000,
   onSave,
-  enabled = true,
-}: UseAutoSaveOptions): UseAutoSaveReturn {
-  const debouncedSaveRef = useRef(
-    debounce(async () => {
+}: UseAutoSaveOptions<T>): UseAutoSaveReturn<T> {
+  const debouncedSaveRef = useRef<ReturnType<typeof debounce>>();
+  useEffect(() => {
+    const debouncedSave = debounce(async (value: T) => {
       try {
-        await onSave();
+        await onSave(value);
         toast.success("Changes Saved", { autoClose: 3000 });
       } catch (error) {
         // Displaying the specific error , if not then -> "Save failed"
@@ -28,32 +27,24 @@ export default function useAutoSave({
           error instanceof Error ? error.message : "Save failed";
         toast.error(`Error saving changes: ${errorMessage}`);
       }
-    }, delay)
-  );
-
-  // whenever user makes change , this function gets called
-  const triggerAutoSave = useCallback(() => {
-    if (enabled) {
-      debouncedSaveRef.current();
-    }
-  }, [enabled]);
-
-  // Adding this useEffect : if user refreshes browser before 3 sec or navigates away then changes should
-  // be saved:
-  useEffect(() => {
+    }, delay);
+    debouncedSaveRef.current = debouncedSave;
+    // fires when Refresh / close tab
     const handleBeforeUnload = () => {
-      debouncedSaveRef.current.flush(); // Pending changes are getting saved immediately
+      debouncedSave.flush(); // Pending changes are getting saved immediately
     };
-    // listening for whenever user closes/refreshes browser
     window.addEventListener("beforeunload", handleBeforeUnload);
-
+    // Flush pending changes on component unmount or re-init like ,
+    //  user navigates to another route
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload); // <- cleanup
-      debouncedSaveRef.current.flush();
+      debouncedSave.flush();
     };
-  }, []);
+  }, [delay, onSave]);
 
-  return {
-    triggerAutoSave, // funct to trigger save countdown
-  };
+  // whenever user makes change , this function gets called
+  const triggerAutoSave = useCallback((value: T) => {
+    debouncedSaveRef.current?.(value);
+  }, []);
+  return { triggerAutoSave };
 }

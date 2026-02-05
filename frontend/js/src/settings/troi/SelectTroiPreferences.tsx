@@ -3,12 +3,12 @@ import * as React from "react";
 import { useLoaderData } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
-import debounce from "lodash/debounce"; // For auto-save debouncing
-import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import useAutoSave from "../../hooks/useAutoSave";
 
 type SelectTroiPreferencesProps = {
   exportToSpotify: boolean;
+  autoSave: (exportToSpotify: boolean) => void;
 };
 
 type SelectTroiPreferencesLoaderData = {
@@ -26,75 +26,27 @@ class SelectTroiPreferences extends React.Component<
   SelectTroiPreferencesProps,
   SelectTroiPreferencesState
 > {
-  static contextType = GlobalAppContext;
-  declare context: React.ContextType<typeof GlobalAppContext>;
-  // Debounced auto-save function
-  private debouncedAutoSave: ReturnType<typeof debounce>;
-
   constructor(props: SelectTroiPreferencesProps) {
     super(props);
     this.state = {
       exportToSpotify: props.exportToSpotify,
     };
-    // debounced auto save funct.Reset if toggles within 3 sec
-    this.debouncedAutoSave = debounce(this.performAutoSave, 3000);
   }
 
-  // Listener for handleBeforeUnload so that pending changes are saved
-  // when user tries to close/refresh browser
-  componentDidMount(): void {
-    window.addEventListener("beforeunload", this.handleBeforeUnload);
+  // Keep local UI state in sync if the prop value changes.
+
+  componentDidUpdate(prevProps: SelectTroiPreferencesProps) {
+    const { exportToSpotify } = this.props;
+
+    if (prevProps.exportToSpotify !== exportToSpotify) {
+      this.setState({ exportToSpotify });
+    }
   }
-
-  // Handles situation when user naviagtes to another page
-
-  componentWillUnmount(): void {
-    //  (cleanup)
-    window.removeEventListener("beforeunload", this.handleBeforeUnload);
-    this.debouncedAutoSave.flush();
-  }
-
-  // Fires when refresh browser or close the tab
-  handleBeforeUnload = (): void => {
-    this.debouncedAutoSave.flush();
-  };
 
   exportToSpotifySelection = (exportToSpotify: boolean): void => {
+    const { autoSave } = this.props;
     this.setState({ exportToSpotify });
-    this.debouncedAutoSave();
-  };
-
-  /* Performs the auto-save operation after debounce delay
-   This is called 3 seconds after the last preference change */
-  performAutoSave = async (): Promise<void> => {
-    const { APIService, currentUser } = this.context;
-    const { exportToSpotify } = this.state;
-
-    // Don't save if user is not logged in
-    if (!currentUser?.auth_token) {
-      return;
-    }
-
-    try {
-      // Call API to save playlist preferences
-
-      const status = await APIService.submitTroiPreferences(
-        currentUser?.auth_token,
-        exportToSpotify
-      );
-
-      if (status === 200) {
-        // Success toast (auto-closes in 3 seconds)
-        toast.success("Playlist Preferences Saved", {
-          autoClose: 3000,
-        });
-      }
-    } catch (error) {
-      // Displaying error toast
-      const errorMessage =
-        error instanceof Error ? error.message : "Save failed";
-      toast.error(`Error saving preferences: ${errorMessage}`);
-    }
+    autoSave(exportToSpotify);
   };
 
   render() {
@@ -113,10 +65,7 @@ class SelectTroiPreferences extends React.Component<
           You can export playlists manually, regardless of whether auto-export
           is turned on or off.
         </p>
-        <p
-          className="border-start border-info border-3 px-3 py-2 mb-3"
-          style={{ backgroundColor: "rgba(248, 249, 250)", fontSize: "1.1em" }}
-        >
+        <p className="border-start  bg-light border-info border-3 px-3 py-2 mb-3 fs-4">
           Changes are saved automatically.
         </p>
 
@@ -140,9 +89,36 @@ class SelectTroiPreferences extends React.Component<
   }
 }
 
+//  Functional wrapper
+
 export function SelectTroiPreferencesWrapper() {
   const data = useLoaderData() as SelectTroiPreferencesLoaderData;
-  const { troi_prefs } = data;
-  const exportToSpotify = troi_prefs?.troi?.export_to_spotify ?? false;
-  return <SelectTroiPreferences exportToSpotify={exportToSpotify} />;
+  const exportToSpotify = data?.troi_prefs?.troi?.export_to_spotify ?? false;
+
+  const globalContext = React.useContext(GlobalAppContext);
+  const { APIService, currentUser } = globalContext;
+
+  const submitTroiPreferences = React.useCallback(
+    async (newValue: boolean) => {
+      if (!currentUser?.auth_token) {
+        toast.error("You must be logged in to update your preferences");
+        return;
+      }
+
+      await APIService.submitTroiPreferences(currentUser.auth_token, newValue);
+    },
+    [APIService, currentUser?.auth_token]
+  );
+
+  const { triggerAutoSave } = useAutoSave<boolean>({
+    delay: 3000,
+    onSave: submitTroiPreferences,
+  });
+
+  return (
+    <SelectTroiPreferences
+      exportToSpotify={exportToSpotify}
+      autoSave={triggerAutoSave}
+    />
+  );
 }

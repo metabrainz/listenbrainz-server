@@ -3,21 +3,21 @@ import * as React from "react";
 import { useLoaderData } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
-import debounce from "lodash/debounce"; // For auto-save debouncing
-import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-/* This is a class component So not using the useAutoSave hook
-as it works for functional components. So using lodash */
+import useAutoSave from "../../hooks/useAutoSave";
 
 export type SelectTimezoneProps = {
   pg_timezones: Array<string[]>;
   user_timezone: string;
+  autoSave: (timezone: string) => void;
 };
 
-type SelectTimezoneLoaderData = SelectTimezoneProps;
+type SelectTimezoneLoaderData = {
+  pg_timezones: Array<string[]>;
+  user_timezone: string;
+};
 
 export interface SelectTimezoneState {
-  selectZone: string;
   userTimezone: string;
 }
 
@@ -25,82 +25,29 @@ export default class SelectTimezone extends React.Component<
   SelectTimezoneProps,
   SelectTimezoneState
 > {
-  static contextType = GlobalAppContext;
-  declare context: React.ContextType<typeof GlobalAppContext>;
-
-  // Debounced auto-save function - waits 3 seconds after last change before saving
-  private debouncedAutoSave: ReturnType<typeof debounce>;
-
   constructor(props: SelectTimezoneProps) {
     super(props);
 
     this.state = {
-      selectZone: props.user_timezone,
       userTimezone: props.user_timezone,
     };
-    // Creating an debounced  auto save function
-    this.debouncedAutoSave = debounce(this.performAutoSave, 3000);
   }
 
-  // Listener for handleBeforeUnload so that pending changes are saved
-  // when user tries to close/refresh browser
-  componentDidMount(): void {
-    window.addEventListener("beforeunload", this.handleBeforeUnload);
+  // Keep local UI state in sync if the prop value changes.
+  componentDidUpdate(prevProps: SelectTimezoneProps) {
+    const { user_timezone } = this.props;
+
+    if (prevProps.user_timezone !== user_timezone) {
+      this.setState({ userTimezone: user_timezone });
+    }
   }
-
-  // handles the situation when user naviagtes to another page
-  // or click to some link  to move to new page
-
-  componentWillUnmount(): void {
-    //  (cleanup)
-    window.removeEventListener("beforeunload", this.handleBeforeUnload);
-    this.debouncedAutoSave.flush();
-  }
-
-  // Fires when user refreshes browser or close the tab
-  handleBeforeUnload = (): void => {
-    this.debouncedAutoSave.flush();
-  };
 
   zoneSelection = (zone: string): void => {
+    const { autoSave } = this.props;
     this.setState({
-      selectZone: zone,
-      // if user change again within 3 sec window
-      // then the timer again resets
+      userTimezone: zone,
     });
-    this.debouncedAutoSave();
-  };
-
-  // Main function which performs the auto save
-  // This is called 3 seconds after the last timezone change
-  performAutoSave = async (): Promise<void> => {
-    const { APIService, currentUser } = this.context;
-    const { auth_token } = currentUser;
-    const { selectZone } = this.state;
-
-    // if user is not logged in then dont save
-    if (!auth_token) {
-      return;
-    }
-
-    try {
-      // Call API to save timezone
-      const status = await APIService.resetUserTimezone(auth_token, selectZone);
-
-      if (status === 200) {
-        this.setState({
-          userTimezone: selectZone, // Update the displayed timezone
-        });
-
-        // Success toast (auto-closes in 3 seconds)
-        toast.success("Timezone Saved", { autoClose: 3000 });
-      }
-    } catch (error) {
-      // Error toast (stays visible)
-      const errorMessage =
-        error instanceof Error ? error.message : "Save failed";
-      toast.error(`Error saving timezone: ${errorMessage}`);
-    }
+    autoSave(zone);
   };
 
   render() {
@@ -124,10 +71,7 @@ export default class SelectTimezone extends React.Component<
           playlists and recommendations are generated.
         </p>
 
-        <p
-          className="border-start border-info border-3 px-3 py-2 mb-3"
-          style={{ backgroundColor: "rgba(248, 249, 250)", fontSize: "1.1em" }}
-        >
+        <p className="border-start bg-light border-info border-3 px-3 py-2 mb-3 fs-4">
           Changes are saved automatically.
         </p>
         <div>
@@ -135,7 +79,7 @@ export default class SelectTimezone extends React.Component<
             Select your local timezone:{" "}
             <select
               className="form-select"
-              defaultValue={userTimezone}
+              value={userTimezone}
               onChange={(e) => this.zoneSelection(e.target.value)}
             >
               <option value="default" disabled>
@@ -158,5 +102,33 @@ export default class SelectTimezone extends React.Component<
 
 export function SelectTimezoneWrapper() {
   const data = useLoaderData() as SelectTimezoneLoaderData;
-  return <SelectTimezone {...data} />;
+  const { pg_timezones, user_timezone } = data;
+
+  const globalContext = React.useContext(GlobalAppContext);
+  const { APIService, currentUser } = globalContext;
+
+  const submitTimezone = React.useCallback(
+    async (newTimezone: string) => {
+      if (!currentUser?.auth_token) {
+        toast.error("You must be logged in to update your timezone");
+        return;
+      }
+
+      await APIService.resetUserTimezone(currentUser.auth_token, newTimezone);
+    },
+    [APIService, currentUser?.auth_token]
+  );
+
+  const { triggerAutoSave } = useAutoSave<string>({
+    delay: 3000,
+    onSave: submitTimezone,
+  });
+
+  return (
+    <SelectTimezone
+      pg_timezones={pg_timezones}
+      user_timezone={user_timezone}
+      autoSave={triggerAutoSave}
+    />
+  );
 }
