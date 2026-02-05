@@ -49,6 +49,46 @@ const defaultProps = {
   onInvalidateDataSource: jest.fn(),
 };
 
+const contextWithoutToken = {
+  ...defaultContext,
+  funkwhaleAuth: {
+    instance_url: "https://test.funkwhale.audio",
+    user_id: "test-user-id",
+    username: "test-user",
+  },
+};
+
+const mockTrack: FunkwhaleTrack = {
+  id: 123,
+  title: "Test Track",
+  fid: "test-fid",
+  listen_url: "/api/v1/listen/123/",
+  is_playable: true,
+  duration: 180,
+  creation_date: "2024-01-01T00:00:00Z",
+  modification_date: "2024-01-01T00:00:00Z",
+  artist: {
+    id: 1,
+    name: "Test Artist",
+    fid: "artist-fid",
+  },
+  album: {
+    id: 1,
+    title: "Test Album",
+    cover: {
+      urls: {
+        original: "https://test.funkwhale.audio/media/cover.jpg",
+      },
+    },
+  },
+};
+
+const mockAudioBlob = new Blob(["audio data"], { type: "audio/mpeg" });
+
+const refreshFunkwhaleToken = jest
+  .fn()
+  .mockResolvedValue("new-access-token");
+
 describe("FunkwhalePlayer", () => {
   beforeEach(() => {
     store.set(currentDataSourceNameAtom, "funkwhale");
@@ -451,9 +491,9 @@ describe("FunkwhalePlayer", () => {
   });
 
   describe("Audio event callbacks", () => {
-    it("should call onPlayerPausedChange when audio plays", () => {
+    it("should call onPlayerPausedChange when playback status changes", () => {
       const onPlayerPausedChange = jest.fn();
-      render(
+      const { rerender } = render(
         <GlobalAppContext.Provider value={defaultContext}>
           <FunkwhalePlayer
             {...defaultProps}
@@ -466,32 +506,16 @@ describe("FunkwhalePlayer", () => {
         "funkwhale-audio"
       ) as HTMLAudioElement;
 
+      // Test play event
       act(() => {
         audio.dispatchEvent(new Event("play"));
       });
-
       expect(onPlayerPausedChange).toHaveBeenCalledWith(false);
-    });
 
-    it("should call onPlayerPausedChange when audio pauses", () => {
-      const onPlayerPausedChange = jest.fn();
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <FunkwhalePlayer
-            {...defaultProps}
-            onPlayerPausedChange={onPlayerPausedChange}
-          />
-        </GlobalAppContext.Provider>
-      );
-
-      const audio = screen.getByTestId(
-        "funkwhale-audio"
-      ) as HTMLAudioElement;
-
+      // Test pause event
       act(() => {
         audio.dispatchEvent(new Event("pause"));
       });
-
       expect(onPlayerPausedChange).toHaveBeenCalledWith(true);
     });
 
@@ -621,7 +645,6 @@ describe("FunkwhalePlayer", () => {
     });
 
     it("should fetch authenticated audio and create blob URL", async () => {
-      const mockAudioBlob = new Blob(["audio data"], { type: "audio/mpeg" });
       fetchMock.mockResponseOnce(async () => mockAudioBlob as any);
 
       const playerRef = React.createRef<FunkwhalePlayer>();
@@ -646,7 +669,6 @@ describe("FunkwhalePlayer", () => {
     });
 
     it("should handle full URL in getAuthenticatedAudioUrl", async () => {
-      const mockAudioBlob = new Blob(["audio data"], { type: "audio/mpeg" });
       fetchMock.mockResponseOnce(async () => mockAudioBlob as any);
 
       const playerRef = React.createRef<FunkwhalePlayer>();
@@ -687,15 +709,6 @@ describe("FunkwhalePlayer", () => {
     });
 
     it("should return null when access token is missing", async () => {
-      const contextWithoutToken = {
-        ...defaultContext,
-        funkwhaleAuth: {
-          instance_url: "https://test.funkwhale.audio",
-          user_id: "test-user-id",
-          username: "test-user",
-        },
-      };
-
       const playerRef = React.createRef<FunkwhalePlayer>();
       render(
         <GlobalAppContext.Provider value={contextWithoutToken}>
@@ -740,31 +753,6 @@ describe("FunkwhalePlayer", () => {
     });
 
     it("should fetch track info with Authorization header", async () => {
-      const mockTrack: FunkwhaleTrack = {
-        id: 123,
-        title: "Test Track",
-        fid: "test-fid",
-        listen_url: "/api/v1/listen/123/",
-        is_playable: true,
-        duration: 180,
-        creation_date: "2024-01-01T00:00:00Z",
-        modification_date: "2024-01-01T00:00:00Z",
-        artist: {
-          id: 1,
-          name: "Test Artist",
-          fid: "artist-fid",
-        },
-        album: {
-          id: 1,
-          title: "Test Album",
-          cover: {
-            urls: {
-              original: "https://test.funkwhale.audio/media/cover.jpg",
-            },
-          },
-        },
-      };
-
       fetchMock.mockResponseOnce(JSON.stringify(mockTrack));
 
       const playerRef = React.createRef<FunkwhalePlayer>();
@@ -804,15 +792,6 @@ describe("FunkwhalePlayer", () => {
     });
 
     it("should return null when access token is missing", async () => {
-      const contextWithoutToken = {
-        ...defaultContext,
-        funkwhaleAuth: {
-          instance_url: "https://test.funkwhale.audio",
-          user_id: "test-user-id",
-          username: "test-user",
-        },
-      };
-
       const playerRef = React.createRef<FunkwhalePlayer>();
       render(
         <GlobalAppContext.Provider value={contextWithoutToken}>
@@ -847,33 +826,6 @@ describe("FunkwhalePlayer", () => {
     });
 
     it("should play track by ID with full authenticated flow", async () => {
-      const mockTrack: FunkwhaleTrack = {
-        id: 123,
-        title: "Test Track",
-        fid: "test-fid",
-        listen_url: "/api/v1/listen/123/",
-        is_playable: true,
-        duration: 180,
-        creation_date: "2024-01-01T00:00:00Z",
-        modification_date: "2024-01-01T00:00:00Z",
-        artist: {
-          id: 1,
-          name: "Test Artist",
-          fid: "artist-fid",
-        },
-        album: {
-          id: 1,
-          title: "Test Album",
-          cover: {
-            urls: {
-              original: "https://test.funkwhale.audio/media/cover.jpg",
-            },
-          },
-        },
-      };
-
-      const mockAudioBlob = new Blob(["audio data"], { type: "audio/mpeg" });
-
       // First fetch for track info, second for audio blob
       fetchMock.mockResponses(
         [JSON.stringify(mockTrack), { status: 200 }],
@@ -1023,10 +975,11 @@ describe("FunkwhalePlayer", () => {
   });
 
   describe("handleTokenError integration", () => {
+    beforeEach(() => {
+      refreshFunkwhaleToken.mockResolvedValue("new-access-token");
+    });
+
     it("should call refreshFunkwhaleToken and retry callback on token error", async () => {
-      const refreshFunkwhaleToken = jest
-        .fn()
-        .mockResolvedValue("new-access-token");
       const callback = jest.fn();
       const playerRef = React.createRef<FunkwhalePlayer>();
 
@@ -1052,9 +1005,7 @@ describe("FunkwhalePlayer", () => {
     });
 
     it("should call onInvalidateDataSource when token refresh fails", async () => {
-      const refreshFunkwhaleToken = jest
-        .fn()
-        .mockRejectedValue(new Error("Refresh failed"));
+      refreshFunkwhaleToken.mockRejectedValueOnce(new Error("Refresh failed"));
       const onInvalidateDataSource = jest.fn();
       const callback = jest.fn();
       const playerRef = React.createRef<FunkwhalePlayer>();
