@@ -15,7 +15,6 @@
     preserveAspectRatio="xMinYMin meet">
     <title>Top 10 songs of {{ year }} for {{ user_name }}&#xA;</title>
     <desc>
-        Top 10 songs of {{ year }} for {{ user_name }}:&#xA;
         {% for track in tracks[:10] %}
         {%- if loop.index == 10 -%}X{%- else -%}{{- loop.index -}}{%- endif -%}. {{
         track.track_name }} - {{ track.artist_name }}&#xA;
