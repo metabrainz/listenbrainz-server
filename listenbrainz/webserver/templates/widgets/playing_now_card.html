@@ -73,7 +73,7 @@
           rel="noopener noreferrer"
           >{{ user_name | safe }}</a
         >
-        <span class="listen-time">on ListenBrainz</span>
+        <span class="listen-time">{% if is_playing_now %}on ListenBrainz{% else %}last listened on ListenBrainz{% endif %}</span>
       </div>
     </div>
     {% endif %}
