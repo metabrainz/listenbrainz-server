@@ -6,6 +6,9 @@ from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.model.feedback import Feedback
 from typing import List
 
+from psycopg2.extras import execute_values
+from psycopg2.sql import SQL, Identifier
+
 INSERT_QUERIES = {
     "msid": """
         INSERT INTO recording_feedback (user_id, recording_msid, score)
@@ -295,3 +298,25 @@ def get_feedback_for_multiple_recordings_for_user(db_conn, user_id: int, user_na
     query = query_base + query_remaining
     result = db_conn.execute(text(query), params)
     return [Feedback(user_id=user_id, user_name=user_name, **row) for row in result.mappings()]
+
+
+def bulk_insert_loved_tracks(db_conn, user_id: int, feedback: list[tuple[int, str]], column: str = 'recording_mbid'):
+    """ Insert loved tracks imported from external services into feedback table """
+    # delete existing feedback for given mbids and then import new in same transaction
+    delete_query = SQL("""
+               WITH entries(user_id, {column}) AS (VALUES %s)
+        DELETE FROM recording_feedback rf
+              USING entries e
+              WHERE e.user_id = rf.user_id
+                AND e.{column}::uuid = rf.{column}
+    """).format(column=Identifier(column))
+    insert_query = SQL("""
+        INSERT INTO recording_feedback (user_id, created, {column}, score)
+             VALUES %s
+    """).format(column=Identifier(column))
+    
+    with db_conn.connection.cursor() as cursor:
+        execute_values(cursor, delete_query, [(mbid,) for ts, mbid in feedback], template=f"({user_id}, %s)")
+        execute_values(cursor, insert_query, feedback, template=f"({user_id}, to_timestamp(%s), %s, 1)")
+    
+    db_conn.commit()
