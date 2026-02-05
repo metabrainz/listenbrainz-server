@@ -30,10 +30,11 @@ It allows users to submit listening data from various players and services
 and explore their music taste through open data and visualizations. We're
 completely open-source and publish our data as open data.
 
-You can use ListenBrainz to track your music listening habits and
-share your taste with others using our visualizations. We also have an
-[API](https://listenbrainz.readthedocs.io/en/latest/users/api/index.html)
-if you want to do more with our data.
+You can use ListenBrainz to track your listening activity, explore personalized 
+insights through visualizations, and share your music taste with others. 
+Developers can also access the ListenBrainz 
+[API](https://listenbrainz.readthedocs.io/en/latest/users/api/index.html) 
+to build applications and services using this data.
 
 ListenBrainz is operated by the [MetaBrainz Foundation](https://metabrainz.org)
 which has a long-standing history of curating, protecting and making music data available to the
