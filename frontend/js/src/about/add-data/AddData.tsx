@@ -448,14 +448,11 @@ export default function AddData() {
           , a{" "}
           <em>
             <a href="https://www.foobar2000.org/">Foobar2000</a>
-          </em>{" "}
-          plugin for submitting and retrieving playlists from ListenBrainz (+
-          Spotify). Can retrieve recommendations, submit tracks feedback (love
-          and hate) and batch upload{" "}
+          </em>{" "} plugin for submitting and retrieving playlists from
+          ListenBrainz (+ Spotify). Can retrieve recommendations, submit
+          tracks feedback (love and hate) and batch upload{" "}
           <em>
-            <a href="https://kawaiidango.github.io/pano-scrobbler/">
-              Pano Scrobbler
-            </a>
+            <a href="https://kawaiidango.github.io/pano-scrobbler/">Pano Scrobbler</a>
           </em>{" "}
           listens.
         </li>
@@ -470,8 +467,8 @@ export default function AddData() {
             <a href="https://www.foobar2000.org/">Foobar2000</a>
           </em>{" "}
           plugin for syncing local playlists with ListenBrainz (+ Spotify).
-          Provides tracking for playlists changes and resolves tracks with local
-          content and YouTube links.
+          Provides tracking for playlists changes and resolves tracks with 
+          local content and YouTube links.
         </li>
         <li>
           <em>
@@ -523,9 +520,9 @@ export default function AddData() {
           <em>
             <a href="https://www.foobar2000.org/">Foobar2000</a>
           </em>{" "}
-          plugin that creates listening reports, similar to Spotify&apos;s
-          annual report for any time period. Can use ListenBrainz listening
-          history and recommendations.
+          plugin that creates listening reports, similar to Spotify&apos;s annual
+          report for any time period. Can use ListenBrainz listening history and
+          recommendations.
         </li>
       </ul>
 
