@@ -491,15 +491,10 @@ export default class APIService {
     // Payload is not within submission limit, split and submit
     const payload1 = payload.slice(0, payload.length / 2);
     const payload2 = payload.slice(payload.length / 2, payload.length);
-    return (
-      this.submitListens(userToken, listenType, payload1, retries)
-
-        // removed response2 because the line  .then((response2) => response2) is redundant
-        // send first half if suceeds then send second half
-        .then((response1) =>
-          // Succes of first request, now do the second one
-          this.submitListens(userToken, listenType, payload2, retries)
-        )
+    return this.submitListens(userToken, listenType, payload1, retries).then(
+      (response1) =>
+        // Succes of first request, now do the second one
+        this.submitListens(userToken, listenType, payload2, retries)
     );
   };
 

@@ -75,14 +75,9 @@ describe("submitListens", () => {
 
     await jest.advanceTimersByTimeAsync(10000);
 
-    // As now Retry is now handled inside the generic withRetry helper.So submitListens
-    //  itself is called only once; the retry happens by
+    // Now submitListens itself is called only once; the retry happens by
     // re-executing the underlying network request.
-
-
-    // Therefore, we show that fetch is called twice instead of
-    // expecting submitListens to be called many times.
-
+    // Therefore, we show that fetch is called twice .
     expect(window.fetch).toHaveBeenCalledTimes(2);
 
   });
@@ -117,7 +112,6 @@ describe("submitListens", () => {
     await jest.advanceTimersByTimeAsync(10000);
 
     // Earlier, retries were done by calling submitListens again,
-    // so the tests checked that the method itself was called multiple times.
     // With the new withRetry helper, the retry happens inside the request  layer instead.
 
     // submitListens runs only once, and the network request
