@@ -162,3 +162,27 @@ $badge-font-size: 1.2rem;
 $grid-gutter-width: 3rem;
 $base-border-radius: 6px;
 $navbar-toggler-border-radius: $base-border-radius;
+
+:root {
+  --lb-bg-primary: #ffffff;
+  --lb-bg-secondary: #f8f9fa;
+
+  --lb-text-primary: #1a1a1a;
+  --lb-text-secondary: #555555;
+
+  --lb-border-color: #e0e0e0;
+
+  --lb-hover-bg: rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="dark"] {
+  --lb-bg-primary: #121212;
+  --lb-bg-secondary: #1e1e1e;
+
+  --lb-text-primary: #f1f1f1;
+  --lb-text-secondary: #bbbbbb;
+
+  --lb-border-color: #2a2a2a;
+
+  --lb-hover-bg: rgba(255, 255, 255, 0.08);
+}

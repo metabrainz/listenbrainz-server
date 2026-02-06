@@ -13,10 +13,12 @@
   vertical-align: middle;
   transition: background 0.25s;
 }
+
 .toggle-switch:before,
 .toggle-switch:after {
   content: "";
 }
+
 .toggle-switch:before {
   display: block;
   background: #d9d9d9;
@@ -29,14 +31,17 @@
   left: 0px;
   transition: left 0.25s;
 }
+
 .toggle:hover .toggle-switch:before {
   background: #d9d9d9;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
 }
-.toggle-checkbox:checked + .toggle-switch {
+
+.toggle-checkbox:checked+.toggle-switch {
   background: $gray-900;
 }
-.toggle-checkbox:checked + .toggle-switch:before {
+
+.toggle-checkbox:checked+.toggle-switch:before {
   left: 23px;
   background: $gray-600;
 }
@@ -51,4 +56,34 @@
   position: relative;
   font-weight: 400;
   vertical-align: middle;
+}
+
+.theme-toggle-btn {
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+
+  padding: 8px;
+  margin-top: 4px;
+
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--lb-text-secondary);
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+
+  &:hover {
+    background-color: var(--lb-hover-bg);
+    color: var(--lb-text-primary);
+  }
+
+  &:focus {
+    outline: none;
+  }
 }
