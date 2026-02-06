@@ -25,7 +25,7 @@ from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from listenbrainz.webserver.utils import number_readable
-from listenbrainz.webserver.views.api_tools import get_non_negative_param, _parse_datetime_arg
+from listenbrainz.webserver.views.api_tools import get_non_negative_param, _parse_datetime_arg, _parse_bool_arg, _parse_int_arg
 
 from brainzutils import cache
 
@@ -463,13 +463,11 @@ def embed_playing_now(user_name):
             height="80"
         ></iframe>
     
-    Query parameters:
-    - include_last_listen: bool (default: false) - Show last listen if not currently playing
-    - refresh_interval: int (default: 1) - Auto-refresh interval in minutes (1-60)
-    - width: int (optional) - Custom width in pixels
-    - height: int (optional) - Custom height in pixels
-    
     :param user_name: the MusicBrainz ID of the user whose currently playing listen you want to embed.
+    :param include_last_listen: Show last listen if not currently playing. Default: ``False``
+    :param refresh_interval: Auto-refresh interval in minutes (1-60). Default: ``1``
+    :param width: Custom width in pixels. Default: ``650``
+    :param height: Custom height in pixels. Default: ``80``
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *text/html*
     :statuscode 404: The requested user was not found.
@@ -482,36 +480,17 @@ def embed_playing_now(user_name):
     # User name used to get user may not have the same case as original user name.
     user_name = user.musicbrainz_id
 
-    # Parse query parameters
-    include_last_listen = request.args.get('include_last_listen', 'false').lower() in ('true', '1', 'yes')
-    
-    # Parse and validate refresh_interval (default: 1 minute, range: 1-60 minutes)
-    try:
-        refresh_interval = int(request.args.get('refresh_interval', 1))
-        if refresh_interval < 1 or refresh_interval > 60:
-            refresh_interval = 1
-    except (ValueError, TypeError):
+    include_last_listen = _parse_bool_arg('include_last_listen', default=False)
+    refresh_interval = _parse_int_arg('refresh_interval', default=1)
+    if refresh_interval < 1 or refresh_interval > 60:
         refresh_interval = 1
-    
-    # Parse custom dimensions (optional)
-    width = request.args.get('width')
-    height = request.args.get('height')
-    
-    try:
-        width = int(width) if width else None
-    except (ValueError, TypeError):
-        width = None
-    
-    try:
-        height = int(height) if height else None
-    except (ValueError, TypeError):
-        height = None
+    width = _parse_int_arg('width', default=650)
+    height = _parse_int_arg('height', default=80)
 
-    # If the request has HTMX headers, return partial content for the playing-now card fragment
+    # HTMX request - return just the card fragment
     if current_app.htmx:
         return render_playing_now_card(user=user, include_last_listen=include_last_listen)
 
-    # Otherwise return the container page
     return render_template(
         "widgets/playing_now.html", 
         user_name=user_name,
@@ -623,13 +602,11 @@ def embed_pin(user_name):
             height="155"
         ></iframe>
     
-    Query parameters:
-    - include_last_pin: bool (default: true) - Show last pin if no active pin
-    - include_blurb: bool (default: true) - Show pin text blurb
-    - width: int (optional) - Custom width in pixels
-    - height: int (optional) - Custom height in pixels
-    
     :param user_name: the MusicBrainz ID of the user whose current pin you want to embed.
+    :param include_last_pin: Show last pin if no active pin. Default: ``True``
+    :param include_blurb: Show pin text blurb. Default: ``True``
+    :param width: Custom width in pixels. Default: ``650``
+    :param height: Custom height in pixels. Default: ``155``
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *text/html*
     :statuscode 404: The requested user was not found.
@@ -641,33 +618,18 @@ def embed_pin(user_name):
     # User name used to get user may not have the same case as original user name.
     user_name = user.musicbrainz_id
 
-    # Parse query parameters
-    include_last_pin = request.args.get('include_last_pin', 'true').lower() in ('true', '1', 'yes')
-    include_blurb = request.args.get('include_blurb', 'true').lower() in ('true', '1', 'yes')
-    
-    # Parse custom dimensions (optional)
-    width = request.args.get('width')
-    height = request.args.get('height')
-    
-    try:
-        width = int(width) if width else None
-    except (ValueError, TypeError):
-        width = None
-    
-    try:
-        height = int(height) if height else None
-    except (ValueError, TypeError):
-        height = None
+    include_last_pin = _parse_bool_arg('include_last_pin', default=True)
+    include_blurb = _parse_bool_arg('include_blurb', default=True)
+    width = _parse_int_arg('width', default=650)
+    height = _parse_int_arg('height', default=155)
 
     pin = get_current_pin_for_user(db_conn, user_id=user.id)
     pin_is_current = True
 
     if pin is None and include_last_pin:
-        # Fallback to latest pin if no current pin
         pin_is_current = False
         older_pins = get_pin_history_for_user(db_conn, user_id=user.id, count=1, offset=0)
-        # If still none, there are no pins to show
-        if older_pins is not None and len(older_pins) > 0:
+        if older_pins and len(older_pins) > 0:
             pin = older_pins[0]
 
     if pin is None:

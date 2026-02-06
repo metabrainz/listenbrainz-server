@@ -39,19 +39,10 @@
   <link href="{{ url_for('static', filename='css/static/widgets.css') }}" rel="stylesheet" media="screen" />
 </head>
 
-<body data-custom-width="{{ width }}" data-custom-height="{{ height }}">
+<body style="{{ 'width: %spx; height: %spx;' | format(width, height) }}">
   {%- block content -%}
   <!-- Pin content -->
   {%- endblock -%}
-
-  <script>
-    (function () {
-      var w = document.body.getAttribute('data-custom-width');
-      var h = document.body.getAttribute('data-custom-height');
-      if (w && w !== 'None') document.body.style.width = w + 'px';
-      if (h && h !== 'None') document.body.style.height = h + 'px';
-    })();
-  </script>
 </body>
 
 </html>
