@@ -9,7 +9,13 @@ import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import Pill from "../components/Pill";
-import type { GenrePageProps, TaggedReleaseGroupEntity } from "./types";
+import ListenCard from "../common/listens/ListenCard";
+import { recordingToListen } from "../track/Track";
+import type {
+  GenrePageProps,
+  TaggedReleaseGroupEntity,
+  TaggedRecordingEntity,
+} from "./types";
 import {
   COVER_ART_SINGLE_ROW_COUNT,
   SortingButtons,
@@ -98,6 +104,8 @@ export default function GenrePage(): JSX.Element {
 
   const wikipediaExtract = wikipediaExtractData?.wikipediaExtract;
 
+  const recordings: TaggedRecordingEntity[] =
+    entities?.recording?.entities ?? [];
   const releaseGroups: TaggedReleaseGroupEntity[] =
     entities?.release_group?.entities ?? [];
   const rgGroups = groupBy(releaseGroups, (rg) => rg.type ?? "Other");
@@ -164,6 +172,23 @@ export default function GenrePage(): JSX.Element {
         </div>
       </div>
       <div className="entity-page-content">
+        {recordings.filter((r) => r.recording_name).length > 0 && (
+          <div>
+            <h3 className="header-with-line">Top recordings</h3>
+            <div className="top-entity-listencards">
+              {recordings
+                .filter((r) => r.recording_name)
+                .map((rec) => (
+                  <ListenCard
+                    key={rec.recording_mbid}
+                    listen={recordingToListen(rec)}
+                    showTimestamp={false}
+                    showUsername={false}
+                  />
+                ))}
+            </div>
+          </div>
+        )}
         <div
           className={`discography ${
             expandDiscography || !showFullDiscographyButton ? "expanded" : ""

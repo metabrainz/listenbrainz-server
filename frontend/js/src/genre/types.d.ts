@@ -20,10 +20,16 @@ export type TaggedEntityGroup<T = TaggedEntity> = {
   entities: Array<T>;
 };
 
+export type TaggedRecordingEntity = import("../track/Track").Recording & {
+  tag_count?: number;
+  total_listen_count?: number;
+  total_user_count?: number;
+};
+
 export type TaggedEntities = {
   artist: TaggedEntityGroup;
   release_group: TaggedEntityGroup<TaggedReleaseGroupEntity>;
-  recording: TaggedEntityGroup;
+  recording: TaggedEntityGroup<TaggedRecordingEntity>;
 };
 
 export type Genre = {

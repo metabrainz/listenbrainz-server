@@ -472,7 +472,7 @@ def genre_entity(genre_mbid: str):
         genre_name = genre_dict.get("name") or ""
         tagged_entities = find_tagged_entities(mb_curs, genre_name)
 
-    # Enrich release_group entities with full metadata and listen counts (only RGs in our cache)
+    # Fetch release group entities with listen counts
     rg_entities = tagged_entities.get("release_group", {}).get("entities", [])
     if rg_entities:
         release_group_mbids = [e["mbid"] for e in rg_entities]
@@ -505,6 +505,32 @@ def genre_entity(genre_mbid: str):
             })
         tagged_entities["release_group"]["entities"] = enriched_rg
 
+    # Fetch recording entities with listen counts
+    rec_entities = tagged_entities.get("recording", {}).get("entities", [])
+    if rec_entities:
+        recording_mbids = [e["mbid"] for e in rec_entities]
+        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+                mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
+                ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
+            recordings_data = load_recordings_from_mbids_with_redirects(
+                mb_curs, ts_curs, recording_mbids
+            )
+        popularity_data, _ = popularity.get_counts(
+            ts_conn, "recording", recording_mbids
+        )
+        enriched_rec = []
+        for i, (entity, rec) in enumerate(zip(rec_entities, recordings_data)):
+            if rec.get("recording_mbid") is None:
+                continue
+            pop = popularity_data[i] if i < len(popularity_data) else {}
+            enriched_rec.append({
+                **rec,
+                "tag_count": entity.get("tag_count"),
+                "total_listen_count": pop.get("total_listen_count"),
+                "total_user_count": pop.get("total_user_count"),
+            })
+        tagged_entities["recording"]["entities"] = enriched_rec
+ 
     return jsonify({
         "genre": genre_dict,
         "genre_mbid": genre_mbid,
