@@ -37,11 +37,11 @@
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
 }
 
-.toggle-checkbox:checked+.toggle-switch {
+.toggle-checkbox:checked + .toggle-switch {
   background: $gray-900;
 }
 
-.toggle-checkbox:checked+.toggle-switch:before {
+.toggle-checkbox:checked + .toggle-switch:before {
   left: 23px;
   background: $gray-600;
 }
@@ -76,7 +76,6 @@
   align-items: center;
 
   transition: background-color 0.15s ease, color 0.15s ease;
-
 
   &:hover {
     background-color: var(--lb-hover-bg);

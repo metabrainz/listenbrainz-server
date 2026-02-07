@@ -135,7 +135,7 @@ input[type="range"] {
 }
 
 /* Custom indicator for details/summary expanded indicator */
-details>summary {
+details > summary {
   &::marker {
     display: none;
     content: "";
@@ -152,7 +152,7 @@ details>summary {
   }
 }
 
-details[open]>summary .summary-indicator {
+details[open] > summary .summary-indicator {
   rotate: 90deg;
 }
 
