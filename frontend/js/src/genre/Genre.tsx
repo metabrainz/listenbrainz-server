@@ -11,8 +11,11 @@ import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import Pill from "../components/Pill";
 import ListenCard from "../common/listens/ListenCard";
 import { recordingToListen } from "../track/Track";
+import { formatListenCount } from "../explore/fresh-releases/utils";
+import { getEntityLink } from "../user/stats/utils";
 import type {
   GenrePageProps,
+  TaggedArtistEntity,
   TaggedReleaseGroupEntity,
   TaggedRecordingEntity,
 } from "./types";
@@ -104,6 +107,7 @@ export default function GenrePage(): JSX.Element {
 
   const wikipediaExtract = wikipediaExtractData?.wikipediaExtract;
 
+  const artists: TaggedArtistEntity[] = entities?.artist?.entities ?? [];
   const recordings: TaggedRecordingEntity[] =
     entities?.recording?.entities ?? [];
   const releaseGroups: TaggedReleaseGroupEntity[] =
@@ -172,6 +176,50 @@ export default function GenrePage(): JSX.Element {
         </div>
       </div>
       <div className="entity-page-content">
+        {artists.length > 0 && (
+          <div>
+            <h3 className="header-with-line">Top artists</h3>
+            <div className="top-entity-listencards">
+              {artists.map((artist) => (
+                <ListenCard
+                  key={artist.mbid}
+                  listen={{
+                    listened_at: 0,
+                    track_metadata: {
+                      track_name: "",
+                      artist_name: artist.name,
+                      additional_info: {
+                        artist_mbids: [artist.mbid],
+                      },
+                    },
+                  }}
+                  listenDetails={getEntityLink(
+                    "artist",
+                    artist.name,
+                    artist.mbid
+                  )}
+                  showTimestamp={false}
+                  showUsername={false}
+                  additionalActions={
+                    artist.total_listen_count != null ? (
+                      <span className="badge bg-info">
+                        {formatListenCount(artist.total_listen_count)}
+                      </span>
+                    ) : undefined
+                  }
+                  customThumbnail={
+                    <div
+                      className="listen-thumbnail"
+                      style={{ minWidth: "0" }}
+                    />
+                  }
+                  feedbackComponent={<></>}
+                  compact
+                />
+              ))}
+            </div>
+          </div>
+        )}
         {recordings.filter((r) => r.recording_name).length > 0 && (
           <div>
             <h3 className="header-with-line">Top recordings</h3>

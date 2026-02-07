@@ -26,8 +26,13 @@ export type TaggedRecordingEntity = import("../track/Track").Recording & {
   total_user_count?: number;
 };
 
+export type TaggedArtistEntity = TaggedEntity & {
+  total_listen_count?: number | null;
+  total_user_count?: number | null;
+};
+
 export type TaggedEntities = {
-  artist: TaggedEntityGroup;
+  artist: TaggedEntityGroup<TaggedArtistEntity>;
   release_group: TaggedEntityGroup<TaggedReleaseGroupEntity>;
   recording: TaggedEntityGroup<TaggedRecordingEntity>;
 };

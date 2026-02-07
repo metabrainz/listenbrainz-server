@@ -472,6 +472,23 @@ def genre_entity(genre_mbid: str):
         genre_name = genre_dict.get("name") or ""
         tagged_entities = find_tagged_entities(mb_curs, genre_name)
 
+    # Add listen counts to artist entities
+    artist_entities = tagged_entities.get("artist", {}).get("entities", [])
+    if artist_entities:
+        artist_mbids = [e["mbid"] for e in artist_entities]
+        popularity_data, _ = popularity.get_counts(ts_conn, "artist", artist_mbids)
+        enriched_artists = []
+        for i, entity in enumerate(artist_entities):
+            pop = popularity_data[i] if i < len(popularity_data) else {}
+            enriched_artists.append({
+                "mbid": entity["mbid"],
+                "name": entity.get("name"),
+                "tag_count": entity.get("tag_count"),
+                "total_listen_count": pop.get("total_listen_count"),
+                "total_user_count": pop.get("total_user_count"),
+            })
+        tagged_entities["artist"]["entities"] = enriched_artists
+
     # Fetch release group entities with listen counts
     rg_entities = tagged_entities.get("release_group", {}).get("entities", [])
     if rg_entities:
@@ -530,7 +547,7 @@ def genre_entity(genre_mbid: str):
                 "total_user_count": pop.get("total_user_count"),
             })
         tagged_entities["recording"]["entities"] = enriched_rec
- 
+
     return jsonify({
         "genre": genre_dict,
         "genre_mbid": genre_mbid,
