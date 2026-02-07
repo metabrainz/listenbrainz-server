@@ -25,7 +25,7 @@ from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from listenbrainz.webserver.utils import number_readable
-from listenbrainz.webserver.views.api_tools import get_non_negative_param, _parse_datetime_arg
+from listenbrainz.webserver.views.api_tools import get_non_negative_param, _parse_datetime_arg, _parse_bool_arg, _parse_int_arg
 
 from brainzutils import cache
 
@@ -464,6 +464,10 @@ def embed_playing_now(user_name):
         ></iframe>
     
     :param user_name: the MusicBrainz ID of the user whose currently playing listen you want to embed.
+    :param include_last_listen: Show last listen if not currently playing. Default: ``False``
+    :param refresh_interval: Auto-refresh interval in minutes (1-60). Default: ``1``
+    :param width: Custom width in pixels. Default: ``650``
+    :param height: Custom height in pixels. Default: ``80``
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *text/html*
     :statuscode 404: The requested user was not found.
@@ -476,17 +480,27 @@ def embed_playing_now(user_name):
     # User name used to get user may not have the same case as original user name.
     user_name = user.musicbrainz_id
 
-    # If the request has HTMX headers, return partial content for the pin card fragment
-    if current_app.htmx:
-        return render_playing_now_card(user=user)
+    include_last_listen = _parse_bool_arg('include_last_listen', default=False)
+    refresh_interval = _parse_int_arg('refresh_interval', default=1)
+    if refresh_interval < 1 or refresh_interval > 60:
+        refresh_interval = 1
+    width = _parse_int_arg('width', default=650)
+    height = _parse_int_arg('height', default=80)
 
-    # Otherwise return the container page
+    # HTMX request - return just the card fragment
+    if current_app.htmx:
+        return render_playing_now_card(user=user, include_last_listen=include_last_listen)
+
     return render_template(
-        "widgets/playing_now.html", user_name=user_name
+        "widgets/playing_now.html", 
+        user_name=user_name,
+        refresh_interval=refresh_interval,
+        width=width,
+        height=height
     )
 
 
-def render_playing_now_card(user):
+def render_playing_now_card(user, include_last_listen=False):
     """ Returns the HTMX fragment consisting only in the playing-now card HTML markup """
 
     # Which database to use to show playing_now stream.
@@ -496,16 +510,30 @@ def render_playing_now_card(user):
     # User name used to get user may not have the same case as original user name.
     user_name = user.musicbrainz_id
 
-    if playing_now is None:
+    # If no playing_now and include_last_listen is enabled, fetch the last listen
+    last_listen = None
+    if playing_now is None and include_last_listen:
+        ts_conn = webserver.timescale_connection._ts
+        try:
+            listens_data = ts_conn.fetch_listens(user.to_dict(), from_ts=None, to_ts=None, limit=1)
+            if listens_data and len(listens_data) > 0:
+                last_listen = listens_data[0]
+        except Exception:
+            # If fetching fails, just don't show last listen
+            pass
+
+    if playing_now is None and last_listen is None:
         return render_template(
             "widgets/playing_now_card.html",
             user_name=user_name,
             no_playing_now=True
         )
 
-    playing_now = playing_now.to_api()
+    # Use playing_now if available, otherwise use last_listen
+    listen_data = playing_now.to_api() if playing_now else last_listen.to_api()
+    is_playing_now = playing_now is not None
 
-    metadata = playing_now.get("track_metadata", {})
+    metadata = listen_data.get("track_metadata", {})
     mbid_mapping = metadata.get("mbid_mapping", {})
     additional_info = metadata.get("additional_info", {})
 
@@ -544,6 +572,12 @@ def render_playing_now_card(user):
         else:
             duration = '{:d}:{:02d}'.format(minutes, seconds)
 
+    listened_at = listen_data.get("listened_at")
+    listen_date = None
+    if listened_at:
+        listen_date = datetime.fromtimestamp(listened_at)
+        listen_date = timeago.format(listen_date)
+
     return render_template(
         "widgets/playing_now_card.html",
         user_name=user_name,
@@ -554,7 +588,9 @@ def render_playing_now_card(user):
         recording_name=recording_name,
         artist_mbid=artist_mbid,
         artist_name=artist_name,
-        duration=duration
+        duration=duration,
+        is_playing_now=is_playing_now,
+        listen_date=listen_date
     )
 
 
@@ -574,6 +610,10 @@ def embed_pin(user_name):
         ></iframe>
     
     :param user_name: the MusicBrainz ID of the user whose current pin you want to embed.
+    :param include_last_pin: Show last pin if no active pin. Default: ``True``
+    :param include_blurb: Show pin text blurb. Default: ``True``
+    :param width: Custom width in pixels. Default: ``650``
+    :param height: Custom height in pixels. Default: ``155``
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *text/html*
     :statuscode 404: The requested user was not found.
@@ -585,15 +625,18 @@ def embed_pin(user_name):
     # User name used to get user may not have the same case as original user name.
     user_name = user.musicbrainz_id
 
+    include_last_pin = _parse_bool_arg('include_last_pin', default=True)
+    include_blurb = _parse_bool_arg('include_blurb', default=True)
+    width = _parse_int_arg('width', default=650)
+    height = _parse_int_arg('height', default=155)
+
     pin = get_current_pin_for_user(db_conn, user_id=user.id)
     pin_is_current = True
 
-    if pin is None:
-        # Fallback to latest pin if no current pin
+    if pin is None and include_last_pin:
         pin_is_current = False
         older_pins = get_pin_history_for_user(db_conn, user_id=user.id, count=1, offset=0)
-        # If still none, there are no pins to show
-        if older_pins is not None and len(older_pins) > 0:
+        if older_pins and len(older_pins) > 0:
             pin = older_pins[0]
 
     if pin is None:
@@ -601,7 +644,9 @@ def embed_pin(user_name):
             "widgets/pin_card.html",
             user_name=user_name,
             no_pin=True,
-            pin_is_current=False
+            pin_is_current=False,
+            width=width,
+            height=height
         )
 
     pin = fetch_track_metadata_for_items(
@@ -663,7 +708,9 @@ def embed_pin(user_name):
         pin_date=pin_date,
         duration=duration,
         pin_is_current=pin_is_current,
-        blurb_content=pin.get("blurb_content"),
+        blurb_content=pin.get("blurb_content") if include_blurb else None,
+        width=width,
+        height=height
     )
 
 
