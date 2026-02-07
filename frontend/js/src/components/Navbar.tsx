@@ -6,6 +6,20 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import Username from "../common/Username";
 
 function Navbar() {
+  const [theme, setTheme] = React.useState<"light" | "dark">(() => {
+    const savedTheme = localStorage.getItem("lb-theme");
+    return savedTheme === "dark" ? "dark" : "light";
+  });
+
+  React.useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("lb-theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  };
+
   const { currentUser } = React.useContext(GlobalAppContext);
   const navigate = useNavigate();
 
@@ -120,8 +134,17 @@ function Navbar() {
               Explore
             </NavLink>
           </div>
+          
+
 
           <div className="navbar-bottom">
+            <button
+            type="button"
+            className="theme-toggle-btn"
+            onClick={toggleTheme}
+          >
+            {theme === "dark" ? "☀️ Light mode" : "🌙 Dark mode"}
+          </button>
             {currentUser?.name ? (
               <>
                 <Username
