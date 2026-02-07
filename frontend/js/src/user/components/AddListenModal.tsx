@@ -326,23 +326,20 @@ export default NiceModal.create(() => {
               >
                 Finishes at:
               </Pill>
-              <div className="timestamp-date-picker">
-                <DateTimePicker
-                  value={selectedDate}
-                  onChange={(newDateTimePickerValue: Date) => {
-                    setSelectedDate(newDateTimePickerValue);
-                    setUseNow(false);
-                  }}
-                  calendarIcon={
-                    <FontAwesomeIcon icon={faCalendar as IconProp} />
-                  }
-                  maxDate={new Date()}
-                  clearIcon={null}
-                  format={userLocale ? undefined : "yyyy-MM-dd hh:mm:ss"}
-                  locale={userLocale}
-                  maxDetail="second"
-                />
-              </div>
+              <DateTimePicker
+                className="timestamp-date-picker"
+                value={selectedDate}
+                onChange={(newDateTimePickerValue: Date) => {
+                  setSelectedDate(newDateTimePickerValue);
+                  setUseNow(false);
+                }}
+                calendarIcon={<FontAwesomeIcon icon={faCalendar as IconProp} />}
+                maxDate={new Date()}
+                clearIcon={null}
+                format={userLocale ? undefined : "yyyy-MM-dd hh:mm:ss"}
+                locale={userLocale}
+                maxDetail="second"
+              />
               <Pill
                 active={useNow}
                 onClick={() => {
