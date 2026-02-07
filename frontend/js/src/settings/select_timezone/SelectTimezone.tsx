@@ -6,15 +6,12 @@ import { Helmet } from "react-helmet";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import useAutoSave from "../../hooks/useAutoSave";
 
-export type SelectTimezoneProps = {
-  pg_timezones: Array<string[]>;
-  user_timezone: string;
-  autoSave: (timezone: string) => void;
-};
-
 type SelectTimezoneLoaderData = {
   pg_timezones: Array<string[]>;
   user_timezone: string;
+};
+export type SelectTimezoneProps = SelectTimezoneLoaderData & {
+  autoSave: (timezone: string) => void;
 };
 
 export interface SelectTimezoneState {

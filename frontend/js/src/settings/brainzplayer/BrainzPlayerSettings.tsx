@@ -90,10 +90,6 @@ function BrainzPlayerSettings() {
     userPreferences,
   } = React.useContext(GlobalAppContext);
 
-  // Use a single settings object
-  // Avoids the stale  issues previously caused by reading independent usestate values
-  // and simplifies autosave by always working with the latest snapshot.
-
   const [settings, setSettings] = React.useState<BrainzPlayerSettings>(() => ({
     youtubeEnabled: userPreferences?.brainzplayer?.youtubeEnabled ?? true,
     spotifyEnabled:
@@ -120,20 +116,29 @@ function BrainzPlayerSettings() {
       defaultDataSourcesPriority
     ),
   }));
+  const {
+    youtubeEnabled,
+    spotifyEnabled,
+    soundcloudEnabled,
+    appleMusicEnabled,
+    internetArchiveEnabled,
+    funkwhaleEnabled,
+    navidromeEnabled,
+    brainzplayerEnabled,
+    dataSourcesPriority,
+  } = settings;
 
   const getDataSourcesPriorityList = React.useCallback(() => {
-    const sortedList = settings.dataSourcesPriority.map(
-      (id: DataSourceKey) => ({
-        id,
-        info: dataSourcesInfo[id],
-      })
-    );
+    const sortedList = dataSourcesPriority.map((id: DataSourceKey) => ({
+      id,
+      info: dataSourcesInfo[id],
+    }));
 
     return sortedList as {
       id: DataSourceKey;
       info: DataSourceInfo;
     }[];
-  }, [settings.dataSourcesPriority]);
+  }, [dataSourcesPriority]);
 
   const sortedList = getDataSourcesPriorityList();
 
@@ -169,7 +174,6 @@ function BrainzPlayerSettings() {
     (updater: (prev: BrainzPlayerSettings) => BrainzPlayerSettings) => {
       setSettings((prev) => {
         const next = updater(prev);
-        // Trigger autosave with the new next state
         triggerAutoSave(next);
         return next;
       });
@@ -189,7 +193,7 @@ function BrainzPlayerSettings() {
       <Switch
         id="enable-brainzplayer"
         value="brainzplayer"
-        checked={settings.brainzplayerEnabled}
+        checked={brainzplayerEnabled}
         onChange={() =>
           updateSettings((prev) => ({
             ...prev,
@@ -198,17 +202,15 @@ function BrainzPlayerSettings() {
         }
         switchLabel={
           <span
-            className={`text-brand ${
-              !settings.brainzplayerEnabled ? "text-muted" : ""
-            }`}
+            className={`text-brand ${!brainzplayerEnabled ? "text-muted" : ""}`}
           >
             <span>Enable the player</span>
           </span>
         }
       />
-      <details open={settings.brainzplayerEnabled}>
+      <details open={brainzplayerEnabled}>
         <summary>
-          {!settings.brainzplayerEnabled && (
+          {!brainzplayerEnabled && (
             <p className="text-primary">
               <b>You will not be able to play any music on Listenbrainz</b>
             </p>
@@ -225,18 +227,17 @@ function BrainzPlayerSettings() {
           className="mb-4"
           data-tip
           data-tip-disable={
-            settings.spotifyEnabled || SpotifyPlayer.hasPermissions(spotifyAuth)
+            spotifyEnabled || SpotifyPlayer.hasPermissions(spotifyAuth)
           }
           data-for="login-first"
         >
           <Switch
             id="enable-spotify"
             disabled={
-              !settings.spotifyEnabled &&
-              !SpotifyPlayer.hasPermissions(spotifyAuth)
+              !spotifyEnabled && !SpotifyPlayer.hasPermissions(spotifyAuth)
             }
             value="spotify"
-            checked={settings.spotifyEnabled}
+            checked={spotifyEnabled}
             onChange={() =>
               updateSettings((prev) => ({
                 ...prev,
@@ -245,18 +246,12 @@ function BrainzPlayerSettings() {
             }
             switchLabel={
               <span
-                className={`text-brand ${
-                  !settings.spotifyEnabled ? "text-muted" : ""
-                }`}
+                className={`text-brand ${!spotifyEnabled ? "text-muted" : ""}`}
               >
                 <span>
                   <FontAwesomeIcon
                     icon={faSpotify}
-                    color={
-                      settings.spotifyEnabled
-                        ? dataSourcesInfo.spotify.color
-                        : ""
-                    }
+                    color={spotifyEnabled ? dataSourcesInfo.spotify.color : ""}
                   />
                 </span>
                 <span>&nbsp;Spotify</span>
@@ -278,8 +273,7 @@ function BrainzPlayerSettings() {
           className="mb-4"
           data-tip
           data-tip-disable={
-            settings.appleMusicEnabled ||
-            AppleMusicPlayer.hasPermissions(appleAuth)
+            appleMusicEnabled || AppleMusicPlayer.hasPermissions(appleAuth)
           }
           data-for="login-first"
         >
@@ -287,10 +281,9 @@ function BrainzPlayerSettings() {
             id="enable-apple-music"
             value="apple-music"
             disabled={
-              !settings.appleMusicEnabled &&
-              !AppleMusicPlayer.hasPermissions(appleAuth)
+              !appleMusicEnabled && !AppleMusicPlayer.hasPermissions(appleAuth)
             }
-            checked={settings.appleMusicEnabled}
+            checked={appleMusicEnabled}
             onChange={() =>
               updateSettings((prev) => ({
                 ...prev,
@@ -300,16 +293,14 @@ function BrainzPlayerSettings() {
             switchLabel={
               <span
                 className={`text-brand ${
-                  !settings.appleMusicEnabled ? "text-muted" : ""
+                  !appleMusicEnabled ? "text-muted" : ""
                 }`}
               >
                 <span>
                   <FontAwesomeIcon
                     icon={faApple}
                     color={
-                      settings.appleMusicEnabled
-                        ? dataSourcesInfo.appleMusic.color
-                        : ""
+                      appleMusicEnabled ? dataSourcesInfo.appleMusic.color : ""
                     }
                   />
                 </span>
@@ -333,8 +324,7 @@ function BrainzPlayerSettings() {
           className="mb-4"
           data-tip
           data-tip-disable={
-            settings.soundcloudEnabled ||
-            SoundcloudPlayer.hasPermissions(soundcloudAuth)
+            soundcloudEnabled || SoundcloudPlayer.hasPermissions(soundcloudAuth)
           }
           data-for="login-first"
         >
@@ -342,10 +332,10 @@ function BrainzPlayerSettings() {
             id="enable-soundcloud"
             value="soundcloud"
             disabled={
-              !settings.soundcloudEnabled &&
+              !soundcloudEnabled &&
               !SoundcloudPlayer.hasPermissions(soundcloudAuth)
             }
-            checked={settings.soundcloudEnabled}
+            checked={soundcloudEnabled}
             onChange={() =>
               updateSettings((prev) => ({
                 ...prev,
@@ -355,18 +345,14 @@ function BrainzPlayerSettings() {
             switchLabel={
               <span
                 className={`text-brand ${
-                  !settings.soundcloudEnabled ? "text-muted" : ""
+                  !soundcloudEnabled ? "text-muted" : ""
                 }`}
               >
-                <span
-                  className={settings.soundcloudEnabled ? "text-success" : ""}
-                >
+                <span className={soundcloudEnabled ? "text-success" : ""}>
                   <FontAwesomeIcon
                     icon={faSoundcloud}
                     color={
-                      settings.soundcloudEnabled
-                        ? dataSourcesInfo.soundcloud.color
-                        : ""
+                      soundcloudEnabled ? dataSourcesInfo.soundcloud.color : ""
                     }
                   />
                 </span>
@@ -388,8 +374,7 @@ function BrainzPlayerSettings() {
           className="mb-4"
           data-tip
           data-tip-disable={
-            settings.funkwhaleEnabled ||
-            FunkwhalePlayer.hasPermissions(funkwhaleAuth)
+            funkwhaleEnabled || FunkwhalePlayer.hasPermissions(funkwhaleAuth)
           }
           data-for="login-first"
         >
@@ -397,10 +382,10 @@ function BrainzPlayerSettings() {
             id="enable-funkwhale"
             value="funkwhale"
             disabled={
-              !settings.funkwhaleEnabled &&
+              !funkwhaleEnabled &&
               !FunkwhalePlayer.hasPermissions(funkwhaleAuth)
             }
-            checked={settings.funkwhaleEnabled}
+            checked={funkwhaleEnabled}
             onChange={() =>
               updateSettings((prev) => ({
                 ...prev,
@@ -410,16 +395,14 @@ function BrainzPlayerSettings() {
             switchLabel={
               <span
                 className={`text-brand ${
-                  !settings.funkwhaleEnabled ? "text-muted" : ""
+                  !funkwhaleEnabled ? "text-muted" : ""
                 }`}
               >
                 <span>
                   <FontAwesomeIcon
                     icon={faFunkwhale as IconProp}
                     color={
-                      settings.funkwhaleEnabled
-                        ? dataSourcesInfo.funkwhale.color
-                        : ""
+                      funkwhaleEnabled ? dataSourcesInfo.funkwhale.color : ""
                     }
                   />
                 </span>
@@ -442,17 +425,15 @@ function BrainzPlayerSettings() {
           className="mb-4"
           data-tip
           data-tip-disable={
-            settings.navidromeEnabled || Boolean(navidromeAuth?.instance_url)
+            navidromeEnabled || Boolean(navidromeAuth?.instance_url)
           }
           data-for="login-first"
         >
           <Switch
             id="enable-navidrome"
             value="navidrome"
-            disabled={
-              !settings.navidromeEnabled && !navidromeAuth?.instance_url
-            }
-            checked={settings.navidromeEnabled}
+            disabled={!navidromeEnabled && !navidromeAuth?.instance_url}
+            checked={navidromeEnabled}
             onChange={() =>
               updateSettings((prev) => ({
                 ...prev,
@@ -462,16 +443,14 @@ function BrainzPlayerSettings() {
             switchLabel={
               <span
                 className={`text-brand ${
-                  !settings.navidromeEnabled ? "text-muted" : ""
+                  !navidromeEnabled ? "text-muted" : ""
                 }`}
               >
                 <span>
                   <FontAwesomeIcon
                     icon={faNavidrome as IconProp}
                     color={
-                      settings.navidromeEnabled
-                        ? dataSourcesInfo.navidrome.color
-                        : ""
+                      navidromeEnabled ? dataSourcesInfo.navidrome.color : ""
                     }
                   />
                 </span>
@@ -494,7 +473,7 @@ function BrainzPlayerSettings() {
           <Switch
             id="enable-youtube"
             value="youtube"
-            checked={settings.youtubeEnabled}
+            checked={youtubeEnabled}
             onChange={() =>
               updateSettings((prev) => ({
                 ...prev,
@@ -503,18 +482,12 @@ function BrainzPlayerSettings() {
             }
             switchLabel={
               <span
-                className={`text-brand ${
-                  !settings.youtubeEnabled ? "text-muted" : ""
-                }`}
+                className={`text-brand ${!youtubeEnabled ? "text-muted" : ""}`}
               >
-                <span className={settings.youtubeEnabled ? "text-success" : ""}>
+                <span className={youtubeEnabled ? "text-success" : ""}>
                   <FontAwesomeIcon
                     icon={faYoutube}
-                    color={
-                      settings.youtubeEnabled
-                        ? dataSourcesInfo.youtube.color
-                        : ""
-                    }
+                    color={youtubeEnabled ? dataSourcesInfo.youtube.color : ""}
                   />
                 </span>
                 <span>&nbsp;YouTube</span>
@@ -554,7 +527,7 @@ function BrainzPlayerSettings() {
           <Switch
             id="enable-internet-archive"
             value="internetArchive"
-            checked={settings.internetArchiveEnabled}
+            checked={internetArchiveEnabled}
             onChange={() =>
               updateSettings((prev) => ({
                 ...prev,
@@ -564,14 +537,14 @@ function BrainzPlayerSettings() {
             switchLabel={
               <span
                 className={`text-brand ${
-                  !settings.internetArchiveEnabled ? "text-muted" : ""
+                  !internetArchiveEnabled ? "text-muted" : ""
                 }`}
               >
                 <span>
                   <FontAwesomeIcon
                     icon={dataSourcesInfo.internetArchive.icon}
                     color={
-                      settings.internetArchiveEnabled
+                      internetArchiveEnabled
                         ? dataSourcesInfo.internetArchive.color
                         : ""
                     }
@@ -592,9 +565,6 @@ function BrainzPlayerSettings() {
           will be used in the order you set here.
         </p>
         <p>Drag and drop the services to reorder them:</p>
-        {/* Explicit moveDataSource handler is no longer required.
-         ReactSortable  provides the updated order via setList */}
-
         <ReactSortable
           list={sortedList}
           setList={(newState) => {

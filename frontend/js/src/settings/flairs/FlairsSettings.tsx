@@ -96,10 +96,9 @@ export default function FlairsSettings() {
     [APIService, currentUser?.auth_token, globalContext, queryClient]
   );
 
-  // Auto-save hook  after 3 seconds
   const { triggerAutoSave } = useAutoSave({
-    delay: 3000, // 3 sec wait
-    onSave: submitFlairPreferences, // this funct will be called  when saving
+    delay: 3000,
+    onSave: submitFlairPreferences,
   });
 
   return (
