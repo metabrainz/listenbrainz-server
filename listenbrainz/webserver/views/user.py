@@ -572,6 +572,12 @@ def render_playing_now_card(user, include_last_listen=False):
         else:
             duration = '{:d}:{:02d}'.format(minutes, seconds)
 
+    listened_at = listen_data.get("listened_at")
+    listen_date = None
+    if listened_at:
+        listen_date = datetime.fromtimestamp(listened_at)
+        listen_date = timeago.format(listen_date)
+
     return render_template(
         "widgets/playing_now_card.html",
         user_name=user_name,
@@ -583,7 +589,8 @@ def render_playing_now_card(user, include_last_listen=False):
         artist_mbid=artist_mbid,
         artist_name=artist_name,
         duration=duration,
-        is_playing_now=is_playing_now
+        is_playing_now=is_playing_now,
+        listen_date=listen_date
     )
 
 
