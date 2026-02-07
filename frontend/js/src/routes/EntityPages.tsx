@@ -78,6 +78,17 @@ const getEntityPages = (): RouteObject[] => {
             },
           },
         },
+        {
+          path: "genre/:genreMBID/",
+          lazy: {
+            Component: async () => {
+              return (await import("../genre/Genre")).default;
+            },
+            loader: async () => {
+              return RouteQueryLoader("genre");
+            },
+          },
+        },
       ],
     },
   ];
