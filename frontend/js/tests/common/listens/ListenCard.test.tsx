@@ -18,7 +18,7 @@ import { ReactQueryWrapper } from "../../test-react-query";
 import { textContentMatcher } from "../../test-utils/rtl-test-utils";
 import { ToastContainer } from "react-toastify";
 import fetchMock from "jest-fetch-mock";
-
+import { createBrainzPlayerSettings } from "../../test-utils/BrainzPlayer-test-utils";
 jest.unmock("react-toastify");
 
 fetchMock.enableMocks();
@@ -57,7 +57,7 @@ const defaultContext: GlobalAppContextT = {
     new APIServiceClass(""),
     { name: "Fnord" }
   ),
-  userPreferences: { brainzplayer: { brainzplayerEnabled: true } },
+  userPreferences: { brainzplayer: createBrainzPlayerSettings({ brainzplayerEnabled: true }) },
 };
 
 // Helper function to render the component with all necessary providers.
@@ -143,7 +143,7 @@ describe("ListenCard", () => {
   it("should render a play button if BrainzPlayer is enabled in preferences", () => {
     renderComponent(
       {},
-      { userPreferences: { brainzplayer: { brainzplayerEnabled: true } } }
+      { userPreferences: { brainzplayer:createBrainzPlayerSettings( { brainzplayerEnabled: true } )} }
     );
     expect(screen.queryByRole("button", { name: "Play" })).toBeInTheDocument();
   });
@@ -151,7 +151,7 @@ describe("ListenCard", () => {
   it("should not render play button when BrainzPlayer is disabled in preferences", () => {
     renderComponent(
       {},
-      { userPreferences: { brainzplayer: { brainzplayerEnabled: false } } }
+      { userPreferences: { brainzplayer:createBrainzPlayerSettings({ brainzplayerEnabled: false }) } }
     );
     expect(
       screen.queryByRole("button", { name: "Play" })

@@ -3,11 +3,12 @@ import * as React from "react";
 import { useLoaderData } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
-import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import useAutoSave from "../../hooks/useAutoSave";
 
 type SelectTroiPreferencesProps = {
   exportToSpotify: boolean;
+  autoSave: (exportToSpotify: boolean) => void;
 };
 
 type SelectTroiPreferencesLoaderData = {
@@ -25,9 +26,6 @@ class SelectTroiPreferences extends React.Component<
   SelectTroiPreferencesProps,
   SelectTroiPreferencesState
 > {
-  static contextType = GlobalAppContext;
-  declare context: React.ContextType<typeof GlobalAppContext>;
-
   constructor(props: SelectTroiPreferencesProps) {
     super(props);
     this.state = {
@@ -35,62 +33,24 @@ class SelectTroiPreferences extends React.Component<
     };
   }
 
+  // Keep local UI state in sync if the prop value changes.
+
+  componentDidUpdate(prevProps: SelectTroiPreferencesProps) {
+    const { exportToSpotify } = this.props;
+
+    if (prevProps.exportToSpotify !== exportToSpotify) {
+      this.setState({ exportToSpotify });
+    }
+  }
+
   exportToSpotifySelection = (exportToSpotify: boolean): void => {
+    const { autoSave } = this.props;
     this.setState({ exportToSpotify });
-  };
-
-  handleError = (error: string | Error, title?: string): void => {
-    if (!error) {
-      return;
-    }
-    toast.error(
-      <ToastMsg
-        title={title || "Error"}
-        message={typeof error === "object" ? error.message : error}
-      />,
-      { toastId: "playlist-error" }
-    );
-  };
-
-  submitPreferences = async (
-    event?: React.FormEvent<HTMLFormElement>
-  ): Promise<any> => {
-    const { APIService, currentUser } = this.context;
-    const { auth_token } = currentUser;
-    const { exportToSpotify } = this.state;
-
-    if (event) {
-      event.preventDefault();
-    }
-
-    if (auth_token) {
-      try {
-        const status = await APIService.submitTroiPreferences(
-          auth_token,
-          exportToSpotify
-        );
-        if (status === 200) {
-          this.setState({ exportToSpotify });
-          toast.success(
-            <ToastMsg
-              title="Your playlist preferences have been saved."
-              message=""
-            />,
-            { toastId: "playlist-success" }
-          );
-        }
-      } catch (error) {
-        this.handleError(
-          error,
-          "Something went wrong! Unable to update playlist preferences right now."
-        );
-      }
-    }
+    autoSave(exportToSpotify);
   };
 
   render() {
     const { exportToSpotify } = this.state;
-
     return (
       <>
         <Helmet>
@@ -105,39 +65,60 @@ class SelectTroiPreferences extends React.Component<
           You can export playlists manually, regardless of whether auto-export
           is turned on or off.
         </p>
+        <p className="border-start  bg-light border-info border-3 px-3 py-2 mb-3 fs-4">
+          Changes are saved automatically.
+        </p>
 
         <div>
-          <form onSubmit={this.submitPreferences}>
-            <div className="preference-switch">
-              <input
-                id="export-to-spotify"
-                name="export-to-spotify"
-                type="checkbox"
-                onChange={(e) =>
-                  this.exportToSpotifySelection(e.target.checked)
-                }
-                checked={exportToSpotify}
-              />
-              <label htmlFor="export-to-spotify">
-                <b>Auto-export playlists to Spotify</b>
-                <span className="switch bg-primary" />
-              </label>
-            </div>
-            <p>
-              <button type="submit" className="btn btn-info btn-lg">
-                Save changes
-              </button>
-            </p>
-          </form>
+          <div className="preference-switch">
+            <input
+              id="export-to-spotify"
+              name="export-to-spotify"
+              type="checkbox"
+              onChange={(e) => this.exportToSpotifySelection(e.target.checked)}
+              checked={exportToSpotify}
+            />
+            <label htmlFor="export-to-spotify">
+              <b>Auto-export playlists to Spotify</b>
+              <span className="switch bg-primary" />
+            </label>
+          </div>
         </div>
       </>
     );
   }
 }
 
+//  Functional wrapper
+
 export function SelectTroiPreferencesWrapper() {
   const data = useLoaderData() as SelectTroiPreferencesLoaderData;
-  const { troi_prefs } = data;
-  const exportToSpotify = troi_prefs?.troi?.export_to_spotify ?? false;
-  return <SelectTroiPreferences exportToSpotify={exportToSpotify} />;
+  const exportToSpotify = data?.troi_prefs?.troi?.export_to_spotify ?? false;
+
+  const globalContext = React.useContext(GlobalAppContext);
+  const { APIService, currentUser } = globalContext;
+
+  const submitTroiPreferences = React.useCallback(
+    async (newValue: boolean) => {
+      if (!currentUser?.auth_token) {
+        toast.error("You must be logged in to update your preferences");
+        return;
+      }
+
+      await APIService.submitTroiPreferences(currentUser.auth_token, newValue);
+    },
+    [APIService, currentUser?.auth_token]
+  );
+
+  const { triggerAutoSave } = useAutoSave<boolean>({
+    delay: 3000,
+    onSave: submitTroiPreferences,
+  });
+
+  return (
+    <SelectTroiPreferences
+      exportToSpotify={exportToSpotify}
+      autoSave={triggerAutoSave}
+    />
+  );
 }
