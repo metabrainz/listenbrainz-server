@@ -143,6 +143,21 @@ export default function BarDualTone(props: BarDualToneProps) {
 
   const { dateFormat, keys, itemWidth } = rangeMap[range] || {};
 
+  const maxValue = React.useMemo(() => {
+    if (!Array.isArray(data) || data.length === 0) return 0;
+    return Math.max(
+      ...data.map((d) =>
+        Math.max(d.lastRangeCount || 0, d.thisRangeCount || 0)
+      )
+    );
+  }, [data]);
+
+  const tickValues = React.useMemo(() => {
+    return maxValue <= 10
+      ? Array.from({ length: maxValue + 1 }, (_, i) => i)
+      : undefined;
+  }, [maxValue]);
+
   const customTooltip = (elem: BarTooltipProps<UserListeningActivityDatum>) => {
     const { id, data: datum, color, value } = elem;
 
@@ -164,9 +179,8 @@ export default function BarDualTone(props: BarDualToneProps) {
     return (
       <BasicTooltip
         id={dateString}
-        value={`${formattedValue} ${
-          Number(value) === 1 ? "listen" : "listens"
-        }`}
+        value={`${formattedValue} ${Number(value) === 1 ? "listen" : "listens"
+          }`}
         color={color}
       />
     );
@@ -195,7 +209,8 @@ export default function BarDualTone(props: BarDualToneProps) {
               : undefined,
         }}
         axisLeft={{
-          format: ".2~s",
+          format: (value) => (Number.isInteger(value) ? value : ""),
+          tickValues,
         }}
         minValue={0}
         padding={0.3}
@@ -212,34 +227,34 @@ export default function BarDualTone(props: BarDualToneProps) {
         legends={
           showLegend
             ? [
-                {
-                  dataFrom: "keys",
-                  data: [
-                    {
-                      id: "lastRangeName",
-                      label: generateLegendLabel(
-                        lastRangePeriod.start,
-                        lastRangePeriod.end
-                      ),
-                      color: COLOR_LB_BLUE,
-                    },
-                    {
-                      id: "thisRangeName",
-                      label: generateLegendLabel(
-                        thisRangePeriod.start,
-                        thisRangePeriod.end
-                      ),
-                      color: COLOR_LB_ORANGE,
-                    },
-                  ],
-                  anchor: "top-right",
-                  direction: "row",
-                  itemHeight: 20,
-                  translateY: -20,
-                  symbolSize: 10,
-                  itemWidth,
-                },
-              ]
+              {
+                dataFrom: "keys",
+                data: [
+                  {
+                    id: "lastRangeName",
+                    label: generateLegendLabel(
+                      lastRangePeriod.start,
+                      lastRangePeriod.end
+                    ),
+                    color: COLOR_LB_BLUE,
+                  },
+                  {
+                    id: "thisRangeName",
+                    label: generateLegendLabel(
+                      thisRangePeriod.start,
+                      thisRangePeriod.end
+                    ),
+                    color: COLOR_LB_ORANGE,
+                  },
+                ],
+                anchor: "top-right",
+                direction: "row",
+                itemHeight: 20,
+                translateY: -20,
+                symbolSize: 10,
+                itemWidth,
+              },
+            ]
             : []
         }
       />

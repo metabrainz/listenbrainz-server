@@ -46,9 +46,14 @@ export default function Bar(props: BarProps) {
     ? Math.min(5, maxValue)
     : Math.min(9, maxValue);
 
+  const tickValues =
+    maxValue <= 10
+      ? Array.from({ length: maxValue + 1 }, (_, i) => i)
+      : numberOfTicks;
+
   const horizontalAxis = {
     tickSize: 5,
-    tickValues: numberOfTicks,
+    tickValues,
     tickPadding: 5,
     legend: "Number of listens",
     legendOffset: 30,
