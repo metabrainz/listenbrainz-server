@@ -19,38 +19,16 @@ type SelectTroiPreferencesLoaderData = {
   };
 };
 
-export interface SelectTroiPreferencesState {
-  exportToSpotify: boolean;
-}
 class SelectTroiPreferences extends React.Component<
-  SelectTroiPreferencesProps,
-  SelectTroiPreferencesState
+  SelectTroiPreferencesProps
 > {
-  constructor(props: SelectTroiPreferencesProps) {
-    super(props);
-    this.state = {
-      exportToSpotify: props.exportToSpotify,
-    };
-  }
-
-  // Keep local UI state in sync if the prop value changes.
-
-  componentDidUpdate(prevProps: SelectTroiPreferencesProps) {
-    const { exportToSpotify } = this.props;
-
-    if (prevProps.exportToSpotify !== exportToSpotify) {
-      this.setState({ exportToSpotify });
-    }
-  }
-
   exportToSpotifySelection = (exportToSpotify: boolean): void => {
     const { autoSave } = this.props;
-    this.setState({ exportToSpotify });
     autoSave(exportToSpotify);
   };
 
   render() {
-    const { exportToSpotify } = this.state;
+    const { exportToSpotify } = this.props;
     return (
       <>
         <Helmet>
@@ -91,12 +69,17 @@ class SelectTroiPreferences extends React.Component<
 
 //  Functional wrapper
 
-export function SelectTroiPreferencesWrapper() {
+export default function SelectTroiPreferencesWrapper() {
   const data = useLoaderData() as SelectTroiPreferencesLoaderData;
   const exportToSpotify = data?.troi_prefs?.troi?.export_to_spotify ?? false;
 
   const globalContext = React.useContext(GlobalAppContext);
   const { APIService, currentUser } = globalContext;
+  const [value, setValue] = React.useState(exportToSpotify);
+
+  React.useEffect(() => {
+    setValue(exportToSpotify);
+  }, [exportToSpotify]);
 
   const submitTroiPreferences = React.useCallback(
     async (newValue: boolean) => {
@@ -115,10 +98,12 @@ export function SelectTroiPreferencesWrapper() {
     onSave: submitTroiPreferences,
   });
 
+  const handleSave = (newValue: boolean) => {
+    setValue(newValue);
+    triggerAutoSave(newValue);
+  };
+
   return (
-    <SelectTroiPreferences
-      exportToSpotify={exportToSpotify}
-      autoSave={triggerAutoSave}
-    />
+    <SelectTroiPreferences exportToSpotify={value} autoSave={handleSave} />
   );
 }

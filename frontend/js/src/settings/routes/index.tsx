@@ -86,7 +86,7 @@ const getSettingsRoutes = (): RouteObject[] => {
           path: "troi/",
           lazy: {
             Component: async () => {
-              return (await import("../troi/SelectTroiPreferences")).SelectTroiPreferencesWrapper;
+              return (await import("../troi/SelectTroiPreferences")).default;
             },
             loader: async () => {
               return RouteLoader;

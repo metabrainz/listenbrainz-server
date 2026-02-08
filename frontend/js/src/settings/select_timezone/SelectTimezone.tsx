@@ -13,43 +13,16 @@ type SelectTimezoneLoaderData = {
 export type SelectTimezoneProps = SelectTimezoneLoaderData & {
   autoSave: (timezone: string) => void;
 };
-
-export interface SelectTimezoneState {
-  userTimezone: string;
-}
-
 export default class SelectTimezone extends React.Component<
-  SelectTimezoneProps,
-  SelectTimezoneState
+  SelectTimezoneProps
 > {
-  constructor(props: SelectTimezoneProps) {
-    super(props);
-
-    this.state = {
-      userTimezone: props.user_timezone,
-    };
-  }
-
-  // Keep local UI state in sync if the prop value changes.
-  componentDidUpdate(prevProps: SelectTimezoneProps) {
-    const { user_timezone } = this.props;
-
-    if (prevProps.user_timezone !== user_timezone) {
-      this.setState({ userTimezone: user_timezone });
-    }
-  }
-
   zoneSelection = (zone: string): void => {
     const { autoSave } = this.props;
-    this.setState({
-      userTimezone: zone,
-    });
     autoSave(zone);
   };
 
   render() {
-    const { userTimezone } = this.state;
-    const { pg_timezones } = this.props;
+    const { pg_timezones, user_timezone } = this.props;
 
     return (
       <>
@@ -59,7 +32,7 @@ export default class SelectTimezone extends React.Component<
         <h3>Select your timezone</h3>
         <p>
           Your timezone is{" "}
-          <span style={{ fontWeight: "bold" }}>{userTimezone}.</span>
+          <span style={{ fontWeight: "bold" }}>{user_timezone}.</span>
         </p>
 
         <p>
@@ -76,7 +49,7 @@ export default class SelectTimezone extends React.Component<
             Select your local timezone:{" "}
             <select
               className="form-select"
-              value={userTimezone}
+              value={user_timezone}
               onChange={(e) => this.zoneSelection(e.target.value)}
             >
               <option value="default" disabled>
@@ -103,6 +76,11 @@ export function SelectTimezoneWrapper() {
 
   const globalContext = React.useContext(GlobalAppContext);
   const { APIService, currentUser } = globalContext;
+  const [currentTimezone, setCurrentTimezone] = React.useState(user_timezone);
+
+  React.useEffect(() => {
+    setCurrentTimezone(user_timezone);
+  }, [user_timezone]);
 
   const submitTimezone = React.useCallback(
     async (newTimezone: string) => {
@@ -121,11 +99,16 @@ export function SelectTimezoneWrapper() {
     onSave: submitTimezone,
   });
 
+  const handleSave = (zone: string) => {
+    setCurrentTimezone(zone);
+    triggerAutoSave(zone);
+  };
+
   return (
     <SelectTimezone
       pg_timezones={pg_timezones}
-      user_timezone={user_timezone}
-      autoSave={triggerAutoSave}
+      user_timezone={currentTimezone}
+      autoSave={handleSave}
     />
   );
 }
