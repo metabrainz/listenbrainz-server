@@ -1,4 +1,5 @@
 import { ResponsiveStream, TooltipProps } from "@nivo/stream";
+import { format as d3Format } from "d3-format";
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {  type OrdinalColorScaleConfig } from "@nivo/colors";
 import * as React from "react";
@@ -282,9 +283,23 @@ export function UserArtistEvolutionActivityGraph(
     [orderedTimeUnits, artistHref]
   );
 
+  const maxValue = React.useMemo(() => {
+    if (!chartData || chartData.length === 0) return 0;
+    return Math.max(
+      ...chartData.map((item) =>
+        keys.reduce((sum, key) => sum + ((item[key] as number) || 0), 0)
+      )
+    );
+  }, [chartData, keys]);
+
+  const tickValues = React.useMemo(() => {
+    return maxValue <= 10
+      ? Array.from({ length: maxValue + 1 }, (_, i) => i)
+      : undefined;
+  }, [maxValue]);
 
   return (
-    
+
     <div
       style={{ width: "100%", height: isMobile ? "500px" : "600px" }}
       data-testid="artist-evolution-stream"
@@ -307,7 +322,16 @@ export function UserArtistEvolutionActivityGraph(
           legendPosition: "middle",
           tickRotation: isMobile ? -45 : 0,
         }}
-        axisLeft={{ tickSize: 5, tickPadding: 5, tickRotation: 0 }}
+        axisLeft={{
+          tickSize: 5,
+          tickPadding: 5,
+          tickRotation: 0,
+          format: (value) => {
+            if (!Number.isInteger(value)) return "";
+            return value < 1000 ? value.toString() : d3Format(".2~s")(value);
+          },
+          tickValues,
+        }}
         enableGridX
         enableGridY
         offsetType="none"

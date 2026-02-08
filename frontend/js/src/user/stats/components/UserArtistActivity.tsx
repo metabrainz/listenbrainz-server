@@ -169,6 +169,23 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
     []
   );
 
+  const maxValue = React.useMemo(() => {
+    if (!chartData || chartData.length === 0) return 0;
+    return Math.max(
+      ...chartData.map((item) =>
+        Object.entries(item)
+          .filter(([key]) => key !== "label")
+          .reduce((sum, [, val]) => sum + (val as number), 0)
+      )
+    );
+  }, [chartData]);
+
+  const tickValues = React.useMemo(() => {
+    return maxValue <= 10
+      ? Array.from({ length: maxValue + 1 }, (_, i) => i)
+      : undefined;
+  }, [maxValue]);
+
   return (
     <Card className="user-stats-card" data-testid="user-artist-activity">
       <div className="d-flex align-items-baseline">
@@ -264,6 +281,10 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                         </g>
                       );
                     },
+                  }}
+                  axisLeft={{
+                    format: (value) => (Number.isInteger(value) ? value : ""),
+                    tickValues,
                   }}
                   onClick={(barData, event) => {
                     const albumName = barData.id;
