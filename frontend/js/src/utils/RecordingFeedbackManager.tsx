@@ -56,7 +56,21 @@ export default class RecordingFeedbackManager {
     }
   };
 
-  fetchFeedback = async () => {
+  /**
+   * Fetches feedback for recordings in the queue with automatic retry on failure.
+   * 
+   * Implements exponential backoff retry strategy:
+   * - Retry 1: 1 second delay
+   * - Retry 2: 2 seconds delay  
+   * - Retry 3: 4 seconds delay
+   * 
+   * After max retries, fails silently with console error to avoid disrupting UX.
+   * 
+   * @param retries - Number of retry attempts remaining (default: 3)
+   * @returns Promise that resolves when fetch completes or max retries exceeded
+   */
+
+  fetchFeedback = async (retries: number = 3): Promise<void> => {
     if (!this.currentUser?.name) {
       return;
     }
@@ -68,25 +82,38 @@ export default class RecordingFeedbackManager {
     );
 
     if (recordingMBIDs?.length || recordingMSIDs?.length) {
-      const data = await this.APIService.getFeedbackForUserForRecordings(
-        this.currentUser.name,
-        recordingMBIDs,
-        recordingMSIDs
-      );
-      data.feedback?.forEach((fb: FeedbackResponse) => {
-        if (fb.recording_mbid) {
-          this.recordingMBIDFeedbackMap.set(fb.recording_mbid, fb.score);
-          this.updateSubscribed(fb.recording_mbid, fb.score);
+      try {
+        const data = await this.APIService.getFeedbackForUserForRecordings(
+          this.currentUser.name,
+          recordingMBIDs,
+          recordingMSIDs
+        );
+        data.feedback?.forEach((fb: FeedbackResponse) => {
+          if (fb.recording_mbid) {
+            this.recordingMBIDFeedbackMap.set(fb.recording_mbid, fb.score);
+            this.updateSubscribed(fb.recording_mbid, fb.score);
+          }
+          if (fb.recording_msid) {
+            this.recordingMSIDFeedbackMap.set(fb.recording_msid, fb.score);
+            this.updateSubscribed(fb.recording_msid, fb.score);
+          }
+        });
+        // empty the queues
+        this.mbidFetchQueue.length = 0;
+        this.msidFetchQueue.length = 0;
+      } catch (error) {
+        // Retry on network or API errors
+        if (retries > 0) {
+          // Exponential backoff: 1s, 2s, 4s
+          const delay = 1000 * 2 ** (3 - retries);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          return this.fetchFeedback(retries - 1);
         }
-        if (fb.recording_msid) {
-          this.recordingMSIDFeedbackMap.set(fb.recording_msid, fb.score);
-          this.updateSubscribed(fb.recording_msid, fb.score);
-        }
-      });
-      // empty the queues
-      this.mbidFetchQueue.length = 0;
-      this.msidFetchQueue.length = 0;
-      // TODO: add retry mechanism ?
+        // Max retries exceeded - silently fail to avoid disrupting user experience
+        // The feedback simply won't be displayed for these recordings
+        // eslint-disable-next-line no-console
+        console.error("Failed to fetch recording feedback after retries:", error);
+      }
     }
   };
 
