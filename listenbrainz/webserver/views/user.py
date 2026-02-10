@@ -507,31 +507,32 @@ def render_playing_now_card(user, include_last_listen=False):
     playing_now_conn = webserver.redis_connection._redis
     playing_now = playing_now_conn.get_playing_now(user.id)
 
+    # Track if we have actual playing_now data (before potentially using last_listen)
+    is_playing_now = playing_now is not None
+
     # User name used to get user may not have the same case as original user name.
     user_name = user.musicbrainz_id
 
     # If no playing_now and include_last_listen is enabled, fetch the last listen
-    last_listen = None
     if playing_now is None and include_last_listen:
         ts_conn = webserver.timescale_connection._ts
         try:
             listens_data = ts_conn.fetch_listens(user.to_dict(), from_ts=None, to_ts=None, limit=1)
             if listens_data and len(listens_data) > 0:
-                last_listen = listens_data[0]
+                playing_now = listens_data[0]
         except Exception:
             # If fetching fails, just don't show last listen
             pass
 
-    if playing_now is None and last_listen is None:
+    if playing_now is None:
         return render_template(
             "widgets/playing_now_card.html",
             user_name=user_name,
             no_playing_now=True
         )
 
-    # Use playing_now if available, otherwise use last_listen
-    listen_data = playing_now.to_api() if playing_now else last_listen.to_api()
-    is_playing_now = playing_now is not None
+    # Use playing_now data
+    listen_data = playing_now.to_api()
 
     metadata = listen_data.get("track_metadata", {})
     mbid_mapping = metadata.get("mbid_mapping", {})
