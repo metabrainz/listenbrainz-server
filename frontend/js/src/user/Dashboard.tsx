@@ -499,7 +499,7 @@ export default function Listen() {
               />
             )}
           </div>
-          {playingNow && getListenCard(playingNow)}
+          {isCurrentUsersPage && playingNow && getListenCard(playingNow)}
           {userPinnedRecording && (
             <PinnedRecordingCard
               pinnedRecording={userPinnedRecording}
