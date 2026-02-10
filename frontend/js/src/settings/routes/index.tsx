@@ -16,11 +16,11 @@ const getSettingsRoutes = (): RouteObject[] => {
       children: [
         {
           index: true,
-          lazy: {
-            Component: async () => {
-              return (await import("../Settings")).default;
-            },
-          },
+     lazy: {
+  Component: async () => {
+    return (await import("../Settings")).default;
+  },
+},
         },
         {
           path: "resettoken/",
@@ -35,17 +35,6 @@ const getSettingsRoutes = (): RouteObject[] => {
           lazy: {
             Component: async () => {
               return (await import("../music-services/details/MusicServices")).default;
-            },
-            loader: async () => {
-              return RouteLoader;
-            },
-          },
-        },
-        {
-          path: "import/",
-          lazy: {
-            Component: async () => {
-              return (await import("../import/ImportListens")).default;
             },
             loader: async () => {
               return RouteLoader;
