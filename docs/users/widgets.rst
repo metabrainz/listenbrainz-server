@@ -47,7 +47,7 @@ You can customize the widget behavior by adding query parameters to the URL:
     Example: ``?refresh_interval=5``
 
 **width** (optional)
-    Custom width in pixels. Overrides the iframe width attribute.
+    Custom width in pixels. Overrides the iframe width attribute. Minimum width is 350px.
     
     Example: ``?width=800``
 
@@ -118,7 +118,7 @@ You can customize the widget behavior by adding query parameters to the URL:
     Example: ``?include_blurb=false``
 
 **width** (optional)
-    Custom width in pixels. Overrides the iframe width attribute.
+    Custom width in pixels. Overrides the iframe width attribute. Minimum width is 350px.
     
     Example: ``?width=800``
 

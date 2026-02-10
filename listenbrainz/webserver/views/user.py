@@ -482,19 +482,25 @@ def embed_playing_now(user_name):
 
     include_last_listen = _parse_bool_arg('include_last_listen', default=False)
     refresh_interval = _parse_int_arg('refresh_interval', default=1)
+    # Clamp refresh interval to valid range (1-60 minutes)
     if refresh_interval < 1 or refresh_interval > 60:
         refresh_interval = 1
     width = _parse_int_arg('width', default=650)
+    # Enforce minimum width to prevent text wrapping/overlap issues
+    if width < 350:
+        width = 350
     height = _parse_int_arg('height', default=80)
 
     # HTMX request - return just the card fragment
     if current_app.htmx:
         return render_playing_now_card(user=user, include_last_listen=include_last_listen)
 
+    # Pass include_last_listen to template so HTMX requests can include it in query params
     return render_template(
         "widgets/playing_now.html", 
         user_name=user_name,
         refresh_interval=refresh_interval,
+        include_last_listen=include_last_listen,
         width=width,
         height=height
     )
@@ -517,7 +523,8 @@ def render_playing_now_card(user, include_last_listen=False):
     if playing_now is None and include_last_listen:
         ts_conn = webserver.timescale_connection._ts
         try:
-            listens_data = ts_conn.fetch_listens(user.to_dict(), from_ts=None, to_ts=None, limit=1)
+            # fetch_listens returns a tuple: (listens, min_ts, max_ts)
+            listens_data, _, _ = ts_conn.fetch_listens(user.to_dict(), from_ts=None, to_ts=None, limit=1)
             if listens_data and len(listens_data) > 0:
                 playing_now = listens_data[0]
         except Exception:
@@ -629,6 +636,9 @@ def embed_pin(user_name):
     include_last_pin = _parse_bool_arg('include_last_pin', default=True)
     include_blurb = _parse_bool_arg('include_blurb', default=True)
     width = _parse_int_arg('width', default=650)
+    # Enforce minimum width to prevent text wrapping/overlap issues
+    if width < 350:
+        width = 350
     height = _parse_int_arg('height', default=155)
 
     pin = get_current_pin_for_user(db_conn, user_id=user.id)
@@ -653,9 +663,10 @@ def embed_pin(user_name):
     pin = fetch_track_metadata_for_items(
         webserver.ts_conn, [pin])[0].to_api()
 
-    metadata = pin.get("track_metadata", {})
-    mbid_mapping = metadata.get("mbid_mapping", {})
-    additional_info = metadata.get("additional_info", {})
+    # Use 'or {}' pattern for null-safe dictionary access
+    metadata = pin.get("track_metadata") or {}
+    mbid_mapping = metadata.get("mbid_mapping") or {}
+    additional_info = metadata.get("additional_info") or {}
 
     caa_id = mbid_mapping.get("caa_id")
     caa_release_mbid = mbid_mapping.get("caa_release_mbid")

@@ -15,7 +15,7 @@ body {
     font-size: 14px;
     font-weight: 400;
     line-height: 1.5em;
-    min-width: 300px;
+    min-width: 350px;
 }
 
 .card.listen-card,
@@ -124,7 +124,6 @@ a {
 .profile-link {
     align-self: center;
     text-align: end;
-    line-height: 0;
     font-weight: normal;
 }
 
@@ -191,7 +190,6 @@ a {
 /* Styles for pinned recording cards */
 .pinned-recording-card {
     min-height: 150px;
-    max-height: 160px;
 }
 
 .pinned-recording-card.currently-pinned {

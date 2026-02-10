@@ -43,7 +43,7 @@
 </head>
 
 <body style="{{ 'width: %spx; height: %spx;' | format(width, height) }}">
-  <div hx-target="#playing-now-container" hx-get="./" hx-trigger="load, every {{ refresh_interval }}m"></div>
+  <div hx-target="#playing-now-container" hx-get="./?include_last_listen={{include_last_listen}}" hx-trigger="load, every {{ refresh_interval }}m"></div>
   <div id="playing-now-container"></div>
 
 
