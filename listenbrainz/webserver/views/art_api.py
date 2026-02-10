@@ -340,16 +340,24 @@ def _cover_art_yim_stats(user_name, stats, year, options, styles):
         case other: most_played_day_message = f'I CRANKED TUNES ON <tspan class="user-stat">{other}</tspan>'
 
     most_listened_year = max(stats["most_listened_year"], key=stats["most_listened_year"].get)
+    total_artists = stats["total_artists_count"]
+    new_artists = stats["total_new_artists_discovered"]
 
+    if total_artists > 0:
+        new_artists_percentage = round((new_artists / total_artists) * 100)
+    else:
+        new_artists_percentage = 0
 
     return render_template(
         "art/svg-templates/year-in-music/yim-stats.svg",
         user_name=user_name,
         most_played_day_message=Markup(most_played_day_message),
+        day_of_week=stats["day_of_week"],
         most_listened_year=most_listened_year,
         total_listen_count=stats["total_listen_count"],
         total_new_artists_discovered=stats["total_new_artists_discovered"],
         total_artists_count=stats["total_artists_count"],
+        new_artists_percentage=new_artists_percentage,
         year=year,
         **options,
         **styles,
@@ -491,7 +499,7 @@ def _cover_art_yim_playlist(user_name, stats, key, year, options, styles):
         target_svg,
         user_name=user_name,
         images=cover_art_images,
-        playlists=stats[key],
+        playlist=stats[key],
         year=year,
         width=924,
         height=924,

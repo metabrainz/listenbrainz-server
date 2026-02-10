@@ -2,11 +2,10 @@
 
 <svg width="{{width}}" height="{{height}}" viewBox="0 0 924 924"
     fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <title>{{ playlist.title }}&#xA;</title>
-    <desc>
-        {% for track in playlist.track[:10] %}
-        {%- if loop.index == 10 -%}X{%- else -%}{{ loop.index }}{%- endif -%}. 
-        {{ track.title }}-{{ track.creator }}&#xA;
+    <title>{{ playlist.title }}</title>
+    <desc>&#xA;
+        {%- for track in playlist.track[:10] -%}
+        {%- if loop.index == 10 -%}X{%- else -%}{{- loop.index -}}{%- endif -%}.{{ track.title }}-{{ track.creator }}&#xA;
         {%- endfor -%}
     </desc>
     <defs id="defs42">
