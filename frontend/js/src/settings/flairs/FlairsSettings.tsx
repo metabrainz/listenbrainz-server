@@ -16,6 +16,7 @@ import type { FlairName } from "../../utils/constants";
 import Username from "../../common/Username";
 import queryClient from "../../utils/QueryClient";
 import useUserFlairs from "../../utils/FlairLoader";
+import useAutoSave from "../../hooks/useAutoSave";
 
 function CustomOption(
   props: OptionProps<{ value: Flair; label: FlairName; username: string }>
@@ -51,8 +52,7 @@ export default function FlairsSettings() {
   const [selectedFlair, setSelectedFlair] = React.useState<Flair>(
     currentFlair ?? FlairEnum.None
   );
-  // If this has a value it should tell us if the flair is active,
-  // as calculated on the back-end
+
   const currentUnlockedFlair = useUserFlairs(name);
   // However we also hit the metabrainz nag-check endpoint to comfirm that
   // and get a number of days left
@@ -78,30 +78,32 @@ export default function FlairsSettings() {
     fetchNagStatus();
   }, [name]);
 
-  const submitFlairPreferences = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentUser?.auth_token) {
-      toast.error("You must be logged in to update your preferences");
-      return;
-    }
-    try {
-      const response = await APIService.submitFlairPreferences(
+  const submitFlairPreferences = React.useCallback(
+    async (newFlair: Flair) => {
+      if (!currentUser?.auth_token) {
+        toast.error("You must be logged in to update your preferences");
+        return;
+      }
+
+      await APIService.submitFlairPreferences(
         currentUser?.auth_token,
-        selectedFlair
+        newFlair
       );
-      toast.success("Flair saved successfully");
-      globalContext.flair = selectedFlair;
+
+      globalContext.flair = newFlair;
       queryClient.invalidateQueries({ queryKey: ["flair"] });
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Failed to update flair preferences:", error);
-      toast.error("Failed to update flair preferences. Please try again.");
-    }
-  };
+    },
+    [APIService, currentUser?.auth_token, globalContext, queryClient]
+  );
+
+  const { triggerAutoSave } = useAutoSave({
+    delay: 3000,
+    onSave: submitFlairPreferences,
+  });
 
   return (
     <div className="mb-4 donation-flairs-settings">
-      <form className="mb-4" onSubmit={submitFlairPreferences}>
+      <div className="mb-4">
         <ReactTooltip id="flair-tooltip" place="bottom" multiline>
           Every $5 donation unlocks flairs for 1 month,
           <br />
@@ -141,6 +143,9 @@ export default function FlairsSettings() {
             />
           </div>
         )}
+        <p className="border-start bg-light border-info border-3 px-3 py-2 mb-3 fs-4">
+          Changes are saved automatically.
+        </p>
         <div
           className="flex flex-wrap"
           style={{ gap: "1em", alignItems: "center" }}
@@ -157,9 +162,11 @@ export default function FlairsSettings() {
                 ) as FlairName,
                 username: name,
               }}
-              onChange={(newSelection) =>
-                setSelectedFlair(newSelection?.value ?? FlairEnum.None)
-              }
+              onChange={(newSelection) => {
+                const newFlair = newSelection?.value ?? FlairEnum.None;
+                setSelectedFlair(newFlair);
+                triggerAutoSave(newFlair);
+              }}
               options={flairNames.map((flairName) => ({
                 value: FlairEnum[flairName],
                 label: startCase(flairName) as FlairName,
@@ -181,11 +188,7 @@ export default function FlairsSettings() {
             />
           </div>
         </div>
-
-        <button className="btn btn-success mt-3" type="submit">
-          Save flair
-        </button>
-      </form>
+      </div>
     </div>
   );
 }

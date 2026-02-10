@@ -25,6 +25,7 @@ import Card from "../../components/Card";
 import faInternetArchive from "../../common/icons/faInternetArchive";
 import faFunkwhale from "../../common/icons/faFunkwhale";
 import { faNavidrome } from "../../common/icons/faNavidrome";
+import useAutoSave from "../../hooks/useAutoSave";
 
 export const dataSourcesInfo = {
   youtube: {
@@ -86,58 +87,49 @@ function BrainzPlayerSettings() {
     navidromeAuth,
     APIService,
     currentUser,
+    userPreferences,
   } = React.useContext(GlobalAppContext);
-  const { userPreferences } = React.useContext(GlobalAppContext);
-  const [youtubeEnabled, setYoutubeEnabled] = React.useState(
-    userPreferences?.brainzplayer?.youtubeEnabled ?? true
-  );
-  const [spotifyEnabled, setSpotifyEnabled] = React.useState(
-    userPreferences?.brainzplayer?.spotifyEnabled ??
-      SpotifyPlayer.hasPermissions(spotifyAuth)
-  );
-  const [soundcloudEnabled, setSoundcloudEnabled] = React.useState(
-    userPreferences?.brainzplayer?.soundcloudEnabled ??
-      SoundcloudPlayer.hasPermissions(soundcloudAuth)
-  );
-  const [appleMusicEnabled, setAppleMusicEnabled] = React.useState(
-    userPreferences?.brainzplayer?.appleMusicEnabled ??
-      AppleMusicPlayer.hasPermissions(appleAuth)
-  );
-  const [internetArchiveEnabled, setInternetArchiveEnabled] = React.useState(
-    userPreferences?.brainzplayer?.internetArchiveEnabled ?? true
-  );
-  const [funkwhaleEnabled, setFunkwhaleEnabled] = React.useState(
-    userPreferences?.brainzplayer?.funkwhaleEnabled ??
-      FunkwhalePlayer.hasPermissions(funkwhaleAuth)
-  );
-  const [navidromeEnabled, setNavidromeEnabled] = React.useState(
-    userPreferences?.brainzplayer?.navidromeEnabled ??
-      Boolean(navidromeAuth?.instance_url)
-  );
-  const [brainzplayerEnabled, setBrainzplayerEnabled] = React.useState(
-    userPreferences?.brainzplayer?.brainzplayerEnabled ?? true
-  );
 
-  // Combine saved priority list and default list to add any new music service at the end
-  const [dataSourcesPriority, setDataSourcesPriority] = React.useState<
-    DataSourceKey[]
-  >(
-    union(
+  const [settings, setSettings] = React.useState<BrainzPlayerSettings>(() => ({
+    youtubeEnabled: userPreferences?.brainzplayer?.youtubeEnabled ?? true,
+    spotifyEnabled:
+      userPreferences?.brainzplayer?.spotifyEnabled ??
+      SpotifyPlayer.hasPermissions(spotifyAuth),
+    soundcloudEnabled:
+      userPreferences?.brainzplayer?.soundcloudEnabled ??
+      SoundcloudPlayer.hasPermissions(soundcloudAuth),
+    appleMusicEnabled:
+      userPreferences?.brainzplayer?.appleMusicEnabled ??
+      AppleMusicPlayer.hasPermissions(appleAuth),
+    internetArchiveEnabled:
+      userPreferences?.brainzplayer?.internetArchiveEnabled ?? true,
+    funkwhaleEnabled:
+      userPreferences?.brainzplayer?.funkwhaleEnabled ??
+      FunkwhalePlayer.hasPermissions(funkwhaleAuth),
+    navidromeEnabled:
+      userPreferences?.brainzplayer?.navidromeEnabled ??
+      Boolean(navidromeAuth?.instance_url),
+    brainzplayerEnabled:
+      userPreferences?.brainzplayer?.brainzplayerEnabled ?? true,
+    dataSourcesPriority: union(
       userPreferences?.brainzplayer?.dataSourcesPriority ?? [],
       defaultDataSourcesPriority
-    )
-  );
-
-  const moveDataSource = (evt: any) => {
-    const { newIndex, oldIndex } = evt;
-    const newPriority = [...dataSourcesPriority];
-    const [removed] = newPriority.splice(oldIndex, 1);
-    newPriority.splice(newIndex, 0, removed);
-    setDataSourcesPriority(newPriority);
-  };
+    ),
+  }));
+  const {
+    youtubeEnabled,
+    spotifyEnabled,
+    soundcloudEnabled,
+    appleMusicEnabled,
+    internetArchiveEnabled,
+    funkwhaleEnabled,
+    navidromeEnabled,
+    brainzplayerEnabled,
+    dataSourcesPriority,
+  } = settings;
 
   const getDataSourcesPriorityList = React.useCallback(() => {
-    const sortedList = dataSourcesPriority.map((id) => ({
+    const sortedList = dataSourcesPriority.map((id: DataSourceKey) => ({
       id,
       info: dataSourcesInfo[id],
     }));
@@ -150,69 +142,44 @@ function BrainzPlayerSettings() {
 
   const sortedList = getDataSourcesPriorityList();
 
-  const saveSettings = React.useCallback(async () => {
-    if (!currentUser?.auth_token) {
-      toast.error("You must be logged in to update your preferences");
-      return;
-    }
-    const { submitBrainzplayerPreferences } = APIService;
-    try {
-      await submitBrainzplayerPreferences(currentUser.auth_token, {
-        youtubeEnabled,
-        spotifyEnabled,
-        soundcloudEnabled,
-        appleMusicEnabled,
-        internetArchiveEnabled,
-        funkwhaleEnabled,
-        navidromeEnabled,
-        brainzplayerEnabled,
-        dataSourcesPriority,
-      });
-      toast.success("Saved your preferences successfully");
+  const saveSettings = React.useCallback(
+    async (newSettings: BrainzPlayerSettings) => {
+      if (!currentUser?.auth_token) {
+        toast.error("You must be logged in to update your preferences");
+        return;
+      }
+
+      await APIService.submitBrainzplayerPreferences(
+        currentUser.auth_token,
+        newSettings
+      );
+
       // Update the global context values
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
       if (userPreferences) {
-        userPreferences.brainzplayer = {
-          youtubeEnabled,
-          spotifyEnabled,
-          soundcloudEnabled,
-          appleMusicEnabled,
-          internetArchiveEnabled,
-          funkwhaleEnabled,
-          navidromeEnabled,
-          brainzplayerEnabled,
-          dataSourcesPriority,
-        };
+        userPreferences.brainzplayer = newSettings;
       }
-    } catch (error) {
-      toast.error(
-        <ToastMsg
-          title="Error saving preferences"
-          message={
-            <>
-              {error.toString()}
-              <br />
-              Please try again or contact us if the issue persists.
-            </>
-          }
-        />
-      );
-    }
-  }, [
-    youtubeEnabled,
-    spotifyEnabled,
-    soundcloudEnabled,
-    appleMusicEnabled,
-    internetArchiveEnabled,
-    funkwhaleEnabled,
-    navidromeEnabled,
-    brainzplayerEnabled,
-    dataSourcesPriority,
-    APIService,
-    currentUser?.auth_token,
-    userPreferences,
-  ]);
+    },
+    [APIService, currentUser?.auth_token, userPreferences]
+  );
+
+  const { triggerAutoSave } = useAutoSave<BrainzPlayerSettings>({
+    delay: 3000,
+    onSave: saveSettings,
+  });
+  // helper to update the next state from previous
+
+  const updateSettings = React.useCallback(
+    (updater: (prev: BrainzPlayerSettings) => BrainzPlayerSettings) => {
+      setSettings((prev) => {
+        const next = updater(prev);
+        triggerAutoSave(next);
+        return next;
+      });
+    },
+    [triggerAutoSave]
+  );
 
   return (
     <>
@@ -220,11 +187,19 @@ function BrainzPlayerSettings() {
         <title>BrainzPlayer Settings</title>
       </Helmet>
       <h2 className="page-title">BrainzPlayer settings</h2>
+      <p className="border-start bg-light border-info border-3 px-3 py-2 mb-3 fs-4">
+        Changes are saved automatically.
+      </p>
       <Switch
         id="enable-brainzplayer"
         value="brainzplayer"
         checked={brainzplayerEnabled}
-        onChange={(e) => setBrainzplayerEnabled(!brainzplayerEnabled)}
+        onChange={() =>
+          updateSettings((prev) => ({
+            ...prev,
+            brainzplayerEnabled: !prev.brainzplayerEnabled,
+          }))
+        }
         switchLabel={
           <span
             className={`text-brand ${!brainzplayerEnabled ? "text-muted" : ""}`}
@@ -263,7 +238,12 @@ function BrainzPlayerSettings() {
             }
             value="spotify"
             checked={spotifyEnabled}
-            onChange={(e) => setSpotifyEnabled(!spotifyEnabled)}
+            onChange={() =>
+              updateSettings((prev) => ({
+                ...prev,
+                spotifyEnabled: !prev.spotifyEnabled,
+              }))
+            }
             switchLabel={
               <span
                 className={`text-brand ${!spotifyEnabled ? "text-muted" : ""}`}
@@ -304,7 +284,12 @@ function BrainzPlayerSettings() {
               !appleMusicEnabled && !AppleMusicPlayer.hasPermissions(appleAuth)
             }
             checked={appleMusicEnabled}
-            onChange={(e) => setAppleMusicEnabled(!appleMusicEnabled)}
+            onChange={() =>
+              updateSettings((prev) => ({
+                ...prev,
+                appleMusicEnabled: !prev.appleMusicEnabled,
+              }))
+            }
             switchLabel={
               <span
                 className={`text-brand ${
@@ -351,7 +336,12 @@ function BrainzPlayerSettings() {
               !SoundcloudPlayer.hasPermissions(soundcloudAuth)
             }
             checked={soundcloudEnabled}
-            onChange={(e) => setSoundcloudEnabled(!soundcloudEnabled)}
+            onChange={() =>
+              updateSettings((prev) => ({
+                ...prev,
+                soundcloudEnabled: !prev.soundcloudEnabled,
+              }))
+            }
             switchLabel={
               <span
                 className={`text-brand ${
@@ -396,7 +386,12 @@ function BrainzPlayerSettings() {
               !FunkwhalePlayer.hasPermissions(funkwhaleAuth)
             }
             checked={funkwhaleEnabled}
-            onChange={(e) => setFunkwhaleEnabled(!funkwhaleEnabled)}
+            onChange={() =>
+              updateSettings((prev) => ({
+                ...prev,
+                funkwhaleEnabled: !prev.funkwhaleEnabled,
+              }))
+            }
             switchLabel={
               <span
                 className={`text-brand ${
@@ -439,7 +434,12 @@ function BrainzPlayerSettings() {
             value="navidrome"
             disabled={!navidromeEnabled && !navidromeAuth?.instance_url}
             checked={navidromeEnabled}
-            onChange={(e) => setNavidromeEnabled(!navidromeEnabled)}
+            onChange={() =>
+              updateSettings((prev) => ({
+                ...prev,
+                navidromeEnabled: !prev.navidromeEnabled,
+              }))
+            }
             switchLabel={
               <span
                 className={`text-brand ${
@@ -474,7 +474,12 @@ function BrainzPlayerSettings() {
             id="enable-youtube"
             value="youtube"
             checked={youtubeEnabled}
-            onChange={(e) => setYoutubeEnabled(!youtubeEnabled)}
+            onChange={() =>
+              updateSettings((prev) => ({
+                ...prev,
+                youtubeEnabled: !prev.youtubeEnabled,
+              }))
+            }
             switchLabel={
               <span
                 className={`text-brand ${!youtubeEnabled ? "text-muted" : ""}`}
@@ -523,7 +528,12 @@ function BrainzPlayerSettings() {
             id="enable-internet-archive"
             value="internetArchive"
             checked={internetArchiveEnabled}
-            onChange={() => setInternetArchiveEnabled(!internetArchiveEnabled)}
+            onChange={() =>
+              updateSettings((prev) => ({
+                ...prev,
+                internetArchiveEnabled: !prev.internetArchiveEnabled,
+              }))
+            }
             switchLabel={
               <span
                 className={`text-brand ${
@@ -558,9 +568,13 @@ function BrainzPlayerSettings() {
         <ReactSortable
           list={sortedList}
           setList={(newState) => {
-            setDataSourcesPriority(newState.map((item) => item.id));
+            updateSettings((prev) => ({
+              ...prev,
+              dataSourcesPriority: newState.map(
+                (item: { id: DataSourceKey }) => item.id
+              ),
+            }));
           }}
-          onEnd={moveDataSource}
           handle=".drag-handle"
         >
           {sortedList.map((item) => (
@@ -585,13 +599,6 @@ function BrainzPlayerSettings() {
           ))}
         </ReactSortable>
       </details>
-      <button
-        className="btn btn-lg btn-info"
-        type="button"
-        onClick={saveSettings}
-      >
-        Save BrainzPlayer settings
-      </button>
       <ReactTooltip id="login-first" aria-haspopup="true" delayHide={500}>
         You must login to this service in the &quot;Connect services&quot;
         section before using it.

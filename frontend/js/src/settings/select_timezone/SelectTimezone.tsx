@@ -3,94 +3,26 @@ import * as React from "react";
 import { useLoaderData } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
-import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import useAutoSave from "../../hooks/useAutoSave";
 
-export type SelectTimezoneProps = {
+type SelectTimezoneLoaderData = {
   pg_timezones: Array<string[]>;
   user_timezone: string;
 };
-
-type SelectTimezoneLoaderData = SelectTimezoneProps;
-
-export interface SelectTimezoneState {
-  selectZone: string;
-  userTimezone: string;
-}
-
+export type SelectTimezoneProps = SelectTimezoneLoaderData & {
+  autoSave: (timezone: string) => void;
+};
 export default class SelectTimezone extends React.Component<
-  SelectTimezoneProps,
-  SelectTimezoneState
+  SelectTimezoneProps
 > {
-  static contextType = GlobalAppContext;
-  declare context: React.ContextType<typeof GlobalAppContext>;
-
-  constructor(props: SelectTimezoneProps) {
-    super(props);
-
-    this.state = {
-      selectZone: props.user_timezone,
-      userTimezone: props.user_timezone,
-    };
-  }
-
   zoneSelection = (zone: string): void => {
-    this.setState({
-      selectZone: zone,
-    });
-  };
-
-  handleError = (error: string | Error, title?: string): void => {
-    if (!error) {
-      return;
-    }
-    toast.error(
-      <ToastMsg
-        title={title || "Error"}
-        message={typeof error === "object" ? error.message : error}
-      />,
-      { toastId: "timezone-success" }
-    );
-  };
-
-  submitTimezone = async (
-    event?: React.FormEvent<HTMLFormElement>
-  ): Promise<any> => {
-    const { APIService, currentUser } = this.context;
-    const { auth_token } = currentUser;
-    const { selectZone } = this.state;
-
-    if (event) {
-      event.preventDefault();
-    }
-
-    if (auth_token) {
-      try {
-        const status = await APIService.resetUserTimezone(
-          auth_token,
-          selectZone
-        );
-        if (status === 200) {
-          this.setState({
-            userTimezone: selectZone,
-          });
-          toast.success(
-            <ToastMsg title="Your timezone has been saved." message="" />,
-            { toastId: "timezone-success" }
-          );
-        }
-      } catch (error) {
-        this.handleError(
-          error,
-          "Something went wrong! Unable to update timezone right now."
-        );
-      }
-    }
+    const { autoSave } = this.props;
+    autoSave(zone);
   };
 
   render() {
-    const { userTimezone } = this.state;
-    const { pg_timezones } = this.props;
+    const { pg_timezones, user_timezone } = this.props;
 
     return (
       <>
@@ -100,7 +32,7 @@ export default class SelectTimezone extends React.Component<
         <h3>Select your timezone</h3>
         <p>
           Your timezone is{" "}
-          <span style={{ fontWeight: "bold" }}>{userTimezone}.</span>
+          <span style={{ fontWeight: "bold" }}>{user_timezone}.</span>
         </p>
 
         <p>
@@ -109,35 +41,29 @@ export default class SelectTimezone extends React.Component<
           playlists and recommendations are generated.
         </p>
 
+        <p className="border-start bg-light border-info border-3 px-3 py-2 mb-3 fs-4">
+          Changes are saved automatically.
+        </p>
         <div>
-          <form onSubmit={this.submitTimezone}>
-            <label>
-              Select your local timezone:{" "}
-              <select
-                className="form-select"
-                defaultValue={userTimezone}
-                onChange={(e) => this.zoneSelection(e.target.value)}
-              >
-                <option value="default" disabled>
-                  Choose an option
-                </option>
-                {pg_timezones.map((zone: string[]) => {
-                  return (
-                    <option key={zone[0]} value={zone[0]}>
-                      {zone[0]} ({zone[1]})
-                    </option>
-                  );
-                })}
-              </select>
-            </label>
-            <br />
-            <br />
-            <p>
-              <button type="submit" className="btn btn-info btn-lg">
-                Save timezone
-              </button>
-            </p>
-          </form>
+          <label>
+            Select your local timezone:{" "}
+            <select
+              className="form-select"
+              value={user_timezone}
+              onChange={(e) => this.zoneSelection(e.target.value)}
+            >
+              <option value="default" disabled>
+                Choose an option
+              </option>
+              {pg_timezones.map((zone: string[]) => {
+                return (
+                  <option key={zone[0]} value={zone[0]}>
+                    {zone[0]} ({zone[1]})
+                  </option>
+                );
+              })}
+            </select>
+          </label>
         </div>
       </>
     );
@@ -146,5 +72,43 @@ export default class SelectTimezone extends React.Component<
 
 export function SelectTimezoneWrapper() {
   const data = useLoaderData() as SelectTimezoneLoaderData;
-  return <SelectTimezone {...data} />;
+  const { pg_timezones, user_timezone } = data;
+
+  const globalContext = React.useContext(GlobalAppContext);
+  const { APIService, currentUser } = globalContext;
+  const [currentTimezone, setCurrentTimezone] = React.useState(user_timezone);
+
+  React.useEffect(() => {
+    setCurrentTimezone(user_timezone);
+  }, [user_timezone]);
+
+  const submitTimezone = React.useCallback(
+    async (newTimezone: string) => {
+      if (!currentUser?.auth_token) {
+        toast.error("You must be logged in to update your timezone");
+        return;
+      }
+
+      await APIService.resetUserTimezone(currentUser.auth_token, newTimezone);
+    },
+    [APIService, currentUser?.auth_token]
+  );
+
+  const { triggerAutoSave } = useAutoSave<string>({
+    delay: 3000,
+    onSave: submitTimezone,
+  });
+
+  const handleSave = (zone: string) => {
+    setCurrentTimezone(zone);
+    triggerAutoSave(zone);
+  };
+
+  return (
+    <SelectTimezone
+      pg_timezones={pg_timezones}
+      user_timezone={currentTimezone}
+      autoSave={handleSave}
+    />
+  );
 }
