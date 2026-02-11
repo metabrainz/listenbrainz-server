@@ -1,14 +1,15 @@
 import * as React from "react";
-import { useLocation, useParams } from "react-router";
+import { Link, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import DOMPurify from "dompurify";
 import { groupBy, orderBy, sortBy } from "lodash";
 import { RouteQuery } from "../utils/Loader";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
-import Pill from "../components/Pill";
 import ListenCard from "../common/listens/ListenCard";
 import { recordingToListen } from "../track/Track";
 import { formatListenCount } from "../explore/fresh-releases/utils";
@@ -184,6 +185,43 @@ export default function GenrePage(): JSX.Element {
               entityMBID={genre_mbid}
             />
           </div>
+          <div className="btn-group lb-radio-button">
+            <Link
+              type="button"
+              className="btn btn-info"
+              to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
+                name
+              )})&mode=easy`}
+            >
+              <FontAwesomeIcon icon={faPlayCircle} /> Radio
+            </Link>
+            <button
+              type="button"
+              className="btn btn-info dropdown-toggle px-3"
+              data-bs-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-label="Toggle dropdown"
+            />
+            <div className="dropdown-menu">
+              <Link
+                to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
+                  name
+                )})&mode=easy`}
+                className="dropdown-item"
+              >
+                Genre radio
+              </Link>
+              <Link
+                to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
+                  name
+                )})::nosim&mode=easy`}
+                className="dropdown-item"
+              >
+                This genre only
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
       <div className="entity-page-content">
@@ -224,7 +262,6 @@ export default function GenrePage(): JSX.Element {
                       style={{ minWidth: "0" }}
                     />
                   }
-                  feedbackComponent={<></>}
                   compact
                 />
               ))}
