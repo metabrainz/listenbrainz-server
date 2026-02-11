@@ -5,6 +5,9 @@ import { useContext } from "react";
 
 import { Link } from "react-router";
 import { Helmet } from "react-helmet";
+import { Collapse } from "react-bootstrap";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronRight } from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 type ExploreCardProps = {
@@ -42,6 +45,9 @@ function ExploreCard(props: ExploreCardProps) {
 
 export default function ExplorePage() {
   const { currentUser } = useContext(GlobalAppContext);
+  const [showBeta, setShowBeta] = React.useState(true);
+  const [showArchived, setShowArchived] = React.useState(false);
+
   return (
     <div role="main">
       <Helmet>
@@ -91,74 +97,124 @@ export default function ExplorePage() {
           url="/explore/similar-users/"
         />
       </div>
+
+      {/* Beta Section */}
       <div className="explore-page-divider">
-        <h3>Beta</h3>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => setShowBeta(!showBeta)}
+          onKeyDown={(e: React.KeyboardEvent) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setShowBeta(!showBeta);
+            }
+          }}
+          className="d-flex align-items-center cursor-pointer"
+          style={{ cursor: "pointer" }}
+        >
+          <FontAwesomeIcon
+            icon={faChevronRight}
+            rotation={showBeta ? 90 : undefined}
+            className="me-2"
+          />
+          <h3 className="mb-0">Beta</h3>
+        </div>
         <hr />
       </div>
-      <div className="row">
-        <ExploreCard
-          name="ListenBrainz Radio"
-          desc="Instant custom playlists"
-          img_name="lb-radio-beta.jpg"
-          url="/explore/lb-radio/"
-        />
+      <Collapse in={showBeta}>
+        <div>
+          <div className="row">
+            <ExploreCard
+              name="ListenBrainz Radio"
+              desc="Instant custom playlists"
+              img_name="lb-radio-beta.jpg"
+              url="/explore/lb-radio/"
+            />
 
-        <ExploreCard
-          name="Widgets"
-          desc="Embed ListenBrainz elements into your website"
-          img_name="lb-widgets-beta.jpg"
-          url="https://listenbrainz.readthedocs.io/en/latest/users/widgets.html"
-        />
-      </div>
+            <ExploreCard
+              name="Widgets"
+              desc="Embed ListenBrainz elements into your website"
+              img_name="lb-widgets-beta.jpg"
+              url="https://listenbrainz.readthedocs.io/en/latest/users/widgets.html"
+            />
+          </div>
+        </div>
+      </Collapse>
+
+      {/* Archived Section */}
       {currentUser?.name && (
         <>
           <div className="explore-page-divider">
-            <h3>Archived</h3>
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setShowArchived(!showArchived)}
+              onKeyDown={(e: React.KeyboardEvent) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setShowArchived(!showArchived);
+                }
+              }}
+              className="d-flex align-items-center cursor-pointer"
+              style={{ cursor: "pointer" }}
+            >
+              <FontAwesomeIcon
+                icon={faChevronRight}
+                rotation={showArchived ? 90 : undefined}
+                className="me-2"
+              />
+              <h3 className="mb-0">Archived</h3>
+            </div>
             <hr />
           </div>
-          <div className="row" style={{ opacity: "0.5" }}>
-            <ExploreCard
-              name="Cover Art Collage"
-              desc="Discover"
-              img_name="cover-art-collage.jpg"
-              url="/explore/cover-art-collage/"
-            />
+          <Collapse in={showArchived}>
+            <div>
+              <div className="row">
+                <ExploreCard
+                  name="Cover Art Collage"
+                  desc="Discover"
+                  img_name="cover-art-collage.jpg"
+                  url="/explore/cover-art-collage/"
+                />
 
-            <ExploreCard
-              name="Your Year in Music 2024"
-              desc="Archival version of Year In Music 2024"
-              img_name="year-in-music-2024.png"
-              url={`/user/${encodeURIComponent(
-                currentUser.name
-              )}/year-in-music/legacy/2024/`}
-            />
+                <ExploreCard
+                  name="Your Year in Music 2024"
+                  desc="Archival version of Year In Music 2024"
+                  img_name="year-in-music-2024.png"
+                  url={`/user/${encodeURIComponent(
+                    currentUser.name
+                  )}/year-in-music/legacy/2024/`}
+                />
 
-            <ExploreCard
-              name="Your Year in Music 2023"
-              desc="Archival version of Year In Music 2023"
-              img_name="year-in-music-2023.jpg"
-              url={`/user/${encodeURIComponent(
-                currentUser.name
-              )}/year-in-music/legacy/2023/`}
-            />
+                <ExploreCard
+                  name="Your Year in Music 2023"
+                  desc="Archival version of Year In Music 2023"
+                  img_name="year-in-music-2023.jpg"
+                  url={`/user/${encodeURIComponent(
+                    currentUser.name
+                  )}/year-in-music/legacy/2023/`}
+                />
 
-            <ExploreCard
-              name="Your Year in Music 2022"
-              desc="Archival version of Year In Music 2022"
-              img_name="year-in-music-2022.jpg"
-              url={`/user/${encodeURIComponent(
-                currentUser.name
-              )}/year-in-music/legacy/2022/`}
-            />
-            <ExploreCard
-              name="Your Year in Music 2021"
-              desc="Archival version of Year In Music 2021"
-              img_name="year-in-music-2021.jpg"
-              url={`/user/${encodeURIComponent(
-                currentUser.name
-              )}/year-in-music/legacy/2021/`}
-            />
-          </div>
+                <ExploreCard
+                  name="Your Year in Music 2022"
+                  desc="Archival version of Year In Music 2022"
+                  img_name="year-in-music-2022.jpg"
+                  url={`/user/${encodeURIComponent(
+                    currentUser.name
+                  )}/year-in-music/legacy/2022/`}
+                />
+                <ExploreCard
+                  name="Your Year in Music 2021"
+                  desc="Archival version of Year In Music 2021"
+                  img_name="year-in-music-2021.jpg"
+                  url={`/user/${encodeURIComponent(
+                    currentUser.name
+                  )}/year-in-music/legacy/2021/`}
+                />
+              </div>
+            </div>
+          </Collapse>
         </>
       )}
     </div>
