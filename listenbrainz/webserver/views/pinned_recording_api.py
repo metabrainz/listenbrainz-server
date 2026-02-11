@@ -30,7 +30,7 @@ def pin_recording_for_user():
     must be provided in the Authorization header! Each request should contain only one pinned recording item in the payload.
 
     **Note:** Pinning a new recording will automatically unpin (deactivate) any currently active pin.
-    Pins are active for a default duration (7 days) unless `pinned_until` is specified.
+    Pins are active for a default duration (:data:`~listenbrainz.db.model.pinned_recording.DAYS_UNTIL_UNPIN` days) unless ``pinned_until`` is specified.
 
     The format of the JSON to be POSTed to this endpoint should look like the following:
 
@@ -85,7 +85,7 @@ def unpin_recording_for_user():
     must be provided in the Authorization header!
 
     **Note:** This action only *deactivates* the current pin. It does NOT delete the pin from the user's history.
-    The pin will still appear in `GET /<user_name>/pins`. To fully remove a pin, use the DELETE endpoint.
+    The pin will still appear in ``GET /<user_name>/pins``. To fully remove a pin, use :func:`delete_pin_for_user`.
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: recording unpinned.
@@ -377,7 +377,7 @@ def get_current_pin_for_user(user_name):
 
     If there is no current pin for the user, "pinned_recording" field will be null.
 
-    **Note:** A pin ceases to be current if it is manually unpinned, expires (defaults to 7 days), or is replaced by a new pin.
+    **Note:** A pin ceases to be current if it is manually unpinned, expires (defaults to :data:`~listenbrainz.db.model.pinned_recording.DAYS_UNTIL_UNPIN` days), or is replaced by a new pin.
 
     :param user_name: the MusicBrainz ID of the user whose pin track history requested.
     :type user_name: ``str``
