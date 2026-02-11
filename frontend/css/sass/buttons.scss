@@ -1,8 +1,5 @@
 /* Buttons */
-.btn-warning {
-  --bs-btn-color: #fff;
-  --bs-btn-hover-color: #fff;
-}
+
 .btn-icon {
   padding: 0.5em;
   font-size: 1.5em;
@@ -12,24 +9,29 @@
   text-align: center;
   display: inline-block;
 
-  & + * {
+  &+* {
     margin-left: 0.4em;
   }
 }
+
 .btn-transparent {
   --bs-btn-border-width: 0;
-  --bs-btn-color: inherit;
+  --bs-btn-color: var(--bs-body-color);
+  --bs-btn-hover-color: var(--bs-link-hover-color);
   background: transparent;
   border: none;
   outline: none;
 }
+
 .btn-rounded {
   --bs-btn-border-radius: 3em;
 }
+
 .btn-small-rounding,
 .btn.dropdown-toggle {
   --bs-btn-border-radius: #{$btn-border-radius-lg};
 }
+
 @each $color, $value in $theme-colors {
   .btn-outline-#{$color} {
     --bs-btn-border-radius: #{$btn-border-radius-lg};
@@ -37,16 +39,30 @@
 }
 
 .btn-link {
-  color: $listenbrainz-blue;
+  color: var(--bs-link-color);
   border-color: transparent;
   text-decoration: none;
-  &:hover,
+
+  &:hover {
+    color: var(--bs-link-hover-color);
+    text-decoration: underline;
+  }
+
   &:focus {
     text-decoration: underline;
   }
 }
 
 // Fix button height inside an input group
-.input-group > .btn {
+.input-group>.btn {
   margin: 0;
+}
+a.btn.btn-outline-info {
+  color: var(--bs-body-color);
+  border-color: var(--bs-border-color);
+
+  &:hover {
+    color: var(--bs-link-hover-color);
+    border-color: var(--bs-border-color);
+  }
 }

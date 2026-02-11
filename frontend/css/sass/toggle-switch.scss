@@ -62,25 +62,22 @@
   background: none;
   border: none;
   width: 100%;
-  text-align: left;
+  text-align: right;
 
-  padding: 8px;
+  padding: 0px;
   margin-top: 4px;
+  margin-bottom: 2px;
 
   font-size: 14px;
   font-weight: 500;
-  color: var(--lb-text-secondary);
+  color: var(--bs-body-color);
   cursor: pointer;
 
   display: flex;
   align-items: center;
+  justify-content: flex-end;
 
   transition: background-color 0.15s ease, color 0.15s ease;
-
-  &:hover {
-    background-color: var(--lb-hover-bg);
-    color: var(--lb-text-primary);
-  }
 
   &:focus {
     outline: none;

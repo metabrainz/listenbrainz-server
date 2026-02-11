@@ -1,18 +1,31 @@
 import React from "react";
 import { Link, NavLink, useNavigate } from "react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import {
+  faMoon,
+  faSun,
+  faMagnifyingGlass,
+} from "@fortawesome/free-solid-svg-icons";
+
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Username from "../common/Username";
 
 function Navbar() {
-  const [theme, setTheme] = React.useState<"light" | "dark">(() => {
+  const getInitialTheme = (): "light" | "dark" => {
     const savedTheme = localStorage.getItem("lb-theme");
-    return savedTheme === "dark" ? "dark" : "light";
-  });
+    if (savedTheme === "light" || savedTheme === "dark") {
+      return savedTheme;
+    }
+
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+  };
+
+  const [theme, setTheme] = React.useState<"light" | "dark">(getInitialTheme);
 
   React.useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.setAttribute("data-bs-theme", theme);
     localStorage.setItem("lb-theme", theme);
   }, [theme]);
 
@@ -134,17 +147,19 @@ function Navbar() {
               Explore
             </NavLink>
           </div>
-          
-
 
           <div className="navbar-bottom">
             <button
-            type="button"
-            className="theme-toggle-btn"
-            onClick={toggleTheme}
-          >
-            {theme === "dark" ? "☀️ Light mode" : "🌙 Dark mode"}
-          </button>
+              type="button"
+              className="theme-toggle-btn"
+              onClick={toggleTheme}
+            >
+              <FontAwesomeIcon
+                icon={theme === "dark" ? faSun : faMoon}
+                fixedWidth
+              />
+            </button>
+
             {currentUser?.name ? (
               <>
                 <Username

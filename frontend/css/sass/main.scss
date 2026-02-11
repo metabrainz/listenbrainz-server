@@ -70,19 +70,20 @@ b,
 
 html {
   font-size: 10px;
-  -webkit-tap-highlight-color: black;
+  -webkit-tap-highlight-color: var(--bs-body-color);
 }
 
 body {
-  background-color: var(--lb-bg-primary);
-  color: var(--lb-text-primary);
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
 }
 
+
 a {
-  color: var(--lb-text-primary);
+  color: var(--bs-link-color);
 
   &:hover {
-    color: var(--lb-text-secondary);
+    color: var(--bs-link-hover-color);
   }
 }
 
@@ -115,13 +116,13 @@ ol {
   margin-bottom: 2rem;
 
   .panel-heading {
-    background-color: var(--lb-bg-secondary);
-    color: var(--lb-text-primary);
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-body-color);
   }
 }
 
 .form-text {
-  color: #8c8674;
+  color: var(--bs-secondary-color);
 }
 
 .container-react-main {
@@ -131,7 +132,7 @@ ol {
 }
 
 input[type="range"] {
-  accent-color: $blue;
+  accent-color: var(--bs-primary);
 }
 
 /* Custom indicator for details/summary expanded indicator */
