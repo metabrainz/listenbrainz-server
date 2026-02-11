@@ -9,9 +9,9 @@ TAG_HEIRARCHY_CACHE_KEY = "tag_hierarchy"
 # Entity types that have tags in MusicBrainz: (entity_type, tag_table, id_column, order_column, limit).
 # order_column: artist uses sort_name, others use name (per MusicBrainz EntityTag role).
 TAGGED_ENTITY_TYPES = [
-    ("artist", "artist_tag", "artist", "sort_name", 10),
+    ("artist", "artist_tag", "artist", "sort_name", 12),
     ("release_group", "release_group_tag", "release_group", "name", 100),
-    ("recording", "recording_tag", "recording", "name", 10),
+    ("recording", "recording_tag", "recording", "name", 12),
 ]
 TAG_HEIRARCHY_CACHE_EXPIRY = 60 * 60 * 24 * 7  # 7 days
 
