@@ -1,9 +1,6 @@
 @use "sass:map";
 
-$sidebar-gradient: linear-gradient(50deg,
-    rgba(0, 0, 0, 0.04),
-    transparent);
-
+$sidebar-gradient: linear-gradient(50deg, rgba(0, 0, 0, 0.04), transparent);
 
 .sidebar {
   position: sticky;
@@ -18,7 +15,7 @@ $sidebar-gradient: linear-gradient(50deg,
   background: var(--bs-body-bg);
   color: var(--bs-body-color);
 
-  >* {
+  > * {
     background: $sidebar-gradient;
     padding: 12px 20px;
   }
@@ -105,7 +102,6 @@ $sidebar-gradient: linear-gradient(50deg,
   background-color: var(--bs-body-bg);
   color: var(--bs-primary);
   border-color: var(--bs-border-color);
-
 
   @media screen and (min-width: map.get($grid-breakpoints, "lg")) {
     display: none;

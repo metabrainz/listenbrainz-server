@@ -44,7 +44,7 @@ body {
       }
 
       a {
-        display: block; 
+        display: block;
 
         &,
         &:visited {
@@ -89,7 +89,7 @@ body {
 
         line-height: 1.5em;
 
-        >a {
+        > a {
           width: fit-content;
           margin-left: auto;
           font-weight: normal;
@@ -115,8 +115,6 @@ body {
       border-bottom: 3px solid;
       border-image: linear-gradient(to right, $blue, $gradient-orange) 100% 1;
 
-
-
       .navbar-logo {
         margin: 0;
         margin-left: auto;
@@ -124,7 +122,7 @@ body {
         width: auto;
         align-self: center;
 
-        >img {
+        > img {
           height: 26px;
           margin-top: 3px;
         }
@@ -245,7 +243,6 @@ body {
     }
 
     .container-react {
-
       &,
       .container-react-main {
         width: 100%;
@@ -266,7 +263,7 @@ body {
   margin-bottom: $nav-bottom-padding;
 
   &,
-  >* {
+  > * {
     background-color: var(--bs-tertiary-bg);
   }
 
@@ -277,12 +274,12 @@ body {
     border-bottom: none;
     flex-wrap: nowrap;
 
-    >li {
+    > li {
       background-color: var(--bs-tertiary-bg);
       border-bottom: 1px solid var(--bs-border-color);
       float: unset;
 
-      >a {
+      > a {
         color: var(--bs-link-color);
         padding: $nav-tabs-link-padding;
         border: 1px solid $nav-tabs-border-color;
@@ -300,7 +297,7 @@ body {
         }
       }
 
-      &.active>a {
+      &.active > a {
         color: var(--bs-body-color);
         font-weight: 700;
         border-bottom: 1px solid white;
@@ -312,7 +309,7 @@ body {
         background: linear-gradient(288deg, #46433a 16.96%, $blue 98.91%);
         color: $white;
 
-        >* {
+        > * {
           padding: $nav-tabs-link-padding;
         }
 
@@ -326,10 +323,12 @@ body {
       }
 
       &.disabled {
-        background-color: color.adjust($nav-tabs-background-color,
-            $lightness: -15%);
+        background-color: color.adjust(
+          $nav-tabs-background-color,
+          $lightness: -15%
+        );
 
-        >a {
+        > a {
           color: color.adjust($nav-tabs-background-color, $lightness: -35%);
         }
       }
@@ -341,11 +340,11 @@ body {
     list-style: none;
     border-bottom: 1px solid $nav-tabs-border-color;
 
-    >li {
+    > li {
       display: inline-block;
       color: $body-color;
 
-      >a {
+      > a {
         color: $nav-link-color !important;
         font-weight: initial;
       }
@@ -355,7 +354,7 @@ body {
         font-weight: 700;
       }
 
-      &+li:before {
+      & + li:before {
         padding: 0 5px;
         content: "\003E";
       }
@@ -364,7 +363,6 @@ body {
 
   /* Styles for mobile devices */
   @media (max-width: $offscreen-sidenav-breakpoint) {
-
     /* When not all tabs fit horizontally,
 		hide tabs behind gradient to indicate there's more */
     &::after {
@@ -378,10 +376,9 @@ body {
       margin-top: calc(-#{$tabs-height} - 10px);
     }
 
-    .nav.nav-tabs>li {
-
-      >a,
-      &.username>* {
+    .nav.nav-tabs > li {
+      > a,
+      &.username > * {
         padding: $nav-tabs-link-padding-mobile;
       }
     }
@@ -393,7 +390,7 @@ body {
 
   /* Special styles for very wide screens */
   @media (min-width: $very-wide-screen-breakpoint) {
-    >* {
+    > * {
       /* Align the secondary nav with the centered content */
       width: calc(100% - $sidenav-width);
       max-width: $max-content-width;
@@ -401,7 +398,7 @@ body {
       margin-right: auto;
     }
 
-    .nav.nav-tabs>li.username {
+    .nav.nav-tabs > li.username {
       background: #46433a;
     }
 
@@ -420,7 +417,7 @@ body {
   margin-left: $grid-gutter-width * -0.5;
   margin-right: $grid-gutter-width * -0.5;
 
-  &.dragscroll>* {
+  &.dragscroll > * {
     flex-shrink: 0;
   }
 }

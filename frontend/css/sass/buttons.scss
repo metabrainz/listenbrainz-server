@@ -9,7 +9,7 @@
   text-align: center;
   display: inline-block;
 
-  &+* {
+  & + * {
     margin-left: 0.4em;
   }
 }
@@ -54,7 +54,7 @@
 }
 
 // Fix button height inside an input group
-.input-group>.btn {
+.input-group > .btn {
   margin: 0;
 }
 a.btn.btn-outline-info {

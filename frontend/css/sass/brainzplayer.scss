@@ -38,7 +38,7 @@ $youtube-expanded-width: 1280px;
   border-top: 1px solid var(--bs-border-color);
   z-index: 110;
 
-  >* {
+  > * {
     flex: 1;
   }
 
@@ -54,7 +54,8 @@ $youtube-expanded-width: 1280px;
 
       // Show big preview of the cover art when hovering over it
       @media (min-width: $offscreen-sidenav-breakpoint) {
-        &:hover>*:not(.hidden):not(.no-album-art):not(.youtube-wrapper):not(.soundcloud) {
+        &:hover
+          > *:not(.hidden):not(.no-album-art):not(.youtube-wrapper):not(.soundcloud) {
           height: min(80vw, $big-cover-art-size);
           width: min(80vw, $big-cover-art-size);
           bottom: $brainzplayer-height + $progress-bar-height;
@@ -62,7 +63,7 @@ $youtube-expanded-width: 1280px;
         }
       }
 
-      >* {
+      > * {
         height: $cover-art-size;
         width: $cover-art-size;
         position: absolute;
@@ -143,7 +144,7 @@ $youtube-expanded-width: 1280px;
           overflow: hidden;
           transition: $youtube-resize-transition;
 
-          >* {
+          > * {
             height: inherit;
           }
         }
@@ -155,7 +156,7 @@ $youtube-expanded-width: 1280px;
           background: color.change($black, $alpha: 50%);
           color: $white;
 
-          +.youtube-button {
+          + .youtube-button {
             margin-left: 0.5em;
           }
         }
@@ -171,7 +172,7 @@ $youtube-expanded-width: 1280px;
         .youtube-resizable-container {
           position: relative;
 
-          >div {
+          > div {
             height: 100%;
             width: 100%;
           }
@@ -192,7 +193,7 @@ $youtube-expanded-width: 1280px;
       padding: 0 0.7em;
     }
 
-    >* {
+    > * {
       transition: all 0.5s ease;
       background: none;
 
@@ -266,7 +267,7 @@ $youtube-expanded-width: 1280px;
     display: flex;
 
     /* Icons */
-    >* {
+    > * {
       stroke-width: 40px;
       font-size: 1.3em;
       margin: 0 0.7em;
@@ -287,7 +288,7 @@ $youtube-expanded-width: 1280px;
       &.music-service-icon {
         max-width: 1.5em;
 
-        >svg {
+        > svg {
           // Youtube forces us to follow their branding guidelines to the letter,
           // so we need to force a minimum height of 20px for the icon path inside the svg
           // [poo emoji]
@@ -370,7 +371,7 @@ $youtube-expanded-width: 1280px;
       .actions {
         flex: 0;
 
-        >.music-service-icon {
+        > .music-service-icon {
           max-width: 1em;
         }
       }
@@ -379,7 +380,6 @@ $youtube-expanded-width: 1280px;
 }
 
 .dropup-content {
-
   // A lot of these styles are copied part from Bootstrap
   // and part from ListenBrainz (ListenCard).
   // We copy them so that we don't have to rely on them for a standalone package
@@ -410,8 +410,8 @@ $youtube-expanded-width: 1280px;
   background-clip: padding-box;
 
   // Links within the dropdown menu
-  >a,
-  >button {
+  > a,
+  > button {
     display: block; // necessary for <a> tags
     width: 100%;
     background: none;
@@ -465,7 +465,7 @@ $youtube-expanded-width: 1280px;
     }
   }
 
-  &> ::after {
+  & > ::after {
     border-color: transparent;
   }
 }
@@ -587,7 +587,7 @@ $youtube-expanded-width: 1280px;
   }
 
   // Negative top margin to remove gap with buttons above
-  .queue-buttons+.queue-headers {
+  .queue-buttons + .queue-headers {
     margin-top: -30px;
   }
 }
@@ -616,13 +616,13 @@ $youtube-expanded-width: 1280px;
   &.open {
     bottom: 0;
 
-    +.queue {
+    + .queue {
       // When the music player is open, bring queu on top of it
       z-index: 112;
     }
   }
 
-  >* {
+  > * {
     margin-block: auto;
   }
 
@@ -770,7 +770,6 @@ $youtube-expanded-width: 1280px;
 }
 
 @keyframes leftright {
-
   0%,
   20% {
     transform: translateX(0%);
