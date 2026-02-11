@@ -110,11 +110,11 @@ def current_status():
         except Exception:
             current_app.logger.error("Could not get %s listen count from redis", day.strftime('%Y-%m-%d'), exc_info=True)
             day_listen_count = None
-            listen_counts_per_day.append({
-                "date": day.strftime('%Y-%m-%d'),
-                "listenCount": format(day_listen_count, ',d') if day_listen_count else "0",
-                "label": "today" if delta == 0 else "yesterday",
-            })
+        listen_counts_per_day.append({
+            "date": day.strftime('%Y-%m-%d'),
+            "listenCount": format(day_listen_count, ',d') if day_listen_count else "0",
+            "label": "today" if delta == 0 else "yesterday",
+        })
 
     data = {
         "load": load,
