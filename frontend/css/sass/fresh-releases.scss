@@ -36,6 +36,7 @@
 }
 
 .releases-page {
+
   // FILTERS
   .filters-main {
     top: 1rem;
@@ -72,6 +73,7 @@
           #clearall-btn-active {
             font-size: 2.5rem;
             flex-grow: 2;
+
             &:hover {
               font-weight: bold;
               color: $orange;
@@ -94,6 +96,7 @@
             font-weight: normal;
             cursor: pointer;
             color: $asphalt;
+
             &:hover {
               font-weight: bold;
               color: $blue;
@@ -139,11 +142,9 @@
             content: "";
             height: 100%;
             width: 3rem;
-            background: linear-gradient(
-              90deg,
-              rgba(255, 255, 255, 1) 50%,
-              rgba(255, 255, 255, 0) 100%
-            );
+            background: linear-gradient(90deg,
+                rgba(255, 255, 255, 1) 50%,
+                rgba(255, 255, 255, 0) 100%);
             position: absolute;
             top: 0;
             left: 0;
@@ -154,11 +155,9 @@
             content: "";
             height: 100%;
             width: 3rem;
-            background: linear-gradient(
-              -90deg,
-              rgba(255, 255, 255, 1) 50%,
-              rgba(255, 255, 255, 0) 100%
-            );
+            background: linear-gradient(-90deg,
+                rgba(255, 255, 255, 1) 50%,
+                rgba(255, 255, 255, 0) 100%);
             position: absolute;
             top: 0;
             right: 0;
@@ -229,6 +228,16 @@
   // height: 100%;
   max-height: calc(100vh - 8em);
 
+  // Prevent calendar icon mark from overlapping with adjacent date marks
+  .rc-slider-mark-text {
+
+    // Mark text containing the calendar SVG icon
+    svg {
+      // Offset the icon away from the slider rail to avoid clustering
+      margin-left: 0.5rem;
+    }
+  }
+
   @media (max-width: map.get($grid-breakpoints, "lg")) {
     height: unset;
     width: 100%;
@@ -239,6 +248,12 @@
     z-index: 50;
     background-color: $white;
     padding-right: 120px; // sidebar button on the right
+
+    // On mobile (horizontal slider), offset the calendar icon vertically
+    .rc-slider-mark-text svg {
+      margin-left: 0;
+      margin-top: -0.25rem;
+    }
   }
 }
 
@@ -307,13 +322,16 @@
 .releases-page-container {
   display: flex;
   gap: 1.5em;
+
   @media screen and (min-width: map.get($grid-breakpoints, "lg")) {
     // make the sidebar flush with the right-hand side on larger sizes
     margin-right: -15px !important;
   }
+
   .releases-page {
     flex: 1;
   }
+
   .sidebar-fresh-releases {
     max-height: 85vh;
 
