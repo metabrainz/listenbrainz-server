@@ -64,7 +64,7 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 
 # MAX file size to be allowed for file uploads, default is infinite
 # Size is in bytes
-MAX_CONTENT_LENGTH = 25 * 1024 * 1024  # 25MB
+MAX_CONTENT_LENGTH = 200 * 1024 * 1024 + 10  # 200MB plus some buffer
 
 # Specify the upload folder where all the lastfm-backup will be stored
 # The path must be absolute path
