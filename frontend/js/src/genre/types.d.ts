@@ -45,4 +45,5 @@ export type GenrePageProps = {
   genre: Genre;
   genre_mbid: string;
   entities: TaggedEntities;
+  coverArt?: string;
 };

@@ -79,7 +79,8 @@ export default function GenrePage(): JSX.Element {
     RouteQuery(["genre", params], location.pathname)
   );
 
-  const { genre, genre_mbid, entities } = data || ({} as GenrePageProps);
+  const { genre, genre_mbid, entities, coverArt: coverArtSVG } =
+    data || ({} as GenrePageProps);
   const { name } = genre || {};
 
   const [sort, setSort] = React.useState<"release_date" | "total_listen_count">(
@@ -142,7 +143,17 @@ export default function GenrePage(): JSX.Element {
         <title>{name}</title>
       </Helmet>
       <div className="entity-page-header flex">
-        <div className="cover-art">{/* TODO: genre cover art */}</div>
+        <div
+          className="cover-art"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(
+              coverArtSVG ??
+                "<img src='/static/img/cover-art-placeholder.jpg' alt=''></img>"
+            ),
+          }}
+          title={name ? `Cover art for ${name}` : undefined}
+        />
         <div className="genre-info">
           <h1>{name}</h1>
           <div className="details" />

@@ -44,8 +44,8 @@ def get_release_group_sort_key(release_group):
     return release_group["total_listen_count"] or 0, release_date
 
 
-def get_cover_art_for_artist(release_groups):
-    """ Get the cover art for an artist using a list of their release groups """
+def get_cover_art_from_release_groups(release_groups):
+    """ Get the cover art from a list of release groups """
     covers = []
     for release_group in release_groups:
         if release_group.get("caa_id") is not None:
@@ -217,7 +217,7 @@ def artist_entity(artist_mbid: str):
         }
 
     try:
-        cover_art = get_cover_art_for_artist(release_groups)
+        cover_art = get_cover_art_from_release_groups(release_groups)
     except Exception:
         current_app.logger.error("Error generating cover art for artist:", exc_info=True)
         cover_art = None
@@ -548,8 +548,16 @@ def genre_entity(genre_mbid: str):
             })
         tagged_entities["recording"]["entities"] = enriched_rec
 
+    release_group_entities = tagged_entities.get("release_group", {}).get("entities", [])
+    try:
+        cover_art = get_cover_art_from_release_groups(release_group_entities) if release_group_entities else None
+    except Exception:
+        current_app.logger.error("Error generating cover art for genre:", exc_info=True)
+        cover_art = None
+
     return jsonify({
         "genre": genre_dict,
         "genre_mbid": genre_mbid,
         "entities": tagged_entities,
+        "coverArt": cover_art,
     })
