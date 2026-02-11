@@ -5,9 +5,7 @@ import { useContext } from "react";
 
 import { Link } from "react-router";
 import { Helmet } from "react-helmet";
-import { Collapse } from "react-bootstrap";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChevronRight } from "@fortawesome/free-solid-svg-icons";
+import { Accordion } from "react-bootstrap";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 type ExploreCardProps = {
@@ -45,8 +43,6 @@ function ExploreCard(props: ExploreCardProps) {
 
 export default function ExplorePage() {
   const { currentUser } = useContext(GlobalAppContext);
-  const [showBeta, setShowBeta] = React.useState(true);
-  const [showArchived, setShowArchived] = React.useState(false);
 
   return (
     <div role="main">
@@ -98,78 +94,38 @@ export default function ExplorePage() {
         />
       </div>
 
-      {/* Beta Section */}
-      <div className="explore-page-divider">
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => setShowBeta(!showBeta)}
-          onKeyDown={(e: React.KeyboardEvent) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              setShowBeta(!showBeta);
-            }
-          }}
-          className="d-flex align-items-center cursor-pointer"
-          style={{ cursor: "pointer" }}
-        >
-          <FontAwesomeIcon
-            icon={faChevronRight}
-            rotation={showBeta ? 90 : undefined}
-            className="me-2"
-          />
-          <h3 className="mb-0">Beta</h3>
-        </div>
-        <hr />
-      </div>
-      <Collapse in={showBeta}>
-        <div>
-          <div className="row">
-            <ExploreCard
-              name="ListenBrainz Radio"
-              desc="Instant custom playlists"
-              img_name="lb-radio-beta.jpg"
-              url="/explore/lb-radio/"
-            />
-
-            <ExploreCard
-              name="Widgets"
-              desc="Embed ListenBrainz elements into your website"
-              img_name="lb-widgets-beta.jpg"
-              url="https://listenbrainz.readthedocs.io/en/latest/users/widgets.html"
-            />
-          </div>
-        </div>
-      </Collapse>
-
-      {/* Archived Section */}
-      {currentUser?.name && (
-        <>
-          <div className="explore-page-divider">
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => setShowArchived(!showArchived)}
-              onKeyDown={(e: React.KeyboardEvent) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setShowArchived(!showArchived);
-                }
-              }}
-              className="d-flex align-items-center cursor-pointer"
-              style={{ cursor: "pointer" }}
-            >
-              <FontAwesomeIcon
-                icon={faChevronRight}
-                rotation={showArchived ? 90 : undefined}
-                className="me-2"
+      <Accordion
+        alwaysOpen
+        defaultActiveKey={["beta"]}
+        className="explore-sections"
+      >
+        {/* Beta Section */}
+        <Accordion.Item eventKey="beta">
+          <Accordion.Header as="h3">Beta</Accordion.Header>
+          <Accordion.Body>
+            <div className="row">
+              <ExploreCard
+                name="ListenBrainz Radio"
+                desc="Instant custom playlists"
+                img_name="lb-radio-beta.jpg"
+                url="/explore/lb-radio/"
               />
-              <h3 className="mb-0">Archived</h3>
+
+              <ExploreCard
+                name="Widgets"
+                desc="Embed ListenBrainz elements into your website"
+                img_name="lb-widgets-beta.jpg"
+                url="https://listenbrainz.readthedocs.io/en/latest/users/widgets.html"
+              />
             </div>
-            <hr />
-          </div>
-          <Collapse in={showArchived}>
-            <div>
+          </Accordion.Body>
+        </Accordion.Item>
+
+        {/* Archived Section */}
+        {currentUser?.name && (
+          <Accordion.Item eventKey="archived">
+            <Accordion.Header as="h3">Archived</Accordion.Header>
+            <Accordion.Body>
               <div className="row">
                 <ExploreCard
                   name="Cover Art Collage"
@@ -213,10 +169,10 @@ export default function ExplorePage() {
                   )}/year-in-music/legacy/2021/`}
                 />
               </div>
-            </div>
-          </Collapse>
-        </>
-      )}
+            </Accordion.Body>
+          </Accordion.Item>
+        )}
+      </Accordion>
     </div>
   );
 }

@@ -149,3 +149,41 @@
     flex: 1;
   }
 }
+
+.explore-sections {
+  .accordion-item {
+    border: none;
+    background: transparent;
+  }
+
+  .accordion-header {
+    .accordion-button {
+      background: transparent;
+      box-shadow: none;
+      padding: 0.5em 0;
+      font-size: 1.5em;
+      font-weight: bold;
+      color: inherit;
+      border-bottom: 1px solid $hr-border-color;
+
+      &::after {
+        // Use Bootstrap's default chevron rotation
+        margin-left: 0;
+        margin-right: 0.5em;
+        order: -1;
+      }
+
+      &:focus {
+        box-shadow: none;
+      }
+
+      &.collapsed {
+        color: inherit;
+      }
+    }
+  }
+
+  .accordion-body {
+    padding: 1em 0;
+  }
+}
