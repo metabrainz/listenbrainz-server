@@ -1,15 +1,22 @@
+// Import Sass map module to access Bootstrap grid breakpoints
+@use "sass:map";
+
 $color-selector-size: 24px;
 
 #stats-art-creator {
   display: flex;
+  flex-wrap: wrap; // Allow wrapping on smaller screens
   gap: 15px;
   margin-right: -15px;
   margin-top: -$nav-bottom-padding;
+  overflow: hidden; // Prevent horizontal scroll
 
   .artwork-container {
     margin: auto;
-    padding: 15px 0;
+    padding: 15px 0; // Vertical padding only for better space utilization
     text-align: center;
+    flex: 1 1 600px; // Flexible sizing with 600px base
+    min-width: 0; // Allow flex item to shrink below content size
   }
 
   .stats-art-gallery {
@@ -66,6 +73,7 @@ $color-selector-size: 24px;
   .settings-navbar {
     margin-left: auto;
     max-width: 320px;
+    min-width: 0; // Prevent overflow in flex container
     overflow-y: scroll;
 
     /* prettier-ignore */
@@ -157,7 +165,7 @@ $color-selector-size: 24px;
   .preview {
     border-radius: 5px;
     margin-bottom: 10px;
-    max-width: min(700px, 55vw);
+    max-width: 100%;
     aspect-ratio: 1;
     height: auto;
   }
@@ -178,7 +186,7 @@ $color-selector-size: 24px;
     padding-left: 0;
 
     /* Input */
-    > input {
+    >input {
       appearance: none;
       -moz-appearance: none;
       -webkit-appearance: none;
@@ -215,20 +223,20 @@ $color-selector-size: 24px;
         transition: transform 0s, opacity 0s;
       }
 
-      &:checked + span::before {
+      &:checked+span::before {
         background-color: $black;
       }
 
-      &:checked + span::after {
+      &:checked+span::after {
         background-color: $gray-600;
         transform: translateX(10px);
       }
 
-      &:active + span::before {
+      &:active+span::before {
         background-color: $gray-600;
       }
 
-      &:checked:active + span::before {
+      &:checked:active+span::before {
         background-color: $black;
       }
 
@@ -237,21 +245,21 @@ $color-selector-size: 24px;
         opacity: 0;
       }
 
-      &:disabled + span::before {
+      &:disabled+span::before {
         background-color: $gray-300;
       }
 
-      &:checked:disabled + span::before {
+      &:checked:disabled+span::before {
         background-color: #bfdbda;
       }
 
-      &:checked:disabled + span::after {
+      &:checked:disabled+span::after {
         background-color: $black;
       }
     }
 
     /* Track */
-    > span::before {
+    >span::before {
       content: "";
       display: inline-block;
       margin: 5px 0 5px 10px;
@@ -264,7 +272,7 @@ $color-selector-size: 24px;
     }
 
     /* Thumb */
-    > span::after {
+    >span::after {
       content: "";
       position: absolute;
       top: 4px;
@@ -279,7 +287,7 @@ $color-selector-size: 24px;
     }
 
     /* Hover, Focus */
-    &:hover > input {
+    &:hover>input {
       opacity: 0.04;
 
       &:focus {
@@ -302,7 +310,7 @@ $color-selector-size: 24px;
       flex-basis: 300px;
       justify-content: left;
 
-      > .btn-link > span {
+      >.btn-link>span {
         margin-right: 0.2em;
         font-size: 14px;
       }
@@ -318,21 +326,21 @@ $color-selector-size: 24px;
       margin-left: 0.6em;
       margin-right: auto;
 
-      > input {
+      >input {
         text-overflow: ellipsis;
         border-radius: 5px 0 0 5px;
         height: inherit;
       }
 
-      > span {
+      >span {
         height: inherit;
 
-        > button {
+        >button {
           height: inherit;
           border-radius: 0 5px 5px 0;
           line-height: 1em;
 
-          > svg {
+          >svg {
             font-size: 1.5em;
           }
         }
@@ -353,16 +361,27 @@ $color-selector-size: 24px;
     }
   }
 
-  /* Mobile responsive styles */
-  @media (max-width: 767px) {
+  /**
+   * Mobile Responsive Styles
+   * 
+   * Fixes for LB-1933: Horizontal overflow on mobile devices
+   * 
+   * Key changes:
+   * 1. Using Bootstrap 'lg' breakpoint (992px) to sync with sidebar.scss
+   *    - Prevents sidebar overlap issue between 768px-992px
+   * 2. Stacking layout vertically on mobile
+   * 3. Reduced horizontal padding for better space utilization
+   * 4. Full-width constraints to prevent sidebar overlap
+   */
+  @media (max-width: map.get($grid-breakpoints, "lg")) {
     flex-direction: column;
     margin-right: 0;
     gap: 0;
-    overflow-x: hidden;
+    overflow-x: hidden; // Prevent horizontal scroll
 
     .artwork-container {
       width: 100%;
-      padding: 15px;
+      padding: 15px 0; // Vertical padding only - allows 3 preview images per line
       margin: 0;
       box-sizing: border-box;
     }
@@ -373,8 +392,8 @@ $color-selector-size: 24px;
     }
 
     .settings-navbar {
-      max-width: 100%;
-      width: 100%;
+      max-width: 100%; // Prevent sidebar overlap
+      width: 100%;     // Force full width on mobile
       margin-left: 0;
     }
 
