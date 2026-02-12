@@ -6,6 +6,7 @@ from brainzutils.musicbrainz_db import engine as mb_engine
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, request, jsonify, current_app
 
+import listenbrainz.db.genre as db_genre
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 import listenbrainz.db.external_service_oauth as db_external_service_oauth
@@ -23,6 +24,7 @@ from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError,
 from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
+from psycopg2.extras import DictCursor
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, \
     is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, \
     LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
@@ -49,6 +51,30 @@ def search_user():
     else:
         users = []
     return jsonify({'users': users})
+
+
+SEARCH_GENRE_LIMIT = 50
+
+
+@api_bp.get("/search/genres/")
+@crossdomain
+@ratelimit()
+def search_genres():
+    """Search MusicBrainz genres by name (queries the DB directly).
+
+    :param search_term: Query string to match genre names (case-insensitive).
+    """
+    search_term = request.args.get("search_term", "").strip()
+    if not search_term:
+        return jsonify({"genres": []})
+    try:
+        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+                mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
+            genres = db_genre.search_genres(mb_curs, search_term, SEARCH_GENRE_LIMIT)
+    except Exception as e:
+        current_app.logger.error("Error searching genres: %s", str(e), exc_info=True)
+        return jsonify({"genres": [], "error": "Genre search failed"}), 500
+    return jsonify({"genres": genres})
 
 
 @api_bp.post("/submit-listens")

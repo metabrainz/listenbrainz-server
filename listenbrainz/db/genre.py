@@ -41,6 +41,31 @@ def load_genre_with_subgenres(mb_curs: DictCursor):
     return mb_curs.fetchall()
 
 
+def search_genres(mb_curs, query: str, limit: int = 50):
+    """Search MusicBrainz genre table by name (case-insensitive).
+    Orders by: exact match first, then prefix match, then contains; then by name.
+    Returns list of dicts with gid, name."""
+    if not query or not query.strip():
+        return []
+    query_clean = query.strip()
+    pattern = f"%{query_clean}%"
+    prefix_pattern = f"{query_clean}%"
+    mb_curs.execute(
+        """
+        SELECT gid::text AS gid, name
+          FROM genre
+         WHERE name ILIKE %s
+         ORDER BY
+           (LOWER(TRIM(name)) = LOWER(%s)) DESC,
+           (LOWER(name) LIKE LOWER(%s)) DESC,
+           name
+         LIMIT %s
+        """,
+        (pattern, query_clean, prefix_pattern, limit),
+    )
+    return [dict(row) for row in mb_curs.fetchall()]
+
+
 def get_tag_hierarchy_data():
     data = cache.get(TAG_HEIRARCHY_CACHE_KEY)
     if not data:
