@@ -160,17 +160,14 @@
     .accordion-button {
       background: transparent;
       box-shadow: none;
-      padding: 0.5em 0;
-      font-size: 1.5em;
-      font-weight: bold;
+      padding: 0;
       color: inherit;
-      border-bottom: 1px solid $hr-border-color;
 
       &::after {
-        // Use Bootstrap's default chevron rotation
+        // Place chevron before the header text
+        order: -1;
         margin-left: 0;
         margin-right: 0.5em;
-        order: -1;
       }
 
       &:focus {
@@ -179,6 +176,11 @@
 
       &.collapsed {
         color: inherit;
+      }
+
+      // Let the divider fill remaining space
+      .explore-page-divider {
+        flex: 1;
       }
     }
   }

@@ -101,7 +101,10 @@ export default function ExplorePage() {
       >
         {/* Beta Section */}
         <Accordion.Item eventKey="beta">
-          <Accordion.Header as="h3">Beta</Accordion.Header>
+          <Accordion.Header as="div" className="explore-page-divider">
+            <h3>Beta</h3>
+            <hr />
+          </Accordion.Header>
           <Accordion.Body>
             <div className="row">
               <ExploreCard
@@ -124,7 +127,10 @@ export default function ExplorePage() {
         {/* Archived Section */}
         {currentUser?.name && (
           <Accordion.Item eventKey="archived">
-            <Accordion.Header as="h3">Archived</Accordion.Header>
+            <Accordion.Header as="div" className="explore-page-divider">
+              <h3>Archived</h3>
+              <hr />
+            </Accordion.Header>
             <Accordion.Body>
               <div className="row">
                 <ExploreCard
