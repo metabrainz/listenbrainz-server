@@ -1,14 +1,9 @@
 import * as React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import {
-  renderWithProviders,
-  textContentMatcher,
-} from "../test-utils/rtl-test-utils";
+import {renderWithProviders}  from "../test-utils/rtl-test-utils";
 import APIServiceClass from "../../src/utils/APIService";
-import SelectTimezone, {
-  SelectTimezoneWrapper,
-} from "../../src/settings/select_timezone/SelectTimezone";
+import SelectTimezone from "../../src/settings/select_timezone/SelectTimezone";
 
 import { useLoaderData } from "react-router";
 
@@ -18,8 +13,7 @@ const pg_timezones: Array<[string, string]> = [
   ["America/Adak", "-9:00:00 GMT"],
   ["America/New_York", "-4:00:00 GMT"],
 ];
-const autoSaveMock = jest.fn();
-// Mocking react-router loader data so the wrapper component can be tested
+// Mocking react-router loader data so the component can be tested
 // without setting up a full router.
 jest.mock("react-router", () => ({
   ...jest.requireActual("react-router"),
@@ -27,19 +21,16 @@ jest.mock("react-router", () => ({
 }));
 
 
-
-const props = {
-  pg_timezones,
-  user_timezone,
-  autoSave: autoSaveMock,
-};
-
-jest.unmock("react-toastify");
-
 describe("User settings", () => {
   describe("submitTimezonePage", () => {
     it("renders correctly", async () => {
-      render(<SelectTimezone {...props} />);
+     
+(useLoaderData as jest.Mock).mockReturnValue({
+  pg_timezones,
+  user_timezone,
+});
+
+render(<SelectTimezone />);
 
       await screen.findByRole("heading", { name: /select your timezone/i });
       const defaultOption = await screen.findByRole<HTMLOptionElement>(
@@ -59,14 +50,12 @@ describe("User settings", () => {
   describe("resetTimezone", () => {
     it("calls API, and sets state + creates a new alert on success", async () => {
       const testAPIService = new APIServiceClass("fnord");
-      // Provide fake loader data and API service so the wrapper component
-      // can be tested 
       (useLoaderData as jest.Mock).mockReturnValue({
         pg_timezones,
         user_timezone,
       });
 
-      renderWithProviders(<SelectTimezoneWrapper />, {
+      renderWithProviders(<SelectTimezone />, {
         APIService: testAPIService,
       });
     

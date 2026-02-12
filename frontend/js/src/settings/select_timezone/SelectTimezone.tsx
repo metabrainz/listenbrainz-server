@@ -10,72 +10,15 @@ type SelectTimezoneLoaderData = {
   pg_timezones: Array<string[]>;
   user_timezone: string;
 };
-export type SelectTimezoneProps = SelectTimezoneLoaderData & {
-  autoSave: (timezone: string) => void;
-};
-export default class SelectTimezone extends React.Component<
-  SelectTimezoneProps
-> {
-  zoneSelection = (zone: string): void => {
-    const { autoSave } = this.props;
-    autoSave(zone);
-  };
 
-  render() {
-    const { pg_timezones, user_timezone } = this.props;
-
-    return (
-      <>
-        <Helmet>
-          <title>Select your timezone</title>
-        </Helmet>
-        <h3>Select your timezone</h3>
-        <p>
-          Your timezone is{" "}
-          <span style={{ fontWeight: "bold" }}>{user_timezone}.</span>
-        </p>
-
-        <p>
-          Setting your timezone allows us to generate local timestamps and
-          better statistics for your listens. It also influences when your daily
-          playlists and recommendations are generated.
-        </p>
-
-        <p className="border-start bg-light border-info border-3 px-3 py-2 mb-3 fs-4">
-          Changes are saved automatically.
-        </p>
-        <div>
-          <label>
-            Select your local timezone:{" "}
-            <select
-              className="form-select"
-              value={user_timezone}
-              onChange={(e) => this.zoneSelection(e.target.value)}
-            >
-              <option value="default" disabled>
-                Choose an option
-              </option>
-              {pg_timezones.map((zone: string[]) => {
-                return (
-                  <option key={zone[0]} value={zone[0]}>
-                    {zone[0]} ({zone[1]})
-                  </option>
-                );
-              })}
-            </select>
-          </label>
-        </div>
-      </>
-    );
-  }
-}
-
-export function SelectTimezoneWrapper() {
+export default function SelectTimezone() {
   const data = useLoaderData() as SelectTimezoneLoaderData;
+  // user_timezone stores value returned by route loader
   const { pg_timezones, user_timezone } = data;
 
   const globalContext = React.useContext(GlobalAppContext);
   const { APIService, currentUser } = globalContext;
+  // currentTimezone stores immediate local React state
   const [currentTimezone, setCurrentTimezone] = React.useState(user_timezone);
 
   React.useEffect(() => {
@@ -105,10 +48,46 @@ export function SelectTimezoneWrapper() {
   };
 
   return (
-    <SelectTimezone
-      pg_timezones={pg_timezones}
-      user_timezone={currentTimezone}
-      autoSave={handleSave}
-    />
+    <>
+      <Helmet>
+        <title>Select your timezone</title>
+      </Helmet>
+      <h3>Select your timezone</h3>
+      <p>
+        Your timezone is{" "}
+        <span style={{ fontWeight: "bold" }}>{currentTimezone}.</span>
+      </p>
+
+      <p>
+        Setting your timezone allows us to generate local timestamps and better
+        statistics for your listens. It also influences when your daily
+        playlists and recommendations are generated.
+      </p>
+
+      <p className="border-start bg-light border-info border-3 px-3 py-2 mb-3 fs-4">
+        Changes are saved automatically.
+      </p>
+      <div>
+        <label>
+          Select your local timezone:{" "}
+          <select
+            className="form-select"
+            value={currentTimezone}
+            onChange={(e) => handleSave(e.target.value)}
+          >
+            <option value="default" disabled>
+              Choose an option
+            </option>
+            {pg_timezones.map((zone: string[]) => {
+              return (
+                <option key={zone[0]} value={zone[0]}>
+                  {zone[0]} ({zone[1]})
+                </option>
+              );
+            })}
+          </select>
+        </label>
+      </div>
+    </>
   );
 }
