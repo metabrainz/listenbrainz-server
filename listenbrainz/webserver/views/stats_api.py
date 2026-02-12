@@ -855,7 +855,7 @@ def get_daily_activity(user_name: str):
         "daily_activity": daily_activity,
         "from_ts": stats.from_ts,
         "to_ts": stats.to_ts,
-        "range": stats_range,
+        "stats_range": stats_range,
         "last_updated": stats.last_updated
     }})
 
