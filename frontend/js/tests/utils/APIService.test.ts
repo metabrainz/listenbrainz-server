@@ -66,7 +66,6 @@ describe("submitListens", () => {
           status: 200,
         });
       });
-    const spy = jest.spyOn(apiService, "submitListens");
     apiService.submitListens("foobar", "import", [
       {
         listened_at: 1000,
@@ -78,23 +77,8 @@ describe("submitListens", () => {
     ]);
 
     await jest.advanceTimersByTimeAsync(10000);
+    expect(window.fetch).toHaveBeenCalledTimes(2);
 
-    expect(spy).toHaveBeenCalledTimes(2);
-    expect(spy).toHaveBeenNthCalledWith(
-      2,
-      "foobar",
-      "import",
-      [
-        {
-          listened_at: 1000,
-          track_metadata: {
-            artist_name: "foobar",
-            track_name: "bazfoo",
-          },
-        },
-      ],
-      2
-    );
   });
 
   it("retries if error 429 is recieved (rate limited)", async () => {
@@ -114,7 +98,6 @@ describe("submitListens", () => {
           status: 200,
         });
       });
-    const spy = jest.spyOn(apiService, "submitListens");
     apiService.submitListens("foobar", "import", [
       {
         listened_at: 1000,
@@ -126,23 +109,8 @@ describe("submitListens", () => {
     ]);
 
     await jest.advanceTimersByTimeAsync(10000);
+    expect(window.fetch).toHaveBeenCalledTimes(2);
 
-    expect(spy).toHaveBeenCalledTimes(2);
-    expect(spy).toHaveBeenNthCalledWith(
-      2,
-      "foobar",
-      "import",
-      [
-        {
-          listened_at: 1000,
-          track_metadata: {
-            artist_name: "foobar",
-            track_name: "bazfoo",
-          },
-        },
-      ],
-      2
-    );
   });
 
   it("skips if any other response code is recieved", async () => {

@@ -29,6 +29,9 @@ def pin_recording_for_user():
     Pin a recording for user. A user token (found on  https://listenbrainz.org/settings/)
     must be provided in the Authorization header! Each request should contain only one pinned recording item in the payload.
 
+    **Note:** Pinning a new recording will automatically unpin (deactivate) any currently active pin.
+    Pins are active for a default duration (:data:`~listenbrainz.db.model.pinned_recording.DAYS_UNTIL_UNPIN` days) unless ``pinned_until`` is specified.
+
     The format of the JSON to be POSTed to this endpoint should look like the following:
 
     .. code-block:: json
@@ -81,6 +84,9 @@ def unpin_recording_for_user():
     Unpins the currently active pinned recording for the user. A user token (found on  https://listenbrainz.org/settings/)
     must be provided in the Authorization header!
 
+    **Note:** This action only *deactivates* the current pin. It does NOT delete the pin from the user's history.
+    The pin will still appear in ``GET /<user_name>/pins``. To fully remove a pin, use :func:`delete_pin_for_user`.
+
     :reqheader Authorization: Token <user token>
     :statuscode 200: recording unpinned.
     :statuscode 401: invalid authorization. See error message for details.
@@ -108,6 +114,8 @@ def delete_pin_for_user(row_id):
     """
     Deletes the pinned recording with given ``row_id`` from the server.
     A user token (found on  https://listenbrainz.org/settings/) must be provided in the Authorization header!
+
+    **Note:** Unlike unpinning, this action permanently removes the pin from the user's history.
 
     :reqheader Authorization: Token <user token>
     :param row_id: the row_id of the pinned recording that should be deleted.
@@ -191,7 +199,11 @@ def get_pin_by_id(row_id):
 def get_pins_for_user(user_name):
     """
     Get a list of all recordings ever pinned by a user with given ``user_name`` in descending order of the time
-    they were originally pinned. The JSON returned by the API will look like the following:
+    they were originally pinned.
+
+    **Note:** This includes both currently active pins and past (deactivated/unpinned) pins.
+
+    The JSON returned by the API will look like the following:
 
     .. code-block:: json
 
@@ -364,6 +376,8 @@ def get_current_pin_for_user(user_name):
 
 
     If there is no current pin for the user, "pinned_recording" field will be null.
+
+    **Note:** A pin ceases to be current if it is manually unpinned, expires (defaults to :data:`~listenbrainz.db.model.pinned_recording.DAYS_UNTIL_UNPIN` days), or is replaced by a new pin.
 
     :param user_name: the MusicBrainz ID of the user whose pin track history requested.
     :type user_name: ``str``
