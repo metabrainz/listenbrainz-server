@@ -1,12 +1,14 @@
 import * as React from "react";
 import { Link, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useSetAtom } from "jotai";
 import { Helmet } from "react-helmet";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import DOMPurify from "dompurify";
 import { groupBy, orderBy, sortBy } from "lodash";
 import { RouteQuery } from "../utils/Loader";
+import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
@@ -133,6 +135,20 @@ export default function GenrePage(): JSX.Element {
         rows + (curr[1].length > COVER_ART_SINGLE_ROW_COUNT ? 2 : 1),
       0
     ) > 4;
+
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
+  const playableRecordings = React.useMemo(
+    () => recordings.filter((r) => r.recording_name),
+    [recordings]
+  );
+  const listensFromRecordings = React.useMemo(
+    () => playableRecordings.map(recordingToListen),
+    [playableRecordings]
+  );
+  React.useEffect(() => {
+    setAmbientQueue(listensFromRecordings);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listensFromRecordings]);
 
   if (!genre) {
     return <div>Loading...</div>;
@@ -268,20 +284,36 @@ export default function GenrePage(): JSX.Element {
             </div>
           </div>
         )}
-        {recordings.filter((r) => r.recording_name).length > 0 && (
+        {playableRecordings.length > 0 && (
           <div>
-            <h3 className="header-with-line">Top recordings</h3>
+            <h3 className="header-with-line">
+              Top recordings
+              <button
+                type="button"
+                className="btn btn-info btn-rounded play-tracks-button"
+                title="Play top recordings"
+                onClick={() => {
+                  window.postMessage(
+                    {
+                      brainzplayer_event: "play-ambient-queue",
+                      payload: listensFromRecordings,
+                    },
+                    window.location.origin
+                  );
+                }}
+              >
+                <FontAwesomeIcon icon={faPlayCircle} fixedWidth /> Play all
+              </button>
+            </h3>
             <div className="top-entity-listencards">
-              {recordings
-                .filter((r) => r.recording_name)
-                .map((rec) => (
-                  <ListenCard
-                    key={rec.recording_mbid}
-                    listen={recordingToListen(rec)}
-                    showTimestamp={false}
-                    showUsername={false}
-                  />
-                ))}
+              {playableRecordings.map((rec) => (
+                <ListenCard
+                  key={rec.recording_mbid}
+                  listen={recordingToListen(rec)}
+                  showTimestamp={false}
+                  showUsername={false}
+                />
+              ))}
             </div>
           </div>
         )}
