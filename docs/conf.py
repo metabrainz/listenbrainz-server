@@ -36,6 +36,7 @@ extensions = [
     'sphinxcontrib.autohttp.flask',
     'sphinx_click',
     'sphinx.ext.autosectionlabel',
+    'sphinx_rtd_theme',
 ]
 autosectionlabel_prefix_document = True
 
