@@ -1,6 +1,6 @@
 import { ResponsiveStream, TooltipProps } from "@nivo/stream";
 // eslint-disable-next-line import/no-extraneous-dependencies
-import {  type OrdinalColorScaleConfig } from "@nivo/colors";
+import { type OrdinalColorScaleConfig } from "@nivo/colors";
 import * as React from "react";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -284,7 +284,7 @@ export function UserArtistEvolutionActivityGraph(
 
 
   return (
-    
+
     <div
       style={{ width: "100%", height: isMobile ? "500px" : "600px" }}
       data-testid="artist-evolution-stream"
@@ -307,7 +307,12 @@ export function UserArtistEvolutionActivityGraph(
           legendPosition: "middle",
           tickRotation: isMobile ? -45 : 0,
         }}
-        axisLeft={{ tickSize: 5, tickPadding: 5, tickRotation: 0 }}
+        axisLeft={{
+          tickSize: 5,
+          tickPadding: 5,
+          tickRotation: 0,
+          format: (value) => (Number.isInteger(value) ? value : ""),
+        }}
         enableGridX
         enableGridY
         offsetType="none"
@@ -452,9 +457,8 @@ export function UserArtistEvolutionActivityStats(
   return (
     <Card className="user-stats-card" data-testid="artist-evolution">
       <div
-        className={`d-flex align-items-center justify-content-between ${
-          isMobile ? "mb-3" : ""
-        } flex-wrap mt-3`}
+        className={`d-flex align-items-center justify-content-between ${isMobile ? "mb-3" : ""
+          } flex-wrap mt-3`}
       >
         <h3 className="capitalize-bold m-0">Artist Evolution</h3>
         <div className="d-flex align-items-center flex-shrink-0 gap-2">
