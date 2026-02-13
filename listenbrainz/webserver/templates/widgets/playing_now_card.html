@@ -46,14 +46,11 @@
       <div class="username-and-timestamp">
         <a title="{{ user_name | safe }}" href="https://listenbrainz.org/user/{{  user_name  | safe }}/" target="_blank"
           rel="noopener noreferrer">{{ user_name | safe }}</a>
-        <span class="listen-time">{% if is_playing_now %}on ListenBrainz{% else %}last listened on ListenBrainz{% endif
-          %}</span>
-      </div>
-      {% if listen_date %}
-      <div class="listen-timestamp">
+        <span class="listen-time">{% if is_playing_now %}on ListenBrainz{% else %}last listened on ListenBrainz{% endif %}</span>
+        {% if listen_date %}
         <span class="listen-time">{{ listen_date }}</span>
+        {% endif %}
       </div>
-      {% endif %}
     </div>
     {% endif %}
   </div>
