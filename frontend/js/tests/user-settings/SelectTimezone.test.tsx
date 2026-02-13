@@ -1,7 +1,7 @@
 import * as React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import {renderWithProviders}  from "../test-utils/rtl-test-utils";
+import {renderWithProviders} from "../test-utils/rtl-test-utils";
 import APIServiceClass from "../../src/utils/APIService";
 import SelectTimezone from "../../src/settings/select_timezone/SelectTimezone";
 
@@ -24,14 +24,13 @@ jest.mock("react-router", () => ({
 describe("User settings", () => {
   describe("submitTimezonePage", () => {
     it("renders correctly", async () => {
+      (useLoaderData as jest.Mock).mockReturnValue({
+        pg_timezones,
+        user_timezone,
+      });
+
+      render(<SelectTimezone />);
      
-(useLoaderData as jest.Mock).mockReturnValue({
-  pg_timezones,
-  user_timezone,
-});
-
-render(<SelectTimezone />);
-
       await screen.findByRole("heading", { name: /select your timezone/i });
       const defaultOption = await screen.findByRole<HTMLOptionElement>(
         "option",

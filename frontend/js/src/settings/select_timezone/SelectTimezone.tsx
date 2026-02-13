@@ -13,12 +13,10 @@ type SelectTimezoneLoaderData = {
 
 export default function SelectTimezone() {
   const data = useLoaderData() as SelectTimezoneLoaderData;
-  // user_timezone stores value returned by route loader
   const { pg_timezones, user_timezone } = data;
 
   const globalContext = React.useContext(GlobalAppContext);
   const { APIService, currentUser } = globalContext;
-  // currentTimezone stores immediate local React state
   const [currentTimezone, setCurrentTimezone] = React.useState(user_timezone);
 
   React.useEffect(() => {
