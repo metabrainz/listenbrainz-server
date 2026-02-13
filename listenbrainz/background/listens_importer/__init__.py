@@ -7,6 +7,7 @@ from listenbrainz.background.listens_importer.listenbrainz import ListenBrainzLi
 from listenbrainz.background.listens_importer.maloja import MalojaListensImporter
 from listenbrainz.background.listens_importer.spotify import SpotifyListensImporter
 from listenbrainz.background.listens_importer.panoscrobbler import PanoScrobblerListensImporter
+from listenbrainz.background.listens_importer.youtubemusic import YouTubeMusicListensImporter
 from listenbrainz.background.listens_importer.audioscrobbler import AudioscrobblerListensImporter
 
 
@@ -37,6 +38,8 @@ def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
         importer = PanoScrobblerListensImporter(db_conn, ts_conn)
     elif service == "maloja":
         importer = MalojaListensImporter(db_conn, ts_conn)
+    elif service == "youtubemusic":
+        importer = YouTubeMusicListensImporter(db_conn, ts_conn)
     elif service == "audioscrobbler":
         importer = AudioscrobblerListensImporter(db_conn, ts_conn)
     else:
