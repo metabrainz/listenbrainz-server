@@ -917,6 +917,7 @@ def export_playlist(playlist_mbid, service):
 def import_playlist_from_music_service(service):
     """
     Get playlists from chosen Music Service.
+
     :reqheader Authorization: Token <user token>
     :statuscode 200: playlists are fetched.
     :statuscode 401: invalid authorization. See error message for details.
@@ -1046,6 +1047,7 @@ def import_tracks_from_apple_playlist(playlist_id):
 def import_tracks_from_soundcloud_playlist(playlist_id):
     """
     Import a playlist tracks from a SoundCloud and convert them to JSPF.
+    
     :reqheader Authorization: Token <user token>
     :param playlist_id: The SoundCloud playlist id to get the tracks from
     :statuscode 200: tracks are fetched and converted.
