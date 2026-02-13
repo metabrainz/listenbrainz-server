@@ -165,7 +165,7 @@ $color-selector-size: 24px;
   .preview {
     border-radius: 5px;
     margin-bottom: 10px;
-    max-width: 100%;
+    max-width: min(700px, 55vw);
     aspect-ratio: 1;
     height: auto;
   }
@@ -361,18 +361,6 @@ $color-selector-size: 24px;
     }
   }
 
-  /**
-   * Mobile Responsive Styles
-   * 
-   * Fixes for LB-1933: Horizontal overflow on mobile devices
-   * 
-   * Key changes:
-   * 1. Using Bootstrap 'lg' breakpoint (992px) to sync with sidebar.scss
-   *    - Prevents sidebar overlap issue between 768px-992px
-   * 2. Stacking layout vertically on mobile
-   * 3. Reduced horizontal padding for better space utilization
-   * 4. Full-width constraints to prevent sidebar overlap
-   */
   @media (max-width: map.get($grid-breakpoints, "lg")) {
     flex-direction: column;
     margin-right: 0;
@@ -389,12 +377,6 @@ $color-selector-size: 24px;
     .preview {
       max-width: 100%;
       width: 100%;
-    }
-
-    .settings-navbar {
-      max-width: 100%; // Prevent sidebar overlap
-      width: 100%;     // Force full width on mobile
-      margin-left: 0;
     }
 
     .stats-art-gallery {
