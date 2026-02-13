@@ -36,7 +36,6 @@
 }
 
 .releases-page {
-
   // FILTERS
   .filters-main {
     top: 1rem;
@@ -142,9 +141,11 @@
             content: "";
             height: 100%;
             width: 3rem;
-            background: linear-gradient(90deg,
-                rgba(255, 255, 255, 1) 50%,
-                rgba(255, 255, 255, 0) 100%);
+            background: linear-gradient(
+              90deg,
+              rgba(255, 255, 255, 1) 50%,
+              rgba(255, 255, 255, 0) 100%
+            );
             position: absolute;
             top: 0;
             left: 0;
@@ -155,9 +156,11 @@
             content: "";
             height: 100%;
             width: 3rem;
-            background: linear-gradient(-90deg,
-                rgba(255, 255, 255, 1) 50%,
-                rgba(255, 255, 255, 0) 100%);
+            background: linear-gradient(
+              -90deg,
+              rgba(255, 255, 255, 1) 50%,
+              rgba(255, 255, 255, 0) 100%
+            );
             position: absolute;
             top: 0;
             right: 0;
@@ -230,7 +233,6 @@
 
   // Prevent calendar icon mark from overlapping with adjacent date marks
   .rc-slider-mark-text {
-
     // Mark text containing the calendar SVG icon
     svg {
       // Offset the icon away from the slider rail to avoid clustering
