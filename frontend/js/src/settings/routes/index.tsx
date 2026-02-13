@@ -75,7 +75,7 @@ const getSettingsRoutes = (): RouteObject[] => {
           path: "select_timezone/",
           lazy: {
             Component: async () => {
-              return (await import("../select_timezone/SelectTimezone")).SelectTimezoneWrapper;
+              return (await import("../select_timezone/SelectTimezone")).default;
             },
             loader: async () => {
               return RouteLoader;
