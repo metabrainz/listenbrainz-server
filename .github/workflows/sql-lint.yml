@@ -1,0 +1,24 @@
+name: SQL Lint
+
+on:
+  pull_request:
+    paths:
+      - "admin/sql/**/*.sql"
+
+jobs:
+  sqlfluff:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install SQLFluff
+        run: pip install sqlfluff
+
+      - name: Run SQLFluff (lint only)
+        run: sqlfluff lint admin/sql
