@@ -3,13 +3,13 @@
 /* Footer */
 .footer {
   padding: 0 $grid-gutter-width * -0.5;
-  background: #fff;
-  color: #000000;
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
   padding-bottom: 10px;
   margin-top: 2rem;
   border-top-width: 2px;
   border-top-style: solid;
-  border-top-color: #ddd;
+  border-top-color: var(--bs-border-color);
 
   ul {
     line-height: 2;

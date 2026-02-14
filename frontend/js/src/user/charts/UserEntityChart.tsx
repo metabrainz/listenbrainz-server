@@ -380,7 +380,7 @@ export default function UserEntityChart() {
                   maxValue={maxListens}
                   layout="horizontal"
                   barComponent={CustomBarComponent}
-                  labelTextColor={COLOR_LB_ASPHALT}
+                  labelTextColor="var(--bs-body-color)"
                   margin={{
                     bottom: 40,
                     top: 40,
@@ -394,11 +394,11 @@ export default function UserEntityChart() {
                       colors: [
                         {
                           offset: 10,
-                          color: "antiquewhite",
+                          color: "var(--bs-secondary-bg)",
                         },
                         {
                           offset: 90,
-                          color: COLOR_LB_ORANGE,
+                          color: "var(--bs-primary)",
                         },
                       ],
                       y2: "90vw",
