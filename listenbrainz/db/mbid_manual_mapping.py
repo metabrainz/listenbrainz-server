@@ -15,6 +15,7 @@ def create_mbid_manual_mapping(ts_conn, mapping: MbidManualMapping):
              VALUES (:recording_msid, :recording_mbid, :user_id)
         ON CONFLICT (user_id, recording_msid)
       DO UPDATE SET recording_mbid = EXCLUDED.recording_mbid
+               , is_unlinked = FALSE
     """
     ts_conn.execute(
         text(query),
@@ -22,6 +23,36 @@ def create_mbid_manual_mapping(ts_conn, mapping: MbidManualMapping):
             "recording_msid": mapping.recording_msid,
             "recording_mbid": mapping.recording_mbid,
             "user_id": mapping.user_id
+        }
+    )
+    ts_conn.commit()
+
+
+def create_mbid_manual_unlink(ts_conn, recording_msid: uuid.UUID, user_id: int):
+    """Save an 'unlink' entry for a user -- the user wants to remove the MB mapping for this recording MSID.
+
+    This inserts a row with a sentinel recording_mbid and is_unlinked=TRUE. The sentinel
+    is used because recording_mbid has a NOT NULL constraint. If the user later re-links
+    using create_mbid_manual_mapping, the ON CONFLICT clause will overwrite is_unlinked
+    back to FALSE and set the real MBID.
+
+    Arguments:
+        ts_conn: timescale database connection
+        recording_msid: the msid of the recording to unlink
+        user_id: the user id performing the unlink
+    """
+    query = """
+        INSERT INTO mbid_manual_mapping(recording_msid, recording_mbid, user_id, is_unlinked)
+             VALUES (:recording_msid, '00000000-0000-0000-0000-000000000000', :user_id, TRUE)
+        ON CONFLICT (user_id, recording_msid)
+      DO UPDATE SET recording_mbid = EXCLUDED.recording_mbid
+               , is_unlinked = TRUE
+    """
+    ts_conn.execute(
+        text(query),
+        {
+            "recording_msid": str(recording_msid),
+            "user_id": user_id
         }
     )
     ts_conn.commit()
