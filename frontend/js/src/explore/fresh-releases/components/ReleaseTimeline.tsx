@@ -98,15 +98,33 @@ function createMarks(
     }
 
     const title = closestDateStr === recentDateStr ? "Today" : "Nearest Date";
+    const calendarPercent = cummulativeMap.get(closestDateStr)!;
+
+    // Filter out date marks that are too close to the calendar icon position
+    // to prevent overlapping/clustering
+    const proximityThreshold = 5;
+    const filteredIndices = percentArr.reduce<number[]>(
+      (indices, percent, i) => {
+        if (Math.abs(percent - calendarPercent) > proximityThreshold) {
+          indices.push(i);
+        }
+        return indices;
+      },
+      []
+    );
+
+    dataArr = filteredIndices.map((i) => dataArr[i]);
+    percentArr = filteredIndices.map((i) => percentArr[i]);
+
     dataArr.push(
       <FontAwesomeIcon
         icon={faCalendarCheck}
-        size="2xl"
+        size="lg"
         color={COLOR_LB_BLUE}
         title={title}
       />
     );
-    percentArr.push(cummulativeMap.get(closestDateStr)!);
+    percentArr.push(calendarPercent);
 
     const sortedData = percentArr
       .map((percent, index) => ({ percent, data: dataArr[index] }))
