@@ -77,7 +77,7 @@ function getReleaseCard(rg: TaggedReleaseGroupEntity) {
 
 export default function GenrePage(): JSX.Element {
   const location = useLocation();
-  const params = useParams() as { genreMBID: string };
+  const params = useParams() as { genre: string };
   const { data } = useQuery<GenrePageProps>(
     RouteQuery(["genre", params], location.pathname)
   );

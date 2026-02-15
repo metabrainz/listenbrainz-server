@@ -78,6 +78,25 @@ def get_tag_hierarchy_data():
         cache.set(TAG_HEIRARCHY_CACHE_KEY, data, expirein=TAG_HEIRARCHY_CACHE_EXPIRY)
     return data
 
+
+def get_genre_by_name(mb_curs: DictCursor, name: str) -> dict | None:
+    """Resolve genre name to a genre row (genre_gid, name). Returns None if not found."""
+    if not name or not name.strip():
+        return None
+    name_clean = name.strip()
+    mb_curs.execute(
+        """
+        SELECT gid::text AS genre_gid, name
+          FROM genre
+         WHERE LOWER(TRIM(name)) = LOWER(%s)
+         LIMIT 1
+        """,
+        (name_clean,),
+    )
+    row = mb_curs.fetchone()
+    return dict(row) if row else None
+
+
 def load_genres_from_mbids(mb_curs: DictCursor, mbids: Iterable[str]):
     """ Given a list of mbids return a map with mbid as key and the genre info as value. """
 

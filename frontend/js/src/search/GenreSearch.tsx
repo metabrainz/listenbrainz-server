@@ -71,7 +71,10 @@ export default function GenreSearch(props: GenreSearchProps) {
             <tr key={genre.gid}>
               <td>{index + 1}</td>
               <td>
-                <Link to={`/genre/${genre.gid}/`} title={genre.name}>
+                <Link
+                  to={`/genre/${encodeURIComponent(genre.name)}/`}
+                  title={genre.name}
+                >
                   {genre.name}
                 </Link>
               </td>

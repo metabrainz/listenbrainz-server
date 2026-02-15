@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Blueprint, render_template, current_app, jsonify
+from flask import Blueprint, render_template, current_app, jsonify, redirect
 from werkzeug.exceptions import BadRequest
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
@@ -15,7 +15,7 @@ from listenbrainz.webserver.views.api_tools import is_valid_uuid
 from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata, fetch_metadata
 import psycopg2
 from psycopg2.extras import DictCursor
-from listenbrainz.db.genre import find_tagged_entities, load_genres_from_mbids
+from listenbrainz.db.genre import find_tagged_entities, get_genre_by_name, load_genres_from_mbids
 
 artist_bp = Blueprint("artist", __name__)
 album_bp = Blueprint("album", __name__)
@@ -447,30 +447,34 @@ def recording_entity(recording_mbid: str):
     return jsonify(data)
 
 
-@genre_bp.get('/<genre_mbid>/')
-def genre_page(genre_mbid: str):
+@genre_bp.get('/<genre_name>/')
+def genre_page(genre_name: str):
     return render_template("index.html")
 
 
-@genre_bp.post("/<genre_mbid>/")
+@genre_bp.post("/<genre_name>/")
 @web_listenstore_needed
-def genre_entity(genre_mbid: str):
-    """ Show a genre page with all their relevant information """
-
-    if not is_valid_uuid(genre_mbid):
-        return jsonify({"error": "Provided genre mbid is invalid: %s" % genre_mbid}), 400
-
+def genre_entity(genre_name: str):
+    """Genre name in URL can be a name (e.g. 'rock') or a MusicBrainz UUID (legacy)."""
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
             mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
-        genre_data = load_genres_from_mbids(mb_curs, [genre_mbid])
+        if is_valid_uuid(genre_name):
+            genre_data = load_genres_from_mbids(mb_curs, [genre_name])
+            if not genre_data or genre_name not in genre_data:
+                return jsonify({"error": f"Genre not found: {genre_name}"}), 404
+            genre = genre_data[genre_name]
+            genre_mbid = genre_name
+            genre_dict = dict(genre)
+            resolved_name = genre_dict.get("name") or ""
+        else:
+            genre_row = get_genre_by_name(mb_curs, genre_name)
+            if not genre_row:
+                return jsonify({"error": f"Genre not found: {genre_name}"}), 404
+            genre_mbid = genre_row["genre_gid"]
+            genre_dict = dict(genre_row)
+            resolved_name = genre_dict.get("name") or ""
 
-        if genre_data is None or len(genre_data) == 0 or genre_mbid not in genre_data:
-            return jsonify({"error": f"Genre {genre_mbid} not found in the metadata cache"}), 404
-
-        genre = genre_data[genre_mbid]
-        genre_dict = dict(genre)
-        genre_name = genre_dict.get("name") or ""
-        tagged_entities = find_tagged_entities(mb_curs, genre_name)
+        tagged_entities = find_tagged_entities(mb_curs, resolved_name)
 
     # Add listen counts to artist entities
     artist_entities = tagged_entities.get("artist", {}).get("entities", [])
