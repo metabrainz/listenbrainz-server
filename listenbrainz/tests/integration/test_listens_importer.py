@@ -1131,3 +1131,64 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertIn("success_count", metadata)
         self.assertEqual(metadata["attempted_count"], 3)
         self.assertEqual(metadata["success_count"], 2)
+
+    def test_import_spinitron(self):
+        data = {
+            "service": "spinitron",
+            "file": open(self.path_to_data_file("spinitron_sample.csv"), "rb"),
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert200(response)
+        import_id = response.json["import_id"]
+
+        url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
+        response = self.wait_for_query_to_have_items(url, num_items=3, attempts=20)
+        listens = response.json["payload"]["listens"]
+        self.assertEqual(len(listens), 3)
+
+        first_listen = listens[0]
+        self.assertEqual(first_listen["listened_at"], 1725523387)
+        track_metadata = first_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "Microdisney")
+        self.assertEqual(track_metadata["track_name"], "People Just Want To Dream")
+        self.assertEqual(track_metadata["release_name"], "Crooked Mile")
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "Spinitron Archive Importer")
+        self.assertEqual(additional_info["music_service"], "spinitron.com")
+        self.assertEqual(additional_info["label"], "UMC (Universal Music Catalogue)")
+
+        second_listen = listens[1]
+        self.assertEqual(second_listen["listened_at"], 1725523173)
+        track_metadata = second_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "Ganglians")
+        self.assertEqual(track_metadata["track_name"], "Jungle")
+        self.assertEqual(track_metadata["release_name"], "Still Living")
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "Spinitron Archive Importer")
+        self.assertEqual(additional_info["label"], "Souterrain Transmissions")
+
+        third_listen = listens[2]
+        self.assertEqual(third_listen["listened_at"], 1725522874)
+        track_metadata = third_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "Kramer")
+        self.assertEqual(track_metadata["track_name"], "Hello Music")
+        self.assertEqual(track_metadata["release_name"], "The Guilt Trip")
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "Spinitron Archive Importer")
+        self.assertEqual(additional_info["label"], "Shimmy Disc")
+
+        response = self.client.get(
+            self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+        )
+        self.assert200(response)
+        metadata = response.json["metadata"]
+        self.assertIn("attempted_count", metadata)
+        self.assertIn("success_count", metadata)
+        self.assertEqual(metadata["attempted_count"], 3)
+        self.assertEqual(metadata["success_count"], 3)
