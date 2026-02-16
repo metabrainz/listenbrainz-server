@@ -1372,7 +1372,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(feedback[0]["score"], inserted_rows[1]["score"])
         self.assertNotEqual(feedback[0]["created"], "")
 
-    @mock.patch("listenbrainz.domain.lastfm.load_recordings_from_tracks")
+    @mock.patch("listenbrainz.domain.audioscrobbler.load_recordings_from_tracks")
     @requests_mock.Mocker()
     def test_feedback_import(self, mock_load_recordings, mock_requests):
         with open(self.path_to_data_file("lastfm_loved_tracks_1.json")) as f:
@@ -1421,3 +1421,55 @@ class FeedbackAPITestCase(IntegrationTestCase):
         for mbid in expected_mbids:
             self.assertIn(mbid, received_mbids)
         self.assertIn(expected_msid, received_msids)
+
+    @mock.patch("listenbrainz.domain.audioscrobbler.load_recordings_from_tracks")
+    @requests_mock.Mocker()
+    def test_librefm_feedback_import(self, mock_load_recordings, mock_requests):
+        """Test importing loved tracks from Libre.fm via the /import endpoint."""
+        with open(self.path_to_data_file("lastfm_loved_tracks_1.json")) as f:
+            page_1 = json.load(f)
+        with open(self.path_to_data_file("lastfm_loved_tracks_2.json")) as f:
+            page_2 = json.load(f)
+        # Mock the Libre.fm API URL instead of Last.fm
+        mock_requests.get("https://libre.fm/2.0/", [
+            {"json": page_1, "status_code": 200},
+            {"json": page_1, "status_code": 200},
+            {"json": page_2, "status_code": 200}
+        ])
+        mock_load_recordings.return_value = {
+            "07e81754-518c-4e3b-8671-c5df5643dad0": "7ac86b1a-d183-40ca-9d41-df2d90681ffd",
+            "018dfa9b-7a80-3997-b64e-8520488656a1": "9d0c31ef-257a-41af-9a8c-f28a5cd87467",
+            "2446a9ae-6e63-3273-bfc9-58eed8571d7a": "f53937b3-f6dc-450c-8d57-bbc667d8af23"
+        }
+        expected_msid = messybrainz.submit_recording(self.ts_conn, "Let Me Love You", "ariana grande")
+        self.ts_conn.commit()
+
+        r = self.client.post(
+            self.custom_url_for("feedback_api_v1.import_feedback"),
+            data=json.dumps({"service": "librefm", "user_name": "lucifer"}),
+            headers={"Authorization": f'Token {self.user["auth_token"]}'},
+            content_type="application/json"
+        )
+        self.assert200(r)
+        self.assertDictEqual(r.json, {
+            "total": 8,
+            "imported": 6,
+        })
+        r = self.client.get(
+            self.custom_url_for("feedback_api_v1.get_feedback_for_user", user_name=self.user["musicbrainz_id"]))
+
+        data = r.json
+        self.assertEqual(data["count"], 6)
+        self.assertEqual(data["total_count"], 6)
+        self.assertEqual(data["offset"], 0)
+        expected_mbids = [
+            "7ac86b1a-d183-40ca-9d41-df2d90681ffd",
+            "9d0c31ef-257a-41af-9a8c-f28a5cd87467",
+            "f53937b3-f6dc-450c-8d57-bbc667d8af23"
+        ]
+        received_mbids = {f["recording_mbid"] for f in data["feedback"]}
+        received_msids = {f["recording_msid"] for f in data["feedback"]}
+        for mbid in expected_mbids:
+            self.assertIn(mbid, received_mbids)
+        self.assertIn(expected_msid, received_msids)
+
