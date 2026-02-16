@@ -19,7 +19,7 @@ export default class APIService {
   private fetchWithRetry: any;
   private retryParams = {
     retries: 4,
-    retryOn: [429],
+    retryOn: [429, 500, 502, 503, 504],
     retryDelay(attempt: number) {
       const maxRetryTime = 2500;
       const minRetryTime = 1800;
