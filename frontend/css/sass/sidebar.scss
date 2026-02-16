@@ -1,6 +1,6 @@
 @use "sass:map";
 
-$sidebar-gradient: linear-gradient(50deg, $gray-300, transparent);
+$sidebar-gradient: linear-gradient(50deg, rgba(0, 0, 0, 0.04), transparent);
 
 .sidebar {
   position: sticky;
@@ -12,7 +12,8 @@ $sidebar-gradient: linear-gradient(50deg, $gray-300, transparent);
   overflow-y: auto;
   z-index: 109;
   right: 0;
-  background: $nav-background-color;
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
 
   > * {
     background: $sidebar-gradient;
@@ -26,10 +27,11 @@ $sidebar-gradient: linear-gradient(50deg, $gray-300, transparent);
     height: 100%;
     width: 80%;
     max-width: 400px;
-    background-color: $white;
+    background-color: var(--bs-secondary-bg);
     overflow-y: auto;
     box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.2);
     transition: right 0.3s ease-in-out;
+
     &.open {
       right: 0;
       z-index: 112;
@@ -37,8 +39,8 @@ $sidebar-gradient: linear-gradient(50deg, $gray-300, transparent);
   }
 
   .sidebar-header {
-    background: $blue;
-    color: white;
+    background-color: var(--bs-primary);
+    color: var(--bs-body-bg);
     padding-top: 20px;
 
     p:first-of-type {
@@ -82,7 +84,7 @@ $sidebar-gradient: linear-gradient(50deg, $gray-300, transparent);
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 1;
   border: none;
 }
@@ -96,10 +98,10 @@ $sidebar-gradient: linear-gradient(50deg, $gray-300, transparent);
   height: 64px;
   padding: 10px;
   border-radius: 50%;
-  border-color: $black;
   cursor: pointer;
-  background-color: $white;
-  color: $blue;
+  background-color: var(--bs-body-bg);
+  color: var(--bs-primary);
+  border-color: var(--bs-border-color);
 
   @media screen and (min-width: map.get($grid-breakpoints, "lg")) {
     display: none;
@@ -107,6 +109,6 @@ $sidebar-gradient: linear-gradient(50deg, $gray-300, transparent);
 }
 
 .toggle-sidebar-button.open {
-  background-color: $blue;
-  color: $white;
+  background-color: var(--bs-primary);
+  color: var(--bs-body-bg);
 }

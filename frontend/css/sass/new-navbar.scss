@@ -30,7 +30,8 @@ body {
       font-family: "Roboto", sans-serif;
       border-right: 9px solid;
       border-image: linear-gradient(to bottom, $blue, $gradient-orange) 1 100%;
-      background-color: $nav-background-color;
+      background-color: var(--bs-body-bg);
+      color: var(--bs-body-color);
       z-index: 115;
 
       .sidebar-nav {
@@ -44,13 +45,17 @@ body {
 
       a {
         display: block;
-        font-weight: normal;
+
         &,
-        &:visited,
+        &:visited {
+          color: var(--bs-link-color);
+        }
+
         &:hover,
         &:visited:hover {
-          color: $blue;
+          color: var(--bs-link-hover-color);
         }
+
         &.active {
           text-decoration: underline;
           text-decoration-thickness: 2px;
@@ -69,9 +74,11 @@ body {
         margin-bottom: $nav-bottom-padding;
         font-weight: 500;
       }
+
       .navbar-bottom {
         margin-top: auto;
         font-size: 14px;
+
         .username {
           font-weight: 700;
           margin-bottom: 0.3em;
@@ -79,6 +86,7 @@ body {
           word-break: break-all;
           border-radius: 0;
         }
+
         line-height: 1.5em;
 
         > a {
@@ -87,20 +95,23 @@ body {
           font-weight: normal;
         }
       }
+
       .navbar-logo {
         z-index: 102; // just above the toggle hamburger button
       }
     }
+
     /* Sections of the sidebar navigation */
     .navbar-logo {
       height: auto;
       width: 40px;
       margin-bottom: $nav-bottom-padding;
     }
+
     // header shown on small screens, with button to open drawer menu
     .navbar-header {
-      display: none;
-      height: $navbar-height;
+      background-color: var(--bs-body-bg);
+      color: var(--bs-body-color);
       border-bottom: 3px solid;
       border-image: linear-gradient(to right, $blue, $gradient-orange) 100% 1;
 
@@ -110,19 +121,23 @@ body {
         margin-right: auto;
         width: auto;
         align-self: center;
+
         > img {
           height: 26px;
           margin-top: 3px;
         }
       }
+
       .navbar-toggler {
         z-index: 101; // just above so it can be clicked to close the side-nav
         margin-left: 15px;
-        border-color: $blue;
+        border-color: var(--bs-border-color);
         position: absolute;
+
         .icon-bar {
-          background-color: $blue;
+          background-color: var(--bs-body-color);
         }
+
         .navbar-toggler-icon {
           width: 2.5em;
           height: 2.5em;
@@ -131,29 +146,33 @@ body {
     }
 
     .search-bar {
-      background-color: #a4a2bf;
+      background-color: var(--bs-secondary-bg);
       height: 50px;
+
       input {
         font-size: 1.2rem;
         padding: 0.5rem 0.5rem 0.5rem 1rem;
         border-radius: 0;
         box-shadow: none;
-        background-color: #a4a2bf;
-        color: $blue;
+        background-color: var(--bs-secondary-bg);
+        color: var(--bs-body-color);
       }
+
       input:-webkit-autofill,
       input:autofill {
         background-color: #a4a2bf !important;
       }
+
       button {
         border-radius: 0;
         box-shadow: none;
         padding-right: 1.2em;
-        background-color: #a4a2bf;
-        color: $blue;
+        background-color: var(--bs-secondary-bg);
+        color: var(--bs-body-color);
       }
     }
   }
+
   /* main content */
   .container-react {
     // Leave some space for BrainzPlayer
@@ -173,14 +192,17 @@ body {
   @media (max-width: $offscreen-sidenav-breakpoint) {
     nav[role="navigation"] {
       max-width: unset;
+
       #side-nav {
         transition: transform 0.3s ease-in-out;
         position: fixed;
         height: auto;
         transform: translateX(-100%);
+
         &.show {
           transform: none;
         }
+
         .mobile-nav-fix {
           position: absolute;
           background-color: $nav-background-color;
@@ -193,6 +215,7 @@ body {
           z-index: 99;
         }
       }
+
       #side-nav-overlay {
         content: "";
         opacity: 0;
@@ -204,24 +227,28 @@ body {
         top: 0;
         bottom: 0;
         right: 0;
-        background: white;
+        background: rgba(0, 0, 0, 0.5);
         z-index: 114;
+
         &.show {
           opacity: 0.8;
           pointer-events: unset;
         }
       }
+
       .navbar-header {
         display: flex;
         align-items: center;
       }
     }
+
     .container-react {
       &,
       .container-react-main {
         width: 100%;
       }
     }
+
     #react-container {
       display: initial;
     }
@@ -234,50 +261,58 @@ body {
   margin-left: calc($grid-gutter-width * -0.5 - 1px);
   margin-right: $grid-gutter-width * -0.5;
   margin-bottom: $nav-bottom-padding;
+
   &,
   > * {
-    background-color: $nav-tabs-background-color;
+    background-color: var(--bs-tertiary-bg);
   }
 
   .nav.nav-tabs {
     display: flex;
-    background-color: $nav-tabs-background-color;
+    background-color: var(--bs-tertiary-bg);
     white-space: nowrap;
     border-bottom: none;
     flex-wrap: nowrap;
 
     > li {
-      background-color: $nav-tabs-background-color;
-      border-bottom: 1px solid $nav-tabs-border-color;
+      background-color: var(--bs-tertiary-bg);
+      border-bottom: 1px solid var(--bs-border-color);
       float: unset;
+
       > a {
-        color: $nav-link-color;
+        color: var(--bs-link-color);
         padding: $nav-tabs-link-padding;
         border: 1px solid $nav-tabs-border-color;
         border-top: none;
         border-bottom: none;
         margin-right: -1px;
         margin-bottom: 0px;
+
         &:hover {
           color: initial;
+
           &:not(.active) {
             background-color: #f9f6f5;
           }
         }
       }
+
       &.active > a {
-        color: $nav-link-color;
+        color: var(--bs-body-color);
         font-weight: 700;
         border-bottom: 1px solid white;
         margin-bottom: -1px;
       }
+
       &.username {
         font-weight: 700;
         background: linear-gradient(288deg, #46433a 16.96%, $blue 98.91%);
         color: $white;
+
         > * {
           padding: $nav-tabs-link-padding;
         }
+
         a,
         a:hover,
         a:visited,
@@ -286,11 +321,13 @@ body {
           background: initial;
         }
       }
+
       &.disabled {
         background-color: color.adjust(
           $nav-tabs-background-color,
           $lightness: -15%
         );
+
         > a {
           color: color.adjust($nav-tabs-background-color, $lightness: -35%);
         }
@@ -302,23 +339,28 @@ body {
     padding: $nav-tabs-link-padding;
     list-style: none;
     border-bottom: 1px solid $nav-tabs-border-color;
+
     > li {
       display: inline-block;
       color: $body-color;
+
       > a {
         color: $nav-link-color !important;
         font-weight: initial;
       }
+
       &.active {
         color: $blue;
         font-weight: 700;
       }
+
       & + li:before {
         padding: 0 5px;
         content: "\003E";
       }
     }
   }
+
   /* Styles for mobile devices */
   @media (max-width: $offscreen-sidenav-breakpoint) {
     /* When not all tabs fit horizontally,
@@ -340,10 +382,12 @@ body {
         padding: $nav-tabs-link-padding-mobile;
       }
     }
+
     .breadcrumb {
       padding: $nav-tabs-link-padding-mobile;
     }
   }
+
   /* Special styles for very wide screens */
   @media (min-width: $very-wide-screen-breakpoint) {
     > * {
@@ -353,9 +397,11 @@ body {
       margin-left: auto;
       margin-right: auto;
     }
+
     .nav.nav-tabs > li.username {
       background: #46433a;
     }
+
     .breadcrumb {
       padding-left: 0;
     }
@@ -370,35 +416,43 @@ body {
   padding: 0 1em;
   margin-left: $grid-gutter-width * -0.5;
   margin-right: $grid-gutter-width * -0.5;
+
   &.dragscroll > * {
     flex-shrink: 0;
   }
 }
+
 .tertiary-nav-vertical {
   ul {
     padding-left: 1em;
     line-height: 2.2em;
+
     li {
       list-style: none;
     }
   }
 }
+
 #settings {
   display: flex;
   flex-wrap: wrap;
+
   .tertiary-nav-vertical {
     flex: 0;
     flex-basis: 250px;
   }
 }
+
 .profile-on-mb {
   float: right;
   margin-top: 20px;
 }
+
 .modal-backdrop {
   width: 100vw;
   max-width: initial;
   margin: 0;
+
   &:not(.show) {
     pointer-events: none;
   }

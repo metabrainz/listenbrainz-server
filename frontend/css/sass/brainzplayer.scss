@@ -23,16 +23,19 @@ $youtube-expanded-width: 1280px;
   bottom: 0;
   right: 0;
   width: calc(100% - $sidenav-width);
+
   @media (max-width: $offscreen-sidenav-breakpoint) {
     width: 100%;
   }
+
   height: $brainzplayer-height;
-  background: $white-background;
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
   display: flex;
   box-shadow: 0px -4px 12px rgba(0, 0, 0, 0.2);
 
   padding: $brainzplayer-padding;
-  border-top: 1px solid $hr-border-color;
+  border-top: 1px solid var(--bs-border-color);
   z-index: 110;
 
   > * {
@@ -42,11 +45,13 @@ $youtube-expanded-width: 1280px;
   .content {
     display: flex;
     overflow: hidden;
+
     .cover-art {
       min-width: $brainzplayer-height;
       height: 100%;
       flex: 0;
       margin-right: 1em;
+
       // Show big preview of the cover art when hovering over it
       @media (min-width: $offscreen-sidenav-breakpoint) {
         &:hover
@@ -81,9 +86,11 @@ $youtube-expanded-width: 1280px;
         height: auto;
         width: auto;
         max-width: calc(100vw - 20px);
+
         @media (min-width: $offscreen-sidenav-breakpoint) {
           max-width: calc(100vw - 200px - 20px);
         }
+
         z-index: 4;
         text-align: right; // to align the move and reduce buttons
 
@@ -99,6 +106,7 @@ $youtube-expanded-width: 1280px;
             height: 20px;
             z-index: 2;
             position: absolute;
+
             &::after {
               content: "";
               width: 12px;
@@ -109,6 +117,7 @@ $youtube-expanded-width: 1280px;
               border-left: 2px solid rgba(255, 255, 255, 0.978);
               border-top: 2px solid rgba(255, 255, 255, 0.978);
             }
+
             &:hover::after {
               border-color: #fff;
             }
@@ -117,6 +126,7 @@ $youtube-expanded-width: 1280px;
 
         &.reduced {
           height: $youtube-button-size;
+
           .youtube-player {
             height: 0;
           }
@@ -133,6 +143,7 @@ $youtube-expanded-width: 1280px;
           border-top-right-radius: 0; // intersection with the square drag handle
           overflow: hidden;
           transition: $youtube-resize-transition;
+
           > * {
             height: inherit;
           }
@@ -144,12 +155,15 @@ $youtube-expanded-width: 1280px;
           display: inline-block;
           background: color.change($black, $alpha: 50%);
           color: $white;
+
           + .youtube-button {
             margin-left: 0.5em;
           }
         }
+
         .youtube-drag-handle {
           cursor: grab;
+
           &:active {
             cursor: grabbing;
           }
@@ -157,6 +171,7 @@ $youtube-expanded-width: 1280px;
 
         .youtube-resizable-container {
           position: relative;
+
           > div {
             height: 100%;
             width: 100%;
@@ -177,12 +192,15 @@ $youtube-expanded-width: 1280px;
     .play {
       padding: 0 0.7em;
     }
+
     > * {
       transition: all 0.5s ease;
       background: none;
+
       &:hover {
         color: color.adjust($primary-color, $lightness: -10%);
       }
+
       &.disabled {
         color: $gray-600;
         pointer-events: none;
@@ -223,6 +241,7 @@ $youtube-expanded-width: 1280px;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
     .ellipsis-2-lines {
       display: -webkit-box;
       line-clamp: 2;
@@ -255,16 +274,20 @@ $youtube-expanded-width: 1280px;
       max-width: 1em;
       cursor: pointer;
       color: $gray-600;
+
       &:hover {
         color: #46433a;
       }
+
       &.disabled {
         pointer-events: none;
         stroke: $gray-300 !important;
         color: $gray-300 !important;
       }
+
       &.music-service-icon {
         max-width: 1.5em;
+
         > svg {
           // Youtube forces us to follow their branding guidelines to the letter,
           // so we need to force a minimum height of 20px for the icon path inside the svg
@@ -285,6 +308,7 @@ $youtube-expanded-width: 1280px;
       &:hover {
         stroke: $love;
       }
+
       &.loved {
         stroke: transparent;
         color: $love;
@@ -295,6 +319,7 @@ $youtube-expanded-width: 1280px;
       &:hover {
         stroke: $hate;
       }
+
       &.hated {
         stroke: transparent;
         color: $hate;
@@ -312,8 +337,12 @@ $youtube-expanded-width: 1280px;
     background-image: url(../img/logo_big.svg);
     background-repeat: no-repeat;
     background-position: center top;
-    background-color: aliceblue;
-    opacity: 0.3;
+    background-color: var(--bs-body-bg);
+    filter: opacity(0.3);
+  }
+
+  [data-bs-theme="dark"] .no-album-art {
+    filter: opacity(0.5);
   }
 
   .progress-bar-wrapper {
@@ -325,18 +354,23 @@ $youtube-expanded-width: 1280px;
     .content .cover-art {
       margin-right: 0.5em;
     }
+
     .controls {
       margin-left: 2em;
+
       .play {
         padding: initial;
       }
     }
+
     &.playing {
       .controls {
         margin-left: 0;
       }
+
       .actions {
         flex: 0;
+
         > .music-service-icon {
           max-width: 1em;
         }
@@ -352,6 +386,7 @@ $youtube-expanded-width: 1280px;
   &.open {
     display: block;
   }
+
   display: none;
   position: absolute;
   min-width: 140px;
@@ -412,6 +447,7 @@ $youtube-expanded-width: 1280px;
     background-color: $primary-color;
     border-right: 2px solid $dark-turquoise;
   }
+
   &:hover {
     height: $progress-bar-hover-height;
     top: -$progress-bar-hover-height;
@@ -423,10 +459,12 @@ $youtube-expanded-width: 1280px;
     border-radius: 24px;
     font-size: 1.2rem;
     padding: 6px 12px;
+
     &::before {
       display: none;
     }
   }
+
   & > ::after {
     border-color: transparent;
   }
@@ -441,20 +479,24 @@ $youtube-expanded-width: 1280px;
   transition: bottom 0.5s ease-in-out;
   border-top: 1px solid #ccc;
   box-shadow: -6px -1px 10px rgba(0, 0, 0, 0.2);
+
   .volume-input {
     width: 3.5em;
     writing-mode: vertical-rl;
     direction: rtl;
     margin: 1.5em 0.6em;
   }
+
   &.show {
     bottom: $brainzplayer-height;
   }
+
   @media (max-width: map.get($grid-breakpoints, "sm")) {
     right: -6em;
     bottom: 6.5em;
     z-index: 112;
     transition-property: right;
+
     &.show {
       bottom: 6.5em;
       right: 1.5em;
@@ -481,6 +523,7 @@ $youtube-expanded-width: 1280px;
 
   &.show {
     bottom: $brainzplayer-height;
+
     &.mobile {
       bottom: 0;
     }
@@ -506,6 +549,7 @@ $youtube-expanded-width: 1280px;
       font-size: 1.6em;
     }
   }
+
   .queue-item {
     display: flex;
     justify-content: space-between;
@@ -534,12 +578,14 @@ $youtube-expanded-width: 1280px;
       padding-left: 0;
     }
   }
+
   .queue-buttons {
     display: flex;
     justify-content: end;
     align-items: center;
     gap: 1em;
   }
+
   // Negative top margin to remove gap with buttons above
   .queue-buttons + .queue-headers {
     margin-top: -30px;
@@ -569,6 +615,7 @@ $youtube-expanded-width: 1280px;
 
   &.open {
     bottom: 0;
+
     + .queue {
       // When the music player is open, bring queu on top of it
       z-index: 112;
@@ -642,6 +689,7 @@ $youtube-expanded-width: 1280px;
     &:hover {
       stroke: $love;
     }
+
     &.loved {
       color: $love;
       fill-opacity: 1;
@@ -652,6 +700,7 @@ $youtube-expanded-width: 1280px;
     &:hover {
       stroke: $hate;
     }
+
     &.hated {
       color: $hate;
       fill-opacity: 1;
@@ -683,6 +732,7 @@ $youtube-expanded-width: 1280px;
     .play svg {
       font-size: 4.25em !important;
     }
+
     &.secondary {
       margin-top: 1.2em;
     }
@@ -690,6 +740,7 @@ $youtube-expanded-width: 1280px;
 
   .progress-bar-wrapper {
     margin-top: 1em;
+
     .progress {
       position: inherit;
       height: 10px;
@@ -700,15 +751,18 @@ $youtube-expanded-width: 1280px;
         background-color: var(--music-player-accent-color);
       }
     }
+
     .progress-numbers {
       margin-top: 0.5em;
       display: flex;
       justify-content: space-between;
+
       .divider {
         display: none;
       }
     }
   }
+
   .dropup-content {
     top: 45px;
     bottom: unset;
@@ -721,6 +775,7 @@ $youtube-expanded-width: 1280px;
     transform: translateX(0%);
     left: 0%;
   }
+
   80%,
   100% {
     transform: translateX(-100%);
@@ -736,6 +791,7 @@ $alert-thumbnail-size: 60px;
   align-items: center;
   justify-content: center;
 }
+
 .alert-thumbnail {
   max-height: $alert-thumbnail-size;
   margin: -$alert-padding-x;

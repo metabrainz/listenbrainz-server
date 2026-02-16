@@ -162,3 +162,21 @@ $badge-font-size: 1.2rem;
 $grid-gutter-width: 3rem;
 $base-border-radius: 6px;
 $navbar-toggler-border-radius: $base-border-radius;
+
+[data-bs-theme="dark"] {
+  --bs-body-bg: #121212;
+  --bs-body-color: #eaeaea;
+
+  --bs-secondary-bg: #1e1e1e;
+  --bs-tertiary-bg: #2a2a2a;
+
+  --bs-border-color: #2f2f2f;
+
+  --bs-link-color: #9db5ff;
+  --bs-link-hover-color: #c4d0ff;
+
+  --bs-navbar-color: #eaeaea;
+  --bs-navbar-hover-color: #ffffff;
+
+  --bs-card-bg: #1e1e1e;
+}
