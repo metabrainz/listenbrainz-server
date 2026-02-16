@@ -229,6 +229,20 @@
   // height: 100%;
   max-height: calc(100vh - 8em);
 
+  // Move the calendar icon to the opposite (left) side of the vertical slider
+  // so it doesn't overlap the date text marks on the right
+  .rc-slider-vertical .rc-slider-mark-text:has(.calendar-icon-mark) {
+    right: 100%;
+    left: auto !important;
+    padding-right: 0.5rem;
+    text-align: right;
+  }
+
+  // On horizontal (mobile) slider, shift the calendar icon above the track
+  .rc-slider.slider-horizontal .rc-slider-mark-text:has(.calendar-icon-mark) {
+    transform: translateY(-2rem) !important;
+  }
+
   @media (max-width: map.get($grid-breakpoints, "lg")) {
     height: unset;
     width: 100%;
