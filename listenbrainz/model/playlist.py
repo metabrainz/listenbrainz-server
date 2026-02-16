@@ -13,13 +13,13 @@ class Playlist(db.Model):
     __table_args__ = {"schema": "playlist"}
 
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    mbid = db.Column(UUID(as_uuid=True), nullable=False)
+    mbid = db.Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4) 
     creator_id = db.Column(db.Integer, nullable=False)
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String)
     public = db.Column(db.Boolean, nullable=False)
-    created = db.Column(db.DateTime(timezone=True), nullable=False)
-    last_updated = db.Column(db.DateTime(timezone=True), nullable=False)
+    created = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    last_updated = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     copied_from_id = db.Column(db.Integer)
     created_for_id = db.Column(db.Integer)
     additional_metadata = db.Column(JSONB)
