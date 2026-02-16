@@ -118,7 +118,7 @@ def current_status():
 
     data = {
         "load": load,
-        "service-status": service_status,
+        "serviceStatus": service_status,
         "listenCount": format(int(listen_count), ",d") if listen_count else "0",
         "userCount": user_count,
         "listenCountsPerDay": listen_counts_per_day,
