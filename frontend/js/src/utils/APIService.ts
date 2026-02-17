@@ -5,6 +5,10 @@ import APIError from "./APIError";
 import type { Flair } from "./constants";
 import { Modes } from "../explore/lb-radio/components/Prompt";
 
+const fetchWithRetry = require("fetch-retry")(
+  (...args: Parameters<typeof fetch>) => window.fetch(...args)
+);
+
 export interface LBRadioResponse {
   payload: { jspf: JSPFObject; feedback: string[] };
 }
@@ -19,8 +23,23 @@ export default class APIService {
   private fetchWithRetry: any;
   private retryParams = {
     retries: 4,
-    retryOn: [429],
-    retryDelay(attempt: number) {
+    retryOn: [429, 500, 502, 503, 504],
+    retryDelay: (
+      attempt: number,
+      error: Error | null,
+      response: Response | null
+    ) => {
+      // 1. If it's a 429, check if server tells us how long to wait
+      if (response?.status === 429) {
+        const retryAfter = response.headers.get("Retry-After");
+        if (retryAfter) {
+          const delaySeconds = parseInt(retryAfter, 10);
+          if (!Number.isNaN(delaySeconds)) {
+            return delaySeconds * 1000; // Convert seconds to milliseconds
+          }
+        }
+      }
+      // 2.otherwise , use our expnential backoff as fallback
       const maxRetryTime = 2500;
       const minRetryTime = 1800;
       const clampedRandomTime =
@@ -35,11 +54,7 @@ export default class APIService {
   private static readonly SPOTIFY_TOKEN_CACHE_DURATION = 5 * 60 * 1000;
 
   constructor(APIBaseURI: string) {
- const originalFetch = window.fetch;
- const fetchWithRetry = require("fetch-retry")(
-    (...args: Parameters<typeof fetch>) => window.fetch(...args)
-  );
-  this.fetchWithRetry = fetchWithRetry;
+    this.fetchWithRetry = fetchWithRetry;
     let finalUri = APIBaseURI;
     if (finalUri.endsWith("/")) {
       finalUri = finalUri.substring(0, APIBaseURI.length - 1);
