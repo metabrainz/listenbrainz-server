@@ -1,0 +1,55 @@
+{
+    "lovedtracks": {
+        "track": [
+            {
+                "name": "HOW TO DRAW",
+                "mbid": "",
+                "url": "https:\/\/libre.fm\/artist\/Aeter\/album\/SKIN+TURNS+RED\/track\/HOW+TO+DRAW",
+                "date": {
+                    "#text": "14 Feb 2026 15:29 GMT",
+                    "uts": "1771082986"
+                },
+                "artist": {
+                    "name": "aeter",
+                    "mbid": "",
+                    "url": "https:\/\/libre.fm\/artist\/aeter\/"
+                }
+            },
+            {
+                "name": "MAKALYNN",
+                "mbid": "",
+                "url": "https:\/\/libre.fm\/artist\/Aeter\/album\/SKIN+TURNS+RED\/track\/MAKALYNN",
+                "date": {
+                    "#text": "14 Feb 2026 15:20 GMT",
+                    "uts": "1771082436"
+                },
+                "artist": {
+                    "name": "aeter",
+                    "mbid": "",
+                    "url": "https:\/\/libre.fm\/artist\/aeter\/"
+                }
+            },
+            {
+                "name": "TALK",
+                "mbid": "",
+                "url": "https:\/\/libre.fm\/artist\/Aeter\/album\/SKIN+TURNS+RED\/track\/TALK",
+                "date": {
+                    "#text": "14 Feb 2026 15:18 GMT",
+                    "uts": "1771082285"
+                },
+                "artist": {
+                    "name": "aeter",
+                    "mbid": "",
+                    "url": "https:\/\/libre.fm\/artist\/aeter\/"
+                }
+            }
+        ],
+        "@attr": {
+            "user": "usomi",
+            "page": "2",
+            "perPage": "3",
+            "totalPages": "2",
+            "total": "6"
+        }
+    }
+}
