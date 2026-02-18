@@ -15,6 +15,7 @@ import {
   faExternalLinkAlt,
   faImage,
   faLink,
+  faLinkSlash,
   faMusic,
   faPaperPlane,
   faPencilAlt,
@@ -275,6 +276,40 @@ export default function ListenCard(props: ListenCardProps) {
     Boolean(trackMBID) ||
     Boolean(releaseGroupMBID);
 
+  const unlinkListenFromMB = React.useCallback(async () => {
+    if (!currentUser?.auth_token || !recordingMSID) return;
+    try {
+      const result = await APIService.unlinkMapping(
+        currentUser.auth_token,
+        recordingMSID
+      );
+      if (result.status === "ok") {
+        setDisplayListen((prev) => ({
+          ...prev,
+          track_metadata: {
+            ...prev.track_metadata,
+            mbid_mapping: undefined,
+          },
+        }));
+        toast.success(
+          <ToastMsg
+            title="Listen unlinked"
+            message={`${getTrackName(displayListen)} has been unlinked from MusicBrainz`}
+          />,
+          { toastId: "unlink-success" }
+        );
+      }
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Error unlinking listen"
+          message={typeof error === "object" ? (error as Error).message : String(error)}
+        />,
+        { toastId: "unlink-error" }
+      );
+    }
+  }, [currentUser, APIService, recordingMSID, displayListen]);
+
   const hasActionOptions =
     additionalMenuItems?.length ||
     hasInfoAndMBID ||
@@ -517,6 +552,13 @@ export default function ListenCard(props: ListenCardProps) {
                       text="Link with MusicBrainz"
                       icon={faLink}
                       action={openMBIDMappingModal}
+                    />
+                  )}
+                  {isLoggedIn && Boolean(recordingMSID) && hasRecordingMBID && (
+                    <ListenControl
+                      text="Unlink from MusicBrainz"
+                      icon={faLinkSlash}
+                      action={unlinkListenFromMB}
                     />
                   )}
                   {isLoggedIn && isListenReviewable && (
