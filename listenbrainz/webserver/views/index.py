@@ -101,6 +101,17 @@ def current_status():
         user_count = format(int(_get_user_count()), ',d')
     except DatabaseException as e:
         user_count = 'Unknown'
+    try:
+       user_count_evolution = [
+           {
+               "period": period,
+               "total_users": total_users,
+               "new_users": new_users
+           }
+           for period, total_users, new_users in _get_user_count_evolution()
+       ]
+    except DatabaseException as e:
+        user_count_evolution = {}
 
     listen_counts_per_day: List[dict] = []
     for delta in range(2):
@@ -121,6 +132,7 @@ def current_status():
         "service-status": service_status,
         "listenCount": format(int(listen_count), ",d") if listen_count else "0",
         "userCount": user_count,
+        "userCountEvolution": user_count_evolution,
         "listenCountsPerDay": listen_counts_per_day,
     }
 
@@ -289,6 +301,21 @@ def _get_user_count():
         cache.set(user_count_key, int(user_count), CACHE_TIME, encode=False)
         return user_count
 
+
+def _get_user_count_evolution():
+    user_count_evolution_key = "{}.{}".format(STATS_PREFIX, 'user_count_evolution')
+    user_count_evolution = cache.get(user_count_evolution_key, decode=True)
+    user_count_evolution = None
+    if user_count_evolution:
+        return user_count_evolution
+    else:
+        user_count_evolution = db_user.get_user_count_evolution(db_conn)
+
+        cache_time_seconds = 24 * 60 * 60
+        cache.set(user_count_evolution_key, user_count_evolution,
+                    cache_time_seconds, encode=True)
+
+        return user_count_evolution
 
 @index_bp.get("/", defaults={'path': ''})
 @index_bp.get('/<not_api_path:path>/')
