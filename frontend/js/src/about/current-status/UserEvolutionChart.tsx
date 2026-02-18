@@ -24,27 +24,14 @@ function UserEvolutionChart({
           color: "#333",
         }}
       >
-        <div
-          style={{
-            fontSize: "12px",
-            fontWeight: "bold",
-            marginBottom: "4px",
-          }}
-        >
-          {point.data.x.toString()}
+        <b className="mb-2">{point.data.x.toString()}</b>
+        <div>
+          New users:{" "}
+          {/* @ts-ignore arbitrary properties can be added to the point data */}
+          <strong>{Intl.NumberFormat().format(point.data.newUsers)}</strong>
         </div>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <div
-            style={{
-              width: "12px",
-              height: "12px",
-              backgroundColor: point.serieColor,
-              marginRight: "8px",
-            }}
-          />
-          <span>
-            Users: <strong>{point.data.y.toString()}</strong>
-          </span>
+        <div>
+          Total: <strong>{point.data.yFormatted}</strong>
         </div>
       </div>
     );
@@ -66,30 +53,35 @@ function UserEvolutionChart({
               year: "2-digit",
             }),
             y: total_users,
+            newUsers: new_users,
           };
         }) ?? [],
     },
   ];
+  const allLabels = chartData[0].data.map((d) => d.x);
+  const everyThirdLabel = allLabels.filter((_, i) => i % 3 === 0);
 
   return (
     <div style={{ height: "400px", width: "100%" }}>
       <ResponsiveLine
         data={chartData}
-        margin={{ top: 50, right: 30, bottom: 50, left: 60 }}
+        margin={{ top: 30, right: 30, bottom: 60, left: 60 }}
         xScale={{ type: "point" }}
         xFormat="time:%Y"
+        axisBottom={{
+          legend: "Time Period",
+          legendOffset: 45,
+          legendPosition: "middle",
+          tickValues: everyThirdLabel,
+          tickRotation: -45,
+          tickPadding: 10,
+        }}
         yScale={{
           type: "linear",
           min: 0,
           max: "auto",
         }}
-        axisBottom={{
-          legend: "Time Period",
-          legendOffset: 45,
-          legendPosition: "middle",
-          tickRotation: -45,
-          tickValues: "every 1 year",
-        }}
+        yFormat=".4s"
         enableGridX={false}
         useMesh
         tooltip={getTooltip}
