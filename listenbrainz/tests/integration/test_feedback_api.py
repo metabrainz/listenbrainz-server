@@ -1372,9 +1372,9 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(feedback[0]["score"], inserted_rows[1]["score"])
         self.assertNotEqual(feedback[0]["created"], "")
 
-    @mock.patch("listenbrainz.domain.lastfm.load_recordings_from_tracks")
+    @mock.patch("listenbrainz.domain.audioscrobbler.load_recordings_from_tracks")
     @requests_mock.Mocker()
-    def test_feedback_import(self, mock_load_recordings, mock_requests):
+    def test_lastfm_feedback_import(self, mock_load_recordings, mock_requests):
         with open(self.path_to_data_file("lastfm_loved_tracks_1.json")) as f:
             page_1 = json.load(f)
         with open(self.path_to_data_file("lastfm_loved_tracks_2.json")) as f:
@@ -1421,3 +1421,48 @@ class FeedbackAPITestCase(IntegrationTestCase):
         for mbid in expected_mbids:
             self.assertIn(mbid, received_mbids)
         self.assertIn(expected_msid, received_msids)
+
+    @mock.patch("listenbrainz.domain.audioscrobbler.load_recordings_from_tracks")
+    @requests_mock.Mocker()
+    def test_librefm_feedback_import(self, mock_load_recordings, mock_requests):
+        """Test importing loved tracks from Libre.fm via the /import endpoint.
+        Uses real Libre.fm data where tracks have no MBIDs, so all go through the MSID path."""
+        with open(self.path_to_data_file("librefm_loved_tracks_1.json")) as f:
+            page_1 = json.load(f)
+        with open(self.path_to_data_file("librefm_loved_tracks_2.json")) as f:
+            page_2 = json.load(f)
+        mock_requests.get("https://libre.fm/2.0/", [
+            {"json": page_1, "status_code": 200},
+            {"json": page_1, "status_code": 200},
+            {"json": page_2, "status_code": 200}
+        ])
+        # No track MBIDs in Libre.fm data, so load_recordings_from_tracks returns empty
+        mock_load_recordings.return_value = {}
+        # Pre-insert MessyBrainz submissions so bulk_get_msids can match them
+        expected_msid_1 = messybrainz.submit_recording(self.ts_conn, "Die Yung", "Death Souljah")
+        expected_msid_2 = messybrainz.submit_recording(self.ts_conn, "KNOW MY NAME", "aeter")
+        self.ts_conn.commit()
+
+        r = self.client.post(
+            self.custom_url_for("feedback_api_v1.import_feedback"),
+            data=json.dumps({"service": "librefm", "user_name": "usomi"}),
+            headers={"Authorization": f'Token {self.user["auth_token"]}'},
+            content_type="application/json"
+        )
+        self.assert200(r)
+        self.assertDictEqual(r.json, {
+            "total": 6,
+            "imported": 2,
+        })
+        r = self.client.get(
+            self.custom_url_for("feedback_api_v1.get_feedback_for_user", user_name=self.user["musicbrainz_id"]))
+
+        data = r.json
+        self.assertEqual(data["count"], 2)
+        self.assertEqual(data["total_count"], 2)
+        self.assertEqual(data["offset"], 0)
+        received_msids = {f["recording_msid"] for f in data["feedback"]}
+        self.assertIn(expected_msid_1, received_msids)
+        self.assertIn(expected_msid_2, received_msids)
+
+
