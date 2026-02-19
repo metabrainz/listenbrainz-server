@@ -20,5 +20,11 @@ jobs:
       - name: Install SQLFluff
         run: pip install sqlfluff
 
-      - name: Run SQLFluff (lint only)
-        run: sqlfluff lint admin/sql
+      - name: Run SQLFluff on changed SQL files
+        run: |
+          FILES=$(git diff --name-only origin/master...HEAD | grep '\.sql$' || true)
+          if [ -n "$FILES" ]; then
+            python3 -m sqlfluff lint $FILES
+          else
+            echo "No SQL files changed."
+          fi
