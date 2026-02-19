@@ -9,10 +9,11 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, target-densityDpi=device-dpi, minimal-ui' />
 
-  <link rel="icon" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16.png') }}" type="image/png" />
-  <link rel="icon" sizes="256x256" href="{{ url_for('static', filename='img/favicon-256.png') }}" type="image/png" />
-  <link rel="icon" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32.png') }}" type="image/png" />
-
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" sizes="48x48">
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml" sizes="any">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='img/site.webmanifest') }}">
+  
   {# The css file has a .less extension in the manifest file entry (due to its original name in Webpack entry) #}
   <link href="{{ get_static_path('vendors.scss') }}" rel="stylesheet" media="screen" />
   <link href="{{ get_static_path('main.scss') }}" rel="stylesheet" media="screen" />
