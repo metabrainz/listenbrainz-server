@@ -952,8 +952,12 @@ def import_playlist_from_music_service(service):
     try:
         if service == "spotify":
             spotify = spotipy.Spotify(auth=token["access_token"])
-            playlists = spotify.current_user_playlists()
-            return jsonify(playlists["items"])
+            results = spotify.current_user_playlists()
+            playlists = results["items"]
+            while results["next"]:
+                results = spotify.next(results)
+                playlists.extend(results["items"])
+            return jsonify(playlists)
         elif service == "apple_music":
             apple = Apple()
             playlists = apple.get_user_data("https://api.music.apple.com/v1/me/library/playlists/", token["refresh_token"])
