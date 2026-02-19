@@ -908,6 +908,8 @@ def export_playlist(playlist_mbid, service):
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
+    except Exception as exc:
+        raise APIError(f"Failed to export playlist to {service}: {str(exc)}", 500)
 
 
 @playlist_api_bp.get("/import/<service>")
@@ -1119,3 +1121,5 @@ def export_playlist_jspf(service):
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
+    except Exception as exc:
+        raise APIError(f"Failed to export playlist to {service}: {str(exc)}", 500)
