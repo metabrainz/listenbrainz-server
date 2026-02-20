@@ -72,6 +72,7 @@
           #clearall-btn-active {
             font-size: 2.5rem;
             flex-grow: 2;
+
             &:hover {
               font-weight: bold;
               color: $orange;
@@ -94,6 +95,7 @@
             font-weight: normal;
             cursor: pointer;
             color: $asphalt;
+
             &:hover {
               font-weight: bold;
               color: $blue;
@@ -229,6 +231,17 @@
   // height: 100%;
   max-height: calc(100vh - 8em);
 
+  // Reduce slider handle size to prevent overlap with calendar icon and date marks
+  .rc-slider-vertical .rc-slider-handle {
+    height: 2rem;
+    margin-left: -8px;
+    margin-top: 0;
+    touch-action: pan-y;
+    transition: all 0.5s cubic-bezier(0.46, 0.03, 0.52, 0.96) 0s;
+    width: 2rem;
+    z-index: 1;
+  }
+
   @media (max-width: map.get($grid-breakpoints, "lg")) {
     height: unset;
     width: 100%;
@@ -307,13 +320,16 @@
 .releases-page-container {
   display: flex;
   gap: 1.5em;
+
   @media screen and (min-width: map.get($grid-breakpoints, "lg")) {
     // make the sidebar flush with the right-hand side on larger sizes
     margin-right: -15px !important;
   }
+
   .releases-page {
     flex: 1;
   }
+
   .sidebar-fresh-releases {
     max-height: 85vh;
 
