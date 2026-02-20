@@ -1,0 +1,30 @@
+name: SQL Lint
+
+on:
+  pull_request:
+    paths:
+      - "admin/sql/**/*.sql"
+
+jobs:
+  sqlfluff:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install SQLFluff
+        run: pip install sqlfluff
+
+      - name: Run SQLFluff on changed SQL files
+        run: |
+          FILES=$(git diff --name-only origin/master...HEAD | grep '\.sql$' || true)
+          if [ -n "$FILES" ]; then
+            python3 -m sqlfluff lint $FILES
+          else
+            echo "No SQL files changed."
+          fi
