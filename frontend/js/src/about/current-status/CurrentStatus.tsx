@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import { useLocation } from "react-router";
 import { RouteQuery } from "../../utils/Loader";
+import UserEvolutionChart, { UserEvolutionData } from "./UserEvolutionChart";
 
 type CurrentStatusLoaderData = {
   listenCount: number;
@@ -11,6 +12,7 @@ type CurrentStatusLoaderData = {
     label: string;
   }[];
   userCount: number;
+  userCountEvolution: UserEvolutionData[];
   load: string;
 };
 
@@ -25,8 +27,12 @@ export default function CurrentStatus() {
       <h2 className="page-title">Current status</h2>
 
       <div className="row">
-        <div className="col-md-7 col-lg-8">
+        <div className="col">
           <h3>ListenBrainz Stats</h3>
+          <h4>User count</h4>
+          <UserEvolutionChart
+            userCountEvolution={data?.userCountEvolution || []}
+          />
           <table className="table table-border table-sm table-striped">
             <thead>
               <tr>
@@ -86,22 +92,6 @@ export default function CurrentStatus() {
 
           <p>Current server load average</p>
           <div className="border p-4 rounded bg-body-tertiary">{load}</div>
-        </div>
-
-        <div className="col-md-5 col-lg-4">
-          <p style={{ textAlign: "center" }}>
-            <img
-              style={{ borderRadius: "15px" }}
-              src="/static/img/selfie.jpg"
-              width="250"
-              alt="Selfie"
-            />
-          </p>
-
-          <p style={{ textAlign: "center" }}>
-            Our server doesn&apos;t have a selfie. :( <br />
-            Have a monkey selfie instead!
-          </p>
         </div>
       </div>
     </>
