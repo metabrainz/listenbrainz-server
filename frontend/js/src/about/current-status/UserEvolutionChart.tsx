@@ -1,6 +1,7 @@
 import React from "react";
 import { PointTooltipProps, ResponsiveLine } from "@nivo/line";
 import { COLOR_LB_ORANGE } from "../../utils/constants";
+import { useMediaQuery } from "../../explore/fresh-releases/utils";
 
 export type UserEvolutionData = {
   period: string; // ISO date string
@@ -13,6 +14,7 @@ function UserEvolutionChart({
 }: {
   userCountEvolution: UserEvolutionData[];
 }) {
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const getTooltip = React.useCallback(({ point }: PointTooltipProps) => {
     return (
       <div
@@ -59,7 +61,8 @@ function UserEvolutionChart({
     },
   ];
   const allLabels = chartData[0].data.map((d) => d.x);
-  const everyThirdLabel = allLabels.filter((_, i) => i % 3 === 0);
+  const everyXMonths = isMobile ? 6 : 3;
+  const tickValuesFunction = allLabels.filter((_, i) => i % everyXMonths === 0);
 
   return (
     <div style={{ height: "400px", width: "100%" }}>
@@ -72,7 +75,7 @@ function UserEvolutionChart({
           legend: "Time Period",
           legendOffset: 45,
           legendPosition: "middle",
-          tickValues: everyThirdLabel,
+          tickValues: tickValuesFunction,
           tickRotation: -45,
           tickPadding: 10,
         }}
