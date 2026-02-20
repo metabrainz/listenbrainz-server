@@ -1,5 +1,6 @@
 import type { RouteObject } from "react-router";
 import { RouteQueryLoader } from "../utils/Loader";
+import { GenrePageLoader } from "../genre/Genre";
 
 const getEntityPages = (): RouteObject[] => {
   const routes = [
@@ -85,7 +86,7 @@ const getEntityPages = (): RouteObject[] => {
               return (await import("../genre/Genre")).default;
             },
             loader: async () => {
-              return RouteQueryLoader("genre");
+              return GenrePageLoader;
             },
           },
         },

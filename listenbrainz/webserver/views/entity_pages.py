@@ -447,34 +447,39 @@ def recording_entity(recording_mbid: str):
     return jsonify(data)
 
 
-@genre_bp.get('/<genre_name>/')
-def genre_page(genre_name: str):
+@genre_bp.get('/<genre>/')
+def genre_page(genre: str):
     return render_template("index.html")
 
 
-@genre_bp.post("/<genre_name>/")
+# This endpoint supports both genre name and genre mbid in the URL.
+@genre_bp.post("/<genre_slug>/")
 @web_listenstore_needed
-def genre_entity(genre_name: str):
-    """Genre name in URL can be a name (e.g. 'rock') or a MusicBrainz UUID (legacy)."""
+def genre_entity(genre_slug: str):
+    """Genre slug in URL can be a name (e.g. 'rock') or a MusicBrainz UUID."""
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
             mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
-        if is_valid_uuid(genre_name):
-            genre_data = load_genres_from_mbids(mb_curs, [genre_name])
-            if not genre_data or genre_name not in genre_data:
-                return jsonify({"error": f"Genre not found: {genre_name}"}), 404
-            genre = genre_data[genre_name]
-            genre_mbid = genre_name
+        if is_valid_uuid(genre_slug):
+            genre_mbid = genre_slug
+
+            genre_data = load_genres_from_mbids(mb_curs, [genre_mbid])
+            if not genre_data or genre_mbid not in genre_data:
+                return jsonify({"error": f"Genre not found: {genre_mbid}"}), 404
+
+            genre = genre_data[genre_mbid]
             genre_dict = dict(genre)
-            resolved_name = genre_dict.get("name") or ""
+            genre_name = genre_dict.get("name") or ""
+
         else:
+            genre_name = genre_slug
             genre_row = get_genre_by_name(mb_curs, genre_name)
             if not genre_row:
                 return jsonify({"error": f"Genre not found: {genre_name}"}), 404
+
             genre_mbid = genre_row["genre_gid"]
             genre_dict = dict(genre_row)
-            resolved_name = genre_dict.get("name") or ""
 
-        tagged_entities = find_tagged_entities(mb_curs, resolved_name)
+        tagged_entities = find_tagged_entities(mb_curs, genre_name)
 
     # Add listen counts to artist entities
     artist_entities = tagged_entities.get("artist", {}).get("entities", [])

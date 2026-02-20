@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, useLocation, useParams } from "react-router";
+import { Link, useParams, redirect } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { Helmet } from "react-helmet";
@@ -7,7 +7,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import DOMPurify from "dompurify";
 import { groupBy, orderBy, sortBy } from "lodash";
-import { RouteQuery } from "../utils/Loader";
 import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
@@ -27,6 +26,39 @@ import {
   SortingButtons,
   typeOrder,
 } from "../artist/ArtistPage";
+import queryClient from "../utils/QueryClient";
+
+const genreQuery = (identifier: string) => ({
+  queryKey: ["genre", identifier],
+  queryFn: async () => {
+    const res = await fetch(`/genre/${identifier}/`, {
+      method: "POST",
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) throw new Error("Failed");
+    return res.json();
+  },
+  staleTime: 10 * 60 * 1000,
+});
+
+export const GenrePageLoader = async ({
+  params,
+}: {
+  params: { genre?: string };
+}) => {
+  const genreParam = params.genre;
+  if (!genreParam) return null;
+
+  const data = await queryClient.fetchQuery(genreQuery(genreParam));
+  const slug = encodeURIComponent(data.genre.name);
+
+  if (slug !== genreParam) {
+    queryClient.setQueryData(["genre", slug], data);
+    throw redirect(`/genre/${slug}/`);
+  }
+
+  return null;
+};
 
 function sortReleaseGroupsForGenre(
   sort: "release_date" | "total_listen_count",
@@ -76,11 +108,10 @@ function getReleaseCard(rg: TaggedReleaseGroupEntity) {
 }
 
 export default function GenrePage(): JSX.Element {
-  const location = useLocation();
   const params = useParams() as { genre: string };
-  const { data } = useQuery<GenrePageProps>(
-    RouteQuery(["genre", params], location.pathname)
-  );
+
+  // Fetch the genre data
+  const { data } = useQuery(genreQuery(params.genre));
 
   const { genre, genre_mbid, entities, coverArt: coverArtSVG } =
     data || ({} as GenrePageProps);
@@ -91,6 +122,7 @@ export default function GenrePage(): JSX.Element {
   );
   const [expandDiscography, setExpandDiscography] = React.useState(false);
 
+  // Fetch the Wikipedia extract for the genre
   const { data: wikipediaExtractData } = useQuery<{
     wikipediaExtract?: WikipediaExtract;
   }>({
@@ -116,6 +148,8 @@ export default function GenrePage(): JSX.Element {
     entities?.recording?.entities ?? [];
   const releaseGroups: TaggedReleaseGroupEntity[] =
     entities?.release_group?.entities ?? [];
+
+  // Group release groups by type
   const rgGroups = groupBy(releaseGroups, (rg) => rg.type ?? "Other");
   const last = Object.keys(rgGroups).length;
   const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), (type) =>
@@ -136,15 +170,20 @@ export default function GenrePage(): JSX.Element {
       0
     ) > 4;
 
+  // Playable recordings
   const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
   const playableRecordings = React.useMemo(
     () => recordings.filter((r) => r.recording_name),
     [recordings]
   );
+
+  // Listens from recordings
   const listensFromRecordings = React.useMemo(
     () => playableRecordings.map(recordingToListen),
     [playableRecordings]
   );
+
+  // Set the ambient queue to the listens from the recordings
   React.useEffect(() => {
     setAmbientQueue(listensFromRecordings);
     // eslint-disable-next-line react-hooks/exhaustive-deps
