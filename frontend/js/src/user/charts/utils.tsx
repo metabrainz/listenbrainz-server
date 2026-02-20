@@ -62,6 +62,17 @@ export const getData = async (
       Math.ceil(entityData.payload.total_release_group_count / rowsPerPage)
     );
     entityCount = entityData.payload.total_release_group_count;
+  } else if ((entity as string) === "genre") {
+    // so far UserGenresResponse type doesn't exist yet so we use 'any' here
+    const genreData = entityData as any;
+    maxListens = genreData.payload.genres?.[0]?.listen_count ?? 0;
+
+    const totalGenreCount = genreData.payload.total_genre_count ?? 0;
+    totalPages = Math.min(
+      maxNumberOfPages,
+      Math.ceil(totalGenreCount / rowsPerPage)
+    );
+    entityCount = totalGenreCount;
   }
 
   return {
@@ -157,6 +168,17 @@ export const processData = (
         };
       }
     );
+  } else if ((entity as string) === "genre") {
+    result = (data as any).payload.genres?.map((elem: any, idx: number) => {
+      return {
+        id: idx.toString(),
+        entity: elem.genre,
+        entityType: "genre" as Entity,
+        idx: offset + idx + 1,
+        count: elem.listen_count,
+        entityMBID: null,
+      };
+    });
   }
 
   return result;

@@ -56,6 +56,7 @@ export const TERMINOLOGY_ENTITY_MAP: Record<string, Entity> = {
   artist: "artist",
   album: "release-group",
   track: "recording",
+  genre: "genre" as Entity,
 };
 
 const ROWS_PER_PAGE = 25;
@@ -167,8 +168,16 @@ export default function UserEntityChart() {
         setStartDate(fetchedData.startDate);
         setEndDate(fetchedData.endDate);
       } catch (error) {
-        setHasError(true);
-        setErrorMessage(error.message);
+        if (
+          (entity as string) === "genre" &&
+          (error.message?.includes("not found") ||
+            error.message?.includes("404"))
+        ) {
+          setData([]);
+        } else {
+          setHasError(true);
+          setErrorMessage(error.message);
+        }
       } finally {
         setLoading(false);
       }
@@ -247,6 +256,15 @@ export default function UserEntityChart() {
                 className="user-charts-pill"
               >
                 Tracks
+              </Link>
+            </Pill>
+            <Pill active={(terminology as string) === "genre"} type="secondary">
+              <Link
+                to={`../top-genres/${attributesForLinks}`}
+                relative="route"
+                className="user-charts-pill"
+              >
+                Genres
               </Link>
             </Pill>
           </div>
@@ -643,6 +661,25 @@ export const UserEntityChartLoader = async ({
   request: Request;
 }) => {
   const currentURL = new URL(request.url);
+
+  // backend bypass for top-genres page
+  if (currentURL.pathname.includes("top-genres")) {
+    const match = currentURL.pathname.match(/\/user\/([^/]+)/);
+    const username = match ? match[1] : undefined;
+
+    if (!username) {
+      throw new Response("User not found", { status: 404 });
+    }
+
+    return {
+      user: { name: username },
+      entity: "genre",
+      terminology: "genre",
+      currPage: 1,
+      range: "all_time",
+    };
+  }
+
   const response = await fetch(currentURL, {
     method: "POST",
     headers: {
@@ -660,7 +697,7 @@ export const UserEntityChartLoader = async ({
     (currentURL.searchParams.get("range") as UserStatsAPIRange) ?? "all_time";
 
   const match = currentURL.pathname.match(
-    /\/user\/.+\/stats\/top-(artist|album|track)s/
+    /\/user\/.+\/stats\/top-(artist|album|track|genre)s/
   );
   const urlEntityName = match?.[1] ?? "artist";
   const entity = TERMINOLOGY_ENTITY_MAP[urlEntityName];
