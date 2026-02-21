@@ -101,89 +101,61 @@ export default function GenrePage() {
 
   return (
     <div className="container mt-4 genre-page">
-      <div className="row">
-        <div className="col-md-9">
-          <h1>
-            Genre: <span className="text-capitalize">{genreName}</span>
-          </h1>
-          <p className="lead">Explore top music tagged with {genreName}.</p>
+      <h1>
+        Genre: <span className="text-capitalize">{genreName}</span>
+      </h1>
+      <p className="lead">Explore top music tagged with {genreName}.</p>
 
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <ul className="nav nav-tabs border-bottom-0">
-              <li className="nav-item">
-                <button
-                  type="button"
-                  className={`nav-link ${
-                    activeTab === "artists" ? "active" : ""
-                  }`}
-                  onClick={() => setActiveTab("artists")}
-                >
-                  Artists
-                </button>
-              </li>
-              <li className="nav-item">
-                <button
-                  type="button"
-                  className={`nav-link ${
-                    activeTab === "albums" ? "active" : ""
-                  }`}
-                  onClick={() => setActiveTab("albums")}
-                >
-                  Albums
-                </button>
-              </li>
-              <li className="nav-item">
-                <button
-                  type="button"
-                  className={`nav-link ${
-                    activeTab === "tracks" ? "active" : ""
-                  }`}
-                  onClick={() => setActiveTab("tracks")}
-                >
-                  Tracks
-                </button>
-              </li>
-            </ul>
-            <div className="sort-controls d-flex align-items-center">
-              <label htmlFor="sortMethodSelect" className="me-2 mb-0">
-                Sort by:
-              </label>
-              <select
-                id="sortMethodSelect"
-                className="form-select w-auto"
-                value={sortMethod}
-                onChange={(e) => setSortMethod(e.target.value as SortOption)}
-              >
-                <option value="listeners">Listeners</option>
-                <option value="listens">Listens</option>
-                <option value="score">Tag Score</option>
-                <option value="random">Random</option>
-              </select>
-            </div>
-          </div>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <ul className="nav nav-tabs border-bottom-0">
+          <li className="nav-item">
+            <button
+              type="button"
+              className={`nav-link ${activeTab === "artists" ? "active" : ""}`}
+              onClick={() => setActiveTab("artists")}
+            >
+              Artists
+            </button>
+          </li>
+          <li className="nav-item">
+            <button
+              type="button"
+              className={`nav-link ${activeTab === "albums" ? "active" : ""}`}
+              onClick={() => setActiveTab("albums")}
+            >
+              Albums
+            </button>
+          </li>
+          <li className="nav-item">
+            <button
+              type="button"
+              className={`nav-link ${activeTab === "tracks" ? "active" : ""}`}
+              onClick={() => setActiveTab("tracks")}
+            >
+              Tracks
+            </button>
+          </li>
+        </ul>
+        <div className="sort-controls d-flex align-items-center">
+          <label htmlFor="sortMethodSelect" className="me-2 mb-0">
+            Sort by:
+          </label>
+          <select
+            id="sortMethodSelect"
+            className="form-select w-auto"
+            value={sortMethod}
+            onChange={(e) => setSortMethod(e.target.value as SortOption)}
+          >
+            <option value="listeners">Listeners</option>
+            <option value="listens">Listens</option>
+            <option value="score">Tag Score</option>
+            <option value="random">Random</option>
+          </select>
+        </div>
+      </div>
 
-          <div className="tab-content" style={{ minHeight: "300px" }}>
-            {renderContent()}
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card shadow-sm border-0">
-            <div className="card-header bg-light">
-              <strong>Related Genres</strong>
-            </div>
-            <ul className="list-group list-group-flush">
-              <li className="list-group-item">
-                <a href="/explore/genre/alternative">Alternative</a>
-              </li>
-              <li className="list-group-item">
-                <a href="/explore/genre/pop">Pop</a>
-              </li>
-              <li className="list-group-item">
-                <a href="/explore/genre/indie">Indie</a>
-              </li>
-            </ul>
-          </div>
-        </div>
+      <div className="tab-content" style={{ minHeight: "300px" }}>
+        {renderContent()}
       </div>
     </div>
   );

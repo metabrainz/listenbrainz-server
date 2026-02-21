@@ -56,7 +56,7 @@ export default class RecordingFeedbackManager {
     }
   };
 
-fetchFeedback = async () => {
+  fetchFeedback = async () => {
     if (!this.currentUser?.name) {
       return;
     }
@@ -86,10 +86,10 @@ fetchFeedback = async () => {
       // empty the queues
       this.mbidFetchQueue.length = 0;
       this.msidFetchQueue.length = 0;
-
+      // TODO: add retry mechanism ?
     }
   };
-  
+
   getFeedback = async (
     MBID?: string,
     MSID?: string

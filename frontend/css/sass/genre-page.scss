@@ -1,47 +1,47 @@
 .genre-page {
   .nav-tabs {
-    border-bottom: 2px solid #dee2e6;
-    
+    border-bottom: 2px solid $gray-300;
+
     .nav-link {
       font-weight: 600;
-      color: #6c757d;
+      color: $gray-600;
       border: none;
       border-bottom: 2px solid transparent;
       margin-bottom: -2px;
       padding: 0.75rem 1.5rem;
       transition: all 0.2s;
-      
+
       &:hover {
-        color: #495057;
+        color: $gray-700;
         border-color: transparent;
       }
-      
+
       &.active {
-        color: #eb743b; /* ListenBrainz brand orange */
+        color: $orange;
         border-color: transparent;
-        border-bottom: 2px solid #eb743b;
+        border-bottom: 2px solid $orange;
         background: transparent;
       }
     }
   }
 
   .sort-controls {
-    background: #f8f9fa;
+    background: $gray-100;
     padding: 0.5rem 1rem;
     border-radius: 0.25rem;
-    
+
     label {
       font-weight: 600;
-      color: #495057;
+      color: $gray-700;
     }
-    
+
     .form-select {
-      border: 1px solid #ced4da;
+      border: 1px solid $gray-400;
       box-shadow: none;
-      
+
       &:focus {
-        border-color: #eb743b;
-        box-shadow: 0 0 0 0.2rem rgba(235, 116, 59, 0.25);
+        border-color: $orange;
+        box-shadow: 0 0 0 0.2rem rgba($orange, 0.25);
       }
     }
   }
@@ -49,21 +49,21 @@
   .table {
     th {
       font-weight: 600;
-      color: #495057;
+      color: $gray-700;
       border-top: none;
-      background: #f8f9fa;
+      background: $gray-100;
     }
-    
+
     td {
       vertical-align: middle;
-      color: #212529;
+      color: $body-color;
     }
-    
+
     tbody tr {
       transition: background-color 0.2s;
-      
+
       &:hover {
-        background-color: #f1f3f5;
+        background-color: $gray-200;
       }
     }
   }

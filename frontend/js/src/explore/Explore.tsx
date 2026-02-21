@@ -95,7 +95,7 @@ export default function ExplorePage() {
         <ExploreCard
           name="Genre Explorer"
           desc="Discover music by genre"
-          img_name="cover-art-collage.jpg"
+          img_name="music-neighborhood.jpg"
           url="/explore/genre/rock/"
         />
       </div>
