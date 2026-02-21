@@ -81,16 +81,16 @@ class Listen(object):
         self.user_name = user_name
 
         # determine the type of timestamp and do the right thing
-        if isinstance(timestamp, int) or isinstance(timestamp, float):
-            self.ts_since_epoch = int(timestamp)
-            self.timestamp = datetime.fromtimestamp(self.ts_since_epoch, timezone.utc)
-        else:
-            if timestamp:
+        if timestamp:
+            if isinstance(timestamp, datetime):
                 self.timestamp = timestamp
                 self.ts_since_epoch = int(self.timestamp.timestamp())
             else:
-                self.timestamp = None
-                self.ts_since_epoch = None
+                self.ts_since_epoch = int(timestamp)
+                self.timestamp = datetime.fromtimestamp(self.ts_since_epoch, timezone.utc)
+        else:
+            self.timestamp = None
+            self.ts_since_epoch = None
 
         self.recording_msid = recording_msid
         self.inserted_timestamp = inserted_timestamp
