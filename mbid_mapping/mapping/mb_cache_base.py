@@ -30,19 +30,22 @@ ARTIST_LINK_GIDS = (
 )
 ARTIST_LINK_GIDS_SQL = ", ".join([f"'{x}'" for x in ARTIST_LINK_GIDS])
 
-RECORDING_LINK_GIDS = (
+RECORDING_ARTIST_LINK_GIDS = (
     '628a9658-f54c-4142-b0c0-95f031b544da',  # performer
     '59054b12-01ac-43ee-a618-285fd397e461',  # instrument
     '0fdbe3c6-7700-4a31-ae54-b53f06ae1cfa',  # vocal
     '234670ce-5f22-4fd0-921b-ef1662695c5d',  # conductor
     '3b6616c5-88ba-4341-b4ee-81ce1e6d7ebb',  # performing orchestra
-    # TODO: the following URL rels are unused (queries only join artist table)
+)
+RECORDING_ARTIST_LINK_GIDS_SQL = ", ".join([f"'{x}'" for x in RECORDING_ARTIST_LINK_GIDS])
+
+RECORDING_URL_LINK_GIDS = (
     '92777657-504c-4acb-bd33-51a201bd57e1',  # purchase for download
     '45d0cbc5-d65b-4e77-bdfd-8a75207cb5c5',  # download for free
     '7e41ef12-a124-4324-afdb-fdbae687a89c',  # free streaming
     'b5f3058a-666c-406f-aafb-f9249fc7b122'   # streaming
 )
-RECORDING_LINK_GIDS_SQL = ", ".join([f"'{x}'" for x in RECORDING_LINK_GIDS])
+RECORDING_URL_LINK_GIDS_SQL = ", ".join([f"'{x}'" for x in RECORDING_URL_LINK_GIDS])
 
 
 class MusicBrainzEntityMetadataCache(BulkInsertTable, ABC):
