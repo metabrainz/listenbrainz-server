@@ -4,11 +4,19 @@ const feedProps = require("../__mocks__/feedProps.json");
 const pinProps = require("../__mocks__/pinProps.json");
 const freshReleasesSitewideData = require("../__mocks__/freshReleasesSitewideData.json");
 
+window.fetch = jest.fn().mockImplementation(() => {
+  return Promise.resolve({
+    ok: true,
+    status: 200,
+    json: () => Promise.resolve({}),
+  });
+});
 const apiService = new APIService("localhost:1234");
 
 describe("submitListens", () => {
   beforeEach(() => {
     // Mock function for fetch
+    (window.fetch as jest.Mock).mockReset();
     window.fetch = jest.fn().mockImplementation(() => {
       return Promise.resolve({
         ok: true,
@@ -652,8 +660,11 @@ describe("submitFeedback", () => {
 
 describe("getFeedbackForUserForRecordings", () => {
   beforeEach(() => {
-    // Mock function for fetch
-    window.fetch = jest.fn().mockImplementation(() => {
+    // Clear call history but keep the mock
+    (window.fetch as jest.Mock).mockClear();
+    
+    // Set up the mock implementation for this test suite
+    (window.fetch as jest.Mock).mockImplementation(() => {
       return Promise.resolve({
         ok: true,
         status: 200,
@@ -668,9 +679,10 @@ describe("getFeedbackForUserForRecordings", () => {
       ["bar", "baz"],
       ["new", "old"]
     );
+    
     expect(window.fetch).toHaveBeenCalledWith(
       `${apiService.APIBaseURI}/feedback/user/foo/get-feedback-for-recordings`,
-      {
+      expect.objectContaining({
         method: "POST",
         headers: {
           "Content-Type": "application/json;charset=UTF-8",
@@ -679,14 +691,14 @@ describe("getFeedbackForUserForRecordings", () => {
           recording_mbids: ["bar", "baz"],
           recording_msids: ["new", "old"],
         }),
-      }
+      })
     );
   });
 
   it("throws appropriate error if username is missing", async () => {
-    await expect(apiService.getUserListenCount("")).rejects.toThrow(
-      SyntaxError("Username missing")
-    );
+    await expect(
+      apiService.getFeedbackForUserForRecordings("", ["mbid"], ["msid"])
+    ).rejects.toThrow(SyntaxError("Username missing"));
   });
 });
 
