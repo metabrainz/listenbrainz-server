@@ -228,6 +228,30 @@ def get_user_count(db_conn):
         logger.error(e)
         raise
 
+def get_user_count_evolution(db_conn):
+    """ Get total number of users in database.
+
+    Returns:
+        list: tuple(period, total_users) for each period
+    """
+    try:
+        time_period = "month"
+        query = """
+        SELECT
+            DATE_TRUNC(:bucket, created) AS period,
+            COUNT(id) AS new_users,
+            SUM(COUNT(id)) OVER (ORDER BY DATE_TRUNC(:bucket, created)) AS total_users
+        FROM "user"
+        GROUP BY period
+        ORDER BY period ASC;
+        """
+
+        result = db_conn.execute(text(query), {"bucket": time_period})
+        return [(row.period.isoformat(), int(row.total_users), int(row.new_users)) for row in result]
+    except DatabaseException as e:
+        logger.error(e)
+        raise
+
 
 def get_or_create(db_conn, musicbrainz_row_id: int, musicbrainz_id: str) -> dict:
     """Get user with a specified MusicBrainz ID, or create if there's no account.

@@ -36,6 +36,7 @@ extensions = [
     'sphinxcontrib.autohttp.flask',
     'sphinx_click',
     'sphinx.ext.autosectionlabel',
+    'sphinx_rtd_theme',
 ]
 autosectionlabel_prefix_document = True
 
@@ -44,8 +45,7 @@ templates_path = ['_templates']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
-# source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = {'.rst': 'restructuredtext'}
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
@@ -57,6 +57,7 @@ master_doc = 'index'
 project = u'ListenBrainz'
 copyright = f'2017-{datetime.now().year}, MetaBrainz Foundation'
 author = u'MetaBrainz Foundation'
+html_baseurl = 'https://listenbrainz.readthedocs.io/en/latest/'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -116,21 +117,16 @@ todo_include_todos = False
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-import sphinx_rtd_theme
 html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    'canonical_url': "https://listenbrainz.readthedocs.io/en/latest/",
     'collapse_navigation': False,
-    'display_version': False,
+    'version_selector': False,
     'navigation_depth': 3,
 }
-
-# Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -210,7 +206,7 @@ html_css_files = ['css/wrap-text-in-tables.css']
 # Sphinx supports the following languages:
 #   'da', 'de', 'en', 'es', 'fi', 'fr', 'hu', 'it', 'ja'
 #   'nl', 'no', 'pt', 'ro', 'ru', 'sv', 'tr'
-#html_search_language = 'en'
+html_search_language = 'en'
 
 # A dictionary with options for the search language support, empty by default.
 # Now only 'ja' uses this config value
