@@ -29,7 +29,7 @@ export default function MagicShareButton({
   const [svgBlob, setSvgBlob] = useState<Blob>();
   const [copySuccess, setCopySuccess] = useState(false);
 
-  const hasShareFunctionality = Boolean(navigator.canShare);
+
 
   useEffect(() => {
     const getSVG = async () => {
@@ -113,18 +113,17 @@ export default function MagicShareButton({
       dataToShare.text = shareText;
     }
     // Use the Share API to share the image
-    if (hasShareFunctionality && navigator.canShare(dataToShare)) {
-      navigator.share(dataToShare).catch((error) => {
+    if(navigator.share){
+      try{
+        await navigator.share(dataToShare);
+      } catch (error) {
         console.error("Error sharing image:", error);
-        // Fallback to saving the image
         saveToFile();
-      });
+      }
     } else {
-      console.debug("The Share API is not supported on this browser");
-      // Fallback to saving the image
       saveToFile();
     }
-  }, [hasShareFunctionality, shareText, shareTitle, shareUrl, fileName]);
+  }, [shareText, shareTitle, shareUrl, fileName]);
 
   const id = `share-modal-${fileName}`;
   return (
@@ -170,7 +169,6 @@ export default function MagicShareButton({
               <p>
                 <button
                   className="btn btn-primary"
-                  disabled={!hasShareFunctionality}
                   type="button"
                   onClick={shareWithAPI}
                   title="Share"
