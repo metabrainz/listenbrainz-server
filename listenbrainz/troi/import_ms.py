@@ -30,13 +30,10 @@ def import_from_apple_music(token, apple_user_token, user, playlist_id):
         "echo": False,
         "min_recordings": 1
     }
-    from listenbrainz.troi.utils import intercept_apple_music_errors
-
-    with intercept_apple_music_errors():
-        patch = ImportPlaylistPatch(args)
-        playlist = patch.generate_playlist()
-        result = playlist.get_jspf()
-        result.update({'identifier': playlist.playlists[0].mbid})
+    patch = ImportPlaylistPatch(args)
+    playlist = patch.generate_playlist()
+    result = playlist.get_jspf()
+    result.update({'identifier': playlist.playlists[0].mbid})
 
     return result
 
