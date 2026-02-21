@@ -2,7 +2,7 @@ from brainzutils.ratelimit import ratelimit
 from datasethoster import RequestSource
 from flask import Blueprint, request, jsonify, current_app
 
-from listenbrainz.db.mbid_manual_mapping import create_mbid_manual_mapping, get_mbid_manual_mapping
+from listenbrainz.db.mbid_manual_mapping import create_mbid_manual_mapping, create_mbid_manual_unlink, get_mbid_manual_mapping
 from listenbrainz.db.metadata import get_metadata_for_recording, get_metadata_for_artist, get_metadata_for_release_group
 from listenbrainz.db.model.mbid_manual_mapping import MbidManualMapping
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery, \
@@ -503,6 +503,42 @@ def submit_manual_mapping():
     )
 
     create_mbid_manual_mapping(ts_conn, mapping)
+
+    invalidate_user_listen_caches(user["id"])
+
+    return jsonify({"status": "ok"})
+
+
+@metadata_bp.post("/unlink_mapping/")
+@crossdomain
+@ratelimit()
+def unlink_mapping():
+    """
+    Unlink a listen from its MusicBrainz mapping. This removes any automatic or
+    manual mapping for a given recording MSID for the current user.
+
+    The format of the JSON to be POSTed to this endpoint is:
+
+    .. code-block:: json
+
+        {
+            "recording_msid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f"
+        }
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Mapping unlinked successfully.
+    :statuscode 400: invalid JSON sent, see error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+
+    recording_msid = request.json.get("recording_msid")
+    if not recording_msid or not is_valid_uuid(recording_msid):
+        raise APIBadRequest("recording_msid is invalid or not present in arguments")
+
+    create_mbid_manual_unlink(ts_conn, recording_msid, user["id"])
 
     invalidate_user_listen_caches(user["id"])
 

@@ -1401,6 +1401,25 @@ export default class APIService {
     return response.json();
   };
 
+  unlinkMapping = async (
+    userToken: string,
+    recordingMSID: string
+  ): Promise<{ status: string }> => {
+    const url = `${this.APIBaseURI}/metadata/unlink_mapping/`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        recording_msid: recordingMSID,
+      }),
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   unpinRecording = async (userToken: string): Promise<number> => {
     const url = `${this.APIBaseURI}/pin/unpin`;
     const response = await fetch(url, {
