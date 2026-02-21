@@ -82,6 +82,14 @@ const getExploreRoutes = (): RouteObject[] => {
           },
         },
         {
+          path: "genre/:genreName/",
+          lazy: {
+            Component: async () => {
+              return (await import("../genre/GenrePage")).default;
+            },
+          },
+        },
+        {
           path: "lb-radio/",
           lazy: {
             Component: async () => {

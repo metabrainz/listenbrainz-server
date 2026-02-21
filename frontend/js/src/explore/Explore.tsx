@@ -90,6 +90,12 @@ export default function ExplorePage() {
           img_name="similar-users.jpg"
           url="/explore/similar-users/"
         />
+        <ExploreCard
+          name="Genre Explorer"
+          desc="Discover music by genre"
+          img_name="cover-art-collage.jpg"
+          url="/explore/genre/rock/"
+        />
       </div>
       <div className="explore-page-divider">
         <h3>Beta</h3>

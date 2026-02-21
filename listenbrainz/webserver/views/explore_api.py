@@ -11,6 +11,7 @@ from listenbrainz.webserver.views.api_tools import _parse_int_arg, _parse_bool_a
 from listenbrainz.db.color import get_releases_for_color
 from troi.patches.lb_radio import LBRadioPatch
 from troi.patch import Patch
+import listenbrainz.db.genre_page as genre_db
 
 DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS = 14
 MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 90
@@ -210,3 +211,27 @@ def lb_radio():
     feedback = patch.user_feedback()
 
     return jsonify({"payload": {"jspf": jspf, "feedback": feedback}})
+
+@explore_api_bp.get("/genre/<genre_name>/artists")
+@crossdomain
+@ratelimit()
+def get_genre_artists(genre_name):
+    sort = request.args.get('sort', 'listeners')
+    artists = genre_db.get_genre_artists(genre_name, sort=sort)
+    return jsonify({"payload": {"artists": artists}})
+
+@explore_api_bp.get("/genre/<genre_name>/albums")
+@crossdomain
+@ratelimit()
+def get_genre_albums(genre_name):
+    sort = request.args.get('sort', 'listeners')
+    albums = genre_db.get_genre_albums(genre_name, sort=sort)
+    return jsonify({"payload": {"albums": albums}})
+
+@explore_api_bp.get("/genre/<genre_name>/tracks")
+@crossdomain
+@ratelimit()
+def get_genre_tracks(genre_name):
+    sort = request.args.get('sort', 'listeners')
+    tracks = genre_db.get_genre_tracks(genre_name, sort=sort)
+    return jsonify({"payload": {"tracks": tracks}})

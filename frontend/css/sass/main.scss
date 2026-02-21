@@ -42,12 +42,14 @@
 @import "similarity";
 @import "dashboard";
 @import "cover-art-grids";
+@import "genre-page";
 
 // pre is used in a tooltip with a different background color
 pre {
   background-color: inherit;
   border: none;
 }
+
 // For use with highlight.js
 pre code.hljs {
   max-height: 50vh;
@@ -77,17 +79,20 @@ h2,
 h3 {
   margin-top: $spacer;
 }
+
 h4,
 h5,
 h6 {
   margin-top: $headings-margin-bottom;
 }
+
 // Unordered and Ordered lists
 ul,
 ol {
   padding-left: revert;
   margin-top: 0;
   margin-bottom: $spacer * 0.5;
+
   ul,
   ol {
     margin-bottom: 0;
@@ -96,6 +101,7 @@ ol {
 
 .panel {
   margin-bottom: 2rem;
+
   .panel-heading {
     background-color: #fafafa;
   }
@@ -116,21 +122,24 @@ input[type="range"] {
 }
 
 /* Custom indicator for details/summary expanded indicator */
-details > summary {
+details>summary {
   &::marker {
     display: none;
     content: "";
   }
+
   .summary-indicator {
     transition: rotate 0.2s ease-in-out;
     rotate: 0deg;
     margin-right: 0.5em;
   }
+
   &:hover .summary-indicator {
     rotate: 90deg;
   }
 }
-details[open] > summary .summary-indicator {
+
+details[open]>summary .summary-indicator {
   rotate: 90deg;
 }
 
@@ -145,6 +154,7 @@ details[open] > summary .summary-indicator {
 
 .pagination {
   margin: 20px 0;
+
   .page-link {
     padding: 5px 14px;
     font-size: 14px;
@@ -176,6 +186,7 @@ details[open] > summary .summary-indicator {
     padding: 20px;
   }
 }
+
 .badge {
   // Not sure why we need to do this to
   // override the --bs-badge-font-size CSS variable value
