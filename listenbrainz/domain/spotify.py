@@ -30,6 +30,8 @@ SPOTIFY_LISTEN_PERMISSIONS = {
     'user-read-private',
     'playlist-modify-public',
     'playlist-modify-private',
+    'playlist-read-private',
+    'playlist-read-collaborative',
 }
 
 SPOTIFY_PLAYLIST_PERMISSIONS = {
