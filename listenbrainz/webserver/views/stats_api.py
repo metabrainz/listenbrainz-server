@@ -730,9 +730,9 @@ def get_artist_evolution_activity(user_name: str):
         {
           "payload": {
             "artist_evolution_activity": [
-              { "time_unit": "Monday",    "artist_mbid": "mbid_taylor",  "artist_name": "Taylor Swift", "listen_count": 120 },
-              { "time_unit": "Monday",    "artist_mbid": "mbid_drake",   "artist_name": "Drake",        "listen_count": 80  },
-              { "time_unit": "Sunday",    "artist_mbid": "mbid_weeknd",  "artist_name": "The Weeknd",   "listen_count": 400 }
+              { "time_unit": "1",    "artist_mbid": "mbid_taylor",  "artist_name": "Taylor Swift", "listen_count": 120 },
+              { "time_unit": "1",    "artist_mbid": "mbid_drake",   "artist_name": "Drake",        "listen_count": 80  },
+              { "time_unit": "7",    "artist_mbid": "mbid_weeknd",  "artist_name": "The Weeknd",   "listen_count": 400 }
             ],
             "range": "week",
             "from_ts": 1609459200,
@@ -744,9 +744,9 @@ def get_artist_evolution_activity(user_name: str):
 
     .. note::
         - ``time_unit`` depends on the stats range:
-            * ``week``, ``this_week``  → weekday names (Monday..Sunday)
+            * ``week``, ``this_week``  → weekday numbers ("1".."7")
             * ``month``, ``this_month`` → day numbers as strings ("1".."31")
-            * ``year``, ``this_year``, ``half_yearly``, ``quarter``  → month names (January..December)
+            * ``year``, ``this_year``, ``half_yearly``, ``quarter``  → month numbers ("1".."12")
             * ``all_time`` → calendar years as strings ("2019", "2020", ...)
         - ``artist_mbid`` may be null/omitted if unavailable.
 
@@ -1634,9 +1634,9 @@ def get_sitewide_artist_evolution_activity():
         {
           "payload": {
             "artist_evolution_activity": [
-              { "time_unit": "Monday",    "artist_mbid": "mbid_taylor",  "artist_name": "Taylor Swift", "listen_count": 120 },
-              { "time_unit": "Tuesday",   "artist_mbid": "mbid_drake",   "artist_name": "Drake",        "listen_count": 200 },
-              { "time_unit": "Sunday",    "artist_mbid": "mbid_weeknd",  "artist_name": "The Weeknd",   "listen_count": 400 }
+              { "time_unit": 1,    "artist_mbid": "mbid_taylor",  "artist_name": "Taylor Swift", "listen_count": 120 },
+              { "time_unit": 2,   "artist_mbid": "mbid_drake",   "artist_name": "Drake",        "listen_count": 200 },
+              { "time_unit": 7,    "artist_mbid": "mbid_weeknd",  "artist_name": "The Weeknd",   "listen_count": 400 }
             ],
             "range": "week",
             "from_ts": 1609459200,
@@ -1647,10 +1647,10 @@ def get_sitewide_artist_evolution_activity():
 
     .. note::
         - ``time_unit`` depends on the stats range:
-            * ``week``, ``this_week``  → weekday names (Monday..Sunday)
-            * ``month``, ``this_month`` → day numbers as strings ("1".."31")
-            * ``year``, ``this_year``, ``half_yearly``, ``quarter``  → month names (January..December)
-            * ``all_time`` → calendar years as strings ("2019", "2020", ...)
+            * ``week``, ``this_week``  → weekday numbers (1..7)
+            * ``month``, ``this_month`` → day numbers as strings (1..31)
+            * ``year``, ``this_year``, ``half_yearly``, ``quarter``  → month numbers (1..12)
+            * ``all_time`` → calendar years as strings (2019, 2020, ...)
         - ``artist_mbid`` may be null/omitted if unavailable.
         - Shape matches ``/user/<user_name>/artist-evolution-activity`` for easy client reuse.
 
