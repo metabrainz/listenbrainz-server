@@ -573,7 +573,7 @@ class StatsAPITestCase(IntegrationTestCase):
                 }
             ],
             "total_listen_count": 8,
-            "stats_range": "all_time",
+            "range": "all_time",
             "from_ts": data["from_ts"],
             "last_updated": response.json["payload"]["last_updated"],
             "to_ts": data["to_ts"],
@@ -606,7 +606,7 @@ class StatsAPITestCase(IntegrationTestCase):
                 "78c94cba-761f-4212-8508-a24bda2e57dc"
             ],
             "from_ts": data["from_ts"],
-            "stats_range": "all_time",
+            "range": "all_time",
             "last_updated": response.json["payload"]["last_updated"],
             "to_ts": data["to_ts"],
         })
