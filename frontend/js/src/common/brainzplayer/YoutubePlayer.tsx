@@ -328,8 +328,17 @@ export default class YoutubePlayer
     }
   };
 
-  playTrackById = (videoId: string): void => {
-    if (!videoId || !this.youtubePlayer) {
+  playTrackById = (videoId: string, retryCount: number = 0): void => {
+    if (!videoId) {
+      return;
+    }
+    if (!this.youtubePlayer) {
+      if (retryCount < 3) {
+        setTimeout(() => this.playTrackById(videoId, retryCount + 1), 1000);
+        return;
+      }
+      const { onTrackNotFound } = this.props;
+      onTrackNotFound();
       return;
     }
     if (videoId.startsWith("http")) {
@@ -349,8 +358,14 @@ export default class YoutubePlayer
     return false;
   };
 
-  playListen = (listen: Listen | JSPFTrack) => {
-    const youtubeId = YoutubePlayer.getVideoIDFromListen(listen);
+  playListen = (listen: Listen | JSPFTrack, streamingUrl?: string) => {
+    let youtubeId = YoutubePlayer.getVideoIDFromListen(listen);
+
+    if (!youtubeId && streamingUrl) {
+      const videoIdRegexp = /((?:\/|v=|vi=|v%)(?<id>([\-\w]){10,14}))/;
+      const match = videoIdRegexp.exec(streamingUrl);
+      youtubeId = match?.groups?.id;
+    }
 
     if (youtubeId) {
       this.playTrackById(youtubeId);

@@ -7,7 +7,8 @@ import ujson
 import config
 from mapping.canonical_recording_release_redirect import CanonicalRecordingReleaseRedirect
 from mapping.mb_cache_base import MusicBrainzEntityMetadataCache, ARTIST_LINK_GIDS_SQL, \
-    RECORDING_LINK_GIDS_SQL, incremental_update_metadata_cache, create_metadata_cache
+    RECORDING_ARTIST_LINK_GIDS_SQL, RECORDING_URL_LINK_GIDS_SQL, \
+    incremental_update_metadata_cache, create_metadata_cache
 from mapping.utils import log
 
 MB_METADATA_CACHE_TIMESTAMP_KEY = "mb_metadata_cache_last_update_timestamp"
@@ -160,11 +161,19 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                 tag["genre_mbid"] = genre_mbid
             release_group_tags.append(tag)
 
+        url_rels = []
+        for rel_type, url in row["recording_url_rels"] or []:
+            if rel_type is None or url is None:
+                continue
+            url_rels.append({"type": rel_type, "url": url})
+
         recording = {
             "name": row["recording_name"],
             "rels": recording_rels,
             "isrcs": row["isrcs"],
         }
+        if url_rels:
+            recording["url_rels"] = url_rels
         if row["first_release_date"]:
             recording["first_release_date"] = row["first_release_date"]
         if row["length"]:
@@ -227,8 +236,23 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                              LEFT JOIN musicbrainz.link_attribute_type lat
                                     ON la.attribute_type = lat.id
                                   {values_join}
-                                 WHERE lt.gid IN ({RECORDING_LINK_GIDS_SQL})
+                                 WHERE lt.gid IN ({RECORDING_ARTIST_LINK_GIDS_SQL})
                                  -- performer rels are ended by definition (the artist is no longer performing) but they should still be shown to the user
+                               GROUP BY r.gid
+                   ), recording_url_rels AS (
+                                SELECT r.gid
+                                     , array_agg(ARRAY[lt.name, url]) AS recording_url_rels
+                                  FROM musicbrainz.recording r
+                                  JOIN musicbrainz.l_recording_url lru
+                                    ON lru.entity0 = r.id
+                                  JOIN musicbrainz.url u
+                                    ON lru.entity1 = u.id
+                                  JOIN musicbrainz.link l
+                                    ON lru.link = l.id
+                                  JOIN musicbrainz.link_type lt
+                                    ON l.link_type = lt.id
+                                  {values_join}
+                                 WHERE lt.gid IN ({RECORDING_URL_LINK_GIDS_SQL})
                                GROUP BY r.gid
                    ), artist_data AS (
                             SELECT r.gid
@@ -374,6 +398,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                               {values_join}
                    )
                             SELECT recording_links
+                                 , recording_url_rels
                                  , r.name AS recording_name
                                  , r.artist_credit AS artist_credit_id
                                  , ac.name AS artist_credit_name
@@ -408,6 +433,8 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                 ON ard.gid = r.gid
                          LEFT JOIN recording_rels rrl
                                 ON rrl.gid = r.gid
+                         LEFT JOIN recording_url_rels rurl
+                                ON rurl.gid = r.gid
                          LEFT JOIN recording_tags rt
                                 ON rt.recording_mbid = r.gid
                          LEFT JOIN artist_tags ats
@@ -428,6 +455,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                  , rd.name
                                  , r.length
                                  , recording_links
+                                 , recording_url_rels
                                  , recording_tags
                                  , release_group_tags
                                  , rd.release_group_mbid
@@ -516,6 +544,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
         #
         # |   CTE / table    |         purpose               |  last_updated considered           | last_updated ignored
         # |   recording_rels |   artist - recording links    |  link relationship related and url | recording, artist
+        # |   recording_url_rels |   streaming links         |                                    |
         # |   recording_tags |   recording tags              |  recording_tag, genre              | recording
         # |   recording      |                               |  recording                         |
         recording_mbids_query = f"""
@@ -531,11 +560,28 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                     ON la.link = l.id
                   JOIN musicbrainz.link_attribute_type lat
                     ON la.attribute_type = lat.id
-                 WHERE lt.gid IN ({RECORDING_LINK_GIDS_SQL})
+                 WHERE lt.gid IN ({RECORDING_ARTIST_LINK_GIDS_SQL})
                    AND (
                          lar.last_updated > %(timestamp)s
                       OR  lt.last_updated > %(timestamp)s
                       OR lat.last_updated > %(timestamp)s
+                   )
+            UNION
+                SELECT r.gid
+                  FROM musicbrainz.recording r
+                  JOIN musicbrainz.l_recording_url lru
+                    ON lru.entity0 = r.id
+                  JOIN musicbrainz.url u
+                    ON lru.entity1 = u.id
+                  JOIN musicbrainz.link l
+                    ON lru.link = l.id
+                  JOIN musicbrainz.link_type lt
+                    ON l.link_type = lt.id
+                 WHERE lt.gid IN ({RECORDING_URL_LINK_GIDS_SQL})
+                   AND (
+                         lru.last_updated > %(timestamp)s
+                      OR   u.last_updated > %(timestamp)s
+                      OR  lt.last_updated > %(timestamp)s
                    )
             UNION
                 SELECT r.gid
