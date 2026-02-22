@@ -1,122 +1,82 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>
-      {{user_name|safe}} playing now - ListenBrainz
-    </title>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, target-densityDpi=device-dpi, minimal-ui"
-    />
-    <meta
-      name="description"
-      content="Track, explore, visualise and share the music you listen to.
-  Follow your favourites and discover great new music."
-    />
-    <!-- OpenGraph meta tags -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="ListenBrainz" />
-    <meta
-      property="og:description"
-      content="Track, explore, visualise and share the music you listen to.
-  Follow your favourites and discover great new music."
-    />
-    <!--  OpenGraph image meta tags -->
-    <meta
-      property="og:image"
-      content="{{ url_for('static', filename='img/share-header.png', _external=True) }}"
-    />
-    <meta property="og:image:width" content="1280" />
-    <meta property="og:image:height" content="640" />
-    <!--  Twitter meta tags -->
-    <meta name="twitter:title" content="ListenBrainz" />
-    <meta
-      property="twitter:description"
-      content="Track, explore, visualise and share the music you listen to.
-  Follow your favourites and discover great new music."
-    />
-    <!--  Twitter image meta tags -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta
-      name="twitter:image"
-      content="{{ url_for('static', filename='img/share-header.png', _external=True) }}"
-    />
 
-    <link
-      rel="icon"
-      sizes="16x16"
-      href="{{ url_for('static', filename='img/favicon-16.png') }}"
-      type="image/png"
-    />
-    <link
-      rel="icon"
-      sizes="256x256"
-      href="{{ url_for('static', filename='img/favicon-256.png') }}"
-      type="image/png"
-    />
-    <link
-      rel="icon"
-      sizes="32x32"
-      href="{{ url_for('static', filename='img/favicon-32.png') }}"
-      type="image/png"
-    />
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Sintony:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
+<head>
+  <meta charset="utf-8" />
+  <title>
+    {{user_name|safe}} playing now - ListenBrainz
+  </title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, target-densityDpi=device-dpi, minimal-ui" />
+  <meta name="description" content="Track, explore, visualise and share the music you listen to.
+  Follow your favourites and discover great new music." />
+  <!-- OpenGraph meta tags -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="ListenBrainz" />
+  <meta property="og:description" content="Track, explore, visualise and share the music you listen to.
+  Follow your favourites and discover great new music." />
+  <!--  OpenGraph image meta tags -->
+  <meta property="og:image" content="{{ url_for('static', filename='img/share-header.png', _external=True) }}" />
+  <meta property="og:image:width" content="1280" />
+  <meta property="og:image:height" content="640" />
+  <!--  Twitter meta tags -->
+  <meta name="twitter:title" content="ListenBrainz" />
+  <meta property="twitter:description" content="Track, explore, visualise and share the music you listen to.
+  Follow your favourites and discover great new music." />
+  <!--  Twitter image meta tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="{{ url_for('static', filename='img/share-header.png', _external=True) }}" />
 
-    <script src="{{ url_for('static', filename='js/lib/htmx.min.js') }}"></script>
+  <link rel="icon" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16.png') }}" type="image/png" />
+  <link rel="icon" sizes="256x256" href="{{ url_for('static', filename='img/favicon-256.png') }}" type="image/png" />
+  <link rel="icon" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32.png') }}" type="image/png" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sintony:wght@400;700&display=swap" rel="stylesheet" />
 
-    <link
-      href="{{ url_for('static', filename='css/static/widgets.css') }}"
-      rel="stylesheet"
-      media="screen"
-    />
-  </head>
 
-  <body>
-    <div
-      hx-target="#playing-now-container"
-      hx-get="./"
-      hx-trigger="load, every 1m"
-    ></div>
-    <div id="playing-now-container"></div>
+  <script src="{{ url_for('static', filename='js/lib/htmx.min.js') }}"></script>
 
-    <!-- Below you will find other implementation tests for auto-updates, kept in case we decide to use
+  <link href="{{ url_for('static', filename='css/static/widgets.css') }}" rel="stylesheet" media="screen" />
+</head>
+
+<body style="{{ 'max-width: %spx; min-height: %spx;' | format(width, height) }}">
+  <div hx-target="#playing-now-container" hx-get="./?include_last_listen={{include_last_listen}}" hx-trigger="load, every {{ refresh_interval }}m"></div>
+  <div id="playing-now-container"></div>
+
+
+  <!-- Below you will find other implementation tests for auto-updates, kept in case we decide to use
      one of those mechanisms instead of the timer polling (hx-trigger="every 1m")-->
 
-    <!-- SSE: If you wanted to use Server-Sent Events to update the page only when required: -->
-    <!-- Don't forget to save the SSE extension from a CDN and load it like so:  -->
-    <!-- <script src="{{ url_for('static', filename='js/lib/htmx-sse-extension.min.js') }}"></script> -->
-    <!-- <div
+  <!-- SSE: If you wanted to use Server-Sent Events to update the page only when required: -->
+  <!-- Don't forget to save the SSE extension from a CDN and load it like so:  -->
+  <!-- <script src="{{ url_for('static', filename='js/lib/htmx-sse-extension.min.js') }}"></script> -->
+  <!-- <div
       hx-ext="sse"
       sse-connect="./sse/"
       sse-swap="message"
       hx-target="#playing-now-container"
     ></div> -->
 
-    <!-- WS: If we wanted to use standard Websockets with HTMX (see below for socket.io) -->
-    <!-- <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/ws.js"></script> -->
-    <!-- <div hx-ext="ws" ws-connect="{{websockets_url}}/socket.io/"></div> -->
-    <!-- <div
+  <!-- WS: If we wanted to use standard Websockets with HTMX (see below for socket.io) -->
+  <!-- <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/ws.js"></script> -->
+  <!-- <div hx-ext="ws" ws-connect="{{websockets_url}}/socket.io/"></div> -->
+  <!-- <div
       ws-send
       hx-trigger="load"
       hx-vals='{"user":"{{user_name | safe}}"}'
     ></div> -->
 
-    <!-- WS+Socket.IO: HTMX does not currently support socket.io. Instead we can load the socket.io-client library instead
+  <!-- WS+Socket.IO: HTMX does not currently support socket.io. Instead we can load the socket.io-client library instead
      and trigger an HTMX reload event when a socket.io message comes in -->
-    <!-- <script
+  <!-- <script
       src="https://cdn.socket.io/4.8.1/socket.io.min.js"
       integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
       crossorigin="anonymous"
     ></script> -->
-    <!-- <script>
+  <!-- <script>
       console.log("Setting up socket.io connection");
       // Don't forget to add the websockets_url as a template variable in flask !
       const socket = io("{{websockets_url}}", { path: "/socket.io/" });
@@ -134,5 +94,6 @@
         htmx.trigger(document.body, "reload");
       });
     </script> -->
-  </body>
+</body>
+
 </html>
