@@ -36,10 +36,6 @@ def init_spark_session(app_name):
                 .builder \
                 .appName(app_name) \
                 .config("spark.sql.readSideCharPadding", "false") \
-                .config("spark.executor.memory", "4g") \
-                .config("spark.executor.memoryOverhead", "600m") \
-                .config("spark.driver.memory", "2g") \
-                .config("spark.driver.memoryOverhead", "600m") \
                 .getOrCreate()
         context = session.sparkContext
         context.setLogLevel("ERROR")
