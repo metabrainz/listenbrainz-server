@@ -383,7 +383,7 @@ def handle_yim_genre_activity(message):
 
 
 def handle_yim_playlists(message):
-    process_yim_playlists(message["slug"], message["year"], message["data"])
+    process_yim_playlists(message["slug"], message["year"], message["data"], message["export_to_spotify"])
 
 
 def handle_yim_playlists_end(message):

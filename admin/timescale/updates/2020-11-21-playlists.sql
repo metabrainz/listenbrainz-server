@@ -3,7 +3,7 @@ CREATE SCHEMA playlist;
 
 CREATE TABLE playlist.playlist (
     id serial,
-    mbid uuid not null default uuid_generate_v4(),
+    mbid uuid not null default gen_random_uuid(),
     creator_id int not null, -- link to user.id in main database
     name text not null,
     description text,

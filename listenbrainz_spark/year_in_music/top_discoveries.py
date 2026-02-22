@@ -12,7 +12,7 @@ MAX_ARTIST_OCCURRENCE = 2
 MAX_TRACKS_PER_PLAYLIST = 50
 
 
-def generate_top_discoveries(year):
+def generate_top_discoveries(year, export_to_spotify):
     create_tracks_of_the_year(year)
 
     query = f"""
@@ -55,6 +55,7 @@ def generate_top_discoveries(year):
         yield {
             "slug": "top-discoveries",
             "year": year,
+            "export_to_spotify": export_to_spotify,
             "data": playlists,
             "type": "year_in_music_playlists"
         }
