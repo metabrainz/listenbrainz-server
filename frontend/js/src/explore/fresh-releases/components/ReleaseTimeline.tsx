@@ -99,12 +99,14 @@ function createMarks(
 
     const title = closestDateStr === recentDateStr ? "Today" : "Nearest Date";
     dataArr.push(
-      <FontAwesomeIcon
-        icon={faCalendarCheck}
-        size="2xl"
-        color={COLOR_LB_BLUE}
-        title={title}
-      />
+      <span className="calendar-icon-mark">
+        <FontAwesomeIcon
+          icon={faCalendarCheck}
+          size="xl"
+          color={COLOR_LB_BLUE}
+          title={title}
+        />
+      </span>
     );
     percentArr.push(cummulativeMap.get(closestDateStr)!);
 
