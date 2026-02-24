@@ -107,7 +107,7 @@ export default function CurrentStatus() {
               )}
               {serviceStatus && (
                 <tr>
-                  <td>Dump Age</td>
+                  <td>Database Dump Age</td>
                   <td>{serviceStatus.dump_age} seconds</td>
                 </tr>
               )}
