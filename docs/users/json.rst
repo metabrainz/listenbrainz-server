@@ -288,6 +288,8 @@ The following optional elements may also be included in the ``additional_info`` 
        - Jamendo Music
      * - ``play.google.com``
        - Google Play Music
+     * - ``spinitron.com``
+       - Spinitron
 
 
 Client Metadata examples

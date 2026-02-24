@@ -37,7 +37,7 @@ class SpinitronListensImporter(BaseListensImporter):
         listens = []
         for item in batch:
             try:
-                datetime_str = (item.get("date-time") or "").strip()
+                datetime_str = item.get("date-time", "").strip()
                 if not datetime_str:
                     current_app.logger.debug("Missing Date-time in Spinitron item: %s", item)
                     continue
@@ -53,8 +53,8 @@ class SpinitronListensImporter(BaseListensImporter):
             if not (self._from_date <= datetime.fromtimestamp(ts, tz=timezone.utc) <= self._to_date):
                 continue
 
-            artist = (item.get("artist") or "").strip()
-            song = (item.get("song") or "").strip()
+            artist = item.get("artist", "").strip()
+            song = item.get("song", "").strip()
             if not artist or not song:
                 current_app.logger.debug("Missing artist or song in Spinitron item: %s", item)
                 continue
@@ -67,7 +67,7 @@ class SpinitronListensImporter(BaseListensImporter):
                 },
             }
 
-            release = (item.get("release") or "").strip()
+            release = item.get("release", "").strip()
             if release:
                 listen["track_metadata"]["release_name"] = release
 
@@ -76,7 +76,7 @@ class SpinitronListensImporter(BaseListensImporter):
                 "music_service": "spinitron.com",
             }
 
-            label = (item.get("label") or "").strip()
+            label = item.get("label", "").strip()
             if label:
                 additional_info["label"] = label
 
