@@ -14,6 +14,13 @@ type CurrentStatusLoaderData = {
   userCount: number;
   userCountEvolution: UserEvolutionData[];
   load: string;
+  serviceStatus: {
+    time: number;
+    dump_age: number;
+    stats_age: number;
+    sitewide_stats_age: number;
+    incoming_listen_count: number;
+  };
 };
 
 export default function CurrentStatus() {
@@ -21,7 +28,8 @@ export default function CurrentStatus() {
   const { data } = useQuery<CurrentStatusLoaderData>(
     RouteQuery(["current-status"], location.pathname)
   );
-  const { userCount, listenCount, listenCountsPerDay, load } = data || {};
+  const { userCount, listenCount, listenCountsPerDay, load, serviceStatus } =
+    data || {};
   return (
     <>
       <h2 className="page-title">Current status</h2>
@@ -88,10 +96,47 @@ export default function CurrentStatus() {
             doc.
           </p>
 
-          <h3>load average</h3>
-
-          <p>Current server load average</p>
-          <div className="border p-4 rounded bg-body-tertiary">{load}</div>
+          <h3>Current Service Status</h3>
+          <table className="table table-border table-sm table-striped">
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {serviceStatus && (
+                <tr>
+                  <td>Time</td>
+                  <td>{new Date(serviceStatus.time * 1000).toISOString()}</td>
+                </tr>
+              )}
+              {serviceStatus && (
+                <tr>
+                  <td>Database Dump Age</td>
+                  <td>{serviceStatus.dump_age} seconds</td>
+                </tr>
+              )}
+              {serviceStatus && (
+                <tr>
+                  <td>Stats Age</td>
+                  <td>{serviceStatus.stats_age} seconds</td>
+                </tr>
+              )}
+              {serviceStatus && (
+                <tr>
+                  <td>Sitewide Stats Age</td>
+                  <td>{serviceStatus.sitewide_stats_age} seconds</td>
+                </tr>
+              )}
+              {serviceStatus && (
+                <tr>
+                  <td>Incoming Listen Count</td>
+                  <td>{serviceStatus.incoming_listen_count} listens</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </>
