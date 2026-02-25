@@ -123,6 +123,14 @@ const getExploreRoutes = (): RouteObject[] => {
             },
           },
         },
+        {
+          path: "mb-series/",
+          lazy: {
+            Component: async () => {
+              return (await import("../mb-series/MBSeriesPlaylist")).default;
+            },
+          },
+        },
       ],
     },
   ];

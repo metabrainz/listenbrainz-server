@@ -109,6 +109,13 @@ export default function ExplorePage() {
           img_name="lb-widgets-beta.jpg"
           url="https://listenbrainz.readthedocs.io/en/latest/users/widgets.html"
         />
+
+        <ExploreCard
+          name="Playlist from MB Series"
+          desc="Create a playlist from a MusicBrainz series"
+          img_name="cover-art-collage.jpg"
+          url="/explore/mb-series/"
+        />
       </div>
       {currentUser?.name && (
         <>

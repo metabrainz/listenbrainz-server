@@ -9,6 +9,7 @@ import requests
 from psycopg2.extras import DictCursor
 
 import listenbrainz.db.playlist as db_playlist
+from listenbrainz.db.series import fetch_recordings_from_series
 import listenbrainz.db.user as db_user
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
 from listenbrainz.domain.apple import AppleService
@@ -280,6 +281,66 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
     except Exception:
         current_app.logger.error("Error while fetching metadata for a playlist: ", exc_info=True)
         raise APIInternalServerError("Failed to fetch metadata for a playlist. Please try again.")
+
+@playlist_api_bp.post("/create/from-mb-series")
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def create_playlist_from_mb_series():
+    """
+    Create a ListenBrainz playlist from a MusicBrainz series.
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: playlist created successfully.
+    :statuscode 400: invalid series MBID or request data.
+    :statuscode 401: invalid authorization.
+    :statuscode 500: error fetching series or creating playlist.
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+    data = request.json or {}
+
+    series_mbid = data.get("series_mbid")
+    if not series_mbid or not is_valid_uuid(series_mbid):
+        log_raise_400("A valid MusicBrainz series MBID is required.")
+
+    public = data.get("public", True)
+
+    try:
+        series_name, recording_mbids = fetch_recordings_from_series(series_mbid)
+    except ValueError as e:
+        log_raise_400(str(e))
+    except Exception as e:
+        current_app.logger.error(f"Error fetching MusicBrainz series: {e}")
+        raise APIInternalServerError("Failed to fetch series data. Please try again.")
+
+    # Use the provided name or fall back to the series name
+    playlist_name = data.get("name")
+    if not playlist_name or not playlist_name.strip():
+        playlist_name = series_name
+
+    playlist = WritablePlaylist(
+        name=playlist_name,
+        creator_id=user["id"],
+        public=bool(public),
+        collaborator_ids=[],
+        collaborators=[]
+    )
+
+    for mbid_str in recording_mbids:
+        try:
+            mbid = UUID(mbid_str)
+            playlist.recordings.append(WritablePlaylistRecording(mbid=mbid, added_by_id=user["id"]))
+        except ValueError:
+            current_app.logger.warning(f"Invalid recording MBID found in series: {mbid_str}")
+
+    try:
+        playlist = db_playlist.create(db_conn, ts_conn, playlist)
+    except Exception as e:
+        current_app.logger.error(f"Error while creating new playlist from series: {e}")
+        raise APIInternalServerError("Failed to create the playlist. Please try again.")
+
+    return jsonify({'status': 'ok', 'playlist_mbid': playlist.mbid})
 
 
 @playlist_api_bp.post("/create")
