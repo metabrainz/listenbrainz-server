@@ -238,6 +238,17 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
     setSelectedDecade(null);
   }, []);
 
+  const maxValue = React.useMemo(() => {
+    if (!chartData || chartData.length === 0) return 0;
+    return Math.max(...chartData.map((d) => d.listen_count || 0));
+  }, [chartData]);
+
+  const tickValues = React.useMemo(() => {
+    return maxValue <= 10
+      ? Array.from({ length: maxValue + 1 }, (_, i) => i)
+      : undefined;
+  }, [maxValue]);
+
   // Format function for display
   const formatDecadeLabel = useCallback(
     (decade: number): string => {
@@ -346,7 +357,8 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
                       legend: "Number of listens",
                       legendPosition: "middle",
                       legendOffset: -40,
-                      format: ".2~s",
+                      format: (value) => (Number.isInteger(value) ? value : ""),
+                      tickValues,
                     }}
                     minValue={0}
                     padding={BAR_PADDING_RATIO}
