@@ -250,6 +250,9 @@ The following optional elements may also be included in the ``additional_info`` 
    * - ``duration_played``
      - integer
      - The duration in seconds that the user actually listened to the track.
+   * - ``label``
+     - string
+     - The name of the record label that released the recording.
 .. note::
 
   **Music service names**
