@@ -11,7 +11,6 @@ type CurrentStatusLoaderData = {
     label: string;
   }[];
   userCount: number;
-  load: string;
   serviceStatus: {
     time: number;
     dump_age: number;
@@ -26,7 +25,7 @@ export default function CurrentStatus() {
   const { data } = useQuery<CurrentStatusLoaderData>(
     RouteQuery(["current-status"], location.pathname)
   );
-  const { userCount, listenCount, listenCountsPerDay, load, serviceStatus } =
+  const { userCount, listenCount, listenCountsPerDay, serviceStatus } =
     data || {};
   return (
     <>
@@ -101,7 +100,7 @@ export default function CurrentStatus() {
             <tbody>
               {serviceStatus && (
                 <tr>
-                  <td>Time</td>
+                  <td>Last Updated</td>
                   <td>{new Date(serviceStatus.time * 1000).toISOString()}</td>
                 </tr>
               )}
