@@ -200,7 +200,7 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
         .cover-art-container {
           display: grid;
           grid-gap: 1.5em;
-          grid-auto-flow: column;
+          grid-auto-flow: row;
           justify-items: center;
           grid-template-columns: repeat(auto-fill, minmax(190px, max-content));
           grid-template-rows: repeat(2, 1fr);
