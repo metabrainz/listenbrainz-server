@@ -28,7 +28,7 @@ import {
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import ListenCard from "../common/listens/ListenCard";
 
-type Recording = {
+export type Recording = {
   artist_credit_id: number;
   artist_credit_mbids: string[];
   artist_credit_name: string;
