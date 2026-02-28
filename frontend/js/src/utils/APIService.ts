@@ -1862,6 +1862,23 @@ export default class APIService {
     return response.status;
   };
 
+  submitSubmissionFilters = async (
+    userToken: string,
+    filters: SubmissionFiltersSettings
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/settings/submission-filters`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(filters),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
   submitBrainzplayerPreferences = async (
     userToken: string,
     brainzPlayerSettings: BrainzPlayerSettings

@@ -103,6 +103,12 @@ def get_global_props():
         if brainzplayer_props is not None:
             props["user_preferences"] = brainzplayer_props
 
+        submission_filters = db_usersetting.get_submission_filters(db_conn, current_user.id)
+        if submission_filters and submission_filters.get("submission_filters"):
+            if "user_preferences" not in props:
+                props["user_preferences"] = {}
+            props["user_preferences"]["submission_filters"] = submission_filters["submission_filters"]
+
         flair_props = db_usersetting.get_flair(db_conn, current_user.id)
         if flair_props is not None:
             props["flair"] = flair_props
