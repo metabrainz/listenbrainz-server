@@ -3,6 +3,7 @@ import {
   faPlusCircle,
   faUsers,
   faFileImport,
+  faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faSpotify,
@@ -49,6 +50,9 @@ export type UserPlaylistsState = {
   playlists: JSPFPlaylist[];
   sortBy: SortOption;
   view: PlaylistView;
+  searchTerm: string;
+  isSearching: boolean;
+  searchPageCount: number;
 };
 
 enum SortOption {
@@ -84,6 +88,8 @@ const playlistTypeAtom = atomWithStorage<string>(
   "lb_playlists_overview_type",
   ""
 );
+const MIN_SEARCH_LENGTH = 3;
+const PLAYLISTS_PAGE_SIZE = 25;
 export default class UserPlaylists extends React.Component<
   UserPlaylistsClassProps,
   UserPlaylistsState
@@ -98,6 +104,9 @@ export default class UserPlaylists extends React.Component<
       playlists: playlists?.map((pl) => pl.playlist) ?? [],
       sortBy: initialSort,
       view: initialView,
+      searchTerm: "",
+      isSearching: false,
+      searchPageCount: playlistCount,
     };
   }
 
@@ -261,6 +270,77 @@ export default class UserPlaylists extends React.Component<
     });
   };
 
+  // Reset to full playlist list when search is cleared or too short
+  resetSearchResults = () => {
+    const { playlists, initialSort, pageCount } = this.props;
+    const { sortBy } = this.state;
+
+    this.setState(
+      {
+        playlists: playlists.map((pl) => pl.playlist),
+        isSearching: false,
+        searchPageCount: pageCount,
+      },
+      () => {
+        this.setSortOption(sortBy || initialSort);
+      }
+    );
+  };
+
+  performPlaylistSearch = async (query: string) => {
+    const { APIService } = this.context;
+    const { user, initialSort } = this.props;
+    const { sortBy } = this.state;
+
+    const result = await APIService.searchPlaylistsForUser(query, user.name);
+
+    const playlistsFromApi = result.playlists ?? [];
+    const playlists = playlistsFromApi.map((pl: any) => pl.playlist);
+
+    const total = result.playlist_count ?? playlists.length;
+    const pageCount = Math.max(1, Math.ceil(total / PLAYLISTS_PAGE_SIZE));
+
+    this.setState(
+      {
+        playlists,
+        searchPageCount: pageCount,
+        isSearching: false,
+      },
+      () => {
+        // Use the current sort if it exists otherwise use default
+        this.setSortOption(sortBy || initialSort);
+      }
+    );
+  };
+
+  handleSearchSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
+    e.preventDefault();
+
+    const { searchTerm } = this.state;
+    const query = searchTerm.trim();
+
+    if (!query || query.length < MIN_SEARCH_LENGTH) {
+      this.resetSearchResults();
+      return;
+    }
+
+    this.setState({ isSearching: true });
+
+    try {
+      await this.performPlaylistSearch(query);
+    } catch (error) {
+      this.setState({ isSearching: false });
+      toast.error(
+        <ToastMsg
+          title="Search failed"
+          message="Unable to search playlists. Please try again."
+        />
+      );
+    }
+  };
+
   render() {
     const {
       user,
@@ -271,7 +351,14 @@ export default class UserPlaylists extends React.Component<
       handleClickNext,
       setPersistentView,
     } = this.props;
-    const { playlists, sortBy, view } = this.state;
+    const {
+      playlists,
+      sortBy,
+      view,
+      searchTerm,
+      isSearching,
+      searchPageCount,
+    } = this.state;
     const { currentUser } = this.context;
 
     return (
@@ -344,6 +431,22 @@ export default class UserPlaylists extends React.Component<
                 <option value={SortOption.CREATOR}>Creator</option>
                 <option value={SortOption.RANDOM}>Random</option>
               </select>
+            </div>
+            <div className="playlist-search-controls">
+              <form className="search-bar" onSubmit={this.handleSearchSubmit}>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search playlists"
+                  value={searchTerm}
+                  onChange={(e) =>
+                    this.setState({ searchTerm: e.target.value })
+                  }
+                />
+                <button type="submit" disabled={isSearching}>
+                  <FontAwesomeIcon icon={faMagnifyingGlass as IconProp} />
+                </button>
+              </form>
             </div>
             {this.isCurrentUserPage() && (
               <div className="dropdown">
