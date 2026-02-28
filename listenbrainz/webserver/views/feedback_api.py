@@ -6,7 +6,8 @@ import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 from listenbrainz.db.model.feedback import Feedback
 
-from listenbrainz.domain import lastfm
+from listenbrainz.domain.lastfm import LastfmService
+from listenbrainz.domain.librefm import LibrefmService
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APINotFound, APIBadRequest
@@ -309,10 +310,15 @@ def import_feedback():
     if "service" not in data:
         raise APIBadRequest("missing service")
     if "user_name" not in data:
-        raise APIBadRequest("missing last.fm user name")
+        raise APIBadRequest("missing user name")
 
     if data["service"] == "lastfm":
-        counts = lastfm.import_feedback(user["id"], data["user_name"])
-        return jsonify(counts)
+        service = LastfmService()
+    elif data["service"] == "librefm":
+        service = LibrefmService()
+    else:
+        raise APIBadRequest(f"Service {data['service']} is not supported for feedback import.")
 
-    return APIBadRequest(f"Service {data['service']} is not supported for feedback import.")
+    counts = service.import_feedback(user["id"], data["user_name"])
+
+    return jsonify(counts)
