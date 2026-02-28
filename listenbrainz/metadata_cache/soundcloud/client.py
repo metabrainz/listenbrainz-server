@@ -15,7 +15,7 @@ class SoundCloud:
         retry_strategy = Retry(
             total=3,
             status_forcelist=[429, 500, 502, 503, 504],
-            method_whitelist=["HEAD", "GET", "OPTIONS"]
+            allowed_methods=["HEAD", "GET", "OPTIONS"]
         )
         adapter = HTTPAdapter(max_retries=retry_strategy)
         http = requests.Session()
@@ -31,7 +31,7 @@ class SoundCloud:
     def get(self, url, params=None):
         with self._get_requests_session() as http:
             for _ in range(self.retries):
-                response = http.get(url, params=params, headers={"Authorization": f"OAuth {self.developer_token}"})
+                response = http.get(url, params=params, headers={"Authorization": f"Bearer {self.developer_token}"})
                 if response.status_code == 200:
                     return response.json()
 
