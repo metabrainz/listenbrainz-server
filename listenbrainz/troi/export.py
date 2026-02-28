@@ -44,8 +44,11 @@ def export_to_apple_music(lb_token, apple_music_token, music_user_token, is_publ
     playlist = patch.generate_playlist()
     metadata = playlist.playlists[0].additional_metadata
     if not metadata:
-        raise Exception("Failed to export playlist to Apple Music")
-    return metadata["external_urls"]["apple_music"]
+        raise Exception("Failed to export playlist to Apple Music: no metadata returned.")
+    try:
+        return metadata["external_urls"]["apple_music"]
+    except KeyError as e:
+        raise Exception(f"Failed to export playlist to Apple Music: missing key {e} in response.") from e
 
 
 def export_to_soundcloud(lb_token, soundcloud_token, is_public, playlist_mbid=None, jspf=None):
