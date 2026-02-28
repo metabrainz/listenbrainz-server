@@ -99,12 +99,12 @@ class BaseLastfmImporter(ListensImporter):
                 raise LastfmUserNotRetryableException("Last.FM user with username %s not found" % (params["user"],))
             case 429:
                 raise ExternalServiceError("Encountered a rate limit.")
-            case 400:
+            case 400 | 403:
                 # Check for error 17 (privacy mode enabled)
                 data = response.json()
                 if "error" in data and data.get("error") == 17:
                     raise LastfmUserNotRetryableException(
-                        "Please disable privacy mode in the settings on your Last.fm account to allows importing listens."
+                        "Please disable privacy mode in the settings of your Last.fm account to allow importing listens."
                     )
                 raise ExternalServiceAPIError("Error from the API while getting listens: %s" % response.text)
             case _:
@@ -176,12 +176,18 @@ class BaseLastfmImporter(ListensImporter):
             return imported_listen_count
         except LastfmUserNotRetryableException as e:
             self.service.update_user_import_status(user_id=user["user_id"], error=str(e), retry=False)
+            listens_importer.update_status(
+                db_conn, user["user_id"], self.service.service, "Error", initial_imported_listens
+            )
             if not current_app.config["TESTING"]:
                 self.notify_error(user["musicbrainz_id"], str(e))
             raise e
         except ExternalServiceAPIError as e:
             # if it is an error from the Spotify API, show the error message to the user
             self.service.update_user_import_status(user_id=user["user_id"], error=str(e))
+            listens_importer.update_status(
+                db_conn, user["user_id"], self.service.service, "Error", initial_imported_listens
+            )
             if not current_app.config["TESTING"]:
                 self.notify_error(user["musicbrainz_id"], str(e))
             raise e

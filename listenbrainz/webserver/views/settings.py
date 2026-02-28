@@ -28,7 +28,7 @@ from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIO
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError, \
-    APIBadRequest
+    APIBadRequest, APIUnauthorized
 from listenbrainz.webserver.login import api_login_required
 from listenbrainz.domain.funkwhale import FunkwhaleService
 from listenbrainz.domain.navidrome import NavidromeService
@@ -471,6 +471,14 @@ def music_services_connect(service_name: str):
     response = requests_session.get(api_base_url, params=params)
     if response.status_code == 404:
         raise APINotFound(f"User with username '{data['external_user_id']}' not found for service {service_name.capitalize()}.")
+    
+    response_data = response.json()
+    if response.status_code != 200:
+        if service_name.lower() == "lastfm" and "error" in response_data and response_data.get("error") == 17:
+            raise APIUnauthorized(
+                "Please disable privacy mode in the settings of your Last.fm account to allow importing listens."
+            )
+        raise APIServiceUnavailable(f"Error from the {service_name.capitalize()} API while verifying user: {response.text}")
 
     service.add_new_user(current_user.id, {
         "external_user_id": data["external_user_id"],
@@ -479,8 +487,7 @@ def music_services_connect(service_name: str):
 
     total_listens = 0
     try:
-        lfm_data = response.json()
-        total_listens = int(lfm_data["recenttracks"]["@attr"]["total"])
+        total_listens = int(response_data["recenttracks"]["@attr"]["total"])
     except Exception:
         current_app.logger.error(f"Unable to fetch {service_name} user data:", exc_info=True)
 

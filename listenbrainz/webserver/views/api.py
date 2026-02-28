@@ -357,6 +357,10 @@ def latest_import():
                 "state": "a short string denoting the state of the import",
                 "count": "the number of listens that have been imported for the user by the importer",
             },
+            "error": {
+                "retry": boolean,
+                "message": "Optional error message from the import service"
+            }
         }
 
     :param user_name: the MusicBrainz ID of the user whose data is needed
@@ -390,7 +394,8 @@ def latest_import():
         return jsonify({
             "musicbrainz_id": user["musicbrainz_id"],
             "latest_import": status["latest_listened_at"],
-            "status": status["status"]
+            "status": status["status"],
+            "error": status.get("error", None),
         })
     elif request.method == 'POST':
         user = validate_auth_header()
