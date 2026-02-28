@@ -768,9 +768,25 @@ declare type BrainzPlayerSettings = {
   >;
 };
 
+declare type SubmissionFilterCondition = {
+  field: string;
+  operator: string;
+  value: string;
+};
+
+declare type SubmissionFilter = {
+  action: string;
+  conditions: Array<SubmissionFilterCondition>;
+};
+
+declare type SubmissionFiltersSettings = {
+  filters: Array<SubmissionFilter>;
+};
+
 declare type UserPreferences = {
   saveData?: boolean;
   brainzplayer?: BrainzPlayerSettings;
+  submission_filters?: SubmissionFiltersSettings;
 };
 
 declare type FeedbackForUserForRecordingsRequestBody = {
