@@ -3,6 +3,7 @@ import {
   faPlusCircle,
   faUsers,
   faFileImport,
+  faCompactDisc,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faSpotify,
@@ -28,6 +29,7 @@ import ImportPlaylistModal from "./components/ImportJSPFPlaylistModal";
 import ImportSpotifyPlaylistModal from "./components/ImportSpotifyPlaylistModal";
 import ImportAppleMusicPlaylistModal from "./components/ImportAppleMusicPlaylistModal";
 import ImportSoundCloudPlaylistModal from "./components/ImportSoundCloudPlaylistModal";
+import ImportMusicBrainzCollectionModal from "./components/ImportMusicBrainzCollectionModal";
 import PlaylistsList from "./components/PlaylistsList";
 import {
   getPlaylistExtension,
@@ -414,6 +416,20 @@ export default class UserPlaylists extends React.Component<
                   >
                     <FontAwesomeIcon icon={faSoundcloud} />
                     &nbsp;SoundCloud
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      NiceModal.show<JSPFPlaylist[], any>(
+                        ImportMusicBrainzCollectionModal
+                      ).then((newPlaylists) => {
+                        newPlaylists.forEach(this.onPlaylistCreated);
+                      });
+                    }}
+                    className="dropdown-item"
+                  >
+                    <FontAwesomeIcon icon={faCompactDisc} />
+                    &nbsp;MB Collection
                   </button>
                   <button
                     type="button"

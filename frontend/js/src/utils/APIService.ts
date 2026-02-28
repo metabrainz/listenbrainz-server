@@ -1574,6 +1574,35 @@ export default class APIService {
     return response.json();
   };
 
+  importMBCollections = async (userToken?: string): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/import/musicbrainz`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  importMBCollectionTracks = async (
+    userToken: string,
+    collectionId: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/musicbrainz/${collectionId}/import`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   lookupMBRecording = async (
     recordingMBID: string,
     inc = "artists"
