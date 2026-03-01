@@ -282,7 +282,8 @@ export default class UserPlaylists extends React.Component<
         searchPageCount: pageCount,
       },
       () => {
-        this.setSortOption(sortBy || initialSort);
+        const activeSort = sortBy || initialSort;
+        this.setSortOption(activeSort);
       }
     );
   };
@@ -308,7 +309,8 @@ export default class UserPlaylists extends React.Component<
       },
       () => {
         // Use the current sort if it exists otherwise use default
-        this.setSortOption(sortBy || initialSort);
+        const activeSort = sortBy || initialSort;
+        this.setSortOption(activeSort);
       }
     );
   };
