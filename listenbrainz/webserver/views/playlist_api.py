@@ -28,6 +28,8 @@ from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritableP
     PLAYLIST_EXTENSION_URI, PLAYLIST_TRACK_URI_PREFIX, PLAYLIST_URI_PREFIX, PLAYLIST_TRACK_EXTENSION_URI, \
     PLAYLIST_ARTIST_URI_PREFIX, PLAYLIST_RELEASE_URI_PREFIX
 from listenbrainz.webserver.views.api import serialize_playlists
+from brainzutils.musicbrainz_db import engine as mb_engine
+import listenbrainz.db.mb_collection as db_mb_collection
 
 playlist_api_bp = Blueprint('playlist_api_v1', __name__)
 
@@ -1069,6 +1071,111 @@ def import_tracks_from_soundcloud_playlist(playlist_id):
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
 
+
+@playlist_api_bp.get("/import/musicbrainz")
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def import_musicbrainz_collections():
+    """
+
+    Import the user's MusicBrainz recording collections.
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: collections fetched.
+    :statuscode 400: MusicBrainz database is not configured.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+
+    editor_id = user.get("musicbrainz_row_id")
+    if not editor_id:
+        raise APIBadRequest("Your account is not linked to a MusicBrainz. Please log in again.")
+
+    try:
+        with mb_engine.connect() as mb_connection:
+            collections = db_mb_collection.get_recording_collections_for_editor(mb_connection, editor_id)
+        return jsonify(collections)
+    except Exception as e:
+        current_app.logger.error("Error while fetching MusicBrainz collections: %s", e, exc_info=True)
+        raise APIInternalServerError("Failed to fetch MusicBrainz collections. Please try again.")
+
+
+@playlist_api_bp.get("/musicbrainz/<collection_mbid>/import")
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def import_musicbrainz_collection(collection_mbid):
+    """
+
+    Import a MusicBrainz recording collection and convert it to a JSPF playlist.
+
+    :reqheader Authorization: Token <user token>
+    :param collection_mbid: The MusicBrainz collection MBID to import.
+    :statuscode 200: playlist created.
+    :statuscode 400: invalid request. See error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 403: forbidden. The user is not allowed to import this collection.
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+
+    if not is_valid_uuid(collection_mbid):
+        log_raise_400("Provided collection MBID is invalid.")
+
+    editor_id = user.get("musicbrainz_row_id")
+    if not editor_id:
+        raise APIBadRequest("Your account is not linked to a MusicBrainz. Please log in again.")
+
+    try:
+        with mb_engine.connect() as mb_connection:
+            collection = db_mb_collection.get_collection_metadata(mb_connection, collection_mbid)
+            if collection is None:
+                log_raise_400("Collection not found or is not a recording collection.")
+
+            if not collection["public"] and collection["editor_id"] != editor_id:
+                raise APIForbidden("You are not allowed to import this private collection.")
+
+            recording_mbids = db_mb_collection.get_collection_recordings(mb_connection, collection_mbid)
+
+        if not recording_mbids:
+            log_raise_400("The collection has no recordings to import.")
+
+        playlist = WritablePlaylist(
+            name=collection["name"],
+            creator_id=user["id"],
+            description=collection.get("description") or None,
+            public=collection["public"],
+        )
+
+        first_batch = recording_mbids[:MAX_RECORDINGS_PER_ADD]
+        for mbid in first_batch:
+            playlist.recordings.append(
+                WritablePlaylistRecording(mbid=UUID(mbid), added_by_id=user["id"])
+            )
+
+        playlist = db_playlist.create(db_conn, ts_conn, playlist)
+
+        remaining = recording_mbids[MAX_RECORDINGS_PER_ADD:]
+        while remaining:
+            batch = remaining[:MAX_RECORDINGS_PER_ADD]
+            remaining = remaining[MAX_RECORDINGS_PER_ADD:]
+            batch_recordings = [
+                WritablePlaylistRecording(mbid=UUID(mbid), added_by_id=user["id"])
+                for mbid in batch
+            ]
+            db_playlist.add_recordings_to_playlist(db_conn, ts_conn, playlist, batch_recordings, None)
+
+        full_playlist = db_playlist.get_by_mbid(db_conn, ts_conn, str(playlist.mbid), load_recordings=True)
+        fetch_playlist_recording_metadata(full_playlist)
+        return jsonify(full_playlist.serialize_jspf())
+
+    except (APIBadRequest, APIForbidden):
+        raise
+    except Exception as e:
+        current_app.logger.error("Error while importing MusicBrainz collection: %s", e, exc_info=True)
+        raise APIInternalServerError("Failed to import MusicBrainz collection. Please try again.")
 
 @playlist_api_bp.post("/export-jspf/<service>")
 @crossdomain
