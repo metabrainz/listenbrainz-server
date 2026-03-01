@@ -66,6 +66,7 @@ class Listen(object):
         'origin_url',
         'music_service',
         'music_service_name',
+        'label',
     )
 
     TOP_LEVEL_KEYS = (
