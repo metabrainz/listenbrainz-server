@@ -36,7 +36,9 @@ SPOTIFY_LISTEN_PERMISSIONS = {
 
 SPOTIFY_PLAYLIST_PERMISSIONS = {
     'playlist-modify-public',
-    'playlist-modify-private'
+    'playlist-modify-private',
+    'playlist-read-private',
+    'playlist-read-collaborative',
 }
 
 SPOTIFY_API_RETRIES = 5

@@ -29,15 +29,11 @@ class MusicBrainzService(BaseBrainzService):
         )
 
     def get_user_info(self, token: str):
-        response = requests.post(
+        response = requests.get(
             current_app.config["OAUTH_INTROSPECTION_URL"],
-            data={
-                "client_id": current_app.config["OAUTH_CLIENT_ID"],
-                "client_secret": current_app.config["OAUTH_CLIENT_SECRET"],
-                "token": token,
-                "token_type_hint": "access_token",
+            headers={
+                "Authorization": f"Bearer {token}",
             },
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
         response.raise_for_status()
         return response.json()
