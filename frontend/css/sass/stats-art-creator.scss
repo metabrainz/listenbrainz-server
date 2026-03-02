@@ -358,36 +358,54 @@ $color-selector-size: 24px;
 .artwork-container {
     width: 100%;
     max-width: 100%;
-    overflow-x: hidden;
-    word-wrap: break-word; 
-    overflow-wrap: break-word; 
-    word-break: break-word; 
+    box-sizing: border-box;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
     hyphens: auto; 
 }
 
 
+.artwork-container * {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+
 .artwork-container p,
+.artwork-container span,
+.artwork-container div,
+.artwork-container a,
 .artwork-container h1,
 .artwork-container h2,
 .artwork-container h3,
-.artwork-container span,
-.artwork-container div {
-    max-width: 100%;
+.artwork-container li {
     white-space: normal; 
     overflow-wrap: break-word;
-}
-
-.artwork-container .artist-name, 
-.artwork-container .song-title {
-    white-space: normal;
-    overflow-wrap: break-word;
+    word-wrap: break-word;
     word-break: break-word;
-    max-width: 100%;
 }
 
 
-.artwork-container pre {
-    white-space: pre-wrap;
+.artwork-container a {
+    display: inline-block; 
     max-width: 100%;
-    overflow-x: auto; 
+    overflow: visible;
+}
+
+
+.artwork-container {
+    overflow-x: visible; 
+}
+
+
+body {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+}
+
+html {
+    overflow-x: hidden;
+    max-width: 100%;
 }
