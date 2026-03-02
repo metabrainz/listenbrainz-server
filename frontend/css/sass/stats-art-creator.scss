@@ -353,3 +353,41 @@ $color-selector-size: 24px;
     }
   }
 }
+
+/* Fix for the artwork container */
+.artwork-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    word-wrap: break-word; 
+    overflow-wrap: break-word; 
+    word-break: break-word; 
+    hyphens: auto; 
+}
+
+
+.artwork-container p,
+.artwork-container h1,
+.artwork-container h2,
+.artwork-container h3,
+.artwork-container span,
+.artwork-container div {
+    max-width: 100%;
+    white-space: normal; 
+    overflow-wrap: break-word;
+}
+
+.artwork-container .artist-name, 
+.artwork-container .song-title {
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+}
+
+
+.artwork-container pre {
+    white-space: pre-wrap;
+    max-width: 100%;
+    overflow-x: auto; 
+}
