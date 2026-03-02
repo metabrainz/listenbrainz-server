@@ -360,7 +360,7 @@ $color-selector-size: 24px;
   box-sizing: border-box;
   overflow-wrap: break-word;
   word-wrap: break-word;
-  word-break: break-word;
+  word-break: normal;
   hyphens: auto;
 }
 
@@ -369,7 +369,7 @@ $color-selector-size: 24px;
   box-sizing: border-box;
   white-space: normal;
   overflow-wrap: break-word;
-  word-break: break-word;
+  word-break: normal;
 }
 
 .artwork-container a {
