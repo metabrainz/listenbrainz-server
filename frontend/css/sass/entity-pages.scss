@@ -201,10 +201,11 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
         .album-grid-outer {
           // Outer wrapper for overflow detection and height constraint
           position: relative;
-          // Height = (190px card height × 2) + (1.5em gap) + (0.5em hint)
-          // 190px ≈ 11.875em at 16px base font
-          // Total = (11.875em × 2) + 1.5em + 0.5em = 25.75em
-          max-height: 25.75em; // Exactly 2 rows + gap + hint of third row
+          // Measured in browser at 14px root font:
+          // Card height ≈ 215px (~15.35em), gap = 21px (1.5em)
+          // 2 rows + gap + partial 3rd-row hint ≈ 33.5em
+          // Set to 25.75em to show ~1.5 rows; increase to 35em for 2 full rows + hint
+          max-height: 25.75em; // 2 rows visible — tune to 35em if fuller rows needed
           overflow: hidden; // vertical overflow clipped
           
           // Bottom gradient overlay to hint at more content

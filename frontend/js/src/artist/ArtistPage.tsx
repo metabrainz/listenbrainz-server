@@ -565,7 +565,7 @@ export default function ArtistPage(): JSX.Element {
           {releaseGroupTypesNames.map(([type, rgGroup]) => {
             const gridKey = `album-grid-${type}`;
             return (
-              <div className="albums">
+              <div className="albums" key={type}>
                 <div className="listen-header">
                   <h3 className="header-with-line">{type}</h3>
                   <SortingButtons sort={sort} setSort={setSort} />
@@ -577,6 +577,8 @@ export default function ArtistPage(): JSX.Element {
                   ref={(el: HTMLDivElement | null) => {
                     if (el) {
                       albumGridRefs.current[gridKey] = el;
+                    } else {
+                      delete albumGridRefs.current[gridKey];
                     }
                   }}
                 >
