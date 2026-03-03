@@ -112,8 +112,14 @@ def import_data():
     else:
         user_has_email = True
 
+    pg_timezones = db_usersetting.get_pg_timezone(db_conn)
+    user_settings = db_usersetting.get(db_conn, current_user.id)
+    user_timezone = user_settings['timezone_name']
+
     data = {
         "user_has_email": user_has_email,
+        "pg_timezones": pg_timezones,
+        "user_timezone": user_timezone,
     }
 
     return jsonify(data)

@@ -38,7 +38,7 @@ CREATE TABLE deleted_user_listen_history (
 
 CREATE TABLE playlist.playlist (
     id serial,
-    mbid uuid not null default uuid_generate_v4(),
+    mbid uuid not null default gen_random_uuid(),
     creator_id int not null, -- int, but not an fk because it's in the wrong database
     name text not null,
     description text,
@@ -105,18 +105,24 @@ CREATE TABLE mapping.mb_metadata_cache (
     dirty               BOOLEAN DEFAULT FALSE,
     last_updated        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     recording_mbid      UUID NOT NULL,
+    recording_id        INTEGER NOT NULL,
     artist_mbids        UUID[] NOT NULL,
+    artist_ids          INTEGER[] NOT NULL,
     release_mbid        UUID,
+    release_id          INTEGER,
     recording_data      JSONB NOT NULL,
     artist_data         JSONB NOT NULL,
     tag_data            JSONB NOT NULL,
     release_data        JSONB NOT NULL
 );
 
--- postgres does not enforce dimensionality of arrays. add explicit check to avoid regressions (once burnt, twice shy!).
 ALTER TABLE mapping.mb_metadata_cache
-    ADD CONSTRAINT mb_metadata_cache_artist_mbids_check
-    CHECK ( array_ndims(artist_mbids) = 1 );
+        ADD CONSTRAINT mb_metadata_cache_artist_mbids_check
+        CHECK ( array_ndims(artist_mbids) = 1 );
+
+ALTER TABLE mapping.mb_metadata_cache
+        ADD CONSTRAINT mb_metadata_cache_artist_ids_check
+        CHECK ( array_ndims(artist_ids) = 1 );
 
 CREATE TABLE mapping.mb_release_group_cache (
     dirty                   BOOLEAN DEFAULT FALSE,

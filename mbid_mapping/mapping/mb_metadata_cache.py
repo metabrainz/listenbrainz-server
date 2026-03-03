@@ -30,8 +30,11 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
         return [("dirty ",                     "BOOLEAN DEFAULT FALSE"),
                 ("last_updated",               "TIMESTAMPTZ NOT NULL DEFAULT NOW()"),
                 ("recording_mbid ",            "UUID NOT NULL"),
+                ("recording_id ",              "INTEGER NOT NULL"),
                 ("artist_mbids ",              "UUID[] NOT NULL"),
+                ("artist_ids ",                "INTEGER[] NOT NULL"),
                 ("release_mbid ",              "UUID"),
+                ("release_id ",                "INTEGER"),
                 ("recording_data ",            "JSONB NOT NULL"),
                 ("artist_data ",               "JSONB NOT NULL"),
                 ("tag_data ",                  "JSONB NOT NULL"),
@@ -49,12 +52,17 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
         return ["""
             ALTER TABLE mapping.mb_metadata_cache_tmp
             ADD CONSTRAINT mb_metadata_cache_artist_mbids_check_tmp
-                    CHECK ( array_ndims(artist_mbids) = 1 )
+                    CHECK ( array_ndims(artist_mbids) = 1 );
+            ALTER TABLE mapping.mb_metadata_cache_tmp
+            ADD CONSTRAINT mb_metadata_cache_artist_ids_check_tmp
+                    CHECK ( array_ndims(artist_ids) = 1 )
         """]
 
     def get_index_names(self):
         return [("mb_metadata_cache_idx_recording_mbid", "recording_mbid",          True),
+                ("mb_metadata_cache_idx_recording_id",   "recording_id",            True),
                 ("mb_metadata_cache_idx_artist_mbids",   "USING gin(artist_mbids)", False),
+                ("mb_metadata_cache_idx_artist_ids",     "USING gin(artist_ids)",   False),
                 ("mb_metadata_cache_idx_dirty",          "dirty",                   False)]
 
     def process_row(self, row):
@@ -87,7 +95,8 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
         }
         artists_rels = []
         artist_mbids = []
-        for mbid, ac_name, ac_jp, begin_year, end_year, artist_type, gender, area, rels in row["artist_data"]:
+        artist_ids = []
+        for mbid, artist_id, ac_name, ac_jp, begin_year, end_year, artist_type, gender, area, rels in row["artist_data"]:
             data = {
                 "name": ac_name,
                 "join_phrase": ac_jp
@@ -112,6 +121,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                 data["gender"] = gender
             artists_rels.append(data)
             artist_mbids.append(uuid.UUID(mbid))
+            artist_ids.append(artist_id)
 
         artist["artists"] = artists_rels
 
@@ -161,8 +171,11 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
             recording["length"] = row["length"]
 
         return (row["recording_mbid"],
+                row["recording_id"],
                 artist_mbids,
+                artist_ids,
                 row["release_mbid"],
+                row["release_id"],
                 ujson.dumps(recording),
                 ujson.dumps(artist),
                 ujson.dumps({"recording": recording_tags, "artist": artist_tags, "release_group": release_group_tags}),
@@ -222,6 +235,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                  , jsonb_agg(
                                     jsonb_build_array(
                                         a.gid
+                                      , a.id
                                       , acn.name
                                       , acn.join_phrase
                                       , a.begin_date_year
@@ -337,6 +351,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                    ), release_data AS (
                             SELECT r.gid AS recording_mbid
                                  , rel.name
+                                 , rel.id AS release_id
                                  , rac.name AS album_artist_name
                                  , rg.gid AS release_group_mbid
                                  , crrr.release_mbid::TEXT
@@ -375,7 +390,9 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                  , rd.release_group_mbid::TEXT
                                  , r.length
                                  , r.gid::TEXT AS recording_mbid
+                                 , r.id AS recording_id
                                  , rd.release_mbid::TEXT
+                                 , rd.release_id
                                  , rd.album_artist_name
                                  , rd.caa_id
                                  , rd.caa_release_mbid
@@ -401,6 +418,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                 ON rd.recording_mbid = r.gid
                               {values_join}
                           GROUP BY r.gid
+                                 , r.id
                                  , r.name
                                  , r.artist_credit
                                  , ac.name
@@ -416,6 +434,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                  , artist_data
                                  , artist_tags
                                  , rd.release_mbid
+                                 , rd.release_id
                                  , rd.album_artist_name
                                  , rd.caa_id
                                  , rd.caa_release_mbid

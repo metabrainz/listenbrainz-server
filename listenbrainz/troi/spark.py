@@ -142,9 +142,10 @@ def exclude_playlists_from_deleted_users(slug, jam_name, all_playlists):
     return playlists, playlists_to_export
 
 
-def batch_process_playlists(all_playlists, playlists_to_export):
+def batch_process_playlists(all_playlists, playlists_to_export, do_export_to_spotify=True):
     """ Insert the playlists generated in batch by spark """
-    export_to_spotify(playlists_to_export)
+    if do_export_to_spotify:
+        export_to_spotify(playlists_to_export)
 
     conn = timescale.engine.raw_connection()
     try:

@@ -36,10 +36,13 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
     def insert_metadata(self):
         query = """
             INSERT INTO mapping.mb_metadata_cache
-                       (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
+                       (recording_mbid, recording_id, artist_mbids, artist_ids, release_mbid, release_id, recording_data, artist_data, tag_data, release_data, dirty)
                 VALUES ('34c208ee-2de7-4d38-b47e-907074866dd3'
+                      , 1
                       , '{4a779683-5404-4b90-a0d7-242495158265}'::UUID[]
+                      , '{1}'::INTEGER[]
                       , '1390f1b7-7851-48ae-983d-eb8a48f78048'
+                      , 1
                       , '{"name": "52 Bars", "rels": [], "length": 214024}'
                       , '{"name": "Karan Aujla", "artists": [{"area": "Punjab", "name": "Karan Aujla", "rels": {"wikidata": "https://www.wikidata.org/wiki/Q58008320", "social network": "https://www.instagram.com/karanaujla_official/"}, "type": "Person", "gender": "Male", "begin_year": 1997, "join_phrase": ""}], "artist_credit_id": 2892477}'
                       , '{"artist": [], "recording": [], "release_group": []}'

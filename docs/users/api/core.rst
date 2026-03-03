@@ -68,3 +68,4 @@ Constants that are relevant to using the API:
 .. autodata:: listenbrainz.webserver.views.api_tools.MAX_TAGS_PER_LISTEN
 .. autodata:: listenbrainz.webserver.views.api_tools.MAX_TAG_SIZE
 .. autodata:: listenbrainz.listenstore.LISTEN_MINIMUM_TS
+.. autodata:: listenbrainz.db.model.pinned_recording.DAYS_UNTIL_UNPIN

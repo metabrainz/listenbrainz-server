@@ -353,13 +353,14 @@ const removeFeaturingArtists = (artistName: string): string => {
 const performNavidromeSearch = async (
   instanceURL: string,
   authParams: string,
-  query: string
+  query: string,
+  signal?: AbortSignal
 ): Promise<NavidromeTrack | null> => {
   const searchUrl = `${instanceURL}/rest/search3?query=${encodeURIComponent(
     query
   )}&songCount=1&${authParams}`;
 
-  const response = await fetch(searchUrl);
+  const response = await fetch(searchUrl, { signal });
 
   if (!response.ok) {
     let errorBody: any = {};
@@ -392,7 +393,8 @@ const searchForNavidromeTrack = async (
   instanceURL: string,
   authParams: string,
   trackName?: string,
-  artistName?: string
+  artistName?: string,
+  signal?: AbortSignal
 ): Promise<NavidromeTrack | null> => {
   if (!instanceURL || !authParams) {
     throw new Error(
@@ -410,7 +412,8 @@ const searchForNavidromeTrack = async (
     const result = await performNavidromeSearch(
       instanceURL,
       authParams,
-      fullQuery
+      fullQuery,
+      signal
     );
     if (result) {
       return result;
@@ -422,7 +425,8 @@ const searchForNavidromeTrack = async (
     const fallbackResult = await performNavidromeSearch(
       instanceURL,
       authParams,
-      cleanedQuery
+      cleanedQuery,
+      signal
     );
     if (fallbackResult) {
       return fallbackResult;
@@ -430,6 +434,11 @@ const searchForNavidromeTrack = async (
 
     return null;
   } catch (error) {
+    // Allow AbortError to pass through for caller to handle
+    if (error.name === "AbortError") {
+      throw error;
+    }
+
     if (
       error.message ===
         "Missing Navidrome instance URL or authentication parameters" ||
@@ -1163,27 +1172,51 @@ const getAlbumArtFromReleaseMBID = async (
   return undefined;
 };
 
+const fetchSpotifyTrackInfo = async (
+  spotifyTrackId: string,
+  accessToken: string
+): Promise<Response | undefined> => {
+  try {
+    return await fetch(`https://api.spotify.com/v1/tracks/${spotifyTrackId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+  } catch (error) {
+    return undefined;
+  }
+};
+
 const getAlbumArtFromSpotifyTrackID = async (
   spotifyTrackID: string,
   spotifyUser?: SpotifyUser
 ): Promise<string | undefined> => {
-  const APIBaseURI = "https://api.spotify.com/v1";
   if (!spotifyUser || !spotifyTrackID) {
     return undefined;
   }
-  try {
-    const response = await fetch(`${APIBaseURI}/tracks/${spotifyTrackID}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${spotifyUser?.access_token}`,
-      },
-    });
-    if (response.ok) {
+  let response = await fetchSpotifyTrackInfo(
+    spotifyTrackID,
+    spotifyUser.access_token!!
+  );
+  if (response?.status === 401) {
+    try {
+      const newToken = await APIServiceInstance.refreshSpotifyToken();
+      if (newToken) {
+        response = await fetchSpotifyTrackInfo(spotifyTrackID, newToken);
+      }
+    } catch (error) {
+      return undefined;
+    }
+  }
+
+  if (response?.ok) {
+    try {
       const track: SpotifyTrack = await response.json();
       return track.album?.images?.[0]?.url;
+    } catch (error) {
+      return undefined;
     }
-  } catch (error) {
-    return undefined;
   }
   return undefined;
 };
@@ -1225,7 +1258,13 @@ const getAlbumArtFromListenMetadata = async (
     SpotifyPlayer.hasPermissions(spotifyUser)
   ) {
     const trackID = SpotifyPlayer.getSpotifyTrackIDFromListen(listen);
-    return getAlbumArtFromSpotifyTrackID(trackID, spotifyUser);
+    const spotifyAlbumArt = await getAlbumArtFromSpotifyTrackID(
+      trackID,
+      spotifyUser
+    );
+    if (spotifyAlbumArt) {
+      return spotifyAlbumArt;
+    }
   }
   /** Could not load image from music service, fetching from CoverArtArchive if MBID is available */
   // directly access additional_info.release_mbid instead of using getReleaseMBID because we only want

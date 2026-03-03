@@ -17,9 +17,10 @@ logger = logging.getLogger(__name__)
 class ArtistEvolutionActivitySitewideStatsQuery(SitewideStatsQueryProvider):
     """ Sitewide stats query provider for artist evolution - aggregates artist listening patterns by time units across all users. """
 
-    def __init__(self, selector: ListenRangeSelector):
+    def __init__(self, selector: ListenRangeSelector, top_n: int):
         super().__init__(selector)
         self.stats_range = selector.stats_range
+        self.top_n = top_n
 
     @property
     def entity(self):
@@ -82,18 +83,33 @@ class ArtistEvolutionActivitySitewideStatsQuery(SitewideStatsQueryProvider):
 
     def get_stats_query(self, final_aggregate):
         return f"""
-             SELECT sort_array(
-                       collect_list(
-                            struct(
-                                  time_unit
-                                , artist_mbid
-                                , artist_name
-                                , listen_count
-                            )
-                        ), false
-                    ) AS artist_evolution_activity
-               FROM {final_aggregate}
-        """
+               WITH total_artist_listens AS (
+                     SELECT artist_mbid
+                          , artist_name
+                          , SUM(listen_count) AS total_listens
+                       FROM {final_aggregate}
+                   GROUP BY artist_mbid, artist_name
+                ), top_artists AS (
+                     SELECT artist_mbid
+                          , artist_name
+                       FROM total_artist_listens
+                   ORDER BY total_listens DESC
+                      LIMIT {self.top_n}
+                )    SELECT sort_array(
+                                  collect_list(
+                                       struct(
+                                             f.time_unit
+                                           , f.artist_mbid
+                                           , f.artist_name
+                                           , f.listen_count
+                                       )
+                                   ), false
+                            ) AS artist_evolution_activity
+                       FROM {final_aggregate} f
+                       JOIN top_artists ta
+                         ON (f.artist_mbid = ta.artist_mbid OR (f.artist_mbid IS NULL AND ta.artist_mbid IS NULL))
+                        AND f.artist_name = ta.artist_name
+         """
 
 
 class ArtistEvolutionActivitySitewideMessageCreator(SitewideStatsMessageCreator):

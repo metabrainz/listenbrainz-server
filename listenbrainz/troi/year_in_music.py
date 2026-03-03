@@ -91,7 +91,7 @@ def insert_playlists_in_yim(slug, year, playlists, user_details):
     insert_heavy(f"playlist-{slug}-for-year", year, playlist_jsons)
 
 
-def process_yim_playlists(slug, year, playlists):
+def process_yim_playlists(slug, year, playlists, export_to_spotify):
     """ Generate playlists for a batch of users """
     if slug == "top-discoveries":
         playlist_name = "Top Discoveries of {year} for {user}"
@@ -140,7 +140,7 @@ def process_yim_playlists(slug, year, playlists):
         user_details,
         playlists
     )
-    batch_process_playlists(all_playlists, playlists_to_export)
+    batch_process_playlists(all_playlists, playlists_to_export, export_to_spotify)
     insert_playlists_in_yim(slug, year, all_playlists, user_details)
 
 

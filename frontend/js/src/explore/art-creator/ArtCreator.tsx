@@ -1,11 +1,14 @@
 import * as React from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { debounce, isEqual } from "lodash";
 import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import NiceModal from "@ebay/nice-modal-react";
 import { useSearchParams } from "react-router";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleXmark } from "@fortawesome/free-solid-svg-icons";
+import localforage from "localforage";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import ColorPicker from "./components/ColorPicker";
 import Gallery from "./components/Gallery";
@@ -17,6 +20,12 @@ import UserSearch from "../../common/UserSearch";
 import Sidebar from "../../components/Sidebar";
 import SyndicationFeedModal from "../../components/SyndicationFeedModal";
 import { getBaseUrl, getObjectForURLSearchParams } from "../../utils/utils";
+
+const colorPresetStore = localforage.createInstance({
+  name: "listenbrainz",
+  driver: [localforage.INDEXEDDB, localforage.LOCALSTORAGE],
+  storeName: "color-presets",
+});
 
 export enum TemplateNameEnum {
   designerTop5 = "designer-top-5",
@@ -40,6 +49,13 @@ export interface GridTemplateOption extends TemplateOption {
   type: "grid";
   defaultGridSize: number;
   defaultGridLayout: number;
+}
+
+export interface ColorPreset {
+  id: string;
+  textColor: string;
+  firstBgColor: string;
+  secondBgColor: string;
 }
 
 /* Fancy TypeScript to get a typed enum of object literals representing the options */
@@ -117,6 +133,39 @@ const coverArtGridOptions: CoverArtGridOptions[] = [
   { dimension: 5, layout: 1 },
 ];
 
+const hardCodedPresets: ColorPreset[] = [
+  {
+    id: "1",
+    textColor: "#e5cdc8",
+    firstBgColor: "#6b4078",
+    secondBgColor: "#33234c",
+  },
+  {
+    id: "2",
+    textColor: "#8a1515",
+    firstBgColor: "#ff2f6e",
+    secondBgColor: "#e8ff2c",
+  },
+  {
+    id: "3",
+    textColor: "#1f2170",
+    firstBgColor: "#786aba",
+    secondBgColor: "#ff0000",
+  },
+  {
+    id: "4",
+    textColor: "#dde2bb",
+    firstBgColor: "#083023",
+    secondBgColor: "#0fc26c",
+  },
+  {
+    id: "5",
+    textColor: "#006d39",
+    firstBgColor: "#ffffff",
+    secondBgColor: "#006d39",
+  },
+];
+
 // enum FontNameEnum {
 //   "Roboto",
 //   "Integer",
@@ -173,7 +222,145 @@ export default function ArtCreator() {
   const [secondBgColor, setSecondBgColor] = useState<string>(
     defaultStyleOnLoad.defaultColors[2]
   );
+  const [customPresets, setCustomPresets] = useState<ColorPreset[]>([]);
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const previewSVGRef = React.useRef<SVGSVGElement>(null);
+
+  const applyPreset = async (presetId: string) => {
+    try {
+      setSelectedPreset(presetId);
+      await colorPresetStore.setItem("lb-art-selected-preset", presetId);
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Could not apply preset"
+          message={error?.message ?? String(error)}
+        />,
+        { toastId: "apply-preset-error" }
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedPreset) {
+      return;
+    }
+    const currentPreset = [...hardCodedPresets, ...customPresets].find(
+      (preset) => preset.id === selectedPreset
+    );
+    if (currentPreset) {
+      setTextColor(currentPreset.textColor);
+      setFirstBgColor(currentPreset.firstBgColor);
+      setSecondBgColor(currentPreset.secondBgColor);
+    }
+  }, [selectedPreset, customPresets]);
+
+  useEffect(() => {
+    const loadPresets = async () => {
+      try {
+        const [savedPresets, savedSelectedId] = await Promise.all([
+          colorPresetStore.getItem<ColorPreset[]>("lb-art-custom-presets"),
+          colorPresetStore.getItem<string>("lb-art-selected-preset"),
+        ]);
+        if (savedPresets) {
+          setCustomPresets(savedPresets);
+        }
+        if (savedSelectedId) {
+          const allCurrentPresets = [
+            ...hardCodedPresets,
+            ...(savedPresets || []),
+          ];
+          const currentPreset = allCurrentPresets.find(
+            (preset) => preset.id === savedSelectedId
+          );
+
+          if (currentPreset) {
+            setSelectedPreset(currentPreset.id);
+          }
+        }
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="Failed to load the preset"
+            message={error?.message ?? String(error)}
+          />,
+          { toastId: "load-preset-error" }
+        );
+      }
+    };
+
+    loadPresets();
+  }, []);
+
+  const saveCurrentPreset = async () => {
+    if (!textColor || !firstBgColor || !secondBgColor) {
+      toast.error("Please select all the colors before saving");
+      return;
+    }
+
+    const isDuplicate = [...hardCodedPresets, ...customPresets].some(
+      (preset: ColorPreset) =>
+        preset.textColor.toLowerCase() === textColor.toLowerCase() &&
+        preset.firstBgColor.toLowerCase() === firstBgColor.toLowerCase() &&
+        preset.secondBgColor.toLowerCase() === secondBgColor.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      toast.error("This preset already exists");
+      return;
+    }
+
+    const newPreset: ColorPreset = {
+      id: Date.now().toString(),
+      textColor,
+      firstBgColor,
+      secondBgColor,
+    };
+
+    try {
+      const updatedPresets = [...customPresets, newPreset];
+      await colorPresetStore.setItem("lb-art-custom-presets", updatedPresets);
+      setCustomPresets(updatedPresets);
+      toast.success(<ToastMsg title="Success" message="Preset saved" />, {
+        toastId: "save-preset-success",
+      });
+      await applyPreset(newPreset.id);
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Failed to save the preset"
+          message={error?.message ?? String(error)}
+        />,
+        { toastId: "save-preset-error" }
+      );
+    }
+  };
+
+  const deletePreset = async (presetId: string) => {
+    try {
+      const updatedPresets = customPresets.filter(
+        (preset) => preset.id !== presetId
+      );
+      await colorPresetStore.setItem("lb-art-custom-presets", updatedPresets);
+      setCustomPresets(updatedPresets);
+
+      toast.success(<ToastMsg title="Success" message="Preset deleted" />, {
+        toastId: "delete-preset-success",
+      });
+
+      if (selectedPreset === presetId) {
+        await applyPreset(hardCodedPresets[0].id);
+      }
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Failed to delete Preset"
+          message={error?.message ?? String(error)}
+        />,
+        { toastId: "delete-preset-error" }
+      );
+    }
+  };
 
   const updateStyleButtonCallback = useCallback(
     (name: TemplateNameEnum) => {
@@ -182,12 +369,6 @@ export default function ArtCreator() {
       if (selectedStyle.type === "grid") {
         setGridLayout((selectedStyle as GridTemplateOption).defaultGridLayout);
         setGridSize((selectedStyle as GridTemplateOption).defaultGridSize);
-      } else if (selectedStyle.type === "text") {
-        setTextColor((selectedStyle as TextTemplateOption).defaultColors[0]);
-        setFirstBgColor((selectedStyle as TextTemplateOption).defaultColors[1]);
-        setSecondBgColor(
-          (selectedStyle as TextTemplateOption).defaultColors[2]
-        );
       }
     },
     [updateSearchParam]
@@ -624,52 +805,52 @@ export default function ArtCreator() {
                     <label className="form-label" htmlFor="color-presets">
                       Color presets:
                     </label>
-                    <div className="color-picker-panel" id="color-presets">
-                      <ColorPicker
-                        firstColor="#6b4078"
-                        secondColor="#33234c"
-                        onClick={() => {
-                          setTextColor("#e5cdc8");
-                          setFirstBgColor("#6b4078");
-                          setSecondBgColor("#33234c");
-                        }}
-                      />
-                      <ColorPicker
-                        firstColor="#ff2f6e"
-                        secondColor="#e8ff2c"
-                        onClick={() => {
-                          setTextColor("#8a1515");
-                          setFirstBgColor("#ff2f6e");
-                          setSecondBgColor("#e8ff2c");
-                        }}
-                      />
-                      <ColorPicker
-                        firstColor="#786aba"
-                        secondColor="#ff0000"
-                        onClick={() => {
-                          setTextColor("#1f2170");
-                          setFirstBgColor("#786aba");
-                          setSecondBgColor("#ff0000");
-                        }}
-                      />
-                      <ColorPicker
-                        firstColor="#083023"
-                        secondColor="#0fc26c"
-                        onClick={() => {
-                          setTextColor("#dde2bb");
-                          setFirstBgColor("#083023");
-                          setSecondBgColor("#0fc26c");
-                        }}
-                      />
-                      <ColorPicker
-                        firstColor="#ffffff"
-                        secondColor="#006d39"
-                        onClick={() => {
-                          setTextColor("#006d39");
-                          setFirstBgColor("#ffffff");
-                          setSecondBgColor("#006d39");
-                        }}
-                      />
+                    <div className="color-presets-panel" id="color-presets">
+                      {hardCodedPresets.map((preset) => (
+                        <div
+                          key={preset.id}
+                          className={`color-preset-wrapper ${
+                            selectedPreset === preset.id
+                              ? "preset-selected"
+                              : ""
+                          }`}
+                        >
+                          <ColorPicker
+                            firstColor={preset.firstBgColor}
+                            secondColor={preset.secondBgColor}
+                            onClick={() => applyPreset(preset.id)}
+                          />
+                        </div>
+                      ))}
+
+                      {customPresets.map((preset) => (
+                        <div
+                          key={preset.id}
+                          className={`color-preset-wrapper ${
+                            selectedPreset === preset.id
+                              ? "preset-selected"
+                              : ""
+                          }`}
+                        >
+                          <ColorPicker
+                            firstColor={preset.firstBgColor}
+                            secondColor={preset.secondBgColor}
+                            onClick={() => applyPreset(preset.id)}
+                          />
+                          <button
+                            type="button"
+                            className="delete-preset-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deletePreset(preset.id);
+                            }}
+                            aria-label="Delete preset"
+                            title="Delete this preset"
+                          >
+                            <FontAwesomeIcon icon={faCircleXmark} />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   </div>
                   <div>
@@ -732,6 +913,13 @@ export default function ArtCreator() {
                       value={secondBgColor}
                     />
                   </div>
+                  <button
+                    type="button"
+                    className="btn btn-info w-100"
+                    onClick={saveCurrentPreset}
+                  >
+                    Save Preset
+                  </button>
                 </>
               )}
               {/* <div className="flex-center input-group">
