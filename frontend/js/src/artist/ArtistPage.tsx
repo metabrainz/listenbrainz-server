@@ -184,6 +184,40 @@ export default function ArtistPage(): JSX.Element {
     false
   );
 
+  // Track vertical overflow for each album grid
+  const [albumGridOverflow, setAlbumGridOverflow] = React.useState<
+    Record<string, boolean>
+  >({});
+  const albumGridRefs = React.useRef<Record<string, HTMLDivElement>>({});
+
+  // Check vertical overflow for album grids
+  const checkAlbumGridOverflow = React.useCallback(() => {
+    const newOverflowState: Record<string, boolean> = {};
+
+    Object.keys(albumGridRefs.current).forEach((key) => {
+      const el = albumGridRefs.current[key];
+      if (el) {
+        newOverflowState[key] = el.scrollHeight > el.clientHeight;
+      }
+    });
+
+    setAlbumGridOverflow(newOverflowState);
+  }, []);
+
+  // Set up resize observer to detect overflow changes
+  React.useEffect(() => {
+    const resizeObserver = new ResizeObserver(() => checkAlbumGridOverflow());
+
+    Object.values(albumGridRefs.current).forEach((el) => {
+      if (el) resizeObserver.observe(el);
+    });
+
+    // Initial check
+    checkAlbumGridOverflow();
+
+    return () => resizeObserver.disconnect();
+  }, [checkAlbumGridOverflow]); // Remove releaseGroups dependency to avoid re-creating observer
+
   // Sort by the more precise secondary type first to create categories like "Live", "Compilation" and "Remix" instead of
   // "Album + Live", "Single + Live", "EP + Live", "Broadcast + Live" and "Album + Remix", etc.
   const rgGroups = groupBy(
@@ -528,23 +562,37 @@ export default function ArtistPage(): JSX.Element {
             expandDiscography || !showFullDiscographyButton ? "expanded" : ""
           }`}
         >
-          {releaseGroupTypesNames.map(([type, rgGroup]) => (
-            <div className="albums">
-              <div className="listen-header">
-                <h3 className="header-with-line">{type}</h3>
-                <SortingButtons sort={sort} setSort={setSort} />
+          {releaseGroupTypesNames.map(([type, rgGroup]) => {
+            const gridKey = `album-grid-${type}`;
+            return (
+              <div className="albums">
+                <div className="listen-header">
+                  <h3 className="header-with-line">{type}</h3>
+                  <SortingButtons sort={sort} setSort={setSort} />
+                </div>
+                <div
+                  className={`album-grid-outer ${
+                    albumGridOverflow[gridKey] ? "has-overflow" : ""
+                  }`}
+                  ref={(el: HTMLDivElement | null) => {
+                    if (el) {
+                      albumGridRefs.current[gridKey] = el;
+                    }
+                  }}
+                >
+                  <HorizontalScrollContainer
+                    className={`cover-art-container ${
+                      rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT
+                        ? "single-row"
+                        : ""
+                    }`}
+                  >
+                    {rgGroup.map(getReleaseCard)}
+                  </HorizontalScrollContainer>
+                </div>
               </div>
-              <HorizontalScrollContainer
-                className={`cover-art-container ${
-                  rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT
-                    ? "single-row"
-                    : ""
-                }`}
-              >
-                {rgGroup.map(getReleaseCard)}
-              </HorizontalScrollContainer>
-            </div>
-          ))}
+            );
+          })}
           {showFullDiscographyButton && (
             <div className="read-more mb-3">
               <button
