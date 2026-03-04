@@ -32,7 +32,9 @@ def playlist_page(playlist_mbid: str):
                 "type": "music:playlist",
                 "url": f'{current_app.config["SERVER_ROOT_URL"]}/playlist/{playlist_mbid}',
                 "music:creator": f'{current_app.config["SERVER_ROOT_URL"]}/user/{playlist.creator}',
-                # "image": Once we have playlist images we can try adding it here
+                "image": f'{current_app.config["SERVER_ROOT_URL"]}/1/art/playlist/{playlist_mbid}/og/',
+                "image:width": "1280",
+                "image:height": "640",
             }
     return render_template("index.html", og_meta_tags=og_meta_tags)
 
