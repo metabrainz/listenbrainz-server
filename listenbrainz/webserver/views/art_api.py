@@ -9,7 +9,7 @@ from listenbrainz.db import popularity
 from listenbrainz.db.metadata import get_metadata_for_artist
 
 from brainzutils.ratelimit import ratelimit
-from flask import request, render_template, Blueprint, current_app
+from flask import request, render_template, Blueprint, current_app, redirect, url_for
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.webserver import db_conn, ts_conn
@@ -826,6 +826,7 @@ def playlist_cover_art_generate(playlist_mbid, dimension, layout):
 
 @art_api_bp.get("/playlist/<uuid:playlist_mbid>/og/")
 @crossdomain
+@ratelimit()
 def playlist_og_image(playlist_mbid):
     """
     Generate a composed OG (OpenGraph) image for a playlist. The image combines
@@ -848,8 +849,6 @@ def playlist_og_image(playlist_mbid):
     :resheader Content-Type: *image/png*
     :resheader Cache-Control: *max-age=86400*
     """
-    from flask import redirect, url_for
-
     fallback_url = url_for('static', filename='img/share-header.png', _external=True)
 
     playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)

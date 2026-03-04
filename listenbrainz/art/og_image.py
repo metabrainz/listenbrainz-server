@@ -1,5 +1,6 @@
 import io
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import requests as req
@@ -15,6 +16,14 @@ OG_HEIGHT = 640
 GRID_WIDTH = int(OG_WIDTH * 0.72)  # 921px
 
 OVERLAY_PATH = Path(__file__).resolve().parent.parent.parent / "frontend" / "img" / "og-overlay.png"
+OVERLAY_PATH_PROD = Path("/static/img/og-overlay.png")
+
+
+def _get_overlay_path():
+    """Check /static/img first (production), fall back to frontend/ (local dev)."""
+    if OVERLAY_PATH_PROD.exists():
+        return OVERLAY_PATH_PROD
+    return OVERLAY_PATH
 
 # Timeout for downloading cover art images (seconds)
 DOWNLOAD_TIMEOUT = 5
@@ -104,7 +113,7 @@ def generate_playlist_og_image(cover_urls: list[str], overlay_path: str | Path |
         return None
 
     if overlay_path is None:
-        overlay_path = OVERLAY_PATH
+        overlay_path = _get_overlay_path()
 
     # load the overlay
     try:
@@ -115,12 +124,10 @@ def generate_playlist_og_image(cover_urls: list[str], overlay_path: str | Path |
         return None
 
     if len(cover_urls) >= 4:
-        # try to get all 4 for the grid
-        downloaded = []
-        for url in cover_urls[:4]:
-            img = _download_image(url)
-            if img is not None:
-                downloaded.append(img)
+        # download all 4 concurrently to keep latency reasonable
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            downloaded = list(pool.map(_download_image, cover_urls[:4]))
+        downloaded = [img for img in downloaded if img is not None]
 
         if len(downloaded) == 4:
             canvas = _compose_grid_2x2(downloaded)
