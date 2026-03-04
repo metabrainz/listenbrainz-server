@@ -24,15 +24,6 @@ def _create_dummy_png(width=500, height=500, color=(255, 0, 0, 255)):
     return buf.getvalue()
 
 
-def _create_dummy_overlay(width=OG_WIDTH, height=OG_HEIGHT):
-    """Create a dummy overlay PNG with transparency for testing."""
-    img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    buf.seek(0)
-    return buf
-
-
 class TestComposeHelpers:
     """Unit tests for the image composition helper functions."""
 
