@@ -156,13 +156,12 @@ def find_tagged_entities(
     for entity_type, tag_table, id_column, order_column, default_limit in TAGGED_ENTITY_TYPES:
         limit = override_limits.get(entity_type, default_limit)
         # Table names in MusicBrainz: artist, release_group, recording
-        entity_table = "release_group" if entity_type == "release_group" else entity_type
         query = f"""
             SELECT
                 e.gid::text AS mbid,
                 e.name AS name,
                 tt.count AS tag_count
-            FROM musicbrainz.{entity_table} e
+            FROM musicbrainz.{entity_type} e
             JOIN musicbrainz.{tag_table} tt ON e.id = tt.{id_column}
             WHERE tt.tag = %s AND tt.count > 0
             ORDER BY tt.count DESC, e.{order_column} COLLATE musicbrainz, e.id

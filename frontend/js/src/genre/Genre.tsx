@@ -35,7 +35,7 @@ const genreQuery = (identifier: string) => ({
       method: "POST",
       headers: { Accept: "application/json" },
     });
-    if (!res.ok) throw new Error("Failed");
+    if (!res.ok) throw new Error(`Failed to load genre ${identifier}`);
     return res.json();
   },
   staleTime: 10 * 60 * 1000,
@@ -265,7 +265,7 @@ export default function GenrePage(): JSX.Element {
                 )})&mode=easy`}
                 className="dropdown-item"
               >
-                Genre radio
+                This genre (and similar)
               </Link>
               <Link
                 to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
