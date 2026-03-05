@@ -164,11 +164,6 @@ playback start time of the submitted track. The minimum accepted
 value for this field is :data:`~listenbrainz.webserver.views.api_tools.LISTEN_MINIMUM_TS`.
 ``playing_now`` requests should not have a ``listened_at`` field.
 
-Add additional metadata you may have for a track to the ``additional_info``
-element. Any additional information allows us to better correlate your listen
-data to existing MusicBrainz-based data. If you have MusicBrainz IDs available,
-submit them!
-
 The following optional elements may also be included in the ``track_metadata`` element:
 
 ======================= ===========  =========================================================
@@ -177,7 +172,13 @@ element                 data type    description
 ``release_name``        string       The name of the release this recording was played from.
 ======================= ===========  =========================================================
 
-The following optional elements may also be included in the ``additional_info`` element.
+Add additional metadata you may have for a track to the ``additional_info``
+element. Any additional information allows us to better correlate your listen
+data to existing MusicBrainz-based data. If you have MusicBrainz IDs available,
+submit them!
+
+The following optional elements may also be included in the ``additional_info`` element. This list
+is not exhaustive, and you may include any other fields you would consider useful.
 
 .. note::
 

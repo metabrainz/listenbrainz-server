@@ -85,7 +85,7 @@ def unpin_recording_for_user():
     must be provided in the Authorization header!
 
     **Note:** This action only *deactivates* the current pin. It does NOT delete the pin from the user's history.
-    The pin will still appear in ``GET /<user_name>/pins``. To fully remove a pin, use :func:`delete_pin_for_user`.
+    The pin will still appear in ``GET /<user_name>/pins``. To fully remove a pin, use ``POST /pin/delete/<row_id>``.
 
     :reqheader Authorization: Token <user token>
     :statuscode 200: recording unpinned.
