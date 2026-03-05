@@ -56,7 +56,7 @@ class SpinitronListensImporter(BaseListensImporter):
             artist = item.get("artist", "").strip()
             song = item.get("song", "").strip()
             if not artist or not song:
-                current_app.logger.debug("Missing artist or song in Spinitron item: %s", item)
+                current_app.logger.debug("Missing artist name or song title in Spinitron item: %s", item)
                 continue
 
             listen: dict[str, Any] = {
@@ -73,7 +73,7 @@ class SpinitronListensImporter(BaseListensImporter):
 
             additional_info: dict[str, Any] = {
                 "submission_client": self.importer_name,
-                "music_service": "spinitron.com",
+                "original_submission_client": "spinitron",
             }
 
             label = item.get("label", "").strip()

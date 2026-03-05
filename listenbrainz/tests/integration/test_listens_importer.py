@@ -1159,7 +1159,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["release_name"], "Crooked Mile")
         additional_info = track_metadata["additional_info"]
         self.assertEqual(additional_info["submission_client"], "Spinitron Archive Importer")
-        self.assertEqual(additional_info["music_service"], "spinitron.com")
+        self.assertEqual(additional_info["original_submission_client"], "spinitron")
         self.assertEqual(additional_info["label"], "UMC (Universal Music Catalogue)")
 
         second_listen = listens[1]
