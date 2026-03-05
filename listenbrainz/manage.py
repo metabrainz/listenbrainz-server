@@ -30,21 +30,6 @@ ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'admin', 'timescale')
 
 
-@cli.command(name="run_websockets")
-@click.option("--host", "-h", default="0.0.0.0", show_default=True)
-@click.option("--port", "-p", default=7082, show_default=True)
-@click.option("--debug",
-              "-d",
-              is_flag=True,
-              help="Turns debugging mode on or off. If specified, overrides "
-              "'DEBUG' value in the config file.")
-def run_websockets(host, port, debug=True):
-    from listenbrainz.websockets.websockets import run_websockets
-    application = webserver.create_app()
-    with application.app_context():
-        run_websockets(application, host=host, port=port, debug=debug)
-
-
 @cli.command(name="init_db")
 @click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
 @click.option("--create-db", is_flag=True, help="Create the database and user.")
