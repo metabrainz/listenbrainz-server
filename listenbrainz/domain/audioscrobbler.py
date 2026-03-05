@@ -115,16 +115,24 @@ class AudioscrobblerService(ImporterService):
         total_pages = int(data["totalPages"])
         total_count = int(data["total"])
 
+        if total_count == 0:
+            return [], 0
+
         items = []
+        responses = [response]
 
-        for page in range(1, total_pages + 1):
+        for page in range(2, total_pages + 1):
             params["page"] = page
-            response = session.get(self.api_url, params=params)
-            if response.status_code != 200:
-                current_app.logger.error("Unable to import page %d for user %s: %s", page, username, response.text)
+            resp = session.get(self.api_url, params=params)
+            if resp.status_code != 200:
+                current_app.logger.error("Unable to import page %d for user %s: %s", page, username, resp.text)
                 continue
+            responses.append(resp)
 
-            tracks = response.json()["lovedtracks"]["track"]
+        for resp in responses:
+            tracks = resp.json()["lovedtracks"]["track"]
+            if isinstance(tracks, dict):
+                tracks = [tracks]
             for track in tracks:
                 item: dict = {
                     "timestamp": int(track["date"]["uts"]),

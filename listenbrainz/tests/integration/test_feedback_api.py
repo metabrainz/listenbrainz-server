@@ -1381,7 +1381,6 @@ class FeedbackAPITestCase(IntegrationTestCase):
             page_2 = json.load(f)
         mock_requests.get("https://ws.audioscrobbler.com/2.0/", [
             {"json": page_1, "status_code": 200},
-            {"json": page_1, "status_code": 200},
             {"json": page_2, "status_code": 200}
         ])
         mock_load_recordings.return_value = {
@@ -1432,7 +1431,6 @@ class FeedbackAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file("librefm_loved_tracks_2.json")) as f:
             page_2 = json.load(f)
         mock_requests.get("https://libre.fm/2.0/", [
-            {"json": page_1, "status_code": 200},
             {"json": page_1, "status_code": 200},
             {"json": page_2, "status_code": 200}
         ])
