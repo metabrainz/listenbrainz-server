@@ -24,8 +24,6 @@ RECOMMENDATION_PATCHES = (
     'daily-jams',
     'weekly-jams',
     'weekly-exploration',
-    'top-discoveries-for-year',
-    'top-missed-recordings-for-year',
     *(
         patch
         for year in range(MAX_YEAR_IN_MUSIC_YEAR, LAST_FM_FOUNDING_YEAR - 1, -1)

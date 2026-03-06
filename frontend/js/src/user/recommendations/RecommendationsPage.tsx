@@ -45,35 +45,35 @@ function getPlaylistInfo(
   const sourcePatch =
     extension?.additional_metadata?.algorithm_metadata?.source_patch;
   let year;
-  switch (sourcePatch) {
-    case "weekly-jams":
+  switch (true) {
+    case sourcePatch === "weekly-jams":
       return {
         shortTitle: !isOld ? "Weekly Jams" : `Last Week's Jams`,
         cssClasses: "weekly-jams green",
       };
-    case "weekly-exploration":
+    case sourcePatch === "weekly-exploration":
       return {
         shortTitle: !isOld ? "Weekly Exploration" : `Last Week's Exploration`,
         cssClasses: "green",
       };
-    case "daily-jams":
+    case sourcePatch === "daily-jams":
       return {
         shortTitle: "Daily Jams",
         cssClasses: "blue",
       };
-    case "top-discoveries-for-year":
-      // get year from title, fallback to using creation date minus 1
+    case sourcePatch?.startsWith("top-discoveries-of-"):
+      // get year from source patch, fallback to using creation date minus 1
       year =
-        playlist.title.match(/\d{2,4}/)?.[0] ??
+        sourcePatch?.match(/\d{2,4}/)?.[0] ??
         new Date(playlist.date).getUTCFullYear() - 1;
       return {
         shortTitle: `${year} Top Discoveries`,
         cssClasses: "red",
       };
-    case "top-missed-recordings-for-year":
-      // get year from title, fallback to using creation date minus 1
+    case sourcePatch?.startsWith("top-missed-recordings-of-"):
+      // get year from source patch, fallback to using creation date minus 1
       year =
-        playlist.title.match(/\d{2,4}/)?.[0] ??
+        sourcePatch?.match(/\d{2,4}/)?.[0] ??
         new Date(playlist.date).getUTCFullYear() - 1;
       return {
         shortTitle: `${year} Missed Tracks`,
