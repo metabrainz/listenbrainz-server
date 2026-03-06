@@ -14,11 +14,10 @@
     version="1.1"
     role="img"
     preserveAspectRatio="xMinYMin meet">
-    <title>Top 10 artists of {{ year }} for {{ user_name }}&#xA;</title>
-    <desc>
-        {% for artist in artists[:10] %}
-        {%- if loop.index == 10 -%}X{%- else -%}{{- loop.index -}}{%- endif -%}. {{
-        artist.artist_name }}&#xA;
+    <title>Top 10 artists of {{ year }} for {{ user_name }}</title>
+    <desc>&#xA;
+        {%- for artist in artists[:10] -%}
+        {%- if loop.index == 10 -%}X{%- else -%}{{- loop.index -}}{%- endif -%}. {{ artist.artist_name }}&#xA;
         {%- endfor -%}
     </desc>
     <style>
