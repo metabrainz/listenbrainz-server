@@ -130,6 +130,10 @@ class BackgroundJobProcessor:
                     self.internal_message_ack_queue.put(message)
                 except Empty:
                     self.app.logger.debug("Empty internal message queue")
+                except Exception:
+                    self.app.logger.exception("Unhandled error in spark reader. Stopping background job.")
+                    self.stop()
+                    self.terminate()
 
             self.stop()
 

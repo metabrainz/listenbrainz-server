@@ -1,5 +1,3 @@
-import eventlet
-
 from flask_login import current_user
 from flask_socketio import SocketIO, join_room, emit, disconnect
 from werkzeug.exceptions import BadRequest
@@ -8,9 +6,7 @@ from listenbrainz.db import playlist as db_playlist
 from listenbrainz.webserver import ts_conn, db_conn
 from listenbrainz.websockets.listens_dispatcher import ListensDispatcher
 
-eventlet.monkey_patch(all=False, socket=True)
-
-socketio = SocketIO(cors_allowed_origins='*', logger=True, engineio_logger=True)
+socketio = SocketIO(async_mode="gevent", cors_allowed_origins='*', logger=True, engineio_logger=True)
 
 
 @socketio.on('json')
