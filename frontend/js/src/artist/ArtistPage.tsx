@@ -38,7 +38,7 @@ import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import { RouteQuery } from "../utils/Loader";
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
 import Pill from "../components/Pill";
-import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
+
 import Username from "../common/Username";
 import CBReview from "../cb-review/CBReview";
 import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
@@ -216,7 +216,9 @@ export default function ArtistPage(): JSX.Element {
     checkAlbumGridOverflow();
 
     return () => resizeObserver.disconnect();
-  }, [checkAlbumGridOverflow]); // Remove releaseGroups dependency to avoid re-creating observer
+    // Re-run when releaseGroups changes so new grids get observed
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkAlbumGridOverflow, releaseGroups]);
 
   // Sort by the more precise secondary type first to create categories like "Live", "Compilation" and "Remix" instead of
   // "Album + Live", "Single + Live", "EP + Live", "Broadcast + Live" and "Album + Remix", etc.
@@ -574,23 +576,27 @@ export default function ArtistPage(): JSX.Element {
                   className={`album-grid-outer ${
                     albumGridOverflow[gridKey] ? "has-overflow" : ""
                   }`}
-                  ref={(el: HTMLDivElement | null) => {
-                    if (el) {
-                      albumGridRefs.current[gridKey] = el;
-                    } else {
-                      delete albumGridRefs.current[gridKey];
-                    }
-                  }}
                 >
-                  <HorizontalScrollContainer
-                    className={`cover-art-container ${
-                      rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT
-                        ? "single-row"
-                        : ""
-                    }`}
+                  <div
+                    className="album-grid-inner"
+                    ref={(el: HTMLDivElement | null) => {
+                      if (el) {
+                        albumGridRefs.current[gridKey] = el;
+                      } else {
+                        delete albumGridRefs.current[gridKey];
+                      }
+                    }}
                   >
-                    {rgGroup.map(getReleaseCard)}
-                  </HorizontalScrollContainer>
+                    <div
+                      className={`cover-art-container ${
+                        rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT
+                          ? "single-row"
+                          : ""
+                      }`}
+                    >
+                      {rgGroup.map(getReleaseCard)}
+                    </div>
+                  </div>
                 </div>
               </div>
             );
