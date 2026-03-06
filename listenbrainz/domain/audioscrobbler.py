@@ -111,9 +111,14 @@ class AudioscrobblerService(ImporterService):
             raise APINotFound(f"{self.service.value.capitalize()} user with username '{username}' not found")
         response.raise_for_status()
 
-        data = response.json()["lovedtracks"]["@attr"]
-        total_pages = int(data["totalPages"])
-        total_count = int(data["total"])
+        response_object = response.json()["lovedtracks"]
+
+        if "@attr" in response_object:
+            total_pages = int(response_object["@attr"]["totalPages"])
+            total_count = int(response_object["@attr"]["total"])
+        else:
+            total_pages = int(response_object["totalPages"])
+            total_count = int(response_object["total"])
 
         if total_count == 0:
             return [], 0
