@@ -8,6 +8,7 @@ from listenbrainz.webserver.views.playlist_api import fetch_playlist_recording_m
 import listenbrainz.db.playlist as db_playlist
 from listenbrainz.db.model import playlist as model_playlist
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
+from listenbrainz.art.og_image import OG_WIDTH, OG_HEIGHT
 
 playlist_bp = Blueprint("playlist", __name__)
 
@@ -33,8 +34,8 @@ def playlist_page(playlist_mbid: str):
                 "url": f'{current_app.config["SERVER_ROOT_URL"]}/playlist/{playlist_mbid}',
                 "music:creator": f'{current_app.config["SERVER_ROOT_URL"]}/user/{playlist.creator}',
                 "image": f'{current_app.config["SERVER_ROOT_URL"]}/1/art/playlist/{playlist_mbid}/og/',
-                "image:width": "1280",
-                "image:height": "640",
+                "image:width": str(OG_WIDTH),
+                "image:height": str(OG_HEIGHT),
             }
     return render_template("index.html", og_meta_tags=og_meta_tags)
 
