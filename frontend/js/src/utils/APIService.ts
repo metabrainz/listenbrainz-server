@@ -863,7 +863,7 @@ export default class APIService {
     userName: string,
     service: ImportService
   ): Promise<{
-    inserted: number;
+    imported: number;
     invalid_mbid: number;
     mbid_not_found: number;
     missing_mbid: number;
