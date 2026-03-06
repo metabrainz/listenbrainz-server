@@ -239,7 +239,15 @@ class TimescaleListenStore:
                              , l.data
                              -- prefer to use user submitted mbid, then user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
                              , COALESCE((data->'additional_info'->>'recording_mbid')::uuid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
+                             -- flag the listens that are only staged for deletion but not deleted yet
+                             , (ldm.id IS NOT NULL) AS staged_for_deletion
+
                           FROM listen l
+                     LEFT JOIN listen_delete_metadata ldm
+                            ON l.user_id = ldm.user_id
+                           AND l.listened_at = ldm.listened_at
+                           AND l.recording_msid = ldm.recording_msid
+                           AND ldm.status = 'pending'
                      LEFT JOIN mbid_mapping mm
                             ON l.recording_msid = mm.recording_msid
                      LEFT JOIN mbid_manual_mapping user_mm
@@ -256,6 +264,7 @@ class TimescaleListenStore:
                         , created
                         , sl.recording_msid::TEXT
                         , data
+                        , sl.staged_for_deletion
                         , sl.recording_mbid
                         , mbc.recording_data->>'name' AS recording_name
                         , mbc.release_mbid
@@ -274,6 +283,7 @@ class TimescaleListenStore:
                         , user_id
                         , created
                         , data
+                        , sl.staged_for_deletion
                         , sl.recording_mbid
                         , recording_data->>'name'
                         , release_mbid
@@ -356,7 +366,8 @@ class TimescaleListenStore:
                     ac_join_phrases=result.ac_join_phrases,
                     user_name=user["musicbrainz_id"],
                     caa_id=result.caa_id,
-                    caa_release_mbid=result.caa_release_mbid
+                    caa_release_mbid=result.caa_release_mbid,
+                    staged_for_deletion= result.staged_for_deletion
                 ))
 
                 if len(listens) == limit:
