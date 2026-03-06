@@ -8,8 +8,8 @@ from PIL import Image
 
 logger = logging.getLogger(__name__)
 
-OG_WIDTH = 1280
-OG_HEIGHT = 640
+OG_WIDTH = 1200
+OG_HEIGHT = 630
 
 # cover art takes up the left ~72% of the canvas,
 # the rest is for the LB overlay branding
@@ -145,9 +145,13 @@ def generate_playlist_og_image(cover_urls: list[str], overlay_path: str | Path |
 
     # slap the overlay on top
     canvas = Image.alpha_composite(canvas, overlay)
+    # drop the alpha channel. The overlay is already composited,
+    # and PNG-without-alpha is smaller / friendlier to social-media crawlers
+    # plus transparent pngs aren't supported by all social media platforms but RGB is
     canvas = canvas.convert("RGB")
 
     buf = io.BytesIO()
     canvas.save(buf, format="PNG", optimize=True)
+   # Reset the file pointer to the beginning of the stream so the image data can be read
     buf.seek(0)
     return buf
