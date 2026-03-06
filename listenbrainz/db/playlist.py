@@ -25,6 +25,10 @@ RECOMMENDATION_PATCHES = (
     'weekly-exploration',
     'top-discoveries-for-year',
     'top-missed-recordings-for-year',
+    'top-discoveries-of-2025',
+    'top-missed-recordings-of-2025',
+    'top-discoveries-of-2024',
+    'top-missed-recordings-of-2024',
     'top-discoveries-of-2023',
     'top-missed-recordings-of-2023'
 )
