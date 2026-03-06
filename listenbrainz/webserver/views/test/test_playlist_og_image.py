@@ -25,7 +25,6 @@ def _create_dummy_png(width=500, height=500, color=(255, 0, 0, 255)):
 
 
 class TestComposeHelpers:
-    """Unit tests for the image composition helper functions."""
 
     def test_compose_single_creates_correct_size(self):
         cover = Image.new("RGBA", (500, 500), (255, 0, 0, 255))
@@ -38,15 +37,16 @@ class TestComposeHelpers:
         assert result.size == (OG_WIDTH, OG_HEIGHT)
 
     def test_compose_grid_2x2_places_all_four_images(self):
-        """Verify that all 4 tiles have content (non-black pixels in expected regions)."""
+        """Each tile region should contain the colour we painted it, not black (background bleed)."""
         colors = [(255, 0, 0, 255), (0, 255, 0, 255), (0, 0, 255, 255), (255, 255, 0, 255)]
         covers = [Image.new("RGBA", (500, 500), c) for c in colors]
         result = _compose_grid_2x2(covers)
 
-        tile_w = GRID_WIDTH // 2   # ~426
-        tile_h = OG_HEIGHT // 2    # 320
+        tile_w = GRID_WIDTH // 2
+        tile_h = OG_HEIGHT // 2
 
-        # Sample a pixel from the center of each tile
+        # sample a pixel from the centre of each tile — if the grid
+        # placed covers correctly, it should match the input colour
         positions = [
             (tile_w // 2, tile_h // 2),                     # top-left
             (tile_w + tile_w // 2, tile_h // 2),             # top-right
@@ -60,7 +60,6 @@ class TestComposeHelpers:
 
 
 class TestDownloadImage:
-    """Unit tests for _download_image."""
 
     @patch("listenbrainz.art.og_image.req.get")
     def test_download_image_success(self, mock_get):
@@ -91,7 +90,6 @@ class TestDownloadImage:
 
 
 class TestGeneratePlaylistOgImage:
-    """Unit tests for generate_playlist_og_image."""
 
     def _create_overlay_file(self, tmp_path):
         """Create a temporary overlay PNG file."""
@@ -116,7 +114,6 @@ class TestGeneratePlaylistOgImage:
         )
         assert result is not None
 
-        # Verify it's a valid PNG
         result_img = Image.open(result)
         assert result_img.size == (OG_WIDTH, OG_HEIGHT)
         assert result_img.mode == "RGB"
@@ -134,7 +131,6 @@ class TestGeneratePlaylistOgImage:
         assert result_img.size == (OG_WIDTH, OG_HEIGHT)
         assert result_img.mode == "RGB"
 
-        # Should have been called 4 times for the grid
         assert mock_download.call_count == 4
 
     @patch("listenbrainz.art.og_image._download_image")
@@ -147,7 +143,6 @@ class TestGeneratePlaylistOgImage:
         result = generate_playlist_og_image(urls, overlay_path=overlay_path)
         assert result is not None
 
-        # With < 4 URLs, should only download the first image
         assert mock_download.call_count == 1
 
     @patch("listenbrainz.art.og_image._download_image")
@@ -194,12 +189,11 @@ class TestGeneratePlaylistOgImage:
         )
         assert result is not None
         data = result.getvalue()
-        # PNG magic bytes
+        # first 4 bytes of any valid PNG are 0x89 followed by "PNG" (RFC 2083 Section 3.1)
         assert data[:4] == b'\x89PNG'
 
 
 class PlaylistOgImageEndpointTestCase(IntegrationTestCase):
-    """Integration tests for the GET /1/art/playlist/<mbid>/og endpoint."""
 
     @patch("listenbrainz.webserver.views.art_api.generate_playlist_og_image")
     @patch("listenbrainz.webserver.views.art_api.get_cover_art_options")
@@ -207,14 +201,11 @@ class PlaylistOgImageEndpointTestCase(IntegrationTestCase):
     @patch("listenbrainz.webserver.views.art_api.db_playlist.get_by_mbid")
     def test_og_image_success(self, mock_get_playlist, mock_fetch_metadata,
                               mock_get_cover_options, mock_generate_og):
-        """Test successful OG image generation."""
-        # Mock a public playlist
         mock_playlist = MagicMock()
         mock_playlist.is_visible_by.return_value = True
         mock_playlist.recordings = [MagicMock() for _ in range(4)]
         mock_get_playlist.return_value = mock_playlist
 
-        # Mock cover art options with 4 images
         mock_get_cover_options.return_value = [
             {
                 "caa_id": 12345 + i,
@@ -226,7 +217,6 @@ class PlaylistOgImageEndpointTestCase(IntegrationTestCase):
             for i in range(4)
         ]
 
-        # Mock the image generation to return a valid PNG
         dummy_png_buf = io.BytesIO(_create_dummy_png(OG_WIDTH, OG_HEIGHT))
         mock_generate_og.return_value = dummy_png_buf
 
@@ -235,14 +225,13 @@ class PlaylistOgImageEndpointTestCase(IntegrationTestCase):
                                 playlist_mbid="b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6"))
         self.assert200(resp)
         self.assertEqual(resp.content_type, "image/png")
+        # first 4 bytes of a valid PNG: 0x89 + "PNG" (RFC 2083 §3.1)
         self.assertTrue(resp.data[:4] == b'\x89PNG')
 
-        # Verify cache header
         self.assertIn("max-age=86400", resp.headers.get("Cache-Control", ""))
 
     @patch("listenbrainz.webserver.views.art_api.db_playlist.get_by_mbid")
     def test_og_image_playlist_not_found(self, mock_get_playlist):
-        """Test 404 when playlist doesn't exist."""
         mock_get_playlist.return_value = None
 
         resp = self.client.get(
@@ -252,7 +241,6 @@ class PlaylistOgImageEndpointTestCase(IntegrationTestCase):
 
     @patch("listenbrainz.webserver.views.art_api.db_playlist.get_by_mbid")
     def test_og_image_private_playlist(self, mock_get_playlist):
-        """Test 404 when playlist is private (not visible by None/unauthenticated)."""
         mock_playlist = MagicMock()
         mock_playlist.is_visible_by.return_value = False
         mock_get_playlist.return_value = mock_playlist
@@ -267,7 +255,6 @@ class PlaylistOgImageEndpointTestCase(IntegrationTestCase):
     @patch("listenbrainz.webserver.views.art_api.db_playlist.get_by_mbid")
     def test_og_image_no_cover_art_redirects_to_default(self, mock_get_playlist, mock_fetch_metadata,
                                                         mock_get_cover_options):
-        """Test redirect to share-header.png when playlist has no tracks with cover art."""
         mock_playlist = MagicMock()
         mock_playlist.is_visible_by.return_value = True
         mock_get_playlist.return_value = mock_playlist
@@ -286,7 +273,6 @@ class PlaylistOgImageEndpointTestCase(IntegrationTestCase):
     @patch("listenbrainz.webserver.views.art_api.db_playlist.get_by_mbid")
     def test_og_image_generation_failure_redirects_to_default(self, mock_get_playlist, mock_fetch_metadata,
                                                               mock_get_cover_options, mock_generate_og):
-        """Test redirect to share-header.png when image generation fails."""
         mock_playlist = MagicMock()
         mock_playlist.is_visible_by.return_value = True
         mock_get_playlist.return_value = mock_playlist
