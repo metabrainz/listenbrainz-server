@@ -38,6 +38,7 @@ import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import { RouteQuery } from "../utils/Loader";
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
 import Pill from "../components/Pill";
+import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 
 import Username from "../common/Username";
 import CBReview from "../cb-review/CBReview";
@@ -183,42 +184,6 @@ export default function ArtistPage(): JSX.Element {
   const [expandDiscography, setExpandDiscography] = React.useState<boolean>(
     false
   );
-
-  // Track vertical overflow for each album grid
-  const [albumGridOverflow, setAlbumGridOverflow] = React.useState<
-    Record<string, boolean>
-  >({});
-  const albumGridRefs = React.useRef<Record<string, HTMLDivElement>>({});
-
-  // Check vertical overflow for album grids
-  const checkAlbumGridOverflow = React.useCallback(() => {
-    const newOverflowState: Record<string, boolean> = {};
-
-    Object.keys(albumGridRefs.current).forEach((key) => {
-      const el = albumGridRefs.current[key];
-      if (el) {
-        newOverflowState[key] = el.scrollHeight > el.clientHeight;
-      }
-    });
-
-    setAlbumGridOverflow(newOverflowState);
-  }, []);
-
-  // Set up resize observer to detect overflow changes
-  React.useEffect(() => {
-    const resizeObserver = new ResizeObserver(() => checkAlbumGridOverflow());
-
-    Object.values(albumGridRefs.current).forEach((el) => {
-      if (el) resizeObserver.observe(el);
-    });
-
-    // Initial check
-    checkAlbumGridOverflow();
-
-    return () => resizeObserver.disconnect();
-    // Re-run when releaseGroups changes so new grids get observed
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [checkAlbumGridOverflow, releaseGroups]);
 
   // Sort by the more precise secondary type first to create categories like "Live", "Compilation" and "Remix" instead of
   // "Album + Live", "Single + Live", "EP + Live", "Broadcast + Live" and "Album + Remix", etc.
@@ -565,39 +530,27 @@ export default function ArtistPage(): JSX.Element {
           }`}
         >
           {releaseGroupTypesNames.map(([type, rgGroup]) => {
-            const gridKey = `album-grid-${type}`;
             return (
               <div className="albums" key={type}>
                 <div className="listen-header">
                   <h3 className="header-with-line">{type}</h3>
                   <SortingButtons sort={sort} setSort={setSort} />
                 </div>
-                <div
-                  className={`album-grid-outer ${
-                    albumGridOverflow[gridKey] ? "has-overflow" : ""
-                  }`}
+                <HorizontalScrollContainer
+                  direction="vertical"
+                  showScrollbar={false}
+                  enableDragScroll={false}
                 >
                   <div
-                    className="album-grid-inner"
-                    ref={(el: HTMLDivElement | null) => {
-                      if (el) {
-                        albumGridRefs.current[gridKey] = el;
-                      } else {
-                        delete albumGridRefs.current[gridKey];
-                      }
-                    }}
+                    className={`cover-art-container ${
+                      rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT
+                        ? "single-row"
+                        : ""
+                    }`}
                   >
-                    <div
-                      className={`cover-art-container ${
-                        rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT
-                          ? "single-row"
-                          : ""
-                      }`}
-                    >
-                      {rgGroup.map(getReleaseCard)}
-                    </div>
+                    {rgGroup.map(getReleaseCard)}
                   </div>
-                </div>
+                </HorizontalScrollContainer>
               </div>
             );
           })}

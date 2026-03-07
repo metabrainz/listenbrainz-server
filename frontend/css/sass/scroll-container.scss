@@ -32,33 +32,18 @@ $scrollbar-thumb-color-dark: color.adjust(
   }
 }
 
-.horizontal-scroll-container {
+.scroll-container {
   position: relative;
 
-  .horizontal-scroll-container.dragging .horizontal-scroll * {
+  &.dragging .horizontal-scroll *,
+  &.dragging .vertical-scroll * {
     // Prevent text selection and interactions when the user is actively dragging to scroll
     pointer-events: none;
     user-select: none;
   }
 
-  .horizontal-scroll {
-    overflow-x: auto;
-    @include small-scrollbar;
-    &.no-scrollbar {
-      /* Hide the scrollbar: */
-      -ms-overflow-style: none; /* Internet Explorer and Edge */
-      scrollbar-width: none; /* Firefox */
-      &::-webkit-scrollbar {
-        /* Chrome, Safari and Opera */
-        display: none;
-      }
-    }
-  }
-  // hide overflow behind button with gradient to indicate there's more
   .nav-button {
     position: absolute;
-    top: 0;
-    bottom: 0;
     width: 55px;
     border: none;
     font-size: 2em;
@@ -66,25 +51,81 @@ $scrollbar-thumb-color-dark: color.adjust(
     z-index: 2;
     opacity: 1;
     transition: opacity 300ms linear;
-    &.backward {
-      background: linear-gradient(to right, $white 10%, transparent);
-      text-align: left;
-      left: -1px;
-    }
-    &.forward {
-      background: linear-gradient(to left, $white 10%, transparent);
-      right: -1px;
-      text-align: right;
-    }
   }
+
   &.scroll-start .nav-button.backward,
   &.scroll-end .nav-button.forward {
     opacity: 0;
     pointer-events: none;
   }
+
   // Hide arrow buttons when the container does not overflow (class added with javascript)
   &.no-scroll .nav-button {
     display: none;
+  }
+
+  // HORIZONTAL specific
+  &.horizontal {
+    .horizontal-scroll {
+      overflow-x: auto;
+      @include small-scrollbar;
+      &.no-scrollbar {
+        /* Hide the scrollbar: */
+        -ms-overflow-style: none; /* Internet Explorer and Edge */
+        scrollbar-width: none; /* Firefox */
+        &::-webkit-scrollbar {
+          /* Chrome, Safari and Opera */
+          display: none;
+        }
+      }
+    }
+    .nav-button {
+      top: 0;
+      bottom: 0;
+      &.backward {
+        background: linear-gradient(to right, $white 10%, transparent);
+        text-align: left;
+        left: -1px;
+      }
+      &.forward {
+        background: linear-gradient(to left, $white 10%, transparent);
+        right: -1px;
+        text-align: right;
+      }
+    }
+  }
+
+  // VERTICAL specific
+  &.vertical {
+    .vertical-scroll {
+      max-height: 56.9rem;
+      overflow-y: auto;
+      overflow-x: hidden;
+      &.no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+        &::-webkit-scrollbar {
+          /* Chrome, Safari and Opera */
+          display: none;
+        }
+      }
+    }
+    .nav-button {
+      left: 0;
+      right: 0;
+      height: 55px;
+      width: 100%;
+      &.backward {
+        background: linear-gradient(to bottom, $white 10%, transparent);
+        text-align: center;
+        top: -1px;
+      }
+      &.forward {
+        background: linear-gradient(to top, $white 10%, transparent);
+        bottom: -1px;
+        text-align: center;
+      }
+    }
   }
 }
 

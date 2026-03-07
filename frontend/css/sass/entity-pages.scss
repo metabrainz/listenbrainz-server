@@ -198,44 +198,6 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
       .albums {
         width: 100%;
 
-        .album-grid-outer {
-          // Outer wrapper for overflow detection and height constraint
-          position: relative;
-          // - Card height ≈ 21.556rem (215.56px at root font-size 10px)
-          // - Grid gap = 1.5rem = 15px
-          // - 2 full rows + 2 gaps + 0.5 row = 56.889rem ≈ 56.9rem
-          // Using rem (not em) to anchor to the 10px root font-size,
-          // since this element inherits a 14px parent font-size.
-          max-height: 56.9rem;
-          overflow: hidden; // clips content; ::after gradient stays fixed at bottom
-
-          .album-grid-inner {
-            max-height: inherit;
-            overflow-y: auto;
-            overflow-x: hidden;
-          }
-
-          // Bottom gradient overlay to hint at more content
-          &::after {
-            content: "";
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 4em;
-            pointer-events: none;
-            background-image: $white-gradient;
-            z-index: 5;
-            // Hide by default, show only when has-overflow class is present
-            display: none;
-          }
-
-          // Show gradient only when container has vertical overflow
-          &.has-overflow::after {
-            display: block;
-          }
-        }
-
         .cover-art-container {
           display: grid;
           grid-gap: 1.5em;
