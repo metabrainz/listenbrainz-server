@@ -160,8 +160,6 @@ class Listen(object):
                 track_metadata["mbid_mapping"]["caa_id"] = caa_id
                 track_metadata["mbid_mapping"]["caa_release_mbid"] = caa_release_mbid
 
-        track_metadata["staged_for_deletion"]= staged_for_deletion
-
         return cls(
             user_id=user_id,
             user_name=user_name,
