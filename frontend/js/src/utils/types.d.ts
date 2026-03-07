@@ -496,7 +496,7 @@ declare type JSPFPlaylist = {
   track: Array<JSPFTrack>;
   extension?: {
     [name: string]: any;
-    "https://musicbrainz.org/doc/jspf#playlist"?: JSPFPlaylistExtension;
+    "https://musicbrainz.org/doc/jspf#playlist"?: JSPFPlaylistExtension | JSPFPlaylistExtension[];
   };
 };
 
@@ -516,7 +516,7 @@ declare type JSPFTrack = {
   meta?: Array<{ [name: string]: string }>;
   extension?: {
     [name: string]: any;
-    "https://musicbrainz.org/doc/jspf#track"?: JSPFTrackExtension;
+    "https://musicbrainz.org/doc/jspf#track"?: JSPFTrackExtension | JSPFTrackExtension[];
   };
 };
 
