@@ -259,7 +259,7 @@ class TimescaleListenStore:
                            AND l.listened_at > :from_ts
                            AND l.listened_at < :to_ts
                    )
-                   SELECT l.listened_at
+                   SELECT sl.listened_at
                         , user_id
                         , created
                         , sl.recording_msid::TEXT
@@ -278,7 +278,7 @@ class TimescaleListenStore:
                        ON sl.recording_mbid = mbc.recording_mbid
         LEFT JOIN LATERAL jsonb_array_elements(artist_data->'artists') WITH ORDINALITY artists(artist, position)
                        ON TRUE
-                 GROUP BY l.listened_at
+                 GROUP BY sl.listened_at
                         , sl.recording_msid
                         , user_id
                         , created
@@ -293,7 +293,7 @@ class TimescaleListenStore:
                         , release_data->>'name'
                         , release_data->>'caa_id'
                         , release_data->>'caa_release_mbid'
-                 ORDER BY l.listened_at """ + ORDER_TEXT[order] + " LIMIT :limit"
+                 ORDER BY sl.listened_at """ + ORDER_TEXT[order] + " LIMIT :limit"
 
         if from_ts and to_ts:
             to_dynamic = False
