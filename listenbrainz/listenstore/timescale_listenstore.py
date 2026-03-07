@@ -256,10 +256,10 @@ class TimescaleListenStore:
                      LEFT JOIN mbid_manual_mapping_top other_mm
                             ON l.recording_msid = other_mm.recording_msid
                          WHERE l.user_id = :user_id
-                           AND listened_at > :from_ts
-                           AND listened_at < :to_ts
+                           AND l.listened_at > :from_ts
+                           AND l.listened_at < :to_ts
                    )
-                   SELECT listened_at
+                   SELECT l.listened_at
                         , user_id
                         , created
                         , sl.recording_msid::TEXT
@@ -278,7 +278,7 @@ class TimescaleListenStore:
                        ON sl.recording_mbid = mbc.recording_mbid
         LEFT JOIN LATERAL jsonb_array_elements(artist_data->'artists') WITH ORDINALITY artists(artist, position)
                        ON TRUE
-                 GROUP BY listened_at
+                 GROUP BY l.listened_at
                         , sl.recording_msid
                         , user_id
                         , created
@@ -293,7 +293,7 @@ class TimescaleListenStore:
                         , release_data->>'name'
                         , release_data->>'caa_id'
                         , release_data->>'caa_release_mbid'
-                 ORDER BY listened_at """ + ORDER_TEXT[order] + " LIMIT :limit"
+                 ORDER BY l.listened_at """ + ORDER_TEXT[order] + " LIMIT :limit"
 
         if from_ts and to_ts:
             to_dynamic = False
