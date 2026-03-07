@@ -188,7 +188,7 @@ def delete_import_task(import_id):
     """ Cancel the specified import in progress """
     user = validate_auth_header()
     result = db_conn.execute(
-        text("DELETE FROM user_data_import WHERE user_id = :user_id AND id = :import_id AND metadata->>'status' IN ('waiting') RETURNING file_path"),
+        text("DELETE FROM user_data_import WHERE user_id = :user_id AND id = :import_id AND metadata->>'status' IN ('waiting', 'in progress') RETURNING file_path"),
         {"user_id": user["id"], "import_id": import_id}
     )
     row = result.first()
