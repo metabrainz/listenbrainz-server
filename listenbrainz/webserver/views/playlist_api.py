@@ -46,11 +46,21 @@ def _get_playlist_extension(jspf):
     The JSPF spec requires extension values to be arrays of objects, but older versions
     of LB used a single object. This helper unwraps the array if present, falling back
     to the legacy single-object format.
+
+    To be robust against malformed client data (e.g. null, scalars, wrong list types),
+    this function always returns a dict.
     """
     ext = jspf.get("playlist", {}).get("extension", {}).get(PLAYLIST_EXTENSION_URI, {})
+    # Spec-compliant format: array of extension objects
     if isinstance(ext, list):
-        return ext[0] if ext else {}
-    return ext
+        if ext and isinstance(ext[0], dict):
+            return ext[0]
+        return {}
+    # Legacy format: single object
+    if isinstance(ext, dict):
+        return ext
+    # Any other type (None, scalar, wrong structure) is treated as empty
+    return {}
 
 
 def validate_create_playlist_required_items(jspf):
