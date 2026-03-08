@@ -1,4 +1,6 @@
 from itertools import cycle
+import base64
+import os
 
 from markupsafe import Markup
 
@@ -21,6 +23,49 @@ from listenbrainz.webserver.views.playlist import get_cover_art_options
 from listenbrainz.webserver.views.legacy_year_in_music_api import cover_art_yim_legacy
 
 art_api_bp = Blueprint('art_api_v1', __name__)
+
+_floor_texture_data_uri: str | None = None
+
+
+def _get_floor_texture_data_uri() -> str:
+    """Return the floor texture as a base64 data URI so Canvg can render it.
+
+    Canvg (the client-side SVG→PNG renderer used by the Art Creator download
+    button) runs inside an OffscreenCanvas and cannot fetch external HTTP URLs
+    due to CORS/browser security restrictions.  Embedding the image as an
+    inline data URI avoids that restriction entirely.
+
+    Caching: the encoded string is stored in a module-level variable.  When
+    ListenBrainz runs under gunicorn each worker process caches its own copy
+    independently — this is intentional and avoids any cross-process shared
+    state concerns.
+
+    Fallback: if the PNG file is unexpectedly missing from the static folder
+    (e.g. a misconfigured deployment), we log a warning and fall back to the
+    plain static URL.  The browser preview will still work; only the download
+    will lose the texture.  A FileNotFoundError here must never cause a 500
+    for the end user.
+    """
+    global _floor_texture_data_uri
+    if _floor_texture_data_uri is None:
+        floor_path = os.path.join(
+            current_app.static_folder, "img", "art", "cover-art-on-floor.png"
+        )
+        try:
+            with open(floor_path, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode("utf-8")
+            _floor_texture_data_uri = f"data:image/png;base64,{b64}"
+        except OSError:
+            current_app.logger.warning(
+                "LB-1952: floor texture not found at %s — "
+                "falling back to static URL; download will lack texture",
+                floor_path,
+            )
+            _floor_texture_data_uri = (
+                f'{current_app.config["SERVER_ROOT_URL"]}'
+                "/static/img/art/cover-art-on-floor.png"
+            )
+    return _floor_texture_data_uri
 
 
 def _repeat_images(images, size=9):
@@ -417,7 +462,7 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
         except ValueError as error:
             raise APIBadRequest(str(error))
 
-        cover_art_on_floor_url = f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/cover-art-on-floor.png'
+        cover_art_on_floor_url = _get_floor_texture_data_uri()
         return render_template(f"art/svg-templates/{custom_name}.svg",
                                cover_art_on_floor_url=cover_art_on_floor_url,
                                images=images,

@@ -1,3 +1,4 @@
+import unittest
 from unittest.mock import patch
 
 from data.model.user_artist_stat import ArtistRecord
@@ -170,3 +171,91 @@ class ArtViewsTestCase(IntegrationTestCase):
         self.assert200(resp)
         self.assertTrue(resp.text.startswith("<svg"))
         self.assertNotEqual(resp.text.find("2273480607"), -1)
+
+    @patch("listenbrainz.webserver.views.art_api._get_floor_texture_data_uri")
+    @patch.object(CoverArtGenerator, "load_release_group_caa_ids")
+    @patch.object(CoverArtGenerator, "load_release_caa_ids")
+    @patch.object(CoverArtGenerator, "download_user_stats")
+    def test_cover_art_lps_on_the_floor_uses_data_uri(
+        self, mock_download_user_stats, mock_get_release_caa_ids,
+        mock_get_release_group_caa_ids, mock_get_floor_texture
+    ):
+        """LB-1952: floor texture must be inlined as a base64 data URI so that
+        Canvg can render it during client-side PNG export (external URLs are
+        silently dropped by OffscreenCanvas due to CORS restrictions)."""
+        FAKE_DATA_URI = "data:image/png;base64,FAKEFLOORTEXTURE=="
+        mock_get_floor_texture.return_value = FAKE_DATA_URI
+
+        mock_download_user_stats.return_value = [
+            ReleaseRecord(
+                release_mbid="b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
+                release_name="Release 1",
+                listen_count=5,
+                artist_name="Artist 1",
+                artist_mbids=["b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6"]
+            )
+            for _ in range(5)
+        ], 5
+        mock_get_release_caa_ids.return_value = {
+            "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6": {
+                "original_mbid": "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
+                "caa_id": 6945,
+                "caa_release_mbid": "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
+                "title": "Release 1",
+                "artist": "Artist 1",
+            }
+        }
+        mock_get_release_group_caa_ids.return_value = {}
+
+        resp = self.client.get(
+            self.custom_url_for(
+                "art_api_v1.cover_art_custom_stats",
+                custom_name="lps-on-the-floor",
+                user_name="rob",
+                time_range="week",
+                image_size=750,
+            )
+        )
+        self.assert200(resp)
+        self.assertTrue(resp.text.strip().startswith("<svg"))
+        # The floor texture href must be the data URI, not a plain HTTP URL.
+        self.assertIn(FAKE_DATA_URI, resp.text,
+                      "Floor texture must be embedded as a data URI so Canvg can render it")
+        self.assertNotIn("/static/img/art/cover-art-on-floor.png", resp.text,
+                         "Floor texture must NOT be a plain HTTP URL (Canvg cannot fetch it cross-origin)")
+
+    def test_get_floor_texture_data_uri_happy_path(self):
+        """_get_floor_texture_data_uri returns a data URI when the file exists."""
+        import listenbrainz.webserver.views.art_api as art_api_module
+
+        fake_png = b"\x89PNG\r\n"
+        with patch("builtins.open", unittest.mock.mock_open(read_data=fake_png)):
+            # Reset the module-level cache so the helper re-reads the file.
+            art_api_module._floor_texture_data_uri = None
+            with self.app.app_context():
+                result = art_api_module._get_floor_texture_data_uri()
+
+        self.assertTrue(result.startswith("data:image/png;base64,"),
+                        "Result should be a base64 data URI")
+        # Reset cache for other tests.
+        art_api_module._floor_texture_data_uri = None
+
+    def test_get_floor_texture_data_uri_fallback_on_missing_file(self):
+        """_get_floor_texture_data_uri falls back to the static URL on OSError.
+
+        This covers the case where cover-art-on-floor.png is missing from the
+        static folder in a misconfigured deployment.  We must never raise a 500.
+        """
+        import listenbrainz.webserver.views.art_api as art_api_module
+
+        art_api_module._floor_texture_data_uri = None
+        with patch("builtins.open", side_effect=OSError("file not found")):
+            with self.app.app_context():
+                result = art_api_module._get_floor_texture_data_uri()
+
+        self.assertIn("/static/img/art/cover-art-on-floor.png", result,
+                      "Should fall back to the static URL when the file is missing")
+        self.assertFalse(result.startswith("data:"),
+                         "Fallback result must not be a data URI")
+        # Reset cache for other tests.
+        art_api_module._floor_texture_data_uri = None

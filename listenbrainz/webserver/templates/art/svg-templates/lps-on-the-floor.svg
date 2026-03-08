@@ -1,4 +1,4 @@
-{% macro render_lp_image(x, y, width, height, transform, image) %}
+{%- macro render_lp_image(x, y, width, height, transform, image) -%}
   {% if image.entity_mbid %}
   <a href="https://listenbrainz.org/release/{{ image.entity_mbid }}" target="_blank">
   {% endif %}
@@ -9,6 +9,7 @@
         height="{{ height }}"
         preserveAspectRatio="xMidYMid slice"
         href="{{ image.url }}"
+        xlink:href="{{ image.url }}"
         transform="{{ transform }}"
     >
         {% if image.title and image.artist %}
@@ -20,9 +21,10 @@
   {% if image.entity_mbid %}
   </a>
   {% endif %}
-{% endmacro %}
+{%- endmacro -%}
 <svg version="1.1"
      xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
      role="img"
      width="{{ width }}" height="{{ height }}"
      viewBox="0 0 {{ width }} {{ height }}"
@@ -49,5 +51,6 @@
            width="{{ width }}"
            height="{{ height }}"
            href="{{ cover_art_on_floor_url }}"
+           xlink:href="{{ cover_art_on_floor_url }}"
            class="background-image" />
 </svg>
