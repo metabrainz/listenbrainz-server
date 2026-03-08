@@ -27,8 +27,8 @@
   </style>
  <defs id="defs42">
   <linearGradient id="purple-gradient" y2="2000" gradientUnits="userSpaceOnUse" x2="442" y1="38" x1="13">
-   <stop id="stop4176" stop-color="#00A2CC" offset="0"/>
-   <stop id="stop4178" stop-color="#FF29A5" offset="1"/>
+   <stop id="stop4176" class="stop-1" stop-color="#00A2CC" offset="0"/>
+   <stop id="stop4178" class="stop-2" stop-color="#FF29A5" offset="1"/>
   </linearGradient>
   <clipPath id="clip">
       <use xlink:href="#background"/>

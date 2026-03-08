@@ -28,8 +28,8 @@
  <defs id="defs42">
     <linearGradient id="gradient" x1="-20%" y1="-20%" x2="100%" y2="100%"
       gradientUnits="userSpaceOnUse">
-    <stop offset="0" stop-color="#083b2b"/>
-    <stop offset="1" stop-color="#111820"/>
+    <stop class="stop-1" offset="0" stop-color="#083b2b"/>
+    <stop class="stop-2" offset="1" stop-color="#111820"/>
   </linearGradient>
   <clipPath id="clip">
       <use xlink:href="#background"/>
