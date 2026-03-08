@@ -26,7 +26,6 @@ import {
   updateMediaSession,
 } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { getRecordingMBID } from "../../utils/utils";
 import BrainzPlayerUI from "./BrainzPlayerUI";
 import SoundcloudPlayer from "./SoundcloudPlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
@@ -539,49 +538,32 @@ export default function BrainzPlayer() {
         let urlsToUse = streamingUrls;
 
         if (!urlsToUse) {
-          // fetch MBID to make metadata call
-          const recordingMbid = getRecordingMBID(listen as Listen);
-          if (recordingMbid) {
-            try {
-              const metadata = await APIService.getRecordingMetadata(
-                [recordingMbid],
-                true
+          const urlRels = listen?.track_metadata?.mbid_mapping?.url_rels;
+
+          if (urlRels?.length) {
+            const filteredUrls = urlRels.filter(
+              (rel) => rel.type === "free streaming" || rel.type === "streaming"
+            );
+
+            urlsToUse = new Map<string, string>();
+
+            for (const datasourceRef of dataSourceRefs) {
+              const datasource = datasourceRef.current;
+              if (!datasource) continue;
+
+              // check if data source supports "free streaming"
+              const urlPattern = DATASOURCE_URL_MAP[datasource.name];
+              if (!urlPattern) continue;
+
+              // finds first match
+              // TODO: handle multiple matches
+              const matchingUrl = filteredUrls.find((rel) =>
+                urlPattern.test(rel.url)
               );
 
-              if (metadata?.[recordingMbid]?.recording?.url_rels) {
-                const urlRels = metadata[recordingMbid].recording.url_rels;
-
-                const filteredUrls = urlRels.filter(
-                  (rel) =>
-                    rel.type === "free streaming" || rel.type === "streaming"
-                );
-
-                urlsToUse = new Map<string, string>();
-
-                for (const datasourceRef of dataSourceRefs) {
-                  const datasource = datasourceRef.current;
-                  if (!datasource) continue;
-
-                  // check if data source supports "free streaming"
-                  const urlPattern = DATASOURCE_URL_MAP[datasource.name];
-                  if (!urlPattern) continue;
-
-                  // finds first match
-                  // TODO: handle multiple matches
-                  const matchingUrl = filteredUrls.find((rel) =>
-                    urlPattern.test(rel.url)
-                  );
-
-                  if (matchingUrl) {
-                    urlsToUse.set(datasource.name, matchingUrl.url);
-                  }
-                }
+              if (matchingUrl) {
+                urlsToUse.set(datasource.name, matchingUrl.url);
               }
-            } catch (error) {
-              handleError(
-                error,
-                "Error fetching streaming URLs from MusicBrainz"
-              );
             }
           }
         }
