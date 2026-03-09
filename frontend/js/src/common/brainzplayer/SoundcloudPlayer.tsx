@@ -333,6 +333,8 @@ export default class SoundcloudPlayer
         "track_metadata.additional_info.origin_url"
       );
       this.playStreamUrl(originURL);
+    } else if (streamingUrl) {
+      this.playStreamUrl(streamingUrl);
     } else {
       this.searchAndPlayTrack(listen);
     }
