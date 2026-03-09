@@ -2,6 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import { useLocation } from "react-router";
 import { RouteQuery } from "../../utils/Loader";
+import {
+  fullLocalizedDateFromTimestampOrISODate,
+  formatSecondsDuration,
+} from "../../utils/utils";
+
 import UserEvolutionChart, { UserEvolutionData } from "./UserEvolutionChart";
 
 type CurrentStatusLoaderData = {
@@ -107,31 +112,42 @@ export default function CurrentStatus() {
               {serviceStatus && (
                 <tr>
                   <td>Last Updated</td>
-                  <td>{new Date(serviceStatus.time * 1000).toISOString()}</td>
+                  <td>
+                    {fullLocalizedDateFromTimestampOrISODate(
+                      new Date(serviceStatus.time * 1000)
+                    )}
+                  </td>
                 </tr>
               )}
               {serviceStatus && (
                 <tr>
                   <td>Database Dump Age</td>
-                  <td>{serviceStatus.dump_age} seconds</td>
+                  <td>{formatSecondsDuration(serviceStatus.dump_age)}</td>
                 </tr>
               )}
               {serviceStatus && (
                 <tr>
                   <td>Stats Age</td>
-                  <td>{serviceStatus.stats_age} seconds</td>
+                  <td>{formatSecondsDuration(serviceStatus.stats_age)}</td>
                 </tr>
               )}
               {serviceStatus && (
                 <tr>
                   <td>Sitewide Stats Age</td>
-                  <td>{serviceStatus.sitewide_stats_age} seconds</td>
+                  <td>
+                    {formatSecondsDuration(serviceStatus.sitewide_stats_age)}
+                  </td>
                 </tr>
               )}
               {serviceStatus && (
                 <tr>
                   <td>Incoming Listen Count</td>
-                  <td>{serviceStatus.incoming_listen_count} listens</td>
+                  <td>
+                    {new Intl.NumberFormat().format(
+                      serviceStatus.incoming_listen_count
+                    )}{" "}
+                    listens
+                  </td>
                 </tr>
               )}
             </tbody>
