@@ -14,7 +14,7 @@ from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISS
 from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.troi.export import export_to_spotify, export_to_apple_music, export_to_soundcloud
-from listenbrainz.troi.import_ms import import_from_spotify, import_from_apple_music, import_from_soundcloud
+from listenbrainz.troi.import_ms import import_from_spotify, import_from_apple_music, import_from_soundcloud, import_from_xspf
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.metadata_cache.apple.client import Apple
 from listenbrainz.metadata_cache.soundcloud.client import SoundCloud
@@ -1068,6 +1068,39 @@ def import_tracks_from_soundcloud_playlist(playlist_id):
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
+
+
+@playlist_api_bp.post("/xspf/tracks")
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def import_tracks_from_xspf_playlist():
+    """
+    Import a playlist from an XSPF file and convert its tracks to JSPF.
+
+    The request body must contain the raw XSPF XML content. Tracks are resolved
+    to MusicBrainz recording MBIDs automatically: tracks with a MusicBrainz
+    recording URI in their <identifier> element are used directly; all others
+    are resolved via the ListenBrainz metadata lookup API.
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: text/xml
+    :statuscode 200: tracks resolved and returned as JSPF.
+    :statuscode 400: missing or empty XSPF content.
+    :statuscode 401: invalid authorization.
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+
+    xspf_content = request.get_data(as_text=True)
+    if not xspf_content:
+        raise APIBadRequest("No XSPF content provided in request body.")
+
+    try:
+        playlist = import_from_xspf(xspf_content, user["auth_token"])
+        return jsonify(playlist)
+    except Exception as exc:
+        raise APIInternalServerError(f"Could not import XSPF playlist: {str(exc)}")
 
 
 @playlist_api_bp.post("/export-jspf/<service>")

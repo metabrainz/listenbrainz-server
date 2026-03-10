@@ -1574,6 +1574,23 @@ export default class APIService {
     return response.json();
   };
 
+  importXSPFPlaylistTracks = async (
+    userToken: string,
+    xspfContent: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/xspf/tracks`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "text/xml",
+      },
+      body: xspfContent,
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   lookupMBRecording = async (
     recordingMBID: string,
     inc = "artists"

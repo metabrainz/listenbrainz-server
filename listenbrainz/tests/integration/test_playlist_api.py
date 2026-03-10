@@ -1248,3 +1248,66 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert200(response)
         self.assertEqual(response.json, {"external_url": "apple_music_url"})
+
+
+class XSPFImportTestCase(PlaylistAPITestCase):
+
+    SAMPLE_XSPF = """<?xml version="1.0" encoding="UTF-8"?>
+<playlist version="1" xmlns="http://xspf.org/ns/0/">
+  <title>Test XSPF Playlist</title>
+  <annotation>A test playlist</annotation>
+  <trackList>
+    <track>
+      <title>Blue (Da Ba Dee)</title>
+      <creator>Eiffel 65</creator>
+    </track>
+  </trackList>
+</playlist>"""
+
+    MOCK_JSPF = {
+        "playlist": {
+            "title": "Test XSPF Playlist",
+            "annotation": "A test playlist",
+            "extension": {
+                PLAYLIST_EXTENSION_URI: {"public": True}
+            },
+            "track": [
+                {"identifier": ["https://musicbrainz.org/recording/e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"]}
+            ]
+        }
+    }
+
+    @mock.patch("listenbrainz.webserver.views.playlist_api.import_from_xspf")
+    def test_import_xspf_tracks(self, mock_import):
+        """Authenticated POST with valid XSPF returns the resolved JSPF."""
+        mock_import.return_value = self.MOCK_JSPF
+
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.import_tracks_from_xspf_playlist"),
+            data=self.SAMPLE_XSPF,
+            content_type="text/xml",
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        data = response.json
+        assert data["playlist"]["title"] == "Test XSPF Playlist"
+        assert len(data["playlist"]["track"]) == 1
+        mock_import.assert_called_once_with(self.SAMPLE_XSPF, self.user["auth_token"])
+
+    def test_import_xspf_tracks_unauthenticated(self):
+        """Request without auth token must be rejected with 401."""
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.import_tracks_from_xspf_playlist"),
+            data=self.SAMPLE_XSPF,
+            content_type="text/xml",
+        )
+        self.assert401(response)
+
+    def test_import_xspf_tracks_missing_body(self):
+        """Request with empty body must be rejected with 400."""
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.import_tracks_from_xspf_playlist"),
+            content_type="text/xml",
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
