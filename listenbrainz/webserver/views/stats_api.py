@@ -813,7 +813,7 @@ def get_daily_activity(user_name: str):
                     "Tuesday": ["..."],
                     "..."
                 },
-                "stats_range": "all_time",
+                "range": "all_time",
                 "to_ts": 1589155200,
                 "user_id": "ishaanshah"
             }
@@ -890,7 +890,7 @@ def get_artist_map(user_name: str):
                         "artist_count": 32
                     }
                 ],
-                "stats_range": "all_time"
+                "range": "all_time",
                 "to_ts": 1589155200,
                 "user_id": "ishaanshah"
             }
@@ -965,7 +965,7 @@ def get_artist_listeners(artist_mbid):
                 "user_name": "oldpunisher"
               }
             ],
-            "stats_range": "all_time",
+            "range": "all_time",
             "to_ts": 1681777035,
             "total_listen_count": 16393
           }
@@ -1056,7 +1056,7 @@ def get_release_group_listeners(release_group_mbid):
             ],
             "release_group_mbid": "087b3a7d-d532-44d9-b37a-84427677ddcd",
             "release_group_name": "Indigo",
-            "stats_range": "all_time",
+            "range": "all_time",
             "to_ts": 1681777035,
             "total_listen_count": 10291
           }
@@ -1713,7 +1713,7 @@ def get_sitewide_artist_map():
                         "artist_count": 32
                     }
                 ],
-                "stats_range": "all_time"
+                "range": "all_time",
                 "to_ts": 1589155200,
             }
         }
@@ -1742,7 +1742,7 @@ def get_sitewide_artist_map():
             "from_ts": stats["from_ts"],
             "to_ts": stats["to_ts"],
             "last_updated": stats["last_updated"],
-            "stats_range": stats_range
+            "range": stats_range
         }
     })
 
