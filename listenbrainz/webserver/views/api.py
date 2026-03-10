@@ -266,6 +266,54 @@ def get_playing_now(user_name):
     })
 
 
+@api_bp.post("/playing-now/delete")
+@crossdomain
+@ratelimit()
+def delete_playing_now():
+    """
+    Clear the playing now status for the user. If a ``client`` is provided in the request body,
+    the endpoint will only clear the playing_now if it was submitted by the specified client.
+    If no ``client`` is provided, the playing_now will be cleared unconditionally.
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Successfully cleared playing now status (or no playing_now exists).
+    :statuscode 400: Invalid request (invalid JSON).
+    :statuscode 401: Invalid authorization.
+    :statuscode 404: The current playing_now was not submitted by the specified client.
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header(fetch_email=False, scopes=["listenbrainz:submit-listens"])
+
+    playing_now_listen = redis_connection._redis.get_playing_now(user['id'])
+    if playing_now_listen is None:
+        return jsonify({'status': 'ok', 'message': 'Playing now was already cleared'})
+
+    body = request.get_data()
+    client_name = None
+    if body:
+        try:
+            data = orjson.loads(body.decode("utf-8"))
+        except (ValueError, UnicodeDecodeError) as e:
+            raise APIBadRequest("Cannot parse JSON document: %s" % e)
+
+        if not isinstance(data, dict):
+            raise APIBadRequest("Invalid JSON document submitted. Top level of JSON document should be a json object.")
+
+        client_name = data.get('client')
+        if client_name is not None and not isinstance(client_name, str):
+            raise APIBadRequest("The 'client' field must be a string.")
+
+    if client_name:
+        track_metadata = playing_now_listen.data
+        submission_client = track_metadata.get('additional_info', {}).get('submission_client')
+        if submission_client and submission_client != client_name:
+            raise APINotFound("No playing now listen found for the specified client.")
+
+    redis_connection._redis.delete_playing_now(user['id'])
+    return jsonify({'status': 'ok', 'message': 'Playing now cleared successfully'})
+
+
 @api_bp.get("/user/<mb_username:user_name>/similar-users")
 @crossdomain
 @ratelimit()
