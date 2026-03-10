@@ -1167,6 +1167,24 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
     def test_delete_playing_now_errors(self):
         """ Test error cases for delete_playing_now endpoint """
+        playing_now_payload = {
+            "listen_type": "playing_now",
+            "payload": [
+                {
+                    "track_metadata": {
+                        "artist_name": "Kanye West",
+                        "release_name": "The Life of Pablo",
+                        "track_name": "Fade",
+                        "additional_info": {
+                            "submission_client": "BrainzPlayer"
+                        }
+                    }
+                }
+            ]
+        }
+        response = self.send_data(playing_now_payload)
+        self.assert200(response)
+
         delete_url = self.custom_url_for('api_v1.delete_playing_now')
         auth_headers = {'Authorization': 'Token {}'.format(self.user['auth_token'])}
 
