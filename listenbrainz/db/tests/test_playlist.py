@@ -142,6 +142,29 @@ class PlaylistTestCase(IntegrationTestCase):
         self.assertEqual(count, 2)
         self.assertEqual({p.name for p in playlists}, {playlist_1.name, playlist_2.name})
 
+        playlists, count = db_playlist.search_playlists_for_user(
+            self.db_conn, self.ts_conn, self.user_1['id'], "testing", viewer_id=None
+        )
+
+        # Anonymous viewer should only see public playlists associated with user_1.
+        # playlist_1 is private, so only playlist_3 matches.
+
+        self.assertEqual(len(playlists), 1)
+        self.assertEqual(count, 1)
+        self.assertEqual(playlists[0].name, playlist_3.name)
+
+        playlists, count = db_playlist.search_playlists_for_user(
+            self.db_conn, self.ts_conn, self.user_2['id'], "test", viewer_id=self.user_2['id'],
+            include_global=True
+        )
+
+        # With include_global=True, user_1's public playlist_3 should also appear in results
+        # in addition to user_2's associated playlists (playlist_1, playlist_2).
+
+        self.assertEqual(len(playlists), 3)
+        self.assertEqual(count, 3)
+        self.assertEqual({p.name for p in playlists}, {playlist_1.name, playlist_2.name, playlist_3.name})
+
     def test_delete_deletes_user_playlists(self):
         """Tests that deleting a user also deletes their playlists"""
         query = text('INSERT INTO "user" (id, musicbrainz_id, musicbrainz_row_id, auth_token) VALUES (:user_id, :mb_id, :mb_row_id, :token)')

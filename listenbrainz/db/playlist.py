@@ -438,33 +438,19 @@ def search_playlists_for_user(
         """
 
     # Build the association condition: user's playlists OR (if include_global) all public playlists
-    if include_global:
-        association_condition = """
-            (
-                pl.creator_id = :user_id
-             OR pl.created_for_id = :user_id
-             OR EXISTS (
-                    SELECT 1
-                      FROM playlist.playlist_collaborator pc_target
-                     WHERE pc_target.playlist_id = pl.id
-                       AND pc_target.collaborator_id = :user_id
-                )
-             OR pl.public = true
-            )
-        """
-    else:
-        association_condition = """
-            (
-                pl.creator_id = :user_id
-             OR pl.created_for_id = :user_id
-             OR EXISTS (
-                    SELECT 1
-                      FROM playlist.playlist_collaborator pc_target
-                     WHERE pc_target.playlist_id = pl.id
-                       AND pc_target.collaborator_id = :user_id
-                )
-            )
-        """
+    global_condition = "OR pl.public = true" if include_global else ""
+    association_condition = f"""\
+        (
+            pl.creator_id = :user_id
+         OR pl.created_for_id = :user_id
+         OR EXISTS (
+                SELECT 1
+                  FROM playlist.playlist_collaborator pc_target
+                 WHERE pc_target.playlist_id = pl.id
+                   AND pc_target.collaborator_id = :user_id
+            ) {global_condition}
+        )
+    """
 
     query = text(f"""
     WITH candidate_playlists AS (
