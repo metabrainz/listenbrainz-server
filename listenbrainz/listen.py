@@ -233,6 +233,7 @@ class NowPlayingListen:
     def to_api(self):
         return {
             "track_metadata": self.data,
+            'user_name': self.user_name,
             "playing_now": True
         }
 
