@@ -21,6 +21,7 @@
             "track": [
                 {
                     "creator": "Endless Boogie",
+                    "duration": 300000,
                     "extension": {
                         "https://musicbrainz.org/doc/jspf#track": {
                             "added_at": "2020-12-24T01:41:44.821939+00:00",
@@ -32,6 +33,36 @@
                     },
                     "identifier": "https://musicbrainz.org/recording/385f4381-0f6d-47a0-bc56-07570374f650",
                     "title": "Vibe Killer"
+                },
+                {
+                    "creator": "Arcade Fire",
+                    "duration": 245000,
+                    "extension": {
+                        "https://musicbrainz.org/doc/jspf#track": {
+                            "added_at": "2021-01-01T10:00:00.000000+00:00",
+                            "added_by": "troi-bot",
+                            "artist_identifiers": [
+                                "https://musicbrainz.org/artist/52074ba6-e495-4ef3-9bb4-0703888a9f68"
+                            ]
+                        }
+                    },
+                    "identifier": "https://musicbrainz.org/recording/aaaaaaaa-0000-0000-0000-000000000001",
+                    "title": "Rebellion (Lies)"
+                },
+                {
+                    "creator": "Blondie",
+                    "duration": 180000,
+                    "extension": {
+                        "https://musicbrainz.org/doc/jspf#track": {
+                            "added_at": "2021-01-10T08:30:00.000000+00:00",
+                            "added_by": "troi-bot",
+                            "artist_identifiers": [
+                                "https://musicbrainz.org/artist/bbbbbbbb-0000-0000-0000-000000000002"
+                            ]
+                        }
+                    },
+                    "identifier": "https://musicbrainz.org/recording/bbbbbbbb-0000-0000-0000-000000000002",
+                    "title": "Heart of Glass"
                 }
             ]
         }

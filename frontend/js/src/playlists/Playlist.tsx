@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
-import { findIndex } from "lodash";
+import { findIndex, orderBy } from "lodash";
 import * as React from "react";
 
 import {
@@ -8,6 +8,9 @@ import {
   faPlayCircle,
   faPlusCircle,
   faRss,
+  faSort,
+  faSortAmountDown,
+  faSortAmountUp,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { sanitizeUrl } from "@braintree/sanitize-url";
@@ -32,6 +35,7 @@ import {
   getPlaylistExtension,
   getPlaylistId,
   getRecordingMBIDFromJSPFTrack,
+  getTrackExtension,
   isPlaylistOwner,
   LISTENBRAINZ_URI_PREFIX,
   PLAYLIST_TRACK_URI_PREFIX,
@@ -46,6 +50,15 @@ import {
   removeTrackFromAmbientQueueAtom,
   setAmbientQueueAtom,
 } from "../common/brainzplayer/BrainzPlayerAtoms";
+
+export enum TrackSortOption {
+  MANUAL = "manual",
+  TITLE = "title",
+  ARTIST = "artist",
+  DATE_ADDED = "dateAdded",
+  DURATION = "duration",
+  RANDOM = "random",
+}
 
 export type PlaylistPageProps = {
   playlist: JSPFObject & {
@@ -117,6 +130,12 @@ export default function PlaylistPage() {
   );
   const { track: tracks } = playlist;
   const [dontAskAgain, setDontAskAgain] = React.useState(false);
+
+  // Track sort state
+  const [sortBy, setSortBy] = React.useState<TrackSortOption>(
+    TrackSortOption.MANUAL
+  );
+  const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc");
 
   React.useEffect(() => {
     setPlaylist(playlistProps?.playlist || {});
@@ -360,6 +379,25 @@ export default function PlaylistPage() {
     { format: ["days", "hours", "minutes"] }
   );
 
+  const getSortedTracks = (): JSPFTrack[] => {
+    if (sortBy === TrackSortOption.MANUAL) return tracks;
+    if (sortBy === TrackSortOption.RANDOM)
+      return [...tracks].sort(() => Math.random() - 0.5);
+    const criterias: Record<string, (t: JSPFTrack) => string | number> = {
+      [TrackSortOption.TITLE]: (t: JSPFTrack) => t.title?.toLowerCase() ?? "",
+      [TrackSortOption.ARTIST]: (t: JSPFTrack) =>
+        t.creator?.toLowerCase() ?? "",
+      [TrackSortOption.DATE_ADDED]: (t: JSPFTrack) =>
+        getTrackExtension(t)?.added_at ?? "",
+      [TrackSortOption.DURATION]: (t: JSPFTrack) => t.duration ?? 0,
+    };
+    return orderBy([...tracks], [criterias[sortBy]], [sortOrder]);
+  };
+
+  const displayedTracks = getSortedTracks();
+  // Only allow drag-and-drop reordering in manual sort mode
+  const sortingIsActive = sortBy !== TrackSortOption.MANUAL;
+
   const userHasRightToEdit = hasRightToEdit();
   const customFields = getPlaylistExtension(playlist);
 
@@ -559,7 +597,7 @@ export default function PlaylistPage() {
                   window.postMessage(
                     {
                       brainzplayer_event: "play-ambient-queue",
-                      payload: tracks,
+                      payload: displayedTracks,
                     },
                     window.location.origin
                   );
@@ -569,6 +607,51 @@ export default function PlaylistPage() {
               </button>
             )}
           </h3>
+          {Boolean(playlist.track?.length) && (
+            <div className="playlist-sort-controls">
+              <label htmlFor="track-sort-by">Sort by:</label>
+              <select
+                id="track-sort-by"
+                value={sortBy}
+                onChange={(e) => {
+                  setSortBy(e.target.value as TrackSortOption);
+                  setSortOrder("asc");
+                }}
+                className="form-select"
+                style={{ width: "160px" }}
+              >
+                <option value={TrackSortOption.MANUAL}>Manual order</option>
+                <option value={TrackSortOption.TITLE}>Title</option>
+                <option value={TrackSortOption.ARTIST}>Artist</option>
+                <option value={TrackSortOption.DATE_ADDED}>Date Added</option>
+                <option value={TrackSortOption.DURATION}>Duration</option>
+                <option value={TrackSortOption.RANDOM}>Random</option>
+              </select>
+              {sortBy !== TrackSortOption.MANUAL &&
+                sortBy !== TrackSortOption.RANDOM && (
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary btn-sm"
+                    title={
+                      sortOrder === "asc"
+                        ? "Currently ascending — click for descending"
+                        : "Currently descending — click for ascending"
+                    }
+                    onClick={() =>
+                      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                    }
+                  >
+                    <FontAwesomeIcon
+                      icon={
+                        sortOrder === "asc" ? faSortAmountUp : faSortAmountDown
+                      }
+                      fixedWidth
+                    />
+                    &nbsp;{sortOrder === "asc" ? "Asc" : "Desc"}
+                  </button>
+                )}
+            </div>
+          )}
         </div>
         {userHasRightToEdit && tracks && tracks.length > 10 && (
           <div className="text-center">
@@ -589,17 +672,20 @@ export default function PlaylistPage() {
           {tracks && tracks.length > 0 ? (
             <ReactSortable
               handle=".drag-handle"
-              list={tracks as (JSPFTrack & { id: string })[]}
+              list={displayedTracks as (JSPFTrack & { id: string })[]}
               onEnd={movePlaylistItem}
-              setList={(newState) =>
-                setPlaylist({ ...playlist, track: newState })
-              }
+              setList={(newState) => {
+                if (!sortingIsActive) {
+                  setPlaylist({ ...playlist, track: newState });
+                }
+              }}
+              disabled={sortingIsActive}
             >
-              {tracks.map((track: JSPFTrack, index) => {
+              {displayedTracks.map((track: JSPFTrack, index) => {
                 return (
                   <PlaylistItemCard
                     key={`${track.id}-${index.toString()}`}
-                    canEdit={userHasRightToEdit}
+                    canEdit={userHasRightToEdit && !sortingIsActive}
                     track={track}
                     removeTrackFromPlaylist={deletePlaylistItem}
                   />
