@@ -264,7 +264,7 @@ class CoverArtGenerator:
                 conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
             return get_caa_ids_for_release_group_mbids(curs, release_group_mbids)
 
-    def load_images(self, release_mbids, release_group_mbids=[], tile_addrs=None, layout=None, cover_art_size=500):
+    def load_images(self, release_mbids, release_group_mbids=[], tile_addrs=None, layout=None, cover_art_size=500, listen_counts=None):
         """ Given a list of release and release group MBIDs and optional tile addresses, resolve all the cover art design,
             all the cover art to be used and then return the list of images and locations where they should be
             placed. Return an array of dicts containing the image coordinates and the URL of the image. """
@@ -283,12 +283,13 @@ class CoverArtGenerator:
                 "title": results[mbid]["title"],
                 "artist": results[mbid]["artist"],
                 "caa_id": results[mbid]["caa_id"],
-                "caa_release_mbid": results[mbid]["caa_release_mbid"]
+                "caa_release_mbid": results[mbid]["caa_release_mbid"],
+                "listen_count": listen_counts.get(mbid) if listen_counts else None,
             } for mbid in mbids
         ]
-        return self.generate_from_caa_ids(covers, tile_addrs, layout, cover_art_size)
+        return self.generate_from_caa_ids(covers, tile_addrs, layout, cover_art_size, listen_counts)
 
-    def generate_from_caa_ids(self, covers, tile_addrs=None, layout=None, cover_art_size=500):
+    def generate_from_caa_ids(self, covers, tile_addrs=None, layout=None, cover_art_size=500, listen_counts=None):
         """ If the caa_ids have already been resolved, use them directly to generate the grid . """
         # See if we're given a layout or a list of tile addresses
         if layout is not None:
@@ -342,6 +343,7 @@ class CoverArtGenerator:
                     "entity_mbid": cover.get("entity_mbid"),
                     "title": cover.get("title"),
                     "artist": cover.get("artist"),
+                    "listen_count": cover.get("listen_count"),
                 })
 
         return images
@@ -371,7 +373,8 @@ class CoverArtGenerator:
 
         releases, _ = self.download_user_stats("releases", user_name, time_range)
         release_mbids = [r.release_mbid for r in releases]
-        images = self.load_images(release_mbids, layout=layout)
+        listen_counts = {r.release_mbid: r.listen_count for r in releases}
+        images = self.load_images(release_mbids, layout=layout, listen_counts=listen_counts)
         if images is None:
             return None, None
 
