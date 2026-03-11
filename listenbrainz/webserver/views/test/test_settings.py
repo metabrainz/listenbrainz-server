@@ -35,8 +35,21 @@ class SettingsViewsTestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertIn(self.user['auth_token'], response.data.decode('utf-8'))
 
-    def test_reset_import_timestamp(self):
+    @requests_mock.Mocker()
+    def test_reset_import_timestamp(self, mock_requests):
         self.temporary_login(self.user['login_id'])
+        mock_requests.get('https://ws.audioscrobbler.com/2.0/', status_code=200, json={
+            "recenttracks": {
+                "track": [],
+                "@attr": {
+                    "user": "lucifer",
+                    "page": "1",
+                    "perPage": "2",
+                    "totalPages": "0",
+                    "total": "0"
+                }
+            }
+        })
         response = self.client.post(
             self.custom_url_for('settings.music_services_connect', service_name='lastfm'),
             json={"external_user_id": "lucifer"}
