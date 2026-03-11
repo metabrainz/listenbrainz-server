@@ -1,23 +1,19 @@
 import * as React from "react";
 
 type ToggleOptionProps = {
-  buttonName: string;
-  onClick: () => void;
+  label: string;
+  checked: boolean;
+  onChange: () => void;
 };
 
-function ToggleOption({ buttonName, onClick }: ToggleOptionProps) {
+function ToggleOption({ label, checked, onChange }: ToggleOptionProps) {
   return (
-    <div
-      className="cl-toggle-switch"
-      role="presentation"
-      onClick={onClick}
-      onKeyDown={onClick}
-    >
+    <div className="cl-toggle-switch">
       <label className="cl-switch">
-        <input type="checkbox" />
+        <input type="checkbox" checked={checked} onChange={onChange} />
         <span />
       </label>
-      {buttonName}
+      {label}
     </div>
   );
 }
