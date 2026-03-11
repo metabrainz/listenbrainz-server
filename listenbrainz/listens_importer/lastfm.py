@@ -5,7 +5,6 @@ from flask import current_app
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
-from listenbrainz.db import listens_importer
 from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError, LastfmUserNotRetryableException
 from listenbrainz.domain.importer_service import ImporterService
 from listenbrainz.domain.lastfm import LastfmService
@@ -14,8 +13,6 @@ from listenbrainz.listenstore import LISTEN_MINIMUM_DATE
 from listenbrainz.webserver import create_app
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_IMPORT, \
     LISTEN_TYPE_PLAYING_NOW
-
-from listenbrainz.webserver import db_conn
 
 
 class BaseLastfmImporter(ListensImporter):
@@ -122,9 +119,9 @@ class BaseLastfmImporter(ListensImporter):
         Returns:
             the number of recently played listens imported for the user
         """
-        try:
-            imported_listen_count = 0
+        imported_listen_count = 0
 
+        try:
             session = requests.Session()
             session.mount(
                 "https://",
@@ -138,9 +135,7 @@ class BaseLastfmImporter(ListensImporter):
             )
 
             initial_imported_listens = user["status"]["count"] if user["status"] else 0
-            listens_importer.update_status(
-                db_conn, user["user_id"], self.service.service, "Importing", initial_imported_listens
-            )
+            self.service.update_status(user["user_id"], "Importing", initial_imported_listens)
 
             pages = self.get_total_pages(session, user)
 
@@ -163,38 +158,23 @@ class BaseLastfmImporter(ListensImporter):
                     current_app.logger.info('imported %d listens for %s' % (len(listens), str(user['musicbrainz_id'])))
                     imported_listen_count += len(listens)
                 
-                listens_importer.update_status(
-                    db_conn, user["user_id"], self.service.service,
-                    "Importing", initial_imported_listens + imported_listen_count
-                )
+                self.service.update_status(user["user_id"], "Importing", initial_imported_listens + imported_listen_count)
 
-            listens_importer.update_status(
-                db_conn, user["user_id"], self.service.service, "Synced",
-                initial_imported_listens + imported_listen_count
-            )
+            self.service.update_status(user["user_id"], "Synced", initial_imported_listens + imported_listen_count)
 
             return imported_listen_count
         except LastfmUserNotRetryableException as e:
-            self.service.update_user_import_status(user_id=user["user_id"], error=str(e), retry=False)
-            listens_importer.update_status(
-                db_conn, user["user_id"], self.service.service, "Error", initial_imported_listens
-            )
+            self.service.update_status(user["user_id"], "Error", initial_imported_listens, error_message=str(e), retry=False)
             if not current_app.config["TESTING"]:
                 self.notify_error(user["musicbrainz_id"], str(e))
             raise e
         except ExternalServiceAPIError as e:
-            # if it is an error from the Spotify API, show the error message to the user
-            self.service.update_user_import_status(user_id=user["user_id"], error=str(e))
-            listens_importer.update_status(
-                db_conn, user["user_id"], self.service.service, "Error", initial_imported_listens
-            )
+            self.service.update_status(user["user_id"], "Error", initial_imported_listens, error_message=str(e), retry=True)
             if not current_app.config["TESTING"]:
                 self.notify_error(user["musicbrainz_id"], str(e))
             raise e
 
     def process_all_users(self):
-        # todo: last.fm is prone to errors, especially for entire history imports. currently doing alternate passes
-        #   where we ignore and reattempt
         result = super().process_all_users()
         self.exclude_error = not self.exclude_error
         return result

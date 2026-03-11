@@ -111,7 +111,7 @@ class ConvertListensTestCase(DatabaseTestCase):
         mock_send_mail.assert_called_once()
         self.assertListEqual(mock_send_mail.call_args[1]['recipients'], ['one@two.one'])
 
-    @patch('listenbrainz.domain.spotify.SpotifyService.update_user_import_status')
+    @patch('listenbrainz.domain.spotify.SpotifyService.update_status')
     @patch.object(SpotifyImporter, 'notify_error')
     @patch.object(SpotifyImporter, 'make_api_request')
     def test_notification_on_api_error(self, mock_make_api_request, mock_notify_error, mock_update):
