@@ -76,6 +76,7 @@ import useListenSubmission from "./hooks/useListenSubmission";
 const DATASOURCE_URL_MAP: Record<string, RegExp> = {
   youtube: /(?:https?:\/\/(?:www\.|m\.)?)?(?:youtu\.be|youtube\.com)\//,
   soundcloud: /soundcloud\.com/,
+  spotify: /spotify\.com/,
 };
 
 export type DataSourceType = {

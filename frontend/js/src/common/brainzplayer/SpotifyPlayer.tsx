@@ -349,6 +349,16 @@ export default class SpotifyPlayer
       this.playSpotifyURI(
         SpotifyPlayer.getSpotifyUriFromListen(listen as Listen)
       );
+    } else if (streamingUrl) {
+      // from https://regex101.com/r/Mcd4kh/1
+      const spotifyUrlMatch = /https?:\/\/(?:open\.)?spotify.com\/(user|episode|playlist|track)\/(?:spotify\/playlist\/)?(\w*)/.exec(
+        streamingUrl
+      );
+      if (spotifyUrlMatch && spotifyUrlMatch[1] === "track" && spotifyUrlMatch[2]) {
+        this.playSpotifyURI(`spotify:track:${spotifyUrlMatch[2]}`);
+      } else {
+        this.searchAndPlayTrack(listen);
+      }
     } else {
       this.searchAndPlayTrack(listen);
     }
