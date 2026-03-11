@@ -22,7 +22,7 @@ from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError,
     APIUnauthorized, ListenValidationError, APIForbidden
 from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 from listenbrainz.webserver.models import SubmitListenUserMetadata
-from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
+from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR, parse_boolean_arg
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, \
     is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, \
     LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
@@ -264,6 +264,54 @@ def get_playing_now(user_name):
             'listens': listen_data,
         },
     })
+
+
+@api_bp.post("/playing-now/delete")
+@crossdomain
+@ratelimit()
+def delete_playing_now():
+    """
+    Clear the playing now status for the user. If a ``client`` is provided in the request body,
+    the endpoint will only clear the playing_now if it was submitted by the specified client.
+    If no ``client`` is provided, the playing_now will be cleared unconditionally.
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Successfully cleared playing now status (or no playing_now exists).
+    :statuscode 400: Invalid request (invalid JSON).
+    :statuscode 401: Invalid authorization.
+    :statuscode 404: The current playing_now was not submitted by the specified client.
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header(fetch_email=False, scopes=["listenbrainz:submit-listens"])
+
+    playing_now_listen = redis_connection._redis.get_playing_now(user['id'])
+    if playing_now_listen is None:
+        return jsonify({'status': 'ok', 'message': 'Playing now was already cleared'})
+
+    body = request.get_data()
+    client_name = None
+    if body:
+        try:
+            data = orjson.loads(body.decode("utf-8"))
+        except (ValueError, UnicodeDecodeError) as e:
+            raise APIBadRequest("Cannot parse JSON document: %s" % e)
+
+        if not isinstance(data, dict):
+            raise APIBadRequest("Invalid JSON document submitted. Top level of JSON document should be a json object.")
+
+        client_name = data.get('client')
+        if client_name is not None and not isinstance(client_name, str):
+            raise APIBadRequest("The 'client' field must be a string.")
+
+    if client_name:
+        track_metadata = playing_now_listen.data
+        submission_client = track_metadata.get('additional_info', {}).get('submission_client')
+        if submission_client and submission_client != client_name:
+            raise APINotFound("No playing now listen found for the specified client.")
+
+    redis_connection._redis.delete_playing_now(user['id'])
+    return jsonify({'status': 'ok', 'message': 'Playing now cleared successfully'})
 
 
 @api_bp.get("/user/<mb_username:user_name>/similar-users")
@@ -696,12 +744,19 @@ def user_recommendations(playlist_user_name):
 @api_listenstore_needed
 def search_user_playlist(playlist_user_name):
     """
-    Search for a playlist by name for a user.
+    Search for playlists associated with a user by name or description.
+
+    The search is a fuzzy match based on PostgreSQL trigram similarity and is performed against
+    the playlist title and description. Results are ordered by decreasing similarity.
+    The query is treated as a plain string
 
     :param playlist_user_name: the MusicBrainz ID of the user whose playlists are being searched.
-    :queryparam name: the name of the playlist to search for.
+    :queryparam query: the query string used to search for playlists. Must be at least 3 characters long.
+    :queryparam name: deprecated alias for :queryparam:`query`.
     :queryparam count: the number of playlists to return. Default: 25.
     :queryparam offset: the offset of the playlists to return. Default: 0.
+    :queryparam include_global: if true, also include all public playlists globally in addition to
+        the user's associated playlists. Default: false.
 
     :statuscode 200: success
     :statuscode 404: user not found
@@ -711,11 +766,21 @@ def search_user_playlist(playlist_user_name):
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
-    query = request.args.get("query")
+    user = validate_auth_header(optional=True)
+
+    query = request.args.get("query") or request.args.get("name")
     count = get_non_negative_param("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = get_non_negative_param("offset", 0)
+    include_global = parse_boolean_arg("include_global", False)
 
-    playlists, playlist_count = db_playlist.search_playlists_for_user(db_conn, ts_conn, playlist_user.id, query, count, offset)
+    if not query or len(query) < 3:
+        log_raise_400("Query string must be at least 3 characters long.")
+
+    viewer_id = user["id"] if user else None
+    playlists, playlist_count = db_playlist.search_playlists_for_user(
+        db_conn, ts_conn, playlist_user["id"], query, count, offset, 
+        viewer_id=viewer_id, include_global=include_global
+    )
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 

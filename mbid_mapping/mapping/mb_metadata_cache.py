@@ -253,6 +253,8 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                     ON l.link_type = lt.id
                                   {values_join}
                                  WHERE lt.gid IN ({RECORDING_URL_LINK_GIDS_SQL})
+                                    -- do not show outdated urls to users
+                                   AND NOT l.ended
                                GROUP BY r.gid
                    ), artist_data AS (
                             SELECT r.gid
