@@ -14,6 +14,7 @@ import ColorPicker from "./components/ColorPicker";
 import Gallery from "./components/Gallery";
 import IconTray from "./components/IconTray";
 import Preview from "./components/Preview";
+import ToggleOption from "./components/ToggleOption";
 import { svgToBlob, toPng } from "./utils";
 import { ToastMsg } from "../../notifications/Notifications";
 import UserSearch from "../../common/UserSearch";
@@ -209,7 +210,14 @@ export default function ArtCreator() {
 
   const [gridSize, setGridSize] = useState(4);
   const [gridLayout, setGridLayout] = useState(0);
-  const [showCaption, setShowCaption] = useState(true);
+  const [showRank, setShowRank] = useState(false);
+  const [showArtist, setShowArtist] = useState(true);
+  const [showRelease, setShowRelease] = useState(true);
+  const [showListenCount, setShowListenCount] = useState(false);
+  const [captionTextColor, setCaptionTextColor] = useState("#ffffff");
+  const [captionBgColor, setCaptionBgColor] = useState("#0000007a");
+
+  const showCaption = showRank || showRelease || showArtist || showListenCount;
   const [skipMissing, setSkipMissing] = useState(true);
   const [previewUrl, setPreviewUrl] = useState("");
   // const [font, setFont] = useState<keyof typeof FontNameEnum>("Roboto");
@@ -674,6 +682,12 @@ export default function ArtCreator() {
             key={previewUrl}
             url={previewUrl}
             showCaption={showCaption}
+            showRank={showRank}
+            showArtist={showArtist}
+            showRelease={showRelease}
+            showListenCount={showListenCount}
+            captionTextColor={captionTextColor}
+            captionBgColor={captionBgColor}
             styles={{
               textColor,
               bgColor1: firstBgColor,
@@ -752,15 +766,6 @@ export default function ArtCreator() {
                     <input
                       className="form-check-input me-2"
                       type="checkbox"
-                      checked={showCaption}
-                      onChange={(evt) => setShowCaption(evt.target.checked)}
-                    />{" "}
-                    Show caption
-                  </label>
-                  <label className="form-check-label">
-                    <input
-                      className="form-check-input me-2"
-                      type="checkbox"
                       checked={skipMissing}
                       onChange={(evt) => setSkipMissing(evt.target.checked)}
                     />{" "}
@@ -796,6 +801,76 @@ export default function ArtCreator() {
                         </label>
                       );
                     })}
+                  </div>
+                  <hr />
+                  <div className="sidenav-content-grid">
+                    <h6>Caption Options</h6>
+                    <ToggleOption
+                      label="Show Rank"
+                      checked={showRank}
+                      onChange={() => setShowRank(!showRank)}
+                    />
+                    <ToggleOption
+                      label="Show Release Title"
+                      checked={showRelease}
+                      onChange={() => setShowRelease(!showRelease)}
+                    />
+                    <ToggleOption
+                      label="Show Artist"
+                      checked={showArtist}
+                      onChange={() => setShowArtist(!showArtist)}
+                    />
+                    <ToggleOption
+                      label="Show Listen Count"
+                      checked={showListenCount}
+                      onChange={() => setShowListenCount(!showListenCount)}
+                    />
+                    <div>
+                      <label
+                        className="form-label"
+                        htmlFor="caption-text-color"
+                      >
+                        Caption text color:
+                      </label>
+                      <div className="input-group">
+                        <input
+                          id="caption-text-color"
+                          type="color"
+                          className="form-control form-control-color"
+                          value={captionTextColor}
+                          onChange={(e) => setCaptionTextColor(e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={captionTextColor}
+                          readOnly
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label
+                        className="form-label"
+                        htmlFor="caption-bg-color-picker"
+                      >
+                        Caption background color:
+                      </label>
+                      <div className="input-group">
+                        <input
+                          id="caption-bg-color-picker"
+                          type="color"
+                          className="form-control form-control-color"
+                          value={captionBgColor}
+                          onChange={(e) => setCaptionBgColor(e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={captionBgColor}
+                          readOnly
+                        />
+                      </div>
+                    </div>
                   </div>
                 </>
               )}
@@ -942,11 +1017,11 @@ export default function ArtCreator() {
                 />
               </div> */}
               {/* <div>
-                <ToggleOption onClick={userToggler} buttonName="Users" />
-                <ToggleOption onClick={dateToggler} buttonName="Date" />
-                <ToggleOption onClick={rangeToggler} buttonName="Range" />
-                <ToggleOption onClick={totalToggler} buttonName="Total" />
-                <ToggleOption onClick={genresToggler} buttonName="Genres" />
+                <ToggleOption onChange={() => {}} checked={false} label="Users" />
+                <ToggleOption onChange={() => {}} checked={false} label="Date" />
+                <ToggleOption onChange={() => {}} checked={false} label="Range" />
+                <ToggleOption onChange={() => {}} checked={false} label="Total" />
+                <ToggleOption onChange={() => {}} checked={false} label="Genres" />
               </div> */}
               {/* <div>
                 className="form-label" htmlFor="font-select">Font:</label>
@@ -964,7 +1039,7 @@ export default function ArtCreator() {
                 </select>
               </div> */}
               {/* <div>
-                <ToggleOption onClick={vaToggler} buttonName="Ignore VA" />
+                <ToggleOption onChange={() => {}} checked={false} label="Ignore VA" />
               </div> */}
             </div>
           </div>
