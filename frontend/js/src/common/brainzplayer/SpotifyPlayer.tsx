@@ -350,12 +350,11 @@ export default class SpotifyPlayer
         SpotifyPlayer.getSpotifyUriFromListen(listen as Listen)
       );
     } else if (streamingUrl) {
-      // from https://regex101.com/r/Mcd4kh/1
-      const spotifyUrlMatch = /https?:\/\/(?:open\.)?spotify.com\/(user|episode|playlist|track)\/(?:spotify\/playlist\/)?(\w*)/.exec(
-        streamingUrl
-      );
-      if (spotifyUrlMatch && spotifyUrlMatch[1] === "track" && spotifyUrlMatch[2]) {
-        this.playSpotifyURI(`spotify:track:${spotifyUrlMatch[2]}`);
+      // modified from https://regex101.com/r/Mcd4kh/1
+      const spotifyIdRegex = /https?:\/\/(?:open\.)?spotify.com\/track\/(?:spotify\/playlist\/)?(?<id>\w*)/;
+      const trackId = spotifyIdRegex.exec(streamingUrl)?.groups?.id;
+      if (trackId) {
+        this.playSpotifyURI(`spotify:track:${trackId}`);
       } else {
         this.searchAndPlayTrack(listen);
       }
