@@ -1,0 +1,43 @@
+[MAIN]
+# Analyse the listenbrainz package for coding errors.
+# Skip test fixture data and cache directories.
+ignore=testdata,__pycache__
+
+[MESSAGES CONTROL]
+# Start with errors-only approach: disable convention (C), refactor (R), and
+# warning (W) categories entirely. This avoids flooding PRs with style nits
+# while still catching real bugs.
+#
+# Additionally disable error-level checks that produce false positives in CI
+# where not every C-extension / system library is available, or which conflict
+# with patterns used in the codebase (Pydantic validators, type annotations):
+#
+#   import-error              – dependency may not be installed in the lint runner
+#   no-name-in-module         – same root cause as import-error
+#   no-member                 – frequently wrong for dynamic ORMs (SQLAlchemy, etc.)
+#   no-self-argument          – false positive on Pydantic @validator / @root_validator methods
+#   unsubscriptable-object    – false positive on Optional[] / Union[] type annotations
+#   bad-string-format-type    – false positive with Click boolean parameters
+#   assignment-from-no-return – false positive when return type cannot be inferred without deps
+#   unexpected-keyword-arg    – false positive when library API differs across versions
+#   no-value-for-parameter    – false positive when default values come from decorators/wrappers
+disable=C,R,W,
+        import-error,
+        no-name-in-module,
+        no-member,
+        no-self-argument,
+        unsubscriptable-object,
+        bad-string-format-type,
+        assignment-from-no-return,
+        unexpected-keyword-arg,
+        no-value-for-parameter
+
+[REPORTS]
+# Use a parseable format so editors and CI can linkify file:line references.
+output-format=colorized
+# Do not print the numeric score summary – just show problems.
+score=no
+
+[FORMAT]
+# Keep in sync with .pep8speaks.yml (pycodestyle max-line-length).
+max-line-length=130

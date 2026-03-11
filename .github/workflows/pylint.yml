@@ -1,0 +1,40 @@
+name: Pylint Check
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ '*' ]
+    types: [ opened, synchronize, reopened, ready_for_review ]
+    paths:
+      - '**.py'
+      - '.pylintrc'
+      - '.github/workflows/pylint.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  pylint:
+
+    runs-on: ubuntu-latest
+
+    if: github.event.pull_request.draft == false
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install pylint and project dependencies
+      run: |
+        pip install pylint
+        pip install -r requirements.txt || true
+
+    - name: Run pylint on listenbrainz package
+      run: pylint listenbrainz/
