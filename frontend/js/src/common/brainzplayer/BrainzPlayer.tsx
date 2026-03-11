@@ -74,7 +74,7 @@ import useCrossTabSync from "./hooks/useCrossTabSync";
 import useListenSubmission from "./hooks/useListenSubmission";
 
 const DATASOURCE_URL_MAP: Record<string, RegExp> = {
-  youtube: /(?:https?:\/\/(?:www\.|m\.)?)?(?:youtu\.be|youtube\.com)\//,
+  youtube: /(?:https?:\/\/(?:www\.|m\.)?)?(?:youtu\.be|youtube\.com)\//, // modified from https://gist.github.com/rodrigoborgesdeoliveira/987683cfbfcc8d800192da1e73adc486?permalink_comment_id=5567955#gistcomment-5567955
   soundcloud: /soundcloud\.com/,
   spotify: /spotify\.com/,
 };

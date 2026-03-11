@@ -362,6 +362,7 @@ export default class YoutubePlayer
     let youtubeId = YoutubePlayer.getVideoIDFromListen(listen);
 
     if (!youtubeId && streamingUrl) {
+      // from https://gist.github.com/rodrigoborgesdeoliveira/987683cfbfcc8d800192da1e73adc486?permalink_comment_id=5567955#gistcomment-5567955
       const videoIdRegexp = /((?:\/|v=|vi=|v%)(?<id>([\-\w]){10,14}))/;
       const match = videoIdRegexp.exec(streamingUrl);
       youtubeId = match?.groups?.id;
