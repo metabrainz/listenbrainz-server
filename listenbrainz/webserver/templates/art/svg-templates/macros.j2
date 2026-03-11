@@ -10,7 +10,7 @@
   {%- endif -%}
 {% endmacro %}
 
-{% macro render_image_link(entity, image, show_caption, rank=None) %}
+{% macro render_image_link(entity, image, show_caption, rank=None, caption_text_color="#ffffff", caption_bg_color="#0000007a") %}
   {% if image.entity_mbid %}
   <a href="https://listenbrainz.org/{{ entity }}/{{ image.entity_mbid }}" target="_blank">
   {% endif %}
@@ -37,24 +37,24 @@
         height="{{ image.height }}">
       </rect>
     </clipPath>
-    {% if show_caption and (image.title or image.artist) %}
-      <g class="caption" clip-path="url(#clip-{{ image.x }}-{{ image.y }})" >
-        <rect fill="#0000007a" width="{{image.width}}" height="30" x="{{ image.x }}" y="{{ image.y + image.height - 30 }}"></rect>
-        <text x="{{ image.x }}" y="{{ image.y + image.height - 30 }}" fill="white" font-weight="normal" font-size="12" font-family="Sintony, sans-serif">
-          {% if rank is not none %}
-          <tspan class="caption-rank" x="{{ image.x + 5 }}" dy="13">{{ rank }}</tspan>
-          {% endif %}
-          {% if image.title %}
-          <tspan class="caption-release" x="{{ image.x + 5 }}" dy="13">{{ image.title|escape }}</tspan>
-          {% endif %}
-          {% if image.artist %}
-          <tspan class="caption-artist" x="{{ image.x + 5 }}" dy="13">{{ image.artist|escape }}</tspan>
-          {% endif %}
-          {% if image.listen_count %}
-          <tspan class="caption-listen-count" x="{{ image.x + 5 }}" dy="13">{{ image.listen_count }}</tspan>
-          {% endif %}
-        </text>  
-      </g>
+    {% if show_caption %}
+    <g class="caption" clip-path="url(#clip-{{ image.x }}-{{ image.y }})">
+      <rect x="{{ image.x }}" y="{{ image.y + image.height - 30 }}" width="{{ image.width }}" height="30" fill="{{ caption_bg_color }}" />
+      <text x="{{ image.x + 5 }}" y="{{ image.y + image.height - 18 }}" font-family="Sintony, sans-serif" font-size="10">
+        {% if rank is not none %}
+        <tspan class="caption-rank" x="{{ image.x + 5 }}" dy="0" fill="{{ caption_text_color }}">{{ rank }}</tspan>
+        {% endif %}
+        {% if image.title %}
+        <tspan class="caption-release" x="{{ image.x + 5 }}" dy="13" fill="{{ caption_text_color }}">{{ image.title|escape }}</tspan>
+        {% endif %}
+        {% if image.artist %}
+        <tspan class="caption-artist" x="{{ image.x + 5 }}" dy="13" fill="{{ caption_text_color }}">{{ image.artist|escape }}</tspan>
+        {% endif %}
+        {% if image.listen_count %}
+        <tspan class="caption-listen-count" x="{{ image.x + 5 }}" dy="13" fill="{{ caption_text_color }}">{{ image.listen_count }}</tspan>
+        {% endif %}
+      </text>
+    </g>
     {% endif %}
   {% if image.entity_mbid %}
   </a>

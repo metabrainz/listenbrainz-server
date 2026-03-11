@@ -600,7 +600,9 @@ export default function ArtCreator() {
         gridSizeArg: number,
         gridLayoutArg: number,
         showCaptionArg: boolean,
-        skipMissingArg: boolean
+        skipMissingArg: boolean,
+        captionTextColorArg: string,
+        captionBgColorArg: string
       ) => {
         if (styleArg.type === "grid") {
           let newPreviewUrl = `${
@@ -614,6 +616,12 @@ export default function ArtCreator() {
           }
           if (!skipMissingArg) {
             queryParams.set("skip-missing", "false");
+          }
+          if (captionTextColorArg && captionTextColorArg !== "#ffffff") {
+            queryParams.set("caption-text-color", captionTextColorArg);
+          }
+          if (captionBgColorArg && captionBgColorArg !== "#0000007a") {
+            queryParams.set("caption-bg-color", captionBgColorArg);
           }
           if (queryParams.size) {
             newPreviewUrl += `?${queryParams.toString()}`;
@@ -643,7 +651,9 @@ export default function ArtCreator() {
       gridSize,
       gridLayout,
       showCaption,
-      skipMissing
+      skipMissing,
+      captionTextColor,
+      captionBgColor
     );
   }, [
     userName,
@@ -653,6 +663,8 @@ export default function ArtCreator() {
     gridLayout,
     showCaption,
     skipMissing,
+    captionTextColor,
+    captionBgColor,
     debouncedSetPreviewUrl,
   ]);
 
@@ -826,15 +838,9 @@ export default function ArtCreator() {
                       onChange={() => setShowListenCount(!showListenCount)}
                     />
                     <div>
-                      <label
-                        className="form-label"
-                        htmlFor="caption-text-color"
-                      >
-                        Caption text color:
-                      </label>
+                      <label className="form-label">Caption text color:</label>
                       <div className="input-group">
                         <input
-                          id="caption-text-color"
                           type="color"
                           className="form-control form-control-color"
                           value={captionTextColor}
@@ -849,15 +855,11 @@ export default function ArtCreator() {
                       </div>
                     </div>
                     <div>
-                      <label
-                        className="form-label"
-                        htmlFor="caption-bg-color-picker"
-                      >
+                      <label className="form-label">
                         Caption background color:
                       </label>
                       <div className="input-group">
                         <input
-                          id="caption-bg-color-picker"
                           type="color"
                           className="form-control form-control-color"
                           value={captionBgColor}
