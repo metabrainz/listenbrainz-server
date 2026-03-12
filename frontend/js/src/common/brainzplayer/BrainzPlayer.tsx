@@ -526,6 +526,7 @@ export default function BrainzPlayer() {
     );
 
     let selectedDatasourceIndex: number;
+    let urlsToUse = streamingUrls;
     if (datasourceIndex === 0) {
       /** If available, retrieve the service the listen was listened with */
       const listenedFromIndex = dataSourceRefs.findIndex((datasourceRef) => {
@@ -536,7 +537,6 @@ export default function BrainzPlayer() {
       if (listenedFromIndex !== -1) {
         selectedDatasourceIndex = listenedFromIndex;
       } else {
-        let urlsToUse = streamingUrls;
 
         if (!urlsToUse) {
           const urlRels = listen?.track_metadata?.mbid_mapping?.url_rels;
@@ -546,15 +546,15 @@ export default function BrainzPlayer() {
               (rel) => rel.type === "free streaming" || rel.type === "streaming"
             );
 
-            urlsToUse = new Map<string, string>();
+            const resolvedUrls = new Map<string, string>();
 
-            for (const datasourceRef of dataSourceRefs) {
+            dataSourceRefs.forEach((datasourceRef) => {
               const datasource = datasourceRef.current;
-              if (!datasource) continue;
+              if (!datasource) return;
 
               // check if data source supports "free streaming"
               const urlPattern = DATASOURCE_URL_MAP[datasource.name];
-              if (!urlPattern) continue;
+              if (!urlPattern) return;
 
               // finds first match
               // TODO: handle multiple matches
@@ -563,9 +563,11 @@ export default function BrainzPlayer() {
               );
 
               if (matchingUrl) {
-                urlsToUse.set(datasource.name, matchingUrl.url);
+                resolvedUrls.set(datasource.name, matchingUrl.url);
               }
-            }
+            });
+
+            urlsToUse = resolvedUrls;
           }
         }
 
@@ -585,7 +587,6 @@ export default function BrainzPlayer() {
           selectedDatasourceIndex = 0;
         }
 
-        streamingUrls = urlsToUse;
       }
     } else {
       /** If no matching datasource was found, revert to the default bahaviour
@@ -599,7 +600,7 @@ export default function BrainzPlayer() {
       await new Promise((resolve) => {
         setTimeout(resolve, 200);
       });
-      playListen(listen, nextListenIndex, datasourceIndex, streamingUrls);
+      playListen(listen, nextListenIndex, datasourceIndex, urlsToUse);
       return;
     }
     // Check if we can play the listen with the selected datasource
@@ -609,7 +610,7 @@ export default function BrainzPlayer() {
       !isListenFromDatasource(listen, dataSource) &&
       !dataSource.canSearchAndPlayTracks()
     ) {
-      playListen(listen, nextListenIndex, datasourceIndex + 1, streamingUrls);
+      playListen(listen, nextListenIndex, datasourceIndex + 1, urlsToUse);
       return;
     }
     stopOtherBrainzPlayers();
@@ -639,10 +640,10 @@ export default function BrainzPlayer() {
         }, 500);
       });
     } catch (e) {
-      playListen(listen, nextListenIndex, datasourceIndex + 1, streamingUrls);
+      playListen(listen, nextListenIndex, datasourceIndex + 1, urlsToUse);
       return;
     }
-    const streamingUrl = streamingUrls?.get(dataSource.name);
+    const streamingUrl = urlsToUse?.get(dataSource.name);
     dataSource.playListen(getCurrentListen() ?? listen, streamingUrl);
   };
 
