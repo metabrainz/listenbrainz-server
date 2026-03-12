@@ -774,15 +774,11 @@ export default function ArtCreator() {
               <h4>Advanced</h4>
               {style.type === "grid" && (
                 <>
-                  <label className="form-check-label">
-                    <input
-                      className="form-check-input me-2"
-                      type="checkbox"
-                      checked={skipMissing}
-                      onChange={(evt) => setSkipMissing(evt.target.checked)}
-                    />{" "}
-                    Skip missing covers
-                  </label>
+                  <ToggleOption
+                    label="Skip missing covers"
+                    checked={skipMissing}
+                    onChange={() => setSkipMissing(!skipMissing)}
+                  />
                   <small>Choose a grid layout:</small>
                   <div className="cover-art-grid">
                     {coverArtGridOptions.map((option) => {
@@ -814,9 +810,8 @@ export default function ArtCreator() {
                       );
                     })}
                   </div>
-                  <hr />
                   <div className="sidenav-content-grid">
-                    <h6>Caption Options</h6>
+                    <h4>Captions</h4>
                     <ToggleOption
                       label="Show Rank"
                       checked={showRank}
