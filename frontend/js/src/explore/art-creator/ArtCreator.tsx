@@ -14,7 +14,7 @@ import ColorPicker from "./components/ColorPicker";
 import Gallery from "./components/Gallery";
 import IconTray from "./components/IconTray";
 import Preview from "./components/Preview";
-import ToggleOption from "./components/ToggleOption";
+import Switch from "../../components/Switch";
 import { svgToBlob, toPng } from "./utils";
 import { ToastMsg } from "../../notifications/Notifications";
 import UserSearch from "../../common/UserSearch";
@@ -774,10 +774,12 @@ export default function ArtCreator() {
               <h4>Advanced</h4>
               {style.type === "grid" && (
                 <>
-                  <ToggleOption
-                    label="Skip missing covers"
+                  <Switch
+                    id="skip-missing"
+                    value="skip-missing"
+                    switchLabel="Skip missing covers"
                     checked={skipMissing}
-                    onChange={() => setSkipMissing(!skipMissing)}
+                    onChange={(e) => setSkipMissing(e.target.checked)}
                   />
                   <small>Choose a grid layout:</small>
                   <div className="cover-art-grid">
@@ -812,25 +814,33 @@ export default function ArtCreator() {
                   </div>
                   <div className="sidenav-content-grid">
                     <h4>Captions</h4>
-                    <ToggleOption
-                      label="Show Rank"
+                    <Switch
+                      id="show-rank"
+                      value="show-rank"
+                      switchLabel="Show Rank"
                       checked={showRank}
-                      onChange={() => setShowRank(!showRank)}
+                      onChange={(e) => setShowRank(e.target.checked)}
                     />
-                    <ToggleOption
-                      label="Show Release Title"
+                    <Switch
+                      id="show-release"
+                      value="show-release"
+                      switchLabel="Show Release Title"
                       checked={showRelease}
-                      onChange={() => setShowRelease(!showRelease)}
+                      onChange={(e) => setShowRelease(e.target.checked)}
                     />
-                    <ToggleOption
-                      label="Show Artist"
+                    <Switch
+                      id="show-artist"
+                      value="show-artist"
+                      switchLabel="Show Artist"
                       checked={showArtist}
-                      onChange={() => setShowArtist(!showArtist)}
+                      onChange={(e) => setShowArtist(e.target.checked)}
                     />
-                    <ToggleOption
-                      label="Show Listen Count"
+                    <Switch
+                      id="show-listen-count"
+                      value="show-listen-count"
+                      switchLabel="Show Listen Count"
                       checked={showListenCount}
-                      onChange={() => setShowListenCount(!showListenCount)}
+                      onChange={(e) => setShowListenCount(e.target.checked)}
                     />
                     <div>
                       <label className="form-label">Caption text color:</label>
