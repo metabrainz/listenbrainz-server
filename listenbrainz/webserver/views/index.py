@@ -93,8 +93,6 @@ def index():
 @index_bp.post("/current-status/")
 @web_listenstore_needed
 def current_status():
-    load = "%.2f %.2f %.2f" % os.getloadavg()
-
     service_status = get_service_status()
     listen_count = _ts.get_total_listen_count()
     try:
@@ -128,8 +126,7 @@ def current_status():
         })
 
     data = {
-        "load": load,
-        "service-status": service_status,
+        "serviceStatus": service_status,
         "listenCount": format(int(listen_count), ",d") if listen_count else "0",
         "userCount": user_count,
         "userCountEvolution": user_count_evolution,
