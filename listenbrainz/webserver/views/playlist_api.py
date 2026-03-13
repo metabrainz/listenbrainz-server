@@ -268,6 +268,11 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
     """
         This interim function will soon be replaced with a more complete service layer
     """
+    if not current_app.config.get("MB_DATABASE_URI"):
+        current_app.logger.warning(
+            "Skipping playlist metadata fetch because MB_DATABASE_URI is not configured."
+        )
+        return
     mbids = [str(item.mbid) for item in playlist.recordings]
     if not mbids:
         return
@@ -562,7 +567,7 @@ def get_playlist(playlist_mbid):
     if not playlist.is_visible_by(user_id):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    if fetch_metadata:
+    if fetch_metadata and current_app.config.get("MB_DATABASE_URI"):
         fetch_playlist_recording_metadata(playlist)
 
     return jsonify(playlist.serialize_jspf())
@@ -607,7 +612,7 @@ def get_playlist_xspf(playlist_mbid):
         raise PlaylistAPIXMLError("Invalid authorization to access playlist.", status_code=401)
 
     try:
-        if fetch_metadata:
+        if fetch_metadata and current_app.config.get("MB_DATABASE_URI"):
             fetch_playlist_recording_metadata(playlist)
 
         xspf_data = serialize_xspf(playlist)
