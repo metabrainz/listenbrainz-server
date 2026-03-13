@@ -36,6 +36,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                 ("artist_ids ",                "INTEGER[] NOT NULL"),
                 ("release_mbid ",              "UUID"),
                 ("release_id ",                "INTEGER"),
+                ("release_group_id",           "INTEGER"),
                 ("recording_data ",            "JSONB NOT NULL"),
                 ("artist_data ",               "JSONB NOT NULL"),
                 ("tag_data ",                  "JSONB NOT NULL"),
@@ -185,6 +186,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                 artist_ids,
                 row["release_mbid"],
                 row["release_id"],
+                row["release_group_id"],
                 ujson.dumps(recording),
                 ujson.dumps(artist),
                 ujson.dumps({"recording": recording_tags, "artist": artist_tags, "release_group": release_group_tags}),
@@ -379,6 +381,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                  , rel.name
                                  , rel.id AS release_id
                                  , rac.name AS album_artist_name
+                                 , rg.id AS release_group_id
                                  , rg.gid AS release_group_mbid
                                  , crrr.release_mbid::TEXT
                                  , rgca.caa_id
@@ -414,6 +417,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                  , recording_tags
                                  , rd.name AS release_name
                                  , release_group_tags
+                                 , rd.release_group_id
                                  , rd.release_group_mbid::TEXT
                                  , r.length
                                  , r.gid::TEXT AS recording_mbid
@@ -427,9 +431,9 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                               FROM musicbrainz.recording r
                               JOIN musicbrainz.artist_credit ac
                                 ON r.artist_credit = ac.id
-                         LEFT JOIN recording_first_release_date rfdr
+                         LEFT JOIN musicbrainz.recording_first_release_date rfdr
                                 ON rfdr.recording = r.id
-                         LEFT JOIN isrc
+                         LEFT JOIN musicbrainz.isrc isrc
                                 ON isrc.recording = r.id
                          LEFT JOIN artist_data ard
                                 ON ard.gid = r.gid
@@ -460,6 +464,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                  , recording_url_rels
                                  , recording_tags
                                  , release_group_tags
+                                 , rd.release_group_id
                                  , rd.release_group_mbid
                                  , artist_data
                                  , artist_tags
