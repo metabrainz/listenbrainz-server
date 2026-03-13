@@ -8,8 +8,8 @@ from listenbrainz.art.og_image import (
     _compose_single,
     _compose_grid_2x2,
     _download_image,
-    OG_WIDTH,
-    OG_HEIGHT,
+    OPENGRAPH_IMAGE_WIDTH,
+    OPENGRAPH_IMAGE_HEIGHT,
     GRID_WIDTH,
 )
 from listenbrainz.tests.integration import IntegrationTestCase
@@ -29,12 +29,12 @@ class TestComposeHelpers:
     def test_compose_single_creates_correct_size(self):
         cover = Image.new("RGBA", (500, 500), (255, 0, 0, 255))
         result = _compose_single(cover)
-        assert result.size == (OG_WIDTH, OG_HEIGHT)
+        assert result.size == (OPENGRAPH_IMAGE_WIDTH, OPENGRAPH_IMAGE_HEIGHT)
 
     def test_compose_grid_2x2_creates_correct_size(self):
         covers = [Image.new("RGBA", (500, 500), (i * 50, 0, 0, 255)) for i in range(4)]
         result = _compose_grid_2x2(covers)
-        assert result.size == (OG_WIDTH, OG_HEIGHT)
+        assert result.size == (OPENGRAPH_IMAGE_WIDTH, OPENGRAPH_IMAGE_HEIGHT)
 
     def test_compose_grid_2x2_places_all_four_images(self):
         """Each tile region should contain the colour we painted it, not black (background bleed)."""
@@ -43,7 +43,7 @@ class TestComposeHelpers:
         result = _compose_grid_2x2(covers)
 
         tile_w = GRID_WIDTH // 2
-        tile_h = OG_HEIGHT // 2
+        tile_h = OPENGRAPH_IMAGE_HEIGHT // 2
 
         # sample a pixel from the centre of each tile — if the grid
         # placed covers correctly, it should match the input colour
@@ -94,7 +94,7 @@ class TestGeneratePlaylistOgImage:
     def _create_overlay_file(self, tmp_path):
         """Create a temporary overlay PNG file."""
         overlay_path = tmp_path / "og-overlay.png"
-        img = Image.new("RGBA", (OG_WIDTH, OG_HEIGHT), (0, 0, 0, 0))
+        img = Image.new("RGBA", (OPENGRAPH_IMAGE_WIDTH, OPENGRAPH_IMAGE_HEIGHT), (0, 0, 0, 0))
         img.save(overlay_path, format="PNG")
         return overlay_path
 
@@ -115,7 +115,7 @@ class TestGeneratePlaylistOgImage:
         assert result is not None
 
         result_img = Image.open(result)
-        assert result_img.size == (OG_WIDTH, OG_HEIGHT)
+        assert result_img.size == (OPENGRAPH_IMAGE_WIDTH, OPENGRAPH_IMAGE_HEIGHT)
         assert result_img.mode == "RGB"
 
     @patch("listenbrainz.art.og_image._download_image")
@@ -128,7 +128,7 @@ class TestGeneratePlaylistOgImage:
         assert result is not None
 
         result_img = Image.open(result)
-        assert result_img.size == (OG_WIDTH, OG_HEIGHT)
+        assert result_img.size == (OPENGRAPH_IMAGE_WIDTH, OPENGRAPH_IMAGE_HEIGHT)
         assert result_img.mode == "RGB"
 
         assert mock_download.call_count == 4
@@ -158,7 +158,7 @@ class TestGeneratePlaylistOgImage:
         assert result is not None
 
         result_img = Image.open(result)
-        assert result_img.size == (OG_WIDTH, OG_HEIGHT)
+        assert result_img.size == (OPENGRAPH_IMAGE_WIDTH, OPENGRAPH_IMAGE_HEIGHT)
 
     @patch("listenbrainz.art.og_image._download_image")
     def test_all_downloads_fail_returns_none(self, mock_download, tmp_path):
@@ -217,7 +217,7 @@ class PlaylistOgImageEndpointTestCase(IntegrationTestCase):
             for i in range(4)
         ]
 
-        dummy_png_buf = io.BytesIO(_create_dummy_png(OG_WIDTH, OG_HEIGHT))
+        dummy_png_buf = io.BytesIO(_create_dummy_png(OPENGRAPH_IMAGE_WIDTH, OPENGRAPH_IMAGE_HEIGHT))
         mock_generate_og.return_value = dummy_png_buf
 
         resp = self.client.get(
