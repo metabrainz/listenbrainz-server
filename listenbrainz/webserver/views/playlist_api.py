@@ -568,7 +568,7 @@ def get_playlist(playlist_mbid):
     if not playlist.is_visible_by(user_id):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
-    if fetch_metadata and current_app.config.get("MB_DATABASE_URI"):
+    if fetch_metadata:
         fetch_playlist_recording_metadata(playlist)
 
     return jsonify(playlist.serialize_jspf())
@@ -613,7 +613,7 @@ def get_playlist_xspf(playlist_mbid):
         raise PlaylistAPIXMLError("Invalid authorization to access playlist.", status_code=401)
 
     try:
-        if fetch_metadata and current_app.config.get("MB_DATABASE_URI"):
+        if fetch_metadata:
             fetch_playlist_recording_metadata(playlist)
 
         xspf_data = serialize_xspf(playlist)
