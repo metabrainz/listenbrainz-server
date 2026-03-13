@@ -824,7 +824,7 @@ def playlist_cover_art_generate(playlist_mbid, dimension, layout):
                            }
 
 
-@art_api_bp.get("/playlist/<uuid:playlist_mbid>/og/")
+@art_api_bp.get("/playlist/<uuid:playlist_mbid>/opengraph/")
 @crossdomain
 @ratelimit()
 def playlist_og_image(playlist_mbid):

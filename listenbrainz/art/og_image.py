@@ -8,22 +8,28 @@ from PIL import Image
 
 logger = logging.getLogger(__name__)
 
-OG_WIDTH = 1200
-OG_HEIGHT = 630
+OPENGRAPH_IMAGE_WIDTH = 1200
+OPENGRAPH_IMAGE_HEIGHT = 630
 
 # cover art takes up the left ~72% of the canvas,
 # the rest is for the LB overlay branding
-GRID_WIDTH = int(OG_WIDTH * 0.72)  # 921px
+GRID_WIDTH = int(OPENGRAPH_IMAGE_WIDTH * 0.72)  # 921px
 
-OVERLAY_PATH = Path(__file__).resolve().parent.parent.parent / "frontend" / "img" / "og-overlay.png"
-OVERLAY_PATH_PROD = Path("/static/img/og-overlay.png")
+# Local dev fallback: frontend/img lives alongside the source tree
+_OVERLAY_PATH_DEV = Path(__file__).resolve().parent.parent.parent / "frontend" / "img" / "og-overlay.png"
 
 
 def _get_overlay_path():
-    """Check /static/img first (production), fall back to frontend/ (local dev)."""
-    if OVERLAY_PATH_PROD.exists():
-        return OVERLAY_PATH_PROD
-    return OVERLAY_PATH
+    """Use Flask's static folder (production) or fall back to frontend/ (local dev)."""
+    try:
+        from flask import current_app
+        static_path = Path(current_app.static_folder) / "img" / "og-overlay.png"
+        if static_path.exists():
+            return static_path
+    except RuntimeError:
+        # Outside a Flask request context (e.g. tests) — fall through to dev path
+        pass
+    return _OVERLAY_PATH_DEV
 
 # Timeout for downloading cover art images (seconds)
 DOWNLOAD_TIMEOUT = 5
@@ -42,15 +48,15 @@ def _download_image(url):
 
 def _compose_single(cover):
     """Single cover art filling the left grid region, center-cropped to fit."""
-    canvas = Image.new("RGBA", (OG_WIDTH, OG_HEIGHT), (0, 0, 0, 255))
+    canvas = Image.new("RGBA", (OPENGRAPH_IMAGE_WIDTH, OPENGRAPH_IMAGE_HEIGHT), (0, 0, 0, 255))
 
     # aspect ratio math to cover the grid area
     ratio = cover.width / cover.height
-    grid_ratio = GRID_WIDTH / OG_HEIGHT
+    grid_ratio = GRID_WIDTH / OPENGRAPH_IMAGE_HEIGHT
 
     if ratio > grid_ratio:
-        h = OG_HEIGHT
-        w = int(OG_HEIGHT * ratio)
+        h = OPENGRAPH_IMAGE_HEIGHT
+        w = int(OPENGRAPH_IMAGE_HEIGHT * ratio)
     else:
         w = GRID_WIDTH
         h = int(GRID_WIDTH / ratio)
@@ -59,18 +65,18 @@ def _compose_single(cover):
 
     # center-crop
     left = (w - GRID_WIDTH) // 2
-    top = (h - OG_HEIGHT) // 2
-    cropped = resized.crop((left, top, left + GRID_WIDTH, top + OG_HEIGHT))
+    top = (h - OPENGRAPH_IMAGE_HEIGHT) // 2
+    cropped = resized.crop((left, top, left + GRID_WIDTH, top + OPENGRAPH_IMAGE_HEIGHT))
     canvas.paste(cropped, (0, 0))
     return canvas
 
 
 def _compose_grid_2x2(covers):
     """2x2 grid on the left ~72% of the canvas. Overlay sits on the right."""
-    canvas = Image.new("RGBA", (OG_WIDTH, OG_HEIGHT), (0, 0, 0, 255))
+    canvas = Image.new("RGBA", (OPENGRAPH_IMAGE_WIDTH, OPENGRAPH_IMAGE_HEIGHT), (0, 0, 0, 255))
 
     tile_w = GRID_WIDTH // 2
-    tile_h = OG_HEIGHT // 2
+    tile_h = OPENGRAPH_IMAGE_HEIGHT // 2
 
     positions = [
         (0, 0),
@@ -118,7 +124,7 @@ def generate_playlist_og_image(cover_urls: list[str], overlay_path: str | Path |
     # load the overlay
     try:
         overlay = Image.open(overlay_path).convert("RGBA")
-        overlay = overlay.resize((OG_WIDTH, OG_HEIGHT), Image.LANCZOS)
+        overlay = overlay.resize((OPENGRAPH_IMAGE_WIDTH, OPENGRAPH_IMAGE_HEIGHT), Image.LANCZOS)
     except Exception:
         logger.error("Failed to load OG overlay from %s", overlay_path, exc_info=True)
         return None
