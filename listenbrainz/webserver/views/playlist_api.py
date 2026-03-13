@@ -273,6 +273,7 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
             "Skipping playlist metadata fetch because MB_DATABASE_URI is not configured."
         )
         return
+    
     mbids = [str(item.mbid) for item in playlist.recordings]
     if not mbids:
         return
