@@ -1248,3 +1248,114 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert200(response)
         self.assertEqual(response.json, {"external_url": "apple_music_url"})
+
+    @requests_mock.Mocker()
+    @mock.patch("listenbrainz.webserver.views.playlist_api.export_to_apple_music")
+    def test_export_playlist_apple_music_troi_exception(self, mock_requests, mock_export_to_apple_music):
+        """Test that a bare exception raised by troi during Apple Music export returns a clean 500
+        instead of leaking a raw Python error string (e.g. KeyError: 'data') to the frontend."""
+        mock_export_to_apple_music.side_effect = KeyError("data")
+
+        mock_requests.post(OAUTH_TOKEN_URL, status_code=200, json={
+            'access_token': 'tokentoken',
+            'expires_in': 3600,
+            'scope': '',
+        })
+
+        playlist = {
+            "playlist": {
+                "title": "my stupid playlist",
+                "extension": {
+                    PLAYLIST_EXTENSION_URI: {
+                        "public": True
+                    }
+                },
+            }
+        }
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        playlist_mbid = response.json["playlist_mbid"]
+
+        import time as _time
+        from data.model.external_service import ExternalServiceType
+        import listenbrainz.db.external_service_oauth as db_oauth
+        db_oauth.save_token(
+            self.db_conn,
+            user_id=self.user['id'],
+            service=ExternalServiceType.APPLE,
+            access_token='token',
+            refresh_token='refresh_token',
+            token_expires_ts=int(_time.time()),
+            record_listens=True,
+            scopes=[]
+        )
+
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="apple_music"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert500(response)
+        self.assertIn("Failed to export playlist to apple_music", response.json["error"])
+        # Crucially: the raw KeyError key ('data') must NOT be the entire error message shown to the user
+        self.assertNotEqual(response.json["error"], "'data'")
+
+    @requests_mock.Mocker()
+    @mock.patch("listenbrainz.webserver.views.playlist_api.export_to_apple_music")
+    def test_export_playlist_apple_music_no_url_returned(self, mock_requests, mock_export_to_apple_music):
+        """Test that if export_to_apple_music raises due to missing URL in metadata,
+        the API returns a descriptive 500 error rather than a cryptic exception string."""
+        mock_export_to_apple_music.side_effect = Exception(
+            "Apple Music export did not return a playlist URL. Check that your Apple Music account is properly linked."
+        )
+
+        mock_requests.post(OAUTH_TOKEN_URL, status_code=200, json={
+            'access_token': 'tokentoken',
+            'expires_in': 3600,
+            'scope': '',
+        })
+
+        playlist = {
+            "playlist": {
+                "title": "another test playlist",
+                "extension": {
+                    PLAYLIST_EXTENSION_URI: {
+                        "public": True
+                    }
+                },
+            }
+        }
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        playlist_mbid = response.json["playlist_mbid"]
+
+        import time as _time
+        from data.model.external_service import ExternalServiceType
+        import listenbrainz.db.external_service_oauth as db_oauth
+        db_oauth.save_token(
+            self.db_conn,
+            user_id=self.user['id'],
+            service=ExternalServiceType.APPLE,
+            access_token='token',
+            refresh_token='refresh_token',
+            token_expires_ts=int(_time.time()),
+            record_listens=True,
+            scopes=[]
+        )
+
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="apple_music"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert500(response)
+        self.assertIn("Failed to export playlist to apple_music", response.json["error"])
+
