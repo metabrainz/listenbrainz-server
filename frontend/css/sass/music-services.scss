@@ -2,11 +2,47 @@ $checkbox-size: 40px;
 
 #user-profile {
   .card {
-    margin-bottom: 2rem;
+    margin-bottom: 4rem;
+
     .card-header {
+      display: flex;
       padding: 1rem 1.5rem;
+      flex-direction: row;
+      align-items: center;
+      gap: 1rem;
+
       .card-title {
         font-size: 16px;
+        margin: 0;
+      }
+    }
+  }
+}
+
+.services-grid {
+  .card {
+    margin-bottom: 4rem;
+
+    .card-header {
+      display: flex;
+      padding: 1rem 1.5rem;
+      flex-direction: row;
+      align-items: center;
+      gap: 1rem;
+
+      .service-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+      }
+
+      .service-icon {
+        font-size: 3rem;
+      }
+
+      .card-title {
+        font-size: 20px;
         margin: 0;
       }
     }
@@ -20,18 +56,22 @@ $checkbox-size: 40px;
     padding: 0;
     width: 100%;
   }
+
   .music-service-option {
     input[type="radio"] {
       display: none;
-      &:not(:disabled) ~ label {
+
+      &:not(:disabled)~label {
         cursor: pointer;
       }
-      &:disabled ~ label {
+
+      &:disabled~label {
         color: $gray-400;
         border-color: $gray-400;
         cursor: not-allowed;
       }
     }
+
     label {
       display: flex;
       flex-wrap: wrap;
@@ -47,7 +87,7 @@ $checkbox-size: 40px;
       font-weight: normal;
       position: relative;
 
-      > .title {
+      >.title {
         flex: 1;
         flex-basis: 120px;
         padding: 0 0.4em;
@@ -57,20 +97,22 @@ $checkbox-size: 40px;
         font-weight: $headings-font-weight;
         line-height: $headings-line-height;
       }
-      > .details {
+
+      >.details {
         flex: 2;
         text-align: justify;
         flex-basis: 200px;
       }
     }
 
-    input[type="radio"]:checked + label {
+    input[type="radio"]:checked+label {
       background: $green;
       color: $white;
 
-      > .details {
+      >.details {
         font-weight: bold;
       }
+
       &::after {
         position: absolute;
         left: 0;
@@ -97,7 +139,8 @@ $checkbox-size: 40px;
       label {
         border-color: $border-color;
       }
-      input[type="radio"]:checked + label {
+
+      input[type="radio"]:checked+label {
         background: $gray-500;
       }
     }
