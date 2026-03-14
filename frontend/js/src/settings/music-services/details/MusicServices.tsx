@@ -1,18 +1,78 @@
+/** Changes to make:
+ * find corresponding stylesheet for components
+ * figure out better UI layout -> using cards or accordion for each music-service
+ * Add icons for each music-service provider
+ * Add status indicators
+ * Add filters for connected and not connected services
+ *
+ * * */
+
 import * as React from "react";
 
 import { capitalize } from "lodash";
 import { useLoaderData } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faSpotify,
+  faApple,
+  faSoundcloud,
+  faYoutube,
+} from "@fortawesome/free-brands-svg-icons";
+import { faFontAwesome } from "@fortawesome/free-solid-svg-icons";
 import { ToastMsg } from "../../../notifications/Notifications";
 import ServicePermissionButton from "./components/ExternalServiceButton";
 import LFMMusicServicePermissions from "./components/LFMMusicServicePermissions";
+
 import {
   authorizeWithAppleMusic,
   loadAppleMusicKit,
   setupAppleMusicKit,
 } from "../../../common/brainzplayer/AppleMusicPlayer";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
+import faInternetArchive from "../../../common/icons/faInternetArchive";
+import faFunkwhale from "../../../common/icons/faFunkwhale";
+import { faNavidrome } from "../../../common/icons/faNavidrome";
+import { dataSourcesInfo } from "../../brainzplayer/BrainzPlayerSettings";
+
+export const MusicServicesIcons = {
+  youtube: {
+    name: "YouTube",
+    icon: faYoutube,
+    color: "#FF0000",
+  },
+  spotify: {
+    name: "Spotify",
+    icon: faSpotify,
+    color: "#1DB954",
+  },
+  soundcloud: {
+    name: "SoundCloud",
+    icon: faSoundcloud,
+    color: "#FF8800",
+  },
+  appleMusic: {
+    name: "Apple Music",
+    icon: faApple,
+    color: "#000000",
+  },
+  internetArchive: {
+    name: "Internet Archive",
+    icon: faInternetArchive,
+    color: "#6c757d",
+  },
+  funkwhale: {
+    name: "Funkwhale",
+    icon: faFunkwhale,
+    color: "#009FE3",
+  },
+  navidrome: {
+    name: "Navidrome",
+    icon: faNavidrome,
+    color: "#0084ff",
+  },
+} as const;
 
 type MusicServicesLoaderData = {
   current_spotify_permissions: string;
@@ -51,6 +111,19 @@ export default function MusicServices() {
 
   const { appleAuth } = React.useContext(GlobalAppContext);
 
+  const [filter, setFilter] = React.useState("all");
+  const [openPanel, setOpenPanel] = React.useState<string | null>("Spotify");
+
+  const togglePanel = (service: string) => {
+    setOpenPanel((prev) => (prev === service ? null : service));
+  };
+
+  const isConnected = (service: string | null | undefined) => {
+    return (
+      service && permissions[service] && permissions[service] !== "disabled"
+    );
+  };
+
   const [permissions, setPermissions] = React.useState({
     spotify: loaderData.current_spotify_permissions,
     critiquebrainz: loaderData.current_critiquebrainz_permissions,
@@ -60,7 +133,19 @@ export default function MusicServices() {
     funkwhale: loaderData.current_funkwhale_permission,
     navidrome: loaderData.current_navidrome_permissions,
     librefm: loaderData.current_librefm_permissions,
-  });
+  } as Record<string, string>);
+
+  const activeModeLabel = (service: string | null | undefined) => {
+    const labels: Record<string, string> = {
+      both: "Both features active",
+      listen: "Play music only",
+      import: "History only",
+      disable: "Disabled",
+    };
+
+    if (!service || !permissions[service]) return "";
+    return labels[permissions[service]] ?? "";
+  };
 
   const [navidromeIsEditing, setNavidromeIsEditing] = React.useState(false);
   const [navidromeEditValues, setNavidromeEditValues] = React.useState({
@@ -467,11 +552,21 @@ export default function MusicServices() {
       </Helmet>
       <div id="user-profile">
         <h2 className="page-title">Connect third-party music services</h2>
+      </div>
 
+      <div className="services-grid">
         <div className="card">
           <div className="card-header">
+            <span className="service-logo">
+              <FontAwesomeIcon
+                icon={faSpotify}
+                className="service-icon"
+                color="#1DB954"
+              />
+            </span>
             <h3 className="card-title">Spotify</h3>
           </div>
+
           <div className="card-body">
             <p>
               Connect to your Spotify account to read your listening history,
@@ -489,6 +584,7 @@ export default function MusicServices() {
               </small>
             </p>
             <br />
+
             <div className="music-service-selection">
               <form onSubmit={(e) => e.preventDefault}>
                 <ServicePermissionButton
@@ -525,14 +621,11 @@ export default function MusicServices() {
                 />
               </form>
             </div>
-
             <h3>A note about Spotify permissions</h3>
-
             <p>
               To record your listens you will need to grant permission to view
               your recent listens and your current listen.
             </p>
-
             <p>
               To play music on the ListenBrainz pages you will need to grant the
               permission to play streams from your account and create playlists.
@@ -550,7 +643,6 @@ export default function MusicServices() {
               </a>{" "}
               any time!
             </p>
-
             <p>
               Revoke these permissions any time by disabling your Spotify
               connection.
@@ -560,6 +652,16 @@ export default function MusicServices() {
 
         <div className="card">
           <div className="card-header">
+            <span className="service-logo">
+              <img
+                src="/static/img/meb-icons/CritiqueBrainz.svg"
+                alt="CritiqueBrainz logo"
+                className="service-icon"
+                width="32"
+                height="32"
+              />
+            </span>
+
             <h3 className="card-title">CritiqueBrainz</h3>
           </div>
           <div className="card-body">
@@ -617,6 +719,14 @@ export default function MusicServices() {
 
         <div className="card">
           <div className="card-header">
+            <span className="service-logo">
+              <FontAwesomeIcon
+                icon={faSoundcloud}
+                className="service-icon"
+                color="#FF8800"
+              />
+            </span>
+
             <h3 className="card-title">SoundCloud</h3>
           </div>
           <div className="card-body">
@@ -649,6 +759,14 @@ export default function MusicServices() {
 
         <div className="card">
           <div className="card-header">
+            <span className="service-logo">
+              <FontAwesomeIcon
+                icon={faApple}
+                className="service-icon"
+                color="#000000"
+              />
+            </span>
+
             <h3 className="card-title">Apple Music</h3>
           </div>
           <div className="card-body">
@@ -687,6 +805,10 @@ export default function MusicServices() {
 
         <div className="card">
           <div className="card-header">
+            <span className="service-logo">
+              <FontAwesomeIcon icon={faFunkwhale} className="service-icon" />
+            </span>
+
             <h3 className="card-title">Funkwhale</h3>
           </div>
           <div className="card-body">
@@ -774,6 +896,10 @@ export default function MusicServices() {
 
         <div className="card">
           <div className="card-header">
+            <span className="service-logo">
+              <FontAwesomeIcon icon={faNavidrome} className="service-icon" />
+            </span>
+
             <h3 className="card-title">Navidrome</h3>
           </div>
           <div className="card-body">
@@ -926,6 +1052,14 @@ export default function MusicServices() {
 
         <div className="card">
           <div className="card-header">
+            <span className="service-logo">
+              <FontAwesomeIcon
+                icon={faYoutube}
+                className="service-icon"
+                color="#FF0000"
+              />
+            </span>
+
             <h3 className="card-title">Youtube</h3>
           </div>
           <div className="card-body">
@@ -938,6 +1072,14 @@ export default function MusicServices() {
 
         <div className="card">
           <div className="card-header">
+            <span className="service-logo">
+              <FontAwesomeIcon
+                icon={faInternetArchive}
+                className="service-icon"
+                color="#6c757d"
+              />
+            </span>
+
             <h3 className="card-title">InternetArchive</h3>
           </div>
           <div className="card-body">
