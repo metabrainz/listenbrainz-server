@@ -419,22 +419,23 @@ export default function Listen() {
       return;
     }
     setDateTimePickerValue(newDateTimePickerValue);
-    let minJSTimestamp;
-    if (Array.isArray(newDateTimePickerValue)) {
-      // Range of dates
-      minJSTimestamp = newDateTimePickerValue[0].getTime();
-    } else {
-      minJSTimestamp = newDateTimePickerValue.getTime();
-    }
+
+    const selectedDate = Array.isArray(newDateTimePickerValue)
+      ? newDateTimePickerValue[0]
+      : newDateTimePickerValue;
+
+    // Set to end of the day
+    selectedDate.setHours(23, 59, 59, 0);
+    const maxJSTimestamp = selectedDate.getTime();
 
     // Constrain to oldest listen TS for that user
-    const minTimestampInSeconds = Math.max(
+    const maxTimestampInSeconds = Math.max(
       // convert JS time (milliseconds) to seconds
-      Math.round(minJSTimestamp / 1000),
+      Math.floor(maxJSTimestamp / 1000),
       oldestListenTs
     );
 
-    setSearchParams({ min_ts: minTimestampInSeconds.toString() });
+    setSearchParams({ max_ts: maxTimestampInSeconds.toString() });
   };
 
   let allListenables = listens;
