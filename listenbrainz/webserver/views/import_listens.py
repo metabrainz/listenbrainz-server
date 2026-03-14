@@ -58,7 +58,7 @@ def create_import_task():
         raise APIBadRequest("No service selected!")
     service = service.lower()
 
-    allowed_services = ["spotify", "listenbrainz", "librefm", "maloja", "panoscrobbler", "audioscrobbler"]
+    allowed_services = ["spotify", "listenbrainz", "librefm", "maloja", "panoscrobbler", "audioscrobbler", "spinitron"]
     if service not in allowed_services:
         raise APIBadRequest("This service is not supported!")
 
@@ -88,6 +88,8 @@ def create_import_task():
         raise APIBadRequest("Only JSON files are allowed for this service!")
     if service == "audioscrobbler" and extension != ".log":
         raise APIBadRequest("Only .log files are allowed for this service!")
+    if service == "spinitron" and extension != ".csv":
+        raise APIBadRequest("Only csv files are allowed for this service!")
 
     # add a unique ID to the filename to avoid collisions
     saved_filename = str(uuid.uuid4()) + "-" + secure_filename(filename)
@@ -188,7 +190,7 @@ def delete_import_task(import_id):
     """ Cancel the specified import in progress """
     user = validate_auth_header()
     result = db_conn.execute(
-        text("DELETE FROM user_data_import WHERE user_id = :user_id AND id = :import_id AND metadata->>'status' IN ('waiting', 'in progress') RETURNING file_path"),
+        text("DELETE FROM user_data_import WHERE user_id = :user_id AND id = :import_id AND metadata->>'status' IN ('waiting') RETURNING file_path"),
         {"user_id": user["id"], "import_id": import_id}
     )
     row = result.first()
