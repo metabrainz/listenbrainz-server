@@ -40,6 +40,7 @@ enum Services {
   maloja = "Maloja",
   audioscrobbler = "Audioscrobbler/Rockbox",
   spinitron = "Spinitron",
+  tidal = "Tidal",
 }
 const acceptedFileTypes = {
   [Services.spotify]: ".zip",
@@ -50,6 +51,7 @@ const acceptedFileTypes = {
   [Services.maloja]: ".json",
   [Services.audioscrobbler]: ".log",
   [Services.spinitron]: ".csv",
+  [Services.tidal]: ".csv",
 };
 type ImportMetadata = {
   filename: string;

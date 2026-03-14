@@ -58,7 +58,7 @@ def create_import_task():
         raise APIBadRequest("No service selected!")
     service = service.lower()
 
-    allowed_services = ["spotify", "listenbrainz", "librefm", "maloja", "panoscrobbler", "audioscrobbler", "spinitron"]
+    allowed_services = ["spotify", "listenbrainz", "librefm", "maloja", "panoscrobbler", "audioscrobbler", "spinitron", "tidal"]
     if service not in allowed_services:
         raise APIBadRequest("This service is not supported!")
 
@@ -89,6 +89,8 @@ def create_import_task():
     if service == "audioscrobbler" and extension != ".log":
         raise APIBadRequest("Only .log files are allowed for this service!")
     if service == "spinitron" and extension != ".csv":
+        raise APIBadRequest("Only csv files are allowed for this service!")
+    if service == "tidal" and extension != ".csv":
         raise APIBadRequest("Only csv files are allowed for this service!")
 
     # add a unique ID to the filename to avoid collisions

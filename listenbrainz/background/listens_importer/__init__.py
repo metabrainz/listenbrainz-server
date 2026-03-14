@@ -9,7 +9,7 @@ from listenbrainz.background.listens_importer.spotify import SpotifyListensImpor
 from listenbrainz.background.listens_importer.panoscrobbler import PanoScrobblerListensImporter
 from listenbrainz.background.listens_importer.audioscrobbler import AudioscrobblerListensImporter
 from listenbrainz.background.listens_importer.spinitron import SpinitronListensImporter
-
+from listenbrainz.background.listens_importer.tidal import TidalListensImporter
 
 def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
     """Main entry point for importing listens."""
@@ -42,6 +42,8 @@ def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
         importer = AudioscrobblerListensImporter(db_conn, ts_conn)
     elif service == "spinitron":
         importer = SpinitronListensImporter(db_conn, ts_conn)
+    elif service == "tidal":
+        imporer = TidalListensImporter(db_conn, ts_conn)
     else:
         msg = f"Unsupported service: {service}"
         update_import_task(db_conn, import_id, status="failed", progress=msg)
