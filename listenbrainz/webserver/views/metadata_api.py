@@ -21,7 +21,7 @@ from listenbrainz.webserver.views.api_tools import is_valid_uuid, validate_auth_
 metadata_bp = Blueprint('metadata', __name__)
 
 #: The maximum length of the query permitted for a mapping search
-MAX_MAPPING_QUERY_LENGTH = 250
+MAX_MAPPING_QUERY_LENGTH = 1024
 #: The maximum number of lookups permitted in a bulk POST query
 MAX_LOOKUPS_PER_POST = 50
 
