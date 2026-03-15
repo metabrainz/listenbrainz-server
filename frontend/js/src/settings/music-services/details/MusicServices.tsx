@@ -1,12 +1,3 @@
-/** Changes to make:
- * find corresponding stylesheet for components
- * figure out better UI layout -> using cards or accordion for each music-service
- * Add icons for each music-service provider
- * Add status indicators
- * Add filters for connected and not connected services
- *
- * * */
-
 import * as React from "react";
 
 import { capitalize } from "lodash";
@@ -39,44 +30,6 @@ import faInternetArchive from "../../../common/icons/faInternetArchive";
 import faFunkwhale from "../../../common/icons/faFunkwhale";
 import { faNavidrome } from "../../../common/icons/faNavidrome";
 import { dataSourcesInfo } from "../../brainzplayer/BrainzPlayerSettings";
-
-export const MusicServicesIcons = {
-  youtube: {
-    name: "YouTube",
-    icon: faYoutube,
-    color: "#FF0000",
-  },
-  spotify: {
-    name: "Spotify",
-    icon: faSpotify,
-    color: "#1DB954",
-  },
-  soundcloud: {
-    name: "SoundCloud",
-    icon: faSoundcloud,
-    color: "#FF8800",
-  },
-  appleMusic: {
-    name: "Apple Music",
-    icon: faApple,
-    color: "#000000",
-  },
-  internetArchive: {
-    name: "Internet Archive",
-    icon: faInternetArchive,
-    color: "#6c757d",
-  },
-  funkwhale: {
-    name: "Funkwhale",
-    icon: faFunkwhale,
-    color: "#009FE3",
-  },
-  navidrome: {
-    name: "Navidrome",
-    icon: faNavidrome,
-    color: "#0084ff",
-  },
-} as const;
 
 type MusicServicesLoaderData = {
   user_has_email: boolean;
@@ -123,17 +76,6 @@ export default function MusicServices() {
     setOpenPanel((prev) => (prev === service ? null : service));
   };
 
-  const isConnected = (service: string | null | undefined) => {
-    if (!service) return false;
-    const permission = permissions[service];
-    return (
-      permission &&
-      permission !== "disabled" &&
-      permission !== "disable" &&
-      permission.trim() !== ""
-    );
-  };
-
   const [permissions, setPermissions] = React.useState({
     spotify: loaderData.current_spotify_permissions,
     critiquebrainz: loaderData.current_critiquebrainz_permissions,
@@ -144,17 +86,15 @@ export default function MusicServices() {
     navidrome: loaderData.current_navidrome_permissions,
     librefm: loaderData.current_librefm_permissions,
   } as Record<string, string>);
-
-  const activeModeLabel = (service: string | null | undefined) => {
-    const labels: Record<string, string> = {
-      both: "Both features active",
-      listen: "Play music only",
-      import: "History only",
-      disable: "Disabled",
-    };
-
-    if (!service || !permissions[service]) return "";
-    return labels[permissions[service]] ?? "";
+  const isConnected = (service: string | null | undefined) => {
+    if (!service) return false;
+    const permission = permissions[service];
+    return (
+      permission &&
+      permission !== "disabled" &&
+      permission !== "disable" &&
+      permission.trim() !== ""
+    );
   };
 
   const [navidromeIsEditing, setNavidromeIsEditing] = React.useState(false);
