@@ -22,6 +22,13 @@ $checkbox-size: 40px;
 .services-grid {
   .card {
     margin-bottom: 4rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
 
     .card-header {
       display: flex;
@@ -29,12 +36,23 @@ $checkbox-size: 40px;
       flex-direction: row;
       align-items: center;
       gap: 1rem;
+      transition: background-color 0.3s ease;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+        cursor: pointer;
+      }
 
       .service-logo {
         display: flex;
         align-items: center;
         justify-content: center;
         min-width: 40px;
+        transition: transform 0.3s ease;
+      }
+
+      &:hover .service-logo {
+        transform: scale(1.1);
       }
 
       .service-icon {
@@ -44,6 +62,35 @@ $checkbox-size: 40px;
       .card-title {
         font-size: 20px;
         margin: 0;
+        flex: 1;
+      }
+
+      .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-left: auto;
+        font-size: 14px;
+        font-weight: 500;
+
+        .status-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          transition: transform 0.3s ease;
+
+          &.connected {
+            background-color: #28a745;
+          }
+
+          &.disconnected {
+            background-color: #dc3545;
+          }
+        }
+      }
+
+      &:hover .status-dot {
+        transform: scale(1.2);
       }
     }
   }

@@ -14,6 +14,8 @@ type LFMMusicServicePermissionsProps = {
   externalUserId?: string;
   existingLatestListenedAt?: string;
   canImportFeedback?: boolean;
+  isOpen?: boolean;
+  onToggle?: () => void;
 };
 
 export default function LFMMusicServicePermissions({
@@ -23,6 +25,8 @@ export default function LFMMusicServicePermissions({
   externalUserId,
   existingLatestListenedAt,
   canImportFeedback = false,
+  isOpen = true,
+  onToggle,
 }: LFMMusicServicePermissionsProps) {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const { auth_token } = currentUser;
@@ -193,154 +197,200 @@ export default function LFMMusicServicePermissions({
 
   return (
     <div className="card">
-      <div className="card-header">
+      <div
+        className="card-header"
+        role="button"
+        tabIndex={0}
+        onClick={onToggle}
+        onKeyDown={(e) => e.key === "Enter" && onToggle?.()}
+        style={{ cursor: onToggle ? "pointer" : "default" }}
+      >
+        <span className="service-logo">
+          <img
+            src={
+              serviceName === "lastfm"
+                ? "/static/img/icons/Lastfm.svg"
+                : "/static/img/icons/Libre.fm_logo.svg"
+            }
+            alt={`${serviceDisplayName} logo`}
+            className="service-icon"
+            width="32"
+            height="32"
+          />
+        </span>
         <h3 className="card-title">{serviceDisplayName}</h3>
+        <div className="status-indicator">
+          <div
+            className={`status-dot ${
+              permissions &&
+              permissions !== "disabled" &&
+              permissions !== "disable" &&
+              permissions.trim() !== ""
+                ? "connected"
+                : "disconnected"
+            }`}
+          />
+          <span>
+            {permissions &&
+            permissions !== "disabled" &&
+            permissions !== "disable" &&
+            permissions.trim() !== ""
+              ? "Connected"
+              : "Not Connected"}
+          </span>
+        </div>
       </div>
-      <div className="card-body">
-        <p>
-          Connect to your {serviceDisplayName} account to import your entire
-          listening history and automatically add your new scrobbles to
-          ListenBrainz.
-        </p>
-        {permissions === "import" ? (
-          <ImportStatus serviceName={serviceName} />
-        ) : (
-          serviceName === "lastfm" && (
-            <div
-              className="alert alert-warning alert-dismissible fade show"
-              role="alert"
-            >
-              Before connecting, you must disable the &#34;Hide recent listening
-              information&#34; setting in your {serviceDisplayName}{" "}
-              <a
-                href={`https://www.${
-                  serviceName === "lastfm" ? "last.fm" : "libre.fm"
-                }/settings/privacy`}
-                target="_blank"
-                rel="noreferrer"
+      {isOpen && (
+        <div className="card-body">
+          <p>
+            Connect to your {serviceDisplayName} account to import your entire
+            listening history and automatically add your new scrobbles to
+            ListenBrainz.
+          </p>
+          {permissions === "import" ? (
+            <ImportStatus serviceName={serviceName} />
+          ) : (
+            serviceName === "lastfm" && (
+              <div
+                className="alert alert-warning alert-dismissible fade show"
+                role="alert"
               >
-                privacy settings
-              </a>
-              .
+                Before connecting, you must disable the &#34;Hide recent
+                listening information&#34; setting in your {serviceDisplayName}{" "}
+                <a
+                  href={`https://www.${
+                    serviceName === "lastfm" ? "last.fm" : "libre.fm"
+                  }/settings/privacy`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  privacy settings
+                </a>
+                .
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="alert"
+                  aria-label="Close"
+                />
+              </div>
+            )
+          )}
+          <form onSubmit={handleConnectSubmit}>
+            <div className="flex flex-wrap" style={{ gap: "1em" }}>
+              <div>
+                <label
+                  className="form-label"
+                  htmlFor={`${serviceName}Username`}
+                >
+                  Your {serviceDisplayName} username:
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name={`${serviceName}Username`}
+                  title={`${serviceDisplayName} Username`}
+                  placeholder={`${serviceDisplayName} Username`}
+                  value={userId}
+                  onChange={(e) => {
+                    setUserId(e.target.value);
+                  }}
+                  readOnly={!isEditing && permissions === "import"}
+                />
+              </div>
+              <div>
+                <label className="form-label" htmlFor="datetime">
+                  Start import from (optional):
+                </label>
+                <input
+                  type="datetime-local"
+                  className="form-control"
+                  max={new Date().toISOString()}
+                  value={latestListenedAt}
+                  onChange={(e) => {
+                    setLatestListenedAt(e.target.value);
+                  }}
+                  name={`${serviceName}StartDatetime`}
+                  title="Date and time to start import at"
+                  readOnly={!isEditing && permissions === "import"}
+                />
+              </div>
+              <div style={{ flex: 0, alignSelf: "end" }}>
+                <button
+                  disabled={permissions !== "import"}
+                  type={isEditing ? "button" : "submit"}
+                  className={`btn ${editButtonClass}`}
+                  onClick={() => {
+                    setIsEditing((prev) => !prev);
+                  }}
+                >
+                  {isEditing ? "Save" : "Edit"}
+                </button>
+              </div>
+            </div>
+            <br />
+            <div className="music-service-selection">
               <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="alert"
-                aria-label="Close"
-              />
-            </div>
-          )
-        )}
-        <form onSubmit={handleConnectSubmit}>
-          <div className="flex flex-wrap" style={{ gap: "1em" }}>
-            <div>
-              <label className="form-label" htmlFor={`${serviceName}Username`}>
-                Your {serviceDisplayName} username:
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                name={`${serviceName}Username`}
-                title={`${serviceDisplayName} Username`}
-                placeholder={`${serviceDisplayName} Username`}
-                value={userId}
-                onChange={(e) => {
-                  setUserId(e.target.value);
-                }}
-                readOnly={!isEditing && permissions === "import"}
-              />
-            </div>
-            <div>
-              <label className="form-label" htmlFor="datetime">
-                Start import from (optional):
-              </label>
-              <input
-                type="datetime-local"
-                className="form-control"
-                max={new Date().toISOString()}
-                value={latestListenedAt}
-                onChange={(e) => {
-                  setLatestListenedAt(e.target.value);
-                }}
-                name={`${serviceName}StartDatetime`}
-                title="Date and time to start import at"
-                readOnly={!isEditing && permissions === "import"}
-              />
-            </div>
-            <div style={{ flex: 0, alignSelf: "end" }}>
-              <button
-                disabled={permissions !== "import"}
-                type={isEditing ? "button" : "submit"}
-                className={`btn ${editButtonClass}`}
-                onClick={() => {
-                  setIsEditing((prev) => !prev);
-                }}
-              >
-                {isEditing ? "Save" : "Edit"}
-              </button>
-            </div>
-          </div>
-          <br />
-          <div className="music-service-selection">
-            <button
-              type="submit"
-              className="music-service-option"
-              style={{ width: "100%" }}
-            >
-              <input
-                readOnly
-                type="radio"
-                id={`${serviceName}_import`}
-                name={serviceName}
-                value="import"
-                checked={permissions === "import"}
-              />
-              <label htmlFor={`${serviceName}_import`}>
-                <div className="title">
-                  Connect
-                  {permissions === "import" ? "ed" : ""} to {serviceDisplayName}
-                </div>
-                <div className="details">
-                  We will periodically check your {serviceDisplayName} account
-                  and add your new scrobbles to ListenBrainz
-                </div>
-              </label>
-            </button>
-            {canImportFeedback && (
-              <button
-                type="button"
+                type="submit"
                 className="music-service-option"
-                onClick={handleImportFeedback}
+                style={{ width: "100%" }}
               >
                 <input
                   readOnly
                   type="radio"
-                  id={`${serviceName}_import_loved_tracks`}
+                  id={`${serviceName}_import`}
                   name={serviceName}
-                  value="loved_tracks"
-                  checked={false}
+                  value="import"
+                  checked={permissions === "import"}
                 />
-                <label htmlFor={`${serviceName}_import_loved_tracks`}>
-                  <div className="title">Import loved tracks</div>
+                <label htmlFor={`${serviceName}_import`}>
+                  <div className="title">
+                    Connect
+                    {permissions === "import" ? "ed" : ""} to{" "}
+                    {serviceDisplayName}
+                  </div>
                   <div className="details">
-                    Can only be run manually to import your loved tracks from{" "}
-                    {serviceDisplayName}. You can run it again without creating
-                    duplicates.
+                    We will periodically check your {serviceDisplayName} account
+                    and add your new scrobbles to ListenBrainz
                   </div>
                 </label>
               </button>
-            )}
-            <ServicePermissionButton
-              service={serviceName}
-              current={permissions ?? "disable"}
-              value="disable"
-              title="Disable"
-              details={`New scrobbles won't be imported from ${serviceDisplayName}`}
-              handlePermissionChange={handleDisconnect}
-            />
-          </div>
-        </form>
-      </div>
+              {canImportFeedback && (
+                <button
+                  type="button"
+                  className="music-service-option"
+                  onClick={handleImportFeedback}
+                >
+                  <input
+                    readOnly
+                    type="radio"
+                    id={`${serviceName}_import_loved_tracks`}
+                    name={serviceName}
+                    value="loved_tracks"
+                    checked={false}
+                  />
+                  <label htmlFor={`${serviceName}_import_loved_tracks`}>
+                    <div className="title">Import loved tracks</div>
+                    <div className="details">
+                      Can only be run manually to import your loved tracks from{" "}
+                      {serviceDisplayName}. You can run it again without
+                      creating duplicates.
+                    </div>
+                  </label>
+                </button>
+              )}
+              <ServicePermissionButton
+                service={serviceName}
+                current={permissions ?? "disable"}
+                value="disable"
+                title="Disable"
+                details={`New scrobbles won't be imported from ${serviceDisplayName}`}
+                handlePermissionChange={handleDisconnect}
+              />
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
