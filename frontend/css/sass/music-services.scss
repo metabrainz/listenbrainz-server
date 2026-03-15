@@ -24,6 +24,7 @@ $checkbox-size: 40px;
     margin-bottom: 4rem;
     transition: all 0.3s ease;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
 
     &:hover {
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
@@ -32,11 +33,12 @@ $checkbox-size: 40px;
 
     .card-header {
       display: flex;
-      padding: 1rem 1.5rem;
+      padding: 1.5rem 1.5rem;
       flex-direction: row;
       align-items: center;
       gap: 1rem;
       transition: background-color 0.3s ease;
+      min-height: 100px;
 
       &:hover {
         background-color: rgba(0, 0, 0, 0.02);
