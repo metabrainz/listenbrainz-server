@@ -25,6 +25,7 @@ import {
   isActivatedAtom,
   currentListenIndexAtom,
 } from "../../../src/common/brainzplayer/BrainzPlayerAtoms";
+import { createBrainzPlayerSettings } from "../../test-utils/BrainzPlayer-test-utils";
 
 const spotifyAccountWithPermissions = {
   access_token: "haveyouseenthefnords",
@@ -53,7 +54,7 @@ const GlobalContextMock: { context: GlobalAppContextT } = {
       { name: "Fnord" }
     ),
     userPreferences: {
-      brainzplayer: {
+      brainzplayer: createBrainzPlayerSettings({
         spotifyEnabled: true,
         soundcloudEnabled: true,
         youtubeEnabled: true,
@@ -61,7 +62,7 @@ const GlobalContextMock: { context: GlobalAppContextT } = {
         navidromeEnabled: false,
         funkwhaleEnabled: false,
         appleMusicEnabled: false,
-      },
+      })
     },
   },
 };
@@ -289,7 +290,7 @@ describe("BrainzPlayer", () => {
       {
         ...GlobalContextMock.context,
         userPreferences: {
-          brainzplayer: {
+          brainzplayer: createBrainzPlayerSettings({
             youtubeEnabled: true,
             spotifyEnabled: false,
             soundcloudEnabled: false,
@@ -297,7 +298,7 @@ describe("BrainzPlayer", () => {
             funkwhaleEnabled: false,
             navidromeEnabled: false,
             appleMusicEnabled: false,
-          },
+          })
         },
       },
       {

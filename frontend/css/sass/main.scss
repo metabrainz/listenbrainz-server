@@ -48,6 +48,15 @@ pre {
   background-color: inherit;
   border: none;
 }
+.noscript {
+  font-size: 2em;
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  gap: 2em;
+  justify-content: center;
+  align-items: center;
+}
 // For use with highlight.js
 pre code.hljs {
   max-height: 50vh;

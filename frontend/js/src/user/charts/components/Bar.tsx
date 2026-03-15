@@ -51,13 +51,14 @@ export default function Bar(props: BarProps) {
       ? Array.from({ length: maxValue + 1 }, (_, i) => i)
       : numberOfTicks;
 
-  const horizontalAxis = {
-    tickSize: 5,
-    tickValues,
-    tickPadding: 5,
-    legend: "Number of listens",
-    legendOffset: 30,
-  };
+ const horizontalAxis = {
+  tickSize: 5,
+  tickValues,
+  tickPadding: 5,
+  legend: "Number of listens",
+  legendOffset: 45,
+  legendPosition: "middle",
+};
 
   return (
     <ResponsiveBar

@@ -112,6 +112,10 @@ declare type LatestImportResponse = {
     state: ImportStatusT;
     count: number;
   };
+  error?: {
+    retry: boolean;
+    message?: string;
+  };
 };
 
 declare type UserArtistsResponse = {
@@ -749,15 +753,15 @@ declare type SearchUser = {
 };
 
 declare type BrainzPlayerSettings = {
-  youtubeEnabled?: boolean;
-  spotifyEnabled?: boolean;
-  soundcloudEnabled?: boolean;
-  appleMusicEnabled?: boolean;
-  internetArchiveEnabled?: boolean;
-  funkwhaleEnabled?: boolean;
-  navidromeEnabled?: boolean;
-  brainzplayerEnabled?: boolean;
-  dataSourcesPriority?: Array<
+  youtubeEnabled : boolean;
+  spotifyEnabled : boolean;
+  soundcloudEnabled : boolean;
+  appleMusicEnabled : boolean;
+  internetArchiveEnabled : boolean;
+  funkwhaleEnabled : boolean;
+  navidromeEnabled : boolean;
+  brainzplayerEnabled : boolean;
+  dataSourcesPriority : Array<
     | "spotify"
     | "youtube"
     | "soundcloud"

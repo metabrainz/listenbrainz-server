@@ -18,7 +18,7 @@ services:
       - redis:/data:z
 
   lb_db:
-    image: timescale/timescaledb:2.6.0-pg12
+    image: timescale/timescaledb:latest-pg14
     volumes:
       - timescaledb:/var/lib/postgresql/data:z
     ports:
@@ -142,7 +142,7 @@ services:
     image: web
     volumes:
       - ..:/code/listenbrainz:z
-    command: python manage.py run_websockets -h 0.0.0.0 -p 8102
+    command: python run_websockets.py -h 0.0.0.0 -p 8102
     ports:
       - "127.0.0.1:8102:8102"
     user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
