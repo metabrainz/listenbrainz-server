@@ -283,7 +283,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                     },
                   }}
                   axisLeft={{
-                    format: (value) => (Number.isInteger(value) ? value : ""),
+                    format: ".2~s",
                     tickValues,
                   }}
                   onClick={(barData, event) => {

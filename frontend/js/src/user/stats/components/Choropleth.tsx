@@ -173,9 +173,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
           color,
           id: color,
           extent: [start, end],
-          label: `${start < 1000 ? start : format(".2s")(start)} - ${
-            end! < 1000 ? end : format(".2s")(end!)
-          }`,
+          label: `${format(".2s")(start)} - ${format(".2s")(end!)}`,
         };
       })}
       {...(isMobile ? legends.mobile : legends.desktop)}
@@ -407,12 +405,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         colors={colorScale}
         domain={domain}
         theme={isMobile ? themes.mobile : themes.desktop}
-        valueFormat={(value) => {
-          if (value < 1000) {
-            return Math.round(value).toString();
-          }
-          return format(".2~s")(value);
-        }}
+        valueFormat=".2~s"
         // We can't set isInteractive to false (need onClick event)
         // But we don't want to show a tooltip, so this function returns an empty element
         // eslint-disable-next-line

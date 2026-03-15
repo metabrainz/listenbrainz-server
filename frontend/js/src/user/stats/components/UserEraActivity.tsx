@@ -357,7 +357,7 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
                       legend: "Number of listens",
                       legendPosition: "middle",
                       legendOffset: -40,
-                      format: (value) => (Number.isInteger(value) ? value : ""),
+                      format: ".2~s",
                       tickValues,
                     }}
                     minValue={0}

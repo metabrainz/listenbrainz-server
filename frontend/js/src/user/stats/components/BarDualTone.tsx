@@ -208,7 +208,7 @@ export default function BarDualTone(props: BarDualToneProps) {
               : undefined,
         }}
         axisLeft={{
-          format: (value) => (Number.isInteger(value) ? value : ""),
+          format: ".2~s",
           tickValues,
         }}
         minValue={0}

@@ -326,10 +326,7 @@ export function UserArtistEvolutionActivityGraph(
           tickSize: 5,
           tickPadding: 5,
           tickRotation: 0,
-          format: (value) => {
-            if (!Number.isInteger(value)) return "";
-            return value < 1000 ? value.toString() : d3Format(".2~s")(value);
-          },
+          format: ".2~s",
           tickValues,
         }}
         enableGridX
