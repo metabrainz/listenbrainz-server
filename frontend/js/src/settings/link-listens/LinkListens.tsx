@@ -294,7 +294,7 @@ export default function LinkListensPage() {
     // constrain pagination to existing pages, forcing navigation to first page if needed
     if (!pageSearchParam || currPage > totalPages) {
       setSearchParams(
-        { page: "1" },
+        { page: totalPages > 0 ? totalPages.toString() : "1" },
         { preventScrollReset: true, replace: true }
       );
     }
