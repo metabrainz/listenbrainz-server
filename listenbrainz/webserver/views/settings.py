@@ -486,10 +486,11 @@ def music_services_connect(service_name: str):
     })
 
     total_listens = 0
-    try:
-        total_listens = int(response_data["recenttracks"]["@attr"]["total"])
-    except Exception:
-        current_app.logger.error(f"Unable to fetch {service_name} user data:", exc_info=True)
+    if service == ExternalServiceType.LASTFM:
+        try:
+            total_listens = int(response_data["recenttracks"]["@attr"]["total"])
+        except Exception:
+            current_app.logger.error(f"Unable to fetch {service_name} user data:", exc_info=True)
 
     return jsonify({"totalLfmListens": total_listens})
 
