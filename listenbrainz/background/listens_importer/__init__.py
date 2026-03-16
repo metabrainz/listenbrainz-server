@@ -43,7 +43,7 @@ def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
     elif service == "spinitron":
         importer = SpinitronListensImporter(db_conn, ts_conn)
     elif service == "tidal":
-        imporer = TidalListensImporter(db_conn, ts_conn)
+        importer = TidalListensImporter(db_conn, ts_conn)
     else:
         msg = f"Unsupported service: {service}"
         update_import_task(db_conn, import_id, status="failed", progress=msg)

@@ -417,7 +417,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         import_id = response.json["import_id"]
 
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
-        # Some tracks will be skipped,only expecting 6 tracks 
+        # Some tracks will be skipped,only expecting 6 tracks
         response = self.wait_for_query_to_have_items(url, num_items=6, attempts=20)
         listens = response.json["payload"]["listens"]
         self.assertEqual(len(listens), 6)
@@ -444,7 +444,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertIn("success_count", metadata)
         self.assertEqual(metadata["success_count"], 6)
         self.assertGreaterEqual(metadata["attempted_count"], 6)
-    
+
     def test_skip_import_spotify(self):
         # Listens should get skipped for a variety of reasons (manually skipped, errors, etc.)
         data = {
@@ -711,7 +711,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["release_name"], "Primary Colours")
         additional_info = track_metadata["additional_info"]
         self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
-    
+
         response = self.client.get(
             self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
             headers={"Authorization": f"Token {self.user['auth_token']}"},
@@ -973,9 +973,9 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertIn("success_count", metadata)
 
         self.assertEqual(metadata["attempted_count"], 5)
-    
+
         self.assertEqual(metadata["success_count"], 3)
-    
+
         self.assertEqual(metadata["status"], "completed")
 
     def test_import_with_all_validation_failures(self):
@@ -1035,7 +1035,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         )
         self.assert200(response)
         metadata = response.json["metadata"]
-        
+
         self.assertIn("status", metadata)
         self.assertIn("progress", metadata)
         self.assertEqual(metadata["status"], "waiting")
