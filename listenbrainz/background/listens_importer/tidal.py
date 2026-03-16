@@ -16,7 +16,7 @@ class TidalListensImporter(BaseListensImporter):
         self._from_date = import_task["from_date"]
         self._to_date = import_task["to_date"]
 
-        with open(import_task["file_path"], mode="r", newline="", encoding="utf-8") as file:
+        with open(import_task["file_path"], mode="r", encoding="utf-8-sig") as file:
             header_line = self._read_header_line(file)
             reader = csv.DictReader(file, fieldnames=header_line)
             yield from chunked(reader, self.batch_size)
@@ -25,13 +25,13 @@ class TidalListensImporter(BaseListensImporter):
         listens = []
         for item in batch:
             try:
-                date_time = datetime.strptime(item["entry_date"], "%d/%m/%y %H:%M") # TODO: Do we use the timezone column of the streaming csv file to append info about the timezone?
+                date_time = datetime.strptime(item["entry_date"], "%d/%m/%Y %H:%M") # TODO: Do we use the timezone column of the streaming csv file to append info about the timezone?
                 ts = int(date_time.timestamp())
             except (TypeError, ValueError):
                 current_app.logger.debug("Invalid Timestamp in item: %s", item, exc_info=True)
                 continue
 
-            if not (self._from_date <= datetime.fromtimestamp <= self._to_date):
+            if not (self._from_date <= datetime.fromtimestamp(ts, tz=timezone.utc) <= self._to_date):
                 continue
 
             artist_name = item["artist_name"]
@@ -56,9 +56,8 @@ class TidalListensImporter(BaseListensImporter):
 
     @staticmethod
     def _looks_like_header(line: str) -> list[str] | None:
-        maybe_header = [
-            column.strip(' "').lower() for column in line.strip().split(",")
-        ]
+        maybe_header = line.split(",")
+        current_app.logger.debug("Maybe_header is %s", maybe_header)
         expected = {"artist_name", "track_title", "entry_date"}
         if expected.issubset(maybe_header):
             return maybe_header
