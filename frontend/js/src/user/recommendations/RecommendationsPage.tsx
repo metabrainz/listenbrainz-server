@@ -51,19 +51,19 @@ function getPlaylistInfo(
       cssClasses: "weekly-jams green",
     };
   }
-  else if (sourcePatch === "weekly-exploration") {
+  if (sourcePatch === "weekly-exploration") {
     return {
       shortTitle: !isOld ? "Weekly Exploration" : `Last Week's Exploration`,
       cssClasses: "green",
     };
   }
-  else if (sourcePatch === "daily-jams") {
+  if (sourcePatch === "daily-jams") {
     return {
       shortTitle: "Daily Jams",
       cssClasses: "blue",
     };
   }
-  else if (sourcePatch?.startsWith("top-discoveries-of-")) {
+  if (sourcePatch?.startsWith("top-discoveries-of-")) {
     // get year from source patch, fallback to using creation date minus 1
     const year =
       sourcePatch?.match(/\d{2,4}/)?.[0] ??
@@ -73,7 +73,7 @@ function getPlaylistInfo(
       cssClasses: "red",
     };
   }
-  else if (sourcePatch?.startsWith("top-missed-recordings-of-")) {
+  if (sourcePatch?.startsWith("top-missed-recordings-of-")) {
     const year =
       sourcePatch?.match(/\d{2,4}/)?.[0] ??
       new Date(playlist.date).getUTCFullYear() - 1;
