@@ -182,21 +182,21 @@ export default NiceModal.create(() => {
           return;
         }
 
-        const jspfObject: JSPFObject = await APIService.importXSPFPlaylistTracks(
+        const newPlaylistResponse = await APIService.importXSPFPlaylistTracks(
           currentUser.auth_token,
           xspfContent
         );
 
-        newPlaylist = jspfObject.playlist;
+        newPlaylist = newPlaylistResponse.playlist;
 
         toast.success(
           <ToastMsg
             title="Imported XSPF playlist"
             message={
               <>
-                Imported a playlist with ID:
-                <Link to={`/playlist/${newPlaylist.identifier}`}>
-                  {newPlaylist.identifier}
+                Imported a playlist:
+                <Link to={`/playlist/${newPlaylistResponse.identifier}`}>
+                  {newPlaylist.title}
                 </Link>
               </>
             }
