@@ -117,6 +117,7 @@ class FunkwhaleService:
 
     def refresh_access_token(self, user_id: int, server: dict, refresh_token: str):
         oauth = OAuth2Session(
+            client_id=server['client_id'],
             redirect_uri=self.redirect_url
         )
         token_url = f"{server['host_url']}/api/v1/oauth/token/"

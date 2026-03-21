@@ -120,7 +120,9 @@ class PlaylistTestCase(IntegrationTestCase):
         new_playlist_3 = db_playlist.create(self.db_conn, self.ts_conn, playlist_3)
         new_playlist_4 = db_playlist.create(self.db_conn, self.ts_conn, playlist_4)
 
-        playlists, count = db_playlist.search_playlists_for_user(self.db_conn, self.ts_conn, self.user_1['id'], "testing")
+        playlists, count = db_playlist.search_playlists_for_user(
+            self.db_conn, self.ts_conn, self.user_1['id'], "testing", viewer_id=self.user_1['id']
+        )
 
         # Since playlist_2 is private, and user_1 does not have access to it, it will not
 
@@ -129,15 +131,39 @@ class PlaylistTestCase(IntegrationTestCase):
         self.assertEqual(playlists[0].name, playlist_3.name)
         self.assertEqual(playlists[1].name, playlist_1.name)
 
-        playlists, count = db_playlist.search_playlists_for_user(self.db_conn, self.ts_conn, self.user_2['id'], "test")
+        playlists, count = db_playlist.search_playlists_for_user(
+            self.db_conn, self.ts_conn, self.user_2['id'], "test", viewer_id=self.user_2['id']
+        )
 
-        # Since user_2 has access to all the 4 playlists, all the playlists will be searched.
+        # Only playlists associated with user_2 should be searched.
+        # user_2 is a collaborator on playlist_1 and the owner of playlist_2.
+
+        self.assertEqual(len(playlists), 2)
+        self.assertEqual(count, 2)
+        self.assertEqual({p.name for p in playlists}, {playlist_1.name, playlist_2.name})
+
+        playlists, count = db_playlist.search_playlists_for_user(
+            self.db_conn, self.ts_conn, self.user_1['id'], "testing", viewer_id=None
+        )
+
+        # Anonymous viewer should only see public playlists associated with user_1.
+        # playlist_1 is private, so only playlist_3 matches.
+
+        self.assertEqual(len(playlists), 1)
+        self.assertEqual(count, 1)
+        self.assertEqual(playlists[0].name, playlist_3.name)
+
+        playlists, count = db_playlist.search_playlists_for_user(
+            self.db_conn, self.ts_conn, self.user_2['id'], "test", viewer_id=self.user_2['id'],
+            include_global=True
+        )
+
+        # With include_global=True, user_1's public playlist_3 should also appear in results
+        # in addition to user_2's associated playlists (playlist_1, playlist_2).
 
         self.assertEqual(len(playlists), 3)
         self.assertEqual(count, 3)
-        self.assertEqual(playlists[0].name, playlist_3.name)
-        self.assertEqual(playlists[1].name, playlist_2.name)
-        self.assertEqual(playlists[2].name, playlist_1.name)
+        self.assertEqual({p.name for p in playlists}, {playlist_1.name, playlist_2.name, playlist_3.name})
 
     def test_delete_deletes_user_playlists(self):
         """Tests that deleting a user also deletes their playlists"""

@@ -287,7 +287,8 @@ export default function ListenCard(props: ListenCardProps) {
   const renderBrainzplayer =
     userPreferences?.brainzplayer?.brainzplayerEnabled ?? true;
 
-  const isCurrentUsersListen = !!currentUser?.name && displayListen.user_name === currentUser.name;
+  const isCurrentUsersListen =
+    !!currentUser?.name && displayListen.user_name === currentUser.name;
   let timeStampForDisplay;
   if (customTimestamp) {
     timeStampForDisplay = customTimestamp;
@@ -298,9 +299,9 @@ export default function ListenCard(props: ListenCardProps) {
           <Link to="/listening-now/">
             <FontAwesomeIcon icon={faMusic as IconProp} /> Listening now &#8212;
           </Link>
-        ): (
+        ) : (
           <>
-          <FontAwesomeIcon icon={faMusic as IconProp} /> Listening now &#8212;
+            <FontAwesomeIcon icon={faMusic as IconProp} /> Listening now &#8212;
           </>
         )}
       </span>

@@ -84,7 +84,6 @@ def export_to_spotify(playlists):
             playlist_url, _ = submit_to_spotify(
                 sp,
                 playlist_element,
-                user["external_user_id"],
                 existing_url=playlist["existing_url"]
             )
             playlist["additional_metadata"].update({"external_urls": {"spotify": playlist_url}})

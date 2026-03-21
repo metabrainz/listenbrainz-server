@@ -251,6 +251,9 @@ is not exhaustive, and you may include any other fields you would consider usefu
    * - ``duration_played``
      - integer
      - The duration in seconds that the user actually listened to the track.
+   * - ``label``
+     - string
+     - The name of the record label that released the recording.
 .. note::
 
   **Music service names**

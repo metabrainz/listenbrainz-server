@@ -412,7 +412,12 @@ def create_playlist():
 @api_listenstore_needed
 def search_playlist():
     """
-    Search for playlists by name or description. The search query must be at least 3 characters long.
+    Search for public playlists by name or description.
+
+    The search is a fuzzy match based on PostgreSQL trigram similarity and is performed against
+    the playlist title and description. Results are ordered by decreasing similarity.
+    The query is treated as a plain string.
+    The search query must be at least 3 characters long.
 
     :param query: The search query string.
     :type query: ``str``
@@ -1142,7 +1147,7 @@ def export_playlist_jspf(service):
                             f" to use this feature.")
 
     is_public = parse_boolean_arg("is_public", True)
-    jspf = request.json
+    jspf = {"playlist": request.json}
     try:
         if service == "spotify":
             url = export_to_spotify(user["auth_token"], token["access_token"], is_public, jspf=jspf)

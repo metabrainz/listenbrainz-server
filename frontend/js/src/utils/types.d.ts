@@ -113,6 +113,10 @@ declare type LatestImportResponse = {
     state: ImportStatusT;
     count: number;
   };
+  error?: {
+    retry: boolean;
+    message?: string;
+  };
 };
 
 declare type UserArtistsResponse = {
