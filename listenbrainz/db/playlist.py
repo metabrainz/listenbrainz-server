@@ -209,23 +209,24 @@ def _playlist_resultset_to_model(db_conn, ts_conn, result, load_recordings):
     user_id_map = {}
     for row in result.mappings():
         row = dict(row)
+
         creator_id = row.get("creator_id")
         if creator_id is None:
             continue
         if creator_id not in user_id_map:
-            user = db_user.get(db_conn, creator_id)
-            user_id_map[creator_id] = user
-            if user is None:
-                continue
+            user_id_map[creator_id] = db_user.get(db_conn, creator_id)
+        if user_id_map[creator_id] is None:
+            continue
+        row["creator"] = user_id_map[creator_id]["musicbrainz_id"]
+
         created_for_id = row.get("created_for_id")
         if created_for_id and created_for_id not in user_id_map:
-            user = db_user.get(db_conn, created_for_id)
-            user_id_map[created_for_id] = user
-            if user is None:
-                continue
-        row["creator"] = user_id_map[creator_id]["musicbrainz_id"]
+            user_id_map[created_for_id] = db_user.get(db_conn, created_for_id)
+        if created_for_id and user_id_map.get(created_for_id) is None:
+            continue
         if created_for_id:
             row["created_for"] = user_id_map[created_for_id]["musicbrainz_id"]
+
         row["recordings"] = []
         playlist = model_playlist.Playlist.parse_obj(row)
         playlists.append(playlist)
