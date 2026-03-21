@@ -15,7 +15,7 @@ xmltodict==0.14.2
 brainzutils@git+https://github.com/metabrainz/brainzutils-python.git@v3.0.0
 spotipy==2.26.0
 datasethoster@git+https://github.com/metabrainz/data-set-hoster.git@830ecb2b2120acbd5deed2dab4587784c7be04b6
-troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@dfa517e88df69fba0abe7c0f0daa97a13326b097
+troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@f668639c099414e581b087e16bcbf743d34beaa2
 gevent==25.5.1
 gevent-websocket==0.10.1
 uWSGI==2.0.31
