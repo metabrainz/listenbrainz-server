@@ -11,6 +11,7 @@ from listenbrainz.db.model import playlist as model_playlist
 from listenbrainz.db import user as db_user
 from listenbrainz.db.model.playlist import Playlist
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
+from listenbrainz.db.year_in_music import LAST_FM_FOUNDING_YEAR, MAX_YEAR_IN_MUSIC_YEAR
 
 TROI_BOT_USER_ID = 12939
 TROI_BOT_DEBUG_USER_ID = 19055
@@ -23,10 +24,14 @@ RECOMMENDATION_PATCHES = (
     'daily-jams',
     'weekly-jams',
     'weekly-exploration',
-    'top-discoveries-for-year',
-    'top-missed-recordings-for-year',
-    'top-discoveries-of-2023',
-    'top-missed-recordings-of-2023'
+    *(
+        patch
+        for year in range(MAX_YEAR_IN_MUSIC_YEAR, LAST_FM_FOUNDING_YEAR - 1, -1)
+        for patch in (
+            f'top-discoveries-of-{year}',
+            f'top-missed-recordings-of-{year}',
+        )
+    ),
 )
 
 
