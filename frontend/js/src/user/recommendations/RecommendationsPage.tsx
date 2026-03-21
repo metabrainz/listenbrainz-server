@@ -44,47 +44,48 @@ function getPlaylistInfo(
   const extension = getPlaylistExtension(playlist);
   const sourcePatch =
     extension?.additional_metadata?.algorithm_metadata?.source_patch;
-  let year;
-  switch (true) {
-    case sourcePatch === "weekly-jams":
-      return {
-        shortTitle: !isOld ? "Weekly Jams" : `Last Week's Jams`,
-        cssClasses: "weekly-jams green",
-      };
-    case sourcePatch === "weekly-exploration":
-      return {
-        shortTitle: !isOld ? "Weekly Exploration" : `Last Week's Exploration`,
-        cssClasses: "green",
-      };
-    case sourcePatch === "daily-jams":
-      return {
-        shortTitle: "Daily Jams",
-        cssClasses: "blue",
-      };
-    case sourcePatch?.startsWith("top-discoveries-of-"):
-      // get year from source patch, fallback to using creation date minus 1
-      year =
-        sourcePatch?.match(/\d{2,4}/)?.[0] ??
-        new Date(playlist.date).getUTCFullYear() - 1;
-      return {
-        shortTitle: `${year} Top Discoveries`,
-        cssClasses: "red",
-      };
-    case sourcePatch?.startsWith("top-missed-recordings-of-"):
-      // get year from source patch, fallback to using creation date minus 1
-      year =
-        sourcePatch?.match(/\d{2,4}/)?.[0] ??
-        new Date(playlist.date).getUTCFullYear() - 1;
-      return {
-        shortTitle: `${year} Missed Tracks`,
-        cssClasses: "red",
-      };
-    default:
-      return {
-        shortTitle: playlist.title,
-        cssClasses: "blue",
-      };
+
+  if (sourcePatch === "weekly-jams") {
+    return {
+      shortTitle: !isOld ? "Weekly Jams" : `Last Week's Jams`,
+      cssClasses: "weekly-jams green",
+    };
   }
+  else if (sourcePatch === "weekly-exploration") {
+    return {
+      shortTitle: !isOld ? "Weekly Exploration" : `Last Week's Exploration`,
+      cssClasses: "green",
+    };
+  }
+  else if (sourcePatch === "daily-jams") {
+    return {
+      shortTitle: "Daily Jams",
+      cssClasses: "blue",
+    };
+  }
+  else if (sourcePatch?.startsWith("top-discoveries-of-")) {
+    // get year from source patch, fallback to using creation date minus 1
+    const year =
+      sourcePatch?.match(/\d{2,4}/)?.[0] ??
+      new Date(playlist.date).getUTCFullYear() - 1;
+    return {
+      shortTitle: `${year} Top Discoveries`,
+      cssClasses: "red",
+    };
+  }
+  else if (sourcePatch?.startsWith("top-missed-recordings-of-")) {
+    const year =
+      sourcePatch?.match(/\d{2,4}/)?.[0] ??
+      new Date(playlist.date).getUTCFullYear() - 1;
+    return {
+      shortTitle: `${year} Missed Tracks`,
+      cssClasses: "red",
+    };
+  }
+  return {
+    shortTitle: playlist.title,
+    cssClasses: "blue",
+  };
 }
 
 export default function RecommendationsPage() {
