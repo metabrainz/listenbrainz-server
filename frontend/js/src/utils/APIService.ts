@@ -1577,7 +1577,10 @@ export default class APIService {
   importXSPFPlaylistTracks = async (
     userToken: string,
     xspfContent: string
-  ): Promise<any> => {
+  ): Promise<{
+    identifier: string;
+    playlist: JSPFPlaylist;
+  }> => {
     const url = `${this.APIBaseURI}/playlist/xspf/tracks`;
     const response = await fetch(url, {
       method: "POST",
