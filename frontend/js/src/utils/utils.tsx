@@ -6,6 +6,7 @@ import { Rating } from "react-simple-star-rating";
 import { toast } from "react-toastify";
 import { Link } from "react-router";
 import ReactMarkdown from "react-markdown";
+import { formatDuration, intervalToDuration } from "date-fns";
 import SpotifyPlayer from "../common/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../common/brainzplayer/YoutubePlayer";
 import NamePill from "../personal-recommendations/NamePill";
@@ -728,6 +729,11 @@ const preciseTimestamp = (
     default:
       return `${timeago.ago(listened_at)}`;
   }
+};
+const formatSecondsDuration = (seconds: number): string => {
+  return formatDuration(intervalToDuration({ start: 0, end: seconds * 1000 }), {
+    format: ["months", "days", "hours", "minutes"],
+  });
 };
 // recieves or unix epoch timestamp int or ISO datetime string
 const fullLocalizedDateFromTimestampOrISODate = (
@@ -1454,6 +1460,7 @@ export {
   getAlbumLink,
   formatWSMessageToListen,
   preciseTimestamp,
+  formatSecondsDuration,
   fullLocalizedDateFromTimestampOrISODate,
   convertDateToUnixTimestamp,
   getPageProps,

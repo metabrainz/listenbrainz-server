@@ -612,6 +612,7 @@ export default function MusicServices() {
           existingLatestListenedAt={
             loaderData.current_librefm_settings?.latest_listened_at
           }
+          canImportFeedback
         />
 
         <div className="card">

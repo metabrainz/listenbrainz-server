@@ -11,6 +11,7 @@ from listenbrainz.db.model import playlist as model_playlist
 from listenbrainz.db import user as db_user
 from listenbrainz.db.model.playlist import Playlist
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
+from listenbrainz.db.year_in_music import LAST_FM_FOUNDING_YEAR, MAX_YEAR_IN_MUSIC_YEAR
 
 TROI_BOT_USER_ID = 12939
 TROI_BOT_DEBUG_USER_ID = 19055
@@ -23,10 +24,14 @@ RECOMMENDATION_PATCHES = (
     'daily-jams',
     'weekly-jams',
     'weekly-exploration',
-    'top-discoveries-for-year',
-    'top-missed-recordings-for-year',
-    'top-discoveries-of-2023',
-    'top-missed-recordings-of-2023'
+    *(
+        patch
+        for year in range(MAX_YEAR_IN_MUSIC_YEAR, LAST_FM_FOUNDING_YEAR - 1, -1)
+        for patch in (
+            f'top-discoveries-of-{year}',
+            f'top-missed-recordings-of-{year}',
+        )
+    ),
 )
 
 
@@ -209,23 +214,24 @@ def _playlist_resultset_to_model(db_conn, ts_conn, result, load_recordings):
     user_id_map = {}
     for row in result.mappings():
         row = dict(row)
+
         creator_id = row.get("creator_id")
         if creator_id is None:
             continue
         if creator_id not in user_id_map:
-            user = db_user.get(db_conn, creator_id)
-            user_id_map[creator_id] = user
-            if user is None:
-                continue
+            user_id_map[creator_id] = db_user.get(db_conn, creator_id)
+        if user_id_map[creator_id] is None:
+            continue
+        row["creator"] = user_id_map[creator_id]["musicbrainz_id"]
+
         created_for_id = row.get("created_for_id")
         if created_for_id and created_for_id not in user_id_map:
-            user = db_user.get(db_conn, created_for_id)
-            user_id_map[created_for_id] = user
-            if user is None:
-                continue
-        row["creator"] = user_id_map[creator_id]["musicbrainz_id"]
+            user_id_map[created_for_id] = db_user.get(db_conn, created_for_id)
+        if created_for_id and user_id_map.get(created_for_id) is None:
+            continue
         if created_for_id:
             row["created_for"] = user_id_map[created_for_id]["musicbrainz_id"]
+
         row["recordings"] = []
         playlist = model_playlist.Playlist.parse_obj(row)
         playlists.append(playlist)
@@ -372,17 +378,32 @@ def get_playlists_collaborated_on(db_conn, ts_conn, user_id: int, include_privat
     return playlists, count
 
 
-def search_playlists_for_user(db_conn, ts_conn, user_id: int, query: str, count: int = 0, offset: int = 0):
+def search_playlists_for_user(
+    db_conn,
+    ts_conn,
+    user_id: int,
+    query: str,
+    count: int = 0,
+    offset: int = 0,
+    viewer_id: Optional[int] = None,
+    include_global: bool = False,
+):
     """
-    Search for playlists by name or description
+    Search for playlists associated with a user by name or description.
 
     Arguments:
         db_conn: database connection
         ts_conn: timescale database connection
-        user_id: The user id
+        user_id: The user id whose playlists are being searched
         query: The search query
         count: Return this many playlists. If 0, return all playlists
         offset: if set, get playlists from this offset
+        viewer_id: Controls visibility filtering.
+            - If set to ``None`` (default), only public playlists are returned.
+            - If set to a user id, include private playlists that the viewer can access.
+            - If set to the same as ``user_id``, all associated playlists are visible.
+        include_global: If True, also include all public playlists globally in addition to
+            the user's associated playlists. Default: False.
 
     Returns:
         a tuple (playlists, total_playlists)
@@ -390,63 +411,110 @@ def search_playlists_for_user(db_conn, ts_conn, user_id: int, query: str, count:
     if count == 0:
         count = None
 
-    params = {"query": query, "count": count, "offset": offset, "user_id": user_id}
+    params = {
+        "query": query,
+        "count": count,
+        "offset": offset,
+        "user_id": user_id,
+        "viewer_id": viewer_id,
+    }
+
+    # When viewer_id = user_id, visibility is automatically satisfied for associated playlists
+    # (if user is creator/collaborator/created_for, they can see it)
+    # So we only need to check visibility when viewer_id != user_id
+    if viewer_id == user_id:
+        # Viewer is the same as the user - no additional visibility check needed
+        visibility_condition = "TRUE"
+    elif viewer_id is None:
+        # Anonymous viewer - only public playlists
+        visibility_condition = "pl.public = true"
+    else:
+        # Different viewer - check visibility
+        visibility_condition = """
+            (
+                pl.public = true
+                OR pl.creator_id = :viewer_id
+                OR EXISTS (
+                    SELECT 1
+                      FROM playlist.playlist_collaborator pc_view
+                     WHERE pc_view.playlist_id = pl.id
+                       AND pc_view.collaborator_id = :viewer_id
+                )
+            )
+        """
+
+    # Build the association condition: user's playlists OR (if include_global) all public playlists
+    global_condition = "OR pl.public = true" if include_global else ""
+    association_condition = f"""\
+        (
+            pl.creator_id = :user_id
+         OR pl.created_for_id = :user_id
+         OR EXISTS (
+                SELECT 1
+                  FROM playlist.playlist_collaborator pc_target
+                 WHERE pc_target.playlist_id = pl.id
+                   AND pc_target.collaborator_id = :user_id
+            ) {global_condition}
+        )
+    """
+
     query = text(f"""
-    WITH playlist_similarities AS (
+    WITH candidate_playlists AS (
         SELECT pl.id
-             , pl.mbid
-             , pl.creator_id
-             , pl.name
-             , pl.description
-             , pl.public
-             , pl.created
-             , pl.last_updated
-             , pl.copied_from_id
-             , pl.created_for_id
-             , pl.additional_metadata
-             , copy.mbid as copied_from_mbid
              , similarity(pl.name, :query) AS name_similarity
-             , similarity(pl.description, :query) AS description_similarity
+             , similarity(COALESCE(pl.description, ''), :query) AS description_similarity
           FROM playlist.playlist AS pl
-     LEFT JOIN playlist.playlist AS copy
-            ON pl.copied_from_id = copy.id
-     LEFT JOIN playlist.playlist_collaborator
-            ON pl.id = playlist_collaborator.playlist_id
-        WHERE pl.creator_id = :user_id
-            OR pl.created_for_id = :user_id
-            OR playlist.playlist_collaborator.collaborator_id = :user_id
-            OR pl.public = true
+         WHERE {association_condition}
+           AND {visibility_condition}
+    ),
+    matched_playlists AS (
+        SELECT id, name_similarity, description_similarity
+          FROM candidate_playlists
+         WHERE name_similarity > 0.1
+            OR description_similarity > 0.1
+         ORDER BY name_similarity DESC, description_similarity DESC
+         LIMIT :count
+        OFFSET :offset
     )
-    SELECT *
-      FROM playlist_similarities
-     WHERE name_similarity > 0.1
-        OR description_similarity > 0.1
-  ORDER BY name_similarity DESC, description_similarity DESC
-     LIMIT :count
-    OFFSET :offset
+    SELECT pl.id
+         , pl.mbid
+         , pl.creator_id
+         , pl.name
+         , pl.description
+         , pl.public
+         , pl.created
+         , pl.last_updated
+         , pl.copied_from_id
+         , pl.created_for_id
+         , pl.additional_metadata
+         , copy.mbid as copied_from_mbid
+         , mp.name_similarity
+         , mp.description_similarity
+      FROM matched_playlists mp
+      JOIN playlist.playlist pl
+        ON pl.id = mp.id
+ LEFT JOIN playlist.playlist AS copy
+        ON pl.copied_from_id = copy.id
+  ORDER BY mp.name_similarity DESC, mp.description_similarity DESC
     """)
 
     result = ts_conn.execute(query, params)
     playlists = _playlist_resultset_to_model(db_conn, ts_conn, result, False)
 
     # Fetch the total count of playlists
+    # Reuse the same visibility condition logic
     total_count = 0
     query = text(f"""
-    WITH playlist_similarities AS (
-        SELECT similarity(pl.name, :query) AS name_similarity
-             , similarity(pl.description, :query) AS description_similarity
+    WITH candidate_playlists AS (
+        SELECT pl.id
+             , similarity(pl.name, :query) AS name_similarity
+             , similarity(COALESCE(pl.description, ''), :query) AS description_similarity
           FROM playlist.playlist AS pl
-     LEFT JOIN playlist.playlist AS copy
-            ON pl.copied_from_id = copy.id
-     LEFT JOIN playlist.playlist_collaborator
-            ON pl.id = playlist_collaborator.playlist_id
-        WHERE pl.creator_id = :user_id
-            OR pl.created_for_id = :user_id
-            OR playlist.playlist_collaborator.collaborator_id = :user_id
-            OR pl.public = true
+         WHERE {association_condition}
+           AND {visibility_condition}
     )
     SELECT COUNT(*)
-      FROM playlist_similarities
+      FROM candidate_playlists
      WHERE name_similarity > 0.1
         OR description_similarity > 0.1
     """)

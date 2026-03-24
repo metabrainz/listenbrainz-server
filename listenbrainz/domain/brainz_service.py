@@ -77,7 +77,7 @@ class BaseBrainzService(ExternalService):
                 client_id=self.client_id,
                 refresh_token=refresh_token,
             )
-        except InvalidGrantError as e:
+        except (InvalidGrantError, TypeError) as e:
             raise ExternalServiceInvalidGrantError("User revoked access") from e
 
         expires_at = int(time.time()) + token["expires_in"]
