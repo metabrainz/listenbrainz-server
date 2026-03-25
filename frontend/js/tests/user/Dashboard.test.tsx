@@ -820,9 +820,9 @@ describe("Dashboard page", () => {
         // Trigger change with a specific date
         fireEvent.change(datePicker, { target: { value: "2024-03-14" } });
 
-        // The expected timestamp for 2024-03-14 23:59:59.999 in Europe/London (GMT) is 1710460799
+        // The expected timestamp for 2024-03-15 00:00:00 in Europe/London (GMT) is 1710460800
         await waitFor(() => {
-          expect(mockSearchParam).toEqual({ max_ts: "1710460799" });
+          expect(mockSearchParam).toEqual({ max_ts: "1710460800" });
         });
       });
     });
