@@ -31,6 +31,8 @@ def parse_incs(incs):
 
     if not incs:
         return []
+    if not isinstance(incs, str):
+        raise APIBadRequest("inc must be a string")
     incs = incs.split()
     for inc in incs:
         if inc not in allowed_incs:
@@ -154,10 +156,7 @@ def metadata_recording_post():
     """
     data = request.json
 
-    try:
-        incs = parse_incs(data["inc"])
-    except KeyError:
-        incs = []
+    incs = parse_incs(data.get("inc"))
 
     try:
         recording_mbids = data["recording_mbids"]

@@ -1110,53 +1110,53 @@ export default function ArtCreator() {
                     </button>
                   </>
                 )}
+                {/* <div className="flex-center input-group">
+                  <label className="form-label" htmlFor="bg-upload">Background image:</label>
+                  <input className="form-control" type="text" />
+                  <button type="button" className="btn btn-secondary btn-sm">
+                    <FontAwesomeIcon icon={faCloudArrowUp} />
+                  </button>
+                </div> */}
+
+                {/* <div>
+                  <label className="form-label" htmlFor="genres">
+                    Genres: <FontAwesomeIcon icon={faCircleQuestion} />
+                  </label>
+                  <input
+                    id="genres"
+                    type="text"
+                    className="form-control"
+                    onChange={updateGenresCallback}
+                  />
+                </div> */}
+                {/* <div>
+                  <ToggleOption onClick={userToggler} buttonName="Users" />
+                  <ToggleOption onClick={dateToggler} buttonName="Date" />
+                  <ToggleOption onClick={rangeToggler} buttonName="Range" />
+                  <ToggleOption onClick={totalToggler} buttonName="Total" />
+                  <ToggleOption onClick={genresToggler} buttonName="Genres" />
+                </div> */}
+                {/* <div>
+                  className="form-label" htmlFor="font-select">Font:</label>
+                  <select
+                    id="font-select"
+                    className="form-select"
+                    value={font}
+                    onChange={updateFontCallback}
+                  >
+                    {fontOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </div> */}
+                {/* <div>
+                  <ToggleOption onClick={vaToggler} buttonName="Ignore VA" />
+                </div> */}
               </div>
             </div>
           )}
-          {/* <div className="flex-center input-group">
-                <label className="form-label" htmlFor="bg-upload">Background image:</label>
-                <input className="form-control" type="text" />
-                <button type="button" className="btn btn-secondary btn-sm">
-                  <FontAwesomeIcon icon={faCloudArrowUp} />
-                </button>
-              </div> */}
-
-              {/* <div>
-                <label className="form-label" htmlFor="genres">
-                  Genres: <FontAwesomeIcon icon={faCircleQuestion} />
-                </label>
-                <input
-                  id="genres"
-                  type="text"
-                  className="form-control"
-                  onChange={updateGenresCallback}
-                />
-              </div> */}
-              {/* <div>
-                <ToggleOption onChange={() => {}} checked={false} label="Users" />
-                <ToggleOption onChange={() => {}} checked={false} label="Date" />
-                <ToggleOption onChange={() => {}} checked={false} label="Range" />
-                <ToggleOption onChange={() => {}} checked={false} label="Total" />
-                <ToggleOption onChange={() => {}} checked={false} label="Genres" />
-              </div> */}
-              {/* <div>
-                className="form-label" htmlFor="font-select">Font:</label>
-                <select
-                  id="font-select"
-                  className="form-select"
-                  value={font}
-                  onChange={updateFontCallback}
-                >
-                  {fontOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div> */}
-              {/* <div>
-                <ToggleOption onChange={() => {}} checked={false} label="Ignore VA" />
-              </div> */}
         </Sidebar>
       </div>
     </div>
