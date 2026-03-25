@@ -15,6 +15,7 @@ import { faFontAwesome } from "@fortawesome/free-solid-svg-icons";
 import { ToastMsg } from "../../../notifications/Notifications";
 import ServicePermissionButton from "./components/ExternalServiceButton";
 import LFMMusicServicePermissions from "./components/LFMMusicServicePermissions";
+import MusicServiceCard from "./components/MusicServiceCard";
 
 import {
   authorizeWithAppleMusic,
@@ -499,188 +500,145 @@ export default function MusicServices() {
       </div>
 
       <div className="services-grid">
-        <div className="card">
-          <div
-            className="card-header"
-            role="button"
-            tabIndex={0}
-            onClick={() => togglePanel("spotify")}
-            onKeyDown={(e) => e.key === "Enter" && togglePanel("spotify")}
-            style={{ cursor: "pointer" }}
-          >
-            <span className="service-logo">
-              <FontAwesomeIcon
-                icon={faSpotify}
-                className="service-icon"
-                color="#1DB954"
-              />
-            </span>
-            <h3 className="card-title">Spotify</h3>
-            <div className="status-indicator">
-              <div
-                className={`status-dot ${
-                  isConnected("spotify") ? "connected" : "disconnected"
-                }`}
-              />
-              <span>
-                {isConnected("spotify") ? "Connected" : "Not Connected"}
-              </span>
-            </div>
-          </div>
-
-          {openPanel === "spotify" && (
-            <div className="card-body">
-              <p>
-                Connect to your Spotify account to read your listening history,
-                play music on ListenBrainz (requires Spotify Premium), or both.
-                <br />
-                <small>
-                  Full length playback requires Spotify Premium.
-                  <br />
-                  To play music, your browser must allow autoplaying media on
-                  listenbrainz.org.
-                  <br />
-                  If you encounter issues, try disconnecting and reconnecting
-                  your Spotify account and select the permissions to
-                  &apos;record listens and play music&apos; or &apos;play music
-                  only&apos;.
-                </small>
-              </p>
+        <MusicServiceCard
+          serviceId="spotify"
+          icon={
+            <FontAwesomeIcon
+              icon={faSpotify}
+              className="service-icon"
+              color="#1DB954"
+            />
+          }
+          title="Spotify"
+          isConnected={isConnected("spotify")}
+          isOpen={openPanel === "spotify"}
+          onToggle={() => togglePanel("spotify")}
+        >
+          <p>
+            Connect to your Spotify account to read your listening history, play
+            music on ListenBrainz (requires Spotify Premium), or both.
+            <br />
+            <small>
+              Full length playback requires Spotify Premium.
               <br />
-
-              <div className="music-service-selection">
-                <form onSubmit={(e) => e.preventDefault}>
-                  <ServicePermissionButton
-                    service="spotify"
-                    current={permissions.spotify}
-                    value="both"
-                    title="Activate both features (recommended)"
-                    details="Permanently record your listening history and make it available for others to view and explore. Discover and play songs on ListenBrainz, and import/export playlists to and from Spotify."
-                    handlePermissionChange={handlePermissionChange}
-                  />
-                  <ServicePermissionButton
-                    service="spotify"
-                    current={permissions.spotify}
-                    value="listen"
-                    title="Play music on ListenBrainz"
-                    details="Discover and play songs on ListenBrainz, and import/export playlists to and from Spotify."
-                    handlePermissionChange={handlePermissionChange}
-                  />
-                  <ServicePermissionButton
-                    service="spotify"
-                    current={permissions.spotify}
-                    value="import"
-                    title="Record listening history"
-                    details="Record your listening history permanently and make it available for others to view and explore."
-                    handlePermissionChange={handlePermissionChange}
-                  />
-                  <ServicePermissionButton
-                    service="spotify"
-                    current={permissions.spotify}
-                    value="disable"
-                    title="Disable"
-                    details="You won't be able to listen to music on ListenBrainz or import listens using Spotify."
-                    handlePermissionChange={handlePermissionChange}
-                  />
-                </form>
-              </div>
-              <h3>A note about Spotify permissions</h3>
-              <p>
-                To record your listens you will need to grant permission to view
-                your recent listens and your current listen.
-              </p>
-              <p>
-                To play music on the ListenBrainz pages you will need to grant
-                the permission to play streams from your account and create
-                playlists. Spotify also requires permission to read your email
-                address, your private information and your birthdate, to
-                determine if you are a premium user -{" "}
-                <b>ListenBrainz will never read these pieces of data</b>. Please
-                feel free to{" "}
-                <a
-                  href="https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/listens_importer/spotify.py"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  inspect our source code
-                </a>{" "}
-                any time!
-              </p>
-              <p>
-                Revoke these permissions any time by disabling your Spotify
-                connection.
-              </p>
-            </div>
-          )}
-        </div>
-
-        <div className="card">
-          <div
-            className="card-header"
-            role="button"
-            tabIndex={0}
-            onClick={() => togglePanel("critiquebrainz")}
-            onKeyDown={(e) =>
-              e.key === "Enter" && togglePanel("critiquebrainz")
-            }
-            style={{ cursor: "pointer" }}
-          >
-            <span className="service-logo">
-              <img
-                src="/static/img/meb-icons/CritiqueBrainz.svg"
-                alt="CritiqueBrainz logo"
-                className="service-icon"
-                width="32"
-                height="32"
-              />
-            </span>
-
-            <h3 className="card-title">CritiqueBrainz</h3>
-            <div className="status-indicator">
-              <div
-                className={`status-dot ${
-                  isConnected("critiquebrainz") ? "connected" : "disconnected"
-                }`}
-              />
-              <span>
-                {isConnected("critiquebrainz") ? "Connected" : "Not Connected"}
-              </span>
-            </div>
-          </div>
-          {openPanel === "critiquebrainz" && (
-            <div className="card-body">
-              <p>
-                Connect to your CritiqueBrainz account to publish reviews
-                directly from ListenBrainz. Reviews are public on ListenBrainz
-                and CritiqueBrainz. To view or delete your reviews, visit your
-                <a href="https://critiquebrainz.org/">
-                  CritiqueBrainz profile.
-                </a>
-              </p>
+              To play music, your browser must allow autoplaying media on
+              listenbrainz.org.
               <br />
-              <div className="music-service-selection">
-                <form>
-                  <ServicePermissionButton
-                    service="critiquebrainz"
-                    current={permissions.critiquebrainz}
-                    value="review"
-                    title="Publish reviews for your listens"
-                    details="Publish reviews from ListenBrainz."
-                    handlePermissionChange={handlePermissionChange}
-                  />
-                  <ServicePermissionButton
-                    service="critiquebrainz"
-                    current={permissions.critiquebrainz}
-                    value="disable"
-                    title="Disable"
-                    details="You will not be able to publish reviews from ListenBrainz."
-                    handlePermissionChange={handlePermissionChange}
-                  />
-                </form>
-              </div>
-            </div>
-          )}
-        </div>
+              If you encounter issues, try disconnecting and reconnecting your
+              Spotify account and select the permissions to &apos;record listens
+              and play music&apos; or &apos;play music only&apos;.
+            </small>
+          </p>
+          <br />
+
+          <div className="music-service-selection">
+            <form onSubmit={(e) => e.preventDefault}>
+              <ServicePermissionButton
+                service="spotify"
+                current={permissions.spotify}
+                value="both"
+                title="Activate both features (recommended)"
+                details="Permanently record your listening history and make it available for others to view and explore. Discover and play songs on ListenBrainz, and import/export playlists to and from Spotify."
+                handlePermissionChange={handlePermissionChange}
+              />
+              <ServicePermissionButton
+                service="spotify"
+                current={permissions.spotify}
+                value="listen"
+                title="Play music on ListenBrainz"
+                details="Discover and play songs on ListenBrainz, and import/export playlists to and from Spotify."
+                handlePermissionChange={handlePermissionChange}
+              />
+              <ServicePermissionButton
+                service="spotify"
+                current={permissions.spotify}
+                value="import"
+                title="Record listening history"
+                details="Record your listening history permanently and make it available for others to view and explore."
+                handlePermissionChange={handlePermissionChange}
+              />
+              <ServicePermissionButton
+                service="spotify"
+                current={permissions.spotify}
+                value="disable"
+                title="Disable"
+                details="You won't be able to listen to music on ListenBrainz or import listens using Spotify."
+                handlePermissionChange={handlePermissionChange}
+              />
+            </form>
+          </div>
+          <h3>A note about Spotify permissions</h3>
+          <p>
+            To record your listens you will need to grant permission to view
+            your recent listens and your current listen.
+          </p>
+          <p>
+            To play music on the ListenBrainz pages you will need to grant the
+            permission to play streams from your account and create playlists.
+            Spotify also requires permission to read your email address, your
+            private information and your birthdate, to determine if you are a
+            premium user -{" "}
+            <b>ListenBrainz will never read these pieces of data</b>. Please
+            feel free to{" "}
+            <a
+              href="https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/listens_importer/spotify.py"
+              target="_blank"
+              rel="noreferrer"
+            >
+              inspect our source code
+            </a>{" "}
+            any time!
+          </p>
+          <p>
+            Revoke these permissions any time by disabling your Spotify
+            connection.
+          </p>
+        </MusicServiceCard>
+
+        <MusicServiceCard
+          serviceId="critiquebrainz"
+          icon={
+            <img
+              src="/static/img/meb-icons/CritiqueBrainz.svg"
+              alt="CritiqueBrainz logo"
+              className="service-icon"
+              width="32"
+              height="32"
+            />
+          }
+          title="CritiqueBrainz"
+          isConnected={isConnected("critiquebrainz")}
+          isOpen={openPanel === "critiquebrainz"}
+          onToggle={() => togglePanel("critiquebrainz")}
+        >
+          <p>
+            Connect to your CritiqueBrainz account to publish reviews directly
+            from ListenBrainz. Reviews are public on ListenBrainz and
+            CritiqueBrainz. To view or delete your reviews, visit your
+            <a href="https://critiquebrainz.org/">CritiqueBrainz profile.</a>
+          </p>
+          <br />
+          <div className="music-service-selection">
+            <form>
+              <ServicePermissionButton
+                service="critiquebrainz"
+                current={permissions.critiquebrainz}
+                value="review"
+                title="Publish reviews for your listens"
+                details="Publish reviews from ListenBrainz."
+                handlePermissionChange={handlePermissionChange}
+              />
+              <ServicePermissionButton
+                service="critiquebrainz"
+                current={permissions.critiquebrainz}
+                value="disable"
+                title="Disable"
+                details="You will not be able to publish reviews from ListenBrainz."
+                handlePermissionChange={handlePermissionChange}
+              />
+            </form>
+          </div>
+        </MusicServiceCard>
 
         <LFMMusicServicePermissions
           serviceName="lastfm"
@@ -708,488 +666,368 @@ export default function MusicServices() {
           onToggle={() => togglePanel("librefm")}
         />
 
-        <div className="card">
-          <div
-            className="card-header"
-            role="button"
-            tabIndex={0}
-            onClick={() => togglePanel("soundcloud")}
-            onKeyDown={(e) => e.key === "Enter" && togglePanel("soundcloud")}
-            style={{ cursor: "pointer" }}
-          >
-            <span className="service-logo">
-              <FontAwesomeIcon
-                icon={faSoundcloud}
-                className="service-icon"
-                color="#FF8800"
+        <MusicServiceCard
+          serviceId="soundcloud"
+          icon={
+            <FontAwesomeIcon
+              icon={faSoundcloud}
+              className="service-icon"
+              color="#FF8800"
+            />
+          }
+          title="SoundCloud"
+          isConnected={isConnected("soundcloud")}
+          isOpen={openPanel === "soundcloud"}
+          onToggle={() => togglePanel("soundcloud")}
+        >
+          <p>
+            Connect to your SoundCloud account to play music on ListenBrainz.
+          </p>
+          <br />
+          <div className="music-service-selection">
+            <form>
+              <ServicePermissionButton
+                service="soundcloud"
+                current={permissions.soundcloud}
+                value="listen"
+                title="Play music on ListenBrainz"
+                details="Connect to your SoundCloud account to play music using SoundCloud on ListenBrainz."
+                handlePermissionChange={handlePermissionChange}
               />
-            </span>
-
-            <h3 className="card-title">SoundCloud</h3>
-            <div className="status-indicator">
-              <div
-                className={`status-dot ${
-                  isConnected("soundcloud") ? "connected" : "disconnected"
-                }`}
+              <ServicePermissionButton
+                service="soundcloud"
+                current={permissions.soundcloud}
+                value="disable"
+                title="Disable"
+                details="You will not be able to listen to music on ListenBrainz using SoundCloud."
+                handlePermissionChange={handlePermissionChange}
               />
-              <span>
-                {isConnected("soundcloud") ? "Connected" : "Not Connected"}
-              </span>
-            </div>
+            </form>
           </div>
-          {openPanel === "soundcloud" && (
-            <div className="card-body">
-              <p>
-                Connect to your SoundCloud account to play music on
-                ListenBrainz.
-              </p>
+        </MusicServiceCard>
+
+        <MusicServiceCard
+          serviceId="appleMusic"
+          icon={
+            <FontAwesomeIcon
+              icon={faApple}
+              className="service-icon"
+              color="#000000"
+            />
+          }
+          title="Apple Music"
+          isConnected={isConnected("appleMusic")}
+          isOpen={openPanel === "appleMusic"}
+          onToggle={() => togglePanel("appleMusic")}
+        >
+          <p>
+            Connect to your Apple Music account to play music on ListenBrainz.
+            <br />
+            <small>
+              Full length track playback requires a Apple Music subscription.
               <br />
-              <div className="music-service-selection">
-                <form>
-                  <ServicePermissionButton
-                    service="soundcloud"
-                    current={permissions.soundcloud}
-                    value="listen"
-                    title="Play music on ListenBrainz"
-                    details="Connect to your SoundCloud account to play music using SoundCloud on ListenBrainz."
-                    handlePermissionChange={handlePermissionChange}
-                  />
-                  <ServicePermissionButton
-                    service="soundcloud"
-                    current={permissions.soundcloud}
-                    value="disable"
-                    title="Disable"
-                    details="You will not be able to listen to music on ListenBrainz using SoundCloud."
-                    handlePermissionChange={handlePermissionChange}
-                  />
-                </form>
-              </div>
+              You will need to repeat the sign-in process every 6 months.
+            </small>
+          </p>
+          <br />
+          <div className="music-service-selection">
+            <form>
+              <ServicePermissionButton
+                service="appleMusic"
+                current={permissions.appleMusic}
+                value="listen"
+                title="Play music on ListenBrainz"
+                details="Play music using Apple Music on ListenBrainz."
+                handlePermissionChange={handleAppleMusicPermissionChange}
+              />
+              <ServicePermissionButton
+                service="appleMusic"
+                current={permissions.appleMusic}
+                value="disable"
+                title="Disable"
+                details="You won't be able to listen to music on ListenBrainz using Apple Music."
+                handlePermissionChange={handleAppleMusicPermissionChange}
+              />
+            </form>
+          </div>
+        </MusicServiceCard>
+
+        <MusicServiceCard
+          serviceId="funkwhale"
+          icon={<FontAwesomeIcon icon={faFunkwhale} className="service-icon" />}
+          title="Funkwhale"
+          isConnected={isConnected("funkwhale")}
+          isOpen={openPanel === "funkwhale"}
+          onToggle={() => togglePanel("funkwhale")}
+        >
+          <p>Connect to your Funkwhale server to play music on ListenBrainz.</p>
+          {permissions.funkwhale !== "listen" && (
+            <div
+              className="alert alert-warning alert-dismissible fade show"
+              role="alert"
+            >
+              <strong>Important:</strong> You must be already logged into your
+              Funkwhale server before connecting it to ListenBrainz.
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Close"
+              />
             </div>
           )}
-        </div>
-
-        <div className="card">
-          <div
-            className="card-header"
-            role="button"
-            tabIndex={0}
-            onClick={() => togglePanel("appleMusic")}
-            onKeyDown={(e) => e.key === "Enter" && togglePanel("appleMusic")}
-            style={{ cursor: "pointer" }}
-          >
-            <span className="service-logo">
-              <FontAwesomeIcon
-                icon={faApple}
-                className="service-icon"
-                color="#000000"
-              />
-            </span>
-
-            <h3 className="card-title">Apple Music</h3>
-            <div className="status-indicator">
-              <div
-                className={`status-dot ${
-                  isConnected("appleMusic") ? "connected" : "disconnected"
-                }`}
-              />
-              <span>
-                {isConnected("appleMusic") ? "Connected" : "Not Connected"}
-              </span>
-            </div>
-          </div>
-          {openPanel === "appleMusic" && (
-            <div className="card-body">
-              <p>
-                Connect to your Apple Music account to play music on
-                ListenBrainz.
-                <br />
-                <small>
-                  Full length track playback requires a Apple Music
-                  subscription.
-                  <br />
-                  You will need to repeat the sign-in process every 6 months.
-                </small>
-              </p>
-              <br />
-              <div className="music-service-selection">
-                <form>
-                  <ServicePermissionButton
-                    service="appleMusic"
-                    current={permissions.appleMusic}
-                    value="listen"
-                    title="Play music on ListenBrainz"
-                    details="Play music using Apple Music on ListenBrainz."
-                    handlePermissionChange={handleAppleMusicPermissionChange}
-                  />
-                  <ServicePermissionButton
-                    service="appleMusic"
-                    current={permissions.appleMusic}
-                    value="disable"
-                    title="Disable"
-                    details="You won't be able to listen to music on ListenBrainz using Apple Music."
-                    handlePermissionChange={handleAppleMusicPermissionChange}
-                  />
-                </form>
+          <form onSubmit={handleFunkwhaleConnect}>
+            <div className="flex flex-wrap" style={{ gap: "1em" }}>
+              <div>
+                <label className="form-label" htmlFor="funkwhaleHostUrl">
+                  Your Funkwhale server URL:
+                </label>
+                <input
+                  type="url"
+                  className="form-control"
+                  id="funkwhaleHostUrl"
+                  name="funkwhaleHostUrl"
+                  placeholder={
+                    permissions.funkwhale === "listen"
+                      ? funkwhaleAuth?.instance_url ||
+                        "Connected Funkwhale server"
+                      : "https://funkwhale.funkwhale.test/"
+                  }
+                  defaultValue={funkwhaleAuth?.instance_url || ""}
+                  readOnly={permissions.funkwhale === "listen"}
+                />
               </div>
             </div>
-          )}
-        </div>
-
-        <div className="card">
-          <div
-            className="card-header"
-            role="button"
-            tabIndex={0}
-            onClick={() => togglePanel("funkwhale")}
-            onKeyDown={(e) => e.key === "Enter" && togglePanel("funkwhale")}
-            style={{ cursor: "pointer" }}
-          >
-            <span className="service-logo">
-              <FontAwesomeIcon icon={faFunkwhale} className="service-icon" />
-            </span>
-
-            <h3 className="card-title">Funkwhale</h3>
-            <div className="status-indicator">
-              <div
-                className={`status-dot ${
-                  isConnected("funkwhale") ? "connected" : "disconnected"
-                }`}
+            <br />
+            <div className="music-service-selection">
+              <button
+                type="submit"
+                className="music-service-option"
+                style={{ width: "100%" }}
+                disabled={permissions.funkwhale === "listen"}
+              >
+                <input
+                  readOnly
+                  type="radio"
+                  id="funkwhale_listen"
+                  name="funkwhale"
+                  value="listen"
+                  checked={permissions.funkwhale === "listen"}
+                />
+                <label htmlFor="funkwhale_listen">
+                  <div className="title">
+                    {permissions.funkwhale === "listen"
+                      ? "Connected to"
+                      : "Connect to"}{" "}
+                    Funkwhale
+                  </div>
+                  <div className="details">
+                    Connect to your Funkwhale server to play music on
+                    ListenBrainz.
+                  </div>
+                </label>
+              </button>
+              <ServicePermissionButton
+                service="funkwhale"
+                current={permissions.funkwhale}
+                value="disable"
+                title="Disable"
+                details="You will not be able to listen to music on ListenBrainz using Funkwhale."
+                handlePermissionChange={handlePermissionChange}
               />
-              <span>
-                {isConnected("funkwhale") ? "Connected" : "Not Connected"}
-              </span>
             </div>
-          </div>
-          {openPanel === "funkwhale" && (
-            <div className="card-body">
-              <p>
-                Connect to your Funkwhale server to play music on ListenBrainz.
-              </p>
-              {permissions.funkwhale !== "listen" && (
-                <div
-                  className="alert alert-warning alert-dismissible fade show"
-                  role="alert"
-                >
-                  <strong>Important:</strong> You must be already logged into
-                  your Funkwhale server before connecting it to ListenBrainz.
-                  <button
-                    type="button"
-                    className="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close"
+          </form>
+        </MusicServiceCard>
+
+        <MusicServiceCard
+          serviceId="navidrome"
+          icon={<FontAwesomeIcon icon={faNavidrome} className="service-icon" />}
+          title="Navidrome"
+          isConnected={isConnected("navidrome")}
+          isOpen={openPanel === "navidrome"}
+          onToggle={() => togglePanel("navidrome")}
+        >
+          <p>Connect to your Navidrome server to play music on ListenBrainz.</p>
+          {permissions.navidrome !== "listen" && (
+            <div
+              className="alert alert-warning alert-dismissible fade show"
+              role="alert"
+            >
+              <strong>Important:</strong> Make sure your Navidrome server is
+              accessible and you have the correct credentials.
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Close"
+              />
+            </div>
+          )}
+          <form id="navidrome-form" onSubmit={handleNavidromeConnect}>
+            <div className="flex flex-wrap" style={{ gap: "1em" }}>
+              <div>
+                <label className="form-label" htmlFor="navidromeHostUrl">
+                  Your Navidrome server URL:
+                </label>
+                <input
+                  type="url"
+                  className="form-control"
+                  id="navidromeHostUrl"
+                  name="navidromeHostUrl"
+                  placeholder={
+                    permissions.navidrome === "listen"
+                      ? navidromeAuth?.instance_url ||
+                        "Connected Navidrome server"
+                      : "https://navidrome.example.com/"
+                  }
+                  value={navidromeEditValues.hostUrl}
+                  onChange={(e) =>
+                    setNavidromeEditValues((prev) => ({
+                      ...prev,
+                      hostUrl: e.target.value,
+                    }))
+                  }
+                  readOnly={
+                    !navidromeIsEditing && permissions.navidrome === "listen"
+                  }
+                  required={
+                    navidromeIsEditing || permissions.navidrome !== "listen"
+                  }
+                />
+              </div>
+              <div>
+                <label className="form-label" htmlFor="navidromeUsername">
+                  Username:
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="navidromeUsername"
+                  name="navidromeUsername"
+                  placeholder={
+                    permissions.navidrome === "listen"
+                      ? navidromeAuth?.username || "Connected user"
+                      : "Navidrome username"
+                  }
+                  value={navidromeEditValues.username}
+                  onChange={(e) =>
+                    setNavidromeEditValues((prev) => ({
+                      ...prev,
+                      username: e.target.value,
+                    }))
+                  }
+                  readOnly={
+                    !navidromeIsEditing && permissions.navidrome === "listen"
+                  }
+                  required={
+                    navidromeIsEditing || permissions.navidrome !== "listen"
+                  }
+                />
+              </div>
+              {(navidromeIsEditing || permissions.navidrome !== "listen") && (
+                <div>
+                  <label className="form-label" htmlFor="navidromePassword">
+                    Password:
+                  </label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    id="navidromePassword"
+                    name="navidromePassword"
+                    placeholder="Navidrome password"
+                    required
                   />
                 </div>
               )}
-              <form onSubmit={handleFunkwhaleConnect}>
-                <div className="flex flex-wrap" style={{ gap: "1em" }}>
-                  <div>
-                    <label className="form-label" htmlFor="funkwhaleHostUrl">
-                      Your Funkwhale server URL:
-                    </label>
-                    <input
-                      type="url"
-                      className="form-control"
-                      id="funkwhaleHostUrl"
-                      name="funkwhaleHostUrl"
-                      placeholder={
-                        permissions.funkwhale === "listen"
-                          ? funkwhaleAuth?.instance_url ||
-                            "Connected Funkwhale server"
-                          : "https://funkwhale.funkwhale.test/"
-                      }
-                      defaultValue={funkwhaleAuth?.instance_url || ""}
-                      readOnly={permissions.funkwhale === "listen"}
-                    />
-                  </div>
-                </div>
-                <br />
-                <div className="music-service-selection">
-                  <button
-                    type="submit"
-                    className="music-service-option"
-                    style={{ width: "100%" }}
-                    disabled={permissions.funkwhale === "listen"}
-                  >
-                    <input
-                      readOnly
-                      type="radio"
-                      id="funkwhale_listen"
-                      name="funkwhale"
-                      value="listen"
-                      checked={permissions.funkwhale === "listen"}
-                    />
-                    <label htmlFor="funkwhale_listen">
-                      <div className="title">
-                        {permissions.funkwhale === "listen"
-                          ? "Connected to"
-                          : "Connect to"}{" "}
-                        Funkwhale
-                      </div>
-                      <div className="details">
-                        Connect to your Funkwhale server to play music on
-                        ListenBrainz.
-                      </div>
-                    </label>
-                  </button>
-                  <ServicePermissionButton
-                    service="funkwhale"
-                    current={permissions.funkwhale}
-                    value="disable"
-                    title="Disable"
-                    details="You will not be able to listen to music on ListenBrainz using Funkwhale."
-                    handlePermissionChange={handlePermissionChange}
-                  />
-                </div>
-              </form>
-            </div>
-          )}
-        </div>
-
-        <div className="card">
-          <div
-            className="card-header"
-            role="button"
-            tabIndex={0}
-            onClick={() => togglePanel("navidrome")}
-            onKeyDown={(e) => e.key === "Enter" && togglePanel("navidrome")}
-            style={{ cursor: "pointer" }}
-          >
-            <span className="service-logo">
-              <FontAwesomeIcon icon={faNavidrome} className="service-icon" />
-            </span>
-
-            <h3 className="card-title">Navidrome</h3>
-            <div className="status-indicator">
-              <div
-                className={`status-dot ${
-                  isConnected("navidrome") ? "connected" : "disconnected"
-                }`}
-              />
-              <span>
-                {isConnected("navidrome") ? "Connected" : "Not Connected"}
-              </span>
-            </div>
-          </div>
-          {openPanel === "navidrome" && (
-            <div className="card-body">
-              <p>
-                Connect to your Navidrome server to play music on ListenBrainz.
-              </p>
-              {permissions.navidrome !== "listen" && (
-                <div
-                  className="alert alert-warning alert-dismissible fade show"
-                  role="alert"
+              <div style={{ flex: 0, alignSelf: "end" }}>
+                <button
+                  disabled={permissions.navidrome !== "listen"}
+                  type="button"
+                  className={`btn ${navidromeEditButtonClass}`}
+                  onClick={handleNavidromeEditToggle}
                 >
-                  <strong>Important:</strong> Make sure your Navidrome server is
-                  accessible and you have the correct credentials.
-                  <button
-                    type="button"
-                    className="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Close"
-                  />
-                </div>
-              )}
-              <form id="navidrome-form" onSubmit={handleNavidromeConnect}>
-                <div className="flex flex-wrap" style={{ gap: "1em" }}>
-                  <div>
-                    <label className="form-label" htmlFor="navidromeHostUrl">
-                      Your Navidrome server URL:
-                    </label>
-                    <input
-                      type="url"
-                      className="form-control"
-                      id="navidromeHostUrl"
-                      name="navidromeHostUrl"
-                      placeholder={
-                        permissions.navidrome === "listen"
-                          ? navidromeAuth?.instance_url ||
-                            "Connected Navidrome server"
-                          : "https://navidrome.example.com/"
-                      }
-                      value={navidromeEditValues.hostUrl}
-                      onChange={(e) =>
-                        setNavidromeEditValues((prev) => ({
-                          ...prev,
-                          hostUrl: e.target.value,
-                        }))
-                      }
-                      readOnly={
-                        !navidromeIsEditing &&
-                        permissions.navidrome === "listen"
-                      }
-                      required={
-                        navidromeIsEditing || permissions.navidrome !== "listen"
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="form-label" htmlFor="navidromeUsername">
-                      Username:
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="navidromeUsername"
-                      name="navidromeUsername"
-                      placeholder={
-                        permissions.navidrome === "listen"
-                          ? navidromeAuth?.username || "Connected user"
-                          : "Navidrome username"
-                      }
-                      value={navidromeEditValues.username}
-                      onChange={(e) =>
-                        setNavidromeEditValues((prev) => ({
-                          ...prev,
-                          username: e.target.value,
-                        }))
-                      }
-                      readOnly={
-                        !navidromeIsEditing &&
-                        permissions.navidrome === "listen"
-                      }
-                      required={
-                        navidromeIsEditing || permissions.navidrome !== "listen"
-                      }
-                    />
-                  </div>
-                  {(navidromeIsEditing ||
-                    permissions.navidrome !== "listen") && (
-                    <div>
-                      <label className="form-label" htmlFor="navidromePassword">
-                        Password:
-                      </label>
-                      <input
-                        type="password"
-                        className="form-control"
-                        id="navidromePassword"
-                        name="navidromePassword"
-                        placeholder="Navidrome password"
-                        required
-                      />
-                    </div>
-                  )}
-                  <div style={{ flex: 0, alignSelf: "end" }}>
-                    <button
-                      disabled={permissions.navidrome !== "listen"}
-                      type="button"
-                      className={`btn ${navidromeEditButtonClass}`}
-                      onClick={handleNavidromeEditToggle}
-                    >
-                      {navidromeIsEditing ? "Save" : "Edit"}
-                    </button>
-                  </div>
-                </div>
-                <br />
-                <div className="music-service-selection">
-                  <button
-                    type="submit"
-                    className="music-service-option"
-                    style={{ width: "100%" }}
-                    disabled={permissions.navidrome === "listen"}
-                  >
-                    <input
-                      readOnly
-                      type="radio"
-                      id="navidrome_listen"
-                      name="navidrome"
-                      value="listen"
-                      checked={permissions.navidrome === "listen"}
-                    />
-                    <label htmlFor="navidrome_listen">
-                      <div className="title">
-                        {permissions.navidrome === "listen"
-                          ? "Connected to"
-                          : "Connect to"}{" "}
-                        Navidrome
-                      </div>
-                      <div className="details">
-                        Connect to your Navidrome server to play music on
-                        ListenBrainz.
-                      </div>
-                    </label>
-                  </button>
-                  <ServicePermissionButton
-                    service="navidrome"
-                    current={permissions.navidrome}
-                    value="disable"
-                    title="Disable"
-                    details="You will not be able to listen to music on ListenBrainz using Navidrome."
-                    handlePermissionChange={handlePermissionChange}
-                  />
-                </div>
-              </form>
+                  {navidromeIsEditing ? "Save" : "Edit"}
+                </button>
+              </div>
             </div>
-          )}
-        </div>
-
-        <div className="card">
-          <div
-            className="card-header"
-            role="button"
-            tabIndex={0}
-            onClick={() => togglePanel("youtube")}
-            onKeyDown={(e) => e.key === "Enter" && togglePanel("youtube")}
-            style={{ cursor: "pointer" }}
-          >
-            <span className="service-logo">
-              <FontAwesomeIcon
-                icon={faYoutube}
-                className="service-icon"
-                color="#FF0000"
+            <br />
+            <div className="music-service-selection">
+              <button
+                type="submit"
+                className="music-service-option"
+                style={{ width: "100%" }}
+                disabled={permissions.navidrome === "listen"}
+              >
+                <input
+                  readOnly
+                  type="radio"
+                  id="navidrome_listen"
+                  name="navidrome"
+                  value="listen"
+                  checked={permissions.navidrome === "listen"}
+                />
+                <label htmlFor="navidrome_listen">
+                  <div className="title">
+                    {permissions.navidrome === "listen"
+                      ? "Connected to"
+                      : "Connect to"}{" "}
+                    Navidrome
+                  </div>
+                  <div className="details">
+                    Connect to your Navidrome server to play music on
+                    ListenBrainz.
+                  </div>
+                </label>
+              </button>
+              <ServicePermissionButton
+                service="navidrome"
+                current={permissions.navidrome}
+                value="disable"
+                title="Disable"
+                details="You will not be able to listen to music on ListenBrainz using Navidrome."
+                handlePermissionChange={handlePermissionChange}
               />
-            </span>
+            </div>
+          </form>
+        </MusicServiceCard>
 
-            <h3 className="card-title">Youtube</h3>
-            <div className="status-indicator">
-              <div className="status-dot disconnected" />
-              <span>Not Available</span>
-            </div>
-          </div>
-          {openPanel === "youtube" && (
-            <div className="card-body">
-              <p>
-                Playing music using YouTube on ListenBrainz does not require an
-                account to be connected.
-              </p>
-            </div>
-          )}
-        </div>
+        <MusicServiceCard
+          serviceId="youtube"
+          icon={
+            <FontAwesomeIcon
+              icon={faYoutube}
+              className="service-icon"
+              color="#FF0000"
+            />
+          }
+          title="Youtube"
+          collapsible={false}
+          showStatusIndicator={false}
+        >
+          <p>
+            Playing music using YouTube on ListenBrainz does not require an
+            account to be connected.
+          </p>
+        </MusicServiceCard>
 
-        <div className="card">
-          <div
-            className="card-header"
-            role="button"
-            tabIndex={0}
-            onClick={() => togglePanel("internetarchive")}
-            onKeyDown={(e) =>
-              e.key === "Enter" && togglePanel("internetarchive")
-            }
-            style={{ cursor: "pointer" }}
-          >
-            <span className="service-logo">
-              <FontAwesomeIcon
-                icon={faInternetArchive}
-                className="service-icon"
-                color="#6c757d"
-              />
-            </span>
-
-            <h3 className="card-title">InternetArchive</h3>
-            <div className="status-indicator">
-              <div className="status-dot disconnected" />
-              <span>Not Available</span>
-            </div>
-          </div>
-          {openPanel === "internetarchive" && (
-            <div className="card-body">
-              <p>
-                Playing music using InternetArchive on ListenBrainz does not
-                require an account to be connected.
-              </p>
-            </div>
-          )}
-        </div>
+        <MusicServiceCard
+          serviceId="internetarchive"
+          icon={
+            <FontAwesomeIcon
+              icon={faInternetArchive}
+              className="service-icon"
+              color="#6c757d"
+            />
+          }
+          title="InternetArchive"
+          collapsible={false}
+          showStatusIndicator={false}
+        >
+          <p>
+            Playing music using InternetArchive on ListenBrainz does not require
+            an account to be connected.
+          </p>
+        </MusicServiceCard>
       </div>
     </>
   );
