@@ -119,12 +119,23 @@ export const sortReleaseGroups = (
     ["desc", "desc", "asc"]
   );
 
-export const getReleaseCard = (rg: ReleaseGroup) => {
+export const getReleaseCard = (
+  sort: "release_date" | "total_listen_count",
+  rg: ReleaseGroupWithSecondaryTypesAndListenCount
+) => {
+  const releaseDate =
+    sort === "release_date" ? rg.date ?? undefined : undefined;
+  const listenCount =
+    sort === "total_listen_count"
+      ? rg.total_listen_count ?? undefined
+      : undefined;
+
   return (
     <ReleaseCard
       key={rg.mbid}
-      releaseDate={rg.date ?? undefined}
+      releaseDate={releaseDate}
       dateFormatOptions={{ year: "numeric", month: "short" }}
+      listenCount={listenCount}
       releaseGroupMBID={rg.mbid}
       releaseName={rg.name}
       releaseTypePrimary={rg.type}
@@ -138,7 +149,7 @@ export const getReleaseCard = (rg: ReleaseGroup) => {
       showInformation
       showArtist
       showReleaseTitle
-      showListens
+      showListens={sort === "total_listen_count"}
     />
   );
 };
@@ -541,7 +552,7 @@ export default function ArtistPage(): JSX.Element {
                     : ""
                 }`}
               >
-                {rgGroup.map(getReleaseCard)}
+                {rgGroup.map((rg) => getReleaseCard(sort, rg))}
               </HorizontalScrollContainer>
             </div>
           ))}

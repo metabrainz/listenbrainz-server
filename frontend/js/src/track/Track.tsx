@@ -367,7 +367,7 @@ export default function TrackPage(): JSX.Element {
                       : ""
                   }`}
                 >
-                  {rgGroup.map(getReleaseCard)}
+                  {rgGroup.map((rg) => getReleaseCard(sort, rg))}
                 </HorizontalScrollContainer>
               </div>
             ))}
