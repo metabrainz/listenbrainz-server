@@ -72,6 +72,10 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     Boolean(releaseDate.length) &&
     isValid(new Date(releaseDate));
   const futureRelease = hasReleaseDate && new Date(releaseDate) > new Date();
+  const showListenCountInInfo =
+    Boolean(showListens) &&
+    typeof listenCount === "number" &&
+    Number.isFinite(listenCount);
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
   const RELEASE_TYPE_UNKNOWN = "Unknown";
 
@@ -171,18 +175,6 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   return (
     <div className="release-card-container" key={releaseMBID}>
       <div className="release-item">
-        {showListens && listenCount ? (
-          <div className="listen-count">
-            <Pill title="Listens" type="secondary" active>
-              <>
-                <FontAwesomeIcon icon={faPlay} />
-                <span className="listen-count-number">
-                  {formatListenCount(listenCount)}
-                </span>
-              </>
-            </Pill>
-          </div>
-        ) : null}
         <div className="release-information">
           {showTags && releaseTags && releaseTags.length ? (
             <div className="cover-art-info">
@@ -202,17 +194,26 @@ export default function ReleaseCard(props: ReleaseCardProps) {
                   releaseTypePrimary ||
                   RELEASE_TYPE_UNKNOWN}
               </div>
-              {hasReleaseDate && (
-                <div
-                  className="release-date"
-                  title={formatReleaseDate(releaseDate, {
-                    year: "numeric",
-                    month: "long",
-                    day: "2-digit",
-                  })}
-                >
-                  {formatReleaseDate(releaseDate, dateFormatOptions)}
+              {showListenCountInInfo ? (
+                <div className="release-date" title="Listens">
+                  <FontAwesomeIcon icon={faPlay} />
+                  <span className="listen-count-number">
+                    {formatListenCount(listenCount)}
+                  </span>
                 </div>
+              ) : (
+                hasReleaseDate && (
+                  <div
+                    className="release-date"
+                    title={formatReleaseDate(releaseDate, {
+                      year: "numeric",
+                      month: "long",
+                      day: "2-digit",
+                    })}
+                  >
+                    {formatReleaseDate(releaseDate, dateFormatOptions)}
+                  </div>
+                )
               )}
             </div>
           )}
