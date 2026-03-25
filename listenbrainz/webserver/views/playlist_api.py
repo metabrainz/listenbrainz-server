@@ -1114,7 +1114,7 @@ def export_playlist_jspf(service):
                             f" to use this feature.")
 
     is_public = parse_boolean_arg("is_public", True)
-    jspf = request.json
+    jspf = {"playlist": request.json}
     try:
         if service == "spotify":
             url = export_to_spotify(user["auth_token"], token["access_token"], is_public, jspf=jspf)

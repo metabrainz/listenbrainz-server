@@ -280,7 +280,7 @@ def validate_duration_field(listen, key, max_value):
             # the listen submission docs say we accept only integers for duration fields, but the current validation
             # also allows strings if those are convertible to integers. we need this to work around api_compat quirks.
             # see commit message for details.
-            value = int(duration)
+            value = int(float(duration))
             if value <= 0:
                 raise ListenValidationError(f"Value for {key} is invalid, should be a positive integer.", listen)
             if value > max_value:

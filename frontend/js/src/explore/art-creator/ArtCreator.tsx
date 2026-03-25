@@ -743,231 +743,233 @@ export default function ArtCreator() {
               </div>
             </div>
           </div>
-          <div className="advanced-settings-container">
-            <div className="sidenav-content-grid">
-              <h4>Advanced</h4>
-              {style.type === "grid" && (
-                <>
-                  <label className="form-check-label">
-                    <input
-                      className="form-check-input me-2"
-                      type="checkbox"
-                      checked={showCaption}
-                      onChange={(evt) => setShowCaption(evt.target.checked)}
-                    />{" "}
-                    Show caption
-                  </label>
-                  <label className="form-check-label">
-                    <input
-                      className="form-check-input me-2"
-                      type="checkbox"
-                      checked={skipMissing}
-                      onChange={(evt) => setSkipMissing(evt.target.checked)}
-                    />{" "}
-                    Skip missing covers
-                  </label>
-                  <small>Choose a grid layout:</small>
-                  <div className="cover-art-grid">
-                    {coverArtGridOptions.map((option) => {
-                      return (
-                        <label className="cover-art-option">
-                          <input
-                            type="radio"
-                            name="artwork"
-                            value={`artwork-${option.dimension}-${option.layout}`}
-                            key={`artwork-${option.dimension}-${option.layout}`}
-                            className="cover-art-radio"
-                            checked={
-                              isEqual(option.dimension, gridSize) &&
-                              isEqual(option.layout, gridLayout)
-                            }
-                            onChange={() => {
-                              setGridSize(option.dimension);
-                              setGridLayout(option.layout);
-                            }}
-                          />
-                          <img
-                            height={80}
-                            width={80}
-                            src={`/static/img/playlist-cover-art/cover-art_${option.dimension}-${option.layout}.svg`}
-                            alt={`Cover art option ${option.dimension}-${option.layout}`}
-                            className="cover-art-image"
-                          />
-                        </label>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-              {style.type === "text" && (
-                <>
-                  <div>
-                    <label className="form-label" htmlFor="color-presets">
-                      Color presets:
+          {(style.type === "text" || style.type === "grid") && (
+            <div className="advanced-settings-container">
+              <div className="sidenav-content-grid">
+                <h4>Advanced</h4>
+                {style.type === "grid" && (
+                  <>
+                    <label className="form-check-label">
+                      <input
+                        className="form-check-input me-2"
+                        type="checkbox"
+                        checked={showCaption}
+                        onChange={(evt) => setShowCaption(evt.target.checked)}
+                      />{" "}
+                      Show caption
                     </label>
-                    <div className="color-presets-panel" id="color-presets">
-                      {hardCodedPresets.map((preset) => (
-                        <div
-                          key={preset.id}
-                          className={`color-preset-wrapper ${
-                            selectedPreset === preset.id
-                              ? "preset-selected"
-                              : ""
-                          }`}
-                        >
-                          <ColorPicker
-                            firstColor={preset.firstBgColor}
-                            secondColor={preset.secondBgColor}
-                            onClick={() => applyPreset(preset.id)}
-                          />
-                        </div>
-                      ))}
-
-                      {customPresets.map((preset) => (
-                        <div
-                          key={preset.id}
-                          className={`color-preset-wrapper ${
-                            selectedPreset === preset.id
-                              ? "preset-selected"
-                              : ""
-                          }`}
-                        >
-                          <ColorPicker
-                            firstColor={preset.firstBgColor}
-                            secondColor={preset.secondBgColor}
-                            onClick={() => applyPreset(preset.id)}
-                          />
-                          <button
-                            type="button"
-                            className="delete-preset-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deletePreset(preset.id);
-                            }}
-                            aria-label="Delete preset"
-                            title="Delete this preset"
+                    <label className="form-check-label">
+                      <input
+                        className="form-check-input me-2"
+                        type="checkbox"
+                        checked={skipMissing}
+                        onChange={(evt) => setSkipMissing(evt.target.checked)}
+                      />{" "}
+                      Skip missing covers
+                    </label>
+                    <small>Choose a grid layout:</small>
+                    <div className="cover-art-grid">
+                      {coverArtGridOptions.map((option) => {
+                        return (
+                          <label className="cover-art-option">
+                            <input
+                              type="radio"
+                              name="artwork"
+                              value={`artwork-${option.dimension}-${option.layout}`}
+                              key={`artwork-${option.dimension}-${option.layout}`}
+                              className="cover-art-radio"
+                              checked={
+                                isEqual(option.dimension, gridSize) &&
+                                isEqual(option.layout, gridLayout)
+                              }
+                              onChange={() => {
+                                setGridSize(option.dimension);
+                                setGridLayout(option.layout);
+                              }}
+                            />
+                            <img
+                              height={80}
+                              width={80}
+                              src={`/static/img/playlist-cover-art/cover-art_${option.dimension}-${option.layout}.svg`}
+                              alt={`Cover art option ${option.dimension}-${option.layout}`}
+                              className="cover-art-image"
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+                {style.type === "text" && (
+                  <>
+                    <div>
+                      <label className="form-label" htmlFor="color-presets">
+                        Color presets:
+                      </label>
+                      <div className="color-presets-panel" id="color-presets">
+                        {hardCodedPresets.map((preset) => (
+                          <div
+                            key={preset.id}
+                            className={`color-preset-wrapper ${
+                              selectedPreset === preset.id
+                                ? "preset-selected"
+                                : ""
+                            }`}
                           >
-                            <FontAwesomeIcon icon={faCircleXmark} />
-                          </button>
-                        </div>
-                      ))}
+                            <ColorPicker
+                              firstColor={preset.firstBgColor}
+                              secondColor={preset.secondBgColor}
+                              onClick={() => applyPreset(preset.id)}
+                            />
+                          </div>
+                        ))}
+
+                        {customPresets.map((preset) => (
+                          <div
+                            key={preset.id}
+                            className={`color-preset-wrapper ${
+                              selectedPreset === preset.id
+                                ? "preset-selected"
+                                : ""
+                            }`}
+                          >
+                            <ColorPicker
+                              firstColor={preset.firstBgColor}
+                              secondColor={preset.secondBgColor}
+                              onClick={() => applyPreset(preset.id)}
+                            />
+                            <button
+                              type="button"
+                              className="delete-preset-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deletePreset(preset.id);
+                              }}
+                              aria-label="Delete preset"
+                              title="Delete this preset"
+                            >
+                              <FontAwesomeIcon icon={faCircleXmark} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <label className="form-label" htmlFor="text-color-input">
-                      Text color:
-                    </label>
+                    <div>
+                      <label className="form-label" htmlFor="text-color-input">
+                        Text color:
+                      </label>
+                      <div className="input-group">
+                        <input
+                          id="text-color-input"
+                          type="color"
+                          className="form-control form-control-color"
+                          onChange={updateTextColorCallback}
+                          placeholder="#321529"
+                          value={textColor}
+                        />
+                        <input
+                          className="form-control"
+                          type="text"
+                          placeholder="#321529"
+                          value={textColor}
+                          readOnly
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="form-label" htmlFor="bg-color">
+                        Background colors:
+                      </label>
+                      <div className="input-group">
+                        <input
+                          id="bg-color"
+                          type="color"
+                          className="form-control form-control-color"
+                          onChange={updateFirstBgColorCallback}
+                          value={firstBgColor}
+                        />
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Select a color…"
+                          readOnly
+                          value={firstBgColor}
+                        />
+                      </div>
+                    </div>
+
                     <div className="input-group">
                       <input
-                        id="text-color-input"
+                        id="bg-color-2"
                         type="color"
                         className="form-control form-control-color"
-                        onChange={updateTextColorCallback}
-                        placeholder="#321529"
-                        value={textColor}
-                      />
-                      <input
-                        className="form-control"
-                        type="text"
-                        placeholder="#321529"
-                        value={textColor}
-                        readOnly
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="form-label" htmlFor="bg-color">
-                      Background colors:
-                    </label>
-                    <div className="input-group">
-                      <input
-                        id="bg-color"
-                        type="color"
-                        className="form-control form-control-color"
-                        onChange={updateFirstBgColorCallback}
-                        value={firstBgColor}
+                        onChange={updateSecondBgColorCallback}
+                        value={secondBgColor}
                       />
                       <input
                         type="text"
                         className="form-control"
                         placeholder="Select a color…"
                         readOnly
-                        value={firstBgColor}
+                        value={secondBgColor}
                       />
                     </div>
-                  </div>
-
-                  <div className="input-group">
-                    <input
-                      id="bg-color-2"
-                      type="color"
-                      className="form-control form-control-color"
-                      onChange={updateSecondBgColorCallback}
-                      value={secondBgColor}
-                    />
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Select a color…"
-                      readOnly
-                      value={secondBgColor}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    className="btn btn-info w-100"
-                    onClick={saveCurrentPreset}
-                  >
-                    Save Preset
+                    <button
+                      type="button"
+                      className="btn btn-info w-100"
+                      onClick={saveCurrentPreset}
+                    >
+                      Save Preset
+                    </button>
+                  </>
+                )}
+                {/* <div className="flex-center input-group">
+                  <label className="form-label" htmlFor="bg-upload">Background image:</label>
+                  <input className="form-control" type="text" />
+                  <button type="button" className="btn btn-secondary btn-sm">
+                    <FontAwesomeIcon icon={faCloudArrowUp} />
                   </button>
-                </>
-              )}
-              {/* <div className="flex-center input-group">
-                <label className="form-label" htmlFor="bg-upload">Background image:</label>
-                <input className="form-control" type="text" />
-                <button type="button" className="btn btn-secondary btn-sm">
-                  <FontAwesomeIcon icon={faCloudArrowUp} />
-                </button>
-              </div> */}
+                </div> */}
 
-              {/* <div>
-                <label className="form-label" htmlFor="genres">
-                  Genres: <FontAwesomeIcon icon={faCircleQuestion} />
-                </label>
-                <input
-                  id="genres"
-                  type="text"
-                  className="form-control"
-                  onChange={updateGenresCallback}
-                />
-              </div> */}
-              {/* <div>
-                <ToggleOption onClick={userToggler} buttonName="Users" />
-                <ToggleOption onClick={dateToggler} buttonName="Date" />
-                <ToggleOption onClick={rangeToggler} buttonName="Range" />
-                <ToggleOption onClick={totalToggler} buttonName="Total" />
-                <ToggleOption onClick={genresToggler} buttonName="Genres" />
-              </div> */}
-              {/* <div>
-                className="form-label" htmlFor="font-select">Font:</label>
-                <select
-                  id="font-select"
-                  className="form-select"
-                  value={font}
-                  onChange={updateFontCallback}
-                >
-                  {fontOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div> */}
-              {/* <div>
-                <ToggleOption onClick={vaToggler} buttonName="Ignore VA" />
-              </div> */}
+                {/* <div>
+                  <label className="form-label" htmlFor="genres">
+                    Genres: <FontAwesomeIcon icon={faCircleQuestion} />
+                  </label>
+                  <input
+                    id="genres"
+                    type="text"
+                    className="form-control"
+                    onChange={updateGenresCallback}
+                  />
+                </div> */}
+                {/* <div>
+                  <ToggleOption onClick={userToggler} buttonName="Users" />
+                  <ToggleOption onClick={dateToggler} buttonName="Date" />
+                  <ToggleOption onClick={rangeToggler} buttonName="Range" />
+                  <ToggleOption onClick={totalToggler} buttonName="Total" />
+                  <ToggleOption onClick={genresToggler} buttonName="Genres" />
+                </div> */}
+                {/* <div>
+                  className="form-label" htmlFor="font-select">Font:</label>
+                  <select
+                    id="font-select"
+                    className="form-select"
+                    value={font}
+                    onChange={updateFontCallback}
+                  >
+                    {fontOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </div> */}
+                {/* <div>
+                  <ToggleOption onClick={vaToggler} buttonName="Ignore VA" />
+                </div> */}
+              </div>
             </div>
-          </div>
+          )}
         </Sidebar>
       </div>
     </div>
