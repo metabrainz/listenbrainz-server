@@ -2,7 +2,6 @@ import hashlib
 import json
 import time
 from typing import Optional
-import xml.etree.ElementTree as ET
 from datetime import datetime
 from cryptography.fernet import Fernet
 
@@ -165,7 +164,7 @@ def import_starred_tracks(user_id, navidrome_url, auth_token, salt, username):
         's': salt,
         'v': '1.16.1',
         'c': 'ListenBrainz',
-        'f': 'xml'
+        'f': 'json'
     }
     
     api_url = f"{navidrome_url.rstrip('/')}/rest/getStarred"
@@ -176,20 +175,12 @@ def import_starred_tracks(user_id, navidrome_url, auth_token, salt, username):
     except requests.RequestException as e:
         raise ExternalServiceError(f"Failed to fetch starred songs from Navidrome: {str(e)}")
         
-    xml_content = response.content
-    root = ET.fromstring(xml_content)
+    data = response.json()
+    subsonic_response = data.get("subsonic-response", {})
     
-    # Handle namespace if present
-    ns = {}
-    if root.tag.startswith("{http://subsonic.org/restapi}"):
-        ns = {'s': 'http://subsonic.org/restapi'}
-        songs = root.findall(".//s:starred2/s:song", ns)
-        if not songs:
-            songs = root.findall(".//s:starred/s:song", ns)
-    else:
-        songs = root.findall(".//starred2/song")
-        if not songs:
-            songs = root.findall(".//starred/song")
+    # Navidrome might return starred tracks under starred2 or starred
+    starred_data = subsonic_response.get("starred2") or subsonic_response.get("starred") or {}
+    songs = starred_data.get("song", [])
         
     total_found = len(songs)
     total_mapped = 0
@@ -205,7 +196,11 @@ def import_starred_tracks(user_id, navidrome_url, auth_token, salt, username):
         if not artist or not title:
             continue
             
-        match = mapper.search(artist, title, album)
+        try:
+            match = mapper.search(artist, title, album)
+        except Exception:
+            current_app.logger.warning(f"MBIDMapper failed for '{artist} - {title}', skipping.")
+            continue
         
         if match and match['match_type'] in (MATCH_TYPE_MED_QUALITY, MATCH_TYPE_HIGH_QUALITY, MATCH_TYPE_EXACT_MATCH):
             recording_mbid = match['recording_mbid']

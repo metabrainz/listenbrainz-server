@@ -316,7 +316,8 @@ def bulk_insert_loved_tracks(db_conn, user_id: int, feedback: list[tuple[int, st
     """).format(column=Identifier(column))
     
     with db_conn.connection.cursor() as cursor:
-        execute_values(cursor, delete_query, [(mbid,) for ts, mbid in feedback], template=f"({user_id}, %s)")
-        execute_values(cursor, insert_query, feedback, template=f"({user_id}, to_timestamp(%s), %s, 1)")
+        if feedback:
+            execute_values(cursor, delete_query, [(mbid,) for ts, mbid in feedback], template=f"({user_id}, %s)")
+            execute_values(cursor, insert_query, feedback, template=f"({user_id}, to_timestamp(%s), %s, 1)")
     
-    db_conn.commit()
+    db_conn.connection.commit()

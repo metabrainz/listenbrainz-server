@@ -12,31 +12,12 @@ from brainzutils import musicbrainz_db
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import external_service_oauth
+import listenbrainz.db.feedback as db_feedback
 from listenbrainz.domain.importer_service import ImporterService
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.errors import APINotFound
 
 logger = logging.getLogger(__name__)
-
-
-def bulk_insert_loved_tracks(user_id: int, feedback: list[tuple[int, str]], column: str):
-    """ Insert loved tracks imported from LFM into feedback table """
-    # delete existing feedback for given mbids and then import new in same transaction
-    delete_query = SQL("""
-               WITH entries(user_id, {column}) AS (VALUES %s)
-        DELETE FROM recording_feedback rf
-              USING entries e
-              WHERE e.user_id = rf.user_id
-                AND e.{column}::uuid = rf.{column}
-    """).format(column=Identifier(column))
-    insert_query = SQL("""
-        INSERT INTO recording_feedback (user_id, created, {column}, score)
-             VALUES %s
-    """).format(column=Identifier(column))
-    with db_conn.connection.cursor() as cursor:
-        execute_values(cursor, delete_query, [(mbid,) for ts, mbid in feedback], template=f"({user_id}, %s)")
-        execute_values(cursor, insert_query, feedback, template=f"({user_id}, to_timestamp(%s), %s, 1)")
-        db_conn.connection.commit()
 
 
 def load_recordings_from_tracks(track_mbids: list) -> dict[str, str]:
@@ -162,8 +143,8 @@ def import_feedback(user_id: int, lfm_user: str):
         item["msid"] = msids_map.get(key)
     msid_feedback = [(x["timestamp"], x["msid"]) for x in items_without_mbids if x["msid"]]
 
-    bulk_insert_loved_tracks(user_id, mbid_feedback, "recording_mbid")
-    bulk_insert_loved_tracks(user_id, msid_feedback, "recording_msid")
+    db_feedback.bulk_insert_loved_tracks(db_conn, user_id, mbid_feedback, "recording_mbid")
+    db_feedback.bulk_insert_loved_tracks(db_conn, user_id, msid_feedback, "recording_msid")
 
     return {
         "total": total_count,

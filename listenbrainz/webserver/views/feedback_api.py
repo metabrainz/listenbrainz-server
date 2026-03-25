@@ -316,16 +316,19 @@ def import_feedback():
         return jsonify(counts)
 
     if data["service"] == "navidrome":
-        if not all(k in data for k in ("navidrome_url", "auth_token", "salt", "user_name")):
-             raise APIBadRequest("Missing required Navidrome credentials (navidrome_url, auth_token, salt, user_name)")
+        from listenbrainz.domain.navidrome import NavidromeService, import_starred_tracks
         
-        from listenbrainz.domain import navidrome
-        counts = navidrome.import_starred_tracks(
+        navidrome_service = NavidromeService()
+        nav_user = navidrome_service.get_user(user["id"], include_token=True)
+        if not nav_user:
+            raise APIBadRequest("Navidrome account not connected")
+        
+        counts = import_starred_tracks(
             user["id"], 
-            data["navidrome_url"], 
-            data["auth_token"], 
-            data["salt"], 
-            data["user_name"]
+            nav_user["instance_url"], 
+            nav_user["md5_auth_token"], 
+            nav_user["salt"], 
+            nav_user["username"]
         )
         return jsonify(counts)
 
