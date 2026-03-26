@@ -268,6 +268,12 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
     """
         This interim function will soon be replaced with a more complete service layer
     """
+    if not current_app.config.get("MB_DATABASE_URI"):
+        current_app.logger.warning(
+            "Skipping playlist metadata fetch because MB_DATABASE_URI is not configured."
+        )
+        return
+    
     mbids = [str(item.mbid) for item in playlist.recordings]
     if not mbids:
         return
