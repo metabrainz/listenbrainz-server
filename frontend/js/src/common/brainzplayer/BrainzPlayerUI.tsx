@@ -368,8 +368,9 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
             )}
             {currentTrackArtist && (
               <span
-                className="small text-muted ellipsis"
+                className="ellipsis"
                 title={currentTrackArtist}
+                style={{ fontSize: "15px", color: "var(--bs-secondary-color)" }}
               >
                 {currentTrackArtist}
               </span>
