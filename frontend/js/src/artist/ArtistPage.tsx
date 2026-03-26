@@ -39,6 +39,7 @@ import { RouteQuery } from "../utils/Loader";
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
 import Pill from "../components/Pill";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
+
 import Username from "../common/Username";
 import CBReview from "../cb-review/CBReview";
 import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
@@ -528,23 +529,31 @@ export default function ArtistPage(): JSX.Element {
             expandDiscography || !showFullDiscographyButton ? "expanded" : ""
           }`}
         >
-          {releaseGroupTypesNames.map(([type, rgGroup]) => (
-            <div className="albums">
-              <div className="listen-header">
-                <h3 className="header-with-line">{type}</h3>
-                <SortingButtons sort={sort} setSort={setSort} />
+          {releaseGroupTypesNames.map(([type, rgGroup]) => {
+            return (
+              <div className="albums" key={type}>
+                <div className="listen-header">
+                  <h3 className="header-with-line">{type}</h3>
+                  <SortingButtons sort={sort} setSort={setSort} />
+                </div>
+                <HorizontalScrollContainer
+                  direction="vertical"
+                  showScrollbar={false}
+                  enableDragScroll={false}
+                >
+                  <div
+                    className={`cover-art-container ${
+                      rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT
+                        ? "single-row"
+                        : ""
+                    }`}
+                  >
+                    {rgGroup.map(getReleaseCard)}
+                  </div>
+                </HorizontalScrollContainer>
               </div>
-              <HorizontalScrollContainer
-                className={`cover-art-container ${
-                  rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT
-                    ? "single-row"
-                    : ""
-                }`}
-              >
-                {rgGroup.map(getReleaseCard)}
-              </HorizontalScrollContainer>
-            </div>
-          ))}
+            );
+          })}
           {showFullDiscographyButton && (
             <div className="read-more mb-3">
               <button

@@ -197,16 +197,15 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
       }
       .albums {
         width: 100%;
+
         .cover-art-container {
           display: grid;
           grid-gap: 1.5em;
-          grid-auto-flow: column;
+          grid-auto-flow: row;
           justify-items: center;
           grid-template-columns: repeat(auto-fill, minmax(190px, max-content));
-          grid-template-rows: repeat(2, 1fr);
-          &.single-row {
-            grid-template-rows: repeat(1, 1fr);
-          }
+          // Grid flows naturally without row constraints
+
           .cover-art {
             aspect-ratio: 1;
             background: lightgrey;
