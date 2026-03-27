@@ -24,7 +24,7 @@ from listenbrainz.domain.lastfm import LastfmService
 from listenbrainz.domain.librefm import LibrefmService
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.soundcloud import SoundCloudService
-from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
+from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS, SPOTIFY_PLAYLIST_PERMISSIONS
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError, \
@@ -544,11 +544,11 @@ def music_services_disconnect(service_name: str):
         if service_name == 'spotify':
             permissions = None
             if action == 'both':
-                permissions = SPOTIFY_LISTEN_PERMISSIONS | SPOTIFY_IMPORT_PERMISSIONS
+                permissions = SPOTIFY_LISTEN_PERMISSIONS | SPOTIFY_IMPORT_PERMISSIONS | SPOTIFY_PLAYLIST_PERMISSIONS
             elif action == 'import':
                 permissions = SPOTIFY_IMPORT_PERMISSIONS
             elif action == 'listen':
-                permissions = SPOTIFY_LISTEN_PERMISSIONS
+                permissions = SPOTIFY_LISTEN_PERMISSIONS | SPOTIFY_PLAYLIST_PERMISSIONS
             if permissions:
                 return jsonify({"url": service.get_authorize_url(permissions)})
         elif service_name == 'soundcloud':
