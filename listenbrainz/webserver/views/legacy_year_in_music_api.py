@@ -301,7 +301,11 @@ def _cover_art_yim_playlist_2023(user_name, stats, key, branding):
         server_root_url=current_app.config["SERVER_ROOT_URL"])
 
     for track in stats[key]["track"]:
-        additional_metadata = track["extension"][PLAYLIST_TRACK_EXTENSION_URI].get("additional_metadata")
+        track_ext = track["extension"][PLAYLIST_TRACK_EXTENSION_URI]
+        track_ext = track_ext[0] if isinstance(track_ext, list) and track_ext else track_ext
+        if not isinstance(track_ext, dict):
+            continue
+        additional_metadata = track_ext.get("additional_metadata") or {}
         if additional_metadata.get("caa_id") and additional_metadata.get("caa_release_mbid"):
             caa_id = additional_metadata["caa_id"]
             caa_release_mbid = additional_metadata["caa_release_mbid"]
@@ -350,7 +354,11 @@ def _cover_art_yim_playlist_2024(user_name, stats, key, branding, yim24):
         server_root_url=current_app.config["SERVER_ROOT_URL"])
 
     for track in stats[key]["track"]:
-        additional_metadata = track["extension"][PLAYLIST_TRACK_EXTENSION_URI].get("additional_metadata")
+        track_ext = track["extension"][PLAYLIST_TRACK_EXTENSION_URI]
+        track_ext = track_ext[0] if isinstance(track_ext, list) and track_ext else track_ext
+        if not isinstance(track_ext, dict):
+            continue
+        additional_metadata = track_ext.get("additional_metadata") or {}
         if additional_metadata.get("caa_id") and additional_metadata.get("caa_release_mbid"):
             caa_id = additional_metadata["caa_id"]
             caa_release_mbid = additional_metadata["caa_release_mbid"]
