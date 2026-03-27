@@ -196,7 +196,8 @@ CREATE TABLE user_setting (
     timezone_name          TEXT,
     troi                   JSONB, -- troi related prefs
     brainzplayer           JSONB, -- brainzplayer related prefs
-    flair                  JSONB
+    flair                  JSONB,
+    submission_filters     JSONB
 );
 
 ALTER TABLE user_setting
