@@ -65,11 +65,15 @@ def export_query_to_jsonl(conn, file_path, query, **kwargs):
     with conn.execute(
         text(query).execution_options(yield_per=BATCH_SIZE),
         kwargs
-    ) as result, open(file_path, "w") as file:
+    ) as result, open(file_path, "wb") as file:
         for partition in result.partitions():
             for row in partition:
-                file.write(row.line)
-                file.write("\n")
+                line = row.line
+                if isinstance(line, dict):
+                    file.write(orjson.dumps(line))
+                else:
+                    file.write(line.encode("utf-8"))
+                file.write(b"\n")
                 rowcount += 1
     return rowcount
 
@@ -95,14 +99,16 @@ def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: 
                    AND listened_at <= :end_time
                    AND l.user_id = :user_id
           )
-                SELECT jsonb_build_object(
-                            'listened_at'
+                SELECT json_build_object(
+                            'inserted_at'
+                          , (extract(epoch from inserted_at))::integer
+                          , 'listened_at'
                           ,  extract(epoch from listened_at)
-                          , 'inserted_at'
-                          ,  extract(epoch from inserted_at)
+                          , 'recording_msid'
+                          , recording_msid
                           , 'track_metadata'
                           , jsonb_set(
-                                jsonb_set(data, '{recording_msid}'::text[], to_jsonb(recording_msid::text)),
+                                data,
                                     '{mbid_mapping}'::text[]
                                   , CASE
                                     WHEN mbc.recording_mbid IS NULL
@@ -136,7 +142,7 @@ def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: 
                                         )
                                     END
                             )
-                       )::text as line
+                       ) as line
                   FROM selected_listens sl
              LEFT JOIN mapping.mb_metadata_cache mbc
                     ON sl.recording_mbid = mbc.recording_mbid

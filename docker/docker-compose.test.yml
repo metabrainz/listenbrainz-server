@@ -52,6 +52,8 @@ services:
     user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     environment:
       PYTHON_TESTS_RUNNING: 1
+    volumes:
+      - ..:/code/listenbrainz:z
 
   background_tasks:
     image: listenbrainz

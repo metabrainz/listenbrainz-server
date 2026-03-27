@@ -134,7 +134,6 @@ class Listen(object):
                        ac_names=None, ac_join_phrases=None, user_name=None,
                        caa_id=None, caa_release_mbid=None):
         """Factory to make Listen() objects from a timescale dict"""
-        track_metadata["additional_info"]["recording_msid"] = recording_msid
         if recording_mbid is not None:
             track_metadata["mbid_mapping"] = {"recording_mbid": str(recording_mbid)}
 
