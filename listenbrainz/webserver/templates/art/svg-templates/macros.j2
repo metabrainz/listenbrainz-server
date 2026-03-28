@@ -43,8 +43,8 @@
       <text font-family="Sintony, sans-serif" font-size="10" fill="{{ caption_text_color }}">
         <tspan class="caption-rank" x="{{ image.x + 5 }}" y="{{ image.y + image.height - 19 }}">{% if rank is not none %}{{ rank }}{% endif %}</tspan>
         <tspan class="caption-listen-count" x="{{ image.x + 5 }}" y="{{ image.y + image.height - 7 }}">{% if image.listen_count %}{{ image.listen_count }}{% endif %}</tspan>
-        <tspan class="caption-release" x="{{ image.x + image.width // 2 }}" y="{{ image.y + image.height - 19 }}">{% if image.title %}{{ image.title|escape }}{% endif %}</tspan>
-        <tspan class="caption-artist" x="{{ image.x + image.width // 2 }}" y="{{ image.y + image.height - 7 }}">{% if image.artist %}{{ image.artist|escape }}{% endif %}</tspan>
+        <tspan class="caption-release" x="{{ image.x + image.width // 2 }}" y="{{ image.y + image.height - 19 }}">{% if image.title %}{{ image.title|truncate(18, true, '…')|escape }}{% endif %}</tspan>
+        <tspan class="caption-artist" x="{{ image.x + image.width // 2 }}" y="{{ image.y + image.height - 7 }}">{% if image.artist %}{{ image.artist|truncate(18, true, '…')|escape }}{% endif %}</tspan>
       </text>
     </g>
     {% endif %}
