@@ -8,6 +8,7 @@ from listenbrainz.webserver.views.playlist_api import fetch_playlist_recording_m
 import listenbrainz.db.playlist as db_playlist
 from listenbrainz.db.model import playlist as model_playlist
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
+from listenbrainz.art.og_image import OPENGRAPH_IMAGE_WIDTH, OPENGRAPH_IMAGE_HEIGHT
 
 playlist_bp = Blueprint("playlist", __name__)
 
@@ -32,7 +33,9 @@ def playlist_page(playlist_mbid: str):
                 "type": "music:playlist",
                 "url": f'{current_app.config["SERVER_ROOT_URL"]}/playlist/{playlist_mbid}',
                 "music:creator": f'{current_app.config["SERVER_ROOT_URL"]}/user/{playlist.creator}',
-                # "image": Once we have playlist images we can try adding it here
+                "image": f'{current_app.config["SERVER_ROOT_URL"]}/1/art/playlist/{playlist_mbid}/opengraph/',
+                "image:width": str(OPENGRAPH_IMAGE_WIDTH),
+                "image:height": str(OPENGRAPH_IMAGE_HEIGHT),
             }
     return render_template("index.html", og_meta_tags=og_meta_tags)
 
