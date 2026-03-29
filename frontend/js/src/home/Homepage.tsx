@@ -186,17 +186,23 @@ function HomePage() {
         )}
         <div className="homepage-info">
           <h1>
-            Listen together
+            Track every song
             <br />
-            with ListenBrainz
+            you listen to
           </h1>
 
           {createAccountButton}
           {loginButton}
 
           <div className="homepage-info-text">
-            <p>Track, explore, visualise and share the music you listen to.</p>
-            <p>Follow your favourites and discover great new music.</p>
+            <p>
+              ListenBrainz records your listening history automatically — what
+              you play, when, and how often.
+            </p>
+            <p>
+              See your personal stats, get recommendations, and discover new
+              music for free.
+            </p>
           </div>
           <div className="homepage-info-links">
             <Link to="/about/">About ListenBrainz</Link>
@@ -273,28 +279,43 @@ function HomePage() {
           </h1>
         )}
         <div className="homepage-info">
-          <h1>
-            Connect your music
-            <br />
-            with ListenBrainz
-          </h1>
+          <h1>How it works</h1>
+
+          <div className="homepage-how-steps">
+            <div className="homepage-step">
+              <span className="homepage-step-number">1</span>
+              <div className="homepage-step-content">
+                <h2>Connect your music</h2>
+                <p>
+                  Link your Spotify or Last.fm account, or use a plugin for your
+                  favorite music player.
+                </p>
+              </div>
+            </div>
+            <div className="homepage-step">
+              <span className="homepage-step-number">2</span>
+              <div className="homepage-step-content">
+                <h2>Listen as usual</h2>
+                <p>
+                  Every song you play is saved automatically. No extra work
+                  needed.
+                </p>
+              </div>
+            </div>
+            <div className="homepage-step">
+              <span className="homepage-step-number">3</span>
+              <div className="homepage-step-content">
+                <h2>See your stats and discover</h2>
+                <p>
+                  View your top artists, get personal playlists, and find new
+                  music based on what you love.
+                </p>
+              </div>
+            </div>
+          </div>
 
           {createAccountButton}
           {loginButton}
-
-          <div className="homepage-info-text">
-            <p>
-              Discover your music by linking to the largest open source music
-              database.
-            </p>
-            <p>
-              Unlock accurate and detailed metadata for millions of songs,
-              albums and artists.
-            </p>
-          </div>
-          <div className="homepage-info-links">
-            <Link to="/about/">About ListenBrainz</Link>
-          </div>
         </div>
         <FontAwesomeIcon
           icon={faSortDown}
