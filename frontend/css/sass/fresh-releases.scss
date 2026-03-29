@@ -36,6 +36,7 @@
 }
 
 .releases-page {
+
   // FILTERS
   .filters-main {
     top: 1rem;
@@ -72,6 +73,7 @@
           #clearall-btn-active {
             font-size: 2.5rem;
             flex-grow: 2;
+
             &:hover {
               font-weight: bold;
               color: $orange;
@@ -94,6 +96,7 @@
             font-weight: normal;
             cursor: pointer;
             color: $asphalt;
+
             &:hover {
               font-weight: bold;
               color: $blue;
@@ -139,11 +142,9 @@
             content: "";
             height: 100%;
             width: 3rem;
-            background: linear-gradient(
-              90deg,
-              rgba(255, 255, 255, 1) 50%,
-              rgba(255, 255, 255, 0) 100%
-            );
+            background: linear-gradient(90deg,
+                rgba(255, 255, 255, 1) 50%,
+                rgba(255, 255, 255, 0) 100%);
             position: absolute;
             top: 0;
             left: 0;
@@ -154,11 +155,9 @@
             content: "";
             height: 100%;
             width: 3rem;
-            background: linear-gradient(
-              -90deg,
-              rgba(255, 255, 255, 1) 50%,
-              rgba(255, 255, 255, 0) 100%
-            );
+            background: linear-gradient(-90deg,
+                rgba(255, 255, 255, 1) 50%,
+                rgba(255, 255, 255, 0) 100%);
             position: absolute;
             top: 0;
             right: 0;
@@ -225,20 +224,178 @@
   top: 4rem;
   position: sticky;
   padding: 4rem 1rem;
-  // width: 100%;
-  // height: 100%;
   max-height: calc(100vh - 8em);
 
   @media (max-width: map.get($grid-breakpoints, "lg")) {
-    height: unset;
-    width: 100%;
     position: fixed;
-    bottom: 0;
-    top: calc(100vh - 100px);
-    padding: 1rem 2rem 4rem;
+    top: 4rem;
+    right: 0;
+    height: calc(100vh - 8em);
+    padding: 4rem 1rem;
     z-index: 50;
-    background-color: $white;
-    padding-right: 120px; // sidebar button on the right
+    // Transparent or semitransparent background if needed, but since it overlays content,
+    // we just let it float. The tooltip has a solid background anyway.
+    pointer-events: none; // let clicks pass through the container
+
+    // re-enable pointer events for the actual interactive track
+    .timeline-track {
+      pointer-events: auto;
+    }
+  }
+
+  .timeline-track {
+    position: relative;
+    background-color: color.adjust($asphalt, $lightness: 60%);
+    border-radius: 2px;
+    cursor: pointer;
+    user-select: none;
+
+    &.vertical {
+      width: 2px;
+      height: 100%;
+      margin-right: 80px; // space for labels
+    }
+
+    &.horizontal {
+      height: 2px;
+      width: 100%;
+      margin-bottom: 40px;
+    }
+  }
+
+  .timeline-thumb {
+    position: absolute;
+    background-color: $blue;
+    border-radius: 2px;
+    z-index: 2;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: color.adjust($blue, $lightness: 10%);
+    }
+
+    &.vertical {
+      width: 4px;
+      left: -1px;
+      transform: translateY(-50%);
+    }
+
+    &.horizontal {
+      height: 4px;
+      top: -1px;
+      transform: translateX(-50%);
+    }
+  }
+
+  .timeline-mark {
+    position: absolute;
+    white-space: nowrap;
+    color: $asphalt;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+
+    &.vertical {
+      left: 0;
+      width: 80px;
+      justify-content: flex-start;
+      transform: translateY(-50%);
+
+      .tick-mark {
+        width: 8px;
+        height: 1px;
+        background-color: color.adjust($asphalt, $lightness: 60%);
+        flex-shrink: 0;
+      }
+
+      .mark-label {
+        font-size: 0.85rem;
+        color: color.adjust($asphalt, $lightness: 20%);
+        margin-left: 4px;
+        background: transparent;
+        padding: 0;
+      }
+    }
+
+    &.horizontal {
+      top: 0;
+      height: 30px;
+      flex-direction: column;
+      justify-content: flex-start;
+      transform: translateX(-50%);
+
+      .tick-mark {
+        width: 1px;
+        height: 8px;
+        background-color: color.adjust($asphalt, $lightness: 60%);
+        flex-shrink: 0;
+      }
+
+      .mark-label {
+        font-size: 0.85rem;
+        color: color.adjust($asphalt, $lightness: 20%);
+        margin-top: 4px;
+        background: transparent;
+        padding: 0;
+      }
+    }
+  }
+
+  .timeline-tooltip {
+    position: absolute;
+    background-color: $blue;
+    color: $white;
+    z-index: 100;
+    pointer-events: none;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    &.vertical {
+      width: 151px;
+      height: 151px;
+      border-radius: 50% 50% 0 50%;
+      right: 42px;
+      transform: translateY(-50%) rotate(-45deg);
+
+      .tooltip-content {
+        transform: rotate(45deg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+
+    &.horizontal {
+      width: 121px;
+      height: 121px;
+      border-radius: 50% 50% 0 50%;
+      bottom: 75px;
+      transform: translateX(-50%) rotate(-135deg);
+
+      .tooltip-content {
+        transform: rotate(135deg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+
+    .tooltip-day {
+      font-size: 4rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .tooltip-month {
+      font-size: 1.2rem;
+      font-weight: 600;
+      text-transform: capitalize;
+      margin-top: 0.2rem;
+    }
   }
 }
 
@@ -307,18 +464,35 @@
 .releases-page-container {
   display: flex;
   gap: 1.5em;
+
   @media screen and (min-width: map.get($grid-breakpoints, "lg")) {
     // make the sidebar flush with the right-hand side on larger sizes
     margin-right: -15px !important;
   }
+
   .releases-page {
     flex: 1;
+
+    @media screen and (max-width: map.get($grid-breakpoints, "lg")) {
+      padding-right: 90px; // space for the right-docked timeline
+    }
   }
+
+
   .sidebar-fresh-releases {
     max-height: 85vh;
 
     @media screen and (max-width: map.get($grid-breakpoints, "lg")) {
       max-height: calc(100vh - $brainzplayer-height);
     }
+  }
+}
+
+.is-timeline-dragging {
+  .releases-page {
+    opacity: 0.3;
+    filter: blur(1px);
+    transition: opacity 0.3s, filter 0.3s;
+    pointer-events: none;
   }
 }

@@ -1,5 +1,5 @@
 import * as React from "react";
-import Slider from "rc-slider";
+
 import { countBy, debounce, zipObject } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarCheck } from "@fortawesome/free-solid-svg-icons";
@@ -14,16 +14,107 @@ type ReleaseTimelineProps = {
   direction: SortDirection;
 };
 
+interface MappedMark {
+  percent: number;
+  shiftedPercent: number;
+  label: React.ReactNode;
+}
+
+function calculateMapping(
+  marks: Record<number, React.ReactNode>,
+  minGap: number
+) {
+  const sortedPercents = Object.keys(marks)
+    .map(Number)
+    .sort((a, b) => a - b);
+
+  if (sortedPercents.length === 0) return [];
+
+  // Ensure 0 and 100 are in the mapping for better interpolation
+  if (sortedPercents[0] !== 0) sortedPercents.unshift(0);
+  if (sortedPercents[sortedPercents.length - 1] !== 100)
+    sortedPercents.push(100);
+
+  const uniquePercents = Array.from(new Set(sortedPercents)).sort(
+    (a, b) => a - b
+  );
+
+  let lastShiftedPercent = -minGap;
+  const mappedMarks: MappedMark[] = [];
+
+  uniquePercents.forEach((percent) => {
+    const shiftedPercent = Math.max(percent, lastShiftedPercent + minGap);
+    mappedMarks.push({
+      percent,
+      shiftedPercent,
+      label: marks[percent] || null,
+    });
+    lastShiftedPercent = shiftedPercent;
+  });
+
+  const maxShifted = mappedMarks[mappedMarks.length - 1].shiftedPercent;
+  if (maxShifted > 100) {
+    const scale = 100 / maxShifted;
+    mappedMarks.forEach((m) => {
+      m.shiftedPercent *= scale;
+      // Ensure we don't accidentally shift things before 0
+      m.shiftedPercent = Math.max(0, m.shiftedPercent);
+    });
+  }
+
+  return mappedMarks;
+}
+
+function mapLinearToVisual(linearPercent: number, mapping: MappedMark[]) {
+  if (mapping.length < 2) return linearPercent;
+  const first = mapping[0];
+  const last = mapping[mapping.length - 1];
+
+  if (linearPercent <= first.percent) return first.shiftedPercent;
+  if (linearPercent >= last.percent) return last.shiftedPercent;
+
+  let i = 0;
+  while (i < mapping.length - 1 && mapping[i + 1].percent < linearPercent) {
+    i++;
+  }
+
+  const m1 = mapping[i];
+  const m2 = mapping[i + 1];
+  const t = (linearPercent - m1.percent) / (m2.percent - m1.percent || 1);
+  return m1.shiftedPercent + t * (m2.shiftedPercent - m1.shiftedPercent);
+}
+
+function unmapVisualToLinear(visualPercent: number, mapping: MappedMark[]) {
+  if (mapping.length < 2) return visualPercent;
+  const first = mapping[0];
+  const last = mapping[mapping.length - 1];
+
+  if (visualPercent <= first.shiftedPercent) return first.percent;
+  if (visualPercent >= last.shiftedPercent) return last.percent;
+
+  let i = 0;
+  while (
+    i < mapping.length - 1 &&
+    mapping[i + 1].shiftedPercent < visualPercent
+  ) {
+    i++;
+  }
+
+  const m1 = mapping[i];
+  const m2 = mapping[i + 1];
+  const t =
+    (visualPercent - m1.shiftedPercent) /
+    (m2.shiftedPercent - m1.shiftedPercent || 1);
+  return m1.percent + t * (m2.percent - m1.percent);
+}
+
 function createMarks(
   releases: Array<FreshReleaseItem>,
   sortDirection: SortDirection,
   order: SortOption
 ) {
-  let dataArr: Array<string | JSX.Element> = [];
+  const dataArr: Array<string | JSX.Element | number> = [];
   let percentArr: Array<number> = [];
-
-  // We want to filter out the keys that have less than 1.5% of the total releases count if order type is not release_date
-  const minReleasesThreshold = Math.floor(releases.length * 0.015);
 
   if (order === "release_date") {
     let releasesPerDate = countBy(
@@ -39,11 +130,6 @@ function createMarks(
       );
     }
 
-    const firstDate = Object.keys(releasesPerDate)[0];
-    const lastDate = Object.keys(releasesPerDate)[
-      Object.keys(releasesPerDate).length - 1
-    ];
-
     const totalReleases = Object.values(releasesPerDate).reduce(
       (sum, value) => sum + value,
       0
@@ -57,33 +143,19 @@ function createMarks(
       cummulativeSum += releasesPerDate[date];
     });
 
-    const firstDateStr = format(parseISO(firstDate), "yyyy-MM-dd");
-    dataArr.push(formatReleaseDate(firstDateStr));
-    percentArr.push(0);
-
-    for (let i = 10; i < 100; i += 10) {
-      let date = "";
-      let miniDiff = 10;
-      cummulativeMap.forEach((value, key) => {
-        const currentDiff = Math.abs(value - i);
-        if (currentDiff < miniDiff) {
-          miniDiff = currentDiff;
-          date = key;
-        }
-      });
-
-      if (date && dataArr[dataArr.length - 1] !== date) {
-        const dateStr = format(parseISO(date), "yyyy-MM-dd");
-        dataArr.push(formatReleaseDate(dateStr));
-        percentArr.push(cummulativeMap.get(date)!);
+    let lastMonth = "";
+    Object.keys(releasesPerDate).forEach((date) => {
+      const parsedDate = parseISO(date);
+      const day = format(parsedDate, "d");
+      const month = format(parsedDate, "MMM").toUpperCase();
+      let label = day;
+      if (month !== lastMonth) {
+        label = `${day} ${month}`;
+        lastMonth = month;
       }
-    }
-
-    const lastDateStr = format(parseISO(lastDate), "yyyy-MM-dd");
-    if (dataArr[dataArr.length - 1] !== formatReleaseDate(lastDateStr)) {
-      dataArr.push(formatReleaseDate(lastDateStr));
-      percentArr.push(cummulativeMap.get(lastDate)!);
-    }
+      dataArr.push(label);
+      percentArr.push(cummulativeMap.get(date)!);
+    });
 
     const dates = Object.keys(releasesPerDate).map((date) => parseISO(date));
     const recentDateStr = format(startOfDay(new Date()), "yyyy-MM-dd");
@@ -91,69 +163,37 @@ function createMarks(
       ? format(closestTo(new Date(recentDateStr), dates)!, "yyyy-MM-dd")
       : recentDateStr;
 
-    if (dataArr.includes(formatReleaseDate(closestDateStr))) {
-      const index = dataArr.indexOf(formatReleaseDate(closestDateStr));
-      dataArr.splice(index, 1);
-      percentArr.splice(index, 1);
-    }
-
-    const title = closestDateStr === recentDateStr ? "Today" : "Nearest Date";
-    dataArr.push(
-      <FontAwesomeIcon
-        icon={faCalendarCheck}
-        size="2xl"
-        color={COLOR_LB_BLUE}
-        title={title}
-      />
-    );
+    dataArr.push(recentDateStr === closestDateStr ? "Today" : "Recent");
     percentArr.push(cummulativeMap.get(closestDateStr)!);
-
-    const sortedData = percentArr
-      .map((percent, index) => ({ percent, data: dataArr[index] }))
-      .sort((a, b) => a.percent - b.percent);
-
-    dataArr = sortedData.map((item) => item.data);
-    percentArr = sortedData.map((item) => item.percent);
-  } else if (order === "artist_credit_name") {
-    const artistInitialsCount = countBy(releases, (item: FreshReleaseItem) =>
-      item.artist_credit_name.charAt(0).toUpperCase()
+  } else if (order === "artist_credit_name" || order === "release_name") {
+    const counts = countBy(releases, (item: FreshReleaseItem) =>
+      item[order].charAt(0).toUpperCase()
     );
-    const filteredInitials = Object.keys(artistInitialsCount).filter(
-      (initial) => artistInitialsCount[initial] >= minReleasesThreshold
-    );
+    const initials = Object.keys(counts).sort();
+    const totalCount = releases.length;
+    let cummulativeSum = 0;
 
-    dataArr = filteredInitials.sort();
-    percentArr = filteredInitials
-      .map((item) => (artistInitialsCount[item] / releases.length) * 100)
-      .map((_, index, arr) =>
-        arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
-      );
-  } else if (order === "release_name") {
-    const releaseInitialsCount = countBy(releases, (item: FreshReleaseItem) =>
-      item.release_name.charAt(0).toUpperCase()
-    );
-    const filteredInitials = Object.keys(releaseInitialsCount).filter(
-      (initial) => releaseInitialsCount[initial] >= minReleasesThreshold
-    );
-
-    dataArr = filteredInitials.sort();
-    percentArr = filteredInitials
-      .map((item) => (releaseInitialsCount[item] / releases.length) * 100)
-      .map((_, index, arr) =>
-        arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
-      );
-  } else {
-    // conutBy gives us an asc-sorted Dict by confidence
-    const confidenceInitialsCount = countBy(
+    initials.forEach((initial) => {
+      percentArr.push((100 * cummulativeSum) / totalCount);
+      dataArr.push(initial);
+      cummulativeSum += counts[initial];
+    });
+  } else if (order === "confidence") {
+    const counts = countBy(
       releases,
       (item: FreshReleaseItem) => item?.confidence
     );
-    dataArr = Object.keys(confidenceInitialsCount);
-    percentArr = Object.values(confidenceInitialsCount)
-      .map((item) => (item / releases.length) * 100)
-      .map((_, index, arr) =>
-        arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
-      );
+    const confidences = Object.keys(counts).sort(
+      (a, b) => Number(a) - Number(b)
+    );
+    const totalCount = releases.length;
+    let cummulativeSum = 0;
+
+    confidences.forEach((conf) => {
+      percentArr.push((100 * cummulativeSum) / totalCount);
+      dataArr.push(`${Math.round(Number(conf) * 100)}%`);
+      cummulativeSum += counts[conf];
+    });
   }
 
   if (sortDirection === "descend" && order !== "release_date") {
@@ -179,60 +219,225 @@ function createMarks(
   return zipObject(percentArr, dataArr);
 }
 
+/** Returns the element's stable page-level Y position (scroll-invariant). */
+function getAbsoluteTop(el: HTMLElement): number {
+  return el.getBoundingClientRect().top + window.scrollY;
+}
+
 export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const { releases, order, direction } = props;
 
-  const [currentValue, setCurrentValue] = React.useState<number | number[]>();
-  const [marks, setMarks] = React.useState<{ [key: number]: React.ReactNode }>(
-    {}
-  );
+  const [thumbSize, setThumbSize] = React.useState<number>(30);
+  const [currentValue, setCurrentValue] = React.useState<number>(0);
+  const [mappedMarks, setMappedMarks] = React.useState<MappedMark[]>([]);
+  const [isDragging, setIsDragging] = React.useState(false);
+  const trackRef = React.useRef<HTMLDivElement>(null);
 
-  const screenMd = useMediaQuery("(max-width: 992px)"); // @screen-md
+  const screenMd = useMediaQuery("(max-width: 992px)");
 
-  const changeHandler = React.useCallback((percent: number | number[]) => {
-    setCurrentValue(percent);
-    const element: HTMLElement | null = document.getElementById(
-      "release-card-grids"
-    )!;
-    const scrollHeight = ((percent as number) / 100) * element.scrollHeight;
-    const scrollTo = scrollHeight + element.offsetTop;
-    window.scrollTo({ top: scrollTo, behavior: "smooth" });
-    return scrollTo;
-  }, []);
+  const minGap = screenMd ? 2.5 : 1.5;
 
   React.useEffect(() => {
-    setMarks(createMarks(releases, direction, order));
-  }, [releases, direction, order]);
+    const rawMarks = createMarks(releases, direction, order) as Record<
+      number,
+      React.ReactNode
+    >;
+    setMappedMarks(calculateMapping(rawMarks, minGap));
+  }, [releases, direction, order, minGap]);
+
+  React.useEffect(() => {
+    const updateThumbSize = () => {
+      const container = document.getElementById("release-card-grids");
+      if (!container || !trackRef.current) return;
+      const trackLength = screenMd
+        ? trackRef.current.offsetWidth
+        : trackRef.current.offsetHeight;
+      const containerTop = getAbsoluteTop(container);
+      const pageMaxScroll = Math.max(
+        1,
+        document.documentElement.scrollHeight - window.innerHeight
+      );
+      const containerMaxScroll = Math.max(1, pageMaxScroll - containerTop);
+      const ratio = Math.min(window.innerHeight / containerMaxScroll, 0.05);
+      const size = Math.max(20, ratio * trackLength);
+      setThumbSize(size);
+    };
+    updateThumbSize();
+    window.addEventListener("resize", updateThumbSize);
+    return () => window.removeEventListener("resize", updateThumbSize);
+  }, [releases, screenMd]);
+
+  React.useEffect(() => {
+    if (isDragging) {
+      document.body.classList.add("is-timeline-dragging");
+    } else {
+      document.body.classList.remove("is-timeline-dragging");
+    }
+    return () => document.body.classList.remove("is-timeline-dragging");
+  }, [isDragging]);
+
+  const scrollToPosition = React.useCallback(
+    (percent: number, behavior: ScrollBehavior = "smooth") => {
+      const element = document.getElementById("release-card-grids");
+      if (!element) return;
+      const containerTop = getAbsoluteTop(element);
+      const pageMaxScroll = Math.max(
+        1,
+        document.documentElement.scrollHeight - window.innerHeight
+      );
+      // The scrollable distance from when the container enters the viewport
+      // to the absolute page bottom. Using this as the denominator ensures
+      // the thumb reaches 100% exactly at the page bottom on any page size.
+      const containerMaxScroll = Math.max(1, pageMaxScroll - containerTop);
+      window.scrollTo({
+        top: containerTop + (percent / 100) * containerMaxScroll,
+        behavior,
+      });
+    },
+    []
+  );
+
+  const handleMove = React.useCallback(
+    (e: MouseEvent | TouchEvent) => {
+      if (!trackRef.current || !mappedMarks.length) return;
+      const rect = trackRef.current.getBoundingClientRect();
+      const y =
+        "touches" in e
+          ? (e as TouchEvent).touches[0].clientY
+          : (e as MouseEvent).clientY;
+      let visualPercent = ((y - rect.top) / rect.height) * 100;
+      visualPercent = Math.max(0, Math.min(100, visualPercent));
+
+      const linearPercent = unmapVisualToLinear(visualPercent, mappedMarks);
+      setCurrentValue(linearPercent);
+      scrollToPosition(linearPercent, isDragging ? "auto" : "smooth");
+    },
+    [scrollToPosition, isDragging, mappedMarks]
+  );
+
+  const onStart = (e: React.MouseEvent | React.TouchEvent) => {
+    setIsDragging(true);
+    handleMove(e.nativeEvent as any);
+  };
+
+  React.useEffect(() => {
+    const onMove = (e: MouseEvent | TouchEvent) => {
+      if (isDragging) handleMove(e as any);
+    };
+    const onEnd = () => setIsDragging(false);
+
+    if (isDragging) {
+      window.addEventListener("mousemove", onMove as any);
+      window.addEventListener("mouseup", onEnd);
+      window.addEventListener("touchmove", onMove as any, { passive: false });
+      window.addEventListener("touchend", onEnd);
+    }
+    return () => {
+      window.removeEventListener("mousemove", onMove as any);
+      window.removeEventListener("mouseup", onEnd);
+      window.removeEventListener("touchmove", onMove as any);
+      window.removeEventListener("touchend", onEnd);
+    };
+  }, [isDragging, handleMove]);
 
   React.useEffect(() => {
     const handleScroll = debounce(() => {
       const container = document.getElementById("release-card-grids");
-      if (!container) {
-        return;
-      }
+      if (!container || isDragging) return;
+      const containerTop = getAbsoluteTop(container);
+      const pageMaxScroll = Math.max(
+        1,
+        document.documentElement.scrollHeight - window.innerHeight
+      );
+      const containerMaxScroll = Math.max(1, pageMaxScroll - containerTop);
       const scrollPos =
-        ((window.scrollY - container.offsetTop) / container.scrollHeight) * 100;
-      setCurrentValue(scrollPos);
-    }, 500);
+        ((window.scrollY - containerTop) / containerMaxScroll) * 100;
+      setCurrentValue(Math.max(0, Math.min(100, scrollPos)));
+    }, 50);
 
     window.addEventListener("scroll", handleScroll);
     return () => {
       handleScroll.cancel();
       window.removeEventListener("scroll", handleScroll);
     };
-  }, []);
+  }, [isDragging]);
+
+  const getTooltipData = () => {
+    if (!releases.length) return null;
+    let index = Math.floor((currentValue / 100) * (releases.length - 1));
+
+    if (direction === "descend") {
+      index = releases.length - 1 - index;
+    }
+
+    const item = releases[Math.max(0, Math.min(releases.length - 1, index))];
+    if (!item) return null;
+
+    if (order === "release_date") {
+      const date = parseISO(item.release_date);
+      return {
+        main: format(date, "d"),
+        sub: format(date, "MMMM"),
+      };
+    }
+    if (order === "artist_credit_name" || order === "release_name") {
+      return {
+        main: item[order].charAt(0).toUpperCase(),
+        sub: "",
+      };
+    }
+    if (order === "confidence") {
+      return {
+        main: `${Math.round((item.confidence ?? 0) * 100)}`,
+        sub: "%",
+      };
+    }
+    return null;
+  };
+
+  const tooltipData = getTooltipData();
+  const visualPercent = mapLinearToVisual(currentValue, mappedMarks);
 
   return (
     <div className="releases-timeline">
-      <Slider
-        className={screenMd ? "slider-horizontal" : "slider-vertical"}
-        vertical={!screenMd}
-        reverse={!screenMd}
-        included={false}
-        marks={marks}
-        value={currentValue}
-        onChange={changeHandler}
-      />
+      <div
+        ref={trackRef}
+        className="timeline-track vertical"
+        onMouseDown={onStart}
+        onTouchStart={onStart}
+      >
+        <div
+          className="timeline-thumb vertical"
+          style={{
+            top: `${visualPercent}%`,
+            height: `${thumbSize}px`,
+            transition: isDragging ? "none" : "all 0.1s ease-out",
+          }}
+        />
+        {isDragging && tooltipData && (
+          <div
+            className="timeline-tooltip vertical"
+            style={{ top: `${visualPercent}%` }}
+          >
+            <div className="tooltip-content">
+              <div className="tooltip-day">{tooltipData.main}</div>
+              <div className="tooltip-month">{tooltipData.sub}</div>
+            </div>
+          </div>
+        )}
+        {mappedMarks.map((mark: MappedMark) =>
+          mark.label ? (
+            <div
+              key={mark.percent}
+              className="timeline-mark vertical"
+              style={{ top: `${mark.shiftedPercent}%` }}
+            >
+              <div className="tick-mark" />
+              <span className="mark-label">{mark.label}</span>
+            </div>
+          ) : null
+        )}
+      </div>
     </div>
   );
 }
