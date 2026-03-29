@@ -96,7 +96,7 @@ const Preview = React.forwardRef(function PreviewComponent(
           }
           ${
             captionBgColor
-              ? `.caption rect { fill: ${captionBgColor} !important; }`
+              ? `.caption rect { fill: ${captionBgColor} !important; fill-opacity: 0.48; }`
               : ""
           }
         `}
