@@ -227,7 +227,7 @@ export default function ArtCreator() {
   const [showRelease, setShowRelease] = useState(true);
   const [showListenCount, setShowListenCount] = useState(false);
   const [captionTextColor, setCaptionTextColor] = useState("#ffffff");
-  const [captionBgColor, setCaptionBgColor] = useState("#000000");
+  const [captionBgColor, setCaptionBgColor] = useState("rgba(0,0,0,0.48)");
 
   const showCaption = showRank || showRelease || showArtist || showListenCount;
   const [skipMissing, setSkipMissing] = useState(true);
@@ -673,8 +673,8 @@ export default function ArtCreator() {
           if (captionTextColorArg && captionTextColorArg !== "#ffffff") {
             queryParams.set("caption-text-color", captionTextColorArg);
           }
-          if (captionBgColorArg && captionBgColorArg !== "#000000") {
-            queryParams.set("caption-bg-color", captionBgColorArg);
+          if (captionBgColorArg && captionBgColorArg !== "rgba(0,0,0,0.48)") {
+            queryParams.set("caption-bg-color", encodeURIComponent(captionBgColorArg));
           }
           if (fontFamilyArg !== DEFAULT_FONT) {
             queryParams.set("font-family", fontFamilyArg);
