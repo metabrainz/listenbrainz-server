@@ -675,11 +675,8 @@ export default function ArtCreator() {
           if (captionTextColorArg && captionTextColorArg !== "#ffffff") {
             queryParams.set("caption-text-color", captionTextColorArg);
           }
-          if (captionBgColorArg && captionBgColorArg !== "rgba(0,0,0,0.48)") {
-            queryParams.set(
-              "caption-bg-color",
-              encodeURIComponent(captionBgColorArg)
-            );
+          if (captionBgColorArg) {
+            queryParams.set("caption-bg-color", captionBgColorArg);
           }
           if (showRankArg) {
             queryParams.set("show-rank", "true");
