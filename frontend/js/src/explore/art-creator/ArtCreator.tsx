@@ -655,7 +655,9 @@ export default function ArtCreator() {
         skipMissingArg: boolean,
         captionTextColorArg: string,
         captionBgColorArg: string,
-        fontFamilyArg: string
+        fontFamilyArg: string,
+        showRankArg: boolean,
+        showListenCountArg: boolean
       ) => {
         if (styleArg.type === "grid") {
           let newPreviewUrl = `${
@@ -674,7 +676,16 @@ export default function ArtCreator() {
             queryParams.set("caption-text-color", captionTextColorArg);
           }
           if (captionBgColorArg && captionBgColorArg !== "rgba(0,0,0,0.48)") {
-            queryParams.set("caption-bg-color", encodeURIComponent(captionBgColorArg));
+            queryParams.set(
+              "caption-bg-color",
+              encodeURIComponent(captionBgColorArg)
+            );
+          }
+          if (showRankArg) {
+            queryParams.set("show-rank", "true");
+          }
+          if (showListenCountArg) {
+            queryParams.set("show-listen-count", "true");
           }
           if (fontFamilyArg !== DEFAULT_FONT) {
             queryParams.set("font-family", fontFamilyArg);
@@ -712,7 +723,9 @@ export default function ArtCreator() {
       skipMissing,
       captionTextColor,
       captionBgColor,
-      fontFamily
+      fontFamily,
+      showRank,
+      showListenCount
     );
   }, [
     userName,
@@ -725,7 +738,8 @@ export default function ArtCreator() {
     captionTextColor,
     captionBgColor,
     fontFamily,
-
+    showRank,
+    showListenCount,
     debouncedSetPreviewUrl,
   ]);
 
@@ -954,7 +968,9 @@ export default function ArtCreator() {
                             type="color"
                             className="form-control form-control-color"
                             value={captionTextColor}
-                            onChange={(e) => setCaptionTextColor(e.target.value)}
+                            onChange={(e) =>
+                              setCaptionTextColor(e.target.value)
+                            }
                           />
                           <input
                             type="text"
@@ -965,7 +981,10 @@ export default function ArtCreator() {
                         </div>
                       </div>
                       <div>
-                        <label className="form-label" htmlFor="caption-bg-color">
+                        <label
+                          className="form-label"
+                          htmlFor="caption-bg-color"
+                        >
                           Caption background color:
                         </label>
                         <div className="input-group">
