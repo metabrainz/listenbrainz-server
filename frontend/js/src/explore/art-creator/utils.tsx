@@ -23,6 +23,7 @@ export async function svgToBlob(
   }
   const v = Canvg.fromString(ctx as RenderingContext2D, svgString, {
     ...offscreenPreset,
+    backgroundColor: "transparent" as any,
     // Overwrite the Canvg typescript types here, replace once this Canvg ticket is resolved:
     // https://github.com/canvg/canvg/issues/1754
     createCanvas: offscreenPreset.createCanvas as () => OffscreenCanvas & {

@@ -38,13 +38,24 @@
       </rect>
     </clipPath>
     {% if show_caption %}
+    {% set show_left = (rank is not none) or (image.listen_count) %}
+    {% set text_x = (image.x + 5) if not show_left else (image.x + image.width // 2) %}
+    {% set bg_width = (image.width // 2) if show_left else image.width %}
+    {% set bg_x = (image.x + image.width // 2) if show_left else image.x %}
+
     <g class="caption" clip-path="url(#clip-{{ image.x }}-{{ image.y }})">
       <rect x="{{ image.x }}" y="{{ image.y + image.height - 30 }}" width="{{ image.width }}" height="30" fill="{{ caption_bg_color }}" />
+
+      {% if show_left %}
       <text font-family="Sintony, sans-serif" font-size="10" fill="{{ caption_text_color }}">
         <tspan class="caption-rank" x="{{ image.x + 5 }}" y="{{ image.y + image.height - 19 }}">{% if rank is not none %}{{ rank }}{% endif %}</tspan>
         <tspan class="caption-listen-count" x="{{ image.x + 5 }}" y="{{ image.y + image.height - 7 }}">{% if image.listen_count %}{{ image.listen_count }}{% endif %}</tspan>
-        <tspan class="caption-release" x="{{ image.x + image.width // 2 }}" y="{{ image.y + image.height - 19 }}">{% if image.title %}{{ image.title|truncate(18, true, '…')|escape }}{% endif %}</tspan>
-        <tspan class="caption-artist" x="{{ image.x + image.width // 2 }}" y="{{ image.y + image.height - 7 }}">{% if image.artist %}{{ image.artist|truncate(18, true, '…')|escape }}{% endif %}</tspan>
+      </text>
+      {% endif %}
+
+      <text font-family="Sintony, sans-serif" font-size="10" fill="{{ caption_text_color }}">
+        <tspan class="caption-release" x="{{ text_x }}" y="{{ image.y + image.height - 19 }}">{% if image.title %}{{ image.title|truncate(18, true, '…')|escape }}{% endif %}</tspan>
+        <tspan class="caption-artist" x="{{ text_x }}" y="{{ image.y + image.height - 7 }}">{% if image.artist %}{{ image.artist|truncate(18, true, '…')|escape }}{% endif %}</tspan>
       </text>
     </g>
     {% endif %}
