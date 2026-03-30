@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHeadphones,
   faPlayCircle,
+  faQuestionCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
 import { chain, isEmpty, isUndefined, orderBy, groupBy, sortBy } from "lodash";
@@ -20,6 +21,7 @@ import { Helmet } from "react-helmet";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { useSetAtom } from "jotai";
+import ReactTooltip from "react-tooltip";
 import { getReviewEventContent } from "../utils/utils";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../common/listens/ListenCard";
@@ -559,22 +561,40 @@ export default function ArtistPage(): JSX.Element {
         </div>
       </div>
 
-      {similarArtists && similarArtists.artists.length > 0 ? (
+      <h3 className="header-with-line">
+        Similar Artists
+        {!(similarArtists && similarArtists.artists.length > 0) && (
+          <FontAwesomeIcon
+            icon={faQuestionCircle}
+            data-tip
+            data-for="helptext"
+            size="xs"
+            style={{ marginLeft: "0.5em", alignSelf: "center" }}
+          />
+        )}
+      </h3>
+      {!(similarArtists && similarArtists.artists.length > 0) && (
         <>
-          <h3 className="header-with-line">Similar Artists</h3>
-          <div className="similarity">
-            <SimilarArtistComponent
-              onArtistChange={onArtistChange}
-              artistGraphNodeInfo={artistGraphNodeInfo}
-              similarArtistsList={similarArtists.artists as ArtistNodeInfo[]}
-              topAlbumReleaseColor={similarArtists.topReleaseGroupColor}
-              topRecordingReleaseColor={similarArtists.topRecordingColor}
-              similarArtistsLimit={18}
-              graphParentElementRef={graphParentElementRef}
-            />
-          </div>
+          <ReactTooltip id="helptext" place="bottom">
+            This graph will be displayed when more users have listened to this
+            artist.
+          </ReactTooltip>
+          <div className="similarity" style={{ minHeight: "50px" }} />
         </>
-      ) : null}
+      )}
+      {similarArtists && similarArtists.artists.length > 0 && (
+        <div className="similarity">
+          <SimilarArtistComponent
+            onArtistChange={onArtistChange}
+            artistGraphNodeInfo={artistGraphNodeInfo}
+            similarArtistsList={similarArtists.artists as ArtistNodeInfo[]}
+            topAlbumReleaseColor={similarArtists.topReleaseGroupColor}
+            topRecordingReleaseColor={similarArtists.topRecordingColor}
+            similarArtistsLimit={18}
+            graphParentElementRef={graphParentElementRef}
+          />
+        </div>
+      )}
       <div className="reviews">
         <h3 className="header-with-line">Reviews</h3>
         <div className="row">
