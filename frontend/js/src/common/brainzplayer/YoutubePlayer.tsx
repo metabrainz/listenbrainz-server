@@ -183,9 +183,7 @@ export default class YoutubePlayer
   }
 
   stop = () => {
-    this.youtubePlayer?.stopVideo();
-    // Clear playlist
-    this.youtubePlayer?.cueVideoById("");
+    this.youtubePlayer?.pauseVideo();
   };
 
   onReady = (event: YT.PlayerEvent): void => {
