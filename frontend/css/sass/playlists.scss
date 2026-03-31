@@ -11,6 +11,7 @@ $long-description-lines: 8;
 
 .playlist-info .description {
   white-space: pre-wrap;
+  overflow: hidden;
 }
 
 #playlists-container {
@@ -27,7 +28,9 @@ $long-description-lines: 8;
     width: 15em;
     height: 15em !important;
     position: relative;
-    overflow: hidden;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 
     .playlist-card-action-dropdown {
       position: absolute;
@@ -38,6 +41,7 @@ $long-description-lines: 8;
     .playlist-card-action-button {
       position: absolute;
       bottom: 0;
+      border-radius: 0 0 12px 12px;
       border: none;
       padding: 5px;
       width: 100%;
@@ -56,6 +60,8 @@ $long-description-lines: 8;
       height: 100%;
       width: 100%;
       background-color: $playlist-background-color;
+      border-radius: 12px;
+      overflow: hidden;
       > * {
         margin: 0.5em 0;
         &:first-child {
