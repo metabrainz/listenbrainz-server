@@ -36,6 +36,11 @@ $long-description-lines: 8;
       position: absolute;
       bottom: 0;
       width: 100%;
+      .dropdown-menu{
+        right: 0;
+        left: auto;
+        width:100%;
+      }
     }
 
     .playlist-card-action-button {
