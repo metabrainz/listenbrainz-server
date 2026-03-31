@@ -30,16 +30,16 @@ $long-description-lines: 8;
     position: relative;
     border-radius: 12px;
     background: white;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 
     .playlist-card-action-dropdown {
       position: absolute;
       bottom: 0;
       width: 100%;
-      .dropdown-menu{
+      .dropdown-menu {
         right: 0;
         left: auto;
-        width:100%;
+        width: 100%;
       }
     }
 
