@@ -54,11 +54,18 @@ function ProgressBar(props: ProgressBarProps) {
   const progressBarInnerRef = React.useRef<HTMLDivElement>(null);
   const handleRef = React.useRef<HTMLDivElement>(null);
   const rafRef = React.useRef<number>(0);
+  const isDraggingRef = React.useRef<boolean>(false);
+  const rectCacheRef = React.useRef<DOMRect | null>(null);
+  const pendingSeekMsRef = React.useRef<number>(-1);
+  const seekVisualMsRef = React.useRef<number>(-1);
 
   React.useEffect(() => {
     const tick = () => {
-      const elapsed = performance.now() - updateTime;
-      const liveProgressMs = playerPaused ? progressMs : progressMs + elapsed;
+      if (isDraggingRef.current) return;
+      const base =
+        pendingSeekMsRef.current >= 0 ? pendingSeekMsRef.current : progressMs;
+      const elapsed = playerPaused ? 0 : performance.now() - updateTime;
+      const liveProgressMs = base + elapsed;
       const ratio = Math.min(liveProgressMs / durationMs, 1) || 0;
       if (progressBarInnerRef.current) {
         progressBarInnerRef.current.style.transform = `scaleX(${ratio})`;
@@ -75,6 +82,70 @@ function ProgressBar(props: ProgressBarProps) {
     rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
   }, [progressMs, durationMs, playerPaused, updateTime]);
+
+  const getMsFromClientX = (clientX: number): number => {
+    const rect = rectCacheRef.current;
+    if (!rect || durationMs <= 0) return 0;
+    const ratio = Math.max(0, Math.min((clientX - rect.left) / rect.width, 1));
+    return ratio * durationMs;
+  };
+
+  const flushVisuals = (msPosition: number): void => {
+    const ratio = Math.min(msPosition / durationMs, 1) || 0;
+    const barWidth = rectCacheRef.current?.width ?? 0;
+    const handleX = ratio * barWidth;
+    if (progressBarInnerRef.current) {
+      progressBarInnerRef.current.style.transform = `scaleX(${ratio})`;
+    }
+    if (handleRef.current) {
+      handleRef.current.style.setProperty("--handle-x", `${handleX}px`);
+    }
+  };
+
+  React.useEffect(() => {
+    const onPointerMove = (e: PointerEvent) => {
+      if (!isDraggingRef.current) return;
+      const msPos = getMsFromClientX(e.clientX);
+      seekVisualMsRef.current = msPos;
+      flushVisuals(msPos);
+    };
+
+    const onPointerUp = (e: PointerEvent) => {
+      if (!isDraggingRef.current) return;
+      isDraggingRef.current = false;
+      const msPos = getMsFromClientX(e.clientX);
+      pendingSeekMsRef.current = msPos;
+      seekToPositionMs(msPos);
+      document
+        .querySelectorAll(".progress.dragging")
+        .forEach((el) => el.classList.remove("dragging"));
+    };
+
+    document.addEventListener("pointermove", onPointerMove);
+    document.addEventListener("pointerup", onPointerUp);
+    return () => {
+      document.removeEventListener("pointermove", onPointerMove);
+      document.removeEventListener("pointerup", onPointerUp);
+    };
+  }, [seekToPositionMs, durationMs]);
+
+  React.useEffect(() => {
+    if (pendingSeekMsRef.current < 0) return;
+    if (Math.abs(progressMs - pendingSeekMsRef.current) < 500) {
+      pendingSeekMsRef.current = -1;
+    }
+  }, [progressMs]);
+
+  React.useEffect(() => {
+    const onResize = () => {
+      if (isDraggingRef.current && progressBarRef.current) {
+        rectCacheRef.current =
+          progressBarRef.current.getBoundingClientRect();
+      }
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const mouseEventHandler = useThrottle(
     (event: React.MouseEvent<HTMLInputElement>): void => {
@@ -137,11 +208,34 @@ function ProgressBar(props: ProgressBarProps) {
 
   return (
     <div className="progress-bar-wrapper">
+      <style>{`
+        #brainz-player .progress.dragging,
+        .music-player .progress.dragging {
+          height: var(--progress-bar-hover-height, 6px);
+          top: calc(-1 * var(--progress-bar-hover-height, 6px));
+          cursor: grabbing;
+        }
+      `}</style>
       <div
         className="progress"
         onClick={mouseEventHandler}
         onMouseMove={mouseEventHandler}
         onKeyDown={onKeyPressHandler}
+        onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => {
+          e.preventDefault();
+          isDraggingRef.current = true;
+          rectCacheRef.current = (
+            e.currentTarget as HTMLDivElement
+          ).getBoundingClientRect();
+          if (handleRef.current) {
+            handleRef.current.style.transform =
+              "translate(-50%, -50%) scaleX(1)";
+          }
+          (e.currentTarget as HTMLDivElement).classList.add("dragging");
+          const msPos = getMsFromClientX(e.clientX);
+          seekVisualMsRef.current = msPos;
+          flushVisuals(msPos);
+        }}
         onMouseEnter={() => {
           if (handleRef.current) {
             handleRef.current.style.transform =
