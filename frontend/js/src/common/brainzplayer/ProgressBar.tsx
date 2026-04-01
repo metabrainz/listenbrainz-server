@@ -27,6 +27,7 @@ const MOUSE_THROTTLE_DELAY: number = 300;
 
 const TOOLTIP_INITIAL_CONTENT: string = "0:00";
 const TOOLTIP_TOP_OFFSET: number = 39;
+const HANDLE_RADIUS = 5; // px — handle is 10×10px
 
 // Originally by ford04 - https://stackoverflow.com/a/62017005
 const useThrottle = (callback: any, delay: number | undefined) => {
@@ -51,6 +52,7 @@ function ProgressBar(props: ProgressBarProps) {
   const [tipContent, setTipContent] = React.useState(TOOLTIP_INITIAL_CONTENT);
   const progressBarRef = React.useRef<HTMLDivElement>(null);
   const progressBarInnerRef = React.useRef<HTMLDivElement>(null);
+  const handleRef = React.useRef<HTMLDivElement>(null);
   const rafRef = React.useRef<number>(0);
 
   React.useEffect(() => {
@@ -60,6 +62,13 @@ function ProgressBar(props: ProgressBarProps) {
       const ratio = Math.min(liveProgressMs / durationMs, 1) || 0;
       if (progressBarInnerRef.current) {
         progressBarInnerRef.current.style.transform = `scaleX(${ratio})`;
+      }
+      if (handleRef.current) {
+        const barWidth =
+          progressBarInnerRef.current?.parentElement?.getBoundingClientRect()
+            .width ?? 0;
+        const handleX = ratio * barWidth;
+        handleRef.current.style.setProperty("--handle-x", `${handleX}px`);
       }
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -133,6 +142,18 @@ function ProgressBar(props: ProgressBarProps) {
         onClick={mouseEventHandler}
         onMouseMove={mouseEventHandler}
         onKeyDown={onKeyPressHandler}
+        onMouseEnter={() => {
+          if (handleRef.current) {
+            handleRef.current.style.transform =
+              "translate(-50%, -50%) scaleX(1)";
+          }
+        }}
+        onMouseLeave={() => {
+          if (handleRef.current) {
+            handleRef.current.style.transform =
+              "translate(-50%, -50%) scaleX(0)";
+          }
+        }}
         aria-label="Audio progress control"
         role="progressbar"
         aria-valuemin={0}
@@ -146,6 +167,24 @@ function ProgressBar(props: ProgressBarProps) {
           className="progress-bar bg-info"
           ref={progressBarInnerRef}
           style={{ transform: "scaleX(0)", transformOrigin: "left" }}
+        />
+        <div
+          ref={handleRef}
+          className="progress-handle"
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "var(--handle-x, 0px)",
+            width: `${HANDLE_RADIUS * 2}px`,
+            height: `${HANDLE_RADIUS * 2}px`,
+            borderRadius: "50%",
+            backgroundColor: "white",
+            transform: "translate(-50%, -50%) scaleX(0)",
+            transformOrigin: "center",
+            transition: "transform 0.15s ease",
+            willChange: "transform",
+            pointerEvents: "none",
+          }}
         />
         <ReactTooltip
           className="progress-tooltip"
