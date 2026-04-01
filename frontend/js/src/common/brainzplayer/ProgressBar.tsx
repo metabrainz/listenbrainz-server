@@ -3,7 +3,12 @@ import * as React from "react";
 import ReactTooltip from "react-tooltip";
 import { useAtomValue } from "jotai";
 import { millisecondsToStr } from "../../playlists/utils";
-import { durationMsAtom, progressMsAtom } from "./BrainzPlayerAtoms";
+import {
+  durationMsAtom,
+  progressMsAtom,
+  playerPausedAtom,
+  updateTimeAtom,
+} from "./BrainzPlayerAtoms";
 
 type ProgressBarProps = {
   seekToPositionMs: (msTimeCode: number) => void;
@@ -39,13 +44,28 @@ const useThrottle = (callback: any, delay: number | undefined) => {
 function ProgressBar(props: ProgressBarProps) {
   const progressMs = useAtomValue(progressMsAtom);
   const durationMs = useAtomValue(durationMsAtom);
+  const playerPaused = useAtomValue(playerPausedAtom);
+  const updateTime = useAtomValue(updateTimeAtom);
 
   const { seekToPositionMs, showNumbers } = props;
   const [tipContent, setTipContent] = React.useState(TOOLTIP_INITIAL_CONTENT);
   const progressBarRef = React.useRef<HTMLDivElement>(null);
-  const progressPercentage = Number(
-    ((progressMs * 100) / durationMs).toFixed()
-  );
+  const progressBarInnerRef = React.useRef<HTMLDivElement>(null);
+  const rafRef = React.useRef<number>(0);
+
+  React.useEffect(() => {
+    const tick = () => {
+      const elapsed = performance.now() - updateTime;
+      const liveProgressMs = playerPaused ? progressMs : progressMs + elapsed;
+      const ratio = Math.min(liveProgressMs / durationMs, 1) || 0;
+      if (progressBarInnerRef.current) {
+        progressBarInnerRef.current.style.transform = `scaleX(${ratio})`;
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [progressMs, durationMs, playerPaused, updateTime]);
 
   const mouseEventHandler = useThrottle(
     (event: React.MouseEvent<HTMLInputElement>): void => {
@@ -105,13 +125,6 @@ function ProgressBar(props: ProgressBarProps) {
     }
   };
 
-  const progressBarStyle: React.CSSProperties = {
-    width: `${progressPercentage || 0}%`,
-  };
-  if (!progressPercentage || progressPercentage === 0) {
-    // Hide little nubbin' appearing when at 0, for those with mild OCD.
-    progressBarStyle.borderRight = "none";
-  }
 
   return (
     <div className="progress-bar-wrapper">
@@ -124,12 +137,16 @@ function ProgressBar(props: ProgressBarProps) {
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuenow={progressPercentage || 0}
+        aria-valuenow={0}
         tabIndex={0}
         data-tip={tipContent}
         ref={progressBarRef}
       >
-        <div className="progress-bar bg-info" style={progressBarStyle} />
+        <div
+          className="progress-bar bg-info"
+          ref={progressBarInnerRef}
+          style={{ transform: "scaleX(0)", transformOrigin: "left" }}
+        />
         <ReactTooltip
           className="progress-tooltip"
           arrowColor="inherit"
