@@ -91,6 +91,7 @@ function ProgressBar(props: ProgressBarProps) {
   };
 
   const flushVisuals = (msPosition: number): void => {
+    setTipContent(millisecondsToStr(msPosition));
     const ratio = Math.min(msPosition / durationMs, 1) || 0;
     const barWidth = rectCacheRef.current?.width ?? 0;
     const handleX = ratio * barWidth;
@@ -113,6 +114,7 @@ function ProgressBar(props: ProgressBarProps) {
     const onPointerUp = (e: PointerEvent) => {
       if (!isDraggingRef.current) return;
       isDraggingRef.current = false;
+      document.body.style.cursor = "";
       const msPos = getMsFromClientX(e.clientX);
       pendingSeekMsRef.current = msPos;
       seekToPositionMs(msPos);
@@ -190,7 +192,9 @@ function ProgressBar(props: ProgressBarProps) {
       } else {
         oneStepEarlier = progressMs - KEYBOARD_BIG_STEP_MS;
       }
-      seekToPositionMs(oneStepEarlier > 0 ? oneStepEarlier : 0);
+      const newPos = oneStepEarlier > 0 ? oneStepEarlier : 0;
+      pendingSeekMsRef.current = newPos;
+      seekToPositionMs(newPos);
     }
     if (event.key === EVENT_KEY_ARROWRIGHT) {
       let oneStepLater;
@@ -200,6 +204,7 @@ function ProgressBar(props: ProgressBarProps) {
         oneStepLater = progressMs + KEYBOARD_STEP_MS;
       }
       if (oneStepLater <= durationMs - 500) {
+        pendingSeekMsRef.current = oneStepLater;
         seekToPositionMs(oneStepLater);
       }
     }
@@ -208,14 +213,6 @@ function ProgressBar(props: ProgressBarProps) {
 
   return (
     <div className="progress-bar-wrapper">
-      <style>{`
-        #brainz-player .progress.dragging,
-        .music-player .progress.dragging {
-          height: var(--progress-bar-hover-height, 6px);
-          top: calc(-1 * var(--progress-bar-hover-height, 6px));
-          cursor: grabbing;
-        }
-      `}</style>
       <div
         className="progress"
         onClick={mouseEventHandler}
@@ -224,6 +221,7 @@ function ProgressBar(props: ProgressBarProps) {
         onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => {
           e.preventDefault();
           isDraggingRef.current = true;
+          document.body.style.cursor = "grabbing";
           rectCacheRef.current = (
             e.currentTarget as HTMLDivElement
           ).getBoundingClientRect();
@@ -266,18 +264,8 @@ function ProgressBar(props: ProgressBarProps) {
           ref={handleRef}
           className="progress-handle"
           style={{
-            position: "absolute",
-            top: "50%",
-            left: "var(--handle-x, 0px)",
-            width: `${HANDLE_RADIUS * 2}px`,
-            height: `${HANDLE_RADIUS * 2}px`,
-            borderRadius: "50%",
-            backgroundColor: "white",
             transform: "translate(-50%, -50%) scaleX(0)",
-            transformOrigin: "center",
-            transition: "transform 0.15s ease",
-            willChange: "transform",
-            pointerEvents: "none",
+            left: "var(--handle-x, 0px)",
           }}
         />
         <ReactTooltip

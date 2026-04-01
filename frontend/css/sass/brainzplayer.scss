@@ -417,6 +417,26 @@ $youtube-expanded-width: 1280px;
     top: -$progress-bar-hover-height;
   }
 
+  &.dragging {
+    height: $progress-bar-hover-height;
+    top: -$progress-bar-hover-height;
+    cursor: grabbing;
+  }
+
+  .progress-handle {
+    position: absolute;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: white;
+    transform: translate(-50%, -50%) scaleX(0);
+    transition: transform 0.15s ease;
+    will-change: transform;
+    pointer-events: none;
+    left: var(--handle-x, 0px);
+  }
+
   .progress-tooltip {
     background: $primary-color;
     margin-top: -4px;
