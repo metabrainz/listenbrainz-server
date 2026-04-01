@@ -429,7 +429,7 @@ $youtube-expanded-width: 1280px;
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background-color: white;
+    background-color: $primary-color;
     transform: translate(-50%, -50%) scaleX(0);
     transition: transform 0.15s ease;
     will-change: transform;
