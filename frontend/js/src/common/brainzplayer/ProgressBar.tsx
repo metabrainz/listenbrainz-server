@@ -27,7 +27,7 @@ const MOUSE_THROTTLE_DELAY: number = 300;
 
 const TOOLTIP_INITIAL_CONTENT: string = "0:00";
 const TOOLTIP_TOP_OFFSET: number = 39;
-const HANDLE_RADIUS = 5; // px — handle is 10×10px
+const HANDLE_RADIUS = 7; // px — handle is 14×14px
 
 // Originally by ford04 - https://stackoverflow.com/a/62017005
 const useThrottle = (callback: any, delay: number | undefined) => {
@@ -141,8 +141,7 @@ function ProgressBar(props: ProgressBarProps) {
   React.useEffect(() => {
     const onResize = () => {
       if (isDraggingRef.current && progressBarRef.current) {
-        rectCacheRef.current =
-          progressBarRef.current.getBoundingClientRect();
+        rectCacheRef.current = progressBarRef.current.getBoundingClientRect();
       }
     };
     window.addEventListener("resize", onResize);
@@ -210,7 +209,6 @@ function ProgressBar(props: ProgressBarProps) {
     }
   };
 
-
   return (
     <div className="progress-bar-wrapper">
       <div
@@ -222,9 +220,7 @@ function ProgressBar(props: ProgressBarProps) {
           e.preventDefault();
           isDraggingRef.current = true;
           document.body.style.cursor = "grabbing";
-          rectCacheRef.current = (
-            e.currentTarget as HTMLDivElement
-          ).getBoundingClientRect();
+          rectCacheRef.current = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
           if (handleRef.current) {
             handleRef.current.style.transform =
               "translate(-50%, -50%) scaleX(1)";
