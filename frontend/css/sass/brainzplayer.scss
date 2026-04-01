@@ -405,7 +405,9 @@ $youtube-expanded-width: 1280px;
   width: 100%;
   cursor: pointer;
   z-index: 5;
+  overflow: visible;
   transition: height, 0.2s;
+
 
   .progress-bar {
     width: 100%;
