@@ -657,7 +657,9 @@ export default function ArtCreator() {
         captionBgColorArg: string,
         fontFamilyArg: string,
         showRankArg: boolean,
-        showListenCountArg: boolean
+        showListenCountArg: boolean,
+        showReleaseArg: boolean,
+        showArtistArg: boolean
       ) => {
         if (styleArg.type === "grid") {
           let newPreviewUrl = `${
@@ -683,6 +685,12 @@ export default function ArtCreator() {
           }
           if (showListenCountArg) {
             queryParams.set("show-listen-count", "true");
+          }
+          if (!showReleaseArg) {
+            queryParams.set("show-release", "false");
+          }
+          if (!showArtistArg) {
+            queryParams.set("show-artist", "false");
           }
           if (fontFamilyArg !== DEFAULT_FONT) {
             queryParams.set("font-family", fontFamilyArg);
@@ -722,7 +730,9 @@ export default function ArtCreator() {
       captionBgColor,
       fontFamily,
       showRank,
-      showListenCount
+      showListenCount,
+      showRelease,
+      showArtist
     );
   }, [
     userName,
