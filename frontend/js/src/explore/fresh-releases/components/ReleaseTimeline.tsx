@@ -17,9 +17,10 @@ type ReleaseTimelineProps = {
 function createMarks(
   releases: Array<FreshReleaseItem>,
   sortDirection: SortDirection,
-  order: SortOption
+  order: SortOption,
+  screenMd: boolean
 ) {
-  let dataArr: Array<string | JSX.Element> = [];
+  let dataArr: Array<any> = [];
   let percentArr: Array<number> = [];
 
   // We want to filter out the keys that have less than 1.5% of the total releases count if order type is not release_date
@@ -91,21 +92,39 @@ function createMarks(
       ? format(closestTo(new Date(recentDateStr), dates)!, "yyyy-MM-dd")
       : recentDateStr;
 
-    if (dataArr.includes(formatReleaseDate(closestDateStr))) {
-      const index = dataArr.indexOf(formatReleaseDate(closestDateStr));
-      dataArr.splice(index, 1);
-      percentArr.splice(index, 1);
+    // Remove date marks that are within proximity of the calendar icon position
+    // to prevent overlapping labels (not just the exact match)
+    const calendarPercent = cummulativeMap.get(closestDateStr);
+    const proximityThreshold = 5; // percentage points
+    if (calendarPercent !== undefined) {
+      for (let i = percentArr.length - 1; i >= 0; i -= 1) {
+        if (Math.abs(percentArr[i] - calendarPercent) < proximityThreshold) {
+          dataArr.splice(i, 1);
+          percentArr.splice(i, 1);
+        }
+      }
     }
 
     const title = closestDateStr === recentDateStr ? "Today" : "Nearest Date";
-    dataArr.push(
-      <FontAwesomeIcon
-        icon={faCalendarCheck}
-        size="2xl"
-        color={COLOR_LB_BLUE}
-        title={title}
-      />
-    );
+    dataArr.push({
+      style: screenMd
+        ? { marginTop: "-2rem" }
+        : {
+            left: "0",
+            transform: "translate(calc(-100% - 25px), -50%)",
+            paddingRight: "0.3rem",
+          },
+      label: (
+        <span className="calendar-icon-mark">
+          <FontAwesomeIcon
+            icon={faCalendarCheck}
+            size="xl"
+            color={COLOR_LB_BLUE}
+            title={title}
+          />
+        </span>
+      ),
+    });
     percentArr.push(cummulativeMap.get(closestDateStr)!);
 
     const sortedData = percentArr
@@ -201,8 +220,8 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   }, []);
 
   React.useEffect(() => {
-    setMarks(createMarks(releases, direction, order));
-  }, [releases, direction, order]);
+    setMarks(createMarks(releases, direction, order, screenMd));
+  }, [releases, direction, order, screenMd]);
 
   React.useEffect(() => {
     const handleScroll = debounce(() => {
