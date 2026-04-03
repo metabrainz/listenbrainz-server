@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from listenbrainz_spark.path import LISTENBRAINZ_POPULARITY_DIRECTORY
 from listenbrainz_spark.popularity.common import get_popularity_per_artist_query, \
-    get_release_group_popularity_per_artist_query, get_popularity_query
+    get_release_group_popularity_per_artist_query, get_release_group_popularity_query, get_popularity_query
 from listenbrainz_spark.postgres.release import get_release_metadata_cache
 from listenbrainz_spark.stats.incremental.query_provider import QueryProvider
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
@@ -46,7 +46,7 @@ class PopularityProvider(QueryProvider):
             return get_popularity_per_artist_query("artist", table)
         elif self.entity == "release_group":
             rel_cache_table = get_release_metadata_cache()
-            return get_release_group_popularity_per_artist_query(table, rel_cache_table)
+            return get_release_group_popularity_query(table, rel_cache_table)
         else:
             return get_popularity_query(self.entity, table)
 

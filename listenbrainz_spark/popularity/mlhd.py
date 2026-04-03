@@ -37,7 +37,7 @@ class MlhdStatsEngine:
 
         hdfs_connection.client.makedirs(Path(metadata_path).parent)
         metadata_df = listenbrainz_spark.session.createDataFrame(
-            [(self.provider.from_date, self.provider.to_date, datetime.now())],
+            [(self.provider.from_date, self.provider.to_date, datetime.now(), None)],
             schema=BOOKKEEPING_SCHEMA
         )
         metadata_df.write.mode("overwrite").json(metadata_path)

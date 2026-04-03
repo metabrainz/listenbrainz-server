@@ -76,6 +76,18 @@ class IncrementalStatsEngine:
             existing_from_date, existing_to_date = metadata["from_date"], metadata["to_date"]
             existing_aggregate_fresh = existing_from_date.date() == self.provider.from_date.date() \
                 and existing_to_date.date() <= self.provider.to_date.date()
+
+            # if the dump location changed, the partial aggregate is stale and must be rebuilt
+            stored_dump_location = metadata["dump_location"]
+            current_listens_metadata = get_listens_metadata()
+            if current_listens_metadata is not None:
+                current_dump_location = current_listens_metadata.location
+                if stored_dump_location is None or stored_dump_location != current_dump_location:
+                    logger.info(
+                        "Dump location changed (stored=%s, current=%s), partial aggregate is stale",
+                        stored_dump_location, current_dump_location
+                    )
+                    existing_aggregate_fresh = False
         except (AnalysisException, IndexError):
             existing_aggregate_fresh = False
 
@@ -114,9 +126,13 @@ class IncrementalStatsEngine:
         full_df = run_query(full_query)
         full_df.write.mode("overwrite").parquet(existing_aggregate_path)
 
+        # store current dump location so future runs can detect when it changes
+        current_listens_metadata = get_listens_metadata()
+        dump_location = current_listens_metadata.location if current_listens_metadata else None
+
         hdfs_connection.client.makedirs(Path(metadata_path).parent)
         metadata_df = listenbrainz_spark.session.createDataFrame(
-            [(self.provider.from_date, self.provider.to_date, datetime.now())],
+            [(self.provider.from_date, self.provider.to_date, datetime.now(), dump_location)],
             schema=BOOKKEEPING_SCHEMA
         )
         metadata_df.write.mode("overwrite").json(metadata_path)
