@@ -2,6 +2,7 @@ import sys
 from time import asctime
 
 import psycopg2
+from psycopg2 import sql
 from psycopg2.extras import execute_values
 from psycopg2.errors import OperationalError
 
@@ -27,11 +28,17 @@ def insert_rows(curs, table, values, cols=None):
         Helper function to insert a large number of rows into postgres in one go.
     '''
 
+    if not isinstance(table, str) or not table:
+        raise ValueError("table must be a non-empty string")
+
+    table_sql = sql.SQL('.').join(sql.Identifier(part) for part in table.split('.'))
+
     if cols is not None and len(cols) > 0:
-        query = "INSERT INTO " + table + " (" + ",".join(cols) + ") VALUES %s"
+        cols_sql = sql.SQL(',').join(sql.Identifier(col) for col in cols)
+        query = sql.SQL("INSERT INTO {} ({}) VALUES %s").format(table_sql, cols_sql)
         execute_values(curs, query, values, template=None)
     else:
-        query = "INSERT INTO " + table + " VALUES %s"
+        query = sql.SQL("INSERT INTO {} VALUES %s").format(table_sql)
         execute_values(curs, query, values, template=None)
 
 
