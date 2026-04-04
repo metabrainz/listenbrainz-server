@@ -292,9 +292,14 @@ export default function LinkListensPage() {
   React.useEffect(() => {
     // Set the ?page search param in URL on startup if not set, as well as
     // constrain pagination to existing pages, forcing navigation to first page if needed
-    if (!pageSearchParam || currPage > totalPages) {
+    if (!pageSearchParam || currPage < 1) {
       setSearchParams(
         { page: "1" },
+        { preventScrollReset: true, replace: true }
+      );
+    } else if (currPage > totalPages) {
+      setSearchParams(
+        { page: totalPages > 0 ? totalPages.toString() : "1" },
         { preventScrollReset: true, replace: true }
       );
     }
