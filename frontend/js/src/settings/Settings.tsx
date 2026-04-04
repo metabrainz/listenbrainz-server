@@ -9,6 +9,7 @@ import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Username from "../common/Username";
 import FlairsSettings from "./flairs/FlairsSettings";
+import Switch from "../components/Switch";
 
 export default function Settings() {
   const globalContext = React.useContext(GlobalAppContext);
@@ -18,6 +19,9 @@ export default function Settings() {
 
   const [showToken, setShowToken] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
+  const [isBetaState, setIsBetaState] = React.useState(
+    window.location.hostname.includes("beta")
+  );
 
   const copyToken = () => {
     if (!navigator.clipboard) {
@@ -52,6 +56,21 @@ export default function Settings() {
     }
   };
 
+  const handleBetaToggle = () => {
+    const n = !isBetaState;
+    setIsBetaState(n);
+
+    const currentUrl = window.location.href;
+    let newurl;
+
+    if (n) {
+      newurl = currentUrl.replace("beta.listenbrainz.org", "listenbrainz.org");
+    } else {
+      newurl = currentUrl.replace("listenbrainz.org", "beta.listenbrainz.org");
+    }
+
+    window.location.href = newurl;
+  };
   const toggleTokenVisibility = () => {
     setShowToken(!showToken);
   };
@@ -87,6 +106,21 @@ export default function Settings() {
         </div>
 
         <FlairsSettings />
+        <h3>Beta Preferences</h3>
+
+        <Switch
+          id="enable-beta-site"
+          value="beta-site"
+          checked={isBetaState}
+          onChange={handleBetaToggle}
+          switchLabel={
+            <span className={`text-brand ${!isBetaState ? "text-muted" : ""}`}>
+              <span>
+                {isBetaState ? "Stop using Beta Site" : "Use Beta Site"}
+              </span>
+            </span>
+          }
+        />
 
         <h3>User token</h3>
         <p>
