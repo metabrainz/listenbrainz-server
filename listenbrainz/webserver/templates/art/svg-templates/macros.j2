@@ -10,7 +10,7 @@
   {%- endif -%}
 {% endmacro %}
 
-{% macro render_image_link(entity, image, show_caption) %}
+{% macro render_image_link(entity, image, show_caption, rank=None, caption_text_color="#ffffff", caption_bg_color="#0000007a", show_rank=False, show_listen_count=False, show_release=True, show_artist=True) %}
   {% if image.entity_mbid %}
   <a href="https://listenbrainz.org/{{ entity }}/{{ image.entity_mbid }}" target="_blank">
   {% endif %}
@@ -37,18 +37,68 @@
         height="{{ image.height }}">
       </rect>
     </clipPath>
-    {% if show_caption and (image.title or image.artist) %}
-      <g class="caption" clip-path="url(#clip-{{ image.x }}-{{ image.y }})" >
-        <rect fill="#0000007a" width="{{image.width}}" height="30" x="{{ image.x }}" y="{{ image.y + image.height - 30 }}"></rect>
-        <text x="{{ image.x }}" y="{{ image.y + image.height - 30 }}" fill="white" font-weight="normal" font-size="12" font-family="Sintony, sans-serif">
-          <tspan x="{{ image.x + 5 }}" dy="13">
-            {{- image.title|escape -}}
-          </tspan>
-          <tspan x="{{ image.x + 5 }}" dy="13">
-            {{- image.artist|escape -}}
-          </tspan>
-        </text>  
-      </g>
+    {% if show_caption %}
+    {% set show_left = show_rank or show_listen_count %}
+    {% set show_right = show_release or show_artist %}
+
+    {% set left_rows = (1 if show_rank else 0) + (1 if show_listen_count else 0) %}
+    {% set right_rows = (1 if show_release else 0) + (1 if show_artist else 0) %}
+    {% set total_rows = [left_rows, right_rows] | max %}
+    {% set bar_height = 15 if total_rows <= 1 else 30 %}
+
+    {% set text_limit = 18 if show_left else 32 %}
+
+    {% if show_left and show_right %}
+      {% set right_x = image.x + image.width // 2 %}
+      {% set left_x = image.x + 5 %}
+    {% elif show_left %}
+      {% set left_x = image.x + 5 %}
+    {% else %}
+      {% set right_x = image.x + 5 %}
+    {% endif %}
+
+    {% set bar_y = image.y + image.height - bar_height %}
+    {% set row1_y = bar_y + bar_height // 2 - 3 if total_rows == 1 else bar_y + 11 %}
+    {% set row2_y = bar_y + bar_height - 7 %}
+
+    <g class="caption" clip-path="url(#clip-{{ image.x }}-{{ image.y }})">
+      <rect x="{{ image.x }}" y="{{ bar_y }}" width="{{ image.width }}" height="{{ bar_height }}" fill="{{ caption_bg_color }}" />
+
+      {% if show_left %}
+      <text font-family="Sintony, sans-serif" font-size="10" fill="{{ caption_text_color }}">
+        {% if left_rows == 2 %}
+          <tspan class="caption-rank" x="{{ left_x }}" y="{{ row1_y }}">{% if show_rank and rank is not none %}{{ rank }}{% endif %}</tspan>
+          <tspan class="caption-listen-count" x="{{ left_x }}" y="{{ row2_y }}">{% if show_listen_count and image.listen_count %}{{ image.listen_count }}{% endif %}</tspan>
+        {% else %}
+          {% set single_y = bar_y + bar_height // 2 + 4 %}
+          {% if show_rank and rank is not none %}
+            <tspan class="caption-rank" x="{{ left_x }}" y="{{ single_y }}">{{ rank }}</tspan>
+          {% endif %}
+          {% if show_listen_count and image.listen_count %}
+            <tspan class="caption-listen-count" x="{{ left_x }}" y="{{ single_y }}">{{ image.listen_count }}</tspan>
+          {% endif %}
+        {% endif %}
+      </text>
+      {% endif %}
+
+      {% if show_right %}
+      <text font-family="Sintony, sans-serif" font-size="10" fill="{{ caption_text_color }}">
+        {% if right_rows == 2 %}
+          <tspan class="caption-release" x="{{ right_x }}" y="{{ row1_y }}">{% if image.title %}{{ image.title|truncate(text_limit, true, '…')|escape }}{% endif %}</tspan>
+          <tspan class="caption-artist" x="{{ right_x }}" y="{{ row2_y }}">{% if image.artist %}{{ image.artist|truncate(text_limit, true, '…')|escape }}{% endif %}</tspan>
+        {% else %}
+          {% set single_y = bar_y + bar_height // 2 + 4 %}
+          {% if show_release and image.title %}
+            <tspan class="caption-release" x="{{ right_x }}" y="{{ single_y }}">{{ image.title|truncate(text_limit, true, '…')|escape }}</tspan>
+          {% endif %}
+          {% if show_artist and image.artist %}
+            <tspan class="caption-artist" x="{{ right_x }}" y="{{ single_y }}">{{ image.artist|truncate(text_limit, true, '…')|escape }}</tspan>
+          {% endif %}
+        {% endif %}
+      </text>
+      {% endif %}
+
+    </g>
     {% endif %}
   {% if image.entity_mbid %}
   </a>
