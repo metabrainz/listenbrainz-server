@@ -328,7 +328,11 @@ export default class SpotifyPlayer
     return true;
   };
 
-  playListen = (listen: Listen | JSPFTrack, retryCount = 0): void => {
+  playListen = (
+    listen: Listen | JSPFTrack,
+    streamingUrl?: string,
+    retryCount = 0
+  ): void => {
     const { onTrackNotFound } = this.props;
     if (!this.checkRetries(retryCount)) {
       this.debouncedOnTrackNotFound();
@@ -337,7 +341,7 @@ export default class SpotifyPlayer
     if (!this.spotifyPlayer || !this.deviceId) {
       // Device is not ready yet, give it a second and retry
       setTimeout(() => {
-        this.playListen(listen, retryCount + 1);
+        this.playListen(listen, streamingUrl, retryCount + 1);
       }, 1000);
       return;
     }
@@ -345,6 +349,15 @@ export default class SpotifyPlayer
       this.playSpotifyURI(
         SpotifyPlayer.getSpotifyUriFromListen(listen as Listen)
       );
+    } else if (streamingUrl) {
+      // modified from https://regex101.com/r/Mcd4kh/1
+      const spotifyIdRegex = /https?:\/\/(?:open\.)?spotify.com\/track\/(?:spotify\/playlist\/)?(?<id>\w*)/;
+      const trackId = spotifyIdRegex.exec(streamingUrl)?.groups?.id;
+      if (trackId) {
+        this.playSpotifyURI(`spotify:track:${trackId}`);
+      } else {
+        this.searchAndPlayTrack(listen);
+      }
     } else {
       this.searchAndPlayTrack(listen);
     }

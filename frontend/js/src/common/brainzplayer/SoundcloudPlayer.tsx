@@ -326,13 +326,15 @@ export default class SoundcloudPlayer
     onInvalidateDataSource(this, errorMessage);
   };
 
-  playListen = (listen: Listen | JSPFTrack) => {
+  playListen = (listen: Listen | JSPFTrack, streamingUrl?: string) => {
     if (SoundcloudPlayer.isListenFromThisService(listen)) {
       const originURL = _get(
         listen,
         "track_metadata.additional_info.origin_url"
       );
       this.playStreamUrl(originURL);
+    } else if (streamingUrl) {
+      this.playStreamUrl(streamingUrl);
     } else {
       this.searchAndPlayTrack(listen);
     }
