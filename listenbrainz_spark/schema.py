@@ -18,6 +18,7 @@ BOOKKEEPING_SCHEMA = StructType([
     StructField('from_date', TimestampType(), nullable=False),
     StructField('to_date', TimestampType(), nullable=False),
     StructField('updated_at', TimestampType(), nullable=False),
+    StructField('dump_location', StringType(), nullable=True),
 ])
 
 INCREMENTAL_BOOKKEEPING_SCHEMA = StructType([
