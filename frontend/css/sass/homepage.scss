@@ -427,10 +427,10 @@ $homepage-background-inverted: linear-gradient(
     }
 
     .homepage-info-text p {
-      font-size: 14px;
+      font-size: 16px;
       font-style: normal;
       font-weight: 400;
-      line-height: normal;
+      line-height: 1.5;
     }
 
     .homepage-info-links a,
@@ -469,6 +469,68 @@ $homepage-background-inverted: linear-gradient(
       padding: 6px 15px;
       border: none;
       margin: 1em;
+    }
+
+    .homepage-how-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2em;
+      margin-bottom: 1.5em;
+    }
+
+    .homepage-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8em;
+    }
+
+    .homepage-step-number {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #f1a026;
+      color: #1e1e1e;
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+
+    .homepage-step-content {
+      h2 {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0 0 0.2em 0;
+        color: inherit;
+      }
+
+      p {
+        font-size: 14px;
+        line-height: 1.5;
+        margin: 0;
+        opacity: 0.85;
+      }
+    }
+
+    @media (max-width: map.get($grid-breakpoints, "sm")) {
+      .homepage-step-number {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+      }
+
+      .homepage-step-content {
+        h2 {
+          font-size: 16px;
+        }
+
+        p {
+          font-size: 13px;
+        }
+      }
     }
   }
 
