@@ -433,7 +433,7 @@ export default class UserPlaylists extends React.Component<
                     className="dropdown-item"
                   >
                     <FontAwesomeIcon icon={faFileImport} />
-                    &nbsp;Upload JSPF file
+                    &nbsp;Upload JSPF/XSPF/JSON file
                   </button>
                 </ul>
               </div>
