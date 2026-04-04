@@ -353,3 +353,42 @@ $color-selector-size: 24px;
     }
   }
 }
+/*Fixd artwork container*/
+.artwork-container {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: normal;
+  hyphens: auto;
+}
+
+.artwork-container * {
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.artwork-container a {
+  display: inline-block;
+  max-width: 100%;
+  overflow: visible;
+}
+
+/* Media queries */
+@media screen and (max-width: 768px) {
+  .artwork-container {
+    padding: 10px;
+    font-size: 14px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .artwork-container {
+    padding: 8px;
+    font-size: 13px;
+  }
+}
