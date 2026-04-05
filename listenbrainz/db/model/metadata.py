@@ -1,7 +1,7 @@
 import uuid
 from typing import List, Dict, Optional
 
-from pydantic import BaseModel, NonNegativeInt
+from pydantic.v1 import BaseModel, NonNegativeInt
 
 
 class RecordingMetadata(BaseModel):

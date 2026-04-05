@@ -8,7 +8,7 @@ from uuid import UUID
 import psycopg2
 import psycopg2.extras
 from datasethoster import Query
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from unidecode import unidecode
 from listenbrainz import config
 

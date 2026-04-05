@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 from typing import Iterator, Dict, Optional, List
 
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 from pyspark.sql import DataFrame
 
 from data.model.user_artist_stat import ArtistRecord

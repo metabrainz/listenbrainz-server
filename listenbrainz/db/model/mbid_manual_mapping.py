@@ -2,7 +2,7 @@ import datetime
 from typing import Optional
 import uuid
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 class MbidManualMapping(BaseModel):
     """An instance of a msid-mbid mapping manually created by a user"""

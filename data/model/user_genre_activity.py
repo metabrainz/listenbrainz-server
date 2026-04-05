@@ -2,7 +2,7 @@
     The genre trend shows the distribution of music genres listened to by users 
     across hourly time brackets in last week/month/year.
 """
-from pydantic import BaseModel, NonNegativeInt, constr, conint
+from pydantic.v1 import BaseModel, NonNegativeInt, constr, conint
 
 
 class GenreActivityRecord(BaseModel):

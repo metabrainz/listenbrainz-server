@@ -1,7 +1,7 @@
 import uuid
 
 from datasethoster import Query
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from listenbrainz.labs_api.labs.api.utils import lookup_using_metadata, lookup_recording_canonical_metadata
 

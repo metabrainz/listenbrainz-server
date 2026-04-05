@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from listenbrainz.labs_api.labs.api.base_mbid_mapping import BaseMBIDMappingQuery, BaseMBIDMappingOutput
 

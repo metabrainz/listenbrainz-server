@@ -5,7 +5,7 @@ from typing import Iterable, IO
 
 from brainzutils import musicbrainz_db
 from psycopg2.sql import Identifier, Composable, SQL
-from pydantic import BaseModel, validator, root_validator
+from pydantic.v1 import BaseModel, validator, root_validator
 from sqlalchemy import Engine
 
 from listenbrainz import db

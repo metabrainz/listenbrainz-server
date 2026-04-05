@@ -20,7 +20,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Iterable
 
-import pydantic
+import pydantic.v1 as pydantic
 import orjson
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, jsonify, request, current_app

@@ -4,7 +4,7 @@ from uuid import UUID
 
 from datasethoster import Query, QueryOutputLine
 from markupsafe import Markup
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from sqlalchemy import text
 
 from listenbrainz import db

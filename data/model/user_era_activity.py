@@ -1,4 +1,4 @@
-from pydantic import BaseModel, NonNegativeInt
+from pydantic.v1 import BaseModel, NonNegativeInt
 
 class EraActivityRecord(BaseModel):
 	year: NonNegativeInt

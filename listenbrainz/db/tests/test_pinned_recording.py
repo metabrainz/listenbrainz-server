@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import sqlalchemy
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 import time
 
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items

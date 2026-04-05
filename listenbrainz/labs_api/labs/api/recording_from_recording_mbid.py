@@ -4,7 +4,7 @@ from uuid import UUID
 import psycopg2.extras
 from datasethoster import Query
 from flask import current_app
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 

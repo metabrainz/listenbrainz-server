@@ -3,7 +3,7 @@ import logging
 from typing import Iterator, Dict
 
 from more_itertools import chunked
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 from pyspark.sql import DataFrame
 
 from data.model.user_artist_stat import ArtistRecord

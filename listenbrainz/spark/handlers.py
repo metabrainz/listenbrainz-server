@@ -5,7 +5,7 @@ import json
 
 from brainzutils.mail import send_mail
 from flask import current_app, render_template
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 from requests import HTTPError
 from sentry_sdk import start_transaction
 

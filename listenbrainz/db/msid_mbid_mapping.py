@@ -4,7 +4,7 @@ from typing import Optional
 
 from flask import current_app
 from psycopg2.extras import DictCursor
-from pydantic import BaseModel, validator, root_validator
+from pydantic.v1 import BaseModel, validator, root_validator
 
 from data.model.validators import check_valid_uuid
 from listenbrainz.db.recording import load_recordings_from_mbids

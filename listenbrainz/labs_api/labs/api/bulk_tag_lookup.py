@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from flask import current_app
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from werkzeug.exceptions import BadRequest
 import psycopg2
 import psycopg2.extras

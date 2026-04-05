@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel, NonNegativeInt, validator, constr
+from pydantic.v1 import BaseModel, NonNegativeInt, validator, constr
 from data.model.validators import check_valid_uuid
 
 

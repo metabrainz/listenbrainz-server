@@ -17,7 +17,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 from typing import Optional, List
-from pydantic import BaseModel, validator, NonNegativeInt, constr
+from pydantic.v1 import BaseModel, validator, NonNegativeInt, constr
 from data.model.validators import check_valid_uuid
 
 

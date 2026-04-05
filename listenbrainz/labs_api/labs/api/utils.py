@@ -4,7 +4,7 @@ from enum import Enum
 import psycopg2
 
 from flask import current_app
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from unidecode import unidecode
 from psycopg2.extras import execute_values
 from psycopg2.sql import SQL, Identifier

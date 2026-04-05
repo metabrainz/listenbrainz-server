@@ -1,8 +1,8 @@
 # This file contains models for spark -> db statistics.
 from typing import TypeVar, Generic, List, Optional
 
-from pydantic import constr, NonNegativeInt, BaseModel
-from pydantic.generics import GenericModel
+from pydantic.v1 import constr, NonNegativeInt, BaseModel
+from pydantic.v1.generics import GenericModel
 
 SparkT = TypeVar("SparkT")
 

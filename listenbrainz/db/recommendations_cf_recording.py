@@ -25,7 +25,7 @@ import orjson
 import sqlalchemy
 
 from flask import current_app
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 
 from data.model.user_cf_recommendations_recording_message import (UserRecommendationsData,
                                                                   UserRecommendationsJson)

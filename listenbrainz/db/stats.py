@@ -26,7 +26,7 @@ from typing import Optional
 
 import orjson
 from flask import current_app
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 from requests import HTTPError
 from sentry_sdk import start_span
 

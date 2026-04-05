@@ -20,7 +20,7 @@ import orjson
 import sqlalchemy
 
 from listenbrainz import db
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 
 from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzData,
                                                       UserMissingMusicBrainzDataJson, UserMissingMusicBrainzDataRecord)

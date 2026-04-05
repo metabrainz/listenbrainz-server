@@ -3,7 +3,7 @@ from enum import Enum
 from datetime import date
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 
 class ReleaseGroupPrimaryType(Enum):

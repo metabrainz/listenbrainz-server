@@ -7,7 +7,7 @@ import psycopg2
 from datasethoster import Query, RequestSource, QueryOutputLine
 from flask import current_app
 from markupsafe import Markup
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from sqlalchemy import text
 
 from listenbrainz.db import similarity, timescale

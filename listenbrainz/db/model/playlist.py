@@ -2,7 +2,7 @@ import uuid
 import datetime
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel, validator, NonNegativeInt, constr
+from pydantic.v1 import BaseModel, validator, NonNegativeInt, constr
 from data.model.validators import check_valid_uuid
 
 PLAYLIST_TRACK_URI_PREFIX = "https://musicbrainz.org/recording/"

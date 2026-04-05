@@ -4,7 +4,7 @@ from datasethoster import Query
 import psycopg2
 import psycopg2.extras
 from flask import current_app
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 
 class ArtistCountryFromArtistMBIDInput(BaseModel):
