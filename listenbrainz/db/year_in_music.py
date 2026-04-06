@@ -9,6 +9,7 @@ from flask import current_app, render_template
 from psycopg2.extras import execute_values
 from psycopg2.sql import SQL, Literal, Identifier
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 from listenbrainz.db.model.user_timeline_event import NotificationMetadata
 from listenbrainz.db import timescale
@@ -261,7 +262,7 @@ def sanitize_username(username):
     return f'"{username}"'
 
 
-def notify_yim_users(db_conn, ts_conn, year):
+def notify_yim_users(db_conn: Connection, ts_conn: Connection, year):
     logo_cid = make_msgid()
     with open("/static/img/year-in-music/yim-email-header.png", "rb") as img:
         logo = img.read()

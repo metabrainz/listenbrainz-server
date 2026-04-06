@@ -22,6 +22,7 @@ import orjson
 from datetime import datetime, timezone
 
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 from listenbrainz.db.model.user_timeline_event import (
     UserTimelineEvent,
@@ -65,7 +66,7 @@ def create_user_timeline_event(
         raise DatabaseException(str(e))
 
 
-def create_user_track_recommendation_event(db_conn, user_id: int, metadata: RecordingRecommendationMetadata) -> UserTimelineEvent:
+def create_user_track_recommendation_event(db_conn: Connection, user_id: int, metadata: RecordingRecommendationMetadata) -> UserTimelineEvent:
     """ Creates a track recommendation event in the database and returns it.
     """
     return create_user_timeline_event(
@@ -76,7 +77,7 @@ def create_user_track_recommendation_event(db_conn, user_id: int, metadata: Reco
     )
 
 
-def create_user_notification_event(db_conn, user_id: int, metadata: NotificationMetadata) -> UserTimelineEvent:
+def create_user_notification_event(db_conn: Connection, user_id: int, metadata: NotificationMetadata) -> UserTimelineEvent:
     """ Create a notification event in the database and returns it.
     """
     return create_user_timeline_event(
@@ -87,7 +88,7 @@ def create_user_notification_event(db_conn, user_id: int, metadata: Notification
     )
 
 
-def create_thanks_event(db_conn, thanker_id: int, thanker_username: str, thankee_id: int, thankee_username: str, metadata: ThanksMetadata) -> UserTimelineEvent:
+def create_thanks_event(db_conn: Connection, thanker_id: int, thanker_username: str, thankee_id: int, thankee_username: str, metadata: ThanksMetadata) -> UserTimelineEvent:
     """ Creates a thanks event in the database and returns it.
     """
     event_metadata = dict(metadata)
@@ -104,7 +105,7 @@ def create_thanks_event(db_conn, thanker_id: int, thanker_username: str, thankee
     )
 
 
-def delete_user_timeline_event(db_conn, id: int, user_id: int) -> bool:
+def delete_user_timeline_event(db_conn: Connection, id: int, user_id: int) -> bool:
     """ Deletes recommendation and notification event using id """
     try:
         result = db_conn.execute(sqlalchemy.text('''
@@ -121,7 +122,7 @@ def delete_user_timeline_event(db_conn, id: int, user_id: int) -> bool:
         raise DatabaseException(str(e))
 
 
-def create_user_cb_review_event(db_conn, user_id: int, metadata: CBReviewTimelineMetadata) -> UserTimelineEvent:
+def create_user_cb_review_event(db_conn: Connection, user_id: int, metadata: CBReviewTimelineMetadata) -> UserTimelineEvent:
     """ Creates a CritiqueBrainz review event in the database and returns it.
     """
     return create_user_timeline_event(
@@ -132,7 +133,7 @@ def create_user_cb_review_event(db_conn, user_id: int, metadata: CBReviewTimelin
     )
 
 
-def create_personal_recommendation_event(db_conn, user_id: int, metadata: WritePersonalRecordingRecommendationMetadata)\
+def create_personal_recommendation_event(db_conn: Connection, user_id: int, metadata: WritePersonalRecordingRecommendationMetadata)\
         -> UserTimelineEvent:
     """ Creates a personal recommendation event in the database and returns it.
         The User ID in the table is the recommender, meanwhile the users in the
@@ -204,7 +205,7 @@ def get_user_timeline_events(
     return [UserTimelineEvent(**row) for row in result.mappings()]
 
 
-def get_recording_recommendation_events_for_feed(db_conn, user_ids: Iterable[int], min_ts: int, max_ts: int, count: int) \
+def get_recording_recommendation_events_for_feed(db_conn: Connection, user_ids: Iterable[int], min_ts: int, max_ts: int, count: int) \
         -> List[UserTimelineEvent]:
     """ Gets a list of recording_recommendation events for specified users.
 
@@ -220,7 +221,7 @@ def get_recording_recommendation_events_for_feed(db_conn, user_ids: Iterable[int
     )
 
 
-def get_personal_recommendation_events_for_feed(db_conn, user_id: int, min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
+def get_personal_recommendation_events_for_feed(db_conn: Connection, user_id: int, min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
     """ Gets a list of personal_recording_recommendation events for specified users.
 
     user_ids is a tuple of user row IDs.
@@ -269,7 +270,7 @@ def get_personal_recommendation_events_for_feed(db_conn, user_id: int, min_ts: i
         created=row.created
     ) for row in result]
 
-def get_thanks_events_for_feed(db_conn, user_id: int, min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
+def get_thanks_events_for_feed(db_conn: Connection, user_id: int, min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
     """ Gets a list of thanks events for specified users.
 
     user_id is a tuple of user row IDs.
@@ -312,7 +313,7 @@ def get_thanks_events_for_feed(db_conn, user_id: int, min_ts: int, max_ts: int, 
     ) for row in result]
 
 
-def get_cb_review_events(db_conn, user_ids: List[int], min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
+def get_cb_review_events(db_conn: Connection, user_ids: List[int], min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
     """ Gets a list of CritiqueBrainz review events for specified users.
 
     user_ids is a tuple of user row IDs.
@@ -327,7 +328,7 @@ def get_cb_review_events(db_conn, user_ids: List[int], min_ts: int, max_ts: int,
     )
 
 
-def get_user_timeline_event_by_id(db_conn, id: int) -> UserTimelineEvent:
+def get_user_timeline_event_by_id(db_conn: Connection, id: int) -> UserTimelineEvent:
     """ Gets timeline event by its id
         Args:
             id: row ID of the timeline event
@@ -343,7 +344,7 @@ def get_user_timeline_event_by_id(db_conn, id: int) -> UserTimelineEvent:
     return UserTimelineEvent(**row) if row else None
 
 
-def get_user_notification_events(db_conn, user_ids: Iterable[int], min_ts: int, max_ts: int, count: int)\
+def get_user_notification_events(db_conn: Connection, user_ids: Iterable[int], min_ts: int, max_ts: int, count: int)\
         -> List[UserTimelineEvent]:
     """ Gets notification posted on the user's timeline.
 
@@ -359,7 +360,7 @@ def get_user_notification_events(db_conn, user_ids: Iterable[int], min_ts: int, 
     )
 
 
-def hide_user_timeline_event(db_conn, user_id: int, event_type: UserTimelineEventType, event_id: int) -> bool:
+def hide_user_timeline_event(db_conn: Connection, user_id: int, event_type: UserTimelineEventType, event_id: int) -> bool:
     """ Adds events that are to be hidden """
     try:
         result = db_conn.execute(text('''
@@ -378,7 +379,7 @@ def hide_user_timeline_event(db_conn, user_id: int, event_type: UserTimelineEven
         raise DatabaseException(str(e))
 
 
-def get_hidden_timeline_events(db_conn, user_id: int, count: int) -> List[HiddenUserTimelineEvent]:
+def get_hidden_timeline_events(db_conn: Connection, user_id: int, count: int) -> List[HiddenUserTimelineEvent]:
     '''Retrieves all events that are hidden by the user, based on event_type'''
     try:
         result = db_conn.execute(text('''
@@ -396,7 +397,7 @@ def get_hidden_timeline_events(db_conn, user_id: int, count: int) -> List[Hidden
         raise DatabaseException(str(e))
 
 
-def get_hidden_timeline_event_ids(db_conn, user_id: int, count: int) -> set[int]:
+def get_hidden_timeline_event_ids(db_conn: Connection, user_id: int, count: int) -> set[int]:
     """Retrieves all event ids that are hidden by the user."""
     result = db_conn.execute(
             text("""
@@ -410,7 +411,7 @@ def get_hidden_timeline_event_ids(db_conn, user_id: int, count: int) -> set[int]
         )
     return {row[0] for row in result}
 
-def unhide_timeline_event(db_conn, user: int, event_type: UserTimelineEventType, event_id: int) -> bool:
+def unhide_timeline_event(db_conn: Connection, user: int, event_type: UserTimelineEventType, event_id: int) -> bool:
     ''' Deletes hidden timeline events for a user with specific row id '''
     try:
         result = db_conn.execute(text('''

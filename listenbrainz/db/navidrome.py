@@ -1,8 +1,9 @@
 import sqlalchemy
+from sqlalchemy.engine import Connection
 from typing import Optional, Dict, Any
 
 
-def get_or_create_server(db_conn, host_url: str) -> int:
+def get_or_create_server(db_conn: Connection, host_url: str) -> int:
     """Get or create a Navidrome server entry"""
     existing_server = get_server_by_host_url(db_conn, host_url)
     if existing_server:
@@ -19,7 +20,7 @@ def get_or_create_server(db_conn, host_url: str) -> int:
     return result.fetchone().id
 
 
-def get_server_by_host_url(db_conn, host_url: str) -> Optional[Dict[str, Any]]:
+def get_server_by_host_url(db_conn: Connection, host_url: str) -> Optional[Dict[str, Any]]:
     """Get server by host URL"""
     result = db_conn.execute(sqlalchemy.text("""
         SELECT * FROM navidrome_servers WHERE host_url = :host_url
@@ -28,7 +29,7 @@ def get_server_by_host_url(db_conn, host_url: str) -> Optional[Dict[str, Any]]:
     return dict(row) if row else None
 
 
-def save_user_token(db_conn, user_id: int, host_url: str, username: str, encrypted_password: str) -> int:
+def save_user_token(db_conn: Connection, user_id: int, host_url: str, username: str, encrypted_password: str) -> int:
     """Save encrypted password for Navidrome (one connection per user)"""
     server_id = get_or_create_server(db_conn, host_url)
     
@@ -49,7 +50,7 @@ def save_user_token(db_conn, user_id: int, host_url: str, username: str, encrypt
     return result.fetchone().id
 
 
-def get_user_token(db_conn, user_id: int) -> Optional[Dict[str, Any]]:
+def get_user_token(db_conn: Connection, user_id: int) -> Optional[Dict[str, Any]]:
     """Get user's Navidrome connection (only one per user)"""
     result = db_conn.execute(sqlalchemy.text("""
         SELECT t.*, s.host_url
@@ -62,7 +63,7 @@ def get_user_token(db_conn, user_id: int) -> Optional[Dict[str, Any]]:
     return dict(row) if row else None
 
 
-def delete_user_token(db_conn, user_id: int) -> None:
+def delete_user_token(db_conn: Connection, user_id: int) -> None:
     """Delete user's Navidrome connection"""
     db_conn.execute(sqlalchemy.text("""
         DELETE FROM navidrome_tokens WHERE user_id = :user_id

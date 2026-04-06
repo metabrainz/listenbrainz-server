@@ -1,11 +1,12 @@
 from datetime import datetime
 
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 from listenbrainz import db
 
 
-def insert(db_conn, user_id, entity, entity_mbid, until):
+def insert(db_conn: Connection, user_id, entity, entity_mbid, until):
     """ Add an entry to do_not_recommend table for the specified user and entity until the given time. """
     query = """
         INSERT INTO recommendation.do_not_recommend (user_id, entity, entity_mbid, until)
@@ -18,7 +19,7 @@ def insert(db_conn, user_id, entity, entity_mbid, until):
     db_conn.commit()
 
 
-def delete(db_conn, user_id, entity, entity_mbid):
+def delete(db_conn: Connection, user_id, entity, entity_mbid):
     """ Remove an entry from the do_not_recommend table for the specified user and entity. """
     query = """
         DELETE FROM recommendation.do_not_recommend
@@ -30,7 +31,7 @@ def delete(db_conn, user_id, entity, entity_mbid):
     db_conn.commit()
 
 
-def get(db_conn, user_id, count, offset):
+def get(db_conn: Connection, user_id, count, offset):
     """ Retrieve all do not recommend entries for specified user """
     query = """
         SELECT user_id
@@ -52,7 +53,7 @@ def get(db_conn, user_id, count, offset):
     ]
 
 
-def get_total_count(db_conn, user_id):
+def get_total_count(db_conn: Connection, user_id):
     """ Get the total count of do not recommend entries for a given user """
     query = """
         SELECT count(*) as count
@@ -64,7 +65,7 @@ def get_total_count(db_conn, user_id):
     return result.first().count
 
 
-def clear_expired(db_conn):
+def clear_expired(db_conn: Connection):
     """ Remove expired do-not-recommend entries
 
     do-not-recommend entries can optionally have an `until` value which denotes the time till which the entity

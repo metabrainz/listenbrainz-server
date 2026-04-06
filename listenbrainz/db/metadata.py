@@ -4,6 +4,7 @@ import psycopg2.extras
 from listenbrainz.db.model.metadata import RecordingMetadata, ArtistMetadata, ReleaseGroupMetadata
 from listenbrainz.webserver.views.api_tools import MAX_ITEMS_PER_GET
 from typing import List
+from sqlalchemy.engine import Connection
 
 
 def fixup_mbids_to_artists(row):
@@ -13,7 +14,7 @@ def fixup_mbids_to_artists(row):
     return row
 
 
-def get_metadata_for_recording(ts_conn, recording_mbid_list: List[str]) -> List[RecordingMetadata]:
+def get_metadata_for_recording(ts_conn: Connection, recording_mbid_list: List[str]) -> List[RecordingMetadata]:
     """ Get a list of recording Metadata objects for a given recording in descending order of their creation.
         The list of recordings cannot exceed `~db.metadata.MAX_ITEMS_PER_GET` per call.
         If the number of items exceeds this limit, ValueError will be raised. Data is sorted according
@@ -45,7 +46,7 @@ def get_metadata_for_recording(ts_conn, recording_mbid_list: List[str]) -> List[
         return data
 
 
-def get_metadata_for_release_group(ts_conn, release_group_mbid_list: List[str]) -> List[ReleaseGroupMetadata]:
+def get_metadata_for_release_group(ts_conn: Connection, release_group_mbid_list: List[str]) -> List[ReleaseGroupMetadata]:
     """ Get a list of release_group Metadata objects for a given release_group in descending order of their creation.
         The list of release groups cannot exceed `~db.metadata.MAX_ITEMS_PER_GET` per call.
         If the number of items exceeds this limit, ValueError will be raised. Data is sorted according
@@ -76,7 +77,7 @@ def get_metadata_for_release_group(ts_conn, release_group_mbid_list: List[str]) 
         return data
 
 
-def get_metadata_for_artist(ts_conn, artist_mbid_list: List[str]) -> List[ArtistMetadata]:
+def get_metadata_for_artist(ts_conn: Connection, artist_mbid_list: List[str]) -> List[ArtistMetadata]:
     """ Get a list of artist Metadata objects for a given recording in descending order of their creation.
         The list of artists cannot exceed `~db.metadata.MAX_ITEMS_PER_GET` per call.
         If the number of items exceeds this limit, ValueError will be raised. Data is sorted according

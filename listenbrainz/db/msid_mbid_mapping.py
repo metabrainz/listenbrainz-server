@@ -9,6 +9,7 @@ from pydantic.v1 import BaseModel, validator, root_validator
 from data.model.validators import check_valid_uuid
 from listenbrainz.db.recording import load_recordings_from_mbids
 from listenbrainz.messybrainz import load_recordings_from_msids
+from sqlalchemy.engine import Connection
 
 
 class MsidMbidModel(BaseModel):
@@ -39,7 +40,7 @@ class MsidMbidModel(BaseModel):
 ModelT = TypeVar('ModelT', bound=MsidMbidModel)
 
 
-def fetch_track_metadata_for_items(ts_conn, items: List[ModelT]) -> List[ModelT]:
+def fetch_track_metadata_for_items(ts_conn: Connection, items: List[ModelT]) -> List[ModelT]:
     """ Fetches track_metadata for every object in a list of MsidMbidModel items.
 
         Args:

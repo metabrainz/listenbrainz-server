@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
@@ -19,7 +20,7 @@ from brainzutils.mail import send_mail
 logger = logging.getLogger(__name__)
 
 
-def create(db_conn, musicbrainz_row_id: int, musicbrainz_id: str, email: str = None) -> int:
+def create(db_conn: Connection, musicbrainz_row_id: int, musicbrainz_id: str, email: str = None) -> int:
     """Create a new user.
 
     Args:
@@ -45,7 +46,7 @@ def create(db_conn, musicbrainz_row_id: int, musicbrainz_id: str, email: str = N
     return result.fetchone().id
 
 
-def update_token(db_conn, id):
+def update_token(db_conn: Connection, id):
     """Update a user's token to a new UUID
 
     Args:
@@ -71,7 +72,7 @@ USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token',
                     'last_login', 'latest_import', 'gdpr_agreed', 'musicbrainz_row_id', 'login_id', 'is_paused']
 
 
-def get(db_conn, id: int, *, fetch_email: bool = False):
+def get(db_conn: Connection, id: int, *, fetch_email: bool = False):
     """Get user with a specified ID.
 
     Args:
@@ -103,7 +104,7 @@ def get(db_conn, id: int, *, fetch_email: bool = False):
     return result.mappings().first()
 
 
-def get_by_login_id(db_conn, login_id):
+def get_by_login_id(db_conn: Connection, login_id):
     """Get user with a specified login ID.
 
     Args:
@@ -133,7 +134,7 @@ def get_by_login_id(db_conn, login_id):
     return result.mappings().first()
 
 
-def get_many_users_by_mb_id(db_conn, musicbrainz_ids: List[str]):
+def get_many_users_by_mb_id(db_conn: Connection, musicbrainz_ids: List[str]):
     """Load a list of users given their musicbrainz login name
 
     Args:
@@ -154,7 +155,7 @@ def get_many_users_by_mb_id(db_conn, musicbrainz_ids: List[str]):
     return {row["musicbrainz_id"].lower(): row for row in result.mappings()}
 
 
-def get_by_mb_id(db_conn, musicbrainz_id, *, fetch_email: bool = False):
+def get_by_mb_id(db_conn: Connection, musicbrainz_id, *, fetch_email: bool = False):
     """Get user with a specified MusicBrainz ID.
 
     Args:
@@ -186,7 +187,7 @@ def get_by_mb_id(db_conn, musicbrainz_id, *, fetch_email: bool = False):
     return result.mappings().first()
 
 
-def get_by_token(db_conn, token: str, *, fetch_email: bool = False):
+def get_by_token(db_conn: Connection, token: str, *, fetch_email: bool = False):
     """Get user with a specified authentication token.
 
     Args:
@@ -211,7 +212,7 @@ def get_by_token(db_conn, token: str, *, fetch_email: bool = False):
     return result.mappings().first()
 
 
-def get_user_count(db_conn):
+def get_user_count(db_conn: Connection):
     """ Get total number of users in database.
 
     Returns:
@@ -228,7 +229,7 @@ def get_user_count(db_conn):
         logger.error(e)
         raise
 
-def get_user_count_evolution(db_conn):
+def get_user_count_evolution(db_conn: Connection):
     """ Get total number of users in database.
 
     Returns:
@@ -253,7 +254,7 @@ def get_user_count_evolution(db_conn):
         raise
 
 
-def get_or_create(db_conn, musicbrainz_row_id: int, musicbrainz_id: str) -> dict:
+def get_or_create(db_conn: Connection, musicbrainz_row_id: int, musicbrainz_id: str) -> dict:
     """Get user with a specified MusicBrainz ID, or create if there's no account.
 
     Args:
@@ -277,7 +278,7 @@ def get_or_create(db_conn, musicbrainz_row_id: int, musicbrainz_id: str) -> dict
     return user
 
 
-def update_last_login(db_conn, musicbrainz_id):
+def update_last_login(db_conn: Connection, musicbrainz_id):
     """ Update the value of last_login field for user with specified MusicBrainz ID
 
     Args:
@@ -298,7 +299,7 @@ def update_last_login(db_conn, musicbrainz_id):
         raise DatabaseException("Couldn't update last_login: %s" % str(err))
 
 
-def get_all_users(db_conn, created_before=None, columns=None):
+def get_all_users(db_conn: Connection, created_before=None, columns=None):
     """ Returns a list of all users in the database
 
         Args:
@@ -337,7 +338,7 @@ def get_all_users(db_conn, created_before=None, columns=None):
     return result.mappings().all()
 
 
-def delete(db_conn, id):
+def delete(db_conn: Connection, id):
     """ Delete the user with specified row ID from the database.
 
     Note: this deletes all statistics and api_compat sessions and tokens
@@ -360,7 +361,7 @@ def delete(db_conn, id):
         raise DatabaseException("Couldn't delete user: %s" % str(err))
 
 
-def agree_to_gdpr(db_conn, musicbrainz_id):
+def agree_to_gdpr(db_conn: Connection, musicbrainz_id):
     """ Update the gdpr_agreed column for user with specified MusicBrainz ID with current time.
 
     Args:
@@ -381,7 +382,7 @@ def agree_to_gdpr(db_conn, musicbrainz_id):
             "Couldn't update gdpr agreement for user: %s" % str(err))
 
 
-def get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id=None):
+def get_by_mb_row_id(db_conn: Connection, musicbrainz_row_id, musicbrainz_id=None):
     """ Get user with specified MusicBrainz row id.
 
     Note: this function also optionally takes a MusicBrainz username to fall back on
@@ -412,7 +413,7 @@ def get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id=None):
     return result.mappings().first()
 
 
-def get_similar_users(db_conn, user_id: int) -> Optional[list[dict]]:
+def get_similar_users(db_conn: Connection, user_id: int) -> Optional[list[dict]]:
     """ Given a user_id, fetch the similar users for that given user ordered by "similarity" score.
 
         :code:: python
@@ -449,7 +450,7 @@ def get_similar_users(db_conn, user_id: int) -> Optional[list[dict]]:
     return [dict(**row) for row in result.mappings()]
 
 
-def get_users_by_id(db_conn, user_ids: List[int]):
+def get_users_by_id(db_conn: Connection, user_ids: List[int]):
     """ Given a list of user ids, fetch one ore more users at the same time.
         Returns a dict mapping user_ids to user_names. """
     result = db_conn.execute(sqlalchemy.text("""
@@ -465,7 +466,7 @@ def get_users_by_id(db_conn, user_ids: List[int]):
     return row_id_username_map
 
 
-def is_user_reported(db_conn, reporter_id: int, reported_id: int):
+def is_user_reported(db_conn: Connection, reporter_id: int, reported_id: int):
     """ Check whether the user identified by reporter_id has reported the
     user identified by reported_id"""
     result = db_conn.execute(sqlalchemy.text("""
@@ -480,7 +481,7 @@ def is_user_reported(db_conn, reporter_id: int, reported_id: int):
     return True if result.fetchone() else False
 
 
-def report_user(db_conn, reporter_id: int, reported_id: int, reason: str = None):
+def report_user(db_conn: Connection, reporter_id: int, reported_id: int, reason: str = None):
     """ Create a report from user with reporter_id against user with
      reported_id"""
     db_conn.execute(sqlalchemy.text("""
@@ -495,7 +496,7 @@ def report_user(db_conn, reporter_id: int, reported_id: int, reason: str = None)
     db_conn.commit()
 
 
-def update_user_details(db_conn, lb_id: int, musicbrainz_id: str, email: str):
+def update_user_details(db_conn: Connection, lb_id: int, musicbrainz_id: str, email: str):
     """ Update the email field and MusicBrainz ID of the user specified by the lb_id
 
     Args:
@@ -520,7 +521,7 @@ def update_user_details(db_conn, lb_id: int, musicbrainz_id: str, email: str):
         raise DatabaseException("Couldn't update user's email: %s" % str(err))
 
 
-def search_query(db_conn, search_term: str, limit: int):
+def search_query(db_conn: Connection, search_term: str, limit: int):
     result = db_conn.execute(sqlalchemy.text("""
             SELECT musicbrainz_id, similarity(musicbrainz_id, :search_term) AS query_similarity
               FROM "user"
@@ -535,7 +536,7 @@ def search_query(db_conn, search_term: str, limit: int):
     return rows
 
 
-def search(db_conn, search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[str, float, float]]:
+def search(db_conn: Connection, search_term: str, limit: int, searcher_id: int = None) -> List[Tuple[str, float, float]]:
     """ Searches for the input term in the database and returns list of potential user matches along with
     their similarity to the searcher if available.
 
@@ -569,7 +570,7 @@ def search(db_conn, search_term: str, limit: int, searcher_id: int = None) -> Li
     return search_results
 
 
-def search_user_name(db_conn, search_term: str, limit: int) -> List[object]:
+def search_user_name(db_conn: Connection, search_term: str, limit: int) -> List[object]:
     rows = search_query(db_conn, search_term, limit)
 
     if not rows:
@@ -593,7 +594,7 @@ def get_all_usernames():
     return user_id_map
 
 
-def pause(db_conn,id):
+def pause(db_conn: Connection,id):
     """ Sets the user's is_paused flag to true
     with specified row ID from the database.
     
@@ -617,7 +618,7 @@ def pause(db_conn,id):
         raise DatabaseException("Couldn't pause user: %s" % str(err))
 
 
-def unpause(db_conn,id):
+def unpause(db_conn: Connection,id):
     """ Sets the user's is_paused flag to false
     with specified row ID from the database.
     
@@ -641,7 +642,7 @@ def unpause(db_conn,id):
         raise DatabaseException("Couldn't unpause user: %s" % str(err))
 
 
-def _notify_user_paused(db_conn, user_id,paused):
+def _notify_user_paused(db_conn: Connection, user_id,paused):
     user = get(db_conn, user_id, fetch_email=True)
     if user["email"] is None:
         logger.error("%s's email not found" % user["musicbrainz_id"])

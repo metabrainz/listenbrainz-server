@@ -1,6 +1,7 @@
 import json
 
 import sqlalchemy
+from sqlalchemy.engine import Connection
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
 
@@ -8,7 +9,7 @@ from listenbrainz.db.exceptions import DatabaseException
 DEFAULT_TIMEZONE = "UTC"
 
 
-def get_pg_timezone(db_conn):
+def get_pg_timezone(db_conn: Connection):
     """ Get list of time zones PostgreSQL supports.
 
     Returns:
@@ -23,7 +24,7 @@ def get_pg_timezone(db_conn):
     return timezones
 
 
-def get(db_conn, user_id: int):
+def get(db_conn: Connection, user_id: int):
     """ Get user settings with the row ID of the user in the DB.
     Args:
         db_conn: database connection
@@ -51,7 +52,7 @@ def get(db_conn, user_id: int):
         raise DatabaseException("Couldn't get user's setting: %s" % str(err))
 
 
-def set_timezone(db_conn, user_id: int, timezone_name: str):
+def set_timezone(db_conn: Connection, user_id: int, timezone_name: str):
     """ Set user's timezone. Update user timezone if the row exists. Otherwise insert a new row.
     Args:
         db_conn: database connection
@@ -94,7 +95,7 @@ def standardize_timezone(timezones):
     return result
 
 
-def update_troi_prefs(db_conn, user_id: int, export_to_spotify: bool):
+def update_troi_prefs(db_conn: Connection, user_id: int, export_to_spotify: bool):
     """ Update troi preferences for the given user """
     db_conn.execute(sqlalchemy.text("""
         INSERT INTO user_setting (user_id, troi)
@@ -106,7 +107,7 @@ def update_troi_prefs(db_conn, user_id: int, export_to_spotify: bool):
     db_conn.commit()
 
 
-def get_troi_prefs(db_conn, user_id: int):
+def get_troi_prefs(db_conn: Connection, user_id: int):
     """ Retrieve troi preferences for the given user """
     result = db_conn.execute(sqlalchemy.text("""
         SELECT troi
@@ -117,7 +118,7 @@ def get_troi_prefs(db_conn, user_id: int):
     return dict(row) if row else None
 
 
-def update_brainzplayer_prefs(db_conn, user_id: int, brainzplayer_settings: str):
+def update_brainzplayer_prefs(db_conn: Connection, user_id: int, brainzplayer_settings: str):
     """ Update brainzplayer preferences for the given user """
     db_conn.execute(sqlalchemy.text("""
         INSERT INTO user_setting (user_id, brainzplayer)
@@ -129,7 +130,7 @@ def update_brainzplayer_prefs(db_conn, user_id: int, brainzplayer_settings: str)
     db_conn.commit()
 
 
-def get_brainzplayer_prefs(db_conn, user_id: int):
+def get_brainzplayer_prefs(db_conn: Connection, user_id: int):
     """ Retrieve brainzplayer preferences for the given user """
     result = db_conn.execute(sqlalchemy.text("""
         SELECT brainzplayer
@@ -140,7 +141,7 @@ def get_brainzplayer_prefs(db_conn, user_id: int):
     return dict(row) if row else None
 
 
-def update_flair(db_conn, user_id: int, flair):
+def update_flair(db_conn: Connection, user_id: int, flair):
     """ Update a user's flair """
     db_conn.execute(sqlalchemy.text("""
          INSERT INTO user_setting (user_id, flair)
@@ -152,7 +153,7 @@ def update_flair(db_conn, user_id: int, flair):
     db_conn.commit()
 
 
-def get_flair(db_conn, user_id: int):
+def get_flair(db_conn: Connection, user_id: int):
     """ Retrieve flair for the given user """
     result = db_conn.execute(sqlalchemy.text("""
         SELECT flair
@@ -163,7 +164,7 @@ def get_flair(db_conn, user_id: int):
     return row.flair if row else None
 
 
-def get_all_flairs(db_conn):
+def get_all_flairs(db_conn: Connection):
     """ Retrieve all flairs for all users """
     query = """
         SELECT musicbrainz_id

@@ -20,13 +20,14 @@ from datetime import datetime, timezone
 from typing import List, Iterable
 
 import sqlalchemy
+from sqlalchemy.engine import Connection
 
 VALID_RELATIONSHIP_TYPES = (
     'follow',
 )
 
 
-def insert(db_conn, user_0: int, user_1: int, relationship_type: str) -> None:
+def insert(db_conn: Connection, user_0: int, user_1: int, relationship_type: str) -> None:
     if relationship_type not in VALID_RELATIONSHIP_TYPES:
         raise ValueError(f"Invalid relationship type: {relationship_type}")
 
@@ -43,7 +44,7 @@ def insert(db_conn, user_0: int, user_1: int, relationship_type: str) -> None:
     db_conn.commit()
 
 
-def is_following_user(db_conn, follower: int, followed: int) -> bool:
+def is_following_user(db_conn: Connection, follower: int, followed: int) -> bool:
     result = db_conn.execute(sqlalchemy.text("""
         SELECT COUNT(*) as cnt
           FROM user_relationship
@@ -57,7 +58,7 @@ def is_following_user(db_conn, follower: int, followed: int) -> bool:
     return result.fetchone().cnt > 0
 
 
-def multiple_users_by_username_following_user(db_conn, followed: int, followers: List[str]):
+def multiple_users_by_username_following_user(db_conn: Connection, followed: int, followers: List[str]):
     ''' returns a dictionary, keys being usernames values being boolean '''
     result = db_conn.execute(sqlalchemy.text("""
         SELECT "user".musicbrainz_id,
@@ -81,7 +82,7 @@ def multiple_users_by_username_following_user(db_conn, followed: int, followers:
     return {row.musicbrainz_id: row.result for row in result.fetchall()}
 
 
-def delete(db_conn, user_0: int, user_1: int, relationship_type: str) -> None:
+def delete(db_conn: Connection, user_0: int, user_1: int, relationship_type: str) -> None:
     if relationship_type not in VALID_RELATIONSHIP_TYPES:
         raise ValueError(f"Invalid relationship type: {relationship_type}")
 
@@ -99,7 +100,7 @@ def delete(db_conn, user_0: int, user_1: int, relationship_type: str) -> None:
     db_conn.commit()
 
 
-def get_followers_of_user(db_conn, user: int) -> List[dict]:
+def get_followers_of_user(db_conn: Connection, user: int) -> List[dict]:
     """ Returns a list of users who follow the specified user.
     """
     result = db_conn.execute(sqlalchemy.text("""
@@ -114,7 +115,7 @@ def get_followers_of_user(db_conn, user: int) -> List[dict]:
     return result.mappings().all()
 
 
-def get_following_for_user(db_conn, user: int) -> List[dict]:
+def get_following_for_user(db_conn: Connection, user: int) -> List[dict]:
     """ Returns a list of users who the specified user follows.
     """
     result = db_conn.execute(sqlalchemy.text("""
@@ -130,7 +131,7 @@ def get_following_for_user(db_conn, user: int) -> List[dict]:
     return result.mappings().all()
 
 
-def get_follow_events(db_conn, user_ids: Iterable[int], min_ts: float, max_ts: float, count: int) -> List[dict]:
+def get_follow_events(db_conn: Connection, user_ids: Iterable[int], min_ts: float, max_ts: float, count: int) -> List[dict]:
     """ Gets a list of follow events for specified users.
 
     Args:

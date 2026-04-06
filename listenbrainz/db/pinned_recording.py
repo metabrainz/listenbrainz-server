@@ -1,4 +1,5 @@
 import sqlalchemy
+from sqlalchemy.engine import Connection
 from datetime import datetime, timezone
 
 from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording
@@ -15,7 +16,7 @@ PINNED_REC_GET_COLUMNS = [
 ]
 
 
-def pin(db_conn, pinned_recording: WritablePinnedRecording):
+def pin(db_conn: Connection, pinned_recording: WritablePinnedRecording):
     """ Inserts a pinned recording record into the database for the user.
         If the user already has an active pinned recording, it will be unpinned before the new one is pinned.
 
@@ -53,7 +54,7 @@ def pin(db_conn, pinned_recording: WritablePinnedRecording):
     return PinnedRecording.parse_obj(pinned_recording.dict())
 
 
-def unpin(db_conn, user_id: int):
+def unpin(db_conn: Connection, user_id: int):
     """ Unpins the currently active pinned recording for the user if they have one.
 
         Args:
@@ -77,7 +78,7 @@ def unpin(db_conn, user_id: int):
     return result.rowcount == 1
 
 
-def delete(db_conn, row_id: int, user_id: int):
+def delete(db_conn: Connection, row_id: int, user_id: int):
     """ Deletes the pinned recording record for the user from the database.
 
         Args:
@@ -102,7 +103,7 @@ def delete(db_conn, row_id: int, user_id: int):
     return result.rowcount == 1
 
 
-def get_current_pin_for_users(db_conn, user_ids: Iterable[int]) -> List[PinnedRecording]:
+def get_current_pin_for_users(db_conn: Connection, user_ids: Iterable[int]) -> List[PinnedRecording]:
     """ Get the currently active pinned recording for the users if they have one.
 
         Args:
@@ -122,7 +123,7 @@ def get_current_pin_for_users(db_conn, user_ids: Iterable[int]) -> List[PinnedRe
     return [PinnedRecording(**row) if row else None for row in result.mappings()]
 
 
-def get_current_pin_for_user(db_conn, user_id: int) -> PinnedRecording:
+def get_current_pin_for_user(db_conn: Connection, user_id: int) -> PinnedRecording:
     """ Get the currently active pinned recording for the user if they have one.
 
         Args:
@@ -136,7 +137,7 @@ def get_current_pin_for_user(db_conn, user_id: int) -> PinnedRecording:
     return next(iter(get_current_pin_for_users(db_conn, [user_id])), None)
 
 
-def get_pin_history_for_user(db_conn, user_id: int, count: int, offset: int) -> List[PinnedRecording]:
+def get_pin_history_for_user(db_conn: Connection, user_id: int, count: int, offset: int) -> List[PinnedRecording]:
     """ Get a list of pinned recordings for the user in descending order of their created date
 
         Args:
@@ -163,7 +164,7 @@ def get_pin_history_for_user(db_conn, user_id: int, count: int, offset: int) -> 
     return [PinnedRecording(**row) for row in result.mappings()]
 
 
-def get_pins_for_user_following(db_conn, user_id: int, count: int, offset: int) -> List[PinnedRecording]:
+def get_pins_for_user_following(db_conn: Connection, user_id: int, count: int, offset: int) -> List[PinnedRecording]:
     """ Get a list of active pinned recordings for all the users that a user follows sorted
         in descending order of their created date.
 
@@ -199,7 +200,7 @@ def get_pins_for_user_following(db_conn, user_id: int, count: int, offset: int) 
     return [PinnedRecording(**row) for row in result.mappings()]
 
 
-def get_pins_for_feed(db_conn, user_ids: Iterable[int], min_ts: int, max_ts: int, count: int) -> List[PinnedRecording]:
+def get_pins_for_feed(db_conn: Connection, user_ids: Iterable[int], min_ts: int, max_ts: int, count: int) -> List[PinnedRecording]:
     """ Gets a list of PinnedRecordings for specified users in descending order of their created date.
 
     Args:
@@ -229,7 +230,7 @@ def get_pins_for_feed(db_conn, user_ids: Iterable[int], min_ts: int, max_ts: int
     return [PinnedRecording(**row) for row in result.mappings()]
 
 
-def get_pin_by_id(db_conn, row_id: int) -> PinnedRecording:
+def get_pin_by_id(db_conn: Connection, row_id: int) -> PinnedRecording:
     """ Get a pinned_recording by id
         Args:
             db_conn: database connection
@@ -248,7 +249,7 @@ def get_pin_by_id(db_conn, row_id: int) -> PinnedRecording:
     return PinnedRecording(**row) if row else None
 
 
-def get_pin_count_for_user(db_conn, user_id: int) -> int:
+def get_pin_count_for_user(db_conn: Connection, user_id: int) -> int:
     """ Get the total number pinned_recordings for the user.
 
         Args:
@@ -269,7 +270,7 @@ def get_pin_count_for_user(db_conn, user_id: int) -> int:
     return count
 
 
-def update_comment(db_conn, row_id: int, blurb_content: str) -> bool:
+def update_comment(db_conn: Connection, row_id: int, blurb_content: str) -> bool:
     """ Updates the comment of the user of the current pinned recording
 
         Args:

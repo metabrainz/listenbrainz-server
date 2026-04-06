@@ -1,5 +1,6 @@
 import sqlalchemy
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 from listenbrainz import db
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
@@ -35,7 +36,7 @@ DELETE_QUERIES = {
 }
 
 
-def insert(db_conn, feedback: Feedback):
+def insert(db_conn: Connection, feedback: Feedback):
     """ Inserts a feedback record for a user's loved/hated recording into the database.
         If the record is already present for the user, the score is updated to the new
         value passed.
@@ -73,7 +74,7 @@ def insert(db_conn, feedback: Feedback):
     db_conn.commit()
 
 
-def delete(db_conn, feedback: Feedback):
+def delete(db_conn: Connection, feedback: Feedback):
     """ Deletes the feedback record for a given recording for the user from the database
 
         Args:
@@ -98,7 +99,7 @@ def delete(db_conn, feedback: Feedback):
     db_conn.commit()
 
 
-def get_feedback_for_user(db_conn, ts_conn, user_id: int, limit: int, offset: int,
+def get_feedback_for_user(db_conn: Connection, ts_conn: Connection, user_id: int, limit: int, offset: int,
                           score: int = None, metadata: bool = False) -> List[Feedback]:
     """ Get a list of recording feedback given by the user in descending order of their creation
 
@@ -145,7 +146,7 @@ def get_feedback_for_user(db_conn, ts_conn, user_id: int, limit: int, offset: in
     return feedback
 
 
-def get_feedback_count_for_user(db_conn, user_id: int, score=None) -> int:
+def get_feedback_count_for_user(db_conn: Connection, user_id: int, score=None) -> int:
     """ Get total number of recording feedback given by the user
 
         Args:
@@ -172,7 +173,7 @@ def get_feedback_count_for_user(db_conn, user_id: int, score=None) -> int:
     return count
 
 
-def get_feedback_for_recording(db_conn, recording_type: str, recording: str, limit: int,
+def get_feedback_for_recording(db_conn: Connection, recording_type: str, recording: str, limit: int,
                                offset: int, score: int = None) -> List[Feedback]:
     """ Get a list of recording feedback for a given recording in descending order of their creation
 
@@ -213,7 +214,7 @@ def get_feedback_for_recording(db_conn, recording_type: str, recording: str, lim
     return [Feedback(**row) for row in result.mappings()]
 
 
-def get_feedback_count_for_recording(db_conn, recording_type: str, recording: str) -> int:
+def get_feedback_count_for_recording(db_conn: Connection, recording_type: str, recording: str) -> int:
     """ Get total number of recording feedback for a given recording
 
         Args:
@@ -230,7 +231,7 @@ def get_feedback_count_for_recording(db_conn, recording_type: str, recording: st
     return count
 
 
-def get_feedback_for_multiple_recordings_for_user(db_conn, user_id: int, user_name: str, recording_msids: List[str],
+def get_feedback_for_multiple_recordings_for_user(db_conn: Connection, user_id: int, user_name: str, recording_msids: List[str],
                                                   recording_mbids: List[str]) -> List[Feedback]:
     """ Get a list of recording feedback given by the user for given recordings
 
