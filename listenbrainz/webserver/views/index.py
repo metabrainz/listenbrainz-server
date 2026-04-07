@@ -6,7 +6,7 @@ from typing import List
 
 from brainzutils import cache
 from dateutil.relativedelta import relativedelta
-from flask import Blueprint, render_template, current_app, request, jsonify, Response
+from flask import Blueprint, render_template, current_app, request, jsonify, Response, send_from_directory
 from flask_login import current_user, login_required
 from requests.exceptions import HTTPError
 from werkzeug.exceptions import Unauthorized, NotFound
@@ -62,6 +62,9 @@ Allow: /explore/art-creator/
 def robots_txt():
     return Response(ROBOTS_TXT_CONTENT, mimetype='text/plain')
 
+@index_bp.get("/favicon.ico/")
+def favicon():
+    return send_from_directory(current_app.static_folder, "favicon.ico", mimetype="image/vnd.microsoft.icon")
 
 @index_bp.post("/")
 def index():
@@ -93,21 +96,30 @@ def index():
 @index_bp.post("/current-status/")
 @web_listenstore_needed
 def current_status():
-    load = "%.2f %.2f %.2f" % os.getloadavg()
-
     service_status = get_service_status()
     listen_count = _ts.get_total_listen_count()
     try:
         user_count = format(int(_get_user_count()), ',d')
     except DatabaseException as e:
         user_count = 'Unknown'
+    try:
+       user_count_evolution = [
+           {
+               "period": period,
+               "total_users": total_users,
+               "new_users": new_users
+           }
+           for period, total_users, new_users in _get_user_count_evolution()
+       ]
+    except DatabaseException as e:
+        user_count_evolution = {}
 
     listen_counts_per_day: List[dict] = []
     for delta in range(2):
         day = datetime.today() - relativedelta(days=delta)
         try:
             day_listen_count = _redis.get_listen_count_for_day(day)
-        except:
+        except Exception:
             current_app.logger.error("Could not get %s listen count from redis", day.strftime('%Y-%m-%d'), exc_info=True)
             day_listen_count = None
         listen_counts_per_day.append({
@@ -117,10 +129,10 @@ def current_status():
         })
 
     data = {
-        "load": load,
-        "service-status": service_status,
+        "serviceStatus": service_status,
         "listenCount": format(int(listen_count), ",d") if listen_count else "0",
         "userCount": user_count,
+        "userCountEvolution": user_count_evolution,
         "listenCountsPerDay": listen_counts_per_day,
     }
 
@@ -289,6 +301,21 @@ def _get_user_count():
         cache.set(user_count_key, int(user_count), CACHE_TIME, encode=False)
         return user_count
 
+
+def _get_user_count_evolution():
+    user_count_evolution_key = "{}.{}".format(STATS_PREFIX, 'user_count_evolution')
+    user_count_evolution = cache.get(user_count_evolution_key, decode=True)
+    user_count_evolution = None
+    if user_count_evolution:
+        return user_count_evolution
+    else:
+        user_count_evolution = db_user.get_user_count_evolution(db_conn)
+
+        cache_time_seconds = 24 * 60 * 60
+        cache.set(user_count_evolution_key, user_count_evolution,
+                    cache_time_seconds, encode=True)
+
+        return user_count_evolution
 
 @index_bp.get("/", defaults={'path': ''})
 @index_bp.get('/<not_api_path:path>/')

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import NavidromePlayer from "../../../src/common/brainzplayer/NavidromePlayer";
 import APIService from "../../../src/utils/APIService";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
@@ -43,6 +43,20 @@ const defaultProps = {
   handleWarning: jest.fn(),
   handleSuccess: jest.fn(),
   onInvalidateDataSource: jest.fn(),
+};
+
+const contextWithoutAuth = {
+  ...defaultContext,
+  navidromeAuth: undefined,
+};
+
+const mockTrack: NavidromeTrack = {
+  id: "track123",
+  title: "Test Song",
+  artist: "Test Artist",
+  album: "Test Album",
+  albumId: "album123",
+  duration: 180,
 };
 
 // Mock fetch for API calls
@@ -184,11 +198,6 @@ describe("NavidromePlayer", () => {
     });
 
     it("should return false for canSearchAndPlayTracks when user lacks permissions", () => {
-      const contextWithoutAuth = {
-        ...defaultContext,
-        navidromeAuth: undefined,
-      };
-
       const playerRef = React.createRef<NavidromePlayer>();
       render(
         <GlobalAppContext.Provider value={contextWithoutAuth}>
@@ -213,11 +222,6 @@ describe("NavidromePlayer", () => {
 
   describe("Authentication parameter generation", () => {
     it("should return null when authentication is not available", () => {
-      const contextWithoutAuth = {
-        ...defaultContext,
-        navidromeAuth: undefined,
-      };
-
       const playerRef = React.createRef<NavidromePlayer>();
       render(
         <GlobalAppContext.Provider value={contextWithoutAuth}>
@@ -266,11 +270,6 @@ describe("NavidromePlayer", () => {
     });
 
     it("should return empty string when auth params are not available", () => {
-      const contextWithoutAuth = {
-        ...defaultContext,
-        navidromeAuth: undefined,
-      };
-
       const playerRef = React.createRef<NavidromePlayer>();
       render(
         <GlobalAppContext.Provider value={contextWithoutAuth}>
@@ -291,9 +290,9 @@ describe("NavidromePlayer", () => {
         </GlobalAppContext.Provider>
       );
 
-      const streamUrl = playerRef.current?.getNavidromeStreamUrl("track123");
+      const streamUrl = playerRef.current?.getNavidromeStreamUrl(mockTrack.id);
       expect(streamUrl).toContain("https://test.navidrome.com/rest/stream");
-      expect(streamUrl).toContain("id=track123");
+      expect(streamUrl).toContain(`id=${mockTrack.id}`);
       expect(streamUrl).toContain("u=test-user");
       expect(streamUrl).toContain("t=test-md5-token");
       expect(streamUrl).toContain("s=test-salt");
@@ -303,11 +302,6 @@ describe("NavidromePlayer", () => {
     });
 
     it("should throw error when auth is not available", () => {
-      const contextWithoutAuth = {
-        ...defaultContext,
-        navidromeAuth: undefined,
-      };
-
       const playerRef = React.createRef<NavidromePlayer>();
       render(
         <GlobalAppContext.Provider value={contextWithoutAuth}>
@@ -316,7 +310,7 @@ describe("NavidromePlayer", () => {
       );
 
       expect(() =>
-        playerRef.current?.getNavidromeStreamUrl("track123")
+        playerRef.current?.getNavidromeStreamUrl(mockTrack.id)
       ).toThrow("No Navidrome instance URL available - user not connected");
     });
   });
@@ -330,17 +324,197 @@ describe("NavidromePlayer", () => {
         </GlobalAppContext.Provider>
       );
 
+      const webUrl = playerRef.current?.getTrackWebUrl(mockTrack);
+      expect(webUrl).toBe(`https://test.navidrome.com/#/album/${mockTrack.albumId}/show`);
+    });
+  });
+
+  describe("Audio element behavior", () => {
+    it("should update volume when volume prop changes", () => {
+      const { rerender } = render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <NavidromePlayer {...defaultProps} volume={50} />
+        </GlobalAppContext.Provider>
+      );
+
+      const audio = document.querySelector(
+        ".navidrome-player audio"
+      ) as HTMLAudioElement;
+      expect(audio.volume).toBe(0.5);
+
+      rerender(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <NavidromePlayer {...defaultProps} volume={100} />
+        </GlobalAppContext.Provider>
+      );
+
+      expect(audio.volume).toBe(1);
+    });
+
+    it("should have crossOrigin set to anonymous", () => {
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <NavidromePlayer {...defaultProps} />
+        </GlobalAppContext.Provider>
+      );
+
+      const audio = document.querySelector(
+        ".navidrome-player audio"
+      ) as HTMLAudioElement;
+      expect(audio.crossOrigin).toBe("anonymous");
+    });
+
+    it("should have preload set to metadata", () => {
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <NavidromePlayer {...defaultProps} />
+        </GlobalAppContext.Provider>
+      );
+
+      const audio = document.querySelector(
+        ".navidrome-player audio"
+      ) as HTMLAudioElement;
+      expect(audio.preload).toBe("metadata");
+    });
+  });
+
+  describe("Instance methods", () => {
+    it("should expose seekToPositionMs method", () => {
+      const playerRef = React.createRef<NavidromePlayer>();
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <NavidromePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      expect(playerRef.current?.seekToPositionMs).toBeDefined();
+      expect(typeof playerRef.current?.seekToPositionMs).toBe("function");
+    });
+
+    it("should expose togglePlay method", () => {
+      const playerRef = React.createRef<NavidromePlayer>();
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <NavidromePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      expect(playerRef.current?.togglePlay).toBeDefined();
+      expect(typeof playerRef.current?.togglePlay).toBe("function");
+    });
+
+    it("should expose playListen method", () => {
+      const playerRef = React.createRef<NavidromePlayer>();
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <NavidromePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      expect(playerRef.current?.playListen).toBeDefined();
+      expect(typeof playerRef.current?.playListen).toBe("function");
+    });
+
+    it("should expose stop method", () => {
+      const playerRef = React.createRef<NavidromePlayer>();
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <NavidromePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      expect(playerRef.current?.stop).toBeDefined();
+      expect(typeof playerRef.current?.stop).toBe("function");
+    });
+  });
+
+  describe("Audio event callbacks", () => {
+    it("should call onPlayerPausedChange when playback status changes", () => {
+      const onPlayerPausedChange = jest.fn();
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <NavidromePlayer
+            {...defaultProps}
+            onPlayerPausedChange={onPlayerPausedChange}
+          />
+        </GlobalAppContext.Provider>
+      );
+
+      const audio = document.querySelector(
+        ".navidrome-player audio"
+      ) as HTMLAudioElement;
+
+      // Simulate play event
+      audio.dispatchEvent(new Event("play"));
+      expect(onPlayerPausedChange).toHaveBeenCalledWith(false);
+
+      // Simulate pause event
+      audio.dispatchEvent(new Event("pause"));
+      expect(onPlayerPausedChange).toHaveBeenCalledWith(true);
+    });
+  });
+
+  describe("Track artwork URL generation", () => {
+    it("should generate correct artwork URL with album ID", () => {
+      const playerRef = React.createRef<NavidromePlayer>();
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <NavidromePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      const artworkUrl = playerRef.current?.getTrackArtworkUrl(mockTrack);
+      expect(artworkUrl).toContain("https://test.navidrome.com/rest/getCoverArt");
+      expect(artworkUrl).toContain(`id=${mockTrack.albumId}`);
+      expect(artworkUrl).toContain("u=test-user");
+      expect(artworkUrl).toContain("t=test-md5-token");
+      expect(artworkUrl).toContain("s=test-salt");
+    });
+
+    it("should return null when track has no album ID", () => {
+      const playerRef = React.createRef<NavidromePlayer>();
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <NavidromePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
       const track: NavidromeTrack = {
         id: "track123",
         title: "Test Song",
         artist: "Test Artist",
         album: "Test Album",
-        albumId: "album123",
+        albumId: "", // Empty albumId
         duration: 180,
       };
 
-      const webUrl = playerRef.current?.getTrackWebUrl(track);
-      expect(webUrl).toBe("https://test.navidrome.com/#/album/album123/show");
+      const artworkUrl = playerRef.current?.getTrackArtworkUrl(track);
+      expect(artworkUrl).toBeNull();
+    });
+
+    it("should return null when track is undefined", () => {
+      const playerRef = React.createRef<NavidromePlayer>();
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <NavidromePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      const artworkUrl = playerRef.current?.getTrackArtworkUrl(undefined);
+      expect(artworkUrl).toBeNull();
+    });
+
+    it("should throw error when auth is not available", () => {
+      const playerRef = React.createRef<NavidromePlayer>();
+      render(
+        <GlobalAppContext.Provider value={contextWithoutAuth}>
+          <NavidromePlayer {...defaultProps} ref={playerRef} />
+        </GlobalAppContext.Provider>
+      );
+
+      expect(() => playerRef.current?.getTrackArtworkUrl(mockTrack)).toThrow(
+        "No Navidrome instance URL available - user not connected"
+      );
     });
   });
 
@@ -376,11 +550,6 @@ describe("NavidromePlayer", () => {
     });
 
     it("should handle authentication warnings when auth is not available", async () => {
-      const contextWithoutAuth = {
-        ...defaultContext,
-        navidromeAuth: undefined,
-      };
-
       const playerRef = React.createRef<NavidromePlayer>();
       render(
         <GlobalAppContext.Provider value={contextWithoutAuth}>
@@ -408,6 +577,50 @@ describe("NavidromePlayer", () => {
         "Authentication Error"
       );
       expect(defaultProps.onTrackNotFound).toHaveBeenCalled();
+    });
+
+    it("should call handleAuthenticationError on 401 error during search", async () => {
+      const onInvalidateDataSource = jest.fn();
+      const playerRef = React.createRef<NavidromePlayer>();
+      const utils = require("../../../src/utils/utils");
+
+      // Mock searchForNavidromeTrack to throw 401 error
+      const mockError = { status: 401, message: "Unauthorized", name: "Error" };
+      const searchSpy = jest
+        .spyOn(utils, "searchForNavidromeTrack")
+        .mockRejectedValue(mockError);
+
+      render(
+        <GlobalAppContext.Provider value={defaultContext}>
+          <NavidromePlayer
+            {...defaultProps}
+            onInvalidateDataSource={onInvalidateDataSource}
+            ref={playerRef}
+          />
+        </GlobalAppContext.Provider>
+      );
+
+      const listen: Listen = {
+        listened_at: 42,
+        track_metadata: {
+          artist_name: "Test Artist",
+          track_name: "Test Track",
+        },
+      };
+
+      const abortController = new AbortController();
+
+      await act(async () => {
+        await playerRef.current?.searchAndPlayTrack(
+          listen,
+          abortController.signal,
+          abortController
+        );
+      });
+
+      expect(onInvalidateDataSource).toHaveBeenCalled();
+
+      searchSpy.mockRestore();
     });
   });
 });

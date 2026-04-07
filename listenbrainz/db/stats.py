@@ -125,7 +125,7 @@ def get_entity_listener(db_conn, entity, entity_id, stats_range) -> Optional[dic
             if user_name:
                 user_name_listeners.append({"user_name": user_name, "listen_count": x["listen_count"]})
 
-        doc["stats_range"] = stats_range
+        doc["range"] = stats_range
         doc["listeners"] = user_name_listeners
         return doc
     except HTTPError as e:

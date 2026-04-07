@@ -340,7 +340,7 @@ export default function AddData() {
       <ul>
         <li>
           <em>
-            <a href="https://web-scrobbler.com/">Web Scrobbler</a>
+            <a href="https://webscrobbler.com/">Web Scrobbler</a>
           </em>
           , an extension for Firefox and Chrome/Chromium-based browsers
         </li>

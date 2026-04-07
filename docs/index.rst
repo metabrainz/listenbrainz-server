@@ -58,10 +58,3 @@ Contents
    maintainers/rabbitmq
    maintainers/updating-prod-db-schema
    maintainers/pull-requests
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

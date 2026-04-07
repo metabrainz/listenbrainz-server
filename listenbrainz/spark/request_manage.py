@@ -461,27 +461,33 @@ def request_yim_similar_users(year: int):
 @cli.command(name="request_yim_top_missed_recordings")
 @click.option("--year", type=int, help="Year for which to generate the playlists",
               default=date.today().year)
-def request_yim_top_missed_recordings(year: int):
+@click.option("--export-to-spotify/--no-export-to-spotify", is_flag=True, default=True,
+              help="Whether to export the generated playlists to Spotify.")
+def request_yim_top_missed_recordings(year: int, export_to_spotify: bool):
     """ Send the cluster a request to generate tracks of the year data and then
      once the data has been imported generate YIM playlists. """
-    send_request_to_spark_cluster("year_in_music.top_missed_recordings", year=year)
+    send_request_to_spark_cluster("year_in_music.top_missed_recordings", year=year, export_to_spotify=export_to_spotify)
 
 
 @cli.command(name="request_yim_top_discoveries")
 @click.option("--year", type=int, help="Year for which to generate the playlists",
               default=date.today().year)
-def request_yim_top_discoveries(year: int):
+@click.option("--export-to-spotify/--no-export-to-spotify", is_flag=True, default=True,
+              help="Whether to export the generated playlists to Spotify.")
+def request_yim_top_discoveries(year: int, export_to_spotify: bool):
     """ Send the cluster a request to generate tracks of the year data and then
      once the data has been imported generate YIM playlists. """
-    send_request_to_spark_cluster("year_in_music.top_discoveries", year=year)
+    send_request_to_spark_cluster("year_in_music.top_discoveries", year=year, export_to_spotify=export_to_spotify)
 
 
 @cli.command(name="request_year_in_music")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
 @click.option("--import-pg-tables/--no-import-pg-tables", is_flag=True, default=True, help="whether to import the pg tables before generating the stats.")
+@click.option("--export-to-spotify/--no-export-to-spotify", is_flag=True, default=True,
+              help="Whether to export the generated playlists to Spotify.")
 @click.pass_context
-def request_year_in_music(ctx, year: int, import_pg_tables: bool):
+def request_year_in_music(ctx, year: int, import_pg_tables: bool, export_to_spotify: bool):
     """ Send the cluster a request to generate all year in music statistics. """
     send_request_to_spark_cluster("echo.echo", message={"year": year, "action": "year_in_music_start"})
     if import_pg_tables:
@@ -498,8 +504,8 @@ def request_year_in_music(ctx, year: int, import_pg_tables: bool):
     ctx.invoke(request_yim_similar_users, year=year)
     ctx.invoke(request_yim_new_artists_discovered, year=year)
     ctx.invoke(request_yim_listening_time, year=year)
-    ctx.invoke(request_yim_top_missed_recordings, year=year)
-    ctx.invoke(request_yim_top_discoveries, year=year)
+    ctx.invoke(request_yim_top_missed_recordings, year=year, export_to_spotify=export_to_spotify)
+    ctx.invoke(request_yim_top_discoveries, year=year, export_to_spotify=export_to_spotify)
     send_request_to_spark_cluster("echo.echo", message={"year": year, "action": "year_in_music_end"})
 
 

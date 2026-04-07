@@ -5,6 +5,11 @@
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
     xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Year in Music statistics for {{ user_name|e }} in {{ year }}</title>
+    <desc>
+You listened to {{ total_listen_count }} songs, mostly on {{ day_of_week }}, listened to {{ total_artists_count }} artists, and discovered {{ new_artists_percentage }}% new artists.
+    </desc>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;900');
         text {

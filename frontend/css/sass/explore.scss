@@ -149,3 +149,43 @@
     flex: 1;
   }
 }
+
+.explore-sections {
+  .accordion-item {
+    border: none;
+    background: transparent;
+  }
+
+  .accordion-header {
+    .accordion-button {
+      background: transparent;
+      box-shadow: none;
+      padding: 0;
+      color: inherit;
+
+      &::after {
+        // Place chevron before the header text
+        order: -1;
+        margin-left: 0;
+        margin-right: 0.5em;
+      }
+
+      &:focus {
+        box-shadow: none;
+      }
+
+      &.collapsed {
+        color: inherit;
+      }
+
+      // Let the divider fill remaining space
+      .explore-page-divider {
+        flex: 1;
+      }
+    }
+  }
+
+  .accordion-body {
+    padding: 1em 0;
+  }
+}

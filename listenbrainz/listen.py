@@ -66,6 +66,7 @@ class Listen(object):
         'origin_url',
         'music_service',
         'music_service_name',
+        'label',
     )
 
     TOP_LEVEL_KEYS = (
@@ -81,16 +82,16 @@ class Listen(object):
         self.user_name = user_name
 
         # determine the type of timestamp and do the right thing
-        if isinstance(timestamp, int) or isinstance(timestamp, float):
-            self.ts_since_epoch = int(timestamp)
-            self.timestamp = datetime.fromtimestamp(self.ts_since_epoch, timezone.utc)
-        else:
-            if timestamp:
+        if timestamp:
+            if isinstance(timestamp, datetime):
                 self.timestamp = timestamp
                 self.ts_since_epoch = int(self.timestamp.timestamp())
             else:
-                self.timestamp = None
-                self.ts_since_epoch = None
+                self.ts_since_epoch = int(timestamp)
+                self.timestamp = datetime.fromtimestamp(self.ts_since_epoch, timezone.utc)
+        else:
+            self.timestamp = None
+            self.ts_since_epoch = None
 
         self.recording_msid = recording_msid
         self.inserted_timestamp = inserted_timestamp
@@ -232,6 +233,7 @@ class NowPlayingListen:
     def to_api(self):
         return {
             "track_metadata": self.data,
+            'user_name': self.user_name,
             "playing_now": True
         }
 

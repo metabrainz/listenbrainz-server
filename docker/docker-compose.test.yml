@@ -5,7 +5,7 @@
 services:
 
   lb_db:
-    image: timescale/timescaledb:2.6.0-pg12
+    image: timescale/timescaledb:latest-pg14
     command: postgres -F
     environment:
       POSTGRES_PASSWORD: 'postgres'
@@ -79,7 +79,7 @@ services:
     image: listenbrainz
     volumes:
       - ..:/code/listenbrainz:z
-    command: python manage.py run_websockets -h 0.0.0.0 -p 8102
+    command: python run_websockets.py -h 0.0.0.0 -p 8102
     user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     expose:
       - "8102"
