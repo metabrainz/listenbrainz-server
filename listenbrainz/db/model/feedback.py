@@ -1,7 +1,8 @@
-from copy import copy
-
 from datetime import datetime
-from pydantic.v1 import NonNegativeInt, validator
+from typing import Optional
+
+from pydantic import field_validator, Field
+
 from listenbrainz.db.msid_mbid_mapping import MsidMbidModel
 
 
@@ -15,21 +16,21 @@ class Feedback(MsidMbidModel):
             created: (Optional)the timestamp when the feedback record was inserted into DB
     """
 
-    user_id: NonNegativeInt
-    user_name: str = None
+    user_id: int = Field(ge=0)
+    user_name: Optional[str] = None
     score: int
-    created: datetime = None
+    created: Optional[datetime] = None
 
     def to_api(self) -> dict:
-        data = self.dict()
+        data = self.model_dump()
         data["user_id"] = self.user_name
         if self.created is not None:
             data["created"] = int(self.created.timestamp())
         data.pop("user_name", None)
         return data
 
-
-    @validator('score')
+    @field_validator('score')
+    @classmethod
     def check_score_is_valid(cls, scr):
         if scr not in [-1, 0, 1]:
             raise ValueError('Score can have a value of 1, 0 or -1.')

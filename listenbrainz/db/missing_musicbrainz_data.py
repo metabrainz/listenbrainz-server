@@ -21,7 +21,7 @@ import sqlalchemy
 from sqlalchemy.engine import Connection
 
 from listenbrainz import db
-from pydantic.v1 import ValidationError
+from pydantic import ValidationError
 
 from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzData,
                                                       UserMissingMusicBrainzDataJson, UserMissingMusicBrainzDataRecord)
@@ -52,7 +52,7 @@ def insert_user_missing_musicbrainz_data(db_conn: Connection, user_id: int,
                     created = NOW()
         """), {
             'user_id': user_id,
-            'missing_musicbrainz_data': orjson.dumps(missing_musicbrainz_data.dict()).decode("utf-8"),
+            'missing_musicbrainz_data': orjson.dumps(missing_musicbrainz_data.model_dump()).decode("utf-8"),
             'source': source
         }
     )
@@ -139,6 +139,6 @@ def remove_mapped_mb_data(ts_conn: Connection, user_id: int, missing_musicbrainz
     remaining_data = []
     for item in missing_musicbrainz_data:
         if item.recording_msid not in existing_mappings:
-            remaining_data.append(item.dict())
+            remaining_data.append(item.model_dump())
 
     return remaining_data

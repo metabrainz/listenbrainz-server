@@ -1,6 +1,6 @@
 from typing import TypedDict, Optional, Any, Dict, List
 
-import pydantic.v1 as pydantic
+import pydantic
 
 
 class SubmitListenUserMetadata(pydantic.BaseModel):

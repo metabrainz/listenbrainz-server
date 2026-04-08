@@ -1,8 +1,8 @@
 import uuid
 import datetime
-from typing import Dict, List, Optional
+from typing import Annotated, Dict, List, Optional
 
-from pydantic.v1 import BaseModel, validator, NonNegativeInt, constr
+from pydantic import BaseModel, Field, field_validator
 from data.model.validators import check_valid_uuid
 
 PLAYLIST_TRACK_URI_PREFIX = "https://musicbrainz.org/recording/"
@@ -16,79 +16,79 @@ PLAYLIST_TRACK_EXTENSION_URI = "https://musicbrainz.org/doc/jspf#track"
 class PlaylistRecording(BaseModel):
     """A recording that is part of a playlist"""
     # Internal id of the playlist
-    id: NonNegativeInt
+    id: int = Field(ge=0)
     # What playlist this recording is a part of
-    playlist_id: NonNegativeInt
+    playlist_id: int = Field(ge=0)
     # The position of this item in the playlist
-    position: NonNegativeInt
+    position: int = Field(ge=0)
     # The item
     mbid: uuid.UUID
     # Who added this item to the playlist
-    added_by_id: NonNegativeInt
+    added_by_id: int = Field(ge=0)
     # When the item was added
     created: datetime.datetime
 
-    artist_credit: Optional[str]
-    artist_mbids: Optional[List[uuid.UUID]]
-    title: Optional[str]
+    artist_credit: Optional[str] = None
+    artist_mbids: Optional[List[uuid.UUID]] = None
+    title: Optional[str] = None
     # What release would this be if the recording is of more than one?
-    release_mbid: Optional[uuid.UUID]
-    release_name: Optional[str]
-    release_track_number: Optional[NonNegativeInt]  # exists in xspf, probably not needed?
-    duration_ms: Optional[NonNegativeInt]
-    image: Optional[str]  # who looks this up on CAA?
+    release_mbid: Optional[uuid.UUID] = None
+    release_name: Optional[str] = None
+    release_track_number: Optional[int] = Field(default=None, ge=0)  # exists in xspf, probably not needed?
+    duration_ms: Optional[int] = Field(default=None, ge=0)
+    image: Optional[str] = None  # who looks this up on CAA?
 
     additional_metadata: Optional[Dict] = None
 
     # Computed
-    added_by: constr(min_length=1)
+    added_by: Annotated[str, Field(min_length=1)]
 
 
 class WritablePlaylistRecording(PlaylistRecording):
-    id: NonNegativeInt = None
-    playlist_id: NonNegativeInt = None
-    position: NonNegativeInt = None
-    created: datetime.datetime = None
-    added_by: str = None
+    id: Optional[int] = Field(default=None, ge=0)
+    playlist_id: Optional[int] = Field(default=None, ge=0)
+    position: Optional[int] = Field(default=None, ge=0)
+    created: Optional[datetime.datetime] = None
+    added_by: Optional[str] = None
 
 
 class Playlist(BaseModel):
 
     # Database fields
     # The internal ID of the playlist row in the database
-    id: NonNegativeInt
+    id: int = Field(ge=0)
     # The public-facing uuid of the playlist
     mbid: uuid.UUID
     # The listenbrainz user id who created this playlist
-    creator_id: NonNegativeInt
+    creator_id: int = Field(ge=0)
     # The name of the playlist
-    name: constr(min_length=1)
+    name: Annotated[str, Field(min_length=1)]
     # An optional description of the playlist
-    description: Optional[str]
+    description: Optional[str] = None
     public: bool = True
     # When the playlist was created
     created: datetime.datetime
     # When a change was made to metadata
-    last_updated: Optional[datetime.datetime]
+    last_updated: Optional[datetime.datetime] = None
     # If the playlist was copied from another one, the id of that playlist
-    copied_from_id: Optional[NonNegativeInt]
+    copied_from_id: Optional[int] = Field(default=None, ge=0)
     # If the playlist was created by a bot, the user for who this playlist was created
-    created_for_id: Optional[NonNegativeInt]
+    created_for_id: Optional[int] = Field(default=None, ge=0)
     # to store extra data about the playlist
-    additional_metadata: Optional[Dict]
+    additional_metadata: Optional[Dict] = None
     # The users who have permission to collaborate on this playlist
     # TODO: Because the id list isn't an FK to a table, we can't guarantee that these values
     #  actually exist. There's no agreement between collaborator_ids and collaborators.
     #  Ideally this should be a list of a User object that allows us to keep these values in sync
-    collaborator_ids: List[NonNegativeInt] = []
+    collaborator_ids: List[Annotated[int, Field(ge=0)]] = []
     collaborators: List[str] = []
 
     # Computed fields
-    created_for: Optional[str]
-    creator: constr(min_length=1)
+    created_for: Optional[str] = None
+    creator: Annotated[str, Field(min_length=1)]
     recordings: List[PlaylistRecording]
     # mbid of the playlist referred to in copied_from_id
-    copied_from_mbid: Optional[uuid.UUID]
+    copied_from_mbid: Optional[uuid.UUID] = None
 
     def is_visible_by(self, user_id: Optional[int]):
         """Check if user is allowed to access a playlist
@@ -183,10 +183,13 @@ class Playlist(BaseModel):
 
 
 class WritablePlaylist(Playlist):
-    id: int = None
-    mbid: Optional[str]
-    creator: str = None
+    id: Optional[int] = None
+    mbid: Optional[str] = None
+    creator: Optional[str] = None
     recordings: List[PlaylistRecording] = []
-    created: datetime.datetime = None
+    created: Optional[datetime.datetime] = None
 
-    _validate_mbid: classmethod = validator("mbid", allow_reuse=True)(check_valid_uuid)
+    @field_validator("mbid", mode="before")
+    @classmethod
+    def validate_mbid(cls, v):
+        return check_valid_uuid(v)

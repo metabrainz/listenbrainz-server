@@ -1,10 +1,9 @@
 from collections import defaultdict
-from typing import List, TypeVar
-from typing import Optional
+from typing import List, Optional, TypeVar
 
 from flask import current_app
 from psycopg2.extras import DictCursor
-from pydantic.v1 import BaseModel, validator, root_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 from data.model.validators import check_valid_uuid
 from listenbrainz.db.recording import load_recordings_from_mbids
@@ -19,22 +18,20 @@ class MsidMbidModel(BaseModel):
     We intend to migrate from msids to mbids but for compatibility and till
     the remaining gaps in mapping are filled we want to support msids as well.
     """
-    recording_msid: Optional[str]
-    recording_mbid: Optional[str]
-    track_metadata: dict = None
+    recording_msid: Optional[str] = None
+    recording_mbid: Optional[str] = None
+    track_metadata: Optional[dict] = None
 
-    _validate_msids: classmethod = validator(
-        "recording_msid",
-        "recording_mbid",
-        allow_reuse=True
-    )(check_valid_uuid)
+    @field_validator("recording_msid", "recording_mbid", mode="before")
+    @classmethod
+    def validate_uuid(cls, v):
+        return check_valid_uuid(v)
 
-    @root_validator
-    def check_at_least_mbid_or_msid(cls, values):
-        recording_msid, recording_mbid = values.get('recording_msid'), values.get('recording_mbid')
-        if recording_msid is None and recording_mbid is None:
+    @model_validator(mode="after")
+    def check_at_least_mbid_or_msid(self):
+        if self.recording_msid is None and self.recording_mbid is None:
             raise ValueError("at least one of recording_msid or recording_mbid should be specified")
-        return values
+        return self
 
 
 ModelT = TypeVar('ModelT', bound=MsidMbidModel)

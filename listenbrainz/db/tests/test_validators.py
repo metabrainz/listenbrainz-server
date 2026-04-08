@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-import json
-from datetime import datetime, timedelta, timezone
-from pydantic.v1 import ValidationError
+from datetime import datetime, timezone
 import unittest
 
 import data.model.validators as validators

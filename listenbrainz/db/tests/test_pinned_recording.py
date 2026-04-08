@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import sqlalchemy
-from pydantic.v1 import ValidationError
+from pydantic import ValidationError
 import time
 
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
@@ -162,7 +162,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
         pins = db_pinned_rec.get_pin_history_for_user(self.db_conn, self.user["id"], 5, 0)
         pins_with_metadata = fetch_track_metadata_for_items(self.ts_conn, pins)
 
-        received = [x.dict() for x in pins_with_metadata]
+        received = [x.model_dump() for x in pins_with_metadata]
         # pinned recs returned in reverse order of submitted because order newest to oldest
         self.assertEqual(received[0]["recording_msid"], pinned_recs[1]["recording_msid"])
         self.assertEqual(received[0]["recording_mbid"], pinned_recs[1]["recording_mbid"])

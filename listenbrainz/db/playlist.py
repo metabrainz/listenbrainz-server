@@ -95,7 +95,7 @@ def get_by_mbid(db_conn: Connection, ts_conn: Connection, playlist_id: str, load
     collaborator_ids_list = playlist_collaborator_ids.get(obj['id'], [])
     obj['collaborator_ids'] = collaborator_ids_list
     obj['collaborators'] = get_collaborators_names_from_ids(db_conn, collaborator_ids_list)
-    return model_playlist.Playlist.parse_obj(obj)
+    return model_playlist.Playlist.model_validate(obj)
 
 
 def get_playlists_for_user(db_conn: Connection, ts_conn: Connection, user_id: int, include_private: bool = False,
@@ -234,7 +234,7 @@ def _playlist_resultset_to_model(db_conn: Connection, ts_conn: Connection, resul
             row["created_for"] = user_id_map[created_for_id]["musicbrainz_id"]
 
         row["recordings"] = []
-        playlist = model_playlist.Playlist.parse_obj(row)
+        playlist = model_playlist.Playlist.model_validate(row)
         playlists.append(playlist)
 
     playlist_ids = [p.id for p in playlists]
@@ -663,7 +663,7 @@ def get_recordings_for_playlists(db_conn: Connection, ts_conn: Connection, playl
         except TypeError:
             row["added_by"] = DELETED_USER_NAME
 
-        playlist_recording = model_playlist.PlaylistRecording.parse_obj(row)
+        playlist_recording = model_playlist.PlaylistRecording.model_validate(row)
         playlist_recordings_map[playlist_recording.playlist_id].append(playlist_recording)
     for playlist_id in playlist_ids:
         if playlist_id not in playlist_recordings_map:
@@ -754,8 +754,8 @@ def create(db_conn: Connection, ts_conn: Connection, playlist: model_playlist.Wr
                                      , :additional_metadata)
                              RETURNING id, mbid, created
     """)
-    fields = playlist.dict(include={'creator_id', 'name', 'description', 'public',
-                                    'copied_from_id', 'created_for_id'})
+    fields = playlist.model_dump(include={'creator_id', 'name', 'description', 'public',
+                                          'copied_from_id', 'created_for_id'})
     fields["additional_metadata"] = orjson.dumps(playlist.additional_metadata or {}).decode("utf-8")
 
     # This code seems out of place for a create function, but in order to keep the deletion of
@@ -787,7 +787,7 @@ def create(db_conn: Connection, ts_conn: Connection, playlist: model_playlist.Wr
 
     ts_conn.commit()
 
-    return model_playlist.Playlist.parse_obj(playlist.dict())
+    return model_playlist.Playlist.model_validate(playlist.model_dump())
 
 
 def add_playlist_collaborators(ts_conn: Connection, playlist_id, collaborator_ids):
@@ -936,7 +936,7 @@ def insert_recordings(db_conn: Connection, ts_conn: Connection, playlist_id: int
     for recording in recordings:
         if not recording.created:
             recording.created = insert_ts
-        result = ts_conn.execute(query, recording.dict(include={'playlist_id', 'position', 'mbid', 'added_by_id', 'created'}))
+        result = ts_conn.execute(query, recording.model_dump(include={'playlist_id', 'position', 'mbid', 'added_by_id', 'created'}))
         if recording.added_by_id not in user_id_map:
             # TODO: Do this lookup in bulk
             user_id_map[recording.added_by_id] = db_user.get(db_conn, recording.added_by_id)
@@ -944,7 +944,7 @@ def insert_recordings(db_conn: Connection, ts_conn: Connection, playlist_id: int
         recording.id = row.id
         recording.created = row.created
         recording.added_by = user_id_map[recording.added_by_id]["musicbrainz_id"]
-        return_recordings.append(model_playlist.PlaylistRecording.parse_obj(recording.dict()))
+        return_recordings.append(model_playlist.PlaylistRecording.model_validate(recording.model_dump()))
     return return_recordings
 
 

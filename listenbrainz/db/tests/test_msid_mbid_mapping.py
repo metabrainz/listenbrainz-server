@@ -2,6 +2,7 @@ import json
 import uuid
 
 from psycopg2.extras import DictCursor
+from pydantic import ValidationError
 from sqlalchemy import text
 
 from listenbrainz import messybrainz
@@ -12,13 +13,13 @@ from listenbrainz.db.testing import TimescaleTestCase
 class MappingTestCase(TimescaleTestCase):
 
     def test_msid_mbid_model(self):
-        with self.assertRaisesRegex(ValueError, 'at least one of recording_msid or recording_mbid should be specified'):
+        with self.assertRaisesRegex(ValidationError, 'at least one of recording_msid or recording_mbid should be specified'):
             model = MsidMbidModel(recording_mbid=None, recording_msid=None)
 
-        with self.assertRaisesRegex(ValueError, "(?s)recording_msid.*must be a valid UUID"):
+        with self.assertRaisesRegex(ValidationError, "must be a valid UUID"):
             model = MsidMbidModel(recording_msid='', recording_mbid=str(uuid.uuid4()))
 
-        with self.assertRaisesRegex(ValueError, "(?s)recording_mbid.*must be a valid UUID"):
+        with self.assertRaisesRegex(ValidationError, "must be a valid UUID"):
             model = MsidMbidModel(recording_msid=str(uuid.uuid4()), recording_mbid='')
 
         # test that 2 valid uuids doesn't raise error

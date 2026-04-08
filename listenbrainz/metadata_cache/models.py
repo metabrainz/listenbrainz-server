@@ -1,7 +1,7 @@
 import enum
 from typing import Optional
 
-from pydantic.v1 import BaseModel
+from pydantic import BaseModel
 
 
 class Artist(BaseModel):

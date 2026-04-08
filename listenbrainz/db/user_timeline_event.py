@@ -57,7 +57,7 @@ def create_user_timeline_event(
             """), {
                 'user_id': user_id,
                 'event_type': event_type.value,
-                'metadata': orjson.dumps(metadata.dict()).decode("utf-8"),
+                'metadata': orjson.dumps(metadata.model_dump()).decode("utf-8"),
             }
         )
         db_conn.commit()

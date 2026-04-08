@@ -26,7 +26,7 @@ import sqlalchemy
 from sqlalchemy.engine import Connection
 
 from flask import current_app
-from pydantic.v1 import ValidationError
+from pydantic import ValidationError
 
 from data.model.user_cf_recommendations_recording_message import (UserRecommendationsData,
                                                                   UserRecommendationsJson)

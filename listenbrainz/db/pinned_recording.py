@@ -51,7 +51,7 @@ def pin(db_conn: Connection, pinned_recording: WritablePinnedRecording):
     db_conn.commit()
 
     pinned_recording.row_id = row_id
-    return PinnedRecording.parse_obj(pinned_recording.dict())
+    return PinnedRecording.model_validate(pinned_recording.model_dump())
 
 
 def unpin(db_conn: Connection, user_id: int):
