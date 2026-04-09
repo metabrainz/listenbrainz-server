@@ -22,6 +22,10 @@ export default function Settings() {
   const [isBetaState, setIsBetaState] = React.useState(
     window.location.hostname.includes("beta")
   );
+  const handleBetaToggle = () => {
+    const returnTo = encodeURIComponent(window.location.pathname);
+    window.location.href = `/settings/set-beta-preference?returnto=${returnTo}`;
+  };
 
   const copyToken = () => {
     if (!navigator.clipboard) {
@@ -56,21 +60,6 @@ export default function Settings() {
     }
   };
 
-  const handleBetaToggle = () => {
-    const n = !isBetaState;
-    setIsBetaState(n);
-
-    const currentUrl = window.location.href;
-    let newurl;
-
-    if (n) {
-      newurl = currentUrl.replace("beta.listenbrainz.org", "listenbrainz.org");
-    } else {
-      newurl = currentUrl.replace("listenbrainz.org", "beta.listenbrainz.org");
-    }
-
-    window.location.href = newurl;
-  };
   const toggleTokenVisibility = () => {
     setShowToken(!showToken);
   };
