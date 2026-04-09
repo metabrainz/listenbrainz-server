@@ -223,6 +223,9 @@ export default function ArtCreator() {
     defaultStyleOnLoad.defaultColors[2]
   );
   const [customPresets, setCustomPresets] = useState<ColorPreset[]>([]);
+  const [scene, setScene] = useState<string>("wood");
+  const [wearTear, setWearTear] = useState<string>("new");
+  const [playerColor, setPlayerColor] = useState<string>("#ffffff");
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const previewSVGRef = React.useRef<SVGSVGElement>(null);
 
@@ -592,7 +595,10 @@ export default function ArtCreator() {
         gridSizeArg: number,
         gridLayoutArg: number,
         showCaptionArg: boolean,
-        skipMissingArg: boolean
+        skipMissingArg: boolean,
+        sceneArg: string,
+        wearTearArg: string,
+        playerColorArg: string
       ) => {
         if (styleArg.type === "grid") {
           let newPreviewUrl = `${
@@ -612,11 +618,15 @@ export default function ArtCreator() {
           }
           setPreviewUrl(newPreviewUrl);
         } else {
-          setPreviewUrl(
-            `${APIService.APIBaseURI}/art/${styleArg.name}/${encodeURIComponent(
-              userNameArg
-            )}/${timeRangeArg}/${DEFAULT_IMAGE_SIZE}`
-          );
+          let newPreviewUrl = `${APIService.APIBaseURI}/art/${styleArg.name}/${encodeURIComponent(
+            userNameArg
+          )}/${timeRangeArg}/${DEFAULT_IMAGE_SIZE}`;
+
+          if (styleArg.name === TemplateNameEnum.lPsOnTheFloor) {
+            newPreviewUrl += `?scene=${sceneArg}&wear_tear=${wearTearArg}&player_color=${playerColorArg.replace("#", "")}`;
+          }
+
+          setPreviewUrl(newPreviewUrl);
         }
       },
       1000,
@@ -635,7 +645,10 @@ export default function ArtCreator() {
       gridSize,
       gridLayout,
       showCaption,
-      skipMissing
+      skipMissing,
+      scene,
+      wearTear,
+      playerColor
     );
   }, [
     userName,
@@ -645,6 +658,9 @@ export default function ArtCreator() {
     gridLayout,
     showCaption,
     skipMissing,
+    scene,
+    wearTear,
+    playerColor,
     debouncedSetPreviewUrl,
   ]);
 
@@ -743,7 +759,9 @@ export default function ArtCreator() {
               </div>
             </div>
           </div>
-          {(style.type === "text" || style.type === "grid") && (
+          {(style.type === "text" ||
+            style.type === "grid" ||
+            style.name === TemplateNameEnum.lPsOnTheFloor) && (
             <div className="advanced-settings-container">
               <div className="sidenav-content-grid">
                 <h4>Advanced</h4>
@@ -797,6 +815,72 @@ export default function ArtCreator() {
                           </label>
                         );
                       })}
+                    </div>
+                  </>
+                )}
+                {style.name === TemplateNameEnum.lPsOnTheFloor && (
+                  <>
+                    <small>Choose a scene:</small>
+                    <div className="cover-art-grid">
+                      {[
+                        { id: "wood", icon: "1" },
+                        { id: "close", icon: "2" },
+                        { id: "vinyl", icon: "3" },
+                        { id: "many", icon: "4" },
+                      ].map((item) => (
+                        <label className="cover-art-option" key={item.id}>
+                          <input
+                            type="radio"
+                            name="scene"
+                            value={item.id}
+                            className="cover-art-radio"
+                            checked={scene === item.id}
+                            onChange={() => setScene(item.id)}
+                          />
+                          <img
+                            height={80}
+                            width={80}
+                            src={`/static/img/art/lps-on-the-floor/icons/cover-art_photo-${item.icon}.svg`}
+                            alt={`${item.id} scene`}
+                            className="cover-art-image"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                    <div>
+                      <label className="form-label" htmlFor="wear-tear">
+                        Wear & Tear:
+                      </label>
+                      <select
+                        id="wear-tear"
+                        className="form-select"
+                        value={wearTear}
+                        onChange={(e) => setWearTear(e.target.value)}
+                      >
+                        <option value="new">New</option>
+                        <option value="used">Used</option>
+                        <option value="loved">Loved</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="form-label" htmlFor="player-color">
+                        Record player colour:
+                      </label>
+                      <div className="input-group">
+                        <input
+                          id="player-color"
+                          type="color"
+                          className="form-control form-control-color"
+                          onChange={(e) => setPlayerColor(e.target.value)}
+                          value={playerColor}
+                        />
+                        <input
+                          className="form-control"
+                          type="text"
+                          value={playerColor}
+                          readOnly
+                        />
+                      </div>
                     </div>
                   </>
                 )}
