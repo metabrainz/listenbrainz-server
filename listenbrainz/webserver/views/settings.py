@@ -67,7 +67,7 @@ def validate_funkwhale_url(url: str) -> str:
 
 settings_bp = Blueprint("settings", __name__)
 
-@settings_bp.get("/set-beta-preference")
+@settings_bp.get("/set-beta-preference/")
 @login_required
 def set_beta_preference():
     use_beta = request.cookies.get("use_beta", "false")

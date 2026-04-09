@@ -24,7 +24,7 @@ export default function Settings() {
   );
   const handleBetaToggle = () => {
     const returnTo = encodeURIComponent(window.location.pathname);
-    window.location.href = `/settings/set-beta-preference?returnto=${returnTo}`;
+    window.location.href = `/settings/set-beta-preference/?returnto=${returnTo}`;
   };
 
   const copyToken = () => {
