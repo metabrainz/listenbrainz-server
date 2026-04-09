@@ -39,15 +39,31 @@
             pointer-events: none;
         }
     </style>
+    <defs>
+        <filter id="colorizePlayer">
+            <feColorMatrix type="matrix" values="0 0 0 0 {{ player_color_r }}
+                                                 0 0 0 0 {{ player_color_g }}
+                                                 0 0 0 0 {{ player_color_b }}
+                                                 0 0 0 1 0" />
+        </filter>
+    </defs>
+
+    <!-- Layer 1: Album Art -->
     {{ render_lp_image(89, 318, 195, 195, "rotate(6.1)", images[2]) }}
     {{ render_lp_image(17, 223, 193, 193, "rotate(-22.4)", images[1]) }}
     {{ render_lp_image(189, 240, 189, 189, "rotate(-4)", images[0]) }}
     {{ render_lp_image(404, 480, 198, 198, "rotate(-11.9)", images[4]) }}
     {{ render_lp_image(385, 488, 202, 203, "rotate(2.2)", images[3]) }}
-    <image x="0"
-           y="0"
-           width="{{ width }}"
-           height="{{ height }}"
-           href="{{ cover_art_on_floor_url }}"
-           class="background-image" />
+
+    <!-- Layer 2: Scene Background -->
+    <image x="0" y="0" width="1000" height="1000" href="{{ bg_url }}" class="background-image" />
+
+    <!-- Layer 3: Wear & Tear -->
+    {% if worn_url %}
+    <image x="0" y="0" width="1000" height="1000" href="{{ worn_url }}" class="background-image" />
+    {% endif %}
+
+    <!-- Layer 4: Record Player Color Overlay -->
+    <image x="0" y="0" width="1000" height="1000" href="{{ player_color_url }}"
+           filter="url(#colorizePlayer)" style="mix-blend-mode: multiply;" class="background-image" />
 </svg>

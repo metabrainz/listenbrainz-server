@@ -1,4 +1,5 @@
 from itertools import cycle
+from urllib.parse import quote
 
 from markupsafe import Markup
 
@@ -418,6 +419,54 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
             raise APIBadRequest(str(error))
 
         cover_art_on_floor_url = f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/cover-art-on-floor.png'
+
+        if custom_name == "lps-on-the-floor":
+            valid_scenes = ("wood", "close", "vinyl", "many")
+            valid_wear_tear = ("new", "used", "loved")
+
+            scene = request.args.get("scene", "wood")
+            if scene not in valid_scenes:
+                scene = "wood"
+
+            wear_tear = request.args.get("wear_tear", "new")
+            if wear_tear not in valid_wear_tear:
+                wear_tear = "new"
+
+            player_color_hex = request.args.get("player_color", "ffffff")
+            try:
+                r = int(player_color_hex[0:2], 16) / 255.0
+                g = int(player_color_hex[2:4], 16) / 255.0
+                b = int(player_color_hex[4:6], 16) / 255.0
+            except (ValueError, IndexError):
+                r, g, b = 1.0, 1.0, 1.0
+
+            static_base = f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/lps-on-the-floor'
+
+            bg_url = f'{static_base}/{quote(f"{scene} bg.png")}'
+            player_color_url = f'{static_base}/{quote(f"{scene} player color.svg")}'
+
+            if wear_tear == "used":
+                worn_url = f'{static_base}/{quote(f"{scene} worn 1.png")}'
+            elif wear_tear == "loved":
+                worn_url = f'{static_base}/{quote(f"{scene} worn 2.png")}'
+            else:
+                worn_url = None
+
+            return render_template("art/svg-templates/lps-on-the-floor.svg",
+                                   images=images,
+                                   releases=releases,
+                                   width=image_size,
+                                   height=image_size,
+                                   metadata=metadata,
+                                   bg_url=bg_url,
+                                   worn_url=worn_url,
+                                   player_color_url=player_color_url,
+                                   player_color_r=r,
+                                   player_color_g=g,
+                                   player_color_b=b), 200, {
+                                       'Content-Type': 'image/svg+xml'
+                                   }
+
         return render_template(f"art/svg-templates/{custom_name}.svg",
                                cover_art_on_floor_url=cover_art_on_floor_url,
                                images=images,
