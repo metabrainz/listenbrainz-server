@@ -618,12 +618,17 @@ export default function ArtCreator() {
           }
           setPreviewUrl(newPreviewUrl);
         } else {
-          let newPreviewUrl = `${APIService.APIBaseURI}/art/${styleArg.name}/${encodeURIComponent(
+          let newPreviewUrl = `${APIService.APIBaseURI}/art/${
+            styleArg.name
+          }/${encodeURIComponent(
             userNameArg
           )}/${timeRangeArg}/${DEFAULT_IMAGE_SIZE}`;
 
           if (styleArg.name === TemplateNameEnum.lPsOnTheFloor) {
-            newPreviewUrl += `?scene=${sceneArg}&wear_tear=${wearTearArg}&player_color=${playerColorArg.replace("#", "")}`;
+            newPreviewUrl += `?scene=${sceneArg}&wear_tear=${wearTearArg}&player_color=${playerColorArg.replace(
+              "#",
+              ""
+            )}`;
           }
 
           setPreviewUrl(newPreviewUrl);
@@ -820,7 +825,7 @@ export default function ArtCreator() {
                 )}
                 {style.name === TemplateNameEnum.lPsOnTheFloor && (
                   <>
-                    <small>Choose a scene:</small>
+                    <small>Choose a grid layout:</small>
                     <div className="cover-art-grid">
                       {[
                         { id: "wood", icon: "1" },
