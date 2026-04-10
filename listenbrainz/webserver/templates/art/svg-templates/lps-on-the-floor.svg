@@ -1,7 +1,7 @@
-{% macro render_lp_image(x, y, width, height, transform, image) %}
-  {% if image.entity_mbid %}
+{%- macro render_lp_image(x, y, width, height, transform, image) -%}
+  {%- if image.entity_mbid -%}
   <a href="https://listenbrainz.org/release/{{ image.entity_mbid }}" target="_blank">
-  {% endif %}
+  {%- endif -%}
     <image
         x="{{ x }}"
         y="{{ y }}"
@@ -11,16 +11,16 @@
         href="{{ image.url }}"
         transform="{{ transform }}"
     >
-        {% if image.title and image.artist %}
+        {%- if image.title and image.artist -%}
         <title>
           {{- image.title|escape ~ " - " ~ image.artist|escape -}}
         </title>
-        {% endif %}
+        {%- endif -%}
     </image>
-  {% if image.entity_mbid %}
+  {%- if image.entity_mbid -%}
   </a>
-  {% endif %}
-{% endmacro %}
+  {%- endif -%}
+{%- endmacro -%}
 <svg version="1.1"
      xmlns="http://www.w3.org/2000/svg"
      role="img"
@@ -41,9 +41,9 @@
     </style>
     <defs>
         <filter id="colorizePlayer">
-            <feColorMatrix type="matrix" values="0 0 0 0 {{ player_color_r }}
-                                                 0 0 0 0 {{ player_color_g }}
-                                                 0 0 0 0 {{ player_color_b }}
+            <feColorMatrix type="matrix" values="0 0 0 {{ player_color_r }} 0
+                                                 0 0 0 {{ player_color_g }} 0
+                                                 0 0 0 {{ player_color_b }} 0
                                                  0 0 0 1 0" />
         </filter>
     </defs>
