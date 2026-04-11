@@ -290,6 +290,14 @@ CREATE TABLE internetarchive_cache.track (
     last_updated  TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE youtube_cache.video (
+    id            INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    video_id      TEXT UNIQUE NOT NULL,
+    title         TEXT NOT NULL,
+    channel_name  TEXT NOT NULL,
+    last_updated  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 
 CREATE TABLE background_worker_state (
     key     TEXT NOT NULL,
