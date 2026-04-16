@@ -1,6 +1,18 @@
 /* eslint-disable camelcase */
 
 declare module "react-responsive";
+declare module "@tidal-music/player" {
+  interface TidalCredentialsProvider {
+    getCredentials: () => Promise<{
+      token: string;
+      clientId: string;
+      requestedScopes: string[];
+    }>;
+  }
+  export function init(
+    credentialsProvider: TidalCredentialsProvider
+  ): Promise<any>;
+}
 declare module "spotify-web-playback-sdk";
 declare module "musickit-typescript";
 
@@ -767,6 +779,7 @@ declare type BrainzPlayerSettings = {
   internetArchiveEnabled : boolean;
   funkwhaleEnabled : boolean;
   navidromeEnabled : boolean;
+  tidalEnabled : boolean;
   brainzplayerEnabled : boolean;
   dataSourcesPriority : Array<
     | "spotify"
@@ -775,6 +788,7 @@ declare type BrainzPlayerSettings = {
     | "appleMusic"
     | "funkwhale"
     | "navidrome"
+    | "tidal"
     | "internetArchive"
   >;
 };

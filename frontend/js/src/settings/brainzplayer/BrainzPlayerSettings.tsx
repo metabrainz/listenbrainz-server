@@ -25,6 +25,8 @@ import Card from "../../components/Card";
 import faInternetArchive from "../../common/icons/faInternetArchive";
 import faFunkwhale from "../../common/icons/faFunkwhale";
 import { faNavidrome } from "../../common/icons/faNavidrome";
+import faTidal from "../../common/icons/faTidal";
+import TidalPlayer from "../../common/brainzplayer/TidalPlayer";
 import useAutoSave from "../../hooks/useAutoSave";
 
 export const dataSourcesInfo = {
@@ -63,6 +65,11 @@ export const dataSourcesInfo = {
     icon: faNavidrome,
     color: "#0084ff",
   },
+  tidal: {
+    name: "Tidal",
+    icon: faTidal,
+    color: "#000000",
+  },
 } as const;
 
 export type DataSourceKey = keyof typeof dataSourcesInfo;
@@ -72,6 +79,7 @@ export const defaultDataSourcesPriority = [
   "spotify",
   "appleMusic",
   "soundcloud",
+  "tidal",
   "funkwhale",
   "navidrome",
   "youtube",
@@ -85,6 +93,7 @@ function BrainzPlayerSettings() {
     appleAuth,
     funkwhaleAuth,
     navidromeAuth,
+    tidalAuth,
     APIService,
     currentUser,
     userPreferences,
@@ -109,6 +118,9 @@ function BrainzPlayerSettings() {
     navidromeEnabled:
       userPreferences?.brainzplayer?.navidromeEnabled ??
       Boolean(navidromeAuth?.instance_url),
+    tidalEnabled:
+      userPreferences?.brainzplayer?.tidalEnabled ??
+      TidalPlayer.hasPermissions(tidalAuth),
     brainzplayerEnabled:
       userPreferences?.brainzplayer?.brainzplayerEnabled ?? true,
     dataSourcesPriority: union(
@@ -124,6 +136,7 @@ function BrainzPlayerSettings() {
     internetArchiveEnabled,
     funkwhaleEnabled,
     navidromeEnabled,
+    tidalEnabled,
     brainzplayerEnabled,
     dataSourcesPriority,
   } = settings;
@@ -467,6 +480,48 @@ function BrainzPlayerSettings() {
             <Link to="/settings/music-services/details/">
               &quot;connect services&quot; page
             </Link>
+          </small>
+        </div>
+        <div
+          className="mb-4"
+          data-tip
+          data-tip-disable={tidalEnabled || TidalPlayer.hasPermissions(tidalAuth)}
+          data-for="login-first"
+        >
+          <Switch
+            id="enable-tidal"
+            value="tidal"
+            disabled={!tidalEnabled && !TidalPlayer.hasPermissions(tidalAuth)}
+            checked={tidalEnabled}
+            onChange={() =>
+              updateSettings((prev) => ({
+                ...prev,
+                tidalEnabled: !prev.tidalEnabled,
+              }))
+            }
+            switchLabel={
+              <span
+                className={`text-brand ${!tidalEnabled ? "text-muted" : ""}`}
+              >
+                <span>
+                  <FontAwesomeIcon
+                    icon={faTidal as IconProp}
+                    color={tidalEnabled ? dataSourcesInfo.tidal.color : ""}
+                  />
+                </span>
+                <span>&nbsp;Tidal</span>
+              </span>
+            }
+          />
+          <br />
+          <small>
+            Tidal requires a premium account.
+            <br />
+            Sign in on the{" "}
+            <Link to="/settings/music-services/details/">
+              &quot;connect services&quot; page
+            </Link>
+            .
           </small>
         </div>
         <div className="mb-4">
