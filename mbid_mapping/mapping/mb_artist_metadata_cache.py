@@ -38,6 +38,7 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
             ("artist_data ", "JSONB NOT NULL"),
             ("tag_data ", "JSONB NOT NULL"),
             ("release_group_data ", "JSONB NOT NULL"),
+            ("artist_relationship_data ", "JSONB NOT NULL"),
         ]
 
     def get_insert_queries_test_values(self):
@@ -112,7 +113,31 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                 tag["genre_mbid"] = genre_mbid
             artist_tags.append(tag)
 
-        return artist_mbid, ujson.dumps(artist), ujson.dumps({"artist": artist_tags}), ujson.dumps(release_groups)
+        artist_relationships = []
+        if row["artist_relationships"]:
+            for relation_type, direction, related_artist_mbid, related_artist_name in row["artist_relationships"]:
+                artist_relationships.append({
+                    "type": relation_type,
+                    "direction": direction,
+                    "artist_mbid": related_artist_mbid,
+                    "name": related_artist_name,
+                })
+
+        artist_relationships = sorted(
+            artist_relationships,
+            key=lambda relationship: (
+                relationship["type"] or "",
+                (relationship["name"] or "").lower()
+            )
+        )
+
+        return (
+            artist_mbid,
+            ujson.dumps(artist),
+            ujson.dumps({"artist": artist_tags}),
+            ujson.dumps(release_groups),
+            ujson.dumps(artist_relationships),
+        )
 
     def get_metadata_cache_query(self, with_values=False):
         values_cte = ""
@@ -137,6 +162,63 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                              WHERE lt.gid IN ({ARTIST_LINK_GIDS_SQL})
                                AND NOT l.ended
                           GROUP BY a.gid
+                   ), artist_relationships AS (
+                            SELECT artist_mbid
+                                 , array_agg(
+                                    jsonb_build_array(
+                                        relation_type,
+                                        relation_direction,
+                                        related_artist_mbid,
+                                        related_artist_name
+                                    )
+                                 ) AS artist_relationships
+                              FROM (
+                                     /* ----------------------------
+                                     HALF 1: FORWARD direction 
+                                     (primary artist) → (related artist / alias)
+                                      -------------------------------- */
+                                    SELECT a.gid::TEXT AS artist_mbid            -- "MBID of the primary artist"
+                                         , lt.name AS relation_type
+                                         , 'forward' AS relation_direction
+                                         , a2.gid::TEXT AS related_artist_mbid   --"MBID of related artist (stage/alias)"
+                                         , a2.name AS related_artist_name
+                                      FROM musicbrainz.artist a
+                                      JOIN musicbrainz.l_artist_artist laa
+                                        ON laa.entity0 = a.id
+                                      JOIN musicbrainz.artist a2
+                                        ON laa.entity1 = a2.id
+                                      JOIN musicbrainz.link l
+                                        ON l.id = laa.link
+                                      JOIN musicbrainz.link_type lt
+                                        ON l.link_type = lt.id
+                                      {values_join}
+                                     WHERE lt.name = 'performance name'
+                                       AND NOT l.ended
+                                    UNION ALL
+
+                                     /*------------------------------
+                                       HALF 2: BACKWARD direction
+                                       (alias) → (primary artist)
+                                      ------------------------------- */
+                                    SELECT a.gid::TEXT AS artist_mbid          
+                                         , lt.name AS relation_type
+                                         , 'backward' AS relation_direction
+                                         , a2.gid::TEXT AS related_artist_mbid
+                                         , a2.name AS related_artist_name
+                                      FROM musicbrainz.artist a
+                                      JOIN musicbrainz.l_artist_artist laa
+                                        ON laa.entity1 = a.id                 -- alias/stage name artist
+                                      JOIN musicbrainz.artist a2
+                                        ON laa.entity0 = a2.id                -- primary artist 
+                                      JOIN musicbrainz.link l
+                                        ON l.id = laa.link
+                                      JOIN musicbrainz.link_type lt
+                                        ON l.link_type = lt.id
+                                      {values_join}
+                                     WHERE lt.name = 'performance name'
+                                       AND NOT l.ended
+                                   ) relationships
+                          GROUP BY artist_mbid
                    ), artist_tags AS (
                             SELECT a.gid AS artist_mbid
                                  , array_agg(jsonb_build_array(t.name, count, a.gid, g.gid)) AS artist_tags
@@ -247,6 +329,7 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                                  , ag.name AS gender
                                  , ar.name AS area
                                  , artist_links
+                                 , artist_relationships
                                  , artist_tags
                                  , array_agg(
                                         jsonb_build_array(
@@ -277,6 +360,8 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                                 ON arl.artist_mbid = a.gid
                          LEFT JOIN artist_tags ats
                                 ON ats.artist_mbid = a.gid
+                         LEFT JOIN artist_relationships arr
+                                ON arr.artist_mbid = a.gid::TEXT
                          LEFT JOIN release_group_data rgd
                                 ON rgd.artist_mbid = a.gid
                               {values_join}
@@ -288,6 +373,7 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                                  , ag.name
                                  , ar.name
                                  , artist_links
+                                 , artist_relationships
                                  , artist_tags
         """
         return query
@@ -360,6 +446,45 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                 ON t.name = g.name
              WHERE at.last_updated > %(timestamp)s
                 OR  g.last_updated > %(timestamp)s
+        UNION
+
+        /*------------------------------------------
+        Fetches real artist who is on the left side of a "performance name"
+          relationship that has been updated after the given timestamp.
+        ---------------------------------------------*/
+            SELECT a.gid
+              FROM musicbrainz.artist a
+              JOIN musicbrainz.l_artist_artist laa
+                ON laa.entity0 = a.id
+              JOIN musicbrainz.link l
+                ON l.id = laa.link
+              JOIN musicbrainz.link_type lt
+                ON l.link_type = lt.id
+             WHERE lt.name = 'performance name'
+               AND (
+                     laa.last_updated > %(timestamp)s
+                  OR l.last_updated > %(timestamp)s
+                  OR lt.last_updated > %(timestamp)s
+               )
+        UNION
+        /*------------------------------------------
+        Fetches stage name artist who is on the right side of a "performance name"
+          relationship that has been updated after the given timestamp.
+        ---------------------------------------------*/
+            SELECT a.gid
+              FROM musicbrainz.artist a
+              JOIN musicbrainz.l_artist_artist laa
+                ON laa.entity1 = a.id
+              JOIN musicbrainz.link l
+                ON l.id = laa.link
+              JOIN musicbrainz.link_type lt
+                ON l.link_type = lt.id
+             WHERE lt.name = 'performance name'
+               AND (
+                     laa.last_updated > %(timestamp)s
+                  OR l.last_updated > %(timestamp)s
+                  OR lt.last_updated > %(timestamp)s
+               )
         UNION
             SELECT a.gid
               FROM musicbrainz.artist a

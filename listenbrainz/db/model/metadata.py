@@ -74,3 +74,6 @@ class ArtistMetadata(BaseModel):
 
     # JSON which contains metadata about the release group of this artist
     release_group_data: List[Dict]
+
+    # JSON which contains metadata about linked artist identities
+    artist_relationship_data: List[Dict]

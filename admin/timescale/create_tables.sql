@@ -142,6 +142,7 @@ CREATE TABLE mapping.mb_artist_metadata_cache (
     artist_data             JSONB NOT NULL,
     tag_data                JSONB NOT NULL,
     release_group_data      JSONB NOT NULL
+    artist_relationship_data JSONB NOT NULL
 );
 
 -- the various mapping columns should only be null if the match_type is no_match, otherwise the columns should be

@@ -13,6 +13,12 @@ declare type MusicBrainzArtist = {
     artist: Array<ArtistTag>;
   };
   gender?: string;
+  artist_relationships?: Array<{
+    type: string;
+    direction: "forward" | "backward";
+    artist_mbid: string;
+    name: string;
+  }>;
 };
 
 declare type MusicBrainzArtistCredit = {

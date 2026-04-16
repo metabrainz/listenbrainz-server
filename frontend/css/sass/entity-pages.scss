@@ -159,6 +159,16 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
       }
     }
 
+       .artist-relationships {
+      width: 100%;
+      .read-more {
+        position: relative;
+        bottom: auto;
+        padding: 0.5em 0 0;
+        text-align: left;
+      }
+    }
+
     .stats {
       margin-top: 2em;
       display: flex;
