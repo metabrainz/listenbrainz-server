@@ -1,5 +1,5 @@
 $playlist-background-color: $body-tertiary-bg;
-$description-lines: 3;
+$description-lines: 2;
 $long-description-lines: 8;
 
 #playlists-page .playlist-view-options {
@@ -231,8 +231,6 @@ $long-description-lines: 8;
   -webkit-box-orient: vertical;
   padding-right: 2em;
   margin-top: 0.5rem;
-  mask-image: linear-gradient(180deg, #000 60%, transparent 98%);
-  -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent 98%);
 
   &.long {
     max-height: $long-description-lines * 1.2em;
