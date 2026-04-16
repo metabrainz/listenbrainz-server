@@ -338,7 +338,7 @@ export default function AddData() {
           <em>
             <a href="https://unstream.stream/">Unstream</a>
           </em>
-          , a MacOS app and browser extension that detects and submit your listens,
+          , a MacOS app and browser extension that detects and submits your listens,
           and shows the best ways to support your favorite artists
         </li>
       </ul>
