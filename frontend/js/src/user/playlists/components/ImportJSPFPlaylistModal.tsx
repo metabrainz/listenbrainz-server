@@ -14,6 +14,8 @@ export default NiceModal.create(() => {
 
   const [fileError, setFileError] = React.useState<string | null>(null);
   const [fileContent, setFileContent] = React.useState<JSPFObject | null>(null);
+  const [xspfContent, setXspfContent] = React.useState<string | null>(null);
+  const [isXspf, setIsXspf] = React.useState<boolean>(false);
 
   const createPlaylist = React.useCallback(async (): Promise<
     JSPFPlaylist | undefined
@@ -97,6 +99,37 @@ export default NiceModal.create(() => {
     }
   };
 
+  const checkXSPFFileContent = (selectedFile: File | undefined): void => {
+    // Reads the file as plain text and stores the raw XSPF XML content
+    const reader = new FileReader();
+
+    reader.onload = async (e: ProgressEvent<FileReader>): Promise<void> => {
+      const textData = (e.target?.result as string) || "";
+      if (!textData.trim()) {
+        setFileError("The selected XSPF file is empty.");
+        setXspfContent(null);
+        return;
+      }
+      try {
+        const { parse } = await import("xspf-js");
+        parse(textData);
+        setFileError(null);
+        setXspfContent(textData);
+      } catch (error) {
+        setXspfContent(null);
+        setFileError(
+          error instanceof Error
+            ? `Invalid XSPF file: ${error.message}`
+            : "Invalid XSPF file: could not parse the playlist XML."
+        );
+      }
+    };
+
+    if (selectedFile) {
+      reader.readAsText(selectedFile);
+    }
+  };
+
   const handleFileChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ): void => {
@@ -104,23 +137,76 @@ export default NiceModal.create(() => {
 
     // Clear previous error when a new file is selected
     setFileError(null);
+    setFileContent(null);
+    setXspfContent(null);
+    setIsXspf(false);
 
     // Check if the file has a valid extension
     if (selectedFile) {
       const fileExtension = selectedFile?.name.split(".").pop()?.toLowerCase();
-      if (fileExtension !== "jspf" && fileExtension !== "json") {
-        setFileError("Invalid file format. Please select a valid file.");
-
-        return;
+      if (fileExtension === "jspf" || fileExtension === "json") {
+        // JSPF/JSPF-as-JSON import
+        checkFileContent(selectedFile);
+      } else if (fileExtension === "xspf") {
+        // XSPF (XML) import
+        setIsXspf(true);
+        checkXSPFFileContent(selectedFile);
+      } else {
+        setFileError(
+          "Invalid file format. Please select a .jspf, .json, or .xspf file."
+        );
       }
-      // Check if the file content is in valid JSON format and set the new playlist state
-      checkFileContent(selectedFile);
     }
   };
 
   const onSubmit = async (event: React.SyntheticEvent) => {
+    event.preventDefault();
     try {
-      const newPlaylist = await createPlaylist();
+      let newPlaylist: JSPFPlaylist | undefined;
+
+      if (isXspf) {
+        if (!currentUser?.auth_token) {
+          toast.error(
+            <ToastMsg
+              title="Error"
+              message="You must be logged in for this operation"
+            />,
+            { toastId: "auth-error" }
+          );
+          return;
+        }
+        if (!xspfContent) {
+          setFileError(
+            "No XSPF content found. Please select a valid XSPF file."
+          );
+          return;
+        }
+
+        const newPlaylistResponse = await APIService.importXSPFPlaylistTracks(
+          currentUser.auth_token,
+          xspfContent
+        );
+
+        newPlaylist = newPlaylistResponse.playlist;
+
+        toast.success(
+          <ToastMsg
+            title="Imported XSPF playlist"
+            message={
+              <>
+                Imported a playlist:
+                <Link to={`/playlist/${newPlaylistResponse.identifier}`}>
+                  {newPlaylist.title}
+                </Link>
+              </>
+            }
+          />,
+          { toastId: "import-xspf-playlist-success" }
+        );
+      } else {
+        newPlaylist = await createPlaylist();
+      }
+
       if (!newPlaylist) {
         return;
       }
@@ -150,22 +236,37 @@ export default NiceModal.create(() => {
       <Modal.Body>
         <div>
           <label className="form-label" htmlFor="playlistFile">
-            Choose or drop a file with .json or .jspf extension
+            Choose or drop a file with .json, .jspf, or .xspf extension
           </label>
           <input
             type="file"
             className="form-control"
             id="playlistFile"
-            accept=".jspf, .json"
+            accept=".jspf, .json, .xspf"
             onChange={handleFileChange}
           />
         </div>
         {fileError && <div className="has-error">{fileError}</div>}
         <p className="form-text">
           For information on the JSPF playlist format, please visit{" "}
-          <a href="https://musicbrainz.org/doc/jspf">
+          <a
+            href="https://musicbrainz.org/doc/jspf"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             musicbrainz.org/doc/jspf
           </a>
+        </p>
+        <p className="form-text">
+          You can also import playlists from XSPF files (
+          <a
+            href="https://www.xspf.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            xspf.org
+          </a>
+          ).
         </p>
       </Modal.Body>
       <Modal.Footer>
@@ -179,7 +280,10 @@ export default NiceModal.create(() => {
         <button
           type="submit"
           className="btn btn-primary"
-          disabled={!currentUser?.auth_token || fileContent === null}
+          disabled={
+            !currentUser?.auth_token ||
+            (fileContent === null && xspfContent === null)
+          }
           onClick={onSubmit}
         >
           Import

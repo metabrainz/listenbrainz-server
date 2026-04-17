@@ -8,6 +8,7 @@ declare module "time-ago";
 declare module "debounce-async";
 // declaration typescript file doesn't exist for react-datetime-picker/dist/entry.nostyle.js so had to declare a dummy declaration.
 declare module "react-datetime-picker/dist/entry.nostyle";
+declare module "xspf-js";
 
 // TODO: Remove "| null" when backend stops sending fields with null
 interface AdditionalInfo {

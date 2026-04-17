@@ -1,4 +1,5 @@
 from troi.patches.playlist_from_ms import ImportPlaylistPatch
+from troi.patches.playlist_from_xspf import ImportXSPFPlaylistPatch
 
 def import_from_spotify(token, user, playlist_id):
     args = {
@@ -51,6 +52,22 @@ def import_from_soundcloud(token, user, playlist_id):
         "min_recordings": 1
     }
     patch = ImportPlaylistPatch(args)
+    playlist = patch.generate_playlist()
+    result = playlist.get_jspf()
+    result.update({"identifier": playlist.playlists[0].mbid})
+    return result
+
+
+def import_from_xspf(xspf_content, user):
+    args = {
+        "xspf_content": xspf_content,
+        "token": user,
+        "upload": True,
+        "created_for": None,
+        "echo": False,
+        "min_recordings": 1
+    }
+    patch = ImportXSPFPlaylistPatch(args)
     playlist = patch.generate_playlist()
     result = playlist.get_jspf()
     result.update({"identifier": playlist.playlists[0].mbid})
