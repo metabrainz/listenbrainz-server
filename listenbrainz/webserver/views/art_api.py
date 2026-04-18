@@ -428,9 +428,9 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
             if scene not in valid_scenes:
                 scene = "wood"
 
-            wear_tear = request.args.get("wear_tear", "new")
+            wear_tear = request.args.get("wear_tear", "used")
             if wear_tear not in valid_wear_tear:
-                wear_tear = "new"
+                wear_tear = "used"
 
             player_color_hex = request.args.get("player_color", "ffffff")
             try:
@@ -463,7 +463,8 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
                                    player_color_url=player_color_url,
                                    player_color_r=r,
                                    player_color_g=g,
-                                   player_color_b=b), 200, {
+                                   player_color_b=b,
+                                   scene=scene), 200, {
                                        'Content-Type': 'image/svg+xml'
                                    }
 

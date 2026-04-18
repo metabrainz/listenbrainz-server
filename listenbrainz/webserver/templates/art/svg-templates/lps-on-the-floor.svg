@@ -49,11 +49,32 @@
     </defs>
 
     <!-- Layer 1: Album Art -->
-    {{ render_lp_image(89, 318, 195, 195, "rotate(6.1)", images[2]) }}
-    {{ render_lp_image(17, 223, 193, 193, "rotate(-22.4)", images[1]) }}
-    {{ render_lp_image(189, 240, 189, 189, "rotate(-4)", images[0]) }}
-    {{ render_lp_image(404, 480, 198, 198, "rotate(-11.9)", images[4]) }}
-    {{ render_lp_image(385, 488, 202, 203, "rotate(2.2)", images[3]) }}
+    {% if scene == "close" %}
+        {{ render_lp_image(180, 130, 650, 650, "rotate(-10)", images[0]) }}
+        {{ render_lp_image(-100, -100, 350, 350, "rotate(15)", images[1]) }}
+        {{ render_lp_image(750, -50, 300, 300, "rotate(-8)", images[2]) }}
+        {{ render_lp_image(-50, 750, 300, 300, "rotate(-20)", images[3]) }}
+        {{ render_lp_image(800, 800, 280, 280, "rotate(5)", images[4]) }}
+    {% elif scene == "vinyl" %}
+        {{ render_lp_image(50, 50, 280, 280, "rotate(-15)", images[0]) }}
+        {{ render_lp_image(650, 0, 300, 300, "rotate(10)", images[1]) }}
+        {{ render_lp_image(200, 380, 260, 260, "rotate(-5)", images[2]) }}
+        {{ render_lp_image(600, 350, 280, 280, "rotate(8)", images[3]) }}
+        {{ render_lp_image(300, 680, 270, 270, "rotate(-12)", images[4]) }}
+    {% elif scene == "many" %}
+        {{ render_lp_image(550, 150, 280, 280, "rotate(-15)", images[0]) }}
+        {{ render_lp_image(100, 200, 260, 260, "rotate(10)", images[1]) }}
+        {{ render_lp_image(380, 380, 300, 300, "rotate(-5)", images[2]) }}
+        {{ render_lp_image(50, 620, 260, 260, "rotate(15)", images[3]) }}
+        {{ render_lp_image(680, 580, 260, 260, "rotate(-8)", images[4]) }}
+    {% else %}
+        {# wood — rotate around image center to align with sleeve overlays #}
+        {{ render_lp_image(89, 318, 195, 195, "rotate(6.1,186,415)", images[2]) }}
+        {{ render_lp_image(17, 223, 193, 193, "rotate(-22.4,113,319)", images[1]) }}
+        {{ render_lp_image(189, 240, 189, 189, "rotate(-4,283,334)", images[0]) }}
+        {{ render_lp_image(404, 480, 198, 198, "rotate(-11.9,503,579)", images[4]) }}
+        {{ render_lp_image(385, 488, 202, 203, "rotate(2.2,486,589)", images[3]) }}
+    {% endif %}
 
     <!-- Layer 2: Scene Background -->
     <image x="0" y="0" width="1000" height="1000" href="{{ bg_url }}" class="background-image" />

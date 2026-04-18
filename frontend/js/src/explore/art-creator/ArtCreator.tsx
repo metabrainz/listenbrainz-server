@@ -224,7 +224,7 @@ export default function ArtCreator() {
   );
   const [customPresets, setCustomPresets] = useState<ColorPreset[]>([]);
   const [scene, setScene] = useState<string>("wood");
-  const [wearTear, setWearTear] = useState<string>("new");
+  const [wearTear, setWearTear] = useState<string>("used");
   const [playerColor, setPlayerColor] = useState<string>("#ffffff");
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const previewSVGRef = React.useRef<SVGSVGElement>(null);
