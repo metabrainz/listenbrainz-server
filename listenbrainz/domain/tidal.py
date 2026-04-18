@@ -10,7 +10,7 @@ from listenbrainz.domain.brainz_service import BaseBrainzService
 
 TIDAL_AUTHORIZE_URL = "https://login.tidal.com/oauth2/authorize"
 TIDAL_TOKEN_URL = "https://auth.tidal.com/v1/oauth2/token"
-TIDAL_SCOPES = ["r_usr", "w_usr"]
+TIDAL_SCOPES = ["r_usr"]
 
 
 class TidalService(BaseBrainzService):
