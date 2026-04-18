@@ -485,7 +485,9 @@ function BrainzPlayerSettings() {
         <div
           className="mb-4"
           data-tip
-          data-tip-disable={tidalEnabled || TidalPlayer.hasPermissions(tidalAuth)}
+          data-tip-disable={
+            tidalEnabled || TidalPlayer.hasPermissions(tidalAuth)
+          }
           data-for="login-first"
         >
           <Switch

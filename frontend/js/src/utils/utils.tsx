@@ -835,6 +835,7 @@ type GlobalAppProps = {
   appleMusic?: AppleMusicUser;
   funkwhale?: FunkwhaleUser;
   navidrome?: NavidromeUser;
+  tidal?: TidalUser;
   user_preferences?: UserPreferences;
   flair?: Flair;
 };

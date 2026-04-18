@@ -1110,10 +1110,7 @@ export default function BrainzPlayer() {
     ) {
       invalidateDataSource(funkwhalePlayerRef.current);
     }
-    if (
-      !TidalPlayer.hasPermissions(tidalAuth) &&
-      tidalPlayerRef?.current
-    ) {
+    if (!TidalPlayer.hasPermissions(tidalAuth) && tidalPlayerRef?.current) {
       invalidateDataSource(tidalPlayerRef.current);
     }
     return () => {
@@ -1122,7 +1119,14 @@ export default function BrainzPlayer() {
       stopPlayerStateTimer();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spotifyAuth, soundcloudAuth, navidromeAuth, appleAuth, funkwhaleAuth, tidalAuth]);
+  }, [
+    spotifyAuth,
+    soundcloudAuth,
+    navidromeAuth,
+    appleAuth,
+    funkwhaleAuth,
+    tidalAuth,
+  ]);
 
   const { pathname } = useLocation();
 

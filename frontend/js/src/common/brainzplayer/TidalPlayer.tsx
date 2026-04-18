@@ -36,9 +36,7 @@ interface TidalPlayerSDK {
   seek: (positionMs: number) => void;
   setVolume: (volume: number) => void;
   events: {
-    subscribe: (
-      handler: (event: TidalPlayerEvent) => void
-    ) => () => void;
+    subscribe: (handler: (event: TidalPlayerEvent) => void) => () => void;
   };
 }
 
@@ -62,9 +60,7 @@ interface TidalPlayerEvent {
   payload?: TidalPlaybackPayload | TidalErrorPayload;
 }
 
-export type TidalPlayerState = {
-  currentTrackId?: string;
-};
+export type TidalPlayerState = {};
 
 export type TidalPlayerProps = DataSourceProps & {
   refreshTidalToken: () => Promise<string>;
@@ -74,7 +70,6 @@ export default class TidalPlayer
   extends React.Component<TidalPlayerProps, TidalPlayerState>
   implements DataSourceType {
   static contextType = GlobalAppContext;
-  declare context: React.ContextType<typeof GlobalAppContext>;
 
   static hasPermissions = (tidalUser?: TidalUser) => {
     return Boolean(tidalUser?.access_token);
@@ -85,14 +80,8 @@ export default class TidalPlayer
       listen,
       "track_metadata.additional_info.music_service"
     );
-    const originURL = _get(
-      listen,
-      "track_metadata.additional_info.origin_url"
-    );
-    const tidalId = _get(
-      listen,
-      "track_metadata.additional_info.tidal_id"
-    );
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    const tidalId = _get(listen, "track_metadata.additional_info.tidal_id");
     return (
       Boolean(tidalId) ||
       (isString(musicService) &&
@@ -104,15 +93,14 @@ export default class TidalPlayer
   static getURLFromListen = (
     listen: Listen | JSPFTrack
   ): string | undefined => {
-    const originURL = _get(
-      listen,
-      "track_metadata.additional_info.origin_url"
-    );
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
     if (originURL && /tidal\.com/.test(originURL)) {
       return originURL;
     }
     return undefined;
   };
+
+  declare context: React.ContextType<typeof GlobalAppContext>;
 
   public name = "tidal";
   public domainName = "tidal.com";
@@ -126,7 +114,7 @@ export default class TidalPlayer
 
   constructor(props: TidalPlayerProps) {
     super(props);
-    this.state = { currentTrackId: undefined };
+    this.state = {};
   }
 
   async componentDidMount() {
@@ -198,10 +186,7 @@ export default class TidalPlayer
             onDurationChange(payload.duration * 1000);
           }
           onProgressChange(payload.position * 1000);
-        } else if (
-          payload.state === "PAUSED" ||
-          payload.state === "STALLED"
-        ) {
+        } else if (payload.state === "PAUSED" || payload.state === "STALLED") {
           onPlayerPausedChange(true);
         }
         break;
@@ -211,7 +196,10 @@ export default class TidalPlayer
         break;
       case "error": {
         const err = event.payload as TidalErrorPayload;
-        handleError(err?.message ?? "Tidal playback error", "Tidal Player Error");
+        handleError(
+          err?.message ?? "Tidal playback error",
+          "Tidal Player Error"
+        );
         onTrackNotFound();
         break;
       }
@@ -221,10 +209,7 @@ export default class TidalPlayer
   };
 
   playListen = (listen: Listen | JSPFTrack): void => {
-    const tidalId = _get(
-      listen,
-      "track_metadata.additional_info.tidal_id"
-    );
+    const tidalId = _get(listen, "track_metadata.additional_info.tidal_id");
     if (tidalId) {
       this.playByTidalId(String(tidalId));
     } else {
@@ -250,7 +235,6 @@ export default class TidalPlayer
         false
       );
       await this.player.play();
-      this.setState({ currentTrackId: trackId });
     } catch (error) {
       await this.handleTokenError(
         error,
