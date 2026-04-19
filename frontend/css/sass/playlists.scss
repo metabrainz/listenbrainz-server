@@ -231,6 +231,8 @@ $long-description-lines: 8;
   -webkit-box-orient: vertical;
   padding-right: 2em;
   margin-top: 0.5rem;
+  mask-image: linear-gradient(180deg, #000 60%, transparent 98%);
+  -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent 98%);
 
   &.long {
     max-height: $long-description-lines * 1.2em;
@@ -255,4 +257,9 @@ $long-description-lines: 8;
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+.playlist-card-list-view .text-summary,
+.playlist .text-summary {
+mask-image: none;
+-webkit-mask-image: none;
 }
