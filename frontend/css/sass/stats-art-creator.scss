@@ -1,15 +1,21 @@
+@use "sass:map";
+
 $color-selector-size: 24px;
 
 #stats-art-creator {
   display: flex;
+  flex-wrap: wrap;
   gap: 15px;
   margin-right: -15px;
   margin-top: -$nav-bottom-padding;
+  overflow: hidden;
 
   .artwork-container {
     margin: auto;
     padding: 15px 0;
     text-align: center;
+    flex: 1 1 600px;
+    min-width: 0;
   }
 
   .stats-art-gallery {
@@ -66,6 +72,7 @@ $color-selector-size: 24px;
   .settings-navbar {
     margin-left: auto;
     max-width: 320px;
+    min-width: 0;
     overflow-y: scroll;
 
     /* prettier-ignore */
@@ -157,7 +164,7 @@ $color-selector-size: 24px;
   .preview {
     border-radius: 5px;
     margin-bottom: 10px;
-    max-width: min(700px, 55vw);
+    max-width: 100%;
     aspect-ratio: 1;
     height: auto;
   }
@@ -178,7 +185,7 @@ $color-selector-size: 24px;
     padding-left: 0;
 
     /* Input */
-    > input {
+    >input {
       appearance: none;
       -moz-appearance: none;
       -webkit-appearance: none;
@@ -215,20 +222,20 @@ $color-selector-size: 24px;
         transition: transform 0s, opacity 0s;
       }
 
-      &:checked + span::before {
+      &:checked+span::before {
         background-color: $black;
       }
 
-      &:checked + span::after {
+      &:checked+span::after {
         background-color: $gray-600;
         transform: translateX(10px);
       }
 
-      &:active + span::before {
+      &:active+span::before {
         background-color: $gray-600;
       }
 
-      &:checked:active + span::before {
+      &:checked:active+span::before {
         background-color: $black;
       }
 
@@ -237,21 +244,21 @@ $color-selector-size: 24px;
         opacity: 0;
       }
 
-      &:disabled + span::before {
+      &:disabled+span::before {
         background-color: $gray-300;
       }
 
-      &:checked:disabled + span::before {
+      &:checked:disabled+span::before {
         background-color: #bfdbda;
       }
 
-      &:checked:disabled + span::after {
+      &:checked:disabled+span::after {
         background-color: $black;
       }
     }
 
     /* Track */
-    > span::before {
+    >span::before {
       content: "";
       display: inline-block;
       margin: 5px 0 5px 10px;
@@ -264,7 +271,7 @@ $color-selector-size: 24px;
     }
 
     /* Thumb */
-    > span::after {
+    >span::after {
       content: "";
       position: absolute;
       top: 4px;
@@ -279,7 +286,7 @@ $color-selector-size: 24px;
     }
 
     /* Hover, Focus */
-    &:hover > input {
+    &:hover>input {
       opacity: 0.04;
 
       &:focus {
@@ -302,7 +309,7 @@ $color-selector-size: 24px;
       flex-basis: 300px;
       justify-content: left;
 
-      > .btn-link > span {
+      >.btn-link>span {
         margin-right: 0.2em;
         font-size: 14px;
       }
@@ -318,21 +325,21 @@ $color-selector-size: 24px;
       margin-left: 0.6em;
       margin-right: auto;
 
-      > input {
+      >input {
         text-overflow: ellipsis;
         border-radius: 5px 0 0 5px;
         height: inherit;
       }
 
-      > span {
+      >span {
         height: inherit;
 
-        > button {
+        >button {
           height: inherit;
           border-radius: 0 5px 5px 0;
           line-height: 1em;
 
-          > svg {
+          >svg {
             font-size: 1.5em;
           }
         }
@@ -350,6 +357,55 @@ $color-selector-size: 24px;
 
     .input-group-text {
       font-size: 1.4rem;
+    }
+  }
+
+  /* Mobile responsive styles */
+  /* Using 'lg' breakpoint to match sidebar.scss media query at 992px */
+  @media (max-width: map.get($grid-breakpoints, "lg")) {
+    flex-direction: column;
+    margin-right: 0;
+    gap: 0;
+    overflow-x: hidden;
+
+    .artwork-container {
+      width: 100%;
+      /* Reduced padding for better space utilization on mobile */
+      padding: 15px 0;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    .preview {
+      max-width: 100%;
+      width: 100%;
+    }
+
+    .settings-navbar {
+      max-width: 100%;
+      width: 100%;
+      margin-left: 0;
+    }
+
+    .stats-art-gallery {
+      justify-content: center;
+    }
+
+    #share-button-bar {
+      flex-direction: column;
+      gap: 0.5em;
+
+      .profile,
+      .share-buttons {
+        flex-basis: auto;
+        width: 100%;
+      }
+
+      .link-container {
+        width: 100%;
+        margin-left: 0;
+        min-width: unset;
+      }
     }
   }
 }
