@@ -76,5 +76,4 @@ class ArtistMetadata(BaseModel):
     release_group_data: List[Dict]
 
     # JSON which contains metadata about linked artist identities
-    # Backwards compatible default for databases/tests that may not have this column populated yet.
-    artist_relationship_data: List[Dict] = [] 
+    artist_relationship_data: List[Dict] = []

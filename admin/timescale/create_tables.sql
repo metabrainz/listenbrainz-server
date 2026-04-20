@@ -141,7 +141,7 @@ CREATE TABLE mapping.mb_artist_metadata_cache (
     artist_mbid             UUID NOT NULL,
     artist_data             JSONB NOT NULL,
     tag_data                JSONB NOT NULL,
-    release_group_data      JSONB NOT NULL
+    release_group_data      JSONB NOT NULL,
     artist_relationship_data JSONB NOT NULL
 );
 
