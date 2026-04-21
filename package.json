@@ -34,6 +34,7 @@
   "homepage": "https://listenbrainz.org",
   "dependencies": {
     "@babel/runtime": "^7.20.6",
+    "@tidal-music/player": "^0.2.0",
     "@braintree/sanitize-url": "^6.0.1",
     "@cospired/i18n-iso-languages": "^3.0.0",
     "@ebay/nice-modal-react": "^1.2.9",
