@@ -49,7 +49,7 @@
     {% set text_limit = 18 if show_left else 32 %}
 
     {% if show_left and show_right %}
-      {% set right_x = image.x + image.width // 2 %}
+      {% set right_x = image.x + 28 %}
       {% set left_x = image.x + 5 %}
     {% elif show_left %}
       {% set left_x = image.x + 5 %}
