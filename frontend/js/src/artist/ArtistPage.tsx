@@ -38,7 +38,7 @@ import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import { RouteQuery } from "../utils/Loader";
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
 import Pill from "../components/Pill";
-import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
+import ScrollContainer from "../components/HorizontalScrollContainer";
 
 import Username from "../common/Username";
 import CBReview from "../cb-review/CBReview";
@@ -536,21 +536,15 @@ export default function ArtistPage(): JSX.Element {
                   <h3 className="header-with-line">{type}</h3>
                   <SortingButtons sort={sort} setSort={setSort} />
                 </div>
-                <HorizontalScrollContainer
+                <ScrollContainer
                   direction="vertical"
                   showScrollbar={false}
                   enableDragScroll={false}
                 >
-                  <div
-                    className={`cover-art-container ${
-                      rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT
-                        ? "single-row"
-                        : ""
-                    }`}
-                  >
+                  <div className="cover-art-container">
                     {rgGroup.map(getReleaseCard)}
                   </div>
-                </HorizontalScrollContainer>
+                </ScrollContainer>
               </div>
             );
           })}

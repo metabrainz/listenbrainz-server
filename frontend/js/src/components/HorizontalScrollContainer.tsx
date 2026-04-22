@@ -9,7 +9,7 @@ import { throttle } from "lodash";
 import React, { PropsWithChildren } from "react";
 import { useDraggable } from "react-use-draggable-scroll-safe";
 
-type HorizontalScrollContainerProps = {
+type ScrollContainerProps = {
   showScrollbar?: Boolean;
   enableDragScroll?: Boolean;
   className?: string;
@@ -19,13 +19,13 @@ type HorizontalScrollContainerProps = {
 // How many pixels do the arrow buttons scroll?
 const MANUAL_SCROLL_AMOUNT = 500;
 
-export default function HorizontalScrollContainer({
+export default function ScrollContainer({
   showScrollbar = true,
   enableDragScroll = true,
   direction = "horizontal",
   className,
   children,
-}: PropsWithChildren<HorizontalScrollContainerProps>) {
+}: PropsWithChildren<ScrollContainerProps>) {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
   const isVertical = direction === "vertical";
@@ -137,7 +137,7 @@ export default function HorizontalScrollContainer({
       className={
         isVertical
           ? "scroll-container vertical"
-          : "scroll-container horizontal horizontal-scroll-container"
+          : "scroll-container horizontal"
       }
     >
       <button
