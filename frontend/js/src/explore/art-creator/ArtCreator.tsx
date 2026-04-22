@@ -797,8 +797,10 @@ export default function ArtCreator() {
             showArtist={showArtist}
             showRelease={showRelease}
             showListenCount={showListenCount}
-            captionTextColor={captionTextColor}
-            captionBgColor={captionBgColor}
+            captionTextColor={
+              style.type === "grid" ? captionTextColor : undefined
+            }
+            captionBgColor={style.type === "grid" ? captionBgColor : undefined}
             fontFamily={fontFamily !== DEFAULT_FONT ? fontFamily : undefined}
             styles={{
               textColor,
