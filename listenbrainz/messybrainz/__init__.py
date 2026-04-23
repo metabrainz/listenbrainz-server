@@ -58,19 +58,99 @@ def insert_all_in_transaction(ts_conn, submissions: list[dict]):
     Returns:
         A list of dicts containing the recording data for each inserted recording
     """
+    if not submissions:
+        return []
+
+    def normalize_text(value):
+        return value.lower() if value is not None else None
+
+    def submission_key(submission):
+        return (
+            normalize_text(submission["title"]),
+            normalize_text(submission["artist"]),
+            normalize_text(submission.get("release")),
+            normalize_text(submission.get("track_number")),
+            submission.get("duration"),
+        )
+
+    keyed_submissions = []
+    distinct_submissions = {}
+    for submission in submissions:
+        key = submission_key(submission)
+        keyed_submissions.append(key)
+        distinct_submissions.setdefault(key, submission)
+
+    existing_args = [
+        (recording, artist_credit, release, track_number, duration)
+        for recording, artist_credit, release, track_number, duration in distinct_submissions.keys()
+    ]
+    existing_query = """
+        SELECT input.recording
+             , input.artist_credit
+             , input.release
+             , input.track_number
+             , input.duration
+             , matched.gid::text
+          FROM (VALUES %s) AS input (recording, artist_credit, release, track_number, duration)
+     LEFT JOIN LATERAL (
+                SELECT gid
+                  FROM messybrainz.submissions s
+                 WHERE lower(s.recording) = input.recording
+                   AND lower(s.artist_credit) = input.artist_credit
+                   AND lower(s.release) IS NOT DISTINCT FROM input.release
+                   AND lower(s.track_number) IS NOT DISTINCT FROM input.track_number
+                   AND s.duration IS NOT DISTINCT FROM input.duration
+              ORDER BY s.submitted
+                 LIMIT 1
+           ) matched ON TRUE
+    """
+
     with sentry_sdk.start_span(op="db", name="resolve or insert MessyBrainz recordings") as span:
         span.set_data("recording_count", len(submissions))
-        ret = []
-        for submission in submissions:
-            result = submit_recording(
-                ts_conn,
-                submission["title"],
-                submission["artist"],
-                submission.get("release"),
-                submission.get("track_number"),
-                submission.get("duration")
-            )
-            ret.append(result)
+        with sentry_sdk.start_span(op="db", name="lookup existing MessyBrainz recordings") as lookup_span:
+            lookup_span.set_data("recording_count", len(existing_args))
+            with ts_conn.connection.cursor() as curs:
+                rows = execute_values(curs, existing_query, existing_args, page_size=len(existing_args), fetch=True)
+
+        resolved_msids = {
+            (recording, artist_credit, release, track_number, duration): msid
+            for recording, artist_credit, release, track_number, duration, msid in rows
+            if msid is not None
+        }
+        missing_keys = [key for key in distinct_submissions if key not in resolved_msids]
+        span.set_data("existing_count", len(resolved_msids))
+        span.set_data("missing_count", len(missing_keys))
+
+        if missing_keys:
+            insert_args = [
+                (
+                    str(uuid.uuid4()),
+                    distinct_submissions[key]["title"],
+                    distinct_submissions[key]["artist"],
+                    distinct_submissions[key].get("release"),
+                    distinct_submissions[key].get("track_number"),
+                    distinct_submissions[key].get("duration"),
+                )
+                for key in missing_keys
+            ]
+            insert_query = """
+                INSERT INTO messybrainz.submissions (gid, recording, artist_credit, release, track_number, duration)
+                     VALUES %s
+                 RETURNING gid::text
+                         , lower(recording)
+                         , lower(artist_credit)
+                         , lower(release)
+                         , lower(track_number)
+                         , duration
+            """
+            with sentry_sdk.start_span(op="db", name="insert missing MessyBrainz recordings") as insert_span:
+                insert_span.set_data("recording_count", len(insert_args))
+                with ts_conn.connection.cursor() as curs:
+                    inserted_rows = execute_values(curs, insert_query, insert_args, page_size=len(insert_args), fetch=True)
+            for msid, recording, artist_credit, release, track_number, duration in inserted_rows:
+                resolved_msids[(recording, artist_credit, release, track_number, duration)] = msid
+
+        ret = [resolved_msids[key] for key in keyed_submissions]
     with sentry_sdk.start_span(op="db", name="commit MessyBrainz recording batch") as span:
         span.set_data("recording_count", len(ret))
         ts_conn.commit()
