@@ -8,6 +8,7 @@ import orjson
 import psycopg2
 import psycopg2.sql
 import sqlalchemy
+import sentry_sdk
 from brainzutils import cache
 from psycopg2.errors import UntranslatableCharacter
 from psycopg2.extras import execute_values
@@ -158,9 +159,11 @@ class TimescaleListenStore:
             which rows were inserted into the DB. If the row is not listed in the return values, it was a duplicate.
         """
 
-        submit = []
-        for listen in listens:
-            submit.append(listen.to_timescale())
+        with sentry_sdk.start_span(op="serialize", name="serialize listens for Timescale insert") as span:
+            span.set_data("listen_count", len(listens))
+            submit = []
+            for listen in listens:
+                submit.append(listen.to_timescale())
 
         query = """
             WITH inserted_listens AS (
@@ -184,20 +187,27 @@ class TimescaleListenStore:
         """
 
         inserted_rows = []
-        conn = timescale.engine.raw_connection()
+        with sentry_sdk.start_span(op="db", name="open Timescale raw connection"):
+            conn = timescale.engine.raw_connection()
         with conn.cursor() as curs:
             try:
-                execute_values(curs, query, submit, template=None)
-                while True:
-                    result = curs.fetchone()
-                    if not result:
-                        break
-                    inserted_rows.append((result[0], result[1], result[2]))
+                with sentry_sdk.start_span(op="db", name="execute Timescale listen insert") as span:
+                    span.set_data("listen_count", len(submit))
+                    execute_values(curs, query, submit, template=None)
+                    while True:
+                        result = curs.fetchone()
+                        if not result:
+                            break
+                        inserted_rows.append((result[0], result[1], result[2]))
+                    span.set_data("rows_inserted", len(inserted_rows))
             except UntranslatableCharacter:
-                conn.rollback()
+                with sentry_sdk.start_span(op="db", name="rollback Timescale insert after encoding failure"):
+                    conn.rollback()
                 return
 
-        conn.commit()
+        with sentry_sdk.start_span(op="db", name="commit Timescale listen insert") as span:
+            span.set_data("rows_inserted", len(inserted_rows))
+            conn.commit()
 
         return inserted_rows
 

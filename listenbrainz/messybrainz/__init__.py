@@ -3,6 +3,7 @@ from typing import Iterable
 
 import sqlalchemy
 import sqlalchemy.exc
+import sentry_sdk
 from psycopg2.extras import execute_values
 from sqlalchemy import text
 
@@ -19,28 +20,33 @@ def submit_listens_and_sing_me_a_sweet_song(recordings):
         A dict with key 'payload' and value set to a list of dicts containing the
         recording data for each inserted recording.
     """
-    for r in recordings:
-        if "artist" not in r or "title" not in r:
-            raise exceptions.BadDataException("Require artist and title keys in submission")
+    with sentry_sdk.start_span(op="messybrainz", name="submit recordings to MessyBrainz") as span:
+        span.set_data("recording_count", len(recordings))
+        for r in recordings:
+            if "artist" not in r or "title" not in r:
+                raise exceptions.BadDataException("Require artist and title keys in submission")
 
-    attempts = 0
-    success = False
-    while not success and attempts < 3:
-        try:
-            with timescale.engine.connect() as connection:
-                data = insert_all_in_transaction(connection, recordings)
-                success = True
-        except sqlalchemy.exc.IntegrityError:
-            # If we get an IntegrityError then our transaction failed.
-            # We should try again
-            pass
+        attempts = 0
+        success = False
+        while not success and attempts < 3:
+            attempts += 1
+            try:
+                with sentry_sdk.start_span(op="db", name="insert recording batch into MessyBrainz") as insert_span:
+                    insert_span.set_data("recording_count", len(recordings))
+                    insert_span.set_data("attempt", attempts)
+                    with timescale.engine.connect() as connection:
+                        data = insert_all_in_transaction(connection, recordings)
+                        success = True
+            except sqlalchemy.exc.IntegrityError:
+                # If we get an IntegrityError then our transaction failed.
+                # We should try again
+                pass
 
-        attempts += 1
-
-    if success:
-        return data
-    else:
-        raise exceptions.ErrorAddingException("Failed to add data")
+        span.set_data("attempts", attempts)
+        if success:
+            return data
+        else:
+            raise exceptions.ErrorAddingException("Failed to add data")
 
 
 def insert_all_in_transaction(ts_conn, submissions: list[dict]):
@@ -52,18 +58,22 @@ def insert_all_in_transaction(ts_conn, submissions: list[dict]):
     Returns:
         A list of dicts containing the recording data for each inserted recording
     """
-    ret = []
-    for submission in submissions:
-        result = submit_recording(
-            ts_conn,
-            submission["title"],
-            submission["artist"],
-            submission.get("release"),
-            submission.get("track_number"),
-            submission.get("duration")
-        )
-        ret.append(result)
-    ts_conn.commit()
+    with sentry_sdk.start_span(op="db", name="resolve or insert MessyBrainz recordings") as span:
+        span.set_data("recording_count", len(submissions))
+        ret = []
+        for submission in submissions:
+            result = submit_recording(
+                ts_conn,
+                submission["title"],
+                submission["artist"],
+                submission.get("release"),
+                submission.get("track_number"),
+                submission.get("duration")
+            )
+            ret.append(result)
+    with sentry_sdk.start_span(op="db", name="commit MessyBrainz recording batch") as span:
+        span.set_data("recording_count", len(ret))
+        ts_conn.commit()
     return ret
 
 
