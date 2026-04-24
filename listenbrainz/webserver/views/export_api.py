@@ -5,7 +5,7 @@ from psycopg2 import DatabaseError
 
 from listenbrainz.db import user_data_export
 from listenbrainz.webserver import db_conn
-from listenbrainz.webserver.decorators import api_listenstore_needed
+from listenbrainz.webserver.decorators import api_listenstore_needed, crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound
 from listenbrainz.webserver.views.api_tools import validate_auth_header
 
@@ -13,6 +13,7 @@ export_api_bp = Blueprint("export_api", __name__)
 
 
 @export_api_bp.route("/", methods=["POST"])
+@crossdomain
 @api_listenstore_needed
 def create_export_task():
     """ Add a request to export the user data to an archive in background. """
@@ -34,6 +35,7 @@ def create_export_task():
 
 
 @export_api_bp.route("/<int:export_id>", methods=["GET"])
+@crossdomain
 @api_listenstore_needed
 def get_export_task(export_id):
     """ Retrieve the requested export's data if it belongs to the specified user """
@@ -47,6 +49,7 @@ def get_export_task(export_id):
 
 
 @export_api_bp.route("/", methods=["GET"])
+@crossdomain
 @api_listenstore_needed
 def list_export_tasks():
     """ Retrieve the all export tasks for the current user """
@@ -58,6 +61,7 @@ def list_export_tasks():
 
 
 @export_api_bp.route("/<int:export_id>/download", methods=["GET"])
+@crossdomain
 @api_listenstore_needed
 def download_export_archive(export_id):
     """ Download the requested export if it is complete and belongs to the specified user """
