@@ -118,6 +118,8 @@ class TestGeneratePlaylistOgImage:
         assert result_img.size == (OPENGRAPH_IMAGE_WIDTH, OPENGRAPH_IMAGE_HEIGHT)
         assert result_img.mode == "RGB"
 
+        assert mock_download.call_count == 1
+
     @patch("listenbrainz.art.og_image._download_image")
     def test_four_urls_creates_grid_composition(self, mock_download, tmp_path):
         overlay_path = self._create_overlay_file(tmp_path)
@@ -150,8 +152,8 @@ class TestGeneratePlaylistOgImage:
         """If some of the 4 downloads fail, fall back to single image."""
         overlay_path = self._create_overlay_file(tmp_path)
         good_img = Image.new("RGBA", (500, 500), (255, 0, 0, 255))
-        # First one succeeds, rest fail
-        mock_download.side_effect = [good_img, None, None, None]
+        # Two good ones, two fails
+        mock_download.side_effect = [good_img, good_img, None, None]
 
         urls = [f"https://example.com/art{i}.jpg" for i in range(4)]
         result = generate_playlist_og_image(urls, overlay_path=overlay_path)
@@ -159,6 +161,8 @@ class TestGeneratePlaylistOgImage:
 
         result_img = Image.open(result)
         assert result_img.size == (OPENGRAPH_IMAGE_WIDTH, OPENGRAPH_IMAGE_HEIGHT)
+
+        assert mock_download.call_count == 4
 
     @patch("listenbrainz.art.og_image._download_image")
     def test_all_downloads_fail_returns_none(self, mock_download, tmp_path):
@@ -170,13 +174,16 @@ class TestGeneratePlaylistOgImage:
             overlay_path=overlay_path,
         )
         assert result is None
+        assert mock_download.call_count == 1
 
-    def test_missing_overlay_returns_none(self):
+    @patch("listenbrainz.art.og_image._download_image")
+    def test_missing_overlay_returns_none(self, mock_download):
         result = generate_playlist_og_image(
             ["https://example.com/art1.jpg"],
             overlay_path="/nonexistent/path/overlay.png",
         )
         assert result is None
+        assert mock_download.call_count == 0
 
     @patch("listenbrainz.art.og_image._download_image")
     def test_output_starts_with_png_magic_bytes(self, mock_download, tmp_path):
