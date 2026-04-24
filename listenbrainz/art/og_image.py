@@ -1,5 +1,6 @@
 import io
 import logging
+import os.path
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -15,21 +16,7 @@ OPENGRAPH_IMAGE_HEIGHT = 630
 # the rest is for the LB overlay branding
 GRID_WIDTH = int(OPENGRAPH_IMAGE_WIDTH * 0.72)  # 921px
 
-# Local dev fallback: frontend/img lives alongside the source tree
-_OVERLAY_PATH_DEV = Path(__file__).resolve().parent.parent.parent / "frontend" / "img" / "og-overlay.png"
-
-
-def _get_overlay_path():
-    """Use Flask's static folder (production) or fall back to frontend/ (local dev)."""
-    try:
-        from flask import current_app
-        static_path = Path(current_app.static_folder) / "img" / "og-overlay.png"
-        if static_path.exists():
-            return static_path
-    except RuntimeError:
-        # Outside a Flask request context (e.g. tests) — fall through to dev path
-        pass
-    return _OVERLAY_PATH_DEV
+OVERLAY_PATH = os.path.join("/", "static", "img", "og-overlay.png")
 
 # Timeout for downloading cover art images (seconds)
 DOWNLOAD_TIMEOUT = 5
@@ -119,7 +106,7 @@ def generate_playlist_og_image(cover_urls: list[str], overlay_path: str | Path |
         return None
 
     if overlay_path is None:
-        overlay_path = _get_overlay_path()
+        overlay_path = OVERLAY_PATH
 
     # load the overlay
     try:
