@@ -19,9 +19,7 @@ export default function Settings() {
 
   const [showToken, setShowToken] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
-  const [isBetaState, setIsBetaState] = React.useState(
-    window.location.hostname.includes("beta")
-  );
+  const isBetaState = window.location.hostname.includes("beta");
   const handleBetaToggle = () => {
     const returnTo = encodeURIComponent(window.location.pathname);
     window.location.href = `/settings/set-beta-preference/?returnto=${returnTo}`;
@@ -95,21 +93,6 @@ export default function Settings() {
         </div>
 
         <FlairsSettings />
-        <h3>Beta Preferences</h3>
-
-        <Switch
-          id="enable-beta-site"
-          value="beta-site"
-          checked={isBetaState}
-          onChange={handleBetaToggle}
-          switchLabel={
-            <span className={`text-brand ${!isBetaState ? "text-muted" : ""}`}>
-              <span>
-                {isBetaState ? "Stop using Beta Site" : "Use Beta Site"}
-              </span>
-            </span>
-          }
-        />
 
         <h3>User token</h3>
         <p>
@@ -153,6 +136,21 @@ export default function Settings() {
             </Link>
           </span>
         </p>
+        <h3>Beta Preferences</h3>
+
+        <Switch
+          id="enable-beta-site"
+          value="beta-site"
+          checked={isBetaState}
+          onChange={handleBetaToggle}
+          switchLabel={
+            <span className={`text-brand ${!isBetaState ? "text-muted" : ""}`}>
+              <span>
+                {isBetaState ? "Stop using Beta Site" : "Use Beta Site"}
+              </span>
+            </span>
+          }
+        />
       </div>
     </>
   );
