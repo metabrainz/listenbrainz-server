@@ -136,7 +136,7 @@ export default function Settings() {
             </Link>
           </span>
         </p>
-        <h3>Beta Preferences</h3>
+        <h3>Beta Preference</h3>
 
         <Switch
           id="enable-beta-site"
