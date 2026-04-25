@@ -222,6 +222,7 @@ RUN chmod 0644 /etc/cron.d/crontab
 
 # copy the compiled js files and statis assets from image to prod
 COPY --from=listenbrainz-frontend-prod /code/frontend/robots.txt /static/
+COPY --from=listenbrainz-frontend-prod /code/frontend/favicon.ico /static/
 COPY --from=listenbrainz-frontend-prod /code/frontend/sound /static/sound
 COPY --from=listenbrainz-frontend-prod /code/frontend/fonts /static/fonts
 COPY --from=listenbrainz-frontend-prod /code/frontend/img /static/img
