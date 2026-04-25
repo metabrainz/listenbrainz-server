@@ -362,15 +362,13 @@ export default class SpotifyPlayer
     });
   };
 
+  pause = (): void => {
+    this.spotifyPlayer?.pause();
+  };
+
   stop = (): void => {
     this.setState({ currentSpotifyTrack: undefined });
-    this.spotifyPlayer
-      ?.getCurrentState()
-      .then((state: Spotify.PlaybackState) => {
-        if (state && !state.paused) {
-          this.spotifyPlayer?.pause();
-        }
-      });
+    this.pause();
   };
 
   handleTokenError = async (

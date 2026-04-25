@@ -183,6 +183,12 @@ export default class YoutubePlayer
   }
 
   stop = () => {
+    this.youtubePlayer?.stopVideo();
+    // Clear playlist
+    this.youtubePlayer?.cueVideoById("");
+  };
+
+  pause = () => {
     this.youtubePlayer?.pauseVideo();
   };
 
