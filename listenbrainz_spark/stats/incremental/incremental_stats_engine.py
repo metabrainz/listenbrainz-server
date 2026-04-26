@@ -164,10 +164,26 @@ class IncrementalStatsEngine:
         except AnalysisException:
             return None
 
-    def prepare_final_aggregate(self):
-        prefix = self.provider.get_table_prefix()
+    def prepare_final_aggregate(self) -> bool:
+        """ Build the final aggregate temp view used by generate_stats.
 
-        if self.provider.force_partial_aggregate() or not self.partial_aggregate_usable():
+        Returns False to signal that nothing needs to be generated (partial aggregate is fresh and there are no
+        incremental listens to fold in), in which case stats are already up to date. Returns True when a final
+        aggregate has been prepared and stats should be generated.
+        """
+        prefix = self.provider.get_table_prefix()
+        inc_listens_exist = incremental_listens_exist()
+        force_partial = self.provider.force_partial_aggregate()
+        partial_usable = self.partial_aggregate_usable()
+
+        if not force_partial and partial_usable and not inc_listens_exist:
+            logger.info("Partial aggregate is fresh and no incremental listens exist; stats are up to date.")
+            return False
+
+        # The _only_inc filter path requires the incremental bookkeeping marker. If it's missing while
+        # incremental listens exist, the partial aggregate is in an inconsistent state — regenerate it.
+        bookkeeping_exists = self.get_incremental_dumps_existing_created() is not None
+        if force_partial or not partial_usable or (inc_listens_exist and not bookkeeping_exists):
             self.create_partial_aggregate()
             self._only_inc = False
         else:
@@ -181,7 +197,7 @@ class IncrementalStatsEngine:
         else:
             partial_table, partial_df = None, None
 
-        if incremental_listens_exist():
+        if inc_listens_exist:
             inc_df = self.create_incremental_aggregate()
             inc_table = f"{prefix}_incremental_aggregate"
             inc_df.createOrReplaceTempView(inc_table)
@@ -225,6 +241,7 @@ class IncrementalStatsEngine:
 
         self._final_table = f"{prefix}_final_aggregate"
         final_df.createOrReplaceTempView(self._final_table)
+        return True
 
     def generate_stats(self) -> DataFrame:
         results_query = self.provider.get_stats_query(self._final_table)
@@ -245,7 +262,8 @@ class IncrementalStatsEngine:
                 yield message
 
     def run(self) -> Iterator[Dict]:
-        self.prepare_final_aggregate()
+        if not self.prepare_final_aggregate():
+            return
         results = self.generate_stats()
         yield from self.create_messages(results, self.only_inc, self.message_creator)
         if incremental_listens_exist():
