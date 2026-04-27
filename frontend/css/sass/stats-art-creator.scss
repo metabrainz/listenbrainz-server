@@ -125,9 +125,7 @@ $color-selector-size: 24px;
     width: $color-selector-size;
 
     &.preset-selected {
-      box-shadow:
-        0 0 0 1px #ffffff,
-        0 0 0 3px $listenbrainz-blue;
+      box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px $listenbrainz-blue;
       z-index: 1;
     }
 
@@ -141,9 +139,7 @@ $color-selector-size: 24px;
       font-size: 14px;
       cursor: pointer;
       opacity: 0;
-      transition:
-        opacity 0.2s ease-in-out,
-        transform 0.1s;
+      transition: opacity 0.2s ease-in-out, transform 0.1s;
       padding: 0;
       width: 14px;
       height: 14px;
@@ -201,9 +197,7 @@ $color-selector-size: 24px;
       opacity: 0;
       transform: scale(1);
       pointer-events: none;
-      transition:
-        opacity 0.3s 0.1s,
-        transform 0.2s 0.1s;
+      transition: opacity 0.3s 0.1s, transform 0.2s 0.1s;
 
       /* Checked */
       &:checked {
@@ -219,9 +213,7 @@ $color-selector-size: 24px;
       &:active {
         opacity: 1;
         transform: scale(0);
-        transition:
-          transform 0s,
-          opacity 0s;
+        transition: transform 0s, opacity 0s;
       }
 
       &:checked + span::before {
@@ -269,9 +261,7 @@ $color-selector-size: 24px;
       height: 9px;
       background-color: rgb(0, 0, 0, 0.38);
       vertical-align: top;
-      transition:
-        background-color 0.2s,
-        opacity 0.2s;
+      transition: background-color 0.2s, opacity 0.2s;
     }
 
     /* Thumb */
@@ -284,13 +274,9 @@ $color-selector-size: 24px;
       width: 11px;
       height: 11px;
       background-color: #fff;
-      box-shadow:
-        0 3px 1px -2px rgba(0, 0, 0, 0.2),
-        0 2px 2px 0 rgba(0, 0, 0, 0.14),
-        0 1px 5px 0 rgba(0, 0, 0, 0.12);
-      transition:
-        background-color 0.2s,
-        transform 0.2s;
+      box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2),
+        0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
+      transition: background-color 0.2s, transform 0.2s;
     }
 
     /* Hover, Focus */
