@@ -191,7 +191,7 @@ function createMarks(
 
     confidences.forEach((conf) => {
       percentArr.push((100 * cummulativeSum) / totalCount);
-      dataArr.push(`${Math.round(Number(conf) * 100)}%`);
+      dataArr.push(`${Math.round(Number(conf))}%`);
       cummulativeSum += counts[conf];
     });
   }
@@ -366,7 +366,10 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     if (!releases.length) return null;
     let index = Math.floor((currentValue / 100) * (releases.length - 1));
 
-    if (direction === "descend") {
+    if (
+      (order !== "confidence" && direction === "descend") ||
+      (order === "confidence" && direction === "ascend")
+    ) {
       index = releases.length - 1 - index;
     }
 
@@ -388,8 +391,8 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     }
     if (order === "confidence") {
       return {
-        main: `${Math.round((item.confidence ?? 0) * 100)}`,
-        sub: "%",
+        main: `${Math.round(item.confidence ?? 0)}%`,
+        sub: "",
       };
     }
     return null;
