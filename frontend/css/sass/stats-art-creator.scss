@@ -1,3 +1,4 @@
+@use "sass:map";
 $color-selector-size: 24px;
 
 #stats-art-creator {
@@ -300,11 +301,21 @@ $color-selector-size: 24px;
     .share-buttons {
       flex: 1;
       flex-basis: 300px;
-      justify-content: left;
+      justify-content: center;
 
       > .btn-link > span {
         margin-right: 0.2em;
         font-size: 14px;
+      }
+    }
+    .share-buttons {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      @media (max-width: map.get($grid-breakpoints, "sm")) {
+        flex-wrap: wrap;
+        row-gap: 0.5em;
       }
     }
 
@@ -317,6 +328,12 @@ $color-selector-size: 24px;
       height: 3em;
       margin-left: 0.6em;
       margin-right: auto;
+      
+      @media (max-width: map.get($grid-breakpoints, "sm")) {
+        min-width: 0;
+        flex: 1 1 auto;
+        max-width: 100%;
+       }
 
       > input {
         text-overflow: ellipsis;
@@ -351,44 +368,5 @@ $color-selector-size: 24px;
     .input-group-text {
       font-size: 1.4rem;
     }
-  }
-}
-/*Fixd artwork container*/
-.artwork-container {
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-  word-break: normal;
-  hyphens: auto;
-}
-
-.artwork-container * {
-  max-width: 100%;
-  box-sizing: border-box;
-  white-space: normal;
-  overflow-wrap: break-word;
-  word-break: normal;
-}
-
-.artwork-container a {
-  display: inline-block;
-  max-width: 100%;
-  overflow: visible;
-}
-
-/* Media queries */
-@media screen and (max-width: 768px) {
-  .artwork-container {
-    padding: 10px;
-    font-size: 14px;
-  }
-}
-
-@media screen and (max-width: 480px) {
-  .artwork-container {
-    padding: 8px;
-    font-size: 13px;
   }
 }
