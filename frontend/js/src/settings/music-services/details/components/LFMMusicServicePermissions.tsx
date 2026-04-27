@@ -164,10 +164,10 @@ export default function LFMMusicServicePermissions({
           username.toString(),
           serviceName
         );
-        const { inserted, total } = response;
+        const { imported, total } = response;
         toast.success(
           <div>
-            Succesfully imported {inserted} out of {total} tracks feedback from{" "}
+            Succesfully imported {imported} out of {total} tracks feedback from{" "}
             {serviceDisplayName}
             <br />
             <Link to="/my/taste">

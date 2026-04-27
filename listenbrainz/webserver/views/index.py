@@ -6,7 +6,7 @@ from typing import List
 
 from brainzutils import cache
 from dateutil.relativedelta import relativedelta
-from flask import Blueprint, render_template, current_app, request, jsonify, Response
+from flask import Blueprint, render_template, current_app, request, jsonify, Response, send_from_directory
 from flask_login import current_user, login_required
 from requests.exceptions import HTTPError
 from werkzeug.exceptions import Unauthorized, NotFound
@@ -62,6 +62,9 @@ Allow: /explore/art-creator/
 def robots_txt():
     return Response(ROBOTS_TXT_CONTENT, mimetype='text/plain')
 
+@index_bp.get("/favicon.ico/")
+def favicon():
+    return send_from_directory(current_app.static_folder, "favicon.ico", mimetype="image/vnd.microsoft.icon")
 
 @index_bp.post("/")
 def index():
@@ -93,8 +96,6 @@ def index():
 @index_bp.post("/current-status/")
 @web_listenstore_needed
 def current_status():
-    load = "%.2f %.2f %.2f" % os.getloadavg()
-
     service_status = get_service_status()
     listen_count = _ts.get_total_listen_count()
     try:
@@ -128,8 +129,7 @@ def current_status():
         })
 
     data = {
-        "load": load,
-        "service-status": service_status,
+        "serviceStatus": service_status,
         "listenCount": format(int(listen_count), ",d") if listen_count else "0",
         "userCount": user_count,
         "userCountEvolution": user_count_evolution,

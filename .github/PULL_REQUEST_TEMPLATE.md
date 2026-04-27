@@ -47,8 +47,14 @@
 :beginner: If you used AI at all, you [must disclose it](https://github.com/metabrainz/guidelines/?tab=readme-ov-file#ai-use-policy), and what for, such as:
 >Used Copilot when writing the tests I added to `testfile.js`
 
+* [ ] I did not use any AI
 * [ ] I have used AI in this PR (add more details below)
+
+#### If you did use AI:
+* [ ] I used AI tools for communication
+* [ ] I used AI tools for coding
 * [ ] I understand all the changes made in this PR
+
 
 # Action
 

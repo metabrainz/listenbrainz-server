@@ -252,7 +252,8 @@ class SpotifyImporter(ListensImporter):
             # bad listens. so instead we check latest_listened_at which is None only in case when we received
             # nothing from spotify.
             if latest_listened_at is None:
-                self.service.update_user_import_status(user['user_id'])
+                listens_count = user["status"]["count"] if user["status"] else 0
+                self.service.update_status(user['user_id'], "Synced", listens_count)
                 return 0
 
             self.submit_listens_to_listenbrainz(user, listens, listen_type=LISTEN_TYPE_IMPORT)
@@ -265,7 +266,8 @@ class SpotifyImporter(ListensImporter):
 
         except ExternalServiceInvalidGrantError:
             error_message = "It seems like you've revoked permission for us to read your spotify account"
-            self.service.update_user_import_status(user_id=user['user_id'], error=error_message)
+            listens_count = user["status"]["count"] if user["status"] else 0
+            self.service.update_status(user['user_id'], "Error", listens_count, error_message=error_message)
             if not current_app.config['TESTING']:
                 self.notify_error(user['musicbrainz_id'], error_message)
             # user has revoked authorization through spotify ui or deleted their spotify account etc.
@@ -281,7 +283,8 @@ class SpotifyImporter(ListensImporter):
 
         except ExternalServiceAPIError as e:
             # if it is an error from the Spotify API, show the error message to the user
-            self.service.update_user_import_status(user_id=user['user_id'], error=str(e))
+            listens_count = user["status"]["count"] if user["status"] else 0
+            self.service.update_status(user['user_id'], "Error", listens_count, error_message=str(e))
             if not current_app.config['TESTING']:
                 self.notify_error(user['musicbrainz_id'], str(e))
             raise ExternalServiceError("Could not refresh user token from spotify")

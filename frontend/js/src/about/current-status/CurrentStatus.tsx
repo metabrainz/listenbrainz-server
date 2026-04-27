@@ -2,6 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import { useLocation } from "react-router";
 import { RouteQuery } from "../../utils/Loader";
+import {
+  fullLocalizedDateFromTimestampOrISODate,
+  formatSecondsDuration,
+} from "../../utils/utils";
+
 import UserEvolutionChart, { UserEvolutionData } from "./UserEvolutionChart";
 
 type CurrentStatusLoaderData = {
@@ -12,8 +17,14 @@ type CurrentStatusLoaderData = {
     label: string;
   }[];
   userCount: number;
+  serviceStatus: {
+    time: number;
+    dump_age: number;
+    stats_age: number;
+    sitewide_stats_age: number;
+    incoming_listen_count: number;
+  };
   userCountEvolution: UserEvolutionData[];
-  load: string;
 };
 
 export default function CurrentStatus() {
@@ -21,7 +32,8 @@ export default function CurrentStatus() {
   const { data } = useQuery<CurrentStatusLoaderData>(
     RouteQuery(["current-status"], location.pathname)
   );
-  const { userCount, listenCount, listenCountsPerDay, load } = data || {};
+  const { userCount, listenCount, listenCountsPerDay, serviceStatus } =
+    data || {};
   return (
     <>
       <h2 className="page-title">Current status</h2>
@@ -88,10 +100,58 @@ export default function CurrentStatus() {
             doc.
           </p>
 
-          <h3>load average</h3>
-
-          <p>Current server load average</p>
-          <div className="border p-4 rounded bg-body-tertiary">{load}</div>
+          <h3>Current Service Status</h3>
+          <table className="table table-border table-sm table-striped">
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {serviceStatus && (
+                <tr>
+                  <td>Last Updated</td>
+                  <td>
+                    {fullLocalizedDateFromTimestampOrISODate(
+                      new Date(serviceStatus.time * 1000)
+                    )}
+                  </td>
+                </tr>
+              )}
+              {serviceStatus && (
+                <tr>
+                  <td>Database Dump Age</td>
+                  <td>{formatSecondsDuration(serviceStatus.dump_age)}</td>
+                </tr>
+              )}
+              {serviceStatus && (
+                <tr>
+                  <td>Stats Age</td>
+                  <td>{formatSecondsDuration(serviceStatus.stats_age)}</td>
+                </tr>
+              )}
+              {serviceStatus && (
+                <tr>
+                  <td>Sitewide Stats Age</td>
+                  <td>
+                    {formatSecondsDuration(serviceStatus.sitewide_stats_age)}
+                  </td>
+                </tr>
+              )}
+              {serviceStatus && (
+                <tr>
+                  <td>Incoming Listen Count</td>
+                  <td>
+                    {new Intl.NumberFormat().format(
+                      serviceStatus.incoming_listen_count
+                    )}{" "}
+                    listens
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </>

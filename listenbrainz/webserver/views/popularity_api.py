@@ -119,7 +119,7 @@ def fetch_entity_popularity_counts(entity):
     entity_mbid_key = f"{entity}_mbids"
     try:
         entity_mbids = request.json[entity_mbid_key]
-    except KeyError:
+    except (KeyError, TypeError):
         raise APIBadRequest(f"{entity_mbid_key} JSON element must be present and contain a list of {entity_mbid_key}")
 
     for mbid in entity_mbids:

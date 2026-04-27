@@ -1050,6 +1050,167 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(r.json['payload']['listens'][0]
                          ['track_metadata']['track_name'], 'Fade')
 
+    def test_delete_playing_now(self):
+        """ Test for deleting playing_now status with client validation """
+        delete_url = self.custom_url_for('api_v1.delete_playing_now')
+        auth_headers = {'Authorization': 'Token {}'.format(self.user['auth_token'])}
+
+        # Test 1: Delete when no playing_now exists (should succeed)
+        response = self.client.post(delete_url, headers=auth_headers)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+        self.assertEqual(response.json['message'], 'Playing now was already cleared')
+
+        # Test 2: Submit a playing_now with a client name
+        playing_now_payload = {
+            "listen_type": "playing_now",
+            "payload": [
+                {
+                    "track_metadata": {
+                        "artist_name": "Kanye West",
+                        "release_name": "The Life of Pablo",
+                        "track_name": "Fade",
+                        "additional_info": {
+                            "submission_client": "BrainzPlayer"
+                        }
+                    }
+                }
+            ]
+        }
+        response = self.send_data(playing_now_payload)
+        self.assert200(response)
+
+        # Verify playing_now exists
+        r = self.client.get(self.custom_url_for('api_v1.get_playing_now',
+                                                user_name=self.user['musicbrainz_id']))
+        self.assertEqual(r.json['payload']['count'], 1)
+
+        # Test 3: Delete with matching client (should succeed)
+        response = self.client.post(
+            delete_url,
+            data=json.dumps({'client': 'BrainzPlayer'}),
+            headers=auth_headers,
+            content_type='application/json'
+        )
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+        self.assertEqual(response.json['message'], 'Playing now cleared successfully')
+
+        # Verify playing_now is deleted
+        r = self.client.get(self.custom_url_for('api_v1.get_playing_now',
+                                                user_name=self.user['musicbrainz_id']))
+        self.assertEqual(r.json['payload']['count'], 0)
+
+        # Test 4: Submit another playing_now with different client
+        playing_now_payload2 = {
+            "listen_type": "playing_now",
+            "payload": [
+                {
+                    "track_metadata": {
+                        "artist_name": "The Beatles",
+                        "track_name": "Hey Jude",
+                        "additional_info": {
+                            "submission_client": "SpotifyScrobbler"
+                        }
+                    }
+                }
+            ]
+        }
+        response = self.send_data(playing_now_payload2)
+        self.assert200(response)
+
+        # Test 5: Try to delete with non-matching client (should return 404)
+        response = self.client.post(
+            delete_url,
+            data=json.dumps({'client': 'BrainzPlayer'}),
+            headers=auth_headers,
+            content_type='application/json'
+        )
+        self.assert404(response)
+
+        # Test 6: Delete without specifying client (should delete unconditionally)
+        response = self.client.post(delete_url, headers=auth_headers)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+        self.assertEqual(response.json['message'], 'Playing now cleared successfully')
+
+        # Verify playing_now is deleted
+        r = self.client.get(self.custom_url_for(
+            'api_v1.get_playing_now', user_name=self.user['musicbrainz_id']
+        ))
+        self.assertEqual(r.json['payload']['count'], 0)
+
+        # Test 7: Submit playing_now without submission_client
+        playing_now_payload3 = {
+            "listen_type": "playing_now",
+            "payload": [
+                {
+                    "track_metadata": {
+                        "artist_name": "Radiohead",
+                        "track_name": "Creep"
+                    }
+                }
+            ]
+        }
+        response = self.send_data(playing_now_payload3)
+        self.assert200(response)
+
+        # Test 8: Delete with a client when playing_now has no submission_client (should succeed)
+        response = self.client.post(
+            delete_url,
+            data=json.dumps({'client': 'AnyClient'}),
+            headers=auth_headers,
+            content_type='application/json'
+        )
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+    def test_delete_playing_now_errors(self):
+        """ Test error cases for delete_playing_now endpoint """
+        playing_now_payload = {
+            "listen_type": "playing_now",
+            "payload": [
+                {
+                    "track_metadata": {
+                        "artist_name": "Kanye West",
+                        "release_name": "The Life of Pablo",
+                        "track_name": "Fade",
+                        "additional_info": {
+                            "submission_client": "BrainzPlayer"
+                        }
+                    }
+                }
+            ]
+        }
+        response = self.send_data(playing_now_payload)
+        self.assert200(response)
+
+        delete_url = self.custom_url_for('api_v1.delete_playing_now')
+        auth_headers = {'Authorization': 'Token {}'.format(self.user['auth_token'])}
+
+        # Test 1: Invalid JSON body
+        response = self.client.post(
+            delete_url,
+            data='not valid json',
+            headers=auth_headers,
+            content_type='application/json'
+        )
+        self.assert400(response)
+
+        # Test 2: client field is not a string
+        response = self.client.post(
+            delete_url,
+            data=json.dumps({'client': 123}),
+            headers=auth_headers,
+            content_type='application/json'
+        )
+        self.assert400(response)
+        self.assertIn('client', response.json['error'])
+
+        # Test 3: No auth token
+        response = self.client.post(delete_url)
+        self.assert401(response)
+
     def test_delete_listen_not_logged_in(self):
         delete_listen_url = self.custom_url_for('api_v1.delete_listen')
         data = {

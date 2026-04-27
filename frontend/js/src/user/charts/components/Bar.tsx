@@ -49,9 +49,10 @@ export default function Bar(props: BarProps) {
   const horizontalAxis = {
     tickSize: 5,
     tickValues: numberOfTicks,
-    tickPadding: 5,
+    tickPadding: 8,
     legend: "Number of listens",
-    legendOffset: 30,
+    legendOffset: 45,
+    legendPosition: "middle",
   };
 
   return (

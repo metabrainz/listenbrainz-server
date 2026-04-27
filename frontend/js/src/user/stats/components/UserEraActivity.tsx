@@ -345,7 +345,7 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
                     axisLeft={{
                       legend: "Number of listens",
                       legendPosition: "middle",
-                      legendOffset: -40,
+                      legendOffset: -52,
                       format: ".2~s",
                     }}
                     minValue={0}
