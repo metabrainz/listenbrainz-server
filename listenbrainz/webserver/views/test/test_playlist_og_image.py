@@ -135,8 +135,10 @@ class TestGeneratePlaylistOgImage:
 
         assert mock_download.call_count == 4
 
+    @patch("listenbrainz.art.og_image._compose_single", wraps=_compose_single)
+    @patch("listenbrainz.art.og_image._compose_grid_2x2", wraps=_compose_grid_2x2)
     @patch("listenbrainz.art.og_image._download_image")
-    def test_three_urls_falls_back_to_single(self, mock_download, tmp_path):
+    def test_three_urls_falls_back_to_single(self, mock_download, mock_grid, mock_single, tmp_path):
         """With < 4 URLs, should use single first image instead of grid."""
         overlay_path = self._create_overlay_file(tmp_path)
         mock_download.return_value = Image.new("RGBA", (500, 500), (0, 0, 255, 255))
@@ -146,9 +148,13 @@ class TestGeneratePlaylistOgImage:
         assert result is not None
 
         assert mock_download.call_count == 1
+        assert mock_single.call_count == 1
+        assert mock_grid.call_count == 0
 
+    @patch("listenbrainz.art.og_image._compose_single", wraps=_compose_single)
+    @patch("listenbrainz.art.og_image._compose_grid_2x2", wraps=_compose_grid_2x2)
     @patch("listenbrainz.art.og_image._download_image")
-    def test_download_failure_with_four_urls_falls_back_to_single(self, mock_download, tmp_path):
+    def test_download_failure_with_four_urls_falls_back_to_single(self, mock_download, mock_grid, mock_single, tmp_path):
         """If some of the 4 downloads fail, fall back to single image."""
         overlay_path = self._create_overlay_file(tmp_path)
         good_img = Image.new("RGBA", (500, 500), (255, 0, 0, 255))
@@ -163,6 +169,8 @@ class TestGeneratePlaylistOgImage:
         assert result_img.size == (OPENGRAPH_IMAGE_WIDTH, OPENGRAPH_IMAGE_HEIGHT)
 
         assert mock_download.call_count == 4
+        assert mock_single.call_count == 1
+        assert mock_grid.call_count == 0
 
     @patch("listenbrainz.art.og_image._download_image")
     def test_all_downloads_fail_returns_none(self, mock_download, tmp_path):
