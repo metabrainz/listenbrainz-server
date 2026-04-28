@@ -3,10 +3,10 @@ import * as React from "react";
 import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import {
-  faSoundcloud,
-  faSpotify,
-  faYoutube,
-} from "@fortawesome/free-brands-svg-icons";
+  brandSoundcloud as faSoundcloud,
+  brandSpotify as faSpotify,
+  brandYoutube as faYoutube,
+} from "../icons/brandIcons";
 import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import {
   faCode,

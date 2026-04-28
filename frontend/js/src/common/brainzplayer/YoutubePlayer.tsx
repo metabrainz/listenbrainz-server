@@ -20,7 +20,7 @@ import {
   faExpand,
   faCompress,
 } from "@fortawesome/free-solid-svg-icons";
-import { faYoutube } from "@fortawesome/free-brands-svg-icons";
+import { brandYoutube as faYoutube } from "../icons/brandIcons";
 import { Link } from "react-router";
 import {
   getArtistName,

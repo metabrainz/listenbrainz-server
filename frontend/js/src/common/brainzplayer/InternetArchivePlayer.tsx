@@ -1,6 +1,6 @@
 import React from "react";
 import { get as _get } from "lodash";
-import faInternetArchive from "../icons/faInternetArchive";
+import { brandInternetArchive as faInternetArchive } from "../icons/brandIcons";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import { getTrackName, getArtistName } from "../../utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";

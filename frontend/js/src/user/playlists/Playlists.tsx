@@ -5,10 +5,10 @@ import {
   faFileImport,
 } from "@fortawesome/free-solid-svg-icons";
 import {
-  faSpotify,
-  faItunesNote,
-  faSoundcloud,
-} from "@fortawesome/free-brands-svg-icons";
+  brandSpotify as faSpotify,
+  brandItunes as faItunesNote,
+  brandSoundcloud as faSoundcloud,
+} from "../../common/icons/brandIcons";
 import * as React from "react";
 import { orderBy } from "lodash";
 import NiceModal from "@ebay/nice-modal-react";

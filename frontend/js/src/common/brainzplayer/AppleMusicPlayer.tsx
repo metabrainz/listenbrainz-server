@@ -1,6 +1,6 @@
 import * as React from "react";
 import { get as _get, deburr, escapeRegExp, isString } from "lodash";
-import { faApple } from "@fortawesome/free-brands-svg-icons";
+import { brandApple as faApple } from "../icons/brandIcons";
 import { Link } from "react-router";
 import fuzzysort from "fuzzysort";
 import {

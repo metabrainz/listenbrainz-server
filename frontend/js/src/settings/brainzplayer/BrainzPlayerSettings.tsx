@@ -1,11 +1,14 @@
 import * as React from "react";
 import { union } from "lodash";
 import {
-  faSpotify,
-  faApple,
-  faSoundcloud,
-  faYoutube,
-} from "@fortawesome/free-brands-svg-icons";
+  brandSpotify as faSpotify,
+  brandApple as faApple,
+  brandSoundcloud as faSoundcloud,
+  brandYoutube as faYoutube,
+  brandInternetArchive as faInternetArchive,
+  faFunkwhale,
+  faNavidrome,
+} from "../../common/icons/brandIcons";
 import { Helmet } from "react-helmet";
 import { Link } from "react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -22,9 +25,6 @@ import FunkwhalePlayer from "../../common/brainzplayer/FunkwhalePlayer";
 import { ToastMsg } from "../../notifications/Notifications";
 import AppleMusicPlayer from "../../common/brainzplayer/AppleMusicPlayer";
 import Card from "../../components/Card";
-import faInternetArchive from "../../common/icons/faInternetArchive";
-import faFunkwhale from "../../common/icons/faFunkwhale";
-import { faNavidrome } from "../../common/icons/faNavidrome";
 import useAutoSave from "../../hooks/useAutoSave";
 
 export const dataSourcesInfo = {

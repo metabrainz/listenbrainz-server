@@ -2,10 +2,10 @@
 /* eslint-disable react/jsx-no-comment-textnodes */
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import {
-  faItunesNote,
-  faSoundcloud,
-  faSpotify,
-} from "@fortawesome/free-brands-svg-icons";
+  brandItunes as faItunesNote,
+  brandSoundcloud as faSoundcloud,
+  brandSpotify as faSpotify,
+} from "../../common/icons/brandIcons";
 import {
   faCopy,
   faFileExport,

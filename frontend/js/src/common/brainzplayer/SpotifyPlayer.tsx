@@ -9,7 +9,7 @@ import {
   has,
   difference,
 } from "lodash";
-import { faSpotify } from "@fortawesome/free-brands-svg-icons";
+import { brandSpotify as faSpotify } from "../icons/brandIcons";
 import { Link } from "react-router";
 import {
   searchForSpotifyTrack,
