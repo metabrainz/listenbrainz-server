@@ -12,11 +12,20 @@ import {
 import {
   faApple,
   faBandcamp,
+  faDiscord,
   faFacebook,
   faInstagram,
   faLastfm,
+  faLinkedinIn,
+  faMastodon,
+  faPinterest,
+  faSnapchat,
   faSoundcloud,
+  faSpotify,
+  faTiktok,
+  faTwitch,
   faTwitter,
+  faVimeo,
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
 import { dataSourcesInfo } from "../settings/brainzplayer/BrainzPlayerSettings";
@@ -73,7 +82,12 @@ export function getRelIconLink(relName: string, relValue: string) {
   switch (relName) {
     case "streaming":
     case "free streaming":
-      icon = faMusic;
+      if (/spotify/.test(relValue)) {
+        icon = faSpotify;
+        color = dataSourcesInfo.spotify.color;
+      } else {
+        icon = faMusic;
+      }
       break;
     case "lyrics":
       icon = faMicrophone;
@@ -124,6 +138,25 @@ export function getRelIconLink(relName: string, relValue: string) {
       } else if (/soundcloud/.test(relValue)) {
         icon = faSoundcloud;
         color = dataSourcesInfo.soundcloud.color;
+      } else if (/tiktok/.test(relValue)) {
+        icon = faTiktok;
+      } else if (/vimeo/.test(relValue)) {
+        icon = faVimeo;
+      } else if (/snapchat/.test(relValue)) {
+        icon = faSnapchat;
+      } else if (/linkedin/.test(relValue)) {
+        icon = faLinkedinIn;
+      } else if (/discord/.test(relValue)) {
+        icon = faDiscord;
+      } else if (/twitch/.test(relValue)) {
+        icon = faTwitch;
+        color = "#9147FF";
+      } else if (/pinterest/.test(relValue)) {
+        icon = faPinterest;
+        color = "#E60023";
+      } else if (/mastodon/.test(relValue)) {
+        icon = faMastodon;
+        color = "#6364FF";
       } else {
         icon = faCircleNodes;
       }
