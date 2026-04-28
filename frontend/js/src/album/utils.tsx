@@ -159,7 +159,7 @@ export function getRelIconLink(relName: string, relValue: string) {
         icon = faInstagram;
       } else if (/facebook/.test(relValue)) {
         icon = faFacebook;
-      } else if (/twitter/.test(relValue) || /x\.com/.test(relValue)) {
+      } else if (/twitter\.com/.test(relValue) || /(?:^|\.)x\.com/.test(relValue)) {
         icon = faTwitter;
         color = "#55ACEE";
       } else if (/soundcloud/.test(relValue)) {
