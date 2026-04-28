@@ -6,11 +6,8 @@ import type { Palette } from "@vibrant/color";
 import { Vibrant } from "node-vibrant/browser";
 import {
   first,
-  isEmpty,
   isNumber,
-  isPlainObject,
   isString,
-  pick,
 } from "lodash";
 import { Link } from "react-router";
 import { Accordion } from "react-bootstrap";
@@ -208,8 +205,9 @@ export default function MetadataViewer(props: MetadataViewerProps) {
 
   const artist = metadata?.artist?.artists?.[0];
 
-  const supportLinks = pick(artist?.rels, ...supportLinkTypes);
-  const lyricsLink = pick(artist?.rels, "lyrics");
+  const supportLinks =
+    artist?.rels?.filter((rel) => supportLinkTypes.includes(rel.type)) ?? [];
+  const lyricsLink = artist?.rels?.find((rel) => rel.type === "lyrics");
 
   const releaseMBID =
     userSubmittedReleaseMBID ??
@@ -387,9 +385,9 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                 </div>
               )}
               <div className="flex flex-wrap">
-                {lyricsLink?.lyrics && (
+                {lyricsLink?.url && (
                   <a
-                    href={lyricsLink.lyrics}
+                    href={lyricsLink.url}
                     className="btn btn-outline-info"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -498,8 +496,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           <div className="support-artist-btn dropup">
             <button
               className={`dropdown-toggle btn btn-primary${
-                isPlainObject(artist?.rels) &&
-                !Object.keys(artist?.rels as object).length
+                !artist?.rels?.length
                   ? " disabled"
                   : ""
               }`}
@@ -509,17 +506,17 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               <b>Support the artist</b>
             </button>
             <ul className="dropdown-menu dropdown-menu-right" role="menu">
-              {!isEmpty(supportLinks) ? (
-                Object.entries(supportLinks).map(([key, value]) => {
+              {supportLinks.length > 0 ? (
+                supportLinks.map((rel) => {
                   return (
                     <a
                       className="dropdown-item"
-                      key={key}
-                      href={value}
+                      key={rel.url}
+                      href={rel.url}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      {key}
+                      {rel.type}
                     </a>
                   );
                 })

@@ -69,14 +69,17 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
             artist["area"] = row["area"]
 
         if row["artist_links"]:
-            filtered = {}
+            seen_urls = set()
+            rels = []
             for name, url in row["artist_links"]:
                 if name is None or url is None:
                     continue
-                filtered[name] = url
+                if url not in seen_urls:
+                    seen_urls.add(url)
+                    rels.append({"type": name, "url": url})
 
-            if filtered:
-                artist["rels"] = filtered
+            if rels:
+                artist["rels"] = rels
 
         release_groups = []
         if row["release_groups"]:

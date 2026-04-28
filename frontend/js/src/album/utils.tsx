@@ -10,14 +10,17 @@ import {
   faMusic,
 } from "@fortawesome/free-solid-svg-icons";
 import {
+  faAmazon,
   faApple,
   faBandcamp,
+  faDeezer,
   faDiscord,
   faFacebook,
   faInstagram,
   faLastfm,
   faLinkedinIn,
   faMastodon,
+  faNapster,
   faPinterest,
   faSnapchat,
   faSoundcloud,
@@ -82,9 +85,33 @@ export function getRelIconLink(relName: string, relValue: string) {
   switch (relName) {
     case "streaming":
     case "free streaming":
-      if (/spotify/.test(relValue)) {
+      if (/spotify\.com/.test(relValue)) {
         icon = faSpotify;
         color = dataSourcesInfo.spotify.color;
+      } else if (/soundcloud\.com/.test(relValue)) {
+        icon = faSoundcloud;
+        color = dataSourcesInfo.soundcloud.color;
+      } else if (/music\.apple\.com|itunes\.apple\.com/.test(relValue)) {
+        icon = faApple;
+        color = dataSourcesInfo.appleMusic.color;
+      } else if (/bandcamp\.com/.test(relValue)) {
+        icon = faBandcamp;
+        color = "#629AA9";
+      } else if (/last\.fm|lastfm\.com/.test(relValue)) {
+        icon = faLastfm;
+        color = "#D51007";
+      } else if (/deezer\.com/.test(relValue)) {
+        icon = faDeezer;
+        color = "#FF0090";
+      } else if (/music\.amazon|amazon\.com\/music/.test(relValue)) {
+        icon = faAmazon;
+        color = "#FF9900";
+      } else if (/napster\.com/.test(relValue)) {
+        icon = faNapster;
+      } else if (/youtube\.com|youtu\.be/.test(relValue)) {
+        icon = faYoutube;
+        color = dataSourcesInfo.youtube.color;
+        isYoutube = true;
       } else {
         icon = faMusic;
       }
@@ -132,7 +159,7 @@ export function getRelIconLink(relName: string, relValue: string) {
         icon = faInstagram;
       } else if (/facebook/.test(relValue)) {
         icon = faFacebook;
-      } else if (/twitter/.test(relValue) || /x.com/.test(relValue)) {
+      } else if (/twitter/.test(relValue) || /x\.com/.test(relValue)) {
         icon = faTwitter;
         color = "#55ACEE";
       } else if (/soundcloud/.test(relValue)) {
@@ -174,7 +201,7 @@ export function getRelIconLink(relName: string, relValue: string) {
   }
   return (
     <a
-      key={relName}
+      key={relValue}
       href={relValue}
       title={relName}
       className="btn btn-icon btn-link"

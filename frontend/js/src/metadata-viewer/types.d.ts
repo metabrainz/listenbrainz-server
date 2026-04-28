@@ -1,3 +1,5 @@
+declare type ArtistRel = { type: string; url: string };
+
 /** Main entities */
 declare type MusicBrainzArtist = {
   name: string;
@@ -6,8 +8,7 @@ declare type MusicBrainzArtist = {
   area: string;
   begin_year?: number;
   end_year?: number;
-  rels: { [key: string]: string };
-  //   rels: Record<string, string>;
+  rels: ArtistRel[];
   type: string;
   tag?: {
     artist: Array<ArtistTag>;
