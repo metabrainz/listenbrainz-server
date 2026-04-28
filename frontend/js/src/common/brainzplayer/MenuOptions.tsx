@@ -1,8 +1,8 @@
 import {
-  faSoundcloud,
-  faSpotify,
-  faYoutube,
-} from "@fortawesome/free-brands-svg-icons";
+  brandSoundcloud as faSoundcloud,
+  brandSpotify as faSpotify,
+  brandYoutube as faYoutube,
+} from "../icons/brandIcons";
 import {
   faEllipsisVertical,
   faExternalLinkAlt,

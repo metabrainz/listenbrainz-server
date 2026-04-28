@@ -7,7 +7,7 @@ import {
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, isEmpty, isUndefined, orderBy, groupBy, sortBy } from "lodash";
+import { chain, isUndefined, orderBy, groupBy, sortBy } from "lodash";
 import DOMPurify from "dompurify";
 import {
   Link,
@@ -354,9 +354,9 @@ export default function ArtistPage(): JSX.Element {
         <div className="right-side gap-1">
           <div className="entity-rels">
             {artist &&
-              !isEmpty(artist?.rels) &&
-              Object.entries(artist.rels).map(([relName, relValue]) =>
-                getRelIconLink(relName, relValue)
+              Boolean(artist?.rels?.length) &&
+              artist.rels.map((rel) =>
+                getRelIconLink(rel.type, rel.url)
               )}
             <OpenInMusicBrainzButton
               entityType="artist"

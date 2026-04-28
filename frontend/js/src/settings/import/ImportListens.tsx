@@ -13,7 +13,10 @@ import {
 import { format, isValid } from "date-fns";
 import { useMemo } from "react";
 import { initial, last, partition } from "lodash";
-import { faLastfmSquare, faSpotify } from "@fortawesome/free-brands-svg-icons";
+import {
+  brandLastfm as faLastfmSquare,
+  brandSpotify as faSpotify,
+} from "../../common/icons/brandIcons";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import Loader from "../../components/Loader";

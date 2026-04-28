@@ -1,6 +1,6 @@
 import * as React from "react";
 import { get as _get, isString, throttle as _throttle } from "lodash";
-import { faSoundcloud } from "@fortawesome/free-brands-svg-icons";
+import { brandSoundcloud as faSoundcloud } from "../icons/brandIcons";
 import { Link } from "react-router";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import {

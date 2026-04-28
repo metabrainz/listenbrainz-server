@@ -9,7 +9,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Palette } from "@vibrant/color";
-import { chain, flatten, isEmpty, isUndefined, merge } from "lodash";
+import { chain, flatten, isUndefined, merge } from "lodash";
 import { Vibrant } from "node-vibrant/browser";
 import { Helmet } from "react-helmet";
 import { Link, useLocation, useParams } from "react-router";
@@ -341,10 +341,10 @@ export default function AlbumPage(): JSX.Element {
 
         <div className="right-side gap-1">
           <div className="entity-rels">
-            {!isEmpty(artist?.artists?.[0]?.rels) &&
-              Object.entries(
-                artist?.artists?.[0]?.rels ?? {}
-              ).map(([relName, relValue]) => getRelIconLink(relName, relValue))}
+            {Boolean(artist?.artists?.[0]?.rels?.length) &&
+              artist?.artists?.[0]?.rels?.map((rel) =>
+                getRelIconLink(rel.type, rel.url)
+              )}
             <OpenInMusicBrainzButton
               entityType="release-group"
               entityMBID={release_group_mbid}

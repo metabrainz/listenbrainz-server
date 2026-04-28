@@ -1,7 +1,7 @@
 import * as React from "react";
 import { get as _get, isString, throttle as _throttle } from "lodash";
 import { Link } from "react-router";
-import { faNavidrome } from "../icons/faNavidrome";
+import { faNavidrome } from "../icons/brandIcons";
 import {
   DataSourceProps,
   DataSourceType,

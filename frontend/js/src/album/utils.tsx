@@ -10,15 +10,27 @@ import {
   faMusic,
 } from "@fortawesome/free-solid-svg-icons";
 import {
-  faApple,
-  faBandcamp,
-  faFacebook,
-  faInstagram,
-  faLastfm,
-  faSoundcloud,
-  faTwitter,
-  faYoutube,
-} from "@fortawesome/free-brands-svg-icons";
+  brandAmazon as faAmazon,
+  brandApple as faApple,
+  brandBandcamp as faBandcamp,
+  faDeezer,
+  brandDiscord as faDiscord,
+  brandFacebook as faFacebook,
+  brandInstagram as faInstagram,
+  brandLastfm as faLastfm,
+  faLinkedinIn,
+  brandMastodon as faMastodon,
+  brandNapster as faNapster,
+  brandPinterest as faPinterest,
+  brandSnapchat as faSnapchat,
+  brandSoundcloud as faSoundcloud,
+  brandSpotify as faSpotify,
+  brandTiktok as faTiktok,
+  brandTwitch as faTwitch,
+  brandX as faTwitter,
+  brandVimeo as faVimeo,
+  brandYoutube as faYoutube,
+} from "../common/icons/brandIcons";
 import { dataSourcesInfo } from "../settings/brainzplayer/BrainzPlayerSettings";
 
 export type SimilarArtist = {
@@ -73,7 +85,36 @@ export function getRelIconLink(relName: string, relValue: string) {
   switch (relName) {
     case "streaming":
     case "free streaming":
-      icon = faMusic;
+      if (/spotify\.com/.test(relValue)) {
+        icon = faSpotify;
+        color = dataSourcesInfo.spotify.color;
+      } else if (/soundcloud\.com/.test(relValue)) {
+        icon = faSoundcloud;
+        color = dataSourcesInfo.soundcloud.color;
+      } else if (/music\.apple\.com|itunes\.apple\.com/.test(relValue)) {
+        icon = faApple;
+        color = dataSourcesInfo.appleMusic.color;
+      } else if (/bandcamp\.com/.test(relValue)) {
+        icon = faBandcamp;
+        color = "#629AA9";
+      } else if (/last\.fm|lastfm\.com/.test(relValue)) {
+        icon = faLastfm;
+        color = "#D51007";
+      } else if (/deezer\.com/.test(relValue)) {
+        icon = faDeezer;
+        color = "#FF0090";
+      } else if (/music\.amazon|amazon\.com\/music/.test(relValue)) {
+        icon = faAmazon;
+        color = "#FF9900";
+      } else if (/napster\.com/.test(relValue)) {
+        icon = faNapster;
+      } else if (/youtube\.com|youtu\.be/.test(relValue)) {
+        icon = faYoutube;
+        color = dataSourcesInfo.youtube.color;
+        isYoutube = true;
+      } else {
+        icon = faMusic;
+      }
       break;
     case "lyrics":
       icon = faMicrophone;
@@ -118,12 +159,31 @@ export function getRelIconLink(relName: string, relValue: string) {
         icon = faInstagram;
       } else if (/facebook/.test(relValue)) {
         icon = faFacebook;
-      } else if (/twitter/.test(relValue) || /x.com/.test(relValue)) {
+      } else if (/twitter\.com/.test(relValue) || /(?:^|\.)x\.com/.test(relValue)) {
         icon = faTwitter;
         color = "#55ACEE";
       } else if (/soundcloud/.test(relValue)) {
         icon = faSoundcloud;
         color = dataSourcesInfo.soundcloud.color;
+      } else if (/tiktok/.test(relValue)) {
+        icon = faTiktok;
+      } else if (/vimeo/.test(relValue)) {
+        icon = faVimeo;
+      } else if (/snapchat/.test(relValue)) {
+        icon = faSnapchat;
+      } else if (/linkedin/.test(relValue)) {
+        icon = faLinkedinIn;
+      } else if (/discord/.test(relValue)) {
+        icon = faDiscord;
+      } else if (/twitch/.test(relValue)) {
+        icon = faTwitch;
+        color = "#9147FF";
+      } else if (/pinterest/.test(relValue)) {
+        icon = faPinterest;
+        color = "#E60023";
+      } else if (/mastodon/.test(relValue)) {
+        icon = faMastodon;
+        color = "#6364FF";
       } else {
         icon = faCircleNodes;
       }
@@ -141,7 +201,7 @@ export function getRelIconLink(relName: string, relValue: string) {
   }
   return (
     <a
-      key={relName}
+      key={relValue}
       href={relValue}
       title={relName}
       className="btn btn-icon btn-link"
