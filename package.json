@@ -110,7 +110,7 @@
     "swiper": "^12.1.2",
     "time-ago": "^0.2.1",
     "tinycolor2": "^1.4.2",
-    "uuid": "^9.0.1"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.5",

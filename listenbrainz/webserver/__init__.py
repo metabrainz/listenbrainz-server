@@ -192,8 +192,20 @@ def create_app(debug=None):
 
     @app.after_request
     def add_cache_header(response):
-        response.cache_control.private = True
-        response.cache_control.public = False
+        if request.path.startswith('/static'):
+            # cache hashed assets (JS + CSS) for 1 year
+            hashed_assets_max_age = 31536000
+            # cache image assets for 1 week
+            image_assets_max_age = 604800
+            response.cache_control.public = True
+            if request.path.startswith('/static/dist'):
+                response.cache_control.immutable = True
+                response.cache_control.max_age = hashed_assets_max_age
+            elif request.path.startswith('/static/img'):
+                response.cache_control.max_age = image_assets_max_age
+        else:
+            response.cache_control.private = True
+            response.cache_control.public = False
         return response
 
     # Template utilities
