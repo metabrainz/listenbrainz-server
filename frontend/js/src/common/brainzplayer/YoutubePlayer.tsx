@@ -328,17 +328,8 @@ export default class YoutubePlayer
     }
   };
 
-  playTrackById = (videoId: string, retryCount: number = 0): void => {
-    if (!videoId) {
-      return;
-    }
-    if (!this.youtubePlayer) {
-      if (retryCount < 3) {
-        setTimeout(() => this.playTrackById(videoId, retryCount + 1), 1000);
-        return;
-      }
-      const { onTrackNotFound } = this.props;
-      onTrackNotFound();
+  playTrackById = (videoId: string): void => {
+    if (!videoId || !this.youtubePlayer) {
       return;
     }
     if (videoId.startsWith("http")) {
@@ -359,14 +350,7 @@ export default class YoutubePlayer
   };
 
   playListen = (listen: Listen | JSPFTrack, streamingUrl?: string) => {
-    let youtubeId = YoutubePlayer.getVideoIDFromListen(listen);
-
-    if (!youtubeId && streamingUrl) {
-      // from https://gist.github.com/rodrigoborgesdeoliveira/987683cfbfcc8d800192da1e73adc486?permalink_comment_id=5567955#gistcomment-5567955
-      const videoIdRegex = /((?:\/|v=|vi=|v%)(?<id>([-\w]){10,14}))/;
-      const match = videoIdRegex.exec(streamingUrl);
-      youtubeId = match?.groups?.id;
-    }
+    const youtubeId = YoutubePlayer.getVideoIDFromListen(listen);
 
     if (youtubeId) {
       this.playTrackById(youtubeId);
