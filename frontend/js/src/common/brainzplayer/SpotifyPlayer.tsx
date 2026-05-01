@@ -349,15 +349,6 @@ export default class SpotifyPlayer
       this.playSpotifyURI(
         SpotifyPlayer.getSpotifyUriFromListen(listen as Listen)
       );
-    } else if (streamingUrl) {
-      // modified from https://regex101.com/r/Mcd4kh/1
-      const spotifyIdRegex = /https?:\/\/(?:open\.)?spotify.com\/track\/(?:spotify\/playlist\/)?(?<id>\w*)/;
-      const trackId = spotifyIdRegex.exec(streamingUrl)?.groups?.id;
-      if (trackId) {
-        this.playSpotifyURI(`spotify:track:${trackId}`);
-      } else {
-        this.searchAndPlayTrack(listen);
-      }
     } else {
       this.searchAndPlayTrack(listen);
     }
