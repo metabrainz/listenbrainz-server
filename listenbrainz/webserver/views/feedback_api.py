@@ -112,9 +112,8 @@ def get_feedback_for_user(user_name):
         if score not in [-1, 1]:
             log_raise_400("Score can have a value of 1 or -1.", request.args)
 
-    feedback = db_feedback.get_feedback_for_user(db_conn, ts_conn, user_id=user["id"], limit=count,
-                                                 offset=offset, score=score, metadata=metadata)
-    total_count = db_feedback.get_feedback_count_for_user(db_conn, user["id"], score)
+    feedback, total_count = db_feedback.get_feedback_for_user_with_count(db_conn, ts_conn, user_id=user["id"], limit=count,
+                                                                         offset=offset, score=score, metadata=metadata)
 
     feedback = [fb.to_api() for fb in feedback]
 
@@ -186,9 +185,8 @@ def _get_feedback_for_recording(recording_type, recording):
         if score not in [-1, 1]:
             log_raise_400("Score can have a value of 1 or -1.", request.args)
 
-    feedback = db_feedback.get_feedback_for_recording(db_conn, recording_type, recording, limit=count,
-                                                      offset=offset, score=score)
-    total_count = db_feedback.get_feedback_count_for_recording(db_conn, recording_type, recording)
+    feedback, total_count = db_feedback.get_feedback_for_recording_with_count(db_conn, recording_type, recording, limit=count,
+                                                                              offset=offset, score=score)
 
     feedback = [fb.to_api() for fb in feedback]
 

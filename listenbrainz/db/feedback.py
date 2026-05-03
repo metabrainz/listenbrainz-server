@@ -115,6 +115,17 @@ def get_feedback_for_user(db_conn, ts_conn, user_id: int, limit: int, offset: in
         Returns:
             A list of Feedback objects
     """
+    feedback, _ = get_feedback_for_user_with_count(db_conn, ts_conn, user_id, limit, offset, score, metadata)
+    return feedback
+
+
+def get_feedback_for_user_with_count(db_conn, ts_conn, user_id: int, limit: int, offset: int,
+                                     score: int = None, metadata: bool = False):
+    """ Get a list of recording feedback given by the user and the total matching count in one query.
+
+        Returns:
+            A tuple of (list of Feedback objects, total_count int)
+    """
 
     args = {"user_id": user_id, "limit": limit, "offset": offset}
     query = """ SELECT user_id
@@ -123,13 +134,14 @@ def get_feedback_for_user(db_conn, ts_conn, user_id: int, limit: int, offset: in
                      , recording_mbid::text
                      , score
                      , recording_feedback.created
+                     , COUNT(*) OVER() AS total_count
                   FROM recording_feedback
                   JOIN "user"
                     ON "user".id = recording_feedback.user_id
                  WHERE user_id = :user_id
     """
 
-    if score:
+    if score is not None:
         query += " AND score = :score"
         args["score"] = score
 
@@ -137,39 +149,25 @@ def get_feedback_for_user(db_conn, ts_conn, user_id: int, limit: int, offset: in
                  LIMIT :limit OFFSET :offset """
 
     result = db_conn.execute(sqlalchemy.text(query), args)
-    feedback = [Feedback(**row) for row in result.mappings()]
+    rows = result.mappings().all()
+    if rows:
+        total_count = int(rows[0]["total_count"])
+    else:
+        # offset may be beyond the data; run a cheap count to get the real total
+        count_query = "SELECT count(*) FROM recording_feedback WHERE user_id = :user_id"
+        count_args = {"user_id": user_id}
+        if score is not None:
+            count_query += " AND score = :score"
+            count_args["score"] = score
+
+        total_count = db_conn.execute(sqlalchemy.text(count_query), count_args).scalar()
+
+    feedback = [Feedback(**{k: v for k, v in row.items() if k != "total_count"}) for row in rows]
 
     if metadata and len(feedback) > 0:
         feedback = fetch_track_metadata_for_items(ts_conn, feedback)
 
-    return feedback
-
-
-def get_feedback_count_for_user(db_conn, user_id: int, score=None) -> int:
-    """ Get total number of recording feedback given by the user
-
-        Args:
-            db_conn: database connection
-            user_id: the row ID of the user in the DB
-            score: If 1, fetch count for all the loved feedback,
-                   if -1 fetch count for all the hated feedback,
-                   if None, fetch count for all feedback
-
-        Returns:
-            The total number of recording feedback given by the user
-    """
-
-    query = "SELECT count(*) AS value FROM recording_feedback WHERE user_id = :user_id"
-    args = {'user_id': user_id}
-
-    if score is not None:
-        query += " AND score = :score"
-        args['score'] = score
-
-    result = db_conn.execute(text(query), args)
-    count = int(result.fetchone().value)
-
-    return count
+    return feedback, total_count
 
 
 def get_feedback_for_recording(db_conn, recording_type: str, recording: str, limit: int,
@@ -188,6 +186,17 @@ def get_feedback_for_recording(db_conn, recording_type: str, recording: str, lim
         Returns:
             A list of Feedback objects
     """
+    feedback, _ = get_feedback_for_recording_with_count(db_conn, recording_type, recording, limit, offset, score)
+    return feedback
+
+
+def get_feedback_for_recording_with_count(db_conn, recording_type: str, recording: str, limit: int,
+                                          offset: int, score: int = None):
+    """ Get a list of recording feedback for a given recording and the total matching count in one query.
+
+        Returns:
+            A tuple of (list of Feedback objects, total_count int)
+    """
 
     args = {"recording": recording, "limit": limit, "offset": offset}
     query = """
@@ -197,12 +206,13 @@ def get_feedback_for_recording(db_conn, recording_type: str, recording: str, lim
              , recording_mbid::text
              , score
              , recording_feedback.created
+             , COUNT(*) OVER() AS total_count
           FROM recording_feedback
           JOIN "user"
             ON "user".id = recording_feedback.user_id
          WHERE """ + recording_type + " = :recording"
 
-    if score:
+    if score is not None:
         query += " AND score = :score"
         args["score"] = score
 
@@ -210,24 +220,21 @@ def get_feedback_for_recording(db_conn, recording_type: str, recording: str, lim
                  LIMIT :limit OFFSET :offset """
 
     result = db_conn.execute(text(query), args)
-    return [Feedback(**row) for row in result.mappings()]
+    rows = result.mappings().all()
+    if rows:
+        total_count = int(rows[0]["total_count"])
+    else:
+        # offset may be beyond the data; run a cheap count to get the real total
+        count_query = f"SELECT count(*) FROM recording_feedback WHERE {recording_type} = :recording"
+        count_args = {"recording": recording}
 
+        if score is not None:
+            count_query += " AND score = :score"
+            count_args["score"] = score
 
-def get_feedback_count_for_recording(db_conn, recording_type: str, recording: str) -> int:
-    """ Get total number of recording feedback for a given recording
+        total_count = db_conn.execute(text(count_query), count_args).scalar()
 
-        Args:
-            db_conn: database connection
-            recording_type: type of id, recording_msid or recording_mbid
-            recording: the ID of the recording
-
-        Returns:
-            The total number of recording feedback for a given recording
-    """
-    query = "SELECT count(*) AS value FROM recording_feedback WHERE " + recording_type + " = :recording"
-    result = db_conn.execute(text(query), {"recording": recording})
-    count = int(result.fetchone().value)
-    return count
+    return [Feedback(**{k: v for k, v in row.items() if k != "total_count"}) for row in rows], total_count
 
 
 def get_feedback_for_multiple_recordings_for_user(db_conn, user_id: int, user_name: str, recording_msids: List[str],
