@@ -126,7 +126,9 @@ def delete_do_not_recommend():
 
 def _parse_json_params():
     user = validate_auth_header()
-    data = request.json
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
 
     if "entity" not in data:
         raise APIBadRequest("Required `entity` key is missing")

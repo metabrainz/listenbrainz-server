@@ -17,6 +17,7 @@ from listenbrainz.webserver.views.api_tools import (
 )
 from listenbrainz.db.model.pinned_recording import WritablePinnedRecording
 from pydantic import ValidationError
+from listenbrainz.webserver.errors import APIBadRequest
 
 pinned_recording_api_bp = Blueprint("pinned_rec_api_bp_v1", __name__)
 
@@ -51,7 +52,9 @@ def pin_recording_for_user():
     """
     user = validate_auth_header()
 
-    data = request.json
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
 
     if "recording_msid" not in data and "recording_mbid" not in data:
         log_raise_400("JSON document must contain either recording_msid or recording_mbid", data)
@@ -423,7 +426,10 @@ def update_blurb_content_pinned_recording(row_id):
     """
     user = validate_auth_header()
 
-    data = request.json
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
+
     try:
         row_id = int(row_id)
         pin = db_pinned_rec.get_pin_by_id(db_conn, row_id)

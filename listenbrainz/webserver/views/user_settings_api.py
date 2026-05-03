@@ -40,10 +40,14 @@ def update_flair():
     To remove a user's flair, pass {"flair": null}.
     """
     user = validate_auth_header()
-    if "flair" not in request.json:
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
+
+    if "flair" not in data:
         raise APIBadRequest("Missing flair field")
 
-    flair = request.json["flair"]
+    flair = data["flair"]
     if flair:
         if not isinstance(flair, str):
             raise APIBadRequest("Flair must be a string")

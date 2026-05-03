@@ -309,7 +309,10 @@ def create_playlist():
 
     user = validate_auth_header()
 
-    data = request.json
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
+
     validate_create_playlist_required_items(data)
     validate_playlist(data)
 
@@ -459,7 +462,10 @@ def edit_playlist(playlist_mbid):
 
     user = validate_auth_header()
 
-    data = request.json
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
+
     validate_playlist(data)
 
     if not is_valid_uuid(playlist_mbid):
@@ -660,7 +666,10 @@ def add_playlist_item(playlist_mbid, offset):
     if not playlist.is_modifiable_by(user["id"]):
         raise APIForbidden("You are not allowed to add recordings to this playlist.")
 
-    data = request.json
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
+
     validate_playlist(data)
 
     if len(data["playlist"]["track"]) > MAX_RECORDINGS_PER_ADD:
@@ -723,7 +732,10 @@ def move_playlist_item(playlist_mbid):
     if not playlist.is_modifiable_by(user["id"]):
         raise APIForbidden("You are not allowed to move recordings in this playlist.")
 
-    data = request.json
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
+
     validate_move_data(data)
 
     try:
@@ -773,7 +785,10 @@ def delete_playlist_item(playlist_mbid):
     if not playlist.is_modifiable_by(user["id"]):
         raise APIForbidden("You are not allowed to remove recordings from this playlist.")
 
-    data = request.json
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
+
     validate_delete_data(data)
 
     try:
@@ -1114,7 +1129,7 @@ def export_playlist_jspf(service):
                             f" to use this feature.")
 
     is_public = parse_boolean_arg("is_public", True)
-    jspf = {"playlist": request.json}
+    jspf = {"playlist": request.get_json()}
     try:
         if service == "spotify":
             url = export_to_spotify(user["auth_token"], token["access_token"], is_public, jspf=jspf)
