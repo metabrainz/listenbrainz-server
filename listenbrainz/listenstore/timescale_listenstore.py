@@ -185,19 +185,21 @@ class TimescaleListenStore:
 
         inserted_rows = []
         conn = timescale.engine.raw_connection()
-        with conn.cursor() as curs:
-            try:
-                execute_values(curs, query, submit, template=None)
-                while True:
-                    result = curs.fetchone()
-                    if not result:
-                        break
-                    inserted_rows.append((result[0], result[1], result[2]))
-            except UntranslatableCharacter:
-                conn.rollback()
-                return
-
-        conn.commit()
+        try:
+            with conn.cursor() as curs:
+                try:
+                    execute_values(curs, query, submit, template=None)
+                    while True:
+                        result = curs.fetchone()
+                        if not result:
+                            break
+                        inserted_rows.append((result[0], result[1], result[2]))
+                except UntranslatableCharacter:
+                    conn.rollback()
+                    return
+            conn.commit()
+        finally:
+            conn.close()
 
         return inserted_rows
 
@@ -308,6 +310,7 @@ class TimescaleListenStore:
 
             # Oh shit valve. I'm keeping it here for the time being. :)
             if passes == 10:
+                current_app.logger.warning("fetch_listens hit 10-pass limit for user %s, returning partial results.", user.get("id"))
                 done = True
                 break
 
