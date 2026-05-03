@@ -45,16 +45,18 @@ def insert(db_conn, user_0: int, user_1: int, relationship_type: str) -> None:
 
 def is_following_user(db_conn, follower: int, followed: int) -> bool:
     result = db_conn.execute(sqlalchemy.text("""
-        SELECT COUNT(*) as cnt
-          FROM user_relationship
-         WHERE user_0 = :follower
-           AND user_1 = :followed
-           AND relationship_type = 'follow'
+        SELECT EXISTS (
+            SELECT 1
+              FROM user_relationship
+             WHERE user_0 = :follower
+               AND user_1 = :followed
+               AND relationship_type = 'follow'
+        )
     """), {
         "follower": follower,
         "followed": followed,
     })
-    return result.fetchone().cnt > 0
+    return result.scalar_one()
 
 
 def multiple_users_by_username_following_user(db_conn, followed: int, followers: List[str]):
