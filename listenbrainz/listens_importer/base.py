@@ -41,7 +41,11 @@ class ListensImporter(abc.ABC):
             musicbrainz_id: the MusicBrainz ID of the user
             error: a description of the error encountered.
         """
-        user_email = db_user.get_by_mb_id(listenbrainz.webserver.db_conn, musicbrainz_id, fetch_email=True)["email"]
+        user = db_user.get_by_mb_id(listenbrainz.webserver.db_conn, musicbrainz_id, fetch_email=True)
+        if not user:
+            return
+
+        user_email = user["email"]
         if not user_email:
             return
 
@@ -100,7 +104,7 @@ class ListensImporter(abc.ABC):
         username = user['musicbrainz_id']
         user_metadata = SubmitListenUserMetadata(user_id=user['user_id'], musicbrainz_id=username)
         retries = 10
-        while retries >= 0:
+        while retries > 0:
             try:
                 current_app.logger.debug('Submitting %d listens for user %s', len(listens), username)
                 insert_payload(listens, user_metadata, listen_type=listen_type)

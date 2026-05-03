@@ -436,7 +436,9 @@ def music_services_connect(service_name: str):
     if service_name.lower() not in {"lastfm", "librefm"}:
         raise APINotFound("Service %s is invalid." % (service_name,))
 
-    data = request.json
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
 
     if "external_user_id" not in data:
         raise APIBadRequest("Missing 'external_user_id' in request.")
