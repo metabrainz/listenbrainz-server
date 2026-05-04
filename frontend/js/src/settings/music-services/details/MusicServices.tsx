@@ -4,6 +4,14 @@ import { capitalize } from "lodash";
 import { useLoaderData } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import {
+  faApple,
+  faSoundcloud,
+  faSpotify,
+  faYoutube,
+} from "@fortawesome/free-brands-svg-icons";
 import { ToastMsg } from "../../../notifications/Notifications";
 import ServicePermissionButton from "./components/ExternalServiceButton";
 import LFMMusicServicePermissions from "./components/LFMMusicServicePermissions";
@@ -13,6 +21,9 @@ import {
   setupAppleMusicKit,
 } from "../../../common/brainzplayer/AppleMusicPlayer";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
+import faFunkwhale from "../../../common/icons/faFunkwhale";
+import { faNavidrome } from "../../../common/icons/faNavidrome";
+import faInternetArchive from "../../../common/icons/faInternetArchive";
 
 type MusicServicesLoaderData = {
   current_spotify_permissions: string;
@@ -470,7 +481,10 @@ export default function MusicServices() {
 
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">Spotify</h3>
+            <h3 className="card-title">
+              <FontAwesomeIcon icon={faSpotify} color="#1DB954" />{" "}
+              Spotify
+            </h3>
           </div>
           <div className="card-body">
             <p>
@@ -617,7 +631,10 @@ export default function MusicServices() {
 
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">SoundCloud</h3>
+            <h3 className="card-title">
+              <FontAwesomeIcon icon={faSoundcloud} color="#FF8800" />{" "}
+              SoundCloud
+            </h3>
           </div>
           <div className="card-body">
             <p>
@@ -649,7 +666,10 @@ export default function MusicServices() {
 
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">Apple Music</h3>
+            <h3 className="card-title">
+              <FontAwesomeIcon icon={faApple} color="#000000" />{" "}
+              Apple Music
+            </h3>
           </div>
           <div className="card-body">
             <p>
@@ -687,7 +707,10 @@ export default function MusicServices() {
 
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">Funkwhale</h3>
+            <h3 className="card-title">
+              <FontAwesomeIcon icon={faFunkwhale as IconProp} color="#009FE3" />{" "}
+              Funkwhale
+            </h3>
           </div>
           <div className="card-body">
             <p>
@@ -774,7 +797,10 @@ export default function MusicServices() {
 
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">Navidrome</h3>
+            <h3 className="card-title">
+              <FontAwesomeIcon icon={faNavidrome as IconProp} color="#0084ff" />{" "}
+              Navidrome
+            </h3>
           </div>
           <div className="card-body">
             <p>
@@ -926,7 +952,10 @@ export default function MusicServices() {
 
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">Youtube</h3>
+            <h3 className="card-title">
+              <FontAwesomeIcon icon={faYoutube} color="#FF0000" />{" "}
+              YouTube
+            </h3>
           </div>
           <div className="card-body">
             <p>
@@ -938,7 +967,13 @@ export default function MusicServices() {
 
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">InternetArchive</h3>
+            <h3 className="card-title">
+              <FontAwesomeIcon
+                icon={faInternetArchive as IconProp}
+                color="#6c757d"
+              />{" "}
+              InternetArchive
+            </h3>
           </div>
           <div className="card-body">
             <p>
