@@ -164,9 +164,14 @@ def artist_entity(artist_mbid: str):
         "artist_mbid": str(artist_data[0].artist_mbid),
         **artist_data[0].artist_data,
         "tag": artist_data[0].tag_data,
+        "artist_relationships": artist_data[0].artist_relationship_data,
     }
 
-    popular_recordings = popularity.get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, 10)
+    try:
+        popular_recordings = popularity.get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, 10)
+    except Exception:
+        current_app.logger.error("Error loading popular recordings for artist:", exc_info=True)
+        popular_recordings = []
 
     try:
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
@@ -180,19 +185,20 @@ def artist_entity(artist_mbid: str):
                 "session_based_days_7500_session_300_contribution_3_threshold_10_limit_100_filter_True_skip_30",
                 18
             )
-    except IndexError:
+    except Exception:
+        current_app.logger.error("Error loading similar artists:", exc_info=True)
         similar_artists = []
 
     try:
         top_release_group_color = popularity.get_top_release_groups_for_artist(
             db_conn, ts_conn, artist_mbid, 1
         )[0]["release_color"]
-    except IndexError:
+    except Exception:
         top_release_group_color = None
 
     try:
         top_recording_color = popularity.get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, 1)[0]["release_color"]
-    except IndexError:
+    except Exception:
         top_recording_color = None
 
     release_group_data = artist_data[0].release_group_data

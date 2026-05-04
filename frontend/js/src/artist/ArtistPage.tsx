@@ -92,6 +92,7 @@ export type ArtistPageProps = {
 };
 
 export const COVER_ART_SINGLE_ROW_COUNT = 8;
+export const ARTIST_RELATIONSHIPS_DEFAULT_VISIBLE_COUNT = 3;
 export const typeOrder = [
   "Album",
   "EP",
@@ -183,6 +184,10 @@ export default function ArtistPage(): JSX.Element {
   const [expandDiscography, setExpandDiscography] = React.useState<boolean>(
     false
   );
+  const [
+    showAllArtistRelationships,
+    setShowAllArtistRelationships,
+  ] = React.useState<boolean>(false);
 
   // Sort by the more precise secondary type first to create categories like "Live", "Compilation" and "Remix" instead of
   // "Album + Live", "Single + Live", "EP + Live", "Broadcast + Live" and "Album + Remix", etc.
@@ -293,6 +298,14 @@ export default function ArtistPage(): JSX.Element {
   }, [artist?.artist_mbid]);
 
   const releaseGroupTypesNames = Object.entries(groupedReleaseGroups);
+  const artistRelationships = artist?.artist_relationships ?? [];
+  const visibleArtistRelationships = showAllArtistRelationships
+    ? artistRelationships
+    : artistRelationships.slice(0, ARTIST_RELATIONSHIPS_DEFAULT_VISIBLE_COUNT);
+  const hiddenArtistRelationshipsCount = Math.max(
+    0,
+    artistRelationships.length - ARTIST_RELATIONSHIPS_DEFAULT_VISIBLE_COUNT
+  );
 
   // Only show "full discography" button if there are more than 4 rows
   // in total across categories, after which we crop the container
@@ -303,6 +316,10 @@ export default function ArtistPage(): JSX.Element {
         rows + (curr[1].length > COVER_ART_SINGLE_ROW_COUNT ? 2 : 1),
       0
     ) > 4;
+
+  React.useEffect(() => {
+    setShowAllArtistRelationships(false);
+  }, [artist?.artist_mbid]);
 
   return (
     <div id="entity-page" className="artist-page" role="main">
@@ -418,6 +435,43 @@ export default function ArtistPage(): JSX.Element {
         />
       </div>
       <div className="entity-page-content">
+        {Boolean(artistRelationships.length) && (
+          <div className="artist-relationships">
+            <h3 className="header-with-line">Artist relationships</h3>
+            <div className="d-flex flex-column gap-1">
+              {visibleArtistRelationships.map((relationship) => (
+                <div
+                  className="d-flex gap-1 align-items-center"
+                  key={`${relationship.type}-${relationship.direction}-${relationship.artist_mbid}`}
+                >
+                  <span className="text-muted">
+                    {relationship.direction === "forward"
+                      ? "Also performs as:"
+                      : "Performance name of:"}
+                  </span>
+                  <Link to={`/artist/${relationship.artist_mbid}`}>
+                    {relationship.name}
+                  </Link>
+                </div>
+              ))}
+            </div>
+            {hiddenArtistRelationshipsCount > 0 && (
+              <div className="read-more mt-2">
+                <button
+                  type="button"
+                  className="btn btn-outline-info"
+                  onClick={() =>
+                    setShowAllArtistRelationships((prevValue) => !prevValue)
+                  }
+                >
+                  {showAllArtistRelationships
+                    ? "Show less"
+                    : `Show ${hiddenArtistRelationshipsCount} more`}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
         <div className={`tracks ${expandPopularTracks ? "expanded" : ""}`}>
           <div className="header">
             <h3 className="header-with-line">
