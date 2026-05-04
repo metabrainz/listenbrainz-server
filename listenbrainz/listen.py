@@ -77,7 +77,7 @@ class Listen(object):
         'release_name',
     )
 
-    def __init__(self, user_id=None, user_name=None, timestamp=None, recording_msid=None, inserted_timestamp=None, data=None):
+    def __init__(self, user_id=None, user_name=None, timestamp=None, recording_msid=None, inserted_timestamp=None, data=None, staged_for_deletion=False):
         self.user_id = user_id
         self.user_name = user_name
 
@@ -107,6 +107,7 @@ class Listen(object):
                 pass
 
             self.data = data
+            self.staged_for_deletion = staged_for_deletion
 
     @classmethod
     def from_json(cls, j):
@@ -132,7 +133,7 @@ class Listen(object):
     def from_timescale(cls, listened_at, user_id, created, recording_msid, track_metadata,
                        recording_mbid=None, recording_name=None, release_mbid=None, artist_mbids=None,
                        ac_names=None, ac_join_phrases=None, user_name=None,
-                       caa_id=None, caa_release_mbid=None):
+                       caa_id=None, caa_release_mbid=None, staged_for_deletion=False):
         """Factory to make Listen() objects from a timescale dict"""
         track_metadata["additional_info"]["recording_msid"] = recording_msid
         if recording_mbid is not None:
@@ -166,7 +167,8 @@ class Listen(object):
             timestamp=listened_at,
             recording_msid=recording_msid,
             inserted_timestamp=created,
-            data=track_metadata
+            data=track_metadata,
+            staged_for_deletion=staged_for_deletion
         )
 
     def to_api(self):
