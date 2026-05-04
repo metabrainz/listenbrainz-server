@@ -27,7 +27,6 @@ const MOUSE_THROTTLE_DELAY: number = 300;
 
 const TOOLTIP_INITIAL_CONTENT: string = "0:00";
 const TOOLTIP_TOP_OFFSET: number = 39;
-const HANDLE_RADIUS = 7; // px — handle is 14×14px
 
 // Originally by ford04 - https://stackoverflow.com/a/62017005
 const useThrottle = (callback: any, delay: number | undefined) => {
@@ -53,13 +52,14 @@ function ProgressBar(props: ProgressBarProps) {
   const progressBarRef = React.useRef<HTMLDivElement>(null);
   const progressBarInnerRef = React.useRef<HTMLDivElement>(null);
   const handleRef = React.useRef<HTMLDivElement>(null);
-  const rafRef = React.useRef<number>(0);
   const isDraggingRef = React.useRef<boolean>(false);
   const rectCacheRef = React.useRef<DOMRect | null>(null);
   const pendingSeekMsRef = React.useRef<number>(-1);
+  const draggingElementRef = React.useRef<Element | null>(null);
   const seekVisualMsRef = React.useRef<number>(-1);
 
   React.useEffect(() => {
+    let rafId: number;
     const tick = () => {
       if (isDraggingRef.current) return;
       const base =
@@ -77,10 +77,10 @@ function ProgressBar(props: ProgressBarProps) {
         const handleX = ratio * barWidth;
         handleRef.current.style.setProperty("--handle-x", `${handleX}px`);
       }
-      rafRef.current = requestAnimationFrame(tick);
+      rafId = requestAnimationFrame(tick);
     };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
   }, [progressMs, durationMs, playerPaused, updateTime]);
 
   const getMsFromClientX = (clientX: number): number => {
@@ -118,9 +118,8 @@ function ProgressBar(props: ProgressBarProps) {
       const msPos = getMsFromClientX(e.clientX);
       pendingSeekMsRef.current = msPos;
       seekToPositionMs(msPos);
-      document
-        .querySelectorAll(".progress.dragging")
-        .forEach((el) => el.classList.remove("dragging"));
+      draggingElementRef.current?.classList.remove("dragging");
+      draggingElementRef.current = null;
     };
 
     document.addEventListener("pointermove", onPointerMove);
@@ -226,6 +225,7 @@ function ProgressBar(props: ProgressBarProps) {
               "translate(-50%, -50%) scaleX(1)";
           }
           (e.currentTarget as HTMLDivElement).classList.add("dragging");
+          draggingElementRef.current = e.currentTarget as HTMLDivElement;
           const msPos = getMsFromClientX(e.clientX);
           seekVisualMsRef.current = msPos;
           flushVisuals(msPos);
@@ -246,7 +246,7 @@ function ProgressBar(props: ProgressBarProps) {
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuenow={0}
+        aria-valuenow={durationMs > 0 ? Math.round((progressMs * 100) / durationMs) : 0}
         tabIndex={0}
         data-tip={tipContent}
         ref={progressBarRef}
