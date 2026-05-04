@@ -197,10 +197,11 @@ export default function LFMMusicServicePermissions({
     <div className="card">
       <div className="card-header">
         <h3 className="card-title">
-          <FontAwesomeIcon
-            icon={faLastfm}
-            color={serviceName === "lastfm" ? "#D51007" : undefined}
-          />{" "}
+          {serviceName === "lastfm" ? (
+            <>
+              <FontAwesomeIcon icon={faLastfm} color="#D51007" />{" "}
+            </>
+          ) : null}
           {serviceDisplayName}
         </h3>
       </div>
