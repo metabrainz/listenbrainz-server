@@ -170,6 +170,25 @@ def get_feedback_for_user_with_count(db_conn, ts_conn, user_id: int, limit: int,
     return feedback, total_count
 
 
+def get_feedback_count_for_user(db_conn, user_id: int, score: int = None) -> int:
+    """ Get the total number of recording feedback given by a user.
+
+        Args:
+            db_conn: database connection
+            user_id: the row ID of the user in the DB
+            score: optional score filter (1 = loved, -1 = hated)
+
+        Returns:
+            integer count of matching feedback rows
+    """
+    args = {"user_id": user_id}
+    query = "SELECT count(*) FROM recording_feedback WHERE user_id = :user_id"
+    if score is not None:
+        query += " AND score = :score"
+        args["score"] = score
+    return db_conn.execute(sqlalchemy.text(query), args).scalar()
+
+
 def get_feedback_for_recording(db_conn, recording_type: str, recording: str, limit: int,
                                offset: int, score: int = None) -> List[Feedback]:
     """ Get a list of recording feedback for a given recording in descending order of their creation
