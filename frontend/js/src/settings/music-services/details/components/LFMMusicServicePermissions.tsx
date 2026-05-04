@@ -2,6 +2,8 @@ import * as React from "react";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
 import { Link } from "react-router";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faLastfm } from "@fortawesome/free-brands-svg-icons";
 import ServicePermissionButton from "./ExternalServiceButton";
 import ImportStatus from "./ImportStatus";
 import { ToastMsg } from "../../../../notifications/Notifications";
@@ -194,7 +196,13 @@ export default function LFMMusicServicePermissions({
   return (
     <div className="card">
       <div className="card-header">
-        <h3 className="card-title">{serviceDisplayName}</h3>
+        <h3 className="card-title">
+          <FontAwesomeIcon
+            icon={faLastfm}
+            color={serviceName === "lastfm" ? "#D51007" : undefined}
+          />{" "}
+          {serviceDisplayName}
+        </h3>
       </div>
       <div className="card-body">
         <p>
