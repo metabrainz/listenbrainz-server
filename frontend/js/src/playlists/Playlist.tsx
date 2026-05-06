@@ -46,6 +46,7 @@ import {
   removeTrackFromAmbientQueueAtom,
   setAmbientQueueAtom,
 } from "../common/brainzplayer/BrainzPlayerAtoms";
+import { getTrackExtension } from "./utils";
 
 export type PlaylistPageProps = {
   playlist: JSPFObject & {
@@ -59,6 +60,8 @@ export interface PlaylistPageState {
   playlist: JSPFPlaylist;
   loading: boolean;
 }
+
+type TrackSortKey = "default" | "date_added" | "title" | "artist" | "shuffle";
 
 const makeJSPFTrack = (trackMetadata: TrackMetadata): JSPFTrack => {
   return {
@@ -117,10 +120,95 @@ export default function PlaylistPage() {
   );
   const { track: tracks } = playlist;
   const [dontAskAgain, setDontAskAgain] = React.useState(false);
+  const [sortKey, setSortKey] = React.useState<TrackSortKey>("default");
+  const [displayedTracks, setDisplayedTracks] = React.useState<JSPFTrack[]>(
+    playlistProps?.playlist?.track ?? []
+  );
 
   React.useEffect(() => {
     setPlaylist(playlistProps?.playlist || {});
   }, [playlistProps?.playlist]);
+
+  const getTieBreaker = React.useCallback((a: JSPFTrack, b: JSPFTrack) => {
+    const aId = a.id ?? getRecordingMBIDFromJSPFTrack(a);
+    const bId = b.id ?? getRecordingMBIDFromJSPFTrack(b);
+    return aId.localeCompare(bId);
+  }, []);
+
+  const setTrackSortOption = React.useCallback(
+    (option: TrackSortKey) => {
+      const base = tracks ?? [];
+      setSortKey(option);
+
+      if (option === "shuffle") {
+        // Keep the same shuffle logic as the main playlists page
+        setDisplayedTracks([...base].sort(() => Math.random() - 0.5));
+        return;
+      }
+
+      if (option === "default") {
+        setDisplayedTracks(base);
+        return;
+      }
+
+      if (option === "title") {
+        setDisplayedTracks(
+          [...base].sort((a, b) => {
+            const titleA = a.title ?? "";
+            const titleB = b.title ?? "";
+            const cmp = titleA.toLowerCase().localeCompare(titleB.toLowerCase());
+            return cmp !== 0 ? cmp : getTieBreaker(a, b);
+          })
+        );
+        return;
+      }
+
+      if (option === "artist") {
+        setDisplayedTracks(
+          [...base].sort((a, b) => {
+            const artistA = a.creator ?? "";
+            const artistB = b.creator ?? "";
+            const cmp = artistA.toLowerCase().localeCompare(artistB.toLowerCase());
+            return cmp !== 0 ? cmp : getTieBreaker(a, b);
+          })
+        );
+        return;
+      }
+
+      if (option === "date_added") {
+        setDisplayedTracks(
+          [...base].sort((a, b) => {
+            const aTs = Date.parse(getTrackExtension(a)?.added_at || '');
+            const bTs = Date.parse(getTrackExtension(b)?.added_at || '');
+      
+            const aValid = !Number.isNaN(aTs);
+            const bValid = !Number.isNaN(bTs);
+      
+            // Newest first
+            if (aValid && bValid) {
+              return aTs !== bTs ? bTs - aTs : getTieBreaker(a, b);
+            }
+      
+            if (aValid) return -1;
+            if (bValid) return 1;
+      
+            return getTieBreaker(a, b);
+          })
+        );
+      
+        return; 
+      }
+      // If we add more sort options in the future, fall back to default order.
+      setDisplayedTracks(base);
+    },
+    [getTieBreaker, tracks]
+  );
+
+  // Keep displayedTracks in sync with playlist changes, while preserving current sortKey.
+  React.useEffect(() => {
+    setTrackSortOption(sortKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tracks]);
 
   // Functions
   const alertMustBeLoggedIn = () => {
@@ -371,6 +459,7 @@ export default function PlaylistPage() {
   const [showMore, setShowMore] = React.useState(false);
   const isLongDescription =
     playlist?.annotation && playlist.annotation.length > 400;
+  const dragEnabled = sortKey === "default";
   return (
     <div role="main">
       <Helmet>
@@ -548,27 +637,49 @@ export default function PlaylistPage() {
         className="col-md-8 offset-md-2"
       >
         <div className="header">
-          <h3 className="header-with-line">
-            Tracks
-            {Boolean(playlist.track?.length) && (
-              <button
-                type="button"
-                className="btn btn-info btn-rounded play-tracks-button"
-                title="Play all tracks"
-                onClick={() => {
-                  window.postMessage(
-                    {
-                      brainzplayer_event: "play-ambient-queue",
-                      payload: tracks,
-                    },
-                    window.location.origin
-                  );
-                }}
-              >
-                <FontAwesomeIcon icon={faPlayCircle} fixedWidth /> Play all
-              </button>
-            )}
-          </h3>
+          <div className="playlist-tracks-header">
+            <h3 className="header-with-line">Tracks</h3>
+            <div className="playlist-tracks-header-controls">
+              <div className="playlist-sort-controls">
+                <label htmlFor="playlistTrackSort" className="text-muted">
+                  Sort By:
+                </label>
+                <select
+                  id="playlistTrackSort"
+                  className="form-select"
+                  style={{ width: "auto" }}
+                  value={sortKey}
+                  onChange={(e) =>
+                    setTrackSortOption(e.target.value as TrackSortKey)
+                  }
+                >
+                  <option value="default">Default</option>
+                  <option value="date_added">Recently Added</option>
+                  <option value="title">Title (A-Z)</option>
+                  <option value="artist">Artist (A-Z)</option>
+                  <option value="shuffle">Shuffle</option>
+                </select>
+              </div>
+              {Boolean(playlist.track?.length) && (
+                <button
+                  type="button"
+                  className="btn btn-info btn-rounded play-tracks-button"
+                  title="Play all tracks"
+                  onClick={() => {
+                    window.postMessage(
+                      {
+                        brainzplayer_event: "play-ambient-queue",
+                        payload: tracks,
+                      },
+                      window.location.origin
+                    );
+                  }}
+                >
+                  <FontAwesomeIcon icon={faPlayCircle} fixedWidth /> Play all
+                </button>
+              )}
+            </div>
+          </div>
         </div>
         {userHasRightToEdit && tracks && tracks.length > 10 && (
           <div className="text-center">
@@ -587,25 +698,36 @@ export default function PlaylistPage() {
         )}
         <div id="listens row">
           {tracks && tracks.length > 0 ? (
-            <ReactSortable
-              handle=".drag-handle"
-              list={tracks as (JSPFTrack & { id: string })[]}
-              onEnd={movePlaylistItem}
-              setList={(newState) =>
-                setPlaylist({ ...playlist, track: newState })
-              }
-            >
-              {tracks.map((track: JSPFTrack, index) => {
-                return (
+            (() => {
+              const trackRows = displayedTracks.map(
+                (track: JSPFTrack, index) => (
                   <PlaylistItemCard
                     key={`${track.id}-${index.toString()}`}
                     canEdit={userHasRightToEdit}
+                    dragEnabled={dragEnabled}
                     track={track}
                     removeTrackFromPlaylist={deletePlaylistItem}
                   />
-                );
-              })}
-            </ReactSortable>
+                )
+              );
+
+              if (!dragEnabled) {
+                return trackRows;
+              }
+
+              return (
+                <ReactSortable
+                  handle=".drag-handle"
+                  list={displayedTracks as (JSPFTrack & { id: string })[]}
+                  onEnd={movePlaylistItem}
+                  setList={(newState) =>
+                    setPlaylist({ ...playlist, track: newState })
+                  }
+                >
+                  {trackRows}
+                </ReactSortable>
+              );
+            })()
           ) : (
             <div className="lead text-center">
               <p>Nothing in this playlist yet</p>
