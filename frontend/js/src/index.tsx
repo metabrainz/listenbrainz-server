@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     Sentry.init({
       dsn: sentry_dsn,
       integrations: [
-        Sentry.reactRouterV6BrowserTracingIntegration({
+        Sentry.reactRouterV7BrowserTracingIntegration({
           useEffect: React.useEffect,
           useLocation,
           useNavigationType,
@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     false;
 
   const routes = getRoutes(currentUser?.name, !brainzPlayerDisabled);
-  const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouter(
+  const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouterV7(
     createBrowserRouter
   );
   const router = sentryCreateBrowserRouter(routes);
