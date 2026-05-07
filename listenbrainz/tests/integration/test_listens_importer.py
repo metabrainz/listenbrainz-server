@@ -476,9 +476,11 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         metadata = response.json["metadata"]
         self.assertIn("attempted_count", metadata)
         self.assertIn("success_count", metadata)
-        self.assertEqual(metadata["success_count"], 2)
+        self.assertIn("detailed_message", metadata)
         # More tracks were attempted but filtered during processing
-        self.assertGreaterEqual(metadata["attempted_count"], 2)
+        self.assertEqual(metadata["success_count"], 2)
+        self.assertEqual(metadata["attempted_count"], 15)
+        self.assertEqual(metadata["detailed_message"], "1 skipped (incognito mode), 12 skipped (short duration)")
 
 
     def test_import_listenbrainz(self):
