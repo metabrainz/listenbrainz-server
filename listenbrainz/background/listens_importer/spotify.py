@@ -133,13 +133,13 @@ class SpotifyListensImporter(ZipBaseListensImporter):
     def get_validation_detailed_message(self) -> str:
         """Generate Spotify-specific message for import validation summary."""
         messages = []
-        if self.skipped_incognito_count > 0:
-            messages.append(f"{self.skipped_incognito_count} skipped (incognito mode)")
         if self.skipped_short_plays_count > 0:
-            messages.append(f"{self.skipped_short_plays_count} skipped (short duration)")
+            messages.append(f"{self.skipped_short_plays_count} manually skipped or interrupted")
+        if self.skipped_incognito_count > 0:
+            messages.append(f"{self.skipped_incognito_count} incognito mode")
         
         if messages:
-            return ", ".join(messages)
+            return "Discarded: " + ", ".join(messages)
         return ""
 
     def _get_spotify_data(self, spotify_track_ids: set[str]) -> dict[str, dict[str, Any]]:
