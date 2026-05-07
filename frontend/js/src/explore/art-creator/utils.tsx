@@ -21,7 +21,14 @@ export async function svgToBlob(
   if (!ctx) {
     throw new Error("No canvas context");
   }
-  const v = Canvg.fromString(ctx as RenderingContext2D, svgString, {
+  // Strip the a:visited CSS rule before Canvg - it resolves 'fill: inherit'
+  // to black (SVG initial value) instead of the parent's computed CSS fill.
+  // The rule is only needed for browser rendering (Chromium bug #40356084).
+  const cleanedSvg = svgString.replace(
+    /a,\s*a:visited,\s*a:link,\s*a:hover\s*\{[^}]*\}/g,
+    ""
+  );
+  const v = Canvg.fromString(ctx as RenderingContext2D, cleanedSvg, {
     ...offscreenPreset,
     // Overwrite the Canvg typescript types here, replace once this Canvg ticket is resolved:
     // https://github.com/canvg/canvg/issues/1754
