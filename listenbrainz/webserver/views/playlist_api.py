@@ -10,6 +10,7 @@ from psycopg2.extras import DictCursor
 
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
+from listenbrainz.webserver.views.collection import fetch_collection_payload
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
 from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.soundcloud import SoundCloudService
@@ -1077,6 +1078,86 @@ def import_playlist_from_music_service(service):
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
+
+
+@playlist_api_bp.get("/import/musicbrainz/collections")
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def import_musicbrainz_collections():
+    """List the authenticated user's MusicBrainz recording collections."""
+    user = validate_auth_header()
+
+    if not current_app.config.get("MB_DATABASE_URI"):
+        raise APIInternalServerError("MusicBrainz database is not configured on this server.")
+
+    if not user.get("musicbrainz_row_id"):
+        raise APIInternalServerError("Cannot determine MusicBrainz editor id for this user.")
+
+    try:
+        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+                mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
+            mb_curs.execute(
+                """
+                  SELECT ec.gid::text AS mbid
+                       , ec.name AS name
+                       , ec.public AS public
+                       , COUNT(ecr.recording) AS item_count
+                    FROM musicbrainz.editor_collection ec
+               LEFT JOIN musicbrainz.editor_collection_recording ecr
+                      ON ecr.collection = ec.id
+                   WHERE ec.editor = %s
+                GROUP BY ec.id
+                ORDER BY LOWER(ec.name)
+                """,
+                (user["musicbrainz_row_id"],),
+            )
+            collections = mb_curs.fetchall()
+    except Exception:
+        current_app.logger.error("Error fetching MusicBrainz collections:", exc_info=True)
+        raise APIInternalServerError("Failed to fetch MusicBrainz collections. Please try again.")
+
+    return jsonify([
+        {
+            "mbid": row["mbid"],
+            "name": row["name"],
+            "public": bool(row["public"]),
+            "item_count": int(row["item_count"] or 0),
+        }
+        for row in collections
+    ])
+
+
+@playlist_api_bp.get("/import/musicbrainz/collections/<collection_mbid>")
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def import_musicbrainz_collection_detail(collection_mbid):
+    """Fetch a MusicBrainz collection as a read-only track list for preview"""
+    user = validate_auth_header(optional=True)
+    viewer_editor_id = user.get("musicbrainz_row_id") if user else None
+
+    count = get_non_negative_param("count", 100)
+    offset = get_non_negative_param("offset", 0)
+    payload, error = fetch_collection_payload(
+        collection_mbid,
+        viewer_editor_id=viewer_editor_id,
+        count=count,
+        offset=offset,
+    )
+    if error:
+        body, code = error
+        if code == 503:
+            raise APIInternalServerError(body.get("error"))
+        if code == 404:
+            raise APINotFound(body.get("error"))
+        if code == 401:
+            raise APIUnauthorized(body.get("error"))
+        if code == 403:
+            raise APIForbidden(body.get("error"))
+        raise APIInternalServerError(body.get("error"))
+
+    return jsonify(payload)
 
 
 @playlist_api_bp.get("/spotify/<playlist_id>/tracks")
