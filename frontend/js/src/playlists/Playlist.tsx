@@ -36,6 +36,7 @@ import {
   LISTENBRAINZ_URI_PREFIX,
   PLAYLIST_TRACK_URI_PREFIX,
   PLAYLIST_URI_PREFIX,
+  getTrackExtension,
 } from "./utils";
 import SyndicationFeedModal from "../components/SyndicationFeedModal";
 import { getBaseUrl } from "../utils/utils";
@@ -46,7 +47,6 @@ import {
   removeTrackFromAmbientQueueAtom,
   setAmbientQueueAtom,
 } from "../common/brainzplayer/BrainzPlayerAtoms";
-import { getTrackExtension } from "./utils";
 
 export type PlaylistPageProps = {
   playlist: JSPFObject & {
@@ -61,7 +61,12 @@ export interface PlaylistPageState {
   loading: boolean;
 }
 
-type TrackSortKey = "default" | "date_added" | "title" | "artist" | "shuffle";
+type TrackSortKey =
+  | "default"
+  | "recently_added"
+  | "title"
+  | "artist"
+  | "shuffle";
 
 const makeJSPFTrack = (trackMetadata: TrackMetadata): JSPFTrack => {
   return {
@@ -156,7 +161,9 @@ export default function PlaylistPage() {
           [...base].sort((a, b) => {
             const titleA = a.title ?? "";
             const titleB = b.title ?? "";
-            const cmp = titleA.toLowerCase().localeCompare(titleB.toLowerCase());
+            const cmp = titleA
+              .toLowerCase()
+              .localeCompare(titleB.toLowerCase());
             return cmp !== 0 ? cmp : getTieBreaker(a, b);
           })
         );
@@ -168,35 +175,37 @@ export default function PlaylistPage() {
           [...base].sort((a, b) => {
             const artistA = a.creator ?? "";
             const artistB = b.creator ?? "";
-            const cmp = artistA.toLowerCase().localeCompare(artistB.toLowerCase());
+            const cmp = artistA
+              .toLowerCase()
+              .localeCompare(artistB.toLowerCase());
             return cmp !== 0 ? cmp : getTieBreaker(a, b);
           })
         );
         return;
       }
 
-      if (option === "date_added") {
+      if (option === "recently_added") {
         setDisplayedTracks(
           [...base].sort((a, b) => {
-            const aTs = Date.parse(getTrackExtension(a)?.added_at || '');
-            const bTs = Date.parse(getTrackExtension(b)?.added_at || '');
-      
+            const aTs = Date.parse(getTrackExtension(a)?.added_at || "");
+            const bTs = Date.parse(getTrackExtension(b)?.added_at || "");
+
             const aValid = !Number.isNaN(aTs);
             const bValid = !Number.isNaN(bTs);
-      
+
             // Newest first
             if (aValid && bValid) {
               return aTs !== bTs ? bTs - aTs : getTieBreaker(a, b);
             }
-      
+
             if (aValid) return -1;
             if (bValid) return 1;
-      
+
             return getTieBreaker(a, b);
           })
         );
-      
-        return; 
+
+        return;
       }
       // If we add more sort options in the future, fall back to default order.
       setDisplayedTracks(base);
@@ -654,7 +663,7 @@ export default function PlaylistPage() {
                   }
                 >
                   <option value="default">Default</option>
-                  <option value="date_added">Recently Added</option>
+                  <option value="recently_added">Recently Added</option>
                   <option value="title">Title (A-Z)</option>
                   <option value="artist">Artist (A-Z)</option>
                   <option value="shuffle">Shuffle</option>

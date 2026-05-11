@@ -52,9 +52,7 @@ export default class PlaylistItemCard extends React.Component<
             : "Switch to Default order to reorder tracks"
         }
       >
-        <FontAwesomeIcon
-          icon={faGripLines as IconProp}
-        />
+        <FontAwesomeIcon icon={faGripLines as IconProp} />
       </div>
     ) : undefined;
     let additionalMenuItems;
