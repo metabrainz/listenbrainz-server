@@ -349,7 +349,7 @@ export default class YoutubePlayer
     return false;
   };
 
-  playListen = (listen: Listen | JSPFTrack) => {
+  playListen = (listen: Listen | JSPFTrack, streamingUrl?: string) => {
     const youtubeId = YoutubePlayer.getVideoIDFromListen(listen);
 
     if (youtubeId) {

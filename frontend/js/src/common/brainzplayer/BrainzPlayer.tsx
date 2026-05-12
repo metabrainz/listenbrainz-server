@@ -77,7 +77,7 @@ export type DataSourceType = {
   name: string;
   icon: IconProp;
   iconColor: string;
-  playListen: (listen: Listen | JSPFTrack) => void;
+  playListen: (listen: Listen | JSPFTrack, streamingUrl?: string) => void;
   togglePlay: () => void;
   stop: () => void;
   seekToPositionMs: (msTimecode: number) => void;
