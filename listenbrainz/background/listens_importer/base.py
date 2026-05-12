@@ -136,15 +136,15 @@ class BaseListensImporter(ABC):
                     raise ExternalServiceError("ISE while trying to import listens")
 
     @staticmethod
-    def _initialize_validation_stats() -> dict[str, int]:
+    def _initialize_validation_stats() -> dict[str, Any]:
         """Return a fresh attempted/success counter dict."""
-        return {"attempted_count": 0, "success_count": 0}
+        return {"attempted_count": 0, "success_count": 0, "detailed_message": ""}
 
     def parse_and_validate_listen_items(
         self,
         batch: list[dict[str, Any]],
-        validation_stats: dict[str, int],
-    ) -> tuple[list[dict[str, Any]], dict[str, int]]:
+        validation_stats: dict[str, Any],
+    ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         """Parse raw entries and validate them while updating counters."""
         raw_attempts = len(batch)
         parsed_listens = self.parse_listen_batch(batch)
@@ -170,14 +170,21 @@ class BaseListensImporter(ABC):
 
         return validated_listens, validation_stats
 
-    def persist_validation_stats(self, import_id: int, validation_stats: dict[str, int]) -> None:
-        """Persist the current validation counters on the import task metadata."""
+
+    def persist_validation_stats(self, import_id: int, validation_stats: dict[str, Any]) -> None:
+        """Persist the current validation counters and message on the import task metadata."""
+        detailed_message = self.get_validation_detailed_message() or ""
         update_import_task(
             self.db_conn,
             import_id,
             attempted_count=validation_stats.get("attempted_count", 0),
             success_count=validation_stats.get("success_count", 0),
+            detailed_message=detailed_message,
         )
+
+    def get_validation_detailed_message(self) -> str:
+        """Get an optional service-specific message to show users in the import summary."""
+        return ""
 
     def update_import_progress_and_status(self, import_id: int, status: str, progress: str) -> None:
         """Update progress for user data import."""

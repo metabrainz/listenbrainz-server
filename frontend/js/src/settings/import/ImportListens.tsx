@@ -57,6 +57,7 @@ type ImportMetadata = {
   status: ImportStatus;
   attempted_count?: number;
   success_count?: number;
+  detailed_message?: string;
 };
 const serviceNames = Object.values(Services);
 const humanReadableServices = `${initial(serviceNames).join(", ")} and ${last(
@@ -81,11 +82,13 @@ type ValidationSummary = {
   attempted: number;
   success: number;
   description: string;
+  detailed_message?: string;
 };
 
 function getValidationSummary(metadata: ImportMetadata): ValidationSummary {
   const attempted = metadata.attempted_count ?? 0;
   const success = metadata.success_count ?? 0;
+  const { detailed_message } = metadata;
 
   if (attempted === 0) {
     return {
@@ -93,6 +96,7 @@ function getValidationSummary(metadata: ImportMetadata): ValidationSummary {
       attempted,
       success,
       description: "No listens were processed.",
+      detailed_message,
     };
   }
 
@@ -102,6 +106,7 @@ function getValidationSummary(metadata: ImportMetadata): ValidationSummary {
       attempted,
       success,
       description: "None of the listens were imported.",
+      detailed_message,
     };
   }
 
@@ -111,6 +116,7 @@ function getValidationSummary(metadata: ImportMetadata): ValidationSummary {
       attempted,
       success,
       description: "Some listens were rejected.",
+      detailed_message,
     };
   }
 
@@ -119,6 +125,7 @@ function getValidationSummary(metadata: ImportMetadata): ValidationSummary {
     attempted,
     success,
     description: "All listens imported successfully.",
+    detailed_message,
   };
 }
 
@@ -186,10 +193,18 @@ function renderImport(
         <h4 className="alert-heading">Import completed!</h4>
 
         {hasValidationData && (
-          <p className="mb-2" data-testid="validation-summary">
-            Imported {validationSummary.success} / {validationSummary.attempted}
-            &nbsp;listens. {validationSummary.description}
-          </p>
+          <>
+            <p className="mb-2" data-testid="validation-summary">
+              Imported {validationSummary.success} /{" "}
+              {validationSummary.attempted}
+              &nbsp;listens. {validationSummary.description}
+            </p>
+            {validationSummary.detailed_message && (
+              <p className="mb-2" data-testid="detailed-message">
+                {validationSummary.detailed_message}
+              </p>
+            )}
+          </>
         )}
         <p>
           <b>
@@ -237,10 +252,15 @@ function renderImport(
       </p>
       <p>Feel free to close this page while we import your listens.</p>
       {hasValidationData && (
-        <p className="mb-2">
-          Imported {validationSummary.success} / {validationSummary.attempted}
-          &nbsp;listens so far.
-        </p>
+        <>
+          <p className="mb-2">
+            Imported {validationSummary.success} / {validationSummary.attempted}
+            &nbsp;listens so far.
+          </p>
+          {validationSummary.detailed_message && (
+            <p className="mb-2">{validationSummary.detailed_message}</p>
+          )}
+        </>
       )}
       <form
         onSubmit={(e) => cancelImport(e, im.import_id)}
