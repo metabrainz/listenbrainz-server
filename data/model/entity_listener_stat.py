@@ -1,6 +1,6 @@
 from typing import List, Union, Optional
 
-from pydantic import BaseModel, NonNegativeInt, validator, constr
+from pydantic.v1 import BaseModel, NonNegativeInt, validator, constr
 
 from data.model.common_stat_spark import StatMessage
 from data.model.validators import check_valid_uuid

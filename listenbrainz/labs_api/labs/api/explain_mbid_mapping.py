@@ -2,7 +2,7 @@ from typing import Optional, Union
 from uuid import UUID
 
 from datasethoster import Query
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MBIDMapper
 

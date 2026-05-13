@@ -2,13 +2,14 @@ from datetime import datetime, timezone
 from typing import Optional, Union
 
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 from data.model.external_service import ExternalServiceType
 import sqlalchemy
 import json
 
 
-def update_latest_listened_at(db_conn, user_id: int, service: ExternalServiceType, timestamp: Union[int, float]):
+def update_latest_listened_at(db_conn: Connection, user_id: int, service: ExternalServiceType, timestamp: Union[int, float]):
     """ Update the timestamp of the last listen imported for the user with
     specified LB user ID.
 
@@ -33,7 +34,7 @@ def update_latest_listened_at(db_conn, user_id: int, service: ExternalServiceTyp
     db_conn.commit()
 
 
-def get_import_status(db_conn, user_id: int, service: ExternalServiceType) -> dict:
+def get_import_status(db_conn: Connection, user_id: int, service: ExternalServiceType) -> dict:
     """ Returns the timestamp of the last listen imported for the user with
     specified LB user ID from the given service.
 
@@ -67,7 +68,7 @@ def get_import_status(db_conn, user_id: int, service: ExternalServiceType) -> di
     }
 
 
-def get_active_users_to_process(db_conn, service, exclude_error=False) -> list[dict]:
+def get_active_users_to_process(db_conn: Connection, service, exclude_error=False) -> list[dict]:
     """ Returns a list of users whose listens should be imported from the external service.
     """
     filters = ["external_service_oauth.service = :service"]

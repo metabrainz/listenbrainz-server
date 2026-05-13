@@ -7,6 +7,7 @@ from psycopg2.extras import execute_values
 import orjson
 from flask import current_app
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 from listenbrainz import db
 
@@ -85,7 +86,7 @@ def import_user_similarities(data):
     return user_count, target_user_count / user_count, ""
 
 
-def get_top_similar_users(db_conn, count: int = 200):
+def get_top_similar_users(db_conn: Connection, count: int = 200):
     """
         Fetch the count top similar users and return a tuple(user1, user2, score(0.0-1.0))
         If global_similarity is True, the return the user similarity on a global (not

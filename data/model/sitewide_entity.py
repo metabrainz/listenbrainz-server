@@ -1,4 +1,4 @@
-from pydantic import constr, NonNegativeInt
+from pydantic.v1 import constr, NonNegativeInt
 
 from data.model.common_stat_spark import StatMessage
 from data.model.user_entity import EntityRecord

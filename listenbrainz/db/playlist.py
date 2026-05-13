@@ -6,6 +6,7 @@ from uuid import UUID
 import sqlalchemy
 import orjson
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 from listenbrainz.db.model import playlist as model_playlist
 from listenbrainz.db import user as db_user
@@ -35,7 +36,7 @@ RECOMMENDATION_PATCHES = (
 )
 
 
-def get_by_mbid(db_conn, ts_conn, playlist_id: str, load_recordings: bool = True) -> Optional[model_playlist.Playlist]:
+def get_by_mbid(db_conn: Connection, ts_conn: Connection, playlist_id: str, load_recordings: bool = True) -> Optional[model_playlist.Playlist]:
     """Get a playlist given its mbid
 
     Arguments:
@@ -97,7 +98,7 @@ def get_by_mbid(db_conn, ts_conn, playlist_id: str, load_recordings: bool = True
     return model_playlist.Playlist.parse_obj(obj)
 
 
-def get_playlists_for_user(db_conn, ts_conn, user_id: int, include_private: bool = False,
+def get_playlists_for_user(db_conn: Connection, ts_conn: Connection, user_id: int, include_private: bool = False,
                            load_recordings: bool = False, count: int = 0, offset: int = 0):
     """Get all playlists that a user created
 
@@ -166,7 +167,7 @@ def get_playlists_for_user(db_conn, ts_conn, user_id: int, include_private: bool
     return playlists, count
 
 
-def get_recommendation_playlists_for_user(db_conn, ts_conn, user_id: int):
+def get_recommendation_playlists_for_user(db_conn: Connection, ts_conn: Connection, user_id: int):
     """Get all recommendation playlists that have been created for the user
 
     Arguments:
@@ -205,7 +206,7 @@ def get_recommendation_playlists_for_user(db_conn, ts_conn, user_id: int):
     return playlists
 
 
-def _playlist_resultset_to_model(db_conn, ts_conn, result, load_recordings):
+def _playlist_resultset_to_model(db_conn: Connection, ts_conn: Connection, result, load_recordings):
     """Parse the result of an sql query to get playlists
 
     Fill in related data (username, created_for username) and collaborators
@@ -250,7 +251,7 @@ def _playlist_resultset_to_model(db_conn, ts_conn, result, load_recordings):
     return playlists
 
 
-def get_playlists_created_for_user(db_conn, ts_conn, user_id: int, load_recordings: bool = False,
+def get_playlists_created_for_user(db_conn: Connection, ts_conn: Connection, user_id: int, load_recordings: bool = False,
                                    count: int = 0, offset: int = 0):
     """Get all playlists that were created for a user by bots
 
@@ -306,7 +307,7 @@ def get_playlists_created_for_user(db_conn, ts_conn, user_id: int, load_recordin
     return playlists, count
 
 
-def get_playlists_collaborated_on(db_conn, ts_conn, user_id: int, include_private: bool = False,
+def get_playlists_collaborated_on(db_conn: Connection, ts_conn: Connection, user_id: int, include_private: bool = False,
                                   load_recordings: bool = False, count: int = 0, offset: int = 0):
     """Get playlists that this user doesn't own, but is a collaborator on.
     Playlists are ordered by creation date.
@@ -526,7 +527,7 @@ def search_playlists_for_user(
     return playlists, total_count
 
 
-def search_playlist(db_conn, ts_conn, query: str, count: int = 0, offset: int = 0):
+def search_playlist(db_conn: Connection, ts_conn: Connection, query: str, count: int = 0, offset: int = 0):
     """
     Search for playlists by name or description
 
@@ -608,7 +609,7 @@ def search_playlist(db_conn, ts_conn, query: str, count: int = 0, offset: int = 
     return playlists, total_count
 
 
-def get_collaborators_for_playlists(ts_conn, playlist_ids: List[int]):
+def get_collaborators_for_playlists(ts_conn: Connection, playlist_ids: List[int]):
     """Get all of the collaborators for the given playlists
 
     Args:
@@ -634,7 +635,7 @@ def get_collaborators_for_playlists(ts_conn, playlist_ids: List[int]):
     return ret
 
 
-def get_recordings_for_playlists(db_conn, ts_conn, playlist_ids: List[int]):
+def get_recordings_for_playlists(db_conn: Connection, ts_conn: Connection, playlist_ids: List[int]):
     """ Get all recordings for the given playlists """
 
     query = text("""
@@ -669,7 +670,7 @@ def get_recordings_for_playlists(db_conn, ts_conn, playlist_ids: List[int]):
             playlist_recordings_map[playlist_id] = []
     return dict(playlist_recordings_map)
 
-def get_recordings_count_for_playlist(ts_conn, playlist_id: int):
+def get_recordings_count_for_playlist(ts_conn: Connection, playlist_id: int):
     """ Get a count of recordings for a given playlist.
 
     Arguments:
@@ -688,7 +689,7 @@ def get_recordings_count_for_playlist(ts_conn, playlist_id: int):
     return result.scalar()
 
 
-def _remove_old_collaborative_playlists(ts_conn, creator_id: int, created_for_id: int, source_patch: str):
+def _remove_old_collaborative_playlists(ts_conn: Connection, creator_id: int, created_for_id: int, source_patch: str):
     """
        Remove all the collaborative playlists for the given creator, credit_for and source_patch.
        This function will be used in the create function in order to remove the old collaborative playlists
@@ -707,7 +708,7 @@ def _remove_old_collaborative_playlists(ts_conn, creator_id: int, created_for_id
     })
 
 
-def create(db_conn, ts_conn, playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist:
+def create(db_conn: Connection, ts_conn: Connection, playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist:
     """Create a playlist
 
     Arguments:
@@ -789,7 +790,7 @@ def create(db_conn, ts_conn, playlist: model_playlist.WritablePlaylist) -> model
     return model_playlist.Playlist.parse_obj(playlist.dict())
 
 
-def add_playlist_collaborators(ts_conn, playlist_id, collaborator_ids):
+def add_playlist_collaborators(ts_conn: Connection, playlist_id, collaborator_ids):
     delete_query = text("""
         DELETE FROM playlist.playlist_collaborator
               WHERE playlist_id = :playlist_id
@@ -805,7 +806,7 @@ def add_playlist_collaborators(ts_conn, playlist_id, collaborator_ids):
         ts_conn.execute(insert_query, collaborator_params)
 
 
-def get_collaborators_names_from_ids(db_conn, collaborator_ids: List[int]):
+def get_collaborators_names_from_ids(db_conn: Connection, collaborator_ids: List[int]):
     collaborators = []
     # TODO: Look this up in one query
     for user_id in collaborator_ids:
@@ -816,7 +817,7 @@ def get_collaborators_names_from_ids(db_conn, collaborator_ids: List[int]):
     return collaborators
 
 
-def update_playlist(db_conn, ts_conn, playlist: model_playlist.Playlist):
+def update_playlist(db_conn: Connection, ts_conn: Connection, playlist: model_playlist.Playlist):
     """Update playlist metadata (Name, description, public flag)
 
     Arguments:
@@ -852,7 +853,7 @@ def update_playlist(db_conn, ts_conn, playlist: model_playlist.Playlist):
     return playlist
 
 
-def set_last_updated(ts_conn, playlist_id):
+def set_last_updated(ts_conn: Connection, playlist_id):
     query = text("""
         UPDATE playlist.playlist
            SET last_updated = now()
@@ -862,7 +863,7 @@ def set_last_updated(ts_conn, playlist_id):
     return result.fetchone()[0]
 
 
-def copy_playlist(db_conn, ts_conn, playlist: model_playlist.Playlist, creator_id: int):
+def copy_playlist(db_conn: Connection, ts_conn: Connection, playlist: model_playlist.Playlist, creator_id: int):
     newplaylist = playlist.copy()
     newplaylist.name = "Copy of " + newplaylist.name
     newplaylist.creator_id = creator_id
@@ -876,7 +877,7 @@ def copy_playlist(db_conn, ts_conn, playlist: model_playlist.Playlist, creator_i
     return create(db_conn, ts_conn, newplaylist)
 
 
-def delete_playlist(ts_conn, playlist: model_playlist.Playlist):
+def delete_playlist(ts_conn: Connection, playlist: model_playlist.Playlist):
     """Delete a playlist.
 
     Arguments:
@@ -889,7 +890,7 @@ def delete_playlist(ts_conn, playlist: model_playlist.Playlist):
     return delete_playlist_by_mbid(ts_conn, playlist.mbid)
 
 
-def delete_playlist_by_mbid(ts_conn, playlist_mbid: str):
+def delete_playlist_by_mbid(ts_conn: Connection, playlist_mbid: str):
     """Delete a playlist given an mbid.
 
     Arguments:
@@ -908,7 +909,7 @@ def delete_playlist_by_mbid(ts_conn, playlist_mbid: str):
     return result.rowcount == 1
 
 
-def insert_recordings(db_conn, ts_conn, playlist_id: int, recordings: List[model_playlist.WritablePlaylistRecording],
+def insert_recordings(db_conn: Connection, ts_conn: Connection, playlist_id: int, recordings: List[model_playlist.WritablePlaylistRecording],
                       starting_position: int):
     """Insert recordings to an existing playlist. The position field will be computed based on the order
     of the provided recordings.
@@ -947,7 +948,7 @@ def insert_recordings(db_conn, ts_conn, playlist_id: int, recordings: List[model
     return return_recordings
 
 
-def delete_recordings_from_playlist(ts_conn, playlist: model_playlist.Playlist, remove_from: int, remove_count: int):
+def delete_recordings_from_playlist(ts_conn: Connection, playlist: model_playlist.Playlist, remove_from: int, remove_count: int):
     """Delete recordings from a playlist. If the remove_from + remove_count is more than the number
     of items in the playlist, silently remove as many as possible
 
@@ -1005,7 +1006,7 @@ def delete_recordings_from_playlist(ts_conn, playlist: model_playlist.Playlist, 
     ts_conn.commit()
 
 
-def add_recordings_to_playlist(db_conn, ts_conn, playlist: model_playlist.Playlist,
+def add_recordings_to_playlist(db_conn: Connection, ts_conn: Connection, playlist: model_playlist.Playlist,
                                recordings: List[model_playlist.WritablePlaylistRecording], position: int = None):
     """Add some recordings to a playlist at a given position
 
@@ -1049,7 +1050,7 @@ def add_recordings_to_playlist(db_conn, ts_conn, playlist: model_playlist.Playli
     return playlist
 
 
-def move_recordings(db_conn, ts_conn, playlist: model_playlist.Playlist, position_from: int, position_to: int, count: int):
+def move_recordings(db_conn: Connection, ts_conn: Connection, playlist: model_playlist.Playlist, position_from: int, position_to: int, count: int):
     # TODO: This must be done in a single transaction
     removed = playlist.recordings[position_from:position_from+count]
     delete_recordings_from_playlist(ts_conn, playlist, position_from, count)
@@ -1088,7 +1089,7 @@ def get_playlist_recordings_metadata(mb_curs, ts_curs, playlist: Playlist) -> Pl
     return playlist
 
 
-def get_playlist_count(ts_conn, creator_ids: List[str]) -> dict:
+def get_playlist_count(ts_conn: Connection, creator_ids: List[str]) -> dict:
     query = text("""
         SELECT creator_id, COUNT(*) as count
           FROM playlist.playlist
@@ -1099,7 +1100,7 @@ def get_playlist_count(ts_conn, creator_ids: List[str]) -> dict:
     return {row[0]: row[1] for row in result.fetchall()}
 
 
-def delete_playlists_by_user_id(ts_conn, user_id: int) -> int:
+def delete_playlists_by_user_id(ts_conn: Connection, user_id: int) -> int:
     """Delete all playlists for a given user.
 
     This deletes playlists where the user is the creator (creator_id = user_id)

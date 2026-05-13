@@ -7,6 +7,7 @@ import string
 import uuid
 
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 from listenbrainz import db
 from listenbrainz.db.lastfm_user import User
@@ -15,7 +16,7 @@ from listenbrainz.db.lastfm_user import User
 class Session(object):
     """ Session class required by the api-compat """
 
-    def __init__(self, db_conn, id, user_id, sid, api_key, timestamp):
+    def __init__(self, db_conn: Connection, id, user_id, sid, api_key, timestamp):
         self.id = id
         self.sid = sid
         self.api_key = api_key
@@ -24,7 +25,7 @@ class Session(object):
         self.user = User.load_by_id(db_conn, user_id)
 
     @staticmethod
-    def load(db_conn, session_key):
+    def load(db_conn: Connection, session_key):
         """ Load the session details from the database.
             API_key and Session_key are required for a session.
         """
@@ -44,7 +45,7 @@ class Session(object):
 
 
     @staticmethod
-    def generate(db_conn, user_id, sid, api_key):
+    def generate(db_conn: Connection, user_id, sid, api_key):
         result = db_conn.execute(text("""
             INSERT INTO api_compat.session (user_id, sid, api_key)
                  VALUES (:user_id, :sid, :api_key)
@@ -59,7 +60,7 @@ class Session(object):
         return Session(db_conn, row.id, row.user_id, row.sid, row.api_key, row.ts)
 
     @staticmethod
-    def create(db_conn, token):
+    def create(db_conn: Connection, token):
         """ Create a new session for the user by consuming the token.
             If session already exists for the user then renew the session_key(sid).
         """
@@ -70,7 +71,7 @@ class Session(object):
 
 
     @staticmethod
-    def create_by_user_id(db_conn, user_id):
+    def create_by_user_id(db_conn: Connection, user_id):
         """ Create a new session for the user for the deprecated audioscrobbler API v1.2.
             This only requires a user_id, so we use random values for api_key and other things
         """

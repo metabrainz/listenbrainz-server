@@ -18,9 +18,10 @@
 
 import orjson
 import sqlalchemy
+from sqlalchemy.engine import Connection
 
 from listenbrainz import db
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 
 from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzData,
                                                       UserMissingMusicBrainzDataJson, UserMissingMusicBrainzDataRecord)
@@ -29,7 +30,7 @@ from flask import current_app
 from listenbrainz.db.mbid_manual_mapping import check_manual_mapping_exists
 
 
-def insert_user_missing_musicbrainz_data(db_conn, user_id: int,
+def insert_user_missing_musicbrainz_data(db_conn: Connection, user_id: int,
                                          missing_musicbrainz_data: UserMissingMusicBrainzDataJson, source: str):
     """ Insert missing musicbrainz data that a user has submitted to ListenBrainz but
         has not submitted to MusicBrainz in the db.
@@ -58,7 +59,7 @@ def insert_user_missing_musicbrainz_data(db_conn, user_id: int,
     db_conn.commit()
 
 
-def get_user_missing_musicbrainz_data(db_conn, ts_conn, user_id: int, source: str):
+def get_user_missing_musicbrainz_data(db_conn: Connection, ts_conn: Connection, user_id: int, source: str):
     """ Get missing musicbrainz data that has not been submitted to LB
         for a user with the given row ID.
 
@@ -121,7 +122,7 @@ def get_user_missing_musicbrainz_data(db_conn, ts_conn, user_id: int, source: st
         return None, None
 
 
-def remove_mapped_mb_data(ts_conn, user_id: int, missing_musicbrainz_data: list[UserMissingMusicBrainzDataRecord]):
+def remove_mapped_mb_data(ts_conn: Connection, user_id: int, missing_musicbrainz_data: list[UserMissingMusicBrainzDataRecord]):
     """ Remove musicbrainz data that has been mapped to MusicBrainz by the user.
 
         Args:

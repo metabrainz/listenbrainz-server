@@ -21,7 +21,7 @@ from listenbrainz.db.model.recommendation_feedback import (RecommendationFeedbac
                                                            RecommendationFeedbackDelete,
                                                            get_allowed_ratings)
 
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 
 
 recommendation_feedback_api_bp = Blueprint('recommendation_feedback_api_v1', __name__)

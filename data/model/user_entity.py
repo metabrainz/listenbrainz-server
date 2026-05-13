@@ -1,6 +1,6 @@
 from typing import Union
 
-from pydantic import constr, NonNegativeInt
+from pydantic.v1 import constr, NonNegativeInt
 
 from data.model.common_stat_spark import StatMessage, UserStatRecords
 from data.model.user_artist_stat import ArtistRecord

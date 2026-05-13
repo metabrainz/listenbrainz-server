@@ -4,11 +4,12 @@ import uuid
 from psycopg2.extras import execute_values
 from psycopg2.sql import SQL, Literal
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 from listenbrainz.db.model.mbid_manual_mapping import MbidManualMapping
 
 
-def create_mbid_manual_mapping(ts_conn, mapping: MbidManualMapping):
+def create_mbid_manual_mapping(ts_conn: Connection, mapping: MbidManualMapping):
     """Save a user mapping to the database. """
     query = """
         INSERT INTO mbid_manual_mapping(recording_msid, recording_mbid, user_id)
@@ -27,7 +28,7 @@ def create_mbid_manual_mapping(ts_conn, mapping: MbidManualMapping):
     ts_conn.commit()
 
 
-def get_mbid_manual_mapping(ts_conn, recording_msid: uuid.UUID, user_id: int) -> Optional[MbidManualMapping]:
+def get_mbid_manual_mapping(ts_conn: Connection, recording_msid: uuid.UUID, user_id: int) -> Optional[MbidManualMapping]:
     """Get a user's manual mbid mapping for a given recording
     
     Arguments:
@@ -66,7 +67,7 @@ def get_mbid_manual_mapping(ts_conn, recording_msid: uuid.UUID, user_id: int) ->
         return None
 
 
-def get_mbid_manual_mappings(ts_conn, recording_msid: uuid.UUID) -> List[MbidManualMapping]:
+def get_mbid_manual_mappings(ts_conn: Connection, recording_msid: uuid.UUID) -> List[MbidManualMapping]:
     """Get all manual mbid mappings for a given recording
     
     Arguments:
@@ -89,7 +90,7 @@ def get_mbid_manual_mappings(ts_conn, recording_msid: uuid.UUID) -> List[MbidMan
     return [MbidManualMapping(**row) for row in result.mappings()]
 
 
-def check_manual_mapping_exists(ts_conn, user_id: int, recording_msids: Iterable[str]) -> set[str]:
+def check_manual_mapping_exists(ts_conn: Connection, user_id: int, recording_msids: Iterable[str]) -> set[str]:
     """Check if a user has a mapping for a list of recordings
 
     Arguments:

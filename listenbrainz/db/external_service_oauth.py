@@ -2,12 +2,13 @@ from datetime import datetime, timezone
 from typing import List, Optional, Union
 
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 from data.model.external_service import ExternalServiceType
 import sqlalchemy
 
 
-def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token: Optional[str], refresh_token: Optional[str],
+def save_token(db_conn: Connection, user_id: int, service: ExternalServiceType, access_token: Optional[str], refresh_token: Optional[str],
                token_expires_ts: Optional[int], record_listens: bool, scopes: Optional[List[str]], external_user_id: Optional[str] = None,
                latest_listened_at: Optional[datetime] = None):
     """ Add a row to the external_service_oauth table for specified user with corresponding tokens and information.
@@ -80,7 +81,7 @@ def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token
     db_conn.commit()
 
 
-def delete_token(db_conn, user_id: int, service: ExternalServiceType, remove_import_log: bool):
+def delete_token(db_conn: Connection, user_id: int, service: ExternalServiceType, remove_import_log: bool):
     """ Delete a user from the external service table.
 
     Args:
@@ -108,7 +109,7 @@ def delete_token(db_conn, user_id: int, service: ExternalServiceType, remove_imp
     db_conn.commit()
 
 
-def update_token(db_conn, user_id: int, service: ExternalServiceType, access_token: str,
+def update_token(db_conn: Connection, user_id: int, service: ExternalServiceType, access_token: str,
                  refresh_token: str | None, expires_at: int):
     """ Update the token for user with specified LB user ID and external service.
 
@@ -151,7 +152,7 @@ def update_token(db_conn, user_id: int, service: ExternalServiceType, access_tok
     db_conn.commit()
 
 
-def get_token(db_conn, user_id: int, service: ExternalServiceType) -> Union[dict, None]:
+def get_token(db_conn: Connection, user_id: int, service: ExternalServiceType) -> Union[dict, None]:
     """ Get details for user with specified user ID and service.
 
     Args:
@@ -185,7 +186,7 @@ def get_token(db_conn, user_id: int, service: ExternalServiceType) -> Union[dict
     return result.mappings().first()
 
 
-def get_services(db_conn, user_id: int) -> list[str]:
+def get_services(db_conn: Connection, user_id: int) -> list[str]:
     """ Get the list of connected services for a given user
 
     Args:

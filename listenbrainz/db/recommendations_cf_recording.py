@@ -23,15 +23,16 @@
 
 import orjson
 import sqlalchemy
+from sqlalchemy.engine import Connection
 
 from flask import current_app
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 
 from data.model.user_cf_recommendations_recording_message import (UserRecommendationsData,
                                                                   UserRecommendationsJson)
 
 
-def get_timestamp_for_last_recording_recommended(db_conn):
+def get_timestamp_for_last_recording_recommended(db_conn: Connection):
     """ Get the time when recommendation_cf_recording table was last updated
     """
     result = db_conn.execute(sqlalchemy.text("""
@@ -43,7 +44,7 @@ def get_timestamp_for_last_recording_recommended(db_conn):
     return row.created_ts if row else None
 
 
-def insert_user_recommendation(db_conn, user_id: int, recommendations: UserRecommendationsJson):
+def insert_user_recommendation(db_conn: Connection, user_id: int, recommendations: UserRecommendationsJson):
     """ Insert recommended recording for a user in the db.
 
         Args:
@@ -66,7 +67,7 @@ def insert_user_recommendation(db_conn, user_id: int, recommendations: UserRecom
     db_conn.commit()
 
 
-def get_user_recommendation(db_conn, user_id):
+def get_user_recommendation(db_conn: Connection, user_id):
     """ Get recommendations for a user with the given row ID.
 
         Args:

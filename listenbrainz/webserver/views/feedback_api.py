@@ -1,6 +1,6 @@
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, jsonify, request
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user

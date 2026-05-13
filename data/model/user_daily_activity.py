@@ -1,7 +1,7 @@
 """ Models for user's daily activity statistics.
     The daily activity shows the number of listens submitted to ListenBrainz per hour in last week/month/year.
 """
-from pydantic import BaseModel, NonNegativeInt, constr
+from pydantic.v1 import BaseModel, NonNegativeInt, constr
 
 
 class DailyActivityRecord(BaseModel):

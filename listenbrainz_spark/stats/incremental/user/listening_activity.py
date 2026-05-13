@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 
 from data.model.common_stat_spark import UserStatRecords
 from data.model.user_listening_activity import ListeningActivityRecord

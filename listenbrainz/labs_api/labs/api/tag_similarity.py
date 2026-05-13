@@ -3,7 +3,7 @@ import psycopg2
 import psycopg2.extras
 
 from datasethoster import Query
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from listenbrainz.labs_api.labs.api.popular_tags import POPULAR_TAGS
 

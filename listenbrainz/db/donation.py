@@ -6,6 +6,7 @@ import sqlalchemy
 from brainzutils import cache
 from psycopg2.extras import execute_values
 from sqlalchemy import create_engine, NullPool, text
+from sqlalchemy.engine import Connection
 
 engine: Optional[sqlalchemy.engine.Engine] = None
 
@@ -29,7 +30,7 @@ def init_meb_db_connection(connect_str):
             time.sleep(2)
 
 
-def get_flairs_for_donors(db_conn, donors):
+def get_flairs_for_donors(db_conn: Connection, donors):
     """ Given a list of donors, add information about the user's musicbrainz username and whether the user is a listenbrainz
      user and returns the updated list. """
     musicbrainz_row_ids = {d["editor_id"] for d in donors}
@@ -91,7 +92,7 @@ def get_all_donors_from_db(meb_conn, query):
     ]
 
 
-def get_donors(meb_conn, db_conn, query: str, cache_key: str, limit: int, offset: int):
+def get_donors(meb_conn, db_conn: Connection, query: str, cache_key: str, limit: int, offset: int):
     """ Retrieve donors from the cache or database using the specified query and add flair information to them.. """
     all_donors = cache.get(cache_key)
     if all_donors is None:
@@ -104,7 +105,7 @@ def get_donors(meb_conn, db_conn, query: str, cache_key: str, limit: int, offset
     return get_flairs_for_donors(db_conn, donors), total_count
 
 
-def get_recent_donors(meb_conn, db_conn, count: int, offset: int):
+def get_recent_donors(meb_conn, db_conn: Connection, count: int, offset: int):
     """ Returns a list of recent donors with their flairs """
     query = """
         SELECT editor_name
@@ -130,7 +131,7 @@ def get_recent_donors(meb_conn, db_conn, count: int, offset: int):
     return get_donors(meb_conn, db_conn, query, RECENT_DONOR_CACHE_KEY, count, offset)
 
 
-def get_biggest_donors(meb_conn, db_conn, count: int, offset: int):
+def get_biggest_donors(meb_conn, db_conn: Connection, count: int, offset: int):
     """ Returns a list of biggest donors with their flairs """
     query = """
         WITH select_donations AS (

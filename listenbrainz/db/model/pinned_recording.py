@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 
-from pydantic import validator, constr, NonNegativeInt
+from pydantic.v1 import validator, constr, NonNegativeInt
 
 from data.model.validators import check_datetime_has_tzinfo
 from listenbrainz.db.msid_mbid_mapping import MsidMbidModel

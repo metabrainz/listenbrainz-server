@@ -1,4 +1,5 @@
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 from listenbrainz import db
 
@@ -13,7 +14,7 @@ class User(object):
         self.api_key = api_key
 
     @staticmethod
-    def get_id(db_conn, mb_id):
+    def get_id(db_conn: Connection, mb_id):
         result = db_conn.execute(text("""
             SELECT id FROM "user" WHERE musicbrainz_id = :mb_id
         """), {"mb_id": mb_id})
@@ -23,7 +24,7 @@ class User(object):
         return None
 
     @staticmethod
-    def load_by_name(db_conn, mb_id):
+    def load_by_name(db_conn: Connection, mb_id):
         result = db_conn.execute(text("""
             SELECT id, created, musicbrainz_id, auth_token
               FROM "user"
@@ -35,7 +36,7 @@ class User(object):
         return None
 
     @staticmethod
-    def load_by_id(db_conn, serial):
+    def load_by_id(db_conn: Connection, serial):
         result = db_conn.execute(text("""
             SELECT id, created, musicbrainz_id, auth_token
               FROM "user"
@@ -47,7 +48,7 @@ class User(object):
         return None
 
     @staticmethod
-    def load_by_sessionkey(db_conn, session_key, api_key):
+    def load_by_sessionkey(db_conn: Connection, session_key, api_key):
         result = db_conn.execute(text("""
             SELECT "user".id
                  , "user".created
@@ -65,7 +66,7 @@ class User(object):
         return None
 
     @staticmethod
-    def get_play_count(db_conn, user_id, listenstore):
+    def get_play_count(db_conn: Connection, user_id, listenstore):
         """ Get playcount from the given user name.
         """
         user = User.load_by_id(db_conn, user_id)

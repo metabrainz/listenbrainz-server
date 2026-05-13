@@ -1,6 +1,7 @@
 import json
 
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 
 def _with_validation_counts(metadata):
@@ -11,7 +12,7 @@ def _with_validation_counts(metadata):
     return metadata
 
 
-def create_import_task(db_conn, user_id, service, from_date, to_date, save_path, filename, user_timezone=None):
+def create_import_task(db_conn: Connection, user_id, service, from_date, to_date, save_path, filename, user_timezone=None):
     """ Create a new import task for the specified user.
 
         Note, this method does not commit so that the API can commit only if the file upload

@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from pydantic import ValidationError, BaseModel, NonNegativeInt, constr
+from pydantic.v1 import ValidationError, BaseModel, NonNegativeInt, constr
 
 import listenbrainz_spark
 from data.model.common_stat_spark import UserStatRecords

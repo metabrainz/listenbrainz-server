@@ -26,7 +26,7 @@ from typing import Optional
 
 import orjson
 from flask import current_app
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 from requests import HTTPError
 from sentry_sdk import start_span
 
@@ -34,6 +34,7 @@ from data.model.common_stat import StatApi
 from listenbrainz.db import couchdb
 from listenbrainz.db.couchdb import try_insert_data
 from listenbrainz.db.user import get_users_by_id
+from sqlalchemy.engine import Connection
 
 # sitewide statistics are stored in the user statistics table
 # as statistics for a special user with the following user_id.
@@ -97,7 +98,7 @@ def get(user_id, stats_type, stats_range, stats_model) -> Optional[StatApi]:
     return None
 
 
-def get_entity_listener(db_conn, entity, entity_id, stats_range) -> Optional[dict]:
+def get_entity_listener(db_conn: Connection, entity, entity_id, stats_range) -> Optional[dict]:
     """ Retrieve stats for the given entity, stats range and stats type.
 
         Args:

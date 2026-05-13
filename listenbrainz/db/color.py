@@ -5,6 +5,7 @@ from brainzutils import musicbrainz_db as mb_db
 from listenbrainz.db.model.color import ColorResult, ColorCube
 from typing import List, Dict
 from psycopg2.extensions import adapt, AsIs, register_adapter
+from sqlalchemy.engine import Connection
 
 # This determines how many releases for a given color are fetched and then randomly chosen from.
 # If COUNT releases are requested, we use COUNT * INTERMEDIARY_COUNT_MULTIPLIER to create
@@ -21,7 +22,7 @@ def adapt_cube(cube):
 register_adapter(ColorCube, adapt_cube)
 
 
-def get_releases_for_color(db_conn, red: int, green: int, blue: int, count: int) -> List[ColorResult]:
+def get_releases_for_color(db_conn: Connection, red: int, green: int, blue: int, count: int) -> List[ColorResult]:
     """ Fetch matching releases, their euclidian distance in RGB space and the
         release_name and artist_name for the returned releases.
 
@@ -127,7 +128,7 @@ def get_releases_for_color(db_conn, red: int, green: int, blue: int, count: int)
         return results
 
 
-def fetch_color_for_releases(db_conn, release_mbids: List[str]) -> Dict[str, Dict[str, int]]:
+def fetch_color_for_releases(db_conn: Connection, release_mbids: List[str]) -> Dict[str, Dict[str, int]]:
     """ Fetch the color for a given list of release mbids. If the release does not have a color
         associated with it, None is returned.
 

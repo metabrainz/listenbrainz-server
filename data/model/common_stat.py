@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import TypeVar, Generic, Optional, List
 
 from enum import Enum
-from pydantic.generics import GenericModel
+from pydantic.v1.generics import GenericModel
 
 
 class StatisticsRange(Enum):

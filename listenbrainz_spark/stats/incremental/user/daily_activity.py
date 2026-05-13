@@ -3,7 +3,7 @@ import itertools
 import logging
 from typing import List
 
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 
 import listenbrainz_spark
 from data.model.common_stat_spark import UserStatRecords

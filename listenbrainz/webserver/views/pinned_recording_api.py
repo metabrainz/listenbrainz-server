@@ -16,7 +16,7 @@ from listenbrainz.webserver.views.api_tools import (
     validate_auth_header,
 )
 from listenbrainz.db.model.pinned_recording import WritablePinnedRecording
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 
 pinned_recording_api_bp = Blueprint("pinned_rec_api_bp_v1", __name__)
 

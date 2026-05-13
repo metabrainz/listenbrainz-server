@@ -1,4 +1,4 @@
-from pydantic import BaseModel, constr, validator, NonNegativeInt
+from pydantic.v1 import BaseModel, constr, validator, NonNegativeInt
 from data.model.validators import check_valid_uuid
 
 from typing import Optional, List, Dict

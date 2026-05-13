@@ -1,7 +1,7 @@
 """ Models for user's listening activity statistics.
     The listening activity shows the number of listens submitted to ListenBrainz in the last week/month/year.
 """
-from pydantic import BaseModel, NonNegativeInt, constr
+from pydantic.v1 import BaseModel, NonNegativeInt, constr
 
 
 class ListeningActivityRecord(BaseModel):

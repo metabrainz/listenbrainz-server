@@ -1,9 +1,10 @@
 from typing import List, Optional
 
 import sqlalchemy
+from sqlalchemy.engine import Connection
 
 
-def get_user_import_details(db_conn, user_id: int) -> Optional[dict]:
+def get_user_import_details(db_conn: Connection, user_id: int) -> Optional[dict]:
     """ Return user's spotify linking details to display on connect services page
 
     Args:
@@ -28,7 +29,7 @@ def get_user_import_details(db_conn, user_id: int) -> Optional[dict]:
     return dict(row) if row else None
 
 
-def get_user(db_conn, user_id: int) -> Optional[dict]:
+def get_user(db_conn: Connection, user_id: int) -> Optional[dict]:
     """ This get_user method is different from the one in external_service_oauth.py because
      here we join against the listens_importer table to fetch the latest_listened_at column.
      We need latest_listened_at column for using in the spotify_reader."""

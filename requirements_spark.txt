@@ -5,7 +5,7 @@ itsdangerous==2.2.0
 kombu==5.4.2
 python-dateutil==2.9.0.post0
 numpy==2.2.3
-pydantic==1.10.13
+pydantic>=2.0,<3
 sentry-sdk==2.22.0
 more-itertools==10.6.0
 pycountry==24.6.1

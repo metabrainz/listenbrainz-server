@@ -5,6 +5,7 @@ from flask import current_app
 from psycopg2.extras import DictCursor, execute_values
 from psycopg2.sql import SQL, Identifier, Composable
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 from listenbrainz.db import color
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
@@ -149,7 +150,7 @@ def to_entity_mbid(entity, per_artist):
     return f"{entity}_mbid"
 
 
-def get_top_entity_for_artist(ts_conn, entity, artist_mbid, count=None):
+def get_top_entity_for_artist(ts_conn: Connection, entity, artist_mbid, count=None):
     """ Get the top 'count' recordings, releases or release-groups for a given artist mbid
 
         By default running all recordings (entities) of the artist returned.
@@ -186,7 +187,7 @@ def get_top_entity_for_artist(ts_conn, entity, artist_mbid, count=None):
     return results.mappings().all()
 
 
-def get_counts(ts_conn, entity, mbids):
+def get_counts(ts_conn: Connection, entity, mbids):
     """ Get the total listen and user counts for a given entity and list of mbids """
     entity_mbid = to_entity_mbid(entity, False)
 
@@ -229,7 +230,7 @@ def get_counts(ts_conn, entity, mbids):
     return entity_data, index
 
 
-def get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, count=None):
+def get_top_recordings_for_artist(db_conn: Connection, ts_conn: Connection, artist_mbid, count=None):
     """ Get the top recordings for a given artist mbid """
     recordings = get_top_entity_for_artist(ts_conn, "recording", artist_mbid, count)
     recording_mbids = [str(r["recording_mbid"]) for r in recordings]
@@ -260,7 +261,7 @@ def get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, count=None):
         return results
 
 
-def get_top_release_groups_for_artist(db_conn, ts_conn, artist_mbid: str, count=None):
+def get_top_release_groups_for_artist(db_conn: Connection, ts_conn: Connection, artist_mbid: str, count=None):
     """ Get the top releases for a given artist mbid """
     release_groups = get_top_entity_for_artist(ts_conn, "release_group", artist_mbid, count)
     release_group_mbids = [str(r["release_group_mbid"]) for r in release_groups]

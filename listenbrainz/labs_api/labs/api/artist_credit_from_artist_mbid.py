@@ -4,7 +4,7 @@ import psycopg2
 import psycopg2.extras
 from datasethoster import Query
 from flask import current_app
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 
 class ArtistCreditIdFromArtistMBIDInput(BaseModel):

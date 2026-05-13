@@ -1,11 +1,12 @@
 import sqlalchemy
+from sqlalchemy.engine import Connection
 
 from listenbrainz.db.model.recommendation_feedback import (RecommendationFeedbackSubmit,
                                                            RecommendationFeedbackDelete)
 from typing import List
 
 
-def insert(db_conn, feedback_submit: RecommendationFeedbackSubmit):
+def insert(db_conn: Connection, feedback_submit: RecommendationFeedbackSubmit):
     """ Inserts a feedback record for a user's rated recommendation into the database.
         If the record is already present for the user, the rating is updated to the new
         value passed.
@@ -29,7 +30,7 @@ def insert(db_conn, feedback_submit: RecommendationFeedbackSubmit):
     db_conn.commit()
 
 
-def delete(db_conn, feedback_delete: RecommendationFeedbackDelete):
+def delete(db_conn: Connection, feedback_delete: RecommendationFeedbackDelete):
     """ Deletes the feedback record for a given recommendation for the user from the database
 
         Args:
@@ -48,7 +49,7 @@ def delete(db_conn, feedback_delete: RecommendationFeedbackDelete):
     db_conn.commit()
 
 
-def get_feedback_for_user(db_conn, user_id: int, limit: int, offset: int, rating: str = None)\
+def get_feedback_for_user(db_conn: Connection, user_id: int, limit: int, offset: int, rating: str = None)\
         -> List[RecommendationFeedbackSubmit]:
     """ Get a list of recommendation feedback given by the user in descending order of their creation.
         Feedback will be filtered based on limit, offset and rating, if passed.
@@ -84,7 +85,7 @@ def get_feedback_for_user(db_conn, user_id: int, limit: int, offset: int, rating
     return [RecommendationFeedbackSubmit(**row) for row in result.mappings()]
 
 
-def get_feedback_count_for_user(db_conn, user_id: int) -> int:
+def get_feedback_count_for_user(db_conn: Connection, user_id: int) -> int:
     """ Get total number of recommendation feedback given by the user
 
         Args:
@@ -107,7 +108,7 @@ def get_feedback_count_for_user(db_conn, user_id: int) -> int:
     return count
 
 
-def get_feedback_for_multiple_recordings_for_user(db_conn, user_id: int, recording_list: List[str]):
+def get_feedback_for_multiple_recordings_for_user(db_conn: Connection, user_id: int, recording_list: List[str]):
     """ Get a list of recording feedback given by the user for given recordings
 
         Args:
