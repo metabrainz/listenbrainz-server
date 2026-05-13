@@ -38,6 +38,7 @@ enum Services {
   librefm = "Libre.fm",
   panoscrobbler = "PanoScrobbler",
   maloja = "Maloja",
+  youtubemusic = "Youtube Music",
   audioscrobbler = "Audioscrobbler/Rockbox",
   spinitron = "Spinitron",
 }
@@ -48,6 +49,7 @@ const acceptedFileTypes = {
   [Services.librefm]: ".csv",
   [Services.panoscrobbler]: ".jsonl",
   [Services.maloja]: ".json",
+  [Services.youtubemusic]: ".json",
   [Services.audioscrobbler]: ".log",
   [Services.spinitron]: ".csv",
 };

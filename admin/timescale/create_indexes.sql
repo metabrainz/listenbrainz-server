@@ -80,6 +80,8 @@ CREATE INDEX internetarchive_cache_track_album_idx ON internetarchive_cache.trac
 CREATE INDEX internetarchive_cache_track_stream_urls_gin_idx ON internetarchive_cache.track USING GIN (stream_urls);
 CREATE INDEX internetarchive_cache_track_last_updated_idx ON internetarchive_cache.track (last_updated);
 
+-- YouTube cache
+CREATE UNIQUE INDEX youtube_cache_video_video_id_idx ON youtube_cache.video (video_id);
 
 CREATE UNIQUE INDEX similar_recordings_dev_uniq_idx ON similarity.recording_dev (mbid0, mbid1);
 CREATE UNIQUE INDEX similar_recordings_dev_reverse_uniq_idx ON similarity.recording_dev (mbid1, mbid0);

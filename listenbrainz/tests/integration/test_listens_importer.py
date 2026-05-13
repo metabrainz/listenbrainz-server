@@ -946,6 +946,48 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(metadata["success_count"], 0)
         self.assertEqual(metadata["status"], "completed")
 
+    def test_import_youtube(self):
+        data = {
+            "service": "youtubemusic",
+            "file": open(self.path_to_data_file("youtubemusic.json"), "rb")
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert200(response)
+        import_id = response.json["import_id"]
+
+        url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
+        response = self.wait_for_query_to_have_items(url, num_items=1, attempts=20)
+        listens = response.json["payload"]["listens"]
+        self.assertEqual(len(listens), 1)
+
+        listen = listens[0]
+        self.assertEqual(listen["listened_at"], 1639818816)
+        track_metadata = listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "Rage Against the Machine")
+        self.assertEqual(track_metadata["track_name"], "Killing In the Name")
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "YouTube Music History Importer")
+        self.assertEqual(additional_info["music_service"], "music.youtube.com")
+        self.assertEqual(additional_info["youtube_id"], "2o9aoL0NWpw")
+        self.assertEqual(additional_info["origin_url"], "https://www.youtube.com/watch?v=2o9aoL0NWpw")
+
+        response = self.client.get(
+            self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+        )
+        self.assert200(response)
+        metadata = response.json["metadata"]
+        self.assertIn("attempted_count", metadata)
+        self.assertIn("success_count", metadata)
+        self.assertEqual(metadata["attempted_count"], 1)
+        self.assertEqual(metadata["success_count"], 1)
+
+
     def test_import_with_partial_validation_failures(self):
         data = {
             "service": "listenbrainz",
@@ -1194,3 +1236,76 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertIn("success_count", metadata)
         self.assertEqual(metadata["attempted_count"], 5)
         self.assertEqual(metadata["success_count"], 3)
+
+    def insert_sample_youtube_cache_data(self, video_id, title, channel_name):
+        """Pre-seed the YouTube metadata cache with a known entry."""
+        
+        from sqlalchemy import text
+        self.ts_conn.execute(
+            text("""
+                INSERT INTO youtube_cache.video (video_id, title, channel_name)
+                     VALUES (:video_id, :title, :channel_name)
+                ON CONFLICT (video_id)
+                  DO UPDATE SET title = EXCLUDED.title
+                              , channel_name = EXCLUDED.channel_name
+            """),
+            {"video_id": video_id, "title": title, "channel_name": channel_name},
+        )
+        self.ts_conn.commit()
+
+    def test_import_youtube_channel_from_cache(self):
+       
+        self.insert_sample_youtube_cache_data(
+            video_id="dQw4w9WgXcQ",
+            title="Never Gonna Give You Up",
+            channel_name="Rick Astley",
+        )
+
+        data = {
+            "service": "youtubemusic",
+            "file": open(self.path_to_data_file("youtubemusic_cache_test.json"), "rb"),
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data",
+        )
+        self.assert200(response)
+        import_id = response.json["import_id"]
+
+        # Two listens expected: the cache-resolved one and the direct one.
+        url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
+        response = self.wait_for_query_to_have_items(url, num_items=2, attempts=20)
+        listens = response.json["payload"]["listens"]
+        self.assertEqual(len(listens), 2)
+
+        track_names = {l["track_metadata"]["track_name"] for l in listens}
+        self.assertIn("Never Gonna Give You Up", track_names)
+        self.assertIn("Killing In the Name", track_names)
+
+        cached_listen = next(
+            l for l in listens
+            if l["track_metadata"]["track_name"] == "Never Gonna Give You Up"
+        )
+        track_metadata = cached_listen["track_metadata"]
+        # Channel name from cache becomes artist_name 
+        self.assertEqual(track_metadata["artist_name"], "Rick Astley")
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "YouTube Music History Importer")
+        self.assertEqual(additional_info["music_service"], "music.youtube.com")
+        self.assertEqual(additional_info["youtube_id"], "dQw4w9WgXcQ")
+        self.assertEqual(
+            additional_info["origin_url"],
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        )
+
+        # Confirm import stats: there are  3 YouTube Music items attempted
+        # (1 empty-title dropped during parsing, 2 succeed).
+        response = self.client.get(
+            self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+        )
+        self.assert200(response)
+        metadata = response.json["metadata"]
+        self.assertEqual(metadata["success_count"], 2)
