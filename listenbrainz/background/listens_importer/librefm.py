@@ -10,6 +10,11 @@ from listenbrainz.webserver.errors import ImportFailedError
 
 
 class LibrefmListensImporter(BaseListensImporter):
+    """Libre.fm-specific listens importer."""
+    def __init__(self, db_conn, ts_conn):
+        super().__init__(db_conn, ts_conn)
+        self.importer_name = "Libre.Fm Archive Importer"
+
     def process_import_file(self, import_task: dict[str, Any]) -> Iterator[list[dict[str, Any]]]:
         """Processes the libre.fm csv archive file and returns a generator of batches of items."""
 
