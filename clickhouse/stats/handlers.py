@@ -7,10 +7,6 @@ These handlers are invoked by the ClickHouse request consumer via RabbitMQ.
 """
 
 import logging
-import os
-import shutil
-import subprocess
-import tempfile
 from typing import Iterator, Optional
 
 from kombu import Exchange, Queue
@@ -21,8 +17,9 @@ from clickhouse.stats.cache_manager import (
     ENTITY_CONFIGS,
     get_cache_config_from_config,
 )
-from clickhouse.stats.ftp import download_dump
-from clickhouse.stats.load_dump import load_dump
+from clickhouse.stats.ftp import DumpType
+from clickhouse.stats.load_dump import load_dump, load_from_ftp, load_from_local
+from clickhouse.stats.refresh_metadata_cache import refresh_metadata_caches, PG_QUERIES
 
 logger = logging.getLogger(__name__)
 
@@ -69,9 +66,7 @@ def load_full_dump(dump_path: str, workers: int = 4) -> list[dict]:
             password=getattr(config, 'CLICKHOUSE_PASSWORD', ''),
             database=getattr(config, 'CLICKHOUSE_DATABASE', 'default'),
             workers=workers,
-            use_arrow=True,
         )
-
         return [{
             'type': 'clickhouse_load_full_dump',
             'status': 'success',
@@ -80,133 +75,37 @@ def load_full_dump(dump_path: str, workers: int = 4) -> list[dict]:
             'files_completed': result['files_completed'],
         }]
     except Exception as e:
-        logger.error(f"Error loading full dump: {e}", exc_info=True)
-        return [{
-            'type': 'clickhouse_load_full_dump',
-            'status': 'error',
-            'error': str(e),
-        }]
+        logger.error("Error loading full dump: %s", str(e), exc_info=True)
+        return [{'type': 'clickhouse_load_full_dump', 'status': 'error', 'error': str(e)}]
 
 
 def load_incremental_dump(dump_path: str, workers: int = 4) -> list[dict]:
-    """Load an incremental Parquet dump into ClickHouse listens table."""
+    """Load an incremental Parquet dump directory into ClickHouse listens table."""
     return load_full_dump(dump_path, workers)
 
 
-def _extract_dump(archive_path: str, extract_dir: str) -> str:
-    """
-    Extract a .tar.zst dump archive.
-
-    Args:
-        archive_path: Path to the .tar.zst archive
-        extract_dir: Directory to extract to
-
-    Returns:
-        Path to the extracted directory containing Parquet files
-    """
-    logger.info(f"Extracting {archive_path} to {extract_dir}")
-
-    # Use tar with zstd decompression
-    subprocess.run(
-        ['tar', '--use-compress-program=zstd', '-xf', archive_path, '-C', extract_dir],
-        check=True
-    )
-
-    # Find the extracted directory (should be the only directory in extract_dir)
-    extracted_items = os.listdir(extract_dir)
-    for item in extracted_items:
-        item_path = os.path.join(extract_dir, item)
-        if os.path.isdir(item_path):
-            return item_path
-
-    # If no subdirectory, the files are directly in extract_dir
-    return extract_dir
-
-
-def _import_dump(dump_type: str, workers: int = 4) -> list[dict]:
-    """
-    Download and import a dump from FTP.
-
-    Args:
-        dump_type: "full" or "incremental"
-        workers: Number of parallel workers for loading
-
-    Returns:
-        List of result messages for the response queue
-    """
-    download_dir = None
-    extract_dir = None
-
-    try:
-        from clickhouse import config
-
-        # Create temp directories
-        download_dir = tempfile.mkdtemp(prefix="clickhouse_download_")
-        extract_dir = tempfile.mkdtemp(prefix="clickhouse_extract_")
-
-        # Download dump from FTP
-        logger.info(f"Downloading {dump_type} dump from FTP...")
-        archive_path, dump_id = download_dump(
-            dump_type=dump_type,
-            download_dir=download_dir,
-            ftp_server=getattr(config, 'FTP_SERVER_URI', None),
-            ftp_dir=getattr(config, 'FTP_LISTENS_DIR', None),
-        )
-        logger.info(f"Downloaded dump {dump_id}: {archive_path}")
-
-        # Extract the archive
-        parquet_dir = _extract_dump(archive_path, extract_dir)
-        logger.info(f"Extracted to: {parquet_dir}")
-
-        # Load into ClickHouse
-        result = load_dump(
-            directory=parquet_dir,
-            host=getattr(config, 'CLICKHOUSE_HOST', 'localhost'),
-            port=getattr(config, 'CLICKHOUSE_PORT', 8123),
-            username=getattr(config, 'CLICKHOUSE_USERNAME', 'default'),
-            password=getattr(config, 'CLICKHOUSE_PASSWORD', ''),
-            database=getattr(config, 'CLICKHOUSE_DATABASE', 'default'),
-            workers=workers,
-            use_arrow=True,
-        )
-
-        return [{
-            'type': f'clk_dump_imported',
-            'dump_type': dump_type,
-            'dump_id': dump_id,
-            'status': 'success',
-            'total_inserted': result['total_inserted'],
-            'files_completed': result['files_completed'],
-        }]
-
-    except Exception as e:
-        logger.error(f"Error importing {dump_type} dump: {e}", exc_info=True)
-        return [{
-            'type': f'clk_dump_imported',
-            'dump_type': dump_type,
-            'status': 'error',
-            'error': str(e),
-        }]
-
-    finally:
-        # Clean up temp directories
-        if download_dir and os.path.exists(download_dir):
-            shutil.rmtree(download_dir, ignore_errors=True)
-        if extract_dir and os.path.exists(extract_dir):
-            shutil.rmtree(extract_dir, ignore_errors=True)
+def _ch_kwargs() -> dict:
+    """Return ClickHouse connection kwargs from config."""
+    from clickhouse import config
+    return {
+        'host': getattr(config, 'CLICKHOUSE_HOST', 'localhost'),
+        'port': getattr(config, 'CLICKHOUSE_PORT', 8123),
+        'username': getattr(config, 'CLICKHOUSE_USERNAME', 'default'),
+        'password': getattr(config, 'CLICKHOUSE_PASSWORD', ''),
+        'database': getattr(config, 'CLICKHOUSE_DATABASE', 'default'),
+    }
 
 
 def import_full_dump(workers: int = 4) -> list[dict]:
-    """
-    Download latest full dump from FTP and import into ClickHouse.
-
-    Args:
-        workers: Number of parallel workers for loading
-
-    Returns:
-        List of result messages for the response queue
-    """
-    return _import_dump("full", workers)
+    """Download latest full listens dump from FTP and load into ClickHouse."""
+    try:
+        result = load_from_ftp(dump_type=DumpType.FULL, workers=workers, **_ch_kwargs())
+        return [{'type': 'clk_dump_imported', 'dump_type': 'full', 'status': 'success',
+                 'dump_id': result['dump_id'], 'total_inserted': result['total_inserted'],
+                 'files_completed': result['files_completed']}]
+    except Exception as e:
+        logger.error("Error importing full dump: %s", str(e), exc_info=True)
+        return [{'type': 'clk_dump_imported', 'dump_type': 'full', 'status': 'error', 'error': str(e)}]
 
 
 def import_incremental_dump(workers: int = 4) -> list[dict]:
@@ -219,7 +118,14 @@ def import_incremental_dump(workers: int = 4) -> list[dict]:
     Returns:
         List of result messages for the response queue
     """
-    return _import_dump("incremental", workers)
+    try:
+        result = load_from_ftp(dump_type=DumpType.INCREMENTAL, workers=workers, **_ch_kwargs())
+        return [{'type': 'clk_dump_imported', 'dump_type': 'incremental', 'status': 'success',
+                 'dump_id': result['dump_id'], 'total_inserted': result['total_inserted'],
+                 'files_completed': result['files_completed']}]
+    except Exception as e:
+        logger.error("Error importing incremental dump: %s", str(e), exc_info=True)
+        return [{'type': 'clk_dump_imported', 'dump_type': 'incremental', 'status': 'error', 'error': str(e)}]
 
 
 def run_hourly_stats_job(
@@ -248,25 +154,15 @@ def run_hourly_stats_job(
 
     logger.info(f"Running hourly stats job for entities: {entities_to_process}")
 
-    # Capture deletion cutoff before processing any entities
-    deletion_cutoff = None
-    temp_manager = StatsCacheManager(cache_config, ENTITY_CONFIGS[entities_to_process[0]])
-    temp_manager.connect()
-    deletion_cutoff = temp_manager.get_deletion_cutoff()
-    if deletion_cutoff:
-        logger.info(f"Deletion cutoff timestamp: {deletion_cutoff}")
-
-    last_manager = None
     for entity_type in entities_to_process:
         try:
             entity_config = ENTITY_CONFIGS[entity_type]
             manager = StatsCacheManager(cache_config, entity_config)
             manager.connect()
-            last_manager = manager
 
             # Use RMQ mode - yield messages as they're generated
             message_count = 0
-            for message in manager.run_hourly_job_for_rmq(batch_size=batch_size, deletion_cutoff=deletion_cutoff):
+            for message in manager.run_hourly_job_for_rmq(batch_size=batch_size):
                 yield message
                 message_count += 1
 
@@ -279,11 +175,6 @@ def run_hourly_stats_job(
                 'job': 'hourly',
                 'error': str(e),
             }
-
-    # Mark deletions as processed after all entities are done
-    if deletion_cutoff is not None and last_manager is not None:
-        logger.info(f"Marking deletions as processed up to {deletion_cutoff}")
-        last_manager.mark_deletions_processed(cutoff=deletion_cutoff)
 
     # Yield completion message
     yield {
@@ -349,24 +240,65 @@ def run_full_stats_refresh(
     }
 
 
-def cleanup_old_deletions(days: int = 7) -> list[dict]:
-    """Clean up processed deletions older than N days."""
-    cache_config = _get_cache_config()
+def refresh_metadata_cache(
+    cache_types: Optional[list[str]] = None,
+    batch_size: int = 100_000,
+) -> list[dict]:
+    """
+    Refresh ClickHouse metadata tables directly from MusicBrainz PostgreSQL.
 
+    Args:
+        cache_types: List of cache types to refresh ('artist', 'recording', 'release',
+                     'release_group'), or None to refresh all.
+        batch_size: Number of rows to fetch from PostgreSQL per batch.
+
+    Returns:
+        List of result messages for the response queue.
+    """
     try:
-        manager = StatsCacheManager(cache_config, ENTITY_CONFIGS['artist'])
-        manager.connect()
-        manager.cleanup_old_deletions(days=days)
+        from clickhouse import config
+        pg_dsn = getattr(config, 'MUSICBRAINZ_PG_DSN', None)
+        if not pg_dsn:
+            raise ValueError("MUSICBRAINZ_PG_DSN is not configured")
+
+        import clickhouse_connect
+        ch_client = clickhouse_connect.get_client(
+            host=getattr(config, 'CLICKHOUSE_HOST', 'localhost'),
+            port=getattr(config, 'CLICKHOUSE_PORT', 8123),
+            username=getattr(config, 'CLICKHOUSE_USERNAME', 'default'),
+            password=getattr(config, 'CLICKHOUSE_PASSWORD', ''),
+            database=getattr(config, 'CLICKHOUSE_DATABASE', 'default'),
+            compress=False,
+        )
+
+        valid_types = list(PG_QUERIES.keys())
+        if cache_types:
+            invalid = [t for t in cache_types if t not in valid_types]
+            if invalid:
+                raise ValueError(f"Unknown cache type(s): {invalid}. Valid: {valid_types}")
+
+        results = refresh_metadata_caches(pg_dsn, ch_client, cache_types, batch_size)
+        ch_client.close()
+
+        errors = {t: rows for t, rows in results.items() if rows < 0}
+        if errors:
+            return [{
+                'type': 'clk_metadata_cache_refresh',
+                'status': 'error',
+                'results': results,
+                'errors': list(errors.keys()),
+            }]
 
         return [{
-            'type': 'clickhouse_cleanup_deletions',
+            'type': 'clk_metadata_cache_refresh',
             'status': 'success',
-            'days': days,
+            'results': results,
         }]
+
     except Exception as e:
-        logger.error(f"Error cleaning up deletions: {e}", exc_info=True)
+        logger.error("Error refreshing metadata cache: %s", str(e), exc_info=True)
         return [{
-            'type': 'clickhouse_cleanup_deletions',
+            'type': 'clk_metadata_cache_refresh',
             'status': 'error',
             'error': str(e),
         }]
