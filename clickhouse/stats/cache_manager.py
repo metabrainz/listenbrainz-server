@@ -6,9 +6,8 @@ Manages the caching of top 1000 entity stats (artists, recordings, release group
 in CouchDB with smart invalidation.
 
 Architecture:
-    - ClickHouse stores daily aggregated stats (user_{entity}_stats_daily)
+    - ClickHouse stores id-only listens and daily aggregated stats (user_{entity}_stats_daily)
     - MV automatically adds +1 for each new listen
-    - Deletions logged to deleted_listens_log, processed hourly as -1
     - CouchDB caches computed top 1000 per user/entity/time_range
     - Cache state tracked to only update affected users/time_ranges
 """
@@ -23,6 +22,8 @@ from typing import Iterator, Optional
 import clickhouse_connect
 import orjson
 import requests
+
+from clickhouse.stats.schema import ensure_stats_schema
 
 logger = logging.getLogger(__name__)
 
@@ -101,23 +102,6 @@ CREATE TABLE IF NOT EXISTS user_stats_cache_state (
 ORDER BY (user_id, stat_type, time_range)
 """
 
-# Unified deletion log table schema for all entity types
-# When a listen is deleted, it affects artist, recording, and release_group stats
-DELETED_LISTENS_LOG_SCHEMA = """
-CREATE TABLE IF NOT EXISTS deleted_listens_log (
-    user_id UInt32,
-    date Date,
-    listened_at DateTime64(3),
-    artist_id UInt64 DEFAULT 0,        -- MB artist ID (small) or hash (large)
-    recording_id UInt64,
-    release_group_id UInt64,
-    processed UInt8 DEFAULT 0,
-    deleted_at DateTime64(3) DEFAULT now64(3)
-) ENGINE = MergeTree()
-ORDER BY (user_id, date, deleted_at)
-"""
-
-
 @dataclass
 class CacheConfig:
     """Configuration for cache manager."""
@@ -140,7 +124,7 @@ class EntityConfig:
     """Configuration for a specific entity type (artist, recording, release_group)."""
     entity_type: str  # 'artist', 'recording', 'release_group'
     stats_table: str  # e.g., 'user_artist_stats_daily'
-    dimension_table: str  # e.g., 'artist_dim'
+    dimension_table: str  # e.g., 'artist_metadata'
     id_column: str  # e.g., 'artist_id'
     # List of (dim_column, output_key) tuples for dimension table fields
     # output_key is the name used in the output dict (may differ from dim_column)
@@ -152,7 +136,7 @@ class EntityConfig:
 ARTIST_CONFIG = EntityConfig(
     entity_type='artist',
     stats_table='user_artist_stats_daily',
-    dimension_table='artist_cache',  # Primary lookup for mapped artists
+    dimension_table='artist_metadata',
     id_column='artist_id',  # Unified ID: MB ID or hash
     dimension_fields=[
         ('artist_mbid', 'artist_mbid'),
@@ -163,7 +147,7 @@ ARTIST_CONFIG = EntityConfig(
 RECORDING_CONFIG = EntityConfig(
     entity_type='recording',
     stats_table='user_recording_stats_daily',
-    dimension_table='recording_dim',
+    dimension_table='recording_metadata',
     id_column='recording_id',
     dimension_fields=[
         ('recording_mbid', 'recording_mbid'),
@@ -181,7 +165,7 @@ RECORDING_CONFIG = EntityConfig(
 RELEASE_GROUP_CONFIG = EntityConfig(
     entity_type='release_group',
     stats_table='user_release_group_stats_daily',
-    dimension_table='release_group_dim',
+    dimension_table='release_group_metadata',
     id_column='release_group_id',
     dimension_fields=[
         ('release_group_mbid', 'release_group_mbid'),
@@ -241,8 +225,8 @@ class StatsCacheManager:
         logger.info(f"Connected to ClickHouse at {self.config.ch_host}:{self.config.ch_port}")
 
         # Ensure required tables exist
+        ensure_stats_schema(self.ch_client)
         self.ch_client.command(USER_STATS_CACHE_STATE_SCHEMA)
-        self.ch_client.command(DELETED_LISTENS_LOG_SCHEMA)
 
         # CouchDB base URL with auth
         self.couch_base_url = (
@@ -306,141 +290,6 @@ class StatsCacheManager:
         response.raise_for_status()
         return False
 
-    def get_deletion_cutoff(self) -> Optional[datetime]:
-        """
-        Get the current max deleted_at timestamp from pending deletions.
-
-        This should be captured before processing starts to avoid race conditions
-        where new deletions inserted during processing would be incorrectly marked
-        as processed.
-
-        Returns:
-            The max deleted_at timestamp, or None if no pending deletions.
-        """
-        result = self.ch_client.query("""
-            SELECT max(deleted_at) FROM deleted_listens_log WHERE processed = 0
-        """)
-        max_deleted_at = result.first_row[0]
-        # ClickHouse returns epoch (1970-01-01) for max() of empty set
-        if max_deleted_at is None or max_deleted_at.year == 1970:
-            return None
-        return max_deleted_at
-
-    def process_deletions(self, cutoff: Optional[datetime] = None) -> int:
-        """
-        Process pending deletions from deleted_listens_log.
-        Inserts negative counts into the stats table for this entity type.
-
-        Args:
-            cutoff: Only process deletions with deleted_at <= this timestamp.
-                   If None, processes all pending deletions (not recommended due to race conditions).
-
-        Returns:
-            Number of deletions processed.
-        """
-        entity_type = self.entity_config.entity_type
-        stats_table = self.entity_config.stats_table
-
-        logger.info(f"Processing pending deletions for {entity_type}...")
-
-        # Build cutoff filter
-        cutoff_filter = ""
-        params = {}
-        if cutoff is not None:
-            cutoff_filter = "AND deleted_at <= {cutoff:DateTime64(3)}"
-            params['cutoff'] = cutoff
-
-        # Artists use dual-key pattern
-        if entity_type == 'artist':
-            return self._process_artist_deletions(cutoff_filter, params)
-
-        # Other entity types use single id_column pattern
-        id_column = self.entity_config.id_column
-
-        # Count pending deletions that have a valid entity ID for this type
-        count_result = self.ch_client.query(f"""
-            SELECT count() FROM deleted_listens_log
-            WHERE processed = 0 AND {id_column} != 0 {cutoff_filter}
-        """, parameters=params)
-        pending_count = count_result.first_row[0]
-
-        if pending_count == 0:
-            logger.info(f"No pending deletions to process for {entity_type}")
-            return 0
-
-        logger.info(f"Processing {pending_count} pending deletions for {entity_type}")
-
-        # Insert negative counts for this entity type
-        self.ch_client.command(f"""
-            INSERT INTO {stats_table} (date, user_id, {id_column}, listen_count)
-            SELECT
-                date,
-                user_id,
-                {id_column},
-                -toInt64(count()) AS listen_count
-            FROM deleted_listens_log
-            WHERE processed = 0 AND {id_column} != 0 {cutoff_filter}
-            GROUP BY date, user_id, {id_column}
-        """, parameters=params)
-
-        logger.info(f"Processed {pending_count} deletions for {entity_type}")
-        return pending_count
-
-    def _process_artist_deletions(self, cutoff_filter: str, params: dict) -> int:
-        """
-        Process pending deletions for artists using unified artist_id.
-        """
-        # Count pending deletions that have artist_id
-        count_result = self.ch_client.query(f"""
-            SELECT count() FROM deleted_listens_log
-            WHERE processed = 0 AND artist_id != 0 {cutoff_filter}
-        """, parameters=params)
-        pending_count = count_result.first_row[0]
-
-        if pending_count == 0:
-            logger.info("No pending deletions to process for artist")
-            return 0
-
-        logger.info(f"Processing {pending_count} pending deletions for artist")
-
-        # Insert negative counts
-        self.ch_client.command(f"""
-            INSERT INTO user_artist_stats_daily (date, user_id, artist_id, listen_count)
-            SELECT
-                date,
-                user_id,
-                artist_id,
-                -toInt64(count()) AS listen_count
-            FROM deleted_listens_log
-            WHERE processed = 0 AND artist_id != 0 {cutoff_filter}
-            GROUP BY date, user_id, artist_id
-        """, parameters=params)
-
-        logger.info(f"Processed {pending_count} deletions for artist")
-        return pending_count
-
-    def mark_deletions_processed(self, cutoff: Optional[datetime] = None):
-        """
-        Mark pending deletions as processed up to a cutoff timestamp.
-
-        This should be called after all entity types have processed their deletions.
-
-        Args:
-            cutoff: Only mark deletions with deleted_at <= this timestamp.
-                   If None, marks all pending deletions (not recommended due to race conditions).
-        """
-        if cutoff is not None:
-            self.ch_client.command("""
-                ALTER TABLE deleted_listens_log
-                UPDATE processed = 1
-                WHERE processed = 0 AND deleted_at <= {cutoff:DateTime64(3)}
-            """, parameters={'cutoff': cutoff})
-        else:
-            self.ch_client.command("""
-                ALTER TABLE deleted_listens_log
-                UPDATE processed = 1 WHERE processed = 0
-            """)
-
     def get_cache_state(self) -> dict[str, dict]:
         """Get current cache state for all time ranges."""
         stat_type = self.entity_config.entity_type
@@ -464,8 +313,6 @@ class StatsCacheManager:
         Uses EXISTS pattern for optimal query performance:
         1. Users with no cache state for this time_range (never computed)
         2. Users with new listens (created > last_computed_created) within period bounds
-        3. Users with deletions since last compute
-
         Args:
             time_range: The time range to check
             period_start: Start date of the period
@@ -476,29 +323,9 @@ class StatsCacheManager:
         """
         stat_type = self.entity_config.entity_type
         stats_table = self.entity_config.stats_table
-        id_column = self.entity_config.id_column
-
-        # Build deletion check subquery for this entity type
-        deletion_check = f"""
-            UNION ALL
-
-            -- Users with deletions since last compute
-            SELECT c.user_id
-            FROM cached_users c
-            WHERE EXISTS (
-                SELECT 1 FROM deleted_listens_log d
-                WHERE d.user_id = c.user_id
-                  AND d.deleted_at > c.last_computed_created
-                  AND d.date >= {{period_start:Date}}
-                  AND d.date < {{period_end:Date}}
-                  AND d.{id_column} != 0
-            )
-        """
-
         # Query finds:
         # 1. Users who have stats but no cache state (never computed for this range)
         # 2. Users whose cache is stale (new listens within period since last compute)
-        # 3. Users with deletions affecting this period
         query = f"""
             WITH cached_users AS (
                 SELECT user_id, last_computed_created
@@ -526,7 +353,6 @@ class StatsCacheManager:
                       AND toDate(l.listened_at) >= {{period_start:Date}}
                       AND toDate(l.listened_at) < {{period_end:Date}}
                 )
-                {deletion_check}
             )
         """
         ch_start = time.perf_counter()
@@ -627,11 +453,8 @@ class StatsCacheManager:
         if not user_ids:
             return {}
 
-        # Artists use dual-key pattern with special query
-        if self.entity_config.entity_type == 'artist':
-            return self._compute_top_artists_batch(time_range, user_ids, limit)
-
         range_config = TIME_RANGES.get(time_range, {'filter': '', 'period_start_sql': "toDate('1970-01-01')"})
+
         date_filter = range_config['filter']
 
         ec = self.entity_config
@@ -645,7 +468,7 @@ class StatsCacheManager:
                     user_id,
                     {ec.id_column},
                     sum(listen_count) AS listen_count
-                FROM {ec.stats_table}
+                FROM {ec.stats_table} s
                 WHERE user_id IN ({{user_ids:Array(UInt32)}})
                 {date_filter}
                 GROUP BY user_id, {ec.id_column}
@@ -670,7 +493,7 @@ class StatsCacheManager:
                     t.listen_count,
                     {select_fields}
                 FROM top_n t
-                JOIN {ec.dimension_table} d FINAL ON t.{ec.id_column} = d.{ec.id_column}
+                LEFT JOIN {ec.dimension_table} d FINAL ON t.{ec.id_column} = d.{ec.id_column}
             )
             SELECT
                 user_id,
@@ -707,100 +530,6 @@ class StatsCacheManager:
                         for i in range(len(self.entity_config.dimension_fields))
                     },
                     'listen_count': t[len(self.entity_config.dimension_fields)],
-                }
-                for t in entities_tuples
-            ]
-
-        return user_entities
-
-    def _compute_top_artists_batch(
-        self,
-        time_range: str,
-        user_ids: list[int],
-        limit: int = 1000
-    ) -> dict[int, list[dict]]:
-        """
-        Compute top N artists using unified artist_id.
-
-        artist_id is a single UInt64 column that contains:
-        - MB's integer artist ID for mapped artists (small values, < 2^32)
-        - sipHash64 hash for unmapped artists (large 64-bit values)
-
-        Mapped artists join to artist_cache, unmapped to artist_dim.
-        Since IDs don't overlap, we LEFT JOIN both and COALESCE.
-        """
-        range_config = TIME_RANGES.get(time_range, {'filter': '', 'period_start_sql': "toDate('1970-01-01')"})
-        date_filter = range_config['filter']
-
-        query = f"""
-            WITH aggregated AS (
-                SELECT
-                    user_id,
-                    artist_id,
-                    sum(listen_count) AS listen_count
-                FROM user_artist_stats_daily
-                WHERE user_id IN ({{user_ids:Array(UInt32)}})
-                {date_filter}
-                GROUP BY user_id, artist_id
-                HAVING listen_count > 0
-            ),
-            ranked AS (
-                SELECT
-                    user_id,
-                    artist_id,
-                    listen_count,
-                    row_number() OVER (PARTITION BY user_id ORDER BY listen_count DESC) AS rn
-                FROM aggregated
-            ),
-            top_n AS (
-                SELECT user_id, artist_id, listen_count
-                FROM ranked
-                WHERE rn <= {{limit:UInt32}}
-            ),
-            with_metadata AS (
-                SELECT
-                    t.user_id,
-                    t.listen_count,
-                    -- LEFT JOIN both tables; one will match based on ID range
-                    COALESCE(nullIf(ac.artist_mbid, ''), ad.artist_mbid, '') AS artist_mbid,
-                    COALESCE(ac.artist_name, ad.artist_name, '') AS artist_name
-                FROM top_n t
-                LEFT JOIN artist_cache ac FINAL ON t.artist_id = ac.artist_id
-                LEFT JOIN artist_dim ad FINAL ON t.artist_id = ad.artist_id
-            )
-            SELECT
-                user_id,
-                arrayMap(
-                    x -> (x.2, x.3, x.1),
-                    arraySort(
-                        x -> -x.1,
-                        groupArray(
-                            tuple(listen_count, nullIf(artist_mbid, ''), artist_name)
-                        )
-                    )
-                ) AS entities
-            FROM with_metadata
-            GROUP BY user_id
-            ORDER BY user_id
-        """
-
-        ch_start = time.perf_counter()
-        result = self.ch_client.query(
-            query,
-            parameters={'user_ids': user_ids, 'limit': limit}
-        )
-        ch_elapsed = time.perf_counter() - ch_start
-        logger.info(f"ClickHouse artist query took {ch_elapsed:.2f}s for {len(user_ids)} users")
-
-        user_entities: dict[int, list[dict]] = {uid: [] for uid in user_ids}
-
-        for row in result.result_rows:
-            user_id, entities_tuples = row
-            user_entities[user_id] = [
-                {
-                    'artist_mbid': t[0],
-                    'artist_name': t[1],
-                    'listen_count': t[2],
                 }
                 for t in entities_tuples
             ]
@@ -1101,17 +830,13 @@ class StatsCacheManager:
 
         yield from self.generate_stats_messages(time_range, user_entities, database, message_batch_size)
 
-    def run_hourly_job(self, batch_size: int = 1000, deletion_cutoff: Optional[datetime] = None):
+    def run_hourly_job(self, batch_size: int = 1000):
         """
         Run the hourly job:
-        1. Process pending deletions
-        2. For each time_range, find stale users and refresh them
+        For each time_range, find stale users and refresh them.
         """
         entity_type = self.entity_config.entity_type
         logger.info(f"Starting hourly job for {entity_type}...")
-
-        deletions = self.process_deletions(cutoff=deletion_cutoff)
-        logger.info(f"Processed {deletions} deletions")
 
         cache_state = self.get_cache_state()
 
@@ -1156,7 +881,6 @@ class StatsCacheManager:
     def run_hourly_job_for_rmq(
         self,
         batch_size: int = 1000,
-        deletion_cutoff: Optional[datetime] = None,
         message_batch_size: int = 100,
     ) -> Iterator[dict]:
         """
@@ -1176,9 +900,6 @@ class StatsCacheManager:
         """
         entity_type = self.entity_config.entity_type
         logger.info(f"Starting hourly job for {entity_type} (RMQ mode)...")
-
-        deletions = self.process_deletions(cutoff=deletion_cutoff)
-        logger.info(f"Processed {deletions} deletions")
 
         cache_state = self.get_cache_state()
 
@@ -1349,118 +1070,3 @@ class StatsCacheManager:
             self.update_cache_state(time_range, period_start, max_created)
 
         logger.info(f"Full refresh for {entity_type} completed. {total_messages} messages generated")
-
-    def cleanup_old_deletions(self, days: int = 7):
-        """Clean up processed deletions older than N days."""
-        self.ch_client.command(f"""
-            ALTER TABLE deleted_listens_log
-            DELETE WHERE processed = 1 AND deleted_at < now() - INTERVAL {days} DAY
-        """)
-        logger.info(f"Cleaned up deletions older than {days} days")
-
-
-def delete_listen(
-    ch_client,
-    user_id: int,
-    listened_at: datetime,
-    recording_msid: str,
-    artist_name: str,
-    artist_credit_mbids: list[str],
-    artist_mb_ids: list[int],
-    is_mapped: bool,
-    recording_mbid: Optional[str] = None,
-    track_name: Optional[str] = None,
-    release_group_mbid: Optional[str] = None,
-    release_group_name: Optional[str] = None,
-):
-    """
-    Delete a listen and log it for stats adjustment.
-
-    This should be called by the application when a user deletes a listen.
-    Logs the deletion for all entity types (artist, recording, release_group)
-    so that stats caches can be properly invalidated.
-
-    Args:
-        ch_client: ClickHouse client
-        user_id: User ID
-        listened_at: Listen timestamp
-        recording_msid: Recording MSID
-        artist_name: Artist name
-        artist_credit_mbids: List of artist credit MBIDs
-        artist_mb_ids: List of MB integer artist IDs (from listens table)
-        is_mapped: Whether the listen was mapped to MB data
-        recording_mbid: Recording MBID (optional)
-        track_name: Track name (optional)
-        release_group_mbid: Release group MBID (optional)
-        release_group_name: Release group name (optional)
-    """
-    # Ensure we have at least one entry for the artist loop
-    if not artist_credit_mbids:
-        artist_credit_mbids = ['']
-    if not artist_mb_ids:
-        artist_mb_ids = [0] * len(artist_credit_mbids)
-
-    # Ensure arrays are same length
-    while len(artist_mb_ids) < len(artist_credit_mbids):
-        artist_mb_ids.append(0)
-
-    recording_id = 0
-    if recording_mbid:
-        recording_id_query = ch_client.query("""
-            SELECT recordingId({mbid:String}, {name:String})
-        """, parameters={'mbid': recording_mbid, 'name': track_name or ''})
-        recording_id = recording_id_query.first_row[0]
-    elif track_name:
-        recording_id_query = ch_client.query("""
-            SELECT recordingId({mbid:String}, {name:String})
-        """, parameters={'mbid': '', 'name': track_name})
-        recording_id = recording_id_query.first_row[0]
-
-    release_group_id = 0
-    if release_group_mbid:
-        release_group_id_query = ch_client.query("""
-            SELECT releaseGroupId({mbid:String}, {name:String})
-        """, parameters={'mbid': release_group_mbid, 'name': release_group_name or ''})
-        release_group_id = release_group_id_query.first_row[0]
-    elif release_group_name:
-        release_group_id_query = ch_client.query("""
-            SELECT releaseGroupId({mbid:String}, {name:String})
-        """, parameters={'mbid': '', 'name': release_group_name})
-        release_group_id = release_group_id_query.first_row[0]
-
-    # For each artist, compute the unified artist_id
-    for mbid, mb_id in zip(artist_credit_mbids, artist_mb_ids):
-        # Use MB ID if mapped, otherwise compute hash
-        if is_mapped and mb_id != 0:
-            artist_id = mb_id
-        else:
-            hash_query = ch_client.query("""
-                SELECT artistHash({mbid:String}, {name:String})
-            """, parameters={'mbid': mbid, 'name': artist_name})
-            artist_id = hash_query.first_row[0]
-
-        ch_client.command("""
-            INSERT INTO deleted_listens_log
-                (user_id, date, listened_at, artist_id, recording_id, release_group_id)
-            VALUES
-                ({user_id:UInt32}, {date:Date}, {listened_at:DateTime64(3)},
-                 {artist_id:UInt64}, {recording_id:UInt64}, {release_group_id:UInt64})
-        """, parameters={
-            'user_id': user_id,
-            'date': listened_at.date(),
-            'listened_at': listened_at,
-            'artist_id': artist_id,
-            'recording_id': recording_id,
-            'release_group_id': release_group_id,
-        })
-
-    ch_client.command("""
-        DELETE FROM listens
-        WHERE user_id = {user_id:UInt32}
-          AND listened_at = {listened_at:DateTime64(3)}
-          AND recording_msid = {recording_msid:String}
-    """, parameters={
-        'user_id': user_id,
-        'listened_at': listened_at,
-        'recording_msid': recording_msid,
-    })

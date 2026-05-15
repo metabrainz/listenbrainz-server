@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """
-ClickHouse Request Consumer
+ClickHouse Bulk Request Consumer
 
-Consumes stats/management requests from the CLICKHOUSE_EXCHANGE queue
-and invokes the appropriate handlers. Results are pushed to the
-CLICKHOUSE_RESULT_EXCHANGE for processing by the ListenBrainz side.
+Consumes bulk/management requests from the CLICKHOUSE_EXCHANGE queue and
+invokes the appropriate handlers. Handles long-running operations such as:
+- Metadata cache refresh (artist, recording, release, release_group)
+- Stats computation (hourly, full refresh)
+- Listen dump loading (full, incremental)
+
+Results are pushed to CLICKHOUSE_RESULT_EXCHANGE for the ListenBrainz side.
 """
 
 import json
@@ -33,23 +37,24 @@ class ClickHouseRequestConsumer(ConsumerMixin):
         self.connection = None
         self.producer = None
 
-        # ClickHouse request exchange and queue
+        # ClickHouse bulk request exchange and queue (stats, cache refresh, dump loading)
         self.clickhouse_exchange = Exchange(
             config.CLICKHOUSE_EXCHANGE,
-            "fanout",
-            durable=False
+            "direct",
+            durable=True
         )
         self.clickhouse_queue = Queue(
             config.CLICKHOUSE_QUEUE,
             exchange=self.clickhouse_exchange,
+            routing_key=config.CLICKHOUSE_QUEUE,
             durable=True
         )
 
         # Result exchange for sending results back to ListenBrainz
         self.clickhouse_result_exchange = Exchange(
             config.CLICKHOUSE_RESULT_EXCHANGE,
-            "fanout",
-            durable=False
+            "direct",
+            durable=True
         )
 
     def get_result(self, request: dict) -> list[dict] | None:
@@ -96,7 +101,7 @@ class ClickHouseRequestConsumer(ConsumerMixin):
             body = json.dumps(message)
             self.producer.publish(
                 exchange=self.clickhouse_result_exchange,
-                routing_key='',
+                routing_key=config.CLICKHOUSE_RESULT_QUEUE,
                 body=body,
                 properties=PERSISTENT_DELIVERY_MODE,
             )

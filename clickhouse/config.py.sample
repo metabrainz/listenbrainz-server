@@ -5,13 +5,6 @@ CLICKHOUSE_DATABASE = "default"
 CLICKHOUSE_USERNAME = "default"
 CLICKHOUSE_PASSWORD = ""
 
-# TimescaleDB connection settings (for mapping data lookup in listen consumer)
-TIMESCALE_HOST = "localhost"
-TIMESCALE_PORT = 5432
-TIMESCALE_DATABASE = "listenbrainz"
-TIMESCALE_USERNAME = "listenbrainz"
-TIMESCALE_PASSWORD = ""
-
 # RabbitMQ connection settings
 RABBITMQ_HOST = "rabbitmq"
 RABBITMQ_PORT = 5672
@@ -28,10 +21,8 @@ CLICKHOUSE_QUEUE = "clickhouse"
 CLICKHOUSE_RESULT_EXCHANGE = "clickhouse_result"
 CLICKHOUSE_RESULT_QUEUE = "clickhouse_result"
 
-# Listen ingestion - consumes from the existing UNIQUE_EXCHANGE
-# This is the exchange where deduplicated listens are published after TimescaleDB insert
-UNIQUE_EXCHANGE = "unique"
-CLICKHOUSE_LISTEN_QUEUE = "clickhouse_listens"
+# MusicBrainz PostgreSQL DSN (for metadata cache refresh)
+MUSICBRAINZ_PG_DSN = "postgresql://musicbrainz:password@localhost:5432/musicbrainz_db"
 
 # FTP settings for dump download
 FTP_SERVER_URI = "ftp.eu.metabrainz.org"
