@@ -87,19 +87,11 @@ def stats_full_refresh(entity: str, batch_size: int):
     send_request_to_clickhouse("clickhouse.stats.full_refresh", entity=entity, batch_size=batch_size)
 
 
-@cli.command(name="cleanup_deletions")
-@click.option("--days", type=int, default=7, help="Number of days to retain processed deletions")
-def cleanup_deletions(days: int):
-    """Clean up processed deletions older than N days."""
-    send_request_to_clickhouse("clickhouse.stats.cleanup_deletions", days=days)
-
-
 @cli.command(name='cron_stats')
 @click.pass_context
 def cron_stats(ctx):
-    """Cron job: run hourly refresh and cleanup old deletions."""
+    """Cron job: run hourly refresh."""
     ctx.invoke(stats_hourly)
-    ctx.invoke(cleanup_deletions)
 
 
 if __name__ == '__main__':

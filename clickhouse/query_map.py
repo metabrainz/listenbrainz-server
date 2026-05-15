@@ -13,7 +13,7 @@ functions = {
     'clickhouse.import_incremental_dump': clickhouse.stats.handlers.import_incremental_dump,
     'clickhouse.stats.hourly': clickhouse.stats.handlers.run_hourly_stats_job,
     'clickhouse.stats.full_refresh': clickhouse.stats.handlers.run_full_stats_refresh,
-    'clickhouse.stats.cleanup_deletions': clickhouse.stats.handlers.cleanup_old_deletions,
+    'clickhouse.metadata_cache.refresh': clickhouse.stats.handlers.refresh_metadata_cache,
 }
 
 
