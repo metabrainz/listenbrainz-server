@@ -201,6 +201,7 @@ class MainTestCase(flask_testing.TestCase):
         app = create_app()
         app.config['MB_DATABASE_URI'] = 'yermom'
         app.config['SQLALCHEMY_TIMESCALE_URI'] = 'yermom'
+        app.config['SQLALCHEMY_TIMESCALE_PGBOUNCER_URI'] = 'yermom'
         return app
 
     def setUp(self):
