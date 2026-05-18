@@ -65,7 +65,7 @@ def create_mbcanonical(location, use_lb_conn):
     - If called with --use-mb-conn then all tables will be in the musicbrainz database connection.
     - The canonical release redirect table will always be in the musicbrainz database connection.
     """
-    app = create_app()
+    app = create_app(bypass_pgbouncer=True)
     with app.app_context():
         end_time = datetime.now()
         ts = end_time.strftime('%Y%m%d-%H%M%S')
@@ -127,7 +127,7 @@ def create_full(location: str, location_private: str, threads: int, dump_id: int
     """ Create a ListenBrainz data dump which includes a private dump, a statistics dump
         and a dump of the actual listens from the listenstore.
     """
-    app = create_app()
+    app = create_app(bypass_pgbouncer=True)
     with app.app_context():
         if not location_private and (do_db_dump or do_timescale_dump):
             current_app.logger.error("No location specified for creating private database and timescale dumps")
@@ -238,7 +238,7 @@ def create_full(location: str, location_private: str, threads: int, dump_id: int
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
 @click.option('--dump-id', type=int, default=None)
 def create_incremental(location, threads, dump_id):
-    app = create_app()
+    app = create_app(bypass_pgbouncer=True)
     with app.app_context():
         ls = DumpListenStore(app)
         if dump_id is None:
@@ -293,7 +293,7 @@ def create_incremental(location, threads, dump_id):
               help="the number of threads to be used while compression")
 def create_feedback(location, threads):
     """ Create a spark formatted dump of user/recommendation feedback data."""
-    app = create_app()
+    app = create_app(bypass_pgbouncer=True)
     with app.app_context():
 
         end_time = datetime.now()
@@ -331,7 +331,7 @@ def create_feedback(location, threads):
               help="the number of threads to be used while compression")
 def create_sample(location, threads):
     """ Create a sample data dump."""
-    app = create_app()
+    app = create_app(bypass_pgbouncer=True)
     with app.app_context():
 
         end_time = datetime.now()
@@ -396,7 +396,7 @@ def import_dump(private_archive, private_timescale_archive,
         table in the public dump in order to satisfy foreign key constraints. Then it imports
         the listen dump.
     """
-    app = create_app()
+    app = create_app(bypass_pgbouncer=True)
     with app.app_context():
         if private_archive or private_timescale_archive or public_archive or public_timescale_archive:
             import_postgres_dump(private_archive, private_timescale_archive,
