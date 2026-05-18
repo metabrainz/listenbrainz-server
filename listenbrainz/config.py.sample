@@ -36,7 +36,7 @@ MB_DATABASE_URI = ""
 
 # for use in playlists admin view
 SQLALCHEMY_BINDS = {
-   'timescale': SQLALCHEMY_TIMESCALE_URI
+   'timescale': SQLALCHEMY_TIMESCALE_PGBOUNCER_URI
 }
 
 # Redis
