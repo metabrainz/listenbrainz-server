@@ -8,7 +8,7 @@ from requests_oauthlib import OAuth2Session
 from data.model.external_service import ExternalServiceType
 from listenbrainz.domain.brainz_service import BaseBrainzService
 
-TIDAL_AUTHORIZE_URL = "https://login.tidal.com/oauth2/authorize"
+TIDAL_AUTHORIZE_URL = "https://login.tidal.com/authorize"
 TIDAL_TOKEN_URL = "https://auth.tidal.com/v1/oauth2/token"
 TIDAL_SCOPES = ["user.read"]
 
