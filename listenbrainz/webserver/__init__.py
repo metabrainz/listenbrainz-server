@@ -90,10 +90,13 @@ def check_ratelimit_token_whitelist(auth_token):
     return auth_token in current_app.config["WHITELISTED_AUTH_TOKENS"]
 
 
-def create_app(debug=None):
+def create_app(debug=None, bypass_pgbouncer=False):
     """ Generate a Flask app for LB with all configurations done and connections established.
 
     In the Flask app returned, blueprints are not registered.
+
+    When `bypass_pgbouncer` is True, the timescale engine connects directly to the
+    timescale database instead of going through pgbouncer.
     """
 
     app = CustomFlask(import_name=__name__)
@@ -132,7 +135,8 @@ def create_app(debug=None):
         timescale.init_db_connection(ts_connect["DB_CONNECT"])
     else:
         db.init_db_connection(app.config["SQLALCHEMY_DATABASE_URI"])
-        timescale.init_db_connection(app.config["SQLALCHEMY_TIMESCALE_URI"])
+        timescale_uri_config = "SQLALCHEMY_TIMESCALE_URI" if bypass_pgbouncer else "SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"
+        timescale.init_db_connection(app.config[timescale_uri_config])
         if app.config.get("SQLALCHEMY_METABRAINZ_URI", None):
             donation.init_meb_db_connection(app.config["SQLALCHEMY_METABRAINZ_URI"])
 
@@ -243,7 +247,7 @@ def init_admin(app):
     admin.add_view(ReportedUserAdminView(ReportedUsersModel, model.db.session, endpoint='reported_users_model'))
 
     # can be empty incase timescale listenstore is down
-    if app.config['SQLALCHEMY_TIMESCALE_URI']:
+    if app.config['SQLALCHEMY_TIMESCALE_PGBOUNCER_URI']:
         # playlist admin views require timescale database, only register if listenstore is available
         admin.add_view(PlaylistAdminView(PlaylistModel, model.db.session, endpoint='playlist_model'))
         admin.add_view(PlaylistRecordingAdminView(PlaylistRecordingModel, model.db.session, endpoint='playlist_recording_model'))

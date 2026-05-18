@@ -40,6 +40,7 @@ class MainTestCase(flask_testing.TestCase):
         app = create_app()
         app.config['MB_DATABASE_URI'] = 'fuss'
         app.config['SQLALCHEMY_TIMESCALE_URI'] = 'mip'
+        app.config['SQLALCHEMY_TIMESCALE_PGBOUNCER_URI'] = 'mip'
         return app
 
     def setUp(self):
