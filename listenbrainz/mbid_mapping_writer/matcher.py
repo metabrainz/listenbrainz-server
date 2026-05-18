@@ -61,7 +61,11 @@ def process_listens(app, listens, priority):
        the DB. Note: Legacy listens to not need to be checked to see if
        a result alrady exists in the DB -- the selection of legacy listens
        has already taken care of this."""
+    with app.app_context():
+        return _process_listens(app, listens, priority)
 
+
+def _process_listens(app, listens, priority):
     from listenbrainz.mbid_mapping_writer.job_queue import NEW_LISTEN, RECHECK_LISTEN
 
     stats = {"processed": 0, "total": 0, "errors": 0, "listen_count": 0, "listens_matched": 0}
