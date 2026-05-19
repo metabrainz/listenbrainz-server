@@ -114,6 +114,17 @@ MBID_MAPPING_DATABASE_URI = "dbname=musicbrainz_json_dump user=musicbrainz host=
 MBID_MAPPING_DATABASE_URI = ""
 {{end}}
 
+# SQLAlchemy connection pool sizing (per uwsgi worker). Each engine uses a
+# QueuePool sized for concurrent requests within a worker. Total connections
+# to the upstream = processes * (pool_size + max_overflow). Tune based on
+# pgbouncer max_client_conn and postgres max_connections for the target host.
+DB_POOL_SIZE = {{template "KEY" "db_pool_size"}}
+DB_POOL_MAX_OVERFLOW = {{template "KEY" "db_pool_max_overflow"}}
+TIMESCALE_POOL_SIZE = {{template "KEY" "timescale_pool_size"}}
+TIMESCALE_POOL_MAX_OVERFLOW = {{template "KEY" "timescale_pool_max_overflow"}}
+MEB_POOL_SIZE = {{template "KEY" "meb_pool_size"}}
+MEB_POOL_MAX_OVERFLOW = {{template "KEY" "meb_pool_max_overflow"}}
+
 {{if service "typesense-listenbrainz-new"}}
 {{with index (service "typesense-listenbrainz-new") 0}}
 TYPESENSE_HOST = "{{.Address}}"

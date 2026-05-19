@@ -13,17 +13,20 @@ engine: Optional[sqlalchemy.engine.Engine] = None
 psycopg2.extras.register_uuid()
 
 
-def init_db_connection(connect_str):
+def init_db_connection(connect_str, poolclass=NullPool, **engine_kwargs):
     """Initializes database connection using the specified Flask app.
 
     Configuration file must contain `SQLALCHEMY_DATABASE_URI` key. See
     https://pythonhosted.org/Flask-SQLAlchemy/config.html#configuration-keys
     for more info.
+
+    Pass poolclass=QueuePool (and pool_size, max_overflow, pool_pre_ping via
+    engine_kwargs) for long-running services where connection reuse matters.
     """
     global engine
     while True:
         try:
-            engine = create_engine(connect_str, poolclass=NullPool)
+            engine = create_engine(connect_str, poolclass=poolclass, **engine_kwargs)
             break
         except psycopg2.OperationalError as e:
             print("Couldn't establish connection to db: {}".format(str(e)))
