@@ -463,7 +463,7 @@ def _validate_get_endpoint_params() -> Tuple[int, int, int]:
     max_ts = _parse_int_arg("max_ts")
     min_ts = _parse_int_arg("min_ts")
 
-    if max_ts and min_ts and max_ts < min_ts:
+    if max_ts and min_ts and max_ts <= min_ts:
         log_raise_400("max_ts should be greater than min_ts")
 
     # Validate requested listen count is positive
@@ -482,7 +482,7 @@ def _validate_get_listens_endpoint_params() -> Tuple[datetime, datetime, int]:
     max_ts = _parse_datetime_arg("max_ts")
     min_ts = _parse_datetime_arg("min_ts")
 
-    if max_ts and min_ts and max_ts < min_ts:
+    if max_ts and min_ts and max_ts <= min_ts:
         log_raise_400("max_ts should be greater than min_ts")
 
     # Validate requested listen count is positive

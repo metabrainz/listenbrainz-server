@@ -219,7 +219,7 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
 
 
 if __name__ == "__main__":
-    app = create_app()
+    app = create_app(bypass_pgbouncer=True)
     with app.app_context():
         rc = TimescaleWriterSubscriber()
         rc.start()

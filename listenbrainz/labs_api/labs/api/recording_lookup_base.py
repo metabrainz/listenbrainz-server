@@ -8,6 +8,7 @@ from uuid import UUID
 import psycopg2
 import psycopg2.extras
 from datasethoster import Query
+from flask import current_app
 from pydantic import BaseModel
 from unidecode import unidecode
 from listenbrainz import config
@@ -66,7 +67,7 @@ class RecordingLookupBaseQuery(Query, ABC):
 
         lookup_strings = tuple(lookup_strings)
 
-        with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as conn:
+        with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"]) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
                 curs.execute(f"""
                     SELECT artist_credit_name

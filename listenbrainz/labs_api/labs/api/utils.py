@@ -46,7 +46,7 @@ def query_combined_lookup(column: LookupType, lookups: list[tuple], service):
       GROUP BY {column}, idx      
     """).format(column=Identifier(column.value), table=SQL(table))
 
-    with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as conn, conn.cursor() as curs:
+    with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"]) as conn, conn.cursor() as curs:
         execute_values(curs, query, lookups, page_size=len(lookups))
         result = curs.fetchall()
         return {row[0]: row[1] for row in result}
@@ -153,7 +153,7 @@ def lookup_recording_canonical_metadata(mbids: list[str]):
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn, conn.cursor() as curs:
         redirected_mbids, redirect_index, _ = resolve_redirect_mbids(curs, "recording", mbids)
 
-    with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as conn, conn.cursor() as curs:
+    with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"]) as conn, conn.cursor() as curs:
         canonical_mbids, canonical_index, _ = resolve_canonical_mbids(curs, redirected_mbids)
         query = """
               WITH mbids(gid) AS (VALUES %s)

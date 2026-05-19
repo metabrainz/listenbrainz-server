@@ -57,7 +57,7 @@
     "@nivo/tooltip": "^0.81.0",
     "@nivo/treemap": "^0.81.0",
     "@react-spring/web": "^9.7.3",
-    "@sentry/react": "^8.33.1",
+    "@sentry/react": "^8.55.2",
     "@tanstack/react-query": "^5.28.4",
     "@tanstack/react-query-devtools": "^5.28.6",
     "@types/react-datetime-picker": "^3.4.1",
@@ -70,7 +70,7 @@
     "d3-scale-chromatic": "^3.0.0",
     "date-fns": "^3.6.0",
     "debounce-async": "0.0.2",
-    "dompurify": "^3.3.2",
+    "dompurify": "^3.4.0",
     "external-svg-loader": "^1.7.1",
     "fetch-retry": "^5.0.3",
     "file-saver": "^2.0.5",
@@ -111,7 +111,7 @@
     "swiper": "^12.1.2",
     "time-ago": "^0.2.1",
     "tinycolor2": "^1.4.2",
-    "uuid": "^9.0.1"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.5",

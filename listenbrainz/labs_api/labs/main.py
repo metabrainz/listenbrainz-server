@@ -49,7 +49,7 @@ app = create_app()
 load_config(app)
 init_sentry(app, "DATASETS_SENTRY_DSN")
 db.init_db_connection(app.config["SQLALCHEMY_DATABASE_URI"])
-ts.init_db_connection(app.config["SQLALCHEMY_TIMESCALE_URI"])
+ts.init_db_connection(app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"])
 cache.init(
     host=app.config["REDIS_HOST"],
     port=app.config["REDIS_PORT"],

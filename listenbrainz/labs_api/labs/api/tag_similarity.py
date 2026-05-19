@@ -34,7 +34,7 @@ class TagSimilarityQuery(Query):
     def fetch(self, params, source, offset=0, count=50):
 
         tag = params[0].tag
-        with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as conn:
+        with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"]) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
                 curs.execute(

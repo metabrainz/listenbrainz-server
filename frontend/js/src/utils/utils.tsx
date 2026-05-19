@@ -1248,10 +1248,11 @@ const getAlbumArtFromListenMetadataKey = (
     listen.track_metadata?.additional_info?.release_mbid;
   const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
   const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
+  const releaseGroupMbid = getReleaseGroupMBID(listen);
 
-  return `ca:${userSubmittedReleaseMBID ?? ""}:${caaId ?? ""}:${
-    caaReleaseMbid ?? ""
-  }`;
+  return `ca:${userSubmittedReleaseMBID ?? releaseGroupMbid ?? ""}:${
+    caaId ?? ""
+  }:${caaReleaseMbid ?? releaseGroupMbid ?? ""}`;
 };
 
 const getAlbumArtFromListenMetadata = async (
@@ -1285,6 +1286,8 @@ const getAlbumArtFromListenMetadata = async (
     listen.track_metadata?.additional_info?.release_group_mbid;
   const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
   const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
+  const mappingReleaseGroupMbid =
+    listen.track_metadata?.mbid_mapping?.release_group_mbid;
   if (userSubmittedReleaseMBID || userSubmittedReleaseGroupMBID) {
     // try getting the cover art using user submitted release mbid. if user submitted release mbid
     // does not have a cover art and the mapper matched to a different release, try to fallback to
@@ -1302,6 +1305,15 @@ const getAlbumArtFromListenMetadata = async (
   // user submitted release mbids not found, check if there is a match from mbid mapper.
   if (caaId && caaReleaseMbid) {
     return generateAlbumArtThumbnailLink(caaId, caaReleaseMbid);
+  }
+  // Fallback: use the release group MBID from the automatic mapping, if available
+  if (mappingReleaseGroupMbid) {
+    const releaseGroupAlbumArt = await getAlbumArtFromReleaseGroupMBID(
+      mappingReleaseGroupMbid
+    );
+    if (releaseGroupAlbumArt) {
+      return releaseGroupAlbumArt;
+    }
   }
   /* We are putting Youtube thumbnails as last resort fallback as the quality
   and format is usually not very good, user preferring proper cover art. */

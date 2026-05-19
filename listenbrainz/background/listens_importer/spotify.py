@@ -18,6 +18,11 @@ SKIP_REASONS = [
 class SpotifyListensImporter(ZipBaseListensImporter):
     """Spotify-specific listens importer."""
 
+    def __init__(self, db_conn, ts_conn):
+        super().__init__(db_conn, ts_conn)
+        self.skipped_incognito_count = 0
+        self.skipped_short_plays_count = 0
+
     def filter_zip_file(self, file: str) -> bool:
         filename = os.path.basename(file).lower()
         return filename.endswith(".json") and ("audio" in filename or "endsong" in filename)
@@ -30,11 +35,10 @@ class SpotifyListensImporter(ZipBaseListensImporter):
             entry["timestamp"] = timestamp
             yield timestamp, entry
 
-    @staticmethod
-    def _skip_item(item) -> bool:
+    def _skip_item(self, item) -> tuple[bool, str]:
         """ Whether a spotify play should not be imported. """
         if item.get("incognito_mode", False):
-            return True
+            return True, "incognito"
 
         if (
             item.get("ms_played", 0) < 30000 and
@@ -43,9 +47,9 @@ class SpotifyListensImporter(ZipBaseListensImporter):
                 ("reason_end" in item and item["reason_end"] in SKIP_REASONS)
             )
         ):
-            return True
+            return True, "short_play"
 
-        return False
+        return False, ""
 
     def parse_listen_batch(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Parse Spotify listen batch.
@@ -56,7 +60,12 @@ class SpotifyListensImporter(ZipBaseListensImporter):
         items = []
         for item in batch:
             try:
-                if self._skip_item(item):
+                should_skip, skip_reason = self._skip_item(item)
+                if should_skip:
+                    if skip_reason == "incognito":
+                        self.skipped_incognito_count += 1
+                    elif skip_reason == "short_play":
+                        self.skipped_short_plays_count += 1
                     continue
 
                 items.append({
@@ -120,6 +129,18 @@ class SpotifyListensImporter(ZipBaseListensImporter):
                 "track_metadata": track_metadata,
             })
         return listens
+
+    def get_validation_detailed_message(self) -> str:
+        """Generate Spotify-specific message for import validation summary."""
+        messages = []
+        if self.skipped_short_plays_count > 0:
+            messages.append(f"{self.skipped_short_plays_count} manually skipped or interrupted")
+        if self.skipped_incognito_count > 0:
+            messages.append(f"{self.skipped_incognito_count} incognito mode")
+        
+        if messages:
+            return "Discarded: " + ", ".join(messages)
+        return ""
 
     def _get_spotify_data(self, spotify_track_ids: set[str]) -> dict[str, dict[str, Any]]:
         """Get Spotify data from cache and API."""

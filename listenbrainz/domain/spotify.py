@@ -28,13 +28,17 @@ SPOTIFY_LISTEN_PERMISSIONS = {
     'streaming',
     'user-read-email',
     'user-read-private',
+    'playlist-read-private',
+    'playlist-read-collaborative',
     'playlist-modify-public',
     'playlist-modify-private',
 }
 
 SPOTIFY_PLAYLIST_PERMISSIONS = {
     'playlist-modify-public',
-    'playlist-modify-private'
+    'playlist-modify-private',
+    'playlist-read-private',
+    'playlist-read-collaborative',
 }
 
 SPOTIFY_API_RETRIES = 5
