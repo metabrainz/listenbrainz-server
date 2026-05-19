@@ -51,6 +51,7 @@ export type UserPlaylistsState = {
   sortBy: SortOption;
   view: PlaylistView;
   searchTerm: string;
+  activeSearchQuery: string;
   isSearching: boolean;
   searchPageCount: number;
 };
@@ -70,6 +71,7 @@ type UserPlaylistsClassProps = UserPlaylistsProps & {
   playlistType: PlaylistType;
   handleClickPrevious: () => void;
   handleClickNext: () => void;
+  resetToPageOne: () => void;
   handleSetPlaylistType: (newType: PlaylistType) => void;
   initialView: PlaylistView;
   setPersistentView: (view: PlaylistView) => void;
@@ -99,26 +101,51 @@ export default class UserPlaylists extends React.Component<
 
   constructor(props: UserPlaylistsClassProps) {
     super(props);
-    const { playlists, playlistCount, initialView, initialSort } = props;
+    const { playlists, pageCount, initialView, initialSort } = props;
     this.state = {
       playlists: playlists?.map((pl) => pl.playlist) ?? [],
       sortBy: initialSort,
       view: initialView,
       searchTerm: "",
+      activeSearchQuery: "",
       isSearching: false,
-      searchPageCount: playlistCount,
+      searchPageCount: pageCount,
     };
   }
 
   componentDidUpdate(prevProps: Readonly<UserPlaylistsClassProps>): void {
-    const { playlists, initialView, initialSort, playlistType } = this.props;
-    const { sortBy } = this.state;
+    const {
+      playlists,
+      initialView,
+      initialSort,
+      playlistType,
+      page,
+    } = this.props;
+    const { sortBy, activeSearchQuery } = this.state;
+    const pageChanged = prevProps.page !== page;
+    const isSearchActive = activeSearchQuery.length >= MIN_SEARCH_LENGTH;
+
+    if (pageChanged && isSearchActive) {
+      void this.performPlaylistSearch(activeSearchQuery, page).catch(() => {
+        this.setState({ isSearching: false, activeSearchQuery: "" });
+        toast.error(
+          <ToastMsg
+            title="Search failed"
+            message="Unable to search playlists. Please try again."
+          />
+        );
+      });
+      return;
+    }
+
     if (prevProps.playlistType !== playlistType) {
       this.setState(
         {
           playlists: playlists.map((pl) => pl.playlist),
           sortBy: initialSort,
           view: initialView,
+          activeSearchQuery: "",
+          searchTerm: "",
         },
         () => {
           this.setSortOption(initialSort);
@@ -126,7 +153,7 @@ export default class UserPlaylists extends React.Component<
       );
       return;
     }
-    if (prevProps.playlists !== playlists) {
+    if (prevProps.playlists !== playlists && !activeSearchQuery) {
       this.setState(
         {
           playlists: playlists.map((pl) => pl.playlist),
@@ -270,14 +297,28 @@ export default class UserPlaylists extends React.Component<
     });
   };
 
+  isSearchActive = () =>
+    this.state.activeSearchQuery.length >= MIN_SEARCH_LENGTH;
+
   // Reset to full playlist list when search is cleared or too short
   resetSearchResults = () => {
-    const { playlists, initialSort, pageCount } = this.props;
+    const {
+      playlists,
+      initialSort,
+      pageCount,
+      resetToPageOne,
+      page,
+    } = this.props;
     const { sortBy } = this.state;
+
+    if (page !== 1) {
+      resetToPageOne();
+    }
 
     this.setState(
       {
         playlists: playlists.map((pl) => pl.playlist),
+        activeSearchQuery: "",
         isSearching: false,
         searchPageCount: pageCount,
       },
@@ -288,27 +329,33 @@ export default class UserPlaylists extends React.Component<
     );
   };
 
-  performPlaylistSearch = async (query: string) => {
+  performPlaylistSearch = async (query: string, page: number) => {
     const { APIService } = this.context;
     const { user, initialSort } = this.props;
     const { sortBy } = this.state;
 
-    const result = await APIService.searchPlaylistsForUser(query, user.name);
+    this.setState({ isSearching: true });
+    const offset = (page - 1) * PLAYLISTS_PAGE_SIZE;
+    const result = await APIService.searchPlaylistsForUser(
+      query,
+      user.name,
+      PLAYLISTS_PAGE_SIZE,
+      offset
+    );
 
     const playlistsFromApi = result.playlists ?? [];
     const playlists = playlistsFromApi.map((pl: any) => pl.playlist);
 
     const total = result.playlist_count ?? playlists.length;
-    const pageCount = Math.max(1, Math.ceil(total / PLAYLISTS_PAGE_SIZE));
+    const searchPageCount = Math.max(1, Math.ceil(total / PLAYLISTS_PAGE_SIZE));
 
     this.setState(
       {
         playlists,
-        searchPageCount: pageCount,
+        searchPageCount,
         isSearching: false,
       },
       () => {
-        // Use the current sort if it exists otherwise use default
         const activeSort = sortBy || initialSort;
         this.setSortOption(activeSort);
       }
@@ -321,6 +368,7 @@ export default class UserPlaylists extends React.Component<
     e.preventDefault();
 
     const { searchTerm } = this.state;
+    const { page, resetToPageOne } = this.props;
     const query = searchTerm.trim();
 
     if (!query || query.length < MIN_SEARCH_LENGTH) {
@@ -328,18 +376,38 @@ export default class UserPlaylists extends React.Component<
       return;
     }
 
-    this.setState({ isSearching: true });
+    this.setState({ activeSearchQuery: query, isSearching: true });
 
+    const shouldResetPagination = page !== 1;
     try {
-      await this.performPlaylistSearch(query);
+      if (shouldResetPagination) {
+        resetToPageOne();
+        return;
+      }
+      await this.performPlaylistSearch(query, 1);
     } catch (error) {
-      this.setState({ isSearching: false });
+      this.setState({ isSearching: false, activeSearchQuery: "" });
       toast.error(
         <ToastMsg
           title="Search failed"
           message="Unable to search playlists. Please try again."
         />
       );
+    }
+  };
+
+  handleSearchClickNext = () => {
+    const { page, handleClickNext } = this.props;
+    const { searchPageCount } = this.state;
+    if (page < searchPageCount) {
+      handleClickNext();
+    }
+  };
+
+  handleSearchClickPrevious = () => {
+    const { page, handleClickPrevious } = this.props;
+    if (page > 1) {
+      handleClickPrevious();
     }
   };
 
@@ -362,6 +430,8 @@ export default class UserPlaylists extends React.Component<
       searchPageCount,
     } = this.state;
     const { currentUser } = this.context;
+    const isSearchActive = this.isSearchActive();
+    const activePageCount = isSearchActive ? searchPageCount : pageCount;
 
     return (
       <div role="main" id="playlists-page">
@@ -576,9 +646,15 @@ export default class UserPlaylists extends React.Component<
           onPlaylistDeleted={this.onPlaylistDeleted}
           view={view}
           page={page}
-          handleClickPrevious={handleClickPrevious}
-          handleClickNext={handleClickNext}
-          pageCount={pageCount}
+          handleClickPrevious={
+            isSearchActive
+              ? this.handleSearchClickPrevious
+              : handleClickPrevious
+          }
+          handleClickNext={
+            isSearchActive ? this.handleSearchClickNext : handleClickNext
+          }
+          pageCount={activePageCount}
         >
           {this.isCurrentUserPage() && [
             <Card
@@ -626,8 +702,14 @@ export function UserPlaylistsWrapper() {
   const handleClickNext = () => {
     setSearchParams({
       ...searchParamsObj,
-      page: Math.min(currPageNo + 1, data.pageCount).toString(),
+      page: (currPageNo + 1).toString(),
     });
+  };
+
+  const resetToPageOne = () => {
+    if (currPageNo !== 1) {
+      setSearchParams({ ...searchParamsObj, page: "1" });
+    }
   };
 
   const playlistType =
@@ -658,6 +740,7 @@ export function UserPlaylistsWrapper() {
       playlistType={playlistType}
       handleClickPrevious={handleClickPrevious}
       handleClickNext={handleClickNext}
+      resetToPageOne={resetToPageOne}
       handleSetPlaylistType={handleSetPlaylistType}
       initialView={persistentView}
       setPersistentView={setPersistentView}
