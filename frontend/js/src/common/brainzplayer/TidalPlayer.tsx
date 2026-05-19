@@ -118,7 +118,12 @@ export default class TidalPlayer
         getCredentials: async () => ({
           token: this.accessToken,
           clientId: tidalAuth?.client_id ?? "",
-          requestedScopes: [],
+          requestedScopes: [
+            "playback",
+            "entitlements.read",
+            "search.read",
+            "user.read",
+          ],
         }),
       });
 
