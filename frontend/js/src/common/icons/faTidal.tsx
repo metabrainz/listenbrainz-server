@@ -4,10 +4,7 @@ import {
   IconPrefix,
 } from "@fortawesome/fontawesome-svg-core";
 
-/**
- * Custom FontAwesome-compatible icon definition for Tidal
- * Based on Tidal's "T" mark: two stacked triangles forming a wave
- */
+// Tidal brand mark: 4 equal diamonds — 3 in top row + 1 below center
 export const faTidal: IconDefinition = {
   prefix: "fab" as IconPrefix,
   iconName: "tidal" as IconName,
@@ -16,12 +13,7 @@ export const faTidal: IconDefinition = {
     512,
     [],
     "",
-    [
-      // Outer shape: large downward triangle
-      "M0 0L512 0L256 288Z",
-      // Inner shape: smaller upward triangle
-      "M192 288L320 288L256 512Z",
-    ],
+    "M96 96 L176 176 L96 256 L16 176 Z M256 96 L336 176 L256 256 L176 176 Z M416 96 L496 176 L416 256 L336 176 Z M256 256 L336 336 L256 416 L176 336 Z",
   ],
 };
 
