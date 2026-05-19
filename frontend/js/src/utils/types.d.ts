@@ -9,9 +9,35 @@ declare module "@tidal-music/player" {
       requestedScopes: string[];
     }>;
   }
-  export function init(
+  interface TidalMediaProduct {
+    productId: string;
+    productType: "track" | "video";
+    sourceId: string;
+    sourceType: string;
+    referenceId?: string;
+  }
+  interface TidalBootstrapOptions {
+    outputDevices: boolean;
+    players: Array<{
+      itemTypes: Array<"track" | "video">;
+      player: "browser" | "native" | "shaka";
+    }>;
+  }
+  export function bootstrap(options: TidalBootstrapOptions): void;
+  export function setCredentialsProvider(
     credentialsProvider: TidalCredentialsProvider
-  ): Promise<any>;
+  ): void;
+  export function load(
+    mediaProduct: TidalMediaProduct,
+    assetPosition?: number,
+    prefetch?: boolean
+  ): Promise<void>;
+  export function play(): Promise<void>;
+  export function pause(): void;
+  export function reset(): Promise<void>;
+  export function seek(time: number): Promise<number | void | undefined>;
+  export function setVolumeLevel(level: number): void;
+  export const events: EventTarget;
 }
 declare module "spotify-web-playback-sdk";
 declare module "musickit-typescript";
