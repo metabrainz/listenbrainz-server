@@ -40,9 +40,18 @@ class BulkTagLookup(Query):
 
     def fetch(self, params, source, offset=-1, count=-1):
 
-        mbids = tuple([psycopg2.extensions.adapt(p.recording_mbid) for p in params])
+        mbids = []
+        for p in params:
+            for mbid in p.recording_mbid.split(","):
+                mbid = mbid.strip()
+                if mbid:
+                    mbids.append(mbid)
+
         if len(mbids) > 1000:
             raise BadRequest("Cannot lookup more than 1,000 recordings at a time.")
+
+        if not mbids:
+            return []
 
         with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"]) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
@@ -54,7 +63,7 @@ class BulkTagLookup(Query):
                              FROM tags.lb_tag_radio
                             WHERE recording_mbid IN %s'''
 
-                curs.execute(query, tuple([mbids]))
+                curs.execute(query, (tuple(mbids),))
                 output = []
                 while True:
                     row = curs.fetchone()
