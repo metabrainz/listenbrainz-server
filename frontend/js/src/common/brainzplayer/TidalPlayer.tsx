@@ -14,52 +14,6 @@ import faTidal from "../icons/faTidal";
 
 const TIDAL_SEARCH_API = "https://openapi.tidal.com/v2/search";
 
-// Minimal type declarations for @tidal-music/player SDK
-interface TidalCredentials {
-  token: string;
-  clientId: string;
-  requestedScopes: string[];
-}
-
-interface TidalCredentialsProvider {
-  getCredentials: () => Promise<TidalCredentials>;
-}
-
-interface TidalPlayerSDK {
-  load: (
-    request: { productId: string; productType: string },
-    preload?: boolean
-  ) => Promise<void>;
-  play: () => Promise<void>;
-  pause: () => Promise<void>;
-  reset: () => Promise<void>;
-  seek: (positionMs: number) => void;
-  setVolume: (volume: number) => void;
-  events: {
-    subscribe: (handler: (event: TidalPlayerEvent) => void) => () => void;
-  };
-}
-
-interface TidalPlaybackPayload {
-  state: "NOT_LOADED" | "PLAYING" | "PAUSED" | "STALLED";
-  duration: number;
-  position: number;
-}
-
-interface TidalErrorPayload {
-  code?: string;
-  message?: string;
-}
-
-interface TidalPlayerEvent {
-  type:
-    | "playback-state-change"
-    | "media-product-transition"
-    | "end-of-queue"
-    | "error";
-  payload?: TidalPlaybackPayload | TidalErrorPayload;
-}
-
 export type TidalPlayerState = {};
 
 export type TidalPlayerProps = DataSourceProps & {
@@ -107,8 +61,12 @@ export default class TidalPlayer
   public icon = faTidal;
   public iconColor = dataSourcesInfo.tidal.color;
 
-  private player: TidalPlayerSDK | null = null;
-  private unsubscribeEvents: (() => void) | null = null;
+  private playerModule: typeof import("@tidal-music/player") | null = null;
+  private eventListeners: Array<{
+    name: string;
+    fn: EventListenerOrEventListenerObject;
+  }> = [];
+
   private authenticationRetries = 0;
   private accessToken = "";
 
@@ -129,36 +87,45 @@ export default class TidalPlayer
 
   componentDidUpdate(prevProps: DataSourceProps) {
     const { volume } = this.props;
-    if (prevProps.volume !== volume) {
-      this.player?.setVolume((volume ?? 100) / 100);
+    if (prevProps.volume !== volume && this.playerModule) {
+      this.playerModule.setVolumeLevel(volume ?? 100);
     }
   }
 
   componentWillUnmount() {
-    if (this.unsubscribeEvents) {
-      this.unsubscribeEvents();
+    if (this.playerModule) {
+      this.eventListeners.forEach(({ name, fn }) => {
+        this.playerModule!.events.removeEventListener(name, fn);
+      });
+      this.playerModule.reset();
     }
-    this.player?.reset();
   }
 
   initializePlayer = async (): Promise<void> => {
     const { onInvalidateDataSource } = this.props;
     const { tidalAuth } = this.context;
     try {
-      // Dynamic import to avoid bundling issues if SDK is not installed
       // eslint-disable-next-line import/no-extraneous-dependencies
-      const { init } = await import("@tidal-music/player");
-      const credentialsProvider: TidalCredentialsProvider = {
+      const player = await import("@tidal-music/player");
+      this.playerModule = player;
+
+      player.bootstrap({
+        outputDevices: false,
+        players: [{ itemTypes: ["track"], player: "browser" }],
+      });
+
+      player.setCredentialsProvider({
         getCredentials: async () => ({
           token: this.accessToken,
           clientId: tidalAuth?.client_id ?? "",
           requestedScopes: [],
         }),
-      };
-      this.player = (await init(credentialsProvider)) as TidalPlayerSDK;
-      this.unsubscribeEvents = this.player.events.subscribe(
-        this.handlePlayerEvent
-      );
+      });
+
+      this.bindEvent("playback-state-change", this.onPlaybackStateChange);
+      this.bindEvent("media-product-transition", this.onMediaProductTransition);
+      this.bindEvent("ended", this.onEnded);
+      this.bindEvent("error", this.onError);
     } catch (error) {
       onInvalidateDataSource(
         this as DataSourceTypes,
@@ -167,45 +134,49 @@ export default class TidalPlayer
     }
   };
 
-  handlePlayerEvent = (event: TidalPlayerEvent): void => {
-    const {
-      onTrackEnd,
-      onPlayerPausedChange,
-      onProgressChange,
-      onDurationChange,
-      handleError,
-      onTrackNotFound,
-    } = this.props;
+  private bindEvent = (name: string, fn: (e: Event) => void) => {
+    const bound = fn as EventListenerOrEventListenerObject;
+    this.playerModule!.events.addEventListener(name, bound);
+    this.eventListeners.push({ name, fn: bound });
+  };
 
-    switch (event.type) {
-      case "playback-state-change": {
-        const payload = event.payload as TidalPlaybackPayload;
-        if (payload.state === "PLAYING") {
-          onPlayerPausedChange(false);
-          if (payload.duration) {
-            onDurationChange(payload.duration * 1000);
-          }
-          onProgressChange(payload.position * 1000);
-        } else if (payload.state === "PAUSED" || payload.state === "STALLED") {
-          onPlayerPausedChange(true);
-        }
-        break;
-      }
-      case "end-of-queue":
-        onTrackEnd();
-        break;
-      case "error": {
-        const err = event.payload as TidalErrorPayload;
-        handleError(
-          err?.message ?? "Tidal playback error",
-          "Tidal Player Error"
-        );
-        onTrackNotFound();
-        break;
-      }
-      default:
-        break;
+  onPlaybackStateChange = (event: Event): void => {
+    const { onPlayerPausedChange } = this.props;
+    const { state } = (event as CustomEvent).detail ?? {};
+    if (state === "PLAYING") {
+      onPlayerPausedChange(false);
+    } else if (state === "NOT_PLAYING" || state === "STALLED") {
+      onPlayerPausedChange(true);
     }
+  };
+
+  onMediaProductTransition = (event: Event): void => {
+    const { onDurationChange, onProgressChange } = this.props;
+    const { playbackContext } = (event as CustomEvent).detail ?? {};
+    if (playbackContext?.actualDuration) {
+      onDurationChange(playbackContext.actualDuration * 1000);
+    }
+    onProgressChange(0);
+  };
+
+  onEnded = (event: Event): void => {
+    const { onTrackEnd, onTrackNotFound } = this.props;
+    const { reason } = (event as CustomEvent).detail ?? {};
+    if (reason === "completed") {
+      onTrackEnd();
+    } else if (reason === "error") {
+      onTrackNotFound();
+    }
+  };
+
+  onError = (event: Event): void => {
+    const { handleError, onTrackNotFound } = this.props;
+    const err = (event as CustomEvent).detail ?? event;
+    handleError(
+      err?.message ?? String(err) ?? "Tidal playback error",
+      "Tidal Player Error"
+    );
+    onTrackNotFound();
   };
 
   playListen = (listen: Listen | JSPFTrack): void => {
@@ -219,10 +190,10 @@ export default class TidalPlayer
 
   playByTidalId = async (trackId: string): Promise<void> => {
     const { onInvalidateDataSource } = this.props;
-    if (!this.player) {
+    if (!this.playerModule) {
       await this.initializePlayer();
     }
-    if (!this.player) {
+    if (!this.playerModule) {
       onInvalidateDataSource(
         this as DataSourceTypes,
         "Tidal player not initialized."
@@ -230,11 +201,17 @@ export default class TidalPlayer
       return;
     }
     try {
-      await this.player.load(
-        { productId: trackId, productType: "track" },
+      await this.playerModule.load(
+        {
+          productId: trackId,
+          productType: "track",
+          sourceId: "listenbrainz",
+          sourceType: "listenbrainz",
+        },
+        0,
         false
       );
-      await this.player.play();
+      await this.playerModule.play();
     } catch (error) {
       await this.handleTokenError(
         error,
@@ -334,15 +311,15 @@ export default class TidalPlayer
   };
 
   togglePlay = async (): Promise<void> => {
-    if (!this.player) {
+    if (!this.playerModule) {
       return;
     }
     const { playerPaused, handleError, onTrackNotFound } = this.props;
     try {
       if (playerPaused) {
-        await this.player.play();
+        await this.playerModule.play();
       } else {
-        await this.player.pause();
+        this.playerModule.pause();
       }
     } catch (error) {
       handleError(error.message, "Tidal playback error");
@@ -351,11 +328,12 @@ export default class TidalPlayer
   };
 
   stop = (): void => {
-    this.player?.pause();
+    this.playerModule?.pause();
   };
 
   seekToPositionMs = (msTimecode: number): void => {
-    this.player?.seek(msTimecode);
+    // SDK seek takes seconds
+    this.playerModule?.seek(msTimecode / 1000);
   };
 
   canSearchAndPlayTracks = (): boolean => {
