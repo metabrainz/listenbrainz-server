@@ -2,16 +2,17 @@
 import abc
 import re
 from abc import ABC
+from contextlib import closing
 from typing import Optional
 from uuid import UUID
 
 import psycopg2
 import psycopg2.extras
 from datasethoster import Query
-from flask import current_app
 from pydantic import BaseModel
 from unidecode import unidecode
 from listenbrainz import config
+from listenbrainz.db import timescale
 
 
 class RecordingLookupBaseOutput(BaseModel):
@@ -67,42 +68,42 @@ class RecordingLookupBaseQuery(Query, ABC):
 
         lookup_strings = tuple(lookup_strings)
 
-        with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"]) as conn:
-            with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-                curs.execute(f"""
-                    SELECT artist_credit_name
-                         , artist_credit_id
-                         , artist_mbids::TEXT[]
-                         , release_name
-                         , release_mbid
-                         , recording_name
-                         , recording_mbid::TEXT
-                         , combined_lookup
-                      FROM {self.get_table_name()}
-                     WHERE combined_lookup IN %s""", (lookup_strings,))
+        with closing(timescale.engine.raw_connection()) as conn, \
+                conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+            curs.execute(f"""
+                SELECT artist_credit_name
+                     , artist_credit_id
+                     , artist_mbids::TEXT[]
+                     , release_name
+                     , release_mbid
+                     , recording_name
+                     , recording_mbid::TEXT
+                     , combined_lookup
+                  FROM {self.get_table_name()}
+                 WHERE combined_lookup IN %s""", (lookup_strings,))
 
-                results = []
-                while True:
-                    data = curs.fetchone()
-                    if not data:
-                        break
+            results = []
+            while True:
+                data = curs.fetchone()
+                if not data:
+                    break
 
-                    data = dict(data)
-                    index = string_index[data["combined_lookup"]]
-                    param = params[index].dict()
-                    data["recording_arg"] = param["recording_name"]
-                    data["artist_credit_arg"] = param["artist_credit_name"]
-                    if param.get("release_name") is not None:
-                        data["release_name_arg"] = param.get("release_name")
-                    data["index"] = index
-                    results.append(RecordingLookupBaseOutput(**data))
+                data = dict(data)
+                index = string_index[data["combined_lookup"]]
+                param = params[index].dict()
+                data["recording_arg"] = param["recording_name"]
+                data["artist_credit_arg"] = param["artist_credit_name"]
+                if param.get("release_name") is not None:
+                    data["release_name_arg"] = param.get("release_name")
+                data["index"] = index
+                results.append(RecordingLookupBaseOutput(**data))
 
-                    if self.debug:
-                        self.log_lines.append(
-                            "exact match: '%s' '%s' '%s' %s" %
-                            (data['artist_credit_name'],
-                             data['recording_name'],
-                             data['release_name'],
-                             data['recording_mbid']))
+                if self.debug:
+                    self.log_lines.append(
+                        "exact match: '%s' '%s' '%s' %s" %
+                        (data['artist_credit_name'],
+                         data['recording_name'],
+                         data['release_name'],
+                         data['recording_mbid']))
 
-                return results
+            return results

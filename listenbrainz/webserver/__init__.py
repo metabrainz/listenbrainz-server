@@ -190,8 +190,11 @@ def create_app(debug=None, bypass_pgbouncer=False, use_pool=False, pool_size_ove
         if app.config.get("SQLALCHEMY_METABRAINZ_URI", None):
             donation.init_meb_db_connection(app.config["SQLALCHEMY_METABRAINZ_URI"])
 
-    @app.teardown_request
+    @app.teardown_appcontext
     def close_connection(exception):
+        # teardown_appcontext fires for both web requests (app context wraps
+        # the request context) and bare app contexts (e.g. the mbid mapping
+        # writer's worker threads that use `with app.app_context():`).
         _db_conn = getattr(g, "_db_conn", None)
         if _db_conn is not None:
             _db_conn.close()
@@ -201,6 +204,11 @@ def create_app(debug=None, bypass_pgbouncer=False, use_pool=False, pool_size_ove
         if _ts_conn is not None:
             _ts_conn.close()
             del g._ts_conn
+
+        _meb_conn = getattr(g, "_meb_conn", None)
+        if _meb_conn is not None:
+            _meb_conn.close()
+            del g._meb_conn
 
     # Redis connection
     from listenbrainz.webserver.redis_connection import init_redis_connection
