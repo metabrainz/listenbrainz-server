@@ -1,3 +1,5 @@
+from contextlib import closing
+
 import psycopg2
 import psycopg2.extras
 
@@ -34,7 +36,7 @@ class TagSimilarityQuery(Query):
     def fetch(self, params, source, offset=0, count=50):
 
         tag = params[0].tag
-        with timescale.engine.raw_connection() as conn, \
+        with closing(timescale.engine.raw_connection()) as conn, \
                 conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
             curs.execute(
                 f"""SELECT tag_0

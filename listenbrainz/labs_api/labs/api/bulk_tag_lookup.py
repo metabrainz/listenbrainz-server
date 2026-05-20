@@ -1,3 +1,4 @@
+from contextlib import closing
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -55,7 +56,7 @@ class BulkTagLookup(Query):
             return []
 
         with (
-            timescale.engine.raw_connection() as conn,
+            closing(timescale.engine.raw_connection()) as conn,
             conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs
         ):
             query = '''SELECT recording_mbid

@@ -2,6 +2,7 @@
 import abc
 import re
 from abc import ABC
+from contextlib import closing
 from typing import Optional
 from uuid import UUID
 
@@ -67,7 +68,7 @@ class RecordingLookupBaseQuery(Query, ABC):
 
         lookup_strings = tuple(lookup_strings)
 
-        with timescale.engine.raw_connection() as conn, \
+        with closing(timescale.engine.raw_connection()) as conn, \
                 conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
             curs.execute(f"""
                 SELECT artist_credit_name

@@ -1,3 +1,4 @@
+from contextlib import closing
 from typing import Optional
 from uuid import UUID
 
@@ -57,7 +58,7 @@ class RecordingFromRecordingMBIDQuery(Query):
 
         mbids = [p.recording_mbid for p in params]
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-                timescale.engine.raw_connection() as ts_conn, \
+                closing(timescale.engine.raw_connection()) as ts_conn, \
                 mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
                 ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
             output = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids)
