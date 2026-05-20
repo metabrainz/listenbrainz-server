@@ -15,7 +15,7 @@ import { orderBy } from "lodash";
 import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useLoaderData, useSearchParams } from "react-router";
+import { useLoaderData, useNavigation, useSearchParams } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { useAtom } from "jotai";
@@ -87,6 +87,7 @@ type UserPlaylistsClassProps = UserPlaylistsProps & {
   playlistType: PlaylistType;
   searchQuery: string;
   urlSort: SortOption;
+  isLoading: boolean;
   handleClickPrevious: () => void;
   handleClickNext: () => void;
   handleSetPlaylistType: (newType: PlaylistType) => void;
@@ -198,6 +199,38 @@ export default class UserPlaylists extends React.Component<
   isSearchActive = () => {
     const { searchQuery } = this.props;
     return searchQuery.length >= MIN_SEARCH_LENGTH;
+  };
+
+  getEmptyMessage = (): string | undefined => {
+    const { playlistCount, searchQuery, isLoading } = this.props;
+    const { playlists } = this.state;
+
+    if (isLoading || playlists.length > 0) {
+      return undefined;
+    }
+    if (this.isSearchActive()) {
+      return `No playlists match "${searchQuery}"`;
+    }
+    if (playlistCount === 0) {
+      return "No playlists to show yet. Come back later !";
+    }
+
+    return undefined;
+  };
+
+  handleSearchTermChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const searchTerm = e.target.value;
+    this.setState({ searchTerm });
+
+    if (!searchTerm.trim() && this.isSearchActive()) {
+      this.props.onSearchSubmit("");
+    }
+  };
+
+  handleSearchKeyEsc = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Escape") {
+      e.currentTarget.blur();
+    }
   };
 
   alertNotAuthorized = () => {
@@ -457,11 +490,10 @@ export default class UserPlaylists extends React.Component<
                   className="form-control"
                   placeholder="Search playlists"
                   value={searchTerm}
-                  onChange={(e) =>
-                    this.setState({ searchTerm: e.target.value })
-                  }
+                  onChange={this.handleSearchTermChange}
+                  onKeyDown={this.handleSearchKeyEsc}
                 />
-                <button type="submit">
+                <button type="submit" disabled={this.props.isLoading}>
                   <FontAwesomeIcon icon={faMagnifyingGlass as IconProp} />
                 </button>
               </form>
@@ -591,6 +623,8 @@ export default class UserPlaylists extends React.Component<
           onPlaylistDeleted={this.onPlaylistDeleted}
           view={view}
           page={page}
+          isLoading={this.props.isLoading}
+          emptyMessage={this.getEmptyMessage()}
           handleClickPrevious={handleClickPrevious}
           handleClickNext={handleClickNext}
           pageCount={pageCount}
@@ -631,6 +665,8 @@ const parseUrlSort = (sortParam: string | null): SortOption => {
 
 export function UserPlaylistsWrapper() {
   const data = useLoaderData() as UserPlaylistsLoaderData;
+  const navigation = useNavigation();
+  const isLoading = navigation.state === "loading";
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParamsObj = getObjectForURLSearchParams(searchParams);
   const skipTypeRestoreRef = React.useRef(false);
@@ -719,6 +755,7 @@ export function UserPlaylistsWrapper() {
       playlistType={playlistType}
       searchQuery={searchQuery}
       urlSort={urlSort}
+      isLoading={isLoading}
       handleClickPrevious={handleClickPrevious}
       handleClickNext={handleClickNext}
       handleSetPlaylistType={handleSetPlaylistType}
