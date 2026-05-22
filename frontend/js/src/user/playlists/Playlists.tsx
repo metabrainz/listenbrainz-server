@@ -493,7 +493,11 @@ export default class UserPlaylists extends React.Component<
                   onChange={this.handleSearchTermChange}
                   onKeyDown={this.handleSearchKeyEsc}
                 />
-                <button type="submit" disabled={this.props.isLoading}>
+                <button
+                  type="submit"
+                  disabled={this.props.isLoading}
+                  aria-label="Search playlists"
+                >
                   <FontAwesomeIcon icon={faMagnifyingGlass as IconProp} />
                 </button>
               </form>
