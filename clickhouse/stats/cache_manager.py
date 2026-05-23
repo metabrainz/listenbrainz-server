@@ -2,26 +2,23 @@
 """
 Stats Cache Manager
 
-Manages the caching of top 1000 entity stats (artists, recordings, release groups)
-in CouchDB with smart invalidation.
+Computes top 1000 entity stats (artists, recordings, release groups)
+from ClickHouse and emits RabbitMQ result messages.
 
 Architecture:
     - ClickHouse stores id-only listens and daily aggregated stats (user_{entity}_stats_daily)
     - MV automatically adds +1 for each new listen
-    - CouchDB caches computed top 1000 per user/entity/time_range
     - Cache state tracked to only update affected users/time_ranges
 """
 
+import json
 import logging
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Iterator, Optional
+from datetime import date, datetime, timezone
+from typing import Any, Callable, Iterator, Optional
 
 import clickhouse_connect
-import orjson
-import requests
 
 from clickhouse.stats.schema import ensure_stats_schema
 
@@ -94,13 +91,43 @@ TIME_RANGES = {
 USER_STATS_CACHE_STATE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS user_stats_cache_state (
     user_id UInt32,
-    stat_type String,              -- 'artist', 'recording', 'release_group'
+    stat_type String,              -- 'artists', 'recordings', 'release_groups'
     time_range String,             -- 'all_time', 'this_week', etc.
     last_computed_created DateTime64(3),  -- max(created) from listens when cache was computed
     updated_at DateTime64(3) DEFAULT now64(3)
 ) ENGINE = ReplacingMergeTree(updated_at)
 ORDER BY (user_id, stat_type, time_range)
 """
+
+OPEN_ENDED_TIME_RANGES = {'all_time', 'this_week', 'this_month', 'this_year'}
+
+
+def _identity(value: Any) -> Any:
+    return value
+
+
+def _json_array(value: Any) -> list[dict]:
+    if not value:
+        return []
+    if isinstance(value, list):
+        return value
+    try:
+        decoded = json.loads(value)
+    except (TypeError, json.JSONDecodeError):
+        return []
+    return decoded if isinstance(decoded, list) else []
+
+
+def _non_empty_strings(value: Any) -> list[str]:
+    return [item for item in (value or []) if item]
+
+
+@dataclass(frozen=True)
+class DimensionField:
+    column: str
+    output_key: str
+    transform: Callable[[Any], Any] = _identity
+
 
 @dataclass
 class CacheConfig:
@@ -110,79 +137,89 @@ class CacheConfig:
     ch_database: str = 'default'
     ch_username: str = 'default'
     ch_password: str = ''
-    couch_host: str = 'localhost'
-    couch_port: int = 5984
-    couch_username: str = 'admin'
-    couch_password: str = ''
-    couch_db_prefix: str = ''  # Optional prefix for database names
-    couch_workers: int = 3  # Number of threads for CouchDB inserts
     top_n: int = 1000
 
 
 @dataclass
 class EntityConfig:
-    """Configuration for a specific entity type (artist, recording, release_group)."""
-    entity_type: str  # 'artist', 'recording', 'release_group'
+    """Configuration for a specific entity type."""
+    entity_type: str  # 'artists', 'recordings', 'release_groups'
     stats_table: str  # e.g., 'user_artist_stats_daily'
     dimension_table: str  # e.g., 'artist_metadata'
     id_column: str  # e.g., 'artist_id'
-    # List of (dim_column, output_key) tuples for dimension table fields
-    # output_key is the name used in the output dict (may differ from dim_column)
-    dimension_fields: list[tuple[str, str]] = field(default_factory=list)
+    dimension_fields: list[DimensionField] = field(default_factory=list)
 
 
 # Entity configurations for artists, recordings, and release groups
 # Artist uses unified artist_id: MB ID (small) for mapped, hash (large) for unmapped
 ARTIST_CONFIG = EntityConfig(
-    entity_type='artist',
+    entity_type='artists',
     stats_table='user_artist_stats_daily',
     dimension_table='artist_metadata',
     id_column='artist_id',  # Unified ID: MB ID or hash
     dimension_fields=[
-        ('artist_mbid', 'artist_mbid'),
-        ('artist_name', 'artist_name'),
+        DimensionField('artist_mbid', 'artist_mbid'),
+        DimensionField('artist_name', 'artist_name'),
     ],
 )
 
 RECORDING_CONFIG = EntityConfig(
-    entity_type='recording',
+    entity_type='recordings',
     stats_table='user_recording_stats_daily',
     dimension_table='recording_metadata',
     id_column='recording_id',
     dimension_fields=[
-        ('recording_mbid', 'recording_mbid'),
-        ('recording_name', 'track_name'),  # Output as 'track_name' per data model
-        ('artist_name', 'artist_name'),
-        ('artist_credit_mbids', 'artist_mbids'),  # Output as 'artist_mbids' per data model
-        ('release_name', 'release_name'),
-        ('release_mbid', 'release_mbid'),
-        ('artists', 'artists'),
-        ('caa_id', 'caa_id'),
-        ('caa_release_mbid', 'caa_release_mbid'),
+        DimensionField('recording_mbid', 'recording_mbid'),
+        DimensionField('recording_name', 'track_name'),
+        DimensionField('artist_name', 'artist_name'),
+        DimensionField('artist_credit_mbids', 'artist_mbids', _non_empty_strings),
+        DimensionField('release_name', 'release_name'),
+        DimensionField('release_mbid', 'release_mbid'),
+        DimensionField('artists', 'artists', _json_array),
+        DimensionField('caa_id', 'caa_id'),
+        DimensionField('caa_release_mbid', 'caa_release_mbid'),
     ],
 )
 
 RELEASE_GROUP_CONFIG = EntityConfig(
-    entity_type='release_group',
+    entity_type='release_groups',
     stats_table='user_release_group_stats_daily',
     dimension_table='release_group_metadata',
     id_column='release_group_id',
     dimension_fields=[
-        ('release_group_mbid', 'release_group_mbid'),
-        ('release_group_name', 'release_group_name'),
-        ('artist_name', 'artist_name'),
-        ('artist_credit_mbids', 'artist_mbids'),  # Output as 'artist_mbids' per data model
-        ('artists', 'artists'),
-        ('caa_id', 'caa_id'),
-        ('caa_release_mbid', 'caa_release_mbid'),
+        DimensionField('release_group_mbid', 'release_group_mbid'),
+        DimensionField('release_group_name', 'release_group_name'),
+        DimensionField('artist_name', 'artist_name'),
+        DimensionField('artist_credit_mbids', 'artist_mbids', _non_empty_strings),
+        DimensionField('artists', 'artists', _json_array),
+        DimensionField('caa_id', 'caa_id'),
+        DimensionField('caa_release_mbid', 'caa_release_mbid'),
     ],
 )
 
 ENTITY_CONFIGS = {
-    'artist': ARTIST_CONFIG,
-    'recording': RECORDING_CONFIG,
-    'release_group': RELEASE_GROUP_CONFIG,
+    'artists': ARTIST_CONFIG,
+    'recordings': RECORDING_CONFIG,
+    'release_groups': RELEASE_GROUP_CONFIG,
 }
+
+def _to_utc_timestamp(value: date | datetime) -> int:
+    if isinstance(value, datetime):
+        dt = value
+    else:
+        dt = datetime.combine(value, datetime.min.time())
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return int(dt.timestamp())
+
+
+def _format_entity_tuple(entity_tuple: tuple, dimension_fields: list[DimensionField]) -> dict:
+    entity = {
+        field.output_key: field.transform(value)
+        for field, value in zip(dimension_fields, entity_tuple[:-1], strict=True)
+    }
+    entity['listen_count'] = entity_tuple[-1]
+    return entity
 
 
 def get_cache_config_from_config(config_module) -> CacheConfig:
@@ -193,28 +230,20 @@ def get_cache_config_from_config(config_module) -> CacheConfig:
         ch_database=getattr(config_module, 'CLICKHOUSE_DATABASE', 'default'),
         ch_username=getattr(config_module, 'CLICKHOUSE_USERNAME', 'default'),
         ch_password=getattr(config_module, 'CLICKHOUSE_PASSWORD', ''),
-        couch_host=getattr(config_module, 'COUCHDB_HOST', 'localhost'),
-        couch_port=getattr(config_module, 'COUCHDB_PORT', 5984),
-        couch_username=getattr(config_module, 'COUCHDB_USER', 'admin'),
-        couch_password=getattr(config_module, 'COUCHDB_ADMIN_KEY', ''),
-        couch_db_prefix=getattr(config_module, 'STATS_COUCH_DB_PREFIX', ''),
-        couch_workers=getattr(config_module, 'STATS_COUCH_WORKERS', 3),
         top_n=getattr(config_module, 'STATS_TOP_N', 1000),
     )
 
 
 class StatsCacheManager:
-    """Manages entity stats caching between ClickHouse and CouchDB."""
+    """Manages ClickHouse stats computation and RabbitMQ result messages."""
 
     def __init__(self, config: CacheConfig, entity_config: EntityConfig):
         self.config = config
         self.entity_config = entity_config
         self.ch_client = None
-        self.couch_base_url = None
 
     def connect(self):
-        """Establish connections to ClickHouse and CouchDB."""
-        # ClickHouse
+        """Establish a connection to ClickHouse."""
         self.ch_client = clickhouse_connect.get_client(
             host=self.config.ch_host,
             port=self.config.ch_port,
@@ -228,30 +257,19 @@ class StatsCacheManager:
         ensure_stats_schema(self.ch_client)
         self.ch_client.command(USER_STATS_CACHE_STATE_SCHEMA)
 
-        # CouchDB base URL with auth
-        self.couch_base_url = (
-            f"http://{self.config.couch_username}:{self.config.couch_password}"
-            f"@{self.config.couch_host}:{self.config.couch_port}"
-        )
-        logger.info(f"CouchDB configured at {self.config.couch_host}:{self.config.couch_port}")
-
-    def get_couch_db_name(self, entity_type: str, time_range: str, with_timestamp: bool = False) -> str:
+    def get_stats_database_name(self, entity_type: str, time_range: str, with_timestamp: bool = False) -> str:
         """
-        Generate CouchDB database name for entity type and time range.
+        Generate ListenBrainz stats database name for entity type and time range.
 
         Args:
-            entity_type: The entity type (artist, recording, release_group)
+            entity_type: The entity type (artists, recordings, release_groups)
             time_range: The time range (all_time, this_week, etc.)
             with_timestamp: If True, append YYYYMMDD timestamp for new database creation
 
         Returns:
-            Database name like 'clk_artist_all_time' or 'clk_artist_all_time_20240115'
+            Database name like 'artists_all_time' or 'artists_all_time_20240115'
         """
-        base_name = f"{entity_type}_{time_range}"
-        if self.config.couch_db_prefix:
-            db_name = f"{self.config.couch_db_prefix}_{base_name}"
-        else:
-            db_name = base_name
+        db_name = f"{entity_type}_{time_range}"
 
         if with_timestamp:
             timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d")
@@ -259,36 +277,9 @@ class StatsCacheManager:
 
         return db_name
 
-    def get_couch_db_prefix(self, entity_type: str, time_range: str) -> str:
-        """Get database prefix for listing/deleting old databases."""
-        base_name = f"{entity_type}_{time_range}"
-        if self.config.couch_db_prefix:
-            return f"{self.config.couch_db_prefix}_{base_name}"
-        return base_name
-
-    def create_couch_db(self, db_name: str) -> bool:
-        """Create a CouchDB database. Returns True if created, False if already exists."""
-        url = f"{self.couch_base_url}/{db_name}"
-        response = requests.put(url)
-        if response.status_code == 201:
-            logger.info(f"Created CouchDB database: {db_name}")
-            return True
-        elif response.status_code == 412:  # Already exists
-            return False
-        response.raise_for_status()
-        return False
-
-    def delete_couch_db(self, db_name: str) -> bool:
-        """Delete a CouchDB database. Returns True if deleted."""
-        url = f"{self.couch_base_url}/{db_name}"
-        response = requests.delete(url)
-        if response.status_code == 200:
-            logger.info(f"Deleted CouchDB database: {db_name}")
-            return True
-        elif response.status_code == 404:  # Doesn't exist
-            return False
-        response.raise_for_status()
-        return False
+    def get_stats_database_prefix(self, entity_type: str, time_range: str) -> str:
+        """Get database prefix for finding the current ListenBrainz stats database."""
+        return f"{entity_type}_{time_range}"
 
     def get_cache_state(self) -> dict[str, dict]:
         """Get current cache state for all time ranges."""
@@ -397,6 +388,15 @@ class StatsCacheManager:
         )
         return result.first_row[0], result.first_row[1]
 
+    def get_period_timestamps(self, time_range: str, period_start, period_end) -> tuple[int, int]:
+        """Return API from/to timestamps for a stats range."""
+        from_ts = _to_utc_timestamp(period_start)
+        if time_range in OPEN_ENDED_TIME_RANGES:
+            to_ts = int(datetime.now(tz=timezone.utc).timestamp())
+        else:
+            to_ts = _to_utc_timestamp(period_end)
+        return from_ts, to_ts
+
     def on_period_rollover(
         self,
         time_range: str,
@@ -411,25 +411,23 @@ class StatsCacheManager:
             old_period_start: The previous period start date
             new_period_start: The new/current period start date
         """
-        entity_type = self.entity_config.entity_type
-        db_name = self.get_couch_db_name(entity_type, time_range)
         logger.info(
             f"Period rollover for {time_range}: {old_period_start} -> {new_period_start}. "
-            f"Database '{db_name}' should be cleared."
+            "User cache state will be cleared and a new stats database will be requested."
         )
-        # TODO: Implement cache cleanup
 
     def _build_select_fields(self) -> str:
         """Build SELECT clause for dimension fields."""
         fields = []
-        for dim_col, _ in self.entity_config.dimension_fields:
-            fields.append(f'd.{dim_col}')
+        for dim_field in self.entity_config.dimension_fields:
+            fields.append(f'd.{dim_field.column}')
         return ', '.join(fields)
 
     def _build_tuple_fields(self) -> str:
         """Build tuple fields for groupArray."""
         fields = ['listen_count']
-        for dim_col, _ in self.entity_config.dimension_fields:
+        for dim_field in self.entity_config.dimension_fields:
+            dim_col = dim_field.column
             if dim_col.endswith('_mbid') and dim_col != 'artist_credit_mbids':
                 fields.append(f"nullIf({dim_col}, '')")
             else:
@@ -524,14 +522,8 @@ class StatsCacheManager:
         for row in result.result_rows:
             user_id, entities_tuples = row
             user_entities[user_id] = [
-                {
-                    **{
-                        self.entity_config.dimension_fields[i][1]: t[i]
-                        for i in range(len(self.entity_config.dimension_fields))
-                    },
-                    'listen_count': t[len(self.entity_config.dimension_fields)],
-                }
-                for t in entities_tuples
+                _format_entity_tuple(entity_tuple, self.entity_config.dimension_fields)
+                for entity_tuple in entities_tuples
             ]
 
         return user_entities
@@ -552,7 +544,7 @@ class StatsCacheManager:
         """
         entity_type = self.entity_config.entity_type
         return {
-            'type': 'couchdb_data_start',
+            'type': 'clk_stats_database_start',
             'entity_type': entity_type,
             'time_range': time_range,
             'database': database,
@@ -574,7 +566,7 @@ class StatsCacheManager:
         """
         entity_type = self.entity_config.entity_type
         return {
-            'type': 'couchdb_data_end',
+            'type': 'clk_stats_database_end',
             'entity_type': entity_type,
             'time_range': time_range,
             'database': database,
@@ -584,7 +576,10 @@ class StatsCacheManager:
         self,
         time_range: str,
         user_results: dict[int, list[dict]],
-        database: str,
+        from_ts: int,
+        to_ts: int,
+        database: str | None = None,
+        database_prefix: str | None = None,
         batch_size: int = 100,
     ) -> Iterator[dict]:
         """
@@ -596,7 +591,10 @@ class StatsCacheManager:
         Args:
             time_range: The time range for these stats
             user_results: Dict mapping user_id to their stats list
-            database: The database name to insert into
+            from_ts: Start timestamp for this stats range
+            to_ts: End timestamp for this stats range
+            database: The exact database name to insert into
+            database_prefix: Prefix used by LB to select the latest stats database
             batch_size: Number of users per message batch
 
         Yields:
@@ -615,111 +613,22 @@ class StatsCacheManager:
                 batch_data.append({
                     'user_id': user_id,
                     'count': len(stats),
-                    entity_type: stats,
+                    'data': stats,
                 })
 
-            yield {
+            message = {
                 'type': 'clk_user_entity',
-                'entity_type': entity_type,
-                'time_range': time_range,
-                'database': database,
+                'entity': entity_type,
+                'stats_range': time_range,
+                'from_ts': from_ts,
+                'to_ts': to_ts,
                 'data': batch_data,
             }
-
-    def update_cache_batch(
-        self,
-        time_range: str,
-        user_results: dict[int, list[dict]],
-    ):
-        """Batch update CouchDB cache for multiple users using bulk API with threading."""
-        entity_type = self.entity_config.entity_type
-        db_name = self.get_couch_db_name(entity_type, time_range)
-
-        docs = []
-        for user_id, stats in user_results.items():
-            doc = {
-                '_id': str(user_id),
-                'user_id': user_id,
-                'computed_at': datetime.now(tz=timezone.utc).isoformat(),
-                'count': len(stats),
-                'stats': stats,
-            }
-            docs.append(doc)
-
-        if not docs:
-            return
-
-        self.create_couch_db(db_name)
-
-        num_workers = self.config.couch_workers
-        chunk_size = (len(docs) + num_workers - 1) // num_workers
-        chunks = [docs[i:i + chunk_size] for i in range(0, len(docs), chunk_size)]
-
-        couch_start = time.perf_counter()
-
-        with ThreadPoolExecutor(max_workers=num_workers) as executor:
-            futures = [
-                executor.submit(self._insert_docs, db_name, chunk)
-                for chunk in chunks
-            ]
-            for future in as_completed(futures):
-                future.result()
-
-        couch_elapsed = time.perf_counter() - couch_start
-        logger.info(f"CouchDB insert took {couch_elapsed:.2f}s for {len(docs)} docs ({num_workers} workers)")
-
-    def _insert_docs(self, db_name: str, docs: list[dict]):
-        """Insert documents using CouchDB bulk API with conflict handling."""
-        if not docs:
-            return
-
-        bulk_url = f"{self.couch_base_url}/{db_name}/_bulk_docs"
-        data = orjson.dumps({"docs": docs})
-
-        response = requests.post(
-            bulk_url,
-            data=data,
-            headers={"Content-Type": "application/json"}
-        )
-        response.raise_for_status()
-
-        conflict_doc_ids = []
-        for doc_status in response.json():
-            if doc_status.get("error") == "conflict":
-                conflict_doc_ids.append(doc_status["id"])
-
-        if not conflict_doc_ids:
-            return
-
-        bulk_get_url = f"{self.couch_base_url}/{db_name}/_bulk_get"
-        conflict_request = orjson.dumps({"docs": [{"id": doc_id} for doc_id in conflict_doc_ids]})
-
-        response = requests.post(
-            bulk_get_url,
-            data=conflict_request,
-            headers={"Content-Type": "application/json"}
-        )
-        response.raise_for_status()
-
-        revs_map = {}
-        for result in response.json()["results"]:
-            existing_doc = result["docs"][0]["ok"]
-            revs_map[existing_doc["_id"]] = existing_doc["_rev"]
-
-        docs_to_update = []
-        for doc in docs:
-            if doc["_id"] in revs_map:
-                doc["_rev"] = revs_map[doc["_id"]]
-                docs_to_update.append(doc)
-
-        if docs_to_update:
-            data = orjson.dumps({"docs": docs_to_update})
-            response = requests.post(
-                bulk_url,
-                data=data,
-                headers={"Content-Type": "application/json"}
-            )
-            response.raise_for_status()
+            if database is not None:
+                message['database'] = database
+            if database_prefix is not None:
+                message['database_prefix'] = database_prefix
+            yield message
 
     def update_cache_state(
         self,
@@ -786,25 +695,10 @@ class StatsCacheManager:
         self,
         time_range: str,
         user_ids: list[int],
-    ) -> int:
-        """Refresh cache for multiple users for a specific time range."""
-        if not user_ids:
-            return 0
-
-        user_entities = self.compute_top_entities_batch(time_range, user_ids, self.config.top_n)
-        self.update_cache_batch(time_range, user_entities)
-
-        total_entities = sum(len(e) for e in user_entities.values())
-        entity_type = self.entity_config.entity_type
-        logger.info(f"  {time_range}: {len(user_ids)} users, {total_entities} total {entity_type}s cached")
-
-        return len(user_ids)
-
-    def refresh_time_range_batch_for_rmq(
-        self,
-        time_range: str,
-        user_ids: list[int],
-        database: str,
+        from_ts: int,
+        to_ts: int,
+        database: str | None = None,
+        database_prefix: str | None = None,
         message_batch_size: int = 100,
     ) -> Iterator[dict]:
         """
@@ -813,11 +707,14 @@ class StatsCacheManager:
         Args:
             time_range: The time range to compute stats for
             user_ids: List of user IDs to process
-            database: The database name to include in messages
+            from_ts: Start timestamp for this stats range
+            to_ts: End timestamp for this stats range
+            database: The exact database name to include in messages
+            database_prefix: Prefix used by LB to select the latest stats database
             message_batch_size: Number of users per RMQ message
 
         Yields:
-            RMQ messages with stats data
+            RabbitMQ messages with stats data
         """
         if not user_ids:
             return
@@ -828,78 +725,38 @@ class StatsCacheManager:
         entity_type = self.entity_config.entity_type
         logger.info(f"  {time_range}: {len(user_ids)} users, {total_entities} total {entity_type}s computed")
 
-        yield from self.generate_stats_messages(time_range, user_entities, database, message_batch_size)
+        yield from self.generate_stats_messages(
+            time_range,
+            user_entities,
+            from_ts,
+            to_ts,
+            database=database,
+            database_prefix=database_prefix,
+            batch_size=message_batch_size,
+        )
 
-    def run_hourly_job(self, batch_size: int = 1000):
-        """
-        Run the hourly job:
-        For each time_range, find stale users and refresh them.
-        """
-        entity_type = self.entity_config.entity_type
-        logger.info(f"Starting hourly job for {entity_type}...")
-
-        cache_state = self.get_cache_state()
-
-        total_users_refreshed = 0
-        for time_range, config in TIME_RANGES.items():
-            state = cache_state.get(time_range, {})
-            cached_period_start = state.get('period_start')
-
-            period_start, period_end = self.get_period_bounds(time_range)
-
-            if cached_period_start is not None and cached_period_start != period_start:
-                logger.info(f"{time_range}: period rollover detected ({cached_period_start} -> {period_start})")
-                self.on_period_rollover(time_range, cached_period_start, period_start)
-                self.clear_user_cache_state_for_time_range(time_range)
-
-            stale_users = self.get_stale_users(time_range, period_start, period_end)
-
-            if not stale_users:
-                logger.info(f"{time_range}: no stale users")
-                continue
-
-            logger.info(f"{time_range}: refreshing {len(stale_users)} users")
-
-            max_created = self.get_listen_max_created()
-
-            users_processed = 0
-            for i in range(0, len(stale_users), batch_size):
-                batch = stale_users[i:i + batch_size]
-                try:
-                    users_processed += self.refresh_time_range_batch(time_range, batch)
-                    self.update_user_cache_state(batch, time_range, max_created)
-                except Exception as e:
-                    logger.error(f"Error refreshing {time_range} batch {i}: {e}")
-
-            if users_processed > 0:
-                self.update_cache_state(time_range, period_start, max_created)
-
-            total_users_refreshed += users_processed
-
-        logger.info(f"Hourly job for {entity_type} completed. Refreshed {total_users_refreshed} user/time_range combinations")
-
-    def run_hourly_job_for_rmq(
+    def run_hourly_job(
         self,
         batch_size: int = 1000,
         message_batch_size: int = 100,
     ) -> Iterator[dict]:
         """
-        Run the hourly job and yield RMQ messages instead of writing to CouchDB.
+        Run the hourly job and yield RabbitMQ result messages.
 
         For each time_range:
         - If period rollover detected: yield start/data/end messages (new database)
         - Otherwise: yield data messages only (append to existing database)
 
         Message flow for rollover:
-        1. couchdb_data_start - create new database
+        1. clk_stats_database_start - create new database
         2. clk_user_entity (batched) - stats data
-        3. couchdb_data_end - cleanup old databases
+        3. clk_stats_database_end - cleanup old databases
 
         Yields:
-            RMQ messages with stats data
+            RabbitMQ messages with stats data
         """
         entity_type = self.entity_config.entity_type
-        logger.info(f"Starting hourly job for {entity_type} (RMQ mode)...")
+        logger.info(f"Starting hourly job for {entity_type}...")
 
         cache_state = self.get_cache_state()
 
@@ -911,6 +768,7 @@ class StatsCacheManager:
             cached_period_start = state.get('period_start')
 
             period_start, period_end = self.get_period_bounds(time_range)
+            from_ts, to_ts = self.get_period_timestamps(time_range, period_start, period_end)
 
             # Check for period rollover
             is_rollover = cached_period_start is not None and cached_period_start != period_start
@@ -929,13 +787,14 @@ class StatsCacheManager:
 
             # For rollover, create new database with timestamp; otherwise use existing
             if is_rollover:
-                database = self.get_couch_db_name(entity_type, time_range, with_timestamp=True)
+                database = self.get_stats_database_name(entity_type, time_range, with_timestamp=True)
+                database_prefix = None
                 # Yield start message for new database
                 yield self.generate_start_message(time_range, database)
                 total_messages += 1
             else:
-                # Use base name (incremental update to existing database)
-                database = self.get_couch_db_name(entity_type, time_range, with_timestamp=False)
+                database = None
+                database_prefix = self.get_stats_database_prefix(entity_type, time_range)
 
             max_created = self.get_listen_max_created()
             time_range_message_count = 0
@@ -943,8 +802,14 @@ class StatsCacheManager:
             for i in range(0, len(stale_users), batch_size):
                 batch = stale_users[i:i + batch_size]
                 try:
-                    for message in self.refresh_time_range_batch_for_rmq(
-                        time_range, batch, database, message_batch_size
+                    for message in self.refresh_time_range_batch(
+                        time_range,
+                        batch,
+                        from_ts,
+                        to_ts,
+                        database=database,
+                        database_prefix=database_prefix,
+                        message_batch_size=message_batch_size,
                     ):
                         yield message
                         time_range_message_count += 1
@@ -962,65 +827,38 @@ class StatsCacheManager:
             if stale_users:
                 self.update_cache_state(time_range, period_start, max_created)
 
-        logger.info(f"Hourly job for {entity_type} completed. Computed {total_users_processed} user/time_range combinations, {total_messages} messages")
+        logger.info(
+            "Hourly job for %s completed. Computed %d user/time_range combinations, %d messages",
+            entity_type,
+            total_users_processed,
+            total_messages,
+        )
 
-    def run_full_refresh(self, batch_size: int = 1000):
-        """Refresh cache for all users using batch processing."""
-        entity_type = self.entity_config.entity_type
-        stats_table = self.entity_config.stats_table
-        logger.info(f"Starting full refresh for {entity_type}...")
-
-        result = self.ch_client.query(f"""
-            SELECT DISTINCT user_id FROM {stats_table}
-        """)
-
-        all_users = [row[0] for row in result.result_rows]
-        logger.info(f"Found {len(all_users)} users to refresh")
-
-        for time_range in TIME_RANGES:
-            logger.info(f"Processing {time_range}...")
-
-            period_start, period_end = self.get_period_bounds(time_range)
-            max_created = self.get_listen_max_created()
-
-            for i in range(0, len(all_users), batch_size):
-                batch = all_users[i:i + batch_size]
-                try:
-                    self.refresh_time_range_batch(time_range, batch)
-                    self.update_user_cache_state(batch, time_range, max_created)
-                    logger.info(f"  Progress: {min(i + batch_size, len(all_users))}/{len(all_users)} users")
-                except Exception as e:
-                    logger.error(f"Error batch refreshing {time_range} batch {i}: {e}")
-
-            self.update_cache_state(time_range, period_start, max_created)
-
-        logger.info(f"Full refresh for {entity_type} completed")
-
-    def run_full_refresh_for_rmq(
+    def run_full_refresh(
         self,
         batch_size: int = 1000,
         message_batch_size: int = 100,
     ) -> Iterator[dict]:
         """
-        Run full refresh and yield RMQ messages instead of writing to CouchDB.
+        Run full refresh and yield RabbitMQ result messages.
 
         Full refresh always creates new databases with timestamps for all time_ranges.
 
         Message flow for each time_range:
-        1. couchdb_data_start - create new database
+        1. clk_stats_database_start - create new database
         2. clk_user_entity (batched) - stats data
-        3. couchdb_data_end - cleanup old databases
+        3. clk_stats_database_end - cleanup old databases
 
         Args:
             batch_size: Number of users to process per ClickHouse query batch
             message_batch_size: Number of users per RMQ message
 
         Yields:
-            RMQ messages with stats data
+            RabbitMQ messages with stats data
         """
         entity_type = self.entity_config.entity_type
         stats_table = self.entity_config.stats_table
-        logger.info(f"Starting full refresh for {entity_type} (RMQ mode)...")
+        logger.info(f"Starting full refresh for {entity_type}...")
 
         result = self.ch_client.query(f"""
             SELECT DISTINCT user_id FROM {stats_table}
@@ -1035,10 +873,11 @@ class StatsCacheManager:
             logger.info(f"Processing {time_range}...")
 
             period_start, period_end = self.get_period_bounds(time_range)
+            from_ts, to_ts = self.get_period_timestamps(time_range, period_start, period_end)
             max_created = self.get_listen_max_created()
 
             # Full refresh always creates new database with timestamp
-            database = self.get_couch_db_name(entity_type, time_range, with_timestamp=True)
+            database = self.get_stats_database_name(entity_type, time_range, with_timestamp=True)
 
             # Yield start message for new database
             yield self.generate_start_message(time_range, database)
@@ -1051,8 +890,13 @@ class StatsCacheManager:
             for i in range(0, len(all_users), batch_size):
                 batch = all_users[i:i + batch_size]
                 try:
-                    for message in self.refresh_time_range_batch_for_rmq(
-                        time_range, batch, database, message_batch_size
+                    for message in self.refresh_time_range_batch(
+                        time_range,
+                        batch,
+                        from_ts,
+                        to_ts,
+                        database=database,
+                        message_batch_size=message_batch_size,
                     ):
                         yield message
                         time_range_message_count += 1

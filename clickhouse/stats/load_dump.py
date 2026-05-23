@@ -68,6 +68,12 @@ METADATA_COLUMNS = {
 }
 
 
+def _get_config_module():
+    """Return the ClickHouse service config module."""
+    from clickhouse import config
+    return config
+
+
 # =============================================================================
 # ClickHouse client
 # =============================================================================
@@ -782,7 +788,7 @@ def load_from_ftp(
     """
     if ftp_server is None or ftp_dir is None:
         try:
-            from clickhouse import config
+            config = _get_config_module()
             ftp_server = ftp_server or getattr(config, "FTP_SERVER_URI", "ftp.eu.metabrainz.org")
             ftp_dir = ftp_dir or getattr(config, "FTP_LISTENS_DIR", "/pub/musicbrainz/listenbrainz/")
         except ImportError:

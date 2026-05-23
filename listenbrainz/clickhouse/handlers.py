@@ -6,9 +6,19 @@ from requests import HTTPError
 from sentry_sdk import start_transaction
 
 import listenbrainz.db.couchdb as couchdb
+import listenbrainz.db.stats as db_stats
+from data.model.user_artist_stat import ArtistRecord
+from data.model.user_recording_stat import RecordingRecord
+from data.model.user_release_group_stat import ReleaseGroupRecord
 
 
 logger = logging.getLogger(__name__)
+
+ENTITY_MODELS = {
+    "artists": ArtistRecord,
+    "recordings": RecordingRecord,
+    "release_groups": ReleaseGroupRecord,
+}
 
 
 def handle_echo(message):
@@ -16,14 +26,14 @@ def handle_echo(message):
     current_app.logger.info(f"ClickHouse echo: {message.get('message', 'no message')}")
 
 
-def handle_couchdb_data_start(message):
+def handle_stats_database_start(message):
     """
-    Handle start of a CouchDB bulk data operation.
+    Handle start of a stats database refresh.
     Creates the database for the incoming data.
     """
     database = message.get("database")
     if not database:
-        current_app.logger.error("No database specified in couchdb_data_start message")
+        current_app.logger.error("No database specified in clk_stats_database_start message")
         return
 
     match = couchdb.DATABASE_NAME_PATTERN.match(database)
@@ -37,17 +47,18 @@ def handle_couchdb_data_start(message):
         couchdb.create_database(db_name)
         current_app.logger.info(f"Created CouchDB database: {db_name}")
     except HTTPError as e:
-        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
+        if e.response.status_code != 412:
+            current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
 
-def handle_couchdb_data_end(message):
+def handle_stats_database_end(message):
     """
-    Handle end of a CouchDB bulk data operation.
+    Handle end of a stats database refresh.
     Cleans up old databases of the same type.
     """
     database = message.get("database")
     if not database:
-        current_app.logger.error("No database specified in couchdb_data_end message")
+        current_app.logger.error("No database specified in clk_stats_database_end message")
         return
 
     match = couchdb.DATABASE_NAME_PATTERN.match(database)
@@ -73,61 +84,85 @@ def handle_user_entity_stats(message):
     Message format:
         {
             'type': 'clk_user_entity',
-            'entity_type': 'artist',
-            'time_range': 'all_time',
-            'database': 'clk_artist_all_time',
+            'entity': 'artists',
+            'stats_range': 'all_time',
+            'from_ts': 0,
+            'to_ts': 1234567890,
+            'database': 'artists_all_time_20240115',
             'data': [
-                {'user_id': 123, 'count': 100, 'artist': [...]},
-                {'user_id': 456, 'count': 50, 'artist': [...]},
+                {'user_id': 123, 'count': 100, 'data': [...]},
+                {'user_id': 456, 'count': 50, 'data': [...]},
                 ...
             ]
         }
     """
-    entity_type = message.get("entity_type")
-    time_range = message.get("time_range")
+    entity = message.get("entity")
+    stats_range = message.get("stats_range")
+    from_ts = message.get("from_ts")
+    to_ts = message.get("to_ts")
     database = message.get("database")
+    database_prefix = message.get("database_prefix")
     batch_data = message.get("data", [])
 
-    if not all([entity_type, time_range, database]):
+    if not all([entity, stats_range]) or from_ts is None or to_ts is None or not (database or database_prefix):
         current_app.logger.error(f"Missing required fields in clk_user_entity message: {message}")
         return
 
     if not batch_data:
-        current_app.logger.warning(f"Empty data in clk_user_entity message for {entity_type}/{time_range}")
+        current_app.logger.warning(f"Empty data in clk_user_entity message for {entity}/{stats_range}")
         return
 
-    # Build docs from batched data
+    model = ENTITY_MODELS.get(entity)
+    if model is None:
+        current_app.logger.error(f"Unknown ClickHouse entity stats type: {entity}")
+        return
+
+    if database_prefix:
+        databases = couchdb.list_databases(database_prefix)
+        if databases:
+            database = databases[0]
+        else:
+            database = f"{database_prefix}_{datetime.now(tz=timezone.utc).strftime('%Y%m%d')}"
+            try:
+                couchdb.create_database(database)
+            except HTTPError as e:
+                if e.response.status_code != 412:
+                    current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
+                    return
+
     docs = []
-    last_updated = int(datetime.now(tz=timezone.utc).timestamp())
-
     for user_stats in batch_data:
-        user_id = user_stats.get("user_id")
-        count = user_stats.get("count", 0)
-        stats_data = user_stats.get(entity_type, [])
-
-        if user_id is None:
+        if "user_id" not in user_stats:
             current_app.logger.warning(f"Missing user_id in batch item: {user_stats}")
             continue
 
-        doc = {
-            "_id": str(user_id),
-            "user_id": user_id,
+        stats_data = []
+        invalid_count = 0
+        for item in user_stats.get("data", []):
+            try:
+                model(**item)
+            except Exception:
+                invalid_count += 1
+                current_app.logger.warning("Invalid ClickHouse %s stats entry skipped: %s", entity, item)
+            else:
+                stats_data.append(item)
+
+        raw_count = user_stats.get("count")
+        count = len(stats_data) if raw_count is None else max(0, raw_count - invalid_count)
+
+        docs.append({
+            "user_id": user_stats["user_id"],
             "count": count,
-            "last_updated": last_updated,
-            entity_type: stats_data,
-        }
-        docs.append(doc)
+            "data": stats_data,
+        })
 
     if not docs:
         return
 
     try:
-        with start_transaction(op="insert", name=f"insert clk user {entity_type} - {time_range} stats batch"):
-            # Ensure database exists
-            couchdb.create_database(database)
-            # Insert all documents in batch
-            couchdb.insert_data(database, docs)
-            current_app.logger.debug(f"Inserted {len(docs)} {entity_type} stats docs into {database}")
+        with start_transaction(op="insert", name=f"insert clk user {entity} - {stats_range} stats batch"):
+            db_stats.insert(database, from_ts, to_ts, docs)
+            current_app.logger.debug(f"Inserted {len(docs)} {entity} stats docs into {database}")
     except HTTPError as e:
         current_app.logger.error(f"Error inserting stats batch: {e}. Response: %s", e.response.json(), exc_info=True)
     except Exception as e:
@@ -171,14 +206,26 @@ def handle_stats_error(message):
     )
 
 
+def handle_metadata_cache_refresh(message):
+    """Handle notification that a metadata cache refresh completed."""
+    status = message.get("status", "unknown")
+    results = message.get("results", {})
+    error = message.get("error")
+    if status == "success":
+        current_app.logger.info("ClickHouse metadata cache refresh complete: %s", results)
+    else:
+        current_app.logger.error("ClickHouse metadata cache refresh failed: results=%s error=%s", results, error)
+
+
 RESPONSE_HANDLERS = {
     "echo": handle_echo,
-    "couchdb_data_start": handle_couchdb_data_start,
-    "couchdb_data_end": handle_couchdb_data_end,
+    "clk_stats_database_start": handle_stats_database_start,
+    "clk_stats_database_end": handle_stats_database_end,
     "clk_user_entity": handle_user_entity_stats,
     "clk_dump_imported": handle_dump_imported,
     "clk_stats_complete": handle_stats_complete,
     "clk_stats_error": handle_stats_error,
+    "clk_metadata_cache_refresh": handle_metadata_cache_refresh,
 }
 
 
