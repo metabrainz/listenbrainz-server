@@ -148,7 +148,6 @@ class ClickHouseRequestConsumer(ConsumerMixin):
     def get_consumers(self, Consumer, channel):
         return [
             Consumer(
-                channel,
                 queues=[self.clickhouse_queue],
                 on_message=lambda x: self.callback(x.body, x),
                 prefetch_count=1,
