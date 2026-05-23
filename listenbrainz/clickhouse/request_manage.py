@@ -25,7 +25,7 @@ def send_request_to_clickhouse(query, **params):
             transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
         )
 
-        clickhouse_exchange = Exchange(app.config["CLICKHOUSE_EXCHANGE"], "fanout", durable=True)
+        clickhouse_exchange = Exchange(app.config.get("CLICKHOUSE_EXCHANGE", "clickhouse"), "fanout", durable=False)
 
         with connection.Producer() as producer:
             producer.publish(
@@ -69,29 +69,18 @@ def import_incremental_dump(workers: int):
     send_request_to_clickhouse("clickhouse.import_incremental_dump", workers=workers)
 
 
-@cli.command(name="stats_hourly")
-@click.option("--entity", type=click.Choice(['artist', 'recording', 'release_group']),
-              help="Entity type to process (default: all)")
-@click.option("--batch-size", type=int, default=1000, help="Number of users to process per batch")
-def stats_hourly(entity: str, batch_size: int):
-    """Run hourly stats cache refresh job."""
-    send_request_to_clickhouse("clickhouse.stats.hourly", entity=entity, batch_size=batch_size)
-
-
-@cli.command(name="stats_full_refresh")
-@click.option("--entity", type=click.Choice(['artist', 'recording', 'release_group']),
-              help="Entity type to process (default: all)")
-@click.option("--batch-size", type=int, default=1000, help="Number of users to process per batch")
-def stats_full_refresh(entity: str, batch_size: int):
-    """Run full stats cache refresh for all users."""
-    send_request_to_clickhouse("clickhouse.stats.full_refresh", entity=entity, batch_size=batch_size)
-
-
-@cli.command(name='cron_stats')
-@click.pass_context
-def cron_stats(ctx):
-    """Cron job: run hourly refresh."""
-    ctx.invoke(stats_hourly)
+@cli.command(name="refresh_metadata_cache")
+@click.option("--cache-type", "cache_types", multiple=True,
+              type=click.Choice(["artist", "recording", "release", "release_group"]),
+              help="Metadata cache type to refresh. May be passed multiple times; defaults to all.")
+@click.option("--batch-size", type=int, default=100000, help="Rows to fetch from PostgreSQL per batch")
+def refresh_metadata_cache(cache_types: tuple[str], batch_size: int):
+    """Refresh ClickHouse MusicBrainz metadata cache tables."""
+    send_request_to_clickhouse(
+        "clickhouse.metadata_cache.refresh",
+        cache_types=list(cache_types) or None,
+        batch_size=batch_size,
+    )
 
 
 if __name__ == '__main__':
