@@ -46,7 +46,7 @@ class BulkTagLookup(Query):
         count: int = -1,
     ) -> list[BulkTagLookupOutput]:
 
-        mbids = tuple(psycopg2.extensions.adapt(p.recording_mbid) for p in params)
+        mbids = tuple(p.recording_mbid for p in params)
         if len(mbids) > 1000:
             raise BadRequest("Cannot lookup more than 1,000 recordings at a time.")
 
