@@ -29,7 +29,5 @@ FTP_SERVER_URI = "ftp.eu.metabrainz.org"
 FTP_LISTENS_DIR = "/pub/musicbrainz/listenbrainz/"
 
 # Stats settings
-# Database prefix for CouchDB stats databases (format: clk_{entity}_{range}_{YYYYMMDD})
-STATS_COUCH_DB_PREFIX = "clk"
 STATS_TOP_N = 1000  # Number of top entities to cache per user
 STATS_BATCH_SIZE = 1000  # Number of users to process per batch

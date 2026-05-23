@@ -15,13 +15,25 @@ import json
 import logging
 import socket
 import time
+from collections.abc import Iterable
 
 from kombu import Connection, Consumer, Exchange, Queue
 from kombu.entity import PERSISTENT_DELIVERY_MODE
 from kombu.mixins import ConsumerMixin
 
-import config
-import query_map
+from clickhouse import query_map
+
+
+def _get_config_module():
+    try:
+        from clickhouse import config
+        return config
+    except ImportError:
+        return None
+
+
+def _config_value(config, name, default):
+    return getattr(config, name, default) if config is not None else default
 
 logging.basicConfig(
     level=logging.INFO,
@@ -36,28 +48,28 @@ class ClickHouseRequestConsumer(ConsumerMixin):
     def __init__(self):
         self.connection = None
         self.producer = None
+        self.config = _get_config_module()
 
         # ClickHouse bulk request exchange and queue (stats, cache refresh, dump loading)
         self.clickhouse_exchange = Exchange(
-            config.CLICKHOUSE_EXCHANGE,
-            "direct",
-            durable=True
+            _config_value(self.config, "CLICKHOUSE_EXCHANGE", "clickhouse"),
+            "fanout",
+            durable=False,
         )
         self.clickhouse_queue = Queue(
-            config.CLICKHOUSE_QUEUE,
+            _config_value(self.config, "CLICKHOUSE_QUEUE", "clickhouse"),
             exchange=self.clickhouse_exchange,
-            routing_key=config.CLICKHOUSE_QUEUE,
             durable=True
         )
 
         # Result exchange for sending results back to ListenBrainz
         self.clickhouse_result_exchange = Exchange(
-            config.CLICKHOUSE_RESULT_EXCHANGE,
-            "direct",
-            durable=True
+            _config_value(self.config, "CLICKHOUSE_RESULT_EXCHANGE", "clickhouse_result"),
+            "fanout",
+            durable=False,
         )
 
-    def get_result(self, request: dict) -> list[dict] | None:
+    def get_result(self, request: dict) -> Iterable[dict] | None:
         """Process a request and return the result."""
         try:
             query = request['query']
@@ -91,21 +103,33 @@ class ClickHouseRequestConsumer(ConsumerMixin):
             logger.error("Error in handler for query '%s': %s", query, str(e), exc_info=True)
             return None
 
-    def push_to_result_queue(self, messages):
+    def push_to_result_queue(self, messages: Iterable[dict]) -> int:
         """Push result messages to the result exchange."""
         if not messages:
-            return
+            return 0
 
-        logger.debug("Pushing %d results to result queue...", len(messages))
+        message_count = 0
+        total_size = 0
         for message in messages:
             body = json.dumps(message)
+            total_size += len(body)
             self.producer.publish(
                 exchange=self.clickhouse_result_exchange,
-                routing_key=config.CLICKHOUSE_RESULT_QUEUE,
+                routing_key="",
                 body=body,
-                properties=PERSISTENT_DELIVERY_MODE,
+                delivery_mode=PERSISTENT_DELIVERY_MODE,
+                declare=[self.clickhouse_result_exchange],
             )
-        logger.debug("Results pushed to queue")
+            message_count += 1
+        if message_count:
+            logger.info(
+                "Pushed %d ClickHouse result messages, average size %d bytes",
+                message_count,
+                total_size // message_count,
+            )
+        else:
+            logger.info("No ClickHouse result messages generated")
+        return message_count
 
     def callback(self, body, message):
         """Handle incoming message."""
@@ -115,8 +139,6 @@ class ClickHouseRequestConsumer(ConsumerMixin):
             results = self.get_result(request)
             if results:
                 self.push_to_result_queue(results)
-                for result in results:
-                    logger.info('Result: %s', json.dumps(result))
             logger.info('Request done!')
         except Exception as e:
             logger.error("Error while processing request: %s", str(e), exc_info=True)
@@ -126,6 +148,7 @@ class ClickHouseRequestConsumer(ConsumerMixin):
     def get_consumers(self, Consumer, channel):
         return [
             Consumer(
+                channel,
                 queues=[self.clickhouse_queue],
                 on_message=lambda x: self.callback(x.body, x),
                 prefetch_count=1,
@@ -136,11 +159,11 @@ class ClickHouseRequestConsumer(ConsumerMixin):
         """Initialize RabbitMQ connection and producer."""
         connection_name = "clickhouse-request-consumer-" + socket.gethostname()
         self.connection = Connection(
-            hostname=config.RABBITMQ_HOST,
-            userid=config.RABBITMQ_USERNAME,
-            port=config.RABBITMQ_PORT,
-            password=config.RABBITMQ_PASSWORD,
-            virtual_host=config.RABBITMQ_VHOST,
+            hostname=_config_value(self.config, "RABBITMQ_HOST", "rabbitmq"),
+            userid=_config_value(self.config, "RABBITMQ_USERNAME", "guest"),
+            port=_config_value(self.config, "RABBITMQ_PORT", 5672),
+            password=_config_value(self.config, "RABBITMQ_PASSWORD", "guest"),
+            virtual_host=_config_value(self.config, "RABBITMQ_VHOST", "/"),
             transport_options={"client_properties": {"connection_name": connection_name}}
         )
         # Create producer for pushing results
