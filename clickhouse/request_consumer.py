@@ -131,7 +131,7 @@ class ClickHouseRequestConsumer(ConsumerMixin):
             logger.info("No ClickHouse result messages generated")
         return message_count
 
-    def callback(self, body, message):
+    def callback(self, body):
         """Handle incoming message."""
         try:
             request = json.loads(body)
@@ -142,15 +142,14 @@ class ClickHouseRequestConsumer(ConsumerMixin):
             logger.info('Request done!')
         except Exception as e:
             logger.error("Error while processing request: %s", str(e), exc_info=True)
-        finally:
-            message.ack()
 
     def get_consumers(self, Consumer, channel):
         return [
             Consumer(
                 queues=[self.clickhouse_queue],
-                on_message=lambda x: self.callback(x.body, x),
+                on_message=lambda x: self.callback(x.body),
                 prefetch_count=1,
+                no_ack=True,
             )
         ]
 
