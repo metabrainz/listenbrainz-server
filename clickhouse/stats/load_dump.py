@@ -100,6 +100,7 @@ def create_client(host: str, port: int, username: str, password: str, database: 
     return clickhouse_connect.get_client(
         host=host, port=port, username=username, password=password, database=database,
         compress=False,
+        form_encode_query_params=True,
         settings={"async_insert": 1, "wait_for_async_insert": 0},
     )
 
@@ -534,7 +535,7 @@ def _load_parquet_file(
     file_path: Path,
     host: str, port: int, username: str, password: str, database: str,
     progress: LoadProgress = None,
-    batch_size: int = 100_000,
+    batch_size: int = 10_000,
 ) -> int:
     client = create_client(host, port, username, password, database)
     try:
