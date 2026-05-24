@@ -13,7 +13,7 @@ the listens so fallback/hash IDs remain displayable.
 
 The local and FTP paths mirror the patterns in listenbrainz_spark/dump/:
   - dump directories: listenbrainz-dump-{id}-{date}-{tod}-{full|incremental}/
-  - archive file inside: any file matching *listens*.tar.zst or *listens*.tar
+  - archive file inside: listenbrainz-spark-dump-{id}-{date}-{tod}-{full|incremental}.tar
 """
 
 import logging
@@ -678,12 +678,12 @@ def _extract_archive(archive_path: Path, extract_dir: Path) -> Path:
 
 def _find_dump_archive(base_dir: Path, dump_id: int = None, dump_type: DumpType = DumpType.FULL) -> tuple[Path, int]:
     """
-    Find a listens dump archive in a local directory.
+    Find a Spark parquet listens dump archive in a local directory.
 
     Expects the same directory structure used by the ListenBrainz dump pipeline:
         base_dir/
             listenbrainz-dump-{id}-{date}-{tod}-{full|incremental}/
-                *listens*.tar.zst  (or .tar)
+                listenbrainz-spark-dump-{id}-{date}-{tod}-{full|incremental}.tar
 
     Mirrors listenbrainz_spark/dump/local.py::ListenbrainzLocalDumpLoader.load_listens.
 
@@ -710,10 +710,10 @@ def _find_dump_archive(base_dir: Path, dump_id: int = None, dump_type: DumpType 
 
     archives = [
         f for f in dump_dir.iterdir()
-        if "listens" in f.name and (f.name.endswith(".tar.zst") or f.name.endswith(".tar"))
+        if "spark-dump" in f.name and (f.name.endswith(".tar.zst") or f.name.endswith(".tar"))
     ]
     if not archives:
-        raise ValueError(f"No listens archive found in {dump_dir}")
+        raise ValueError(f"No Spark parquet listens archive found in {dump_dir}")
 
     return archives[0], found_id
 
@@ -730,7 +730,7 @@ def load_from_local(
     workers: int = 4,
 ) -> dict:
     """
-    Load a listens dump from a local directory into ClickHouse.
+    Load a Spark parquet listens dump from a local directory into ClickHouse.
 
     Locates the dump archive under base_dir (same directory structure as the
     ListenBrainz dump pipeline), extracts it, and loads the Parquet files.
@@ -774,7 +774,7 @@ def load_from_ftp(
     workers: int = 4,
 ) -> dict:
     """
-    Download the latest listens dump from FTP and load it into ClickHouse.
+    Download the latest Spark parquet listens dump from FTP and load it into ClickHouse.
 
     Mirrors listenbrainz_spark/dump/ftp.py::ListenBrainzFtpDumpLoader.download_listens,
     but targets ClickHouse instead of HDFS/Spark.
