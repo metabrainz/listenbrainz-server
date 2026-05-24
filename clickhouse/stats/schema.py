@@ -170,7 +170,7 @@ CREATE_MATERIALIZED_VIEWS = [
     CREATE MATERIALIZED VIEW IF NOT EXISTS mv_raw_listens_to_submitted_artist_metadata
     TO artist_metadata
     AS
-    SELECT
+    SELECT DISTINCT
         artist_id,
         artist_mbid,
         artist_name,
@@ -183,13 +183,12 @@ CREATE_MATERIALIZED_VIEWS = [
         FROM raw_listens
         ARRAY JOIN if(empty(artist_credit_mbids), [''], artist_credit_mbids) AS artist_mbid
     ) AS normalized_artists
-    GROUP BY artist_id, artist_mbid, artist_name
     """,
     """
     CREATE MATERIALIZED VIEW IF NOT EXISTS mv_raw_listens_to_submitted_recording_metadata
     TO recording_metadata
     AS
-    SELECT
+    SELECT DISTINCT
         recording_id,
         recording_mbid,
         recording_name,
@@ -211,20 +210,12 @@ CREATE_MATERIALIZED_VIEWS = [
             release_mbid
         FROM raw_listens
     ) AS normalized_recordings
-    GROUP BY
-        recording_id,
-        recording_mbid,
-        recording_name,
-        artist_name,
-        normalized_artist_credit_mbids,
-        release_name,
-        release_mbid
     """,
     """
     CREATE MATERIALIZED VIEW IF NOT EXISTS mv_raw_listens_to_submitted_release_group_metadata
     TO release_group_metadata
     AS
-    SELECT
+    SELECT DISTINCT
         release_group_id,
         '' AS release_group_mbid,
         release_name AS release_group_name,
@@ -243,12 +234,7 @@ CREATE_MATERIALIZED_VIEWS = [
             if(empty(artist_credit_mbids), [''], artist_credit_mbids) AS normalized_artist_credit_mbids
         FROM raw_listens
     ) AS normalized_release_groups
-    GROUP BY
-        release_group_id,
-        release_name,
-        artist_name,
-        normalized_artist_credit_mbids
-    HAVING release_group_id != 0
+    WHERE release_group_id != 0
     """,
     """
     CREATE MATERIALIZED VIEW IF NOT EXISTS mv_raw_listens_to_listens
