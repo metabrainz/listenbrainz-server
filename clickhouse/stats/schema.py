@@ -324,23 +324,29 @@ CREATE_MATERIALIZED_VIEWS = [
                 ANY LEFT JOIN (
                     SELECT
                         recording_mbid,
-                        argMin(recording_id, if(recording_id > 0 AND recording_id <= 4294967295, 0, 1)) AS recording_id,
-                        argMin(artist_name, if(recording_id > 0 AND recording_id <= 4294967295, 0, 1)) AS artist_name,
-                        argMin(artist_credit_mbids, if(recording_id > 0 AND recording_id <= 4294967295, 0, 1)) AS artist_credit_mbids,
-                        argMin(release_mbid, if(recording_id > 0 AND recording_id <= 4294967295, 0, 1)) AS release_mbid
+                        recording_id,
+                        artist_name,
+                        artist_credit_mbids,
+                        release_mbid
                     FROM recording_metadata
                     WHERE recording_mbid != ''
-                    GROUP BY recording_mbid
+                    ORDER BY
+                        if(recording_id > 0 AND recording_id <= 4294967295, 0, 1),
+                        recording_id
+                    LIMIT 1 BY recording_mbid
                 ) AS recording
                     ON r.recording_mbid = recording.recording_mbid
             ) AS base
             ANY LEFT JOIN (
                 SELECT
                     release_mbid,
-                    argMin(release_group_id, if(release_group_id > 0 AND release_group_id <= 4294967295, 0, 1)) AS release_group_id
+                    release_group_id
                 FROM release_metadata
                 WHERE release_mbid != ''
-                GROUP BY release_mbid
+                ORDER BY
+                    if(release_group_id > 0 AND release_group_id <= 4294967295, 0, 1),
+                    release_group_id
+                LIMIT 1 BY release_mbid
             ) AS release
                 ON base.effective_release_mbid = release.release_mbid
         ) AS with_release
@@ -351,10 +357,13 @@ CREATE_MATERIALIZED_VIEWS = [
     ANY LEFT JOIN (
         SELECT
             artist_mbid,
-            argMin(artist_id, if(artist_id > 0 AND artist_id <= 4294967295, 0, 1)) AS artist_id
+            artist_id
         FROM artist_metadata
         WHERE artist_mbid != ''
-        GROUP BY artist_mbid
+        ORDER BY
+            if(artist_id > 0 AND artist_id <= 4294967295, 0, 1),
+            artist_id
+        LIMIT 1 BY artist_mbid
     ) AS artist
         ON expanded.artist_mbid = artist.artist_mbid
     GROUP BY
