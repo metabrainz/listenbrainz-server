@@ -7,9 +7,8 @@ Supports three sources:
 - Local dump archive (.tar / .tar.zst): load_from_local(base_dir, ...)
 - FTP download: load_from_ftp(dump_type, ...)
 
-Rows are inserted into the raw listens table. ClickHouse materialized views
-then compute submitted/effective entity IDs and update the downstream stats
-tables.
+Rows are inserted into the raw listens table, then processed in bounded
+ClickHouse batches into the id-only listens table.
 
 The local and FTP paths mirror the patterns in listenbrainz_spark/dump/:
   - dump directories: listenbrainz-dump-{id}-{date}-{tod}-{full|incremental}/
@@ -26,6 +25,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from threading import Lock
 from typing import Any
+from uuid import uuid4
 
 import clickhouse_connect
 from clickhouse_connect.driver import Client
@@ -39,6 +39,7 @@ logger = logging.getLogger(__name__)
 
 LISTENS_TABLE = "listens"
 RAW_LISTENS_TABLE = "raw_listens"
+RAW_LISTENS_BATCH_TABLE = "raw_listens_batch"
 
 RAW_LISTEN_COLUMNS = [
     "listened_at",
@@ -52,6 +53,186 @@ RAW_LISTEN_COLUMNS = [
     "recording_mbid",
     "artist_credit_mbids",
 ]
+
+RAW_LISTEN_BATCH_COLUMNS = ["batch_row_id"] + RAW_LISTEN_COLUMNS
+
+CREATE_RAW_LISTENS_BATCH_TABLE = f"""
+CREATE TEMPORARY TABLE IF NOT EXISTS {RAW_LISTENS_BATCH_TABLE} (
+    batch_row_id UInt64,
+    listened_at DateTime64(3),
+    created DateTime64(3),
+    user_id UInt32,
+    recording_msid String,
+    artist_name String,
+    release_name String,
+    release_mbid String,
+    recording_name String,
+    recording_mbid String,
+    artist_credit_mbids Array(String)
+) ENGINE = Memory
+"""
+
+PROCESS_RAW_LISTENS_BATCH = f"""
+INSERT INTO {LISTENS_TABLE}
+    (
+        listened_at,
+        created,
+        user_id,
+        recording_msid,
+        submitted_recording_id,
+        recording_id,
+        submitted_release_group_id,
+        release_group_id,
+        submitted_artist_ids,
+        artist_ids
+    )
+SELECT
+    expanded.listened_at,
+    expanded.created,
+    expanded.user_id,
+    expanded.recording_msid,
+    expanded.submitted_recording_id,
+    expanded.recording_id,
+    expanded.submitted_release_group_id,
+    expanded.release_group_id,
+    expanded.submitted_artist_ids,
+    arrayMap(
+        item -> tupleElement(item, 2),
+        arraySort(
+            item -> tupleElement(item, 1),
+            groupArray(tuple(
+                expanded.artist_position,
+                if(
+                    artist.artist_id > 0,
+                    artist.artist_id,
+                    submittedArtistId(expanded.artist_mbid, expanded.effective_artist_name)
+                )
+            ))
+        )
+    ) AS artist_ids
+FROM (
+    SELECT
+        with_release.*,
+        artist_position,
+        artist_mbid
+    FROM (
+        SELECT
+            base.batch_row_id,
+            base.listened_at,
+            base.created,
+            base.user_id,
+            base.recording_msid,
+            base.submitted_recording_id,
+            if(base.matched_recording_id > 0, base.matched_recording_id, base.submitted_recording_id) AS recording_id,
+            base.submitted_release_group_id,
+            if(release.release_group_id > 0, release.release_group_id, base.submitted_release_group_id) AS release_group_id,
+            base.submitted_artist_ids,
+            base.effective_artist_name,
+            base.effective_artist_mbids
+        FROM (
+            SELECT
+                r.batch_row_id,
+                r.listened_at,
+                r.created,
+                r.user_id,
+                r.recording_msid,
+                r.artist_name,
+                r.release_mbid,
+                submittedRecordingId(r.recording_mbid, r.artist_name, r.recording_name) AS submitted_recording_id,
+                submittedReleaseGroupId('', r.artist_name, r.release_name) AS submitted_release_group_id,
+                arrayMap(
+                    mbid -> submittedArtistId(mbid, r.artist_name),
+                    if(empty(r.artist_credit_mbids), [''], r.artist_credit_mbids)
+                ) AS submitted_artist_ids,
+                recording.recording_id AS matched_recording_id,
+                if(recording.artist_name != '', recording.artist_name, r.artist_name) AS effective_artist_name,
+                if(
+                    empty(recording.artist_credit_mbids),
+                    if(empty(r.artist_credit_mbids), [''], r.artist_credit_mbids),
+                    recording.artist_credit_mbids
+                ) AS effective_artist_mbids,
+                if(recording.release_mbid != '', recording.release_mbid, r.release_mbid) AS effective_release_mbid
+            FROM {RAW_LISTENS_BATCH_TABLE} AS r
+            ANY LEFT JOIN (
+                SELECT
+                    recording_mbid,
+                    recording_id,
+                    artist_name,
+                    artist_credit_mbids,
+                    release_mbid
+                FROM recording_metadata
+                WHERE recording_mbid IN (
+                    SELECT DISTINCT recording_mbid
+                    FROM {RAW_LISTENS_BATCH_TABLE}
+                    WHERE recording_mbid != ''
+                )
+                ORDER BY
+                    if(recording_id > 0 AND recording_id <= 4294967295, 0, 1),
+                    recording_id
+                LIMIT 1 BY recording_mbid
+            ) AS recording
+                ON r.recording_mbid = recording.recording_mbid
+        ) AS base
+        ANY LEFT JOIN (
+            SELECT
+                release_mbid,
+                release_group_id
+            FROM release_metadata
+            WHERE release_mbid IN (
+                SELECT DISTINCT release_mbid
+                FROM {RAW_LISTENS_BATCH_TABLE}
+                WHERE release_mbid != ''
+            )
+            ORDER BY
+                if(release_group_id > 0 AND release_group_id <= 4294967295, 0, 1),
+                release_group_id
+            LIMIT 1 BY release_mbid
+        ) AS release
+            ON base.effective_release_mbid = release.release_mbid
+    ) AS with_release
+    ARRAY JOIN
+        arrayEnumerate(effective_artist_mbids) AS artist_position,
+        effective_artist_mbids AS artist_mbid
+) AS expanded
+ANY LEFT JOIN (
+    SELECT
+        artist_mbid,
+        artist_id
+    FROM artist_metadata
+    WHERE artist_mbid IN (
+        SELECT DISTINCT artist_mbid
+        FROM (
+            SELECT arrayJoin(if(empty(artist_credit_mbids), [''], artist_credit_mbids)) AS artist_mbid
+            FROM {RAW_LISTENS_BATCH_TABLE}
+            UNION DISTINCT
+            SELECT arrayJoin(if(empty(artist_credit_mbids), [''], artist_credit_mbids)) AS artist_mbid
+            FROM recording_metadata
+            WHERE recording_mbid IN (
+                SELECT DISTINCT recording_mbid
+                FROM {RAW_LISTENS_BATCH_TABLE}
+                WHERE recording_mbid != ''
+            )
+        ) AS batch_artist_mbids
+        WHERE artist_mbid != ''
+    )
+    ORDER BY
+        if(artist_id > 0 AND artist_id <= 4294967295, 0, 1),
+        artist_id
+    LIMIT 1 BY artist_mbid
+) AS artist
+    ON expanded.artist_mbid = artist.artist_mbid
+GROUP BY
+    expanded.batch_row_id,
+    expanded.listened_at,
+    expanded.created,
+    expanded.user_id,
+    expanded.recording_msid,
+    expanded.submitted_recording_id,
+    expanded.recording_id,
+    expanded.submitted_release_group_id,
+    expanded.release_group_id,
+    expanded.submitted_artist_ids
+"""
 
 
 def _get_config_module():
@@ -87,6 +268,7 @@ def create_client(host: str, port: int, username: str, password: str, database: 
         host=host, port=port, username=username, password=password, database=database,
         compress=False,
         form_encode_query_params=True,
+        session_id=f"listenbrainz_load_dump_{uuid4().hex}",
         settings={"async_insert": 1, "wait_for_async_insert": 1},
     )
 
@@ -138,16 +320,35 @@ def _normalise_listen_row(row: dict) -> dict:
     }
 
 
-def build_raw_listens_arrow_table(table: pa.Table) -> pa.Table:
+def build_raw_listens_arrow_table(table: pa.Table, include_batch_row_id: bool = False) -> pa.Table:
     """Normalize a Spark dump batch into the raw listens table schema."""
     listen_rows = [
         _normalise_listen_row(row)
         for row in table.to_pylist()
     ]
+    columns = {
+        column: [row[column] for row in listen_rows]
+        for column in RAW_LISTEN_COLUMNS
+    }
+    if include_batch_row_id:
+        columns = {"batch_row_id": list(range(len(listen_rows))), **columns}
 
-    return pa.table(
-        {column: [row[column] for row in listen_rows] for column in RAW_LISTEN_COLUMNS}
+    return pa.table(columns)
+
+
+def create_raw_listens_batch_table(client: Client) -> None:
+    client.command(CREATE_RAW_LISTENS_BATCH_TABLE)
+
+
+def process_raw_listens_batch(client: Client, table: pa.Table) -> None:
+    batch_table = build_raw_listens_arrow_table(table, include_batch_row_id=True)
+    client.command(f"TRUNCATE TABLE {RAW_LISTENS_BATCH_TABLE}")
+    client.insert_arrow(
+        table=RAW_LISTENS_BATCH_TABLE,
+        arrow_table=batch_table,
+        settings={"async_insert": 0},
     )
+    client.command(PROCESS_RAW_LISTENS_BATCH, settings={"async_insert": 0})
 
 
 # =============================================================================
@@ -162,17 +363,20 @@ def _load_parquet_file(
 ) -> int:
     client = create_client(host, port, username, password, database)
     try:
+        create_raw_listens_batch_table(client)
         parquet_file = pq.ParquetFile(file_path)
         total_rows = parquet_file.metadata.num_rows
         if total_rows == 0:
             return 0
 
         for batch in parquet_file.iter_batches(batch_size=batch_size):
-            listen_table = build_raw_listens_arrow_table(pa.Table.from_batches([batch]))
+            batch_table = pa.Table.from_batches([batch])
+            listen_table = build_raw_listens_arrow_table(batch_table)
             client.insert_arrow(
                 table=RAW_LISTENS_TABLE,
                 arrow_table=listen_table,
             )
+            process_raw_listens_batch(client, batch_table)
 
         if progress:
             progress.update(total_rows)
