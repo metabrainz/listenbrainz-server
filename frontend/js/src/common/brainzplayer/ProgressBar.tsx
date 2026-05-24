@@ -60,21 +60,20 @@ function ProgressBar(props: ProgressBarProps) {
   React.useEffect(() => {
     let rafId: number;
     const tick = () => {
-      if (isDraggingRef.current) return;
-      const base =
-        pendingSeekMsRef.current >= 0 ? pendingSeekMsRef.current : progressMs;
-      const elapsed = playerPaused ? 0 : performance.now() - updateTime;
-      const liveProgressMs = base + elapsed;
-      const ratio = Math.min(liveProgressMs / durationMs, 1) || 0;
-      if (progressBarInnerRef.current) {
-        progressBarInnerRef.current.style.transform = `scaleX(${ratio})`;
-      }
-      if (!isDraggingRef.current && handleRef.current) {
-        const barWidth =
-          progressBarInnerRef.current?.parentElement?.getBoundingClientRect()
-            .width ?? 0;
-        const handleX = ratio * barWidth;
-        handleRef.current.style.setProperty("--handle-x", `${handleX}px`);
+      if (!isDraggingRef.current) {
+        const base =
+          pendingSeekMsRef.current >= 0 ? pendingSeekMsRef.current : progressMs;
+        const elapsed = playerPaused ? 0 : performance.now() - updateTime;
+        const liveProgressMs = base + elapsed;
+        const ratio = Math.min(liveProgressMs / durationMs, 1) || 0;
+        if (progressBarInnerRef.current) {
+          progressBarInnerRef.current.style.transform = `scaleX(${ratio})`;
+        }
+        if (handleRef.current) {
+          const barWidth = rectCacheRef.current?.width ?? 0;
+          const handleX = ratio * barWidth;
+          handleRef.current.style.setProperty("--handle-x", `${handleX}px`);
+        }
       }
       rafId = requestAnimationFrame(tick);
     };
@@ -113,7 +112,7 @@ function ProgressBar(props: ProgressBarProps) {
     };
 
     // On drag release: fire the actual seek and let pendingSeekMsRef hold the optimistic position
-    const onPointerUp = (e: PointerEvent) => {
+    const endDrag = (e: PointerEvent) => {
       if (!isDraggingRef.current) return;
       isDraggingRef.current = false;
       document.body.style.cursor = "";
@@ -125,10 +124,12 @@ function ProgressBar(props: ProgressBarProps) {
     };
 
     document.addEventListener("pointermove", onPointerMove);
-    document.addEventListener("pointerup", onPointerUp);
+    document.addEventListener("pointerup", endDrag);
+    document.addEventListener("pointercancel", endDrag);
     return () => {
       document.removeEventListener("pointermove", onPointerMove);
-      document.removeEventListener("pointerup", onPointerUp);
+      document.removeEventListener("pointerup", endDrag);
+      document.removeEventListener("pointercancel", endDrag);
     };
   }, [seekToPositionMs, durationMs]);
 
