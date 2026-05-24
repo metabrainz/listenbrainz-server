@@ -237,134 +237,6 @@ CREATE_MATERIALIZED_VIEWS = [
     WHERE release_group_id != 0
     """,
     """
-    CREATE MATERIALIZED VIEW IF NOT EXISTS mv_raw_listens_to_listens
-    TO listens
-    AS
-    SELECT
-        expanded.listened_at,
-        expanded.created,
-        expanded.user_id,
-        expanded.recording_msid,
-        expanded.submitted_recording_id,
-        expanded.recording_id,
-        expanded.submitted_release_group_id,
-        expanded.release_group_id,
-        expanded.submitted_artist_ids,
-        arrayMap(
-            item -> tupleElement(item, 2),
-            arraySort(
-                item -> tupleElement(item, 1),
-                groupArray(tuple(
-                    expanded.artist_position,
-                    if(
-                        artist.artist_id > 0,
-                        artist.artist_id,
-                        submittedArtistId(expanded.artist_mbid, expanded.effective_artist_name)
-                    )
-                ))
-            )
-        ) AS artist_ids
-    FROM (
-        SELECT
-            with_release.*,
-            artist_position,
-            artist_mbid
-        FROM (
-            SELECT
-                base.raw_listen_id,
-                base.listened_at,
-                base.created,
-                base.user_id,
-                base.recording_msid,
-                base.submitted_recording_id,
-                if(base.matched_recording_id > 0, base.matched_recording_id, base.submitted_recording_id) AS recording_id,
-                base.submitted_release_group_id,
-                if(release.release_group_id > 0, release.release_group_id, base.submitted_release_group_id) AS release_group_id,
-                base.submitted_artist_ids,
-                base.effective_artist_name,
-                base.effective_artist_mbids
-            FROM (
-                SELECT
-                    r.raw_listen_id,
-                    r.listened_at,
-                    r.created,
-                    r.user_id,
-                    r.recording_msid,
-                    r.artist_name,
-                    r.release_mbid,
-                    submittedRecordingId(r.recording_mbid, r.artist_name, r.recording_name) AS submitted_recording_id,
-                    submittedReleaseGroupId('', r.artist_name, r.release_name) AS submitted_release_group_id,
-                    arrayMap(
-                        mbid -> submittedArtistId(mbid, r.artist_name),
-                        if(empty(r.artist_credit_mbids), [''], r.artist_credit_mbids)
-                    ) AS submitted_artist_ids,
-                    recording.recording_id AS matched_recording_id,
-                    if(recording.artist_name != '', recording.artist_name, r.artist_name) AS effective_artist_name,
-                    if(
-                        empty(recording.artist_credit_mbids),
-                        if(empty(r.artist_credit_mbids), [''], r.artist_credit_mbids),
-                        recording.artist_credit_mbids
-                    ) AS effective_artist_mbids,
-                    if(recording.release_mbid != '', recording.release_mbid, r.release_mbid) AS effective_release_mbid
-                FROM raw_listens AS r
-                ANY LEFT JOIN (
-                    SELECT
-                        recording_mbid,
-                        recording_id,
-                        artist_name,
-                        artist_credit_mbids,
-                        release_mbid
-                    FROM recording_metadata
-                    WHERE recording_mbid != ''
-                    ORDER BY
-                        if(recording_id > 0 AND recording_id <= 4294967295, 0, 1),
-                        recording_id
-                    LIMIT 1 BY recording_mbid
-                ) AS recording
-                    ON r.recording_mbid = recording.recording_mbid
-            ) AS base
-            ANY LEFT JOIN (
-                SELECT
-                    release_mbid,
-                    release_group_id
-                FROM release_metadata
-                WHERE release_mbid != ''
-                ORDER BY
-                    if(release_group_id > 0 AND release_group_id <= 4294967295, 0, 1),
-                    release_group_id
-                LIMIT 1 BY release_mbid
-            ) AS release
-                ON base.effective_release_mbid = release.release_mbid
-        ) AS with_release
-        ARRAY JOIN
-            arrayEnumerate(effective_artist_mbids) AS artist_position,
-            effective_artist_mbids AS artist_mbid
-    ) AS expanded
-    ANY LEFT JOIN (
-        SELECT
-            artist_mbid,
-            artist_id
-        FROM artist_metadata
-        WHERE artist_mbid != ''
-        ORDER BY
-            if(artist_id > 0 AND artist_id <= 4294967295, 0, 1),
-            artist_id
-        LIMIT 1 BY artist_mbid
-    ) AS artist
-        ON expanded.artist_mbid = artist.artist_mbid
-    GROUP BY
-        expanded.raw_listen_id,
-        expanded.listened_at,
-        expanded.created,
-        expanded.user_id,
-        expanded.recording_msid,
-        expanded.submitted_recording_id,
-        expanded.recording_id,
-        expanded.submitted_release_group_id,
-        expanded.release_group_id,
-        expanded.submitted_artist_ids
-    """,
-    """
     CREATE MATERIALIZED VIEW IF NOT EXISTS mv_listens_to_artist_stats
     TO user_artist_stats_daily
     AS
@@ -402,6 +274,16 @@ CREATE_MATERIALIZED_VIEWS = [
     """,
 ]
 
+MATERIALIZED_VIEW_NAMES = [
+    "mv_raw_listens_to_submitted_artist_metadata",
+    "mv_raw_listens_to_submitted_recording_metadata",
+    "mv_raw_listens_to_submitted_release_group_metadata",
+    "mv_raw_listens_to_listens",
+    "mv_listens_to_artist_stats",
+    "mv_listens_to_recording_stats",
+    "mv_listens_to_release_group_stats",
+]
+
 
 def ensure_stats_schema(ch_client: Client) -> None:
     """Create the active stats schema if it does not already exist."""
@@ -412,6 +294,9 @@ def ensure_stats_schema(ch_client: Client) -> None:
 
     for statement in CREATE_TABLES:
         ch_client.command(statement)
+
+    for view_name in MATERIALIZED_VIEW_NAMES:
+        ch_client.command(f"DROP TABLE IF EXISTS {view_name}")
 
     for statement in CREATE_MATERIALIZED_VIEWS:
         ch_client.command(statement)
