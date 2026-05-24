@@ -252,6 +252,7 @@ class StatsCacheManager:
             database=self.config.ch_database,
             username=self.config.ch_username,
             password=self.config.ch_password,
+            form_encode_query_params=True,
         )
         logger.info(f"Connected to ClickHouse at {self.config.ch_host}:{self.config.ch_port}")
 

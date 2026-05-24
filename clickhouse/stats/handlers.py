@@ -50,6 +50,13 @@ def _get_cache_config() -> CacheConfig:
         return CacheConfig()
 
 
+def _raise_on_dump_errors(result: dict) -> None:
+    errors = result.get('errors') or []
+    if errors:
+        examples = "; ".join(f"{path}: {error}" for path, error in errors[:3])
+        raise RuntimeError(f"{len(errors)} parquet file(s) failed to load: {examples}")
+
+
 def _load_dump_from_path(dump_path: str, dump_type: str, workers: int = 4) -> list[dict]:
     """
     Load a Parquet dump into ClickHouse listens table.
@@ -73,6 +80,7 @@ def _load_dump_from_path(dump_path: str, dump_type: str, workers: int = 4) -> li
             database=getattr(config, 'CLICKHOUSE_DATABASE', 'default'),
             workers=workers,
         )
+        _raise_on_dump_errors(result)
         return [{
             'type': 'clk_dump_imported',
             'dump_type': dump_type,
@@ -113,6 +121,7 @@ def import_full_dump(workers: int = 4) -> list[dict]:
     """Download latest full listens dump from FTP and load into ClickHouse."""
     try:
         result = load_from_ftp(dump_type=DumpType.FULL, workers=workers, **_ch_kwargs())
+        _raise_on_dump_errors(result)
         return [{'type': 'clk_dump_imported', 'dump_type': 'full', 'status': 'success',
                  'dump_id': result['dump_id'], 'total_inserted': result['total_inserted'],
                  'files_completed': result['files_completed']}]
@@ -133,6 +142,7 @@ def import_incremental_dump(workers: int = 4) -> list[dict]:
     """
     try:
         result = load_from_ftp(dump_type=DumpType.INCREMENTAL, workers=workers, **_ch_kwargs())
+        _raise_on_dump_errors(result)
         return [{'type': 'clk_dump_imported', 'dump_type': 'incremental', 'status': 'success',
                  'dump_id': result['dump_id'], 'total_inserted': result['total_inserted'],
                  'files_completed': result['files_completed']}]
@@ -291,6 +301,7 @@ def refresh_metadata_cache(
             password=getattr(config, 'CLICKHOUSE_PASSWORD', ''),
             database=getattr(config, 'CLICKHOUSE_DATABASE', 'default'),
             compress=False,
+            form_encode_query_params=True,
         )
 
         valid_types = list(PG_QUERIES.keys())
