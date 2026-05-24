@@ -171,12 +171,18 @@ CREATE_MATERIALIZED_VIEWS = [
     TO artist_metadata
     AS
     SELECT
-        submittedArtistId(artist_mbid, artist_name) AS artist_id,
+        artist_id,
         artist_mbid,
         artist_name,
         '' AS country_code
-    FROM raw_listens
-    ARRAY JOIN if(empty(artist_credit_mbids), [''], artist_credit_mbids) AS artist_mbid
+    FROM (
+        SELECT
+            submittedArtistId(artist_mbid, artist_name) AS artist_id,
+            artist_mbid,
+            artist_name
+        FROM raw_listens
+        ARRAY JOIN if(empty(artist_credit_mbids), [''], artist_credit_mbids) AS artist_mbid
+    ) AS normalized_artists
     GROUP BY artist_id, artist_mbid, artist_name
     """,
     """
@@ -184,23 +190,33 @@ CREATE_MATERIALIZED_VIEWS = [
     TO recording_metadata
     AS
     SELECT
-        submittedRecordingId(recording_mbid, artist_name, recording_name) AS recording_id,
+        recording_id,
         recording_mbid,
         recording_name,
         artist_name,
-        if(empty(artist_credit_mbids), [''], artist_credit_mbids) AS artist_credit_mbids,
+        normalized_artist_credit_mbids AS artist_credit_mbids,
         release_name,
         release_mbid,
         '' AS artists,
         toUInt64(0) AS caa_id,
         '' AS caa_release_mbid
-    FROM raw_listens
+    FROM (
+        SELECT
+            submittedRecordingId(recording_mbid, artist_name, recording_name) AS recording_id,
+            recording_mbid,
+            recording_name,
+            artist_name,
+            if(empty(artist_credit_mbids), [''], artist_credit_mbids) AS normalized_artist_credit_mbids,
+            release_name,
+            release_mbid
+        FROM raw_listens
+    ) AS normalized_recordings
     GROUP BY
         recording_id,
         recording_mbid,
         recording_name,
         artist_name,
-        if(empty(artist_credit_mbids), [''], artist_credit_mbids),
+        normalized_artist_credit_mbids,
         release_name,
         release_mbid
     """,
@@ -209,23 +225,29 @@ CREATE_MATERIALIZED_VIEWS = [
     TO release_group_metadata
     AS
     SELECT
-        submittedReleaseGroupId('', artist_name, release_name) AS release_group_id,
+        release_group_id,
         '' AS release_group_mbid,
         release_name AS release_group_name,
         artist_name,
-        if(empty(artist_credit_mbids), [''], artist_credit_mbids) AS artist_credit_mbids,
+        normalized_artist_credit_mbids AS artist_credit_mbids,
         '' AS artists,
         toUInt64(0) AS caa_id,
         '' AS caa_release_mbid,
         toUInt16(0) AS first_release_date_year,
         '' AS primary_type
-    FROM raw_listens
+    FROM (
+        SELECT
+            submittedReleaseGroupId('', artist_name, release_name) AS release_group_id,
+            release_name,
+            artist_name,
+            if(empty(artist_credit_mbids), [''], artist_credit_mbids) AS normalized_artist_credit_mbids
+        FROM raw_listens
+    ) AS normalized_release_groups
     GROUP BY
         release_group_id,
-        release_group_mbid,
-        release_group_name,
+        release_name,
         artist_name,
-        if(empty(artist_credit_mbids), [''], artist_credit_mbids)
+        normalized_artist_credit_mbids
     HAVING release_group_id != 0
     """,
     """
