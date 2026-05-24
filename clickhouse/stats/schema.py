@@ -35,6 +35,23 @@ CREATE OR REPLACE FUNCTION submittedReleaseGroupId AS (release_group_mbid, artis
 
 CREATE_TABLES = [
     """
+    CREATE TABLE IF NOT EXISTS raw_listens (
+        raw_listen_id UUID DEFAULT generateUUIDv4(),
+        listened_at DateTime64(3),
+        created DateTime64(3) DEFAULT now64(3),
+        user_id UInt32,
+        recording_msid String,
+        artist_name String DEFAULT '',
+        release_name String DEFAULT '',
+        release_mbid String DEFAULT '',
+        recording_name String DEFAULT '',
+        recording_mbid String DEFAULT '',
+        artist_credit_mbids Array(String) DEFAULT []
+    ) ENGINE = MergeTree()
+    ORDER BY (user_id, listened_at, recording_msid, raw_listen_id)
+    SETTINGS index_granularity = 8192
+    """,
+    """
     CREATE TABLE IF NOT EXISTS listens (
         listened_at DateTime64(3),
         created DateTime64(3) DEFAULT now64(3),
@@ -149,6 +166,187 @@ CREATE_TABLES = [
 ]
 
 CREATE_MATERIALIZED_VIEWS = [
+    """
+    CREATE MATERIALIZED VIEW IF NOT EXISTS mv_raw_listens_to_submitted_artist_metadata
+    TO artist_metadata
+    AS
+    SELECT
+        submittedArtistId(artist_mbid, artist_name) AS artist_id,
+        artist_mbid,
+        artist_name,
+        '' AS country_code
+    FROM raw_listens
+    ARRAY JOIN if(empty(artist_credit_mbids), [''], artist_credit_mbids) AS artist_mbid
+    GROUP BY artist_id, artist_mbid, artist_name
+    """,
+    """
+    CREATE MATERIALIZED VIEW IF NOT EXISTS mv_raw_listens_to_submitted_recording_metadata
+    TO recording_metadata
+    AS
+    SELECT
+        submittedRecordingId(recording_mbid, artist_name, recording_name) AS recording_id,
+        recording_mbid,
+        recording_name,
+        artist_name,
+        if(empty(artist_credit_mbids), [''], artist_credit_mbids) AS artist_credit_mbids,
+        release_name,
+        release_mbid,
+        '' AS artists,
+        toUInt64(0) AS caa_id,
+        '' AS caa_release_mbid
+    FROM raw_listens
+    GROUP BY
+        recording_id,
+        recording_mbid,
+        recording_name,
+        artist_name,
+        if(empty(artist_credit_mbids), [''], artist_credit_mbids),
+        release_name,
+        release_mbid
+    """,
+    """
+    CREATE MATERIALIZED VIEW IF NOT EXISTS mv_raw_listens_to_submitted_release_group_metadata
+    TO release_group_metadata
+    AS
+    SELECT
+        submittedReleaseGroupId('', artist_name, release_name) AS release_group_id,
+        '' AS release_group_mbid,
+        release_name AS release_group_name,
+        artist_name,
+        if(empty(artist_credit_mbids), [''], artist_credit_mbids) AS artist_credit_mbids,
+        '' AS artists,
+        toUInt64(0) AS caa_id,
+        '' AS caa_release_mbid,
+        toUInt16(0) AS first_release_date_year,
+        '' AS primary_type
+    FROM raw_listens
+    GROUP BY
+        release_group_id,
+        release_group_mbid,
+        release_group_name,
+        artist_name,
+        if(empty(artist_credit_mbids), [''], artist_credit_mbids)
+    HAVING release_group_id != 0
+    """,
+    """
+    CREATE MATERIALIZED VIEW IF NOT EXISTS mv_raw_listens_to_listens
+    TO listens
+    AS
+    SELECT
+        expanded.listened_at,
+        expanded.created,
+        expanded.user_id,
+        expanded.recording_msid,
+        expanded.submitted_recording_id,
+        expanded.recording_id,
+        expanded.submitted_release_group_id,
+        expanded.release_group_id,
+        expanded.submitted_artist_ids,
+        arrayMap(
+            item -> tupleElement(item, 2),
+            arraySort(
+                item -> tupleElement(item, 1),
+                groupArray(tuple(
+                    expanded.artist_position,
+                    if(
+                        artist.artist_id > 0,
+                        artist.artist_id,
+                        submittedArtistId(expanded.artist_mbid, expanded.effective_artist_name)
+                    )
+                ))
+            )
+        ) AS artist_ids
+    FROM (
+        SELECT
+            with_release.*,
+            artist_position,
+            artist_mbid
+        FROM (
+            SELECT
+                base.raw_listen_id,
+                base.listened_at,
+                base.created,
+                base.user_id,
+                base.recording_msid,
+                base.submitted_recording_id,
+                if(base.matched_recording_id > 0, base.matched_recording_id, base.submitted_recording_id) AS recording_id,
+                base.submitted_release_group_id,
+                if(release.release_group_id > 0, release.release_group_id, base.submitted_release_group_id) AS release_group_id,
+                base.submitted_artist_ids,
+                base.effective_artist_name,
+                base.effective_artist_mbids
+            FROM (
+                SELECT
+                    r.raw_listen_id,
+                    r.listened_at,
+                    r.created,
+                    r.user_id,
+                    r.recording_msid,
+                    r.artist_name,
+                    r.release_mbid,
+                    submittedRecordingId(r.recording_mbid, r.artist_name, r.recording_name) AS submitted_recording_id,
+                    submittedReleaseGroupId('', r.artist_name, r.release_name) AS submitted_release_group_id,
+                    arrayMap(
+                        mbid -> submittedArtistId(mbid, r.artist_name),
+                        if(empty(r.artist_credit_mbids), [''], r.artist_credit_mbids)
+                    ) AS submitted_artist_ids,
+                    recording.recording_id AS matched_recording_id,
+                    if(recording.artist_name != '', recording.artist_name, r.artist_name) AS effective_artist_name,
+                    if(
+                        empty(recording.artist_credit_mbids),
+                        if(empty(r.artist_credit_mbids), [''], r.artist_credit_mbids),
+                        recording.artist_credit_mbids
+                    ) AS effective_artist_mbids,
+                    if(recording.release_mbid != '', recording.release_mbid, r.release_mbid) AS effective_release_mbid
+                FROM raw_listens AS r
+                ANY LEFT JOIN (
+                    SELECT
+                        recording_mbid,
+                        argMin(recording_id, if(recording_id > 0 AND recording_id <= 4294967295, 0, 1)) AS recording_id,
+                        argMin(artist_name, if(recording_id > 0 AND recording_id <= 4294967295, 0, 1)) AS artist_name,
+                        argMin(artist_credit_mbids, if(recording_id > 0 AND recording_id <= 4294967295, 0, 1)) AS artist_credit_mbids,
+                        argMin(release_mbid, if(recording_id > 0 AND recording_id <= 4294967295, 0, 1)) AS release_mbid
+                    FROM recording_metadata
+                    WHERE recording_mbid != ''
+                    GROUP BY recording_mbid
+                ) AS recording
+                    ON r.recording_mbid = recording.recording_mbid
+            ) AS base
+            ANY LEFT JOIN (
+                SELECT
+                    release_mbid,
+                    argMin(release_group_id, if(release_group_id > 0 AND release_group_id <= 4294967295, 0, 1)) AS release_group_id
+                FROM release_metadata
+                WHERE release_mbid != ''
+                GROUP BY release_mbid
+            ) AS release
+                ON base.effective_release_mbid = release.release_mbid
+        ) AS with_release
+        ARRAY JOIN
+            arrayEnumerate(effective_artist_mbids) AS artist_position,
+            effective_artist_mbids AS artist_mbid
+    ) AS expanded
+    ANY LEFT JOIN (
+        SELECT
+            artist_mbid,
+            argMin(artist_id, if(artist_id > 0 AND artist_id <= 4294967295, 0, 1)) AS artist_id
+        FROM artist_metadata
+        WHERE artist_mbid != ''
+        GROUP BY artist_mbid
+    ) AS artist
+        ON expanded.artist_mbid = artist.artist_mbid
+    GROUP BY
+        expanded.raw_listen_id,
+        expanded.listened_at,
+        expanded.created,
+        expanded.user_id,
+        expanded.recording_msid,
+        expanded.submitted_recording_id,
+        expanded.recording_id,
+        expanded.submitted_release_group_id,
+        expanded.release_group_id,
+        expanded.submitted_artist_ids
+    """,
     """
     CREATE MATERIALIZED VIEW IF NOT EXISTS mv_listens_to_artist_stats
     TO user_artist_stats_daily
