@@ -1,7 +1,7 @@
 """
 FTP Dump Downloader for ClickHouse
 
-Downloads listen dumps from the ListenBrainz FTP server for loading into ClickHouse.
+Downloads Spark parquet listen dumps from the ListenBrainz FTP server for loading into ClickHouse.
 """
 
 import ftplib
@@ -27,7 +27,7 @@ class DumpInvalidException(Exception):
 
 
 class FTPDumpDownloader:
-    """Downloads listen dumps from the ListenBrainz FTP server."""
+    """Downloads Spark parquet listen dumps from the ListenBrainz FTP server."""
 
     def __init__(self, ftp_server: str = "ftp.eu.metabrainz.org", ftp_dir: str = "/pub/musicbrainz/listenbrainz/"):
         self.ftp_server = ftp_server
@@ -157,17 +157,12 @@ class FTPDumpDownloader:
         dump_id = int(latest.split('-')[2])
         return latest, dump_id
 
-    def get_listens_filename(self, dump_dir: str) -> str:
-        """Get the listens parquet filename from a dump directory."""
-        self.connection.cwd(dump_dir)
-        files = self.list_dir()
-
-        # Look for the listens parquet archive
-        for f in files:
-            if 'listens' in f and f.endswith('.tar.zst'):
-                return f
-
-        raise ValueError(f"No listens file found in {dump_dir}")
+    def get_spark_dump_filename(self, dump_dir: str) -> str:
+        """Get the Spark parquet archive filename for a ListenBrainz dump directory."""
+        parts = dump_dir.rstrip("/").split("-")
+        if len(parts) < 6:
+            raise ValueError(f"Invalid dump directory name: {dump_dir}")
+        return f"listenbrainz-spark-dump-{parts[2]}-{parts[3]}-{parts[4]}-{parts[5]}.tar"
 
     def download_latest_dump(
         self,
@@ -193,12 +188,11 @@ class FTPDumpDownloader:
         dump_dir_name, dump_id = self.get_latest_dump_name(dump_type)
         logger.info(f"Latest {dump_type.value} dump: {dump_dir_name} (ID: {dump_id})")
 
-        # Get listens filename
-        listens_filename = self.get_listens_filename(dump_dir_name)
-        logger.info(f"Listens file: {listens_filename}")
+        spark_dump_filename = self.get_spark_dump_filename(dump_dir_name)
+        logger.info(f"Spark dump file: {spark_dump_filename}")
 
-        # Download
-        dump_path = self.download_dump(listens_filename, download_dir)
+        self.connection.cwd(dump_dir_name)
+        dump_path = self.download_dump(spark_dump_filename, download_dir)
 
         # Return to root
         self.connection.cwd('/')

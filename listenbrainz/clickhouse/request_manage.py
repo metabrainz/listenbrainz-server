@@ -9,6 +9,8 @@ from listenbrainz.webserver import create_app
 
 cli = click.Group()
 
+CLICKHOUSE_ENTITY_TYPES = ["artists", "recordings", "release_groups"]
+
 
 def send_request_to_clickhouse(query, **params):
     """Send a request to the ClickHouse request queue."""
@@ -37,6 +39,16 @@ def send_request_to_clickhouse(query, **params):
             )
 
     click.echo(f"Request sent: {query}")
+
+
+def _send_stats_request(query: str, entities: tuple[str], batch_size: int):
+    """Send one ClickHouse stats request, or one per selected entity."""
+    if not entities:
+        send_request_to_clickhouse(query, batch_size=batch_size)
+        return
+
+    for entity in entities:
+        send_request_to_clickhouse(query, entity=entity, batch_size=batch_size)
 
 
 @cli.command(name="load_full_dump")
@@ -69,18 +81,62 @@ def import_incremental_dump(workers: int):
     send_request_to_clickhouse("clickhouse.import_incremental_dump", workers=workers)
 
 
+@cli.command(name="request_hourly_stats")
+@click.option("--entity", "entities", multiple=True, type=click.Choice(CLICKHOUSE_ENTITY_TYPES),
+              help="Entity stats to refresh. May be passed multiple times; defaults to all.")
+@click.option("--batch-size", type=int, default=1000, help="Users to process per ClickHouse query batch")
+def request_hourly_stats(entities: tuple[str], batch_size: int):
+    """Request an incremental ClickHouse user entity stats refresh."""
+    _send_stats_request("clickhouse.stats.hourly", entities, batch_size)
+
+
+@cli.command(name="request_full_stats_refresh")
+@click.option("--entity", "entities", multiple=True, type=click.Choice(CLICKHOUSE_ENTITY_TYPES),
+              help="Entity stats to refresh. May be passed multiple times; defaults to all.")
+@click.option("--batch-size", type=int, default=1000, help="Users to process per ClickHouse query batch")
+def request_full_stats_refresh(entities: tuple[str], batch_size: int):
+    """Request a full ClickHouse user entity stats refresh."""
+    _send_stats_request("clickhouse.stats.full_refresh", entities, batch_size)
+
+
 @cli.command(name="refresh_metadata_cache")
 @click.option("--cache-type", "cache_types", multiple=True,
               type=click.Choice(["artist", "recording", "release", "release_group"]),
               help="Metadata cache type to refresh. May be passed multiple times; defaults to all.")
 @click.option("--batch-size", type=int, default=100000, help="Rows to fetch from PostgreSQL per batch")
-def refresh_metadata_cache(cache_types: tuple[str], batch_size: int):
+@click.option("--max-retries", type=int, default=2, help="Retries per cache after a PostgreSQL connection failure")
+def refresh_metadata_cache(cache_types: tuple[str], batch_size: int, max_retries: int):
     """Refresh ClickHouse MusicBrainz metadata cache tables."""
     send_request_to_clickhouse(
         "clickhouse.metadata_cache.refresh",
         cache_types=list(cache_types) or None,
         batch_size=batch_size,
+        max_retries=max_retries,
     )
+
+
+@cli.command(name="cron_request_all_stats")
+@click.option("--stats-batch-size", type=int, default=1000, help="Users to process per ClickHouse query batch")
+@click.option("--metadata-batch-size", type=int, default=100000, help="Rows to fetch from PostgreSQL per metadata batch")
+@click.option("--metadata-max-retries", type=int, default=2,
+              help="Retries per metadata cache after a PostgreSQL connection failure")
+@click.pass_context
+def cron_request_all_stats(ctx, stats_batch_size: int, metadata_batch_size: int, metadata_max_retries: int):
+    """Request metadata refresh and incremental ClickHouse stats refresh."""
+    ctx.invoke(refresh_metadata_cache, cache_types=(), batch_size=metadata_batch_size, max_retries=metadata_max_retries)
+    ctx.invoke(request_hourly_stats, entities=(), batch_size=stats_batch_size)
+
+
+@cli.command(name="cron_request_full_stats_refresh")
+@click.option("--stats-batch-size", type=int, default=1000, help="Users to process per ClickHouse query batch")
+@click.option("--metadata-batch-size", type=int, default=100000, help="Rows to fetch from PostgreSQL per metadata batch")
+@click.option("--metadata-max-retries", type=int, default=2,
+              help="Retries per metadata cache after a PostgreSQL connection failure")
+@click.pass_context
+def cron_request_full_stats_refresh(ctx, stats_batch_size: int, metadata_batch_size: int, metadata_max_retries: int):
+    """Request metadata refresh and full ClickHouse stats refresh."""
+    ctx.invoke(refresh_metadata_cache, cache_types=(), batch_size=metadata_batch_size, max_retries=metadata_max_retries)
+    ctx.invoke(request_full_stats_refresh, entities=(), batch_size=stats_batch_size)
 
 
 if __name__ == '__main__':

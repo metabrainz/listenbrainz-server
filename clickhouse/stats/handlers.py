@@ -262,6 +262,7 @@ def run_full_stats_refresh(
 def refresh_metadata_cache(
     cache_types: Optional[list[str]] = None,
     batch_size: int = 100_000,
+    max_retries: int = 2,
 ) -> list[dict]:
     """
     Refresh ClickHouse metadata tables directly from MusicBrainz PostgreSQL.
@@ -270,6 +271,8 @@ def refresh_metadata_cache(
         cache_types: List of cache types to refresh ('artist', 'recording', 'release',
                      'release_group'), or None to refresh all.
         batch_size: Number of rows to fetch from PostgreSQL per batch.
+        max_retries: Number of times to retry a cache after a recoverable PostgreSQL
+                     connection failure.
 
     Returns:
         List of result messages for the response queue.
@@ -296,7 +299,7 @@ def refresh_metadata_cache(
             if invalid:
                 raise ValueError(f"Unknown cache type(s): {invalid}. Valid: {valid_types}")
 
-        results = refresh_metadata_caches(pg_dsn, ch_client, cache_types, batch_size)
+        results = refresh_metadata_caches(pg_dsn, ch_client, cache_types, batch_size, max_retries)
         ch_client.close()
 
         errors = {t: rows for t, rows in results.items() if rows < 0}

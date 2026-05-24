@@ -9,6 +9,7 @@ sipHash IDs. Both ID spaces share the same metadata tables.
 import json
 import logging
 import time
+from contextlib import suppress
 
 import psycopg2
 import pycountry
@@ -249,34 +250,70 @@ TRANSFORMS = {
 }
 
 
-def refresh_cache(cache_type, pg_dsn, ch_client, batch_size=100_000):
-    """Refresh a single metadata table from MusicBrainz PostgreSQL."""
+RECOVERABLE_PG_ERRORS = (psycopg2.OperationalError, psycopg2.InterfaceError)
+
+
+def _refresh_cache_once(cache_type, pg_dsn, ch_client, batch_size):
     table = TABLE_NAMES[cache_type]
     columns = COLUMN_NAMES[cache_type]
     transform = TRANSFORMS[cache_type]
 
+    total_rows = 0
+    pg_conn = None
+    cursor = None
+    try:
+        pg_conn = psycopg2.connect(pg_dsn)
+        cursor = pg_conn.cursor(name=f"{cache_type}_cache_cursor")
+        cursor.execute(PG_QUERIES[cache_type])
+        while True:
+            rows = cursor.fetchmany(batch_size)
+            if not rows:
+                break
+            ch_client.insert(table, [transform(row) for row in rows], column_names=columns)
+            total_rows += len(rows)
+    finally:
+        if cursor is not None:
+            with suppress(Exception):
+                cursor.close()
+        if pg_conn is not None:
+            with suppress(Exception):
+                pg_conn.close()
+
+    return total_rows
+
+
+def refresh_cache(cache_type, pg_dsn, ch_client, batch_size=100_000, max_retries=2):
+    """Refresh a single metadata table from MusicBrainz PostgreSQL."""
+    table = TABLE_NAMES[cache_type]
+
     ensure_stats_schema(ch_client)
     # Preserve submitted rows; refreshed canonical rows supersede older ones via ReplacingMergeTree.
 
-    total_rows = 0
     start = time.monotonic()
+    attempts = max(0, int(max_retries)) + 1
 
-    with psycopg2.connect(pg_dsn) as pg_conn:
-        with pg_conn.cursor(name=f"{cache_type}_cache_cursor") as cursor:
-            cursor.execute(PG_QUERIES[cache_type])
-            while True:
-                rows = cursor.fetchmany(batch_size)
-                if not rows:
-                    break
-                ch_client.insert(table, [transform(row) for row in rows], column_names=columns)
-                total_rows += len(rows)
+    for attempt in range(1, attempts + 1):
+        try:
+            total_rows = _refresh_cache_once(cache_type, pg_dsn, ch_client, batch_size)
+            break
+        except RECOVERABLE_PG_ERRORS:
+            if attempt >= attempts:
+                raise
+            logger.warning(
+                "PostgreSQL connection failed while refreshing %s; retrying attempt %d/%d",
+                table,
+                attempt + 1,
+                attempts,
+                exc_info=True,
+            )
+            time.sleep(min(30, 2 ** (attempt - 1)))
 
     elapsed = time.monotonic() - start
     logger.info("Refreshed %s: %d rows in %.1fs", table, total_rows, elapsed)
     return total_rows
 
 
-def refresh_metadata_caches(pg_dsn, ch_client, cache_types=None, batch_size=100_000):
+def refresh_metadata_caches(pg_dsn, ch_client, cache_types=None, batch_size=100_000, max_retries=2):
     """
     Refresh all (or selected) metadata tables.
 
@@ -288,7 +325,7 @@ def refresh_metadata_caches(pg_dsn, ch_client, cache_types=None, batch_size=100_
     results = {}
     for cache_type in cache_types:
         try:
-            results[cache_type] = refresh_cache(cache_type, pg_dsn, ch_client, batch_size)
+            results[cache_type] = refresh_cache(cache_type, pg_dsn, ch_client, batch_size, max_retries)
         except Exception:
             logger.error("Error refreshing %s cache", cache_type, exc_info=True)
             results[cache_type] = -1

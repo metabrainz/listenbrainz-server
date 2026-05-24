@@ -88,7 +88,7 @@ def handle_user_entity_stats(message):
             'stats_range': 'all_time',
             'from_ts': 0,
             'to_ts': 1234567890,
-            'database': 'artists_all_time_20240115',
+            'database': 'clk_artists_all_time_20240115',
             'data': [
                 {'user_id': 123, 'count': 100, 'data': [...]},
                 {'user_id': 456, 'count': 50, 'data': [...]},

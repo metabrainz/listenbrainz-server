@@ -138,6 +138,7 @@ class CacheConfig:
     ch_username: str = 'default'
     ch_password: str = ''
     top_n: int = 1000
+    couch_db_prefix: str = 'clk'
 
 
 @dataclass
@@ -231,6 +232,7 @@ def get_cache_config_from_config(config_module) -> CacheConfig:
         ch_username=getattr(config_module, 'CLICKHOUSE_USERNAME', 'default'),
         ch_password=getattr(config_module, 'CLICKHOUSE_PASSWORD', ''),
         top_n=getattr(config_module, 'STATS_TOP_N', 1000),
+        couch_db_prefix=getattr(config_module, 'STATS_COUCH_DB_PREFIX', 'clk'),
     )
 
 
@@ -259,7 +261,7 @@ class StatsCacheManager:
 
     def get_stats_database_name(self, entity_type: str, time_range: str, with_timestamp: bool = False) -> str:
         """
-        Generate ListenBrainz stats database name for entity type and time range.
+        Generate ClickHouse stats database name for entity type and time range.
 
         Args:
             entity_type: The entity type (artists, recordings, release_groups)
@@ -267,9 +269,9 @@ class StatsCacheManager:
             with_timestamp: If True, append YYYYMMDD timestamp for new database creation
 
         Returns:
-            Database name like 'artists_all_time' or 'artists_all_time_20240115'
+            Database name like 'clk_artists_all_time' or 'clk_artists_all_time_20240115'
         """
-        db_name = f"{entity_type}_{time_range}"
+        db_name = self.get_stats_database_prefix(entity_type, time_range)
 
         if with_timestamp:
             timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d")
@@ -278,8 +280,8 @@ class StatsCacheManager:
         return db_name
 
     def get_stats_database_prefix(self, entity_type: str, time_range: str) -> str:
-        """Get database prefix for finding the current ListenBrainz stats database."""
-        return f"{entity_type}_{time_range}"
+        """Get ClickHouse stats database prefix for finding the current CouchDB database."""
+        return f"{self.config.couch_db_prefix}_{entity_type}_{time_range}"
 
     def get_cache_state(self) -> dict[str, dict]:
         """Get current cache state for all time ranges."""
@@ -866,6 +868,9 @@ class StatsCacheManager:
 
         all_users = [row[0] for row in result.result_rows]
         logger.info(f"Found {len(all_users)} users to refresh")
+        if not all_users:
+            logger.info("No users found for %s full refresh; no stats databases will be created", entity_type)
+            return
 
         total_messages = 0
 
