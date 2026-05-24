@@ -56,7 +56,6 @@ function ProgressBar(props: ProgressBarProps) {
   const rectCacheRef = React.useRef<DOMRect | null>(null);
   const pendingSeekMsRef = React.useRef<number>(-1);
   const draggingElementRef = React.useRef<Element | null>(null);
-  const seekVisualMsRef = React.useRef<number>(-1);
 
   React.useEffect(() => {
     let rafId: number;
@@ -70,7 +69,7 @@ function ProgressBar(props: ProgressBarProps) {
       if (progressBarInnerRef.current) {
         progressBarInnerRef.current.style.transform = `scaleX(${ratio})`;
       }
-      if (handleRef.current) {
+      if (!isDraggingRef.current && handleRef.current) {
         const barWidth =
           progressBarInnerRef.current?.parentElement?.getBoundingClientRect()
             .width ?? 0;
@@ -83,6 +82,7 @@ function ProgressBar(props: ProgressBarProps) {
     return () => cancelAnimationFrame(rafId);
   }, [progressMs, durationMs, playerPaused, updateTime]);
 
+  // Converts a pointer clientX coordinate to a millisecond position using the cached bar rect
   const getMsFromClientX = (clientX: number): number => {
     const rect = rectCacheRef.current;
     if (!rect || durationMs <= 0) return 0;
@@ -90,6 +90,7 @@ function ProgressBar(props: ProgressBarProps) {
     return ratio * durationMs;
   };
 
+  // Synchronously writes progress bar transform and handle position to the DOM during drag
   const flushVisuals = (msPosition: number): void => {
     setTipContent(millisecondsToStr(msPosition));
     const ratio = Math.min(msPosition / durationMs, 1) || 0;
@@ -104,13 +105,14 @@ function ProgressBar(props: ProgressBarProps) {
   };
 
   React.useEffect(() => {
+    // During drag: update visuals on every pointer move without firing seek
     const onPointerMove = (e: PointerEvent) => {
       if (!isDraggingRef.current) return;
       const msPos = getMsFromClientX(e.clientX);
-      seekVisualMsRef.current = msPos;
       flushVisuals(msPos);
     };
 
+    // On drag release: fire the actual seek and let pendingSeekMsRef hold the optimistic position
     const onPointerUp = (e: PointerEvent) => {
       if (!isDraggingRef.current) return;
       isDraggingRef.current = false;
@@ -130,6 +132,7 @@ function ProgressBar(props: ProgressBarProps) {
     };
   }, [seekToPositionMs, durationMs]);
 
+  // Clear pendingSeek once the player atom catches up (within 500ms tolerance)
   React.useEffect(() => {
     if (pendingSeekMsRef.current < 0) return;
     if (Math.abs(progressMs - pendingSeekMsRef.current) < 500) {
@@ -137,9 +140,13 @@ function ProgressBar(props: ProgressBarProps) {
     }
   }, [progressMs]);
 
+  // Cache bar rect on mount and keep it fresh on resize
   React.useEffect(() => {
+    if (progressBarRef.current) {
+      rectCacheRef.current = progressBarRef.current.getBoundingClientRect();
+    }
     const onResize = () => {
-      if (isDraggingRef.current && progressBarRef.current) {
+      if (progressBarRef.current) {
         rectCacheRef.current = progressBarRef.current.getBoundingClientRect();
       }
     };
@@ -227,7 +234,6 @@ function ProgressBar(props: ProgressBarProps) {
           (e.currentTarget as HTMLDivElement).classList.add("dragging");
           draggingElementRef.current = e.currentTarget as HTMLDivElement;
           const msPos = getMsFromClientX(e.clientX);
-          seekVisualMsRef.current = msPos;
           flushVisuals(msPos);
         }}
         onMouseEnter={() => {
