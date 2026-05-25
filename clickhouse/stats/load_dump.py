@@ -16,7 +16,6 @@ The local and FTP paths mirror the patterns in listenbrainz_spark/dump/:
 """
 
 import logging
-import math
 import shutil
 import subprocess
 import tempfile
@@ -24,12 +23,13 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from threading import Lock
-from typing import Any
 from uuid import uuid4
 
 import clickhouse_connect
 from clickhouse_connect.driver import Client
+import numpy as np
 import pyarrow as pa
+import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
 from clickhouse.stats.ftp import DumpType, FTPDumpDownloader
@@ -277,61 +277,82 @@ def create_client(host: str, port: int, username: str, password: str, database: 
 # Arrow transform
 # =============================================================================
 
-def clean_array(value: Any) -> list:
-    if value is None:
-        return []
-    if isinstance(value, float) and math.isnan(value):
-        return []
-    if hasattr(value, "tolist"):
-        value = value.tolist()
-    if isinstance(value, str):
-        return [value] if value else []
-    return [item for item in value if item is not None]
+_STRING_LIST_TYPE = pa.list_(pa.string())
 
 
-def _is_null(value) -> bool:
-    if value is None:
-        return True
-    if isinstance(value, float):
-        return math.isnan(value)
-    return False
+def _to_string_array(column) -> pa.Array:
+    if isinstance(column, pa.ChunkedArray):
+        column = column.combine_chunks()
+    if not (pa.types.is_string(column.type) or pa.types.is_large_string(column.type)):
+        column = pc.cast(column, pa.string())
+    return pc.fill_null(column, "")
 
 
-def _clean_scalar(value, default=""):
-    return default if _is_null(value) else value
+def _to_uint32_array(column) -> pa.Array:
+    if isinstance(column, pa.ChunkedArray):
+        column = column.combine_chunks()
+    if pa.types.is_floating(column.type):
+        column = pc.if_else(pc.is_nan(column), pa.scalar(None, type=column.type), column)
+    column = pc.fill_null(column, 0)
+    return pc.cast(column, pa.uint32())
 
 
-def _clean_int(value) -> int:
-    return 0 if _is_null(value) else int(value)
+def _to_string_list_array(column) -> pa.Array:
+    """Replace null outer lists with [] and filter null elements within lists."""
+    if isinstance(column, pa.ChunkedArray):
+        column = column.combine_chunks()
+    if not (pa.types.is_list(column.type) or pa.types.is_large_list(column.type)):
+        column = pc.cast(column, _STRING_LIST_TYPE)
+    inner_type = column.type.value_type
+    if not (pa.types.is_string(inner_type) or pa.types.is_large_string(inner_type)):
+        column = pc.cast(column, _STRING_LIST_TYPE)
+
+    column = pc.fill_null(column, pa.scalar([], type=_STRING_LIST_TYPE))
+
+    values = column.values
+    if values.null_count == 0:
+        return column
+
+    valid_mask = pc.is_valid(values)
+    valid_np = valid_mask.to_numpy(zero_copy_only=False)
+    offsets_np = column.offsets.to_numpy(zero_copy_only=False).astype(np.int64)
+
+    cum_valid = np.empty(len(valid_np) + 1, dtype=np.int64)
+    cum_valid[0] = 0
+    np.cumsum(valid_np, out=cum_valid[1:])
+    new_offsets = pa.array(cum_valid[offsets_np].astype(np.int32), type=pa.int32())
+
+    return pa.ListArray.from_arrays(new_offsets, values.filter(valid_mask))
 
 
-def _normalise_listen_row(row: dict) -> dict:
-    return {
-        "listened_at": row["listened_at"],
-        "created": row["created"],
-        "user_id": _clean_int(row["user_id"]),
-        "recording_msid": str(_clean_scalar(row["recording_msid"])),
-        "artist_name": str(_clean_scalar(row.get("artist_name"))),
-        "release_name": str(_clean_scalar(row.get("release_name"))),
-        "release_mbid": str(_clean_scalar(row.get("release_mbid"))),
-        "recording_name": str(_clean_scalar(row.get("recording_name"))),
-        "recording_mbid": str(_clean_scalar(row.get("recording_mbid"))),
-        "artist_credit_mbids": [str(value) for value in clean_array(row.get("artist_credit_mbids"))],
-    }
+def _column_or_default(table: pa.Table, name: str, default: pa.Array) -> pa.Array:
+    if name in table.column_names:
+        return table[name]
+    return default
 
 
 def build_raw_listens_arrow_table(table: pa.Table, include_batch_row_id: bool = False) -> pa.Table:
     """Normalize a Spark dump batch into the raw listens table schema."""
-    listen_rows = [
-        _normalise_listen_row(row)
-        for row in table.to_pylist()
-    ]
+    n_rows = table.num_rows
+    empty_strings = pa.array([""] * n_rows, type=pa.string())
+    empty_lists = pa.array([[]] * n_rows, type=_STRING_LIST_TYPE)
+
     columns = {
-        column: [row[column] for row in listen_rows]
-        for column in RAW_LISTEN_COLUMNS
+        "listened_at": table["listened_at"],
+        "created": table["created"],
+        "user_id": _to_uint32_array(table["user_id"]),
+        "recording_msid": _to_string_array(table["recording_msid"]),
+        "artist_name": _to_string_array(_column_or_default(table, "artist_name", empty_strings)),
+        "release_name": _to_string_array(_column_or_default(table, "release_name", empty_strings)),
+        "release_mbid": _to_string_array(_column_or_default(table, "release_mbid", empty_strings)),
+        "recording_name": _to_string_array(_column_or_default(table, "recording_name", empty_strings)),
+        "recording_mbid": _to_string_array(_column_or_default(table, "recording_mbid", empty_strings)),
+        "artist_credit_mbids": _to_string_list_array(
+            _column_or_default(table, "artist_credit_mbids", empty_lists)
+        ),
     }
     if include_batch_row_id:
-        columns = {"batch_row_id": list(range(len(listen_rows))), **columns}
+        columns = {"batch_row_id": pa.array(np.arange(n_rows, dtype=np.uint64)), **columns}
 
     return pa.table(columns)
 
@@ -359,7 +380,7 @@ def _load_parquet_file(
     file_path: Path,
     host: str, port: int, username: str, password: str, database: str,
     progress: LoadProgress = None,
-    batch_size: int = 10_000,
+    batch_size: int = 200_000,
 ) -> int:
     client = create_client(host, port, username, password, database)
     try:
