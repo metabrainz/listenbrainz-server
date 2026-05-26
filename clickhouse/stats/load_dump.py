@@ -189,12 +189,17 @@ GROUP BY expanded.raw_listen_id
 """
 
 # Spill GROUP BY / sort state to disk if the working set exceeds ~8GB.
-# Keeps the end-of-load query from OOM-ing on large dumps without
-# hard-capping it on smaller machines.
+# join_algorithm='grace_hash' lets the metadata hash-join build sides spill
+# too, instead of OOMing when the default hash join can't fit. max_memory_usage
+# raises the per-query cap above the 10GB default to give spill enough room
+# to actually engage before the memory tracker kills the query.
 PROCESS_RAW_LISTENS_SETTINGS = {
     "async_insert": 0,
     "max_bytes_before_external_group_by": 8 * 1024 * 1024 * 1024,
     "max_bytes_before_external_sort": 8 * 1024 * 1024 * 1024,
+    "max_memory_usage": 32 * 1024 * 1024 * 1024,
+    "join_algorithm": "grace_hash",
+    "grace_hash_join_initial_buckets": 16,
 }
 
 
@@ -226,13 +231,20 @@ class LoadProgress:
             return self.total_inserted, self.files_completed
 
 
-def create_client(host: str, port: int, username: str, password: str, database: str) -> Client:
+PROCESS_SEND_RECEIVE_TIMEOUT = 7200
+
+
+def create_client(
+    host: str, port: int, username: str, password: str, database: str,
+    send_receive_timeout: int = 300,
+) -> Client:
     return clickhouse_connect.get_client(
         host=host, port=port, username=username, password=password, database=database,
         compress=False,
         form_encode_query_params=True,
         session_id=f"listenbrainz_load_dump_{uuid4().hex}",
         settings={"async_insert": 1, "wait_for_async_insert": 1},
+        send_receive_timeout=send_receive_timeout,
     )
 
 
@@ -424,7 +436,10 @@ def load_dump(
             logger.error("  %s: %s", path, error)
 
     if total_inserted > 0:
-        process_client = create_client(host, port, username, password, database)
+        process_client = create_client(
+            host, port, username, password, database,
+            send_receive_timeout=PROCESS_SEND_RECEIVE_TIMEOUT,
+        )
         try:
             logger.info("Processing raw_listens into listens (single end-of-load join)...")
             process_start = time.time()
