@@ -7,8 +7,13 @@ Supports three sources:
 - Local dump archive (.tar / .tar.zst): load_from_local(base_dir, ...)
 - FTP download: load_from_ftp(dump_type, ...)
 
-Rows are inserted into the raw listens table, then processed in bounded
-ClickHouse batches into the id-only listens table.
+Parquet files are inserted into raw_listens in parallel. Once all files are
+loaded, a single INSERT...SELECT joins raw_listens against the metadata
+tables once and populates the listens table. Joining once at the end (rather
+than per batch) collapses metadata-table scans from N-per-batch to 1-per-load.
+
+NOTE: the end-of-load processing reads the entire raw_listens table. Truncate
+listens before a fresh load to avoid duplicating already-processed rows.
 
 The local and FTP paths mirror the patterns in listenbrainz_spark/dump/:
   - dump directories: listenbrainz-dump-{id}-{date}-{tod}-{full|incremental}/
@@ -39,7 +44,6 @@ logger = logging.getLogger(__name__)
 
 LISTENS_TABLE = "listens"
 RAW_LISTENS_TABLE = "raw_listens"
-RAW_LISTENS_BATCH_TABLE = "raw_listens_batch"
 
 RAW_LISTEN_COLUMNS = [
     "listened_at",
@@ -54,25 +58,11 @@ RAW_LISTEN_COLUMNS = [
     "artist_credit_mbids",
 ]
 
-RAW_LISTEN_BATCH_COLUMNS = ["batch_row_id"] + RAW_LISTEN_COLUMNS
-
-CREATE_RAW_LISTENS_BATCH_TABLE = f"""
-CREATE TEMPORARY TABLE IF NOT EXISTS {RAW_LISTENS_BATCH_TABLE} (
-    batch_row_id UInt64,
-    listened_at DateTime64(3),
-    created DateTime64(3),
-    user_id UInt32,
-    recording_msid String,
-    artist_name String,
-    release_name String,
-    release_mbid String,
-    recording_name String,
-    recording_mbid String,
-    artist_credit_mbids Array(String)
-) ENGINE = Memory
-"""
-
-PROCESS_RAW_LISTENS_BATCH = f"""
+# End-of-load: join raw_listens against the deduped metadata tables once
+# (no per-batch IN-subquery scans) and populate listens. Grouping by the
+# raw_listens UUID is small (16 bytes) and uniquely identifies each source
+# row, so all other listen-level columns can be collapsed via any().
+PROCESS_RAW_LISTENS = f"""
 INSERT INTO {LISTENS_TABLE}
     (
         listened_at,
@@ -87,15 +77,15 @@ INSERT INTO {LISTENS_TABLE}
         artist_ids
     )
 SELECT
-    expanded.listened_at,
-    expanded.created,
-    expanded.user_id,
-    expanded.recording_msid,
-    expanded.submitted_recording_id,
-    expanded.recording_id,
-    expanded.submitted_release_group_id,
-    expanded.release_group_id,
-    expanded.submitted_artist_ids,
+    any(expanded.listened_at) AS listened_at,
+    any(expanded.created) AS created,
+    any(expanded.user_id) AS user_id,
+    any(expanded.recording_msid) AS recording_msid,
+    any(expanded.submitted_recording_id) AS submitted_recording_id,
+    any(expanded.recording_id) AS recording_id,
+    any(expanded.submitted_release_group_id) AS submitted_release_group_id,
+    any(expanded.release_group_id) AS release_group_id,
+    any(expanded.submitted_artist_ids) AS submitted_artist_ids,
     arrayMap(
         item -> tupleElement(item, 2),
         arraySort(
@@ -117,7 +107,7 @@ FROM (
         artist_mbid
     FROM (
         SELECT
-            base.batch_row_id,
+            base.raw_listen_id,
             base.listened_at,
             base.created,
             base.user_id,
@@ -131,7 +121,7 @@ FROM (
             base.effective_artist_mbids
         FROM (
             SELECT
-                r.batch_row_id,
+                r.raw_listen_id,
                 r.listened_at,
                 r.created,
                 r.user_id,
@@ -152,7 +142,7 @@ FROM (
                     recording.artist_credit_mbids
                 ) AS effective_artist_mbids,
                 if(recording.release_mbid != '', recording.release_mbid, r.release_mbid) AS effective_release_mbid
-            FROM {RAW_LISTENS_BATCH_TABLE} AS r
+            FROM {RAW_LISTENS_TABLE} AS r
             ANY LEFT JOIN (
                 SELECT
                     recording_mbid,
@@ -161,11 +151,6 @@ FROM (
                     artist_credit_mbids,
                     release_mbid
                 FROM recording_metadata
-                WHERE recording_mbid IN (
-                    SELECT DISTINCT recording_mbid
-                    FROM {RAW_LISTENS_BATCH_TABLE}
-                    WHERE recording_mbid != ''
-                )
                 ORDER BY
                     if(recording_id > 0 AND recording_id <= 4294967295, 0, 1),
                     recording_id
@@ -178,11 +163,6 @@ FROM (
                 release_mbid,
                 release_group_id
             FROM release_metadata
-            WHERE release_mbid IN (
-                SELECT DISTINCT release_mbid
-                FROM {RAW_LISTENS_BATCH_TABLE}
-                WHERE release_mbid != ''
-            )
             ORDER BY
                 if(release_group_id > 0 AND release_group_id <= 4294967295, 0, 1),
                 release_group_id
@@ -199,40 +179,23 @@ ANY LEFT JOIN (
         artist_mbid,
         artist_id
     FROM artist_metadata
-    WHERE artist_mbid IN (
-        SELECT DISTINCT artist_mbid
-        FROM (
-            SELECT arrayJoin(if(empty(artist_credit_mbids), [''], artist_credit_mbids)) AS artist_mbid
-            FROM {RAW_LISTENS_BATCH_TABLE}
-            UNION DISTINCT
-            SELECT arrayJoin(if(empty(artist_credit_mbids), [''], artist_credit_mbids)) AS artist_mbid
-            FROM recording_metadata
-            WHERE recording_mbid IN (
-                SELECT DISTINCT recording_mbid
-                FROM {RAW_LISTENS_BATCH_TABLE}
-                WHERE recording_mbid != ''
-            )
-        ) AS batch_artist_mbids
-        WHERE artist_mbid != ''
-    )
     ORDER BY
         if(artist_id > 0 AND artist_id <= 4294967295, 0, 1),
         artist_id
     LIMIT 1 BY artist_mbid
 ) AS artist
     ON expanded.artist_mbid = artist.artist_mbid
-GROUP BY
-    expanded.batch_row_id,
-    expanded.listened_at,
-    expanded.created,
-    expanded.user_id,
-    expanded.recording_msid,
-    expanded.submitted_recording_id,
-    expanded.recording_id,
-    expanded.submitted_release_group_id,
-    expanded.release_group_id,
-    expanded.submitted_artist_ids
+GROUP BY expanded.raw_listen_id
 """
+
+# Spill GROUP BY / sort state to disk if the working set exceeds ~8GB.
+# Keeps the end-of-load query from OOM-ing on large dumps without
+# hard-capping it on smaller machines.
+PROCESS_RAW_LISTENS_SETTINGS = {
+    "async_insert": 0,
+    "max_bytes_before_external_group_by": 8 * 1024 * 1024 * 1024,
+    "max_bytes_before_external_sort": 8 * 1024 * 1024 * 1024,
+}
 
 
 def _get_config_module():
@@ -331,13 +294,13 @@ def _column_or_default(table: pa.Table, name: str, default: pa.Array) -> pa.Arra
     return default
 
 
-def build_raw_listens_arrow_table(table: pa.Table, include_batch_row_id: bool = False) -> pa.Table:
+def build_raw_listens_arrow_table(table: pa.Table) -> pa.Table:
     """Normalize a Spark dump batch into the raw listens table schema."""
     n_rows = table.num_rows
     empty_strings = pa.array([""] * n_rows, type=pa.string())
     empty_lists = pa.array([[]] * n_rows, type=_STRING_LIST_TYPE)
 
-    columns = {
+    return pa.table({
         "listened_at": table["listened_at"],
         "created": table["created"],
         "user_id": _to_uint32_array(table["user_id"]),
@@ -350,26 +313,12 @@ def build_raw_listens_arrow_table(table: pa.Table, include_batch_row_id: bool = 
         "artist_credit_mbids": _to_string_list_array(
             _column_or_default(table, "artist_credit_mbids", empty_lists)
         ),
-    }
-    if include_batch_row_id:
-        columns = {"batch_row_id": pa.array(np.arange(n_rows, dtype=np.uint64)), **columns}
-
-    return pa.table(columns)
+    })
 
 
-def create_raw_listens_batch_table(client: Client) -> None:
-    client.command(CREATE_RAW_LISTENS_BATCH_TABLE)
-
-
-def process_raw_listens_batch(client: Client, table: pa.Table) -> None:
-    batch_table = build_raw_listens_arrow_table(table, include_batch_row_id=True)
-    client.command(f"TRUNCATE TABLE {RAW_LISTENS_BATCH_TABLE}")
-    client.insert_arrow(
-        table=RAW_LISTENS_BATCH_TABLE,
-        arrow_table=batch_table,
-        settings={"async_insert": 0},
-    )
-    client.command(PROCESS_RAW_LISTENS_BATCH, settings={"async_insert": 0})
+def process_raw_listens(client: Client) -> None:
+    """Join raw_listens against the metadata tables once and populate listens."""
+    client.command(PROCESS_RAW_LISTENS, settings=PROCESS_RAW_LISTENS_SETTINGS)
 
 
 # =============================================================================
@@ -384,20 +333,17 @@ def _load_parquet_file(
 ) -> int:
     client = create_client(host, port, username, password, database)
     try:
-        create_raw_listens_batch_table(client)
         parquet_file = pq.ParquetFile(file_path)
         total_rows = parquet_file.metadata.num_rows
         if total_rows == 0:
             return 0
 
         for batch in parquet_file.iter_batches(batch_size=batch_size):
-            batch_table = pa.Table.from_batches([batch])
-            listen_table = build_raw_listens_arrow_table(batch_table)
+            listen_table = build_raw_listens_arrow_table(pa.Table.from_batches([batch]))
             client.insert_arrow(
                 table=RAW_LISTENS_TABLE,
                 arrow_table=listen_table,
             )
-            process_raw_listens_batch(client, batch_table)
 
         if progress:
             progress.update(total_rows)
@@ -465,9 +411,12 @@ def load_dump(
                 errors.append((str(file_path), str(e)))
                 logger.error("Error loading %s: %s", file_path, e)
 
-    elapsed = time.time() - start_time
+    ingest_elapsed = time.time() - start_time
     total_inserted, files_completed = progress.get()
-    logger.info("Completed in %.1fs, %s rows inserted", elapsed, f"{total_inserted:,}")
+    logger.info(
+        "Ingested %s rows into raw_listens in %.1fs",
+        f"{total_inserted:,}", ingest_elapsed,
+    )
 
     if errors:
         logger.error("%d errors:", len(errors))
@@ -475,12 +424,22 @@ def load_dump(
             logger.error("  %s: %s", path, error)
 
     if total_inserted > 0:
-        verify_client = create_client(host, port, username, password, database)
-        raw_count = verify_client.query("SELECT count(*) FROM raw_listens").first_row[0]
-        processed_count = verify_client.query("SELECT count(*) FROM listens").first_row[0]
-        logger.info("Total rows in raw_listens: %s", f"{raw_count:,}")
-        logger.info("Total rows in listens: %s", f"{processed_count:,}")
-        verify_client.close()
+        process_client = create_client(host, port, username, password, database)
+        try:
+            logger.info("Processing raw_listens into listens (single end-of-load join)...")
+            process_start = time.time()
+            process_raw_listens(process_client)
+            logger.info("Processed listens in %.1fs", time.time() - process_start)
+
+            raw_count = process_client.query("SELECT count(*) FROM raw_listens").first_row[0]
+            processed_count = process_client.query("SELECT count(*) FROM listens").first_row[0]
+            logger.info("Total rows in raw_listens: %s", f"{raw_count:,}")
+            logger.info("Total rows in listens: %s", f"{processed_count:,}")
+        finally:
+            process_client.close()
+
+    elapsed = time.time() - start_time
+    logger.info("Completed in %.1fs", elapsed)
 
     return {
         "total_inserted": total_inserted,
