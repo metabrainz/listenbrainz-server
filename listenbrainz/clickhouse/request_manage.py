@@ -99,6 +99,23 @@ def request_full_stats_refresh(entities: tuple[str], batch_size: int):
     _send_stats_request("clickhouse.stats.full_refresh", entities, batch_size)
 
 
+@cli.command(name="request_bulk_full_stats_refresh")
+@click.option("--entity", "entities", multiple=True, type=click.Choice(CLICKHOUSE_ENTITY_TYPES),
+              help="Entity stats to refresh. May be passed multiple times; defaults to all.")
+@click.option("--message-batch-size", type=int, default=100,
+              help="Users per outbound RMQ message.")
+@click.option("--user-flush-size", type=int, default=5000,
+              help="Users buffered from the ClickHouse stream before messages are emitted.")
+def request_bulk_full_stats_refresh(entities: tuple[str], message_batch_size: int, user_flush_size: int):
+    """Request a bulk ClickHouse user entity stats refresh (single intermediate scan)."""
+    params = {"message_batch_size": message_batch_size, "user_flush_size": user_flush_size}
+    if not entities:
+        send_request_to_clickhouse("clickhouse.stats.bulk_full_refresh", **params)
+        return
+    for entity in entities:
+        send_request_to_clickhouse("clickhouse.stats.bulk_full_refresh", entity=entity, **params)
+
+
 @cli.command(name="refresh_metadata_cache")
 @click.option("--cache-type", "cache_types", multiple=True,
               type=click.Choice(["artist", "recording", "release", "release_group"]),

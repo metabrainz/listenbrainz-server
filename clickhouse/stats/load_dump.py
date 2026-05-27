@@ -143,6 +143,12 @@ FROM (
                 ) AS effective_artist_mbids,
                 if(recording.release_mbid != '', recording.release_mbid, r.release_mbid) AS effective_release_mbid
             FROM {RAW_LISTENS_TABLE} AS r
+            -- Exclude empty *_mbid rows from the dedup subqueries. The metadata
+            -- tables hold a row per distinct artist/recording/release without an
+            -- MBID; collapsing them via LIMIT 1 BY '' would pick ONE arbitrary row
+            -- and attribute every metadata-less listen to it. By filtering empties
+            -- out, those listens fall through to the per-name submitted*Id() hash
+            -- below, which keeps distinct artists/recordings separate.
             ANY LEFT JOIN (
                 SELECT
                     recording_mbid,
@@ -151,6 +157,7 @@ FROM (
                     artist_credit_mbids,
                     release_mbid
                 FROM recording_metadata
+                WHERE recording_mbid != ''
                 ORDER BY
                     if(recording_id > 0 AND recording_id <= 4294967295, 0, 1),
                     recording_id
@@ -163,6 +170,7 @@ FROM (
                 release_mbid,
                 release_group_id
             FROM release_metadata
+            WHERE release_mbid != ''
             ORDER BY
                 if(release_group_id > 0 AND release_group_id <= 4294967295, 0, 1),
                 release_group_id
@@ -179,6 +187,7 @@ ANY LEFT JOIN (
         artist_mbid,
         artist_id
     FROM artist_metadata
+    WHERE artist_mbid != ''
     ORDER BY
         if(artist_id > 0 AND artist_id <= 4294967295, 0, 1),
         artist_id
