@@ -211,6 +211,13 @@ PROCESS_RAW_LISTENS_SETTINGS = {
     "grace_hash_join_initial_buckets": 16,
 }
 
+# Split PROCESS_RAW_LISTENS into N sequential buckets by user_id % N so peak
+# memory and temp-disk per query stay bounded. raw_listens is ORDER BY
+# (user_id, ...) so each bucket reads a contiguous slice of granules. 16
+# keeps each bucket's spill state under ~1 GB on full dumps; bump if you
+# still see NOT_ENOUGH_SPACE on _tmp_default.
+PROCESS_RAW_LISTENS_CHUNKS = 16
+
 
 def _get_config_module():
     """Return the ClickHouse service config module."""
@@ -337,9 +344,27 @@ def build_raw_listens_arrow_table(table: pa.Table) -> pa.Table:
     })
 
 
-def process_raw_listens(client: Client) -> None:
-    """Join raw_listens against the metadata tables once and populate listens."""
-    client.command(PROCESS_RAW_LISTENS, settings=PROCESS_RAW_LISTENS_SETTINGS)
+def process_raw_listens(client: Client, chunks: int = PROCESS_RAW_LISTENS_CHUNKS) -> None:
+    """Join raw_listens against the metadata tables and populate listens.
+
+    Runs in ``chunks`` sequential buckets keyed by ``user_id % chunks`` so each
+    query's GROUP BY / grace-hash spill state stays bounded. Pass ``chunks=1``
+    to run the join as a single query (only safe on small inputs or with
+    plenty of temp-disk headroom).
+    """
+    if chunks <= 1:
+        client.command(PROCESS_RAW_LISTENS, settings=PROCESS_RAW_LISTENS_SETTINGS)
+        return
+
+    for i in range(chunks):
+        chunked_sql = PROCESS_RAW_LISTENS.replace(
+            f"FROM {RAW_LISTENS_TABLE} AS r",
+            f"FROM (SELECT * FROM {RAW_LISTENS_TABLE} WHERE user_id % {chunks} = {i}) AS r",
+        )
+        logger.info("Processing raw_listens bucket %d/%d", i + 1, chunks)
+        t0 = time.time()
+        client.command(chunked_sql, settings=PROCESS_RAW_LISTENS_SETTINGS)
+        logger.info("Bucket %d/%d done in %.1fs", i + 1, chunks, time.time() - t0)
 
 
 # =============================================================================
@@ -389,6 +414,7 @@ def load_dump(
     password: str = "",
     database: str = "default",
     workers: int = 4,
+    process_chunks: int = PROCESS_RAW_LISTENS_CHUNKS,
 ) -> dict:
     """
     Load Parquet dump files from a directory into ClickHouse.
@@ -450,9 +476,12 @@ def load_dump(
             send_receive_timeout=PROCESS_SEND_RECEIVE_TIMEOUT,
         )
         try:
-            logger.info("Processing raw_listens into listens (single end-of-load join)...")
+            logger.info(
+                "Processing raw_listens into listens (end-of-load join, %d chunks)...",
+                process_chunks,
+            )
             process_start = time.time()
-            process_raw_listens(process_client)
+            process_raw_listens(process_client, chunks=process_chunks)
             logger.info("Processed listens in %.1fs", time.time() - process_start)
 
             raw_count = process_client.query("SELECT count(*) FROM raw_listens").first_row[0]
@@ -559,6 +588,7 @@ def load_from_local(
     password: str = "",
     database: str = "default",
     workers: int = 4,
+    process_chunks: int = PROCESS_RAW_LISTENS_CHUNKS,
 ) -> dict:
     """
     Load a Spark parquet listens dump from a local directory into ClickHouse.
@@ -581,7 +611,10 @@ def load_from_local(
         parquet_dir = _extract_archive(archive_path, Path(extract_dir))
         logger.info("Extracted to %s", parquet_dir)
 
-        result = load_dump(str(parquet_dir), host, port, username, password, database, workers)
+        result = load_dump(
+            str(parquet_dir), host, port, username, password, database, workers,
+            process_chunks=process_chunks,
+        )
         result["dump_id"] = found_dump_id
         return result
     finally:
@@ -603,6 +636,7 @@ def load_from_ftp(
     password: str = "",
     database: str = "default",
     workers: int = 4,
+    process_chunks: int = PROCESS_RAW_LISTENS_CHUNKS,
 ) -> dict:
     """
     Download the latest Spark parquet listens dump from FTP and load it into ClickHouse.
@@ -642,7 +676,10 @@ def load_from_ftp(
         parquet_dir = _extract_archive(Path(archive_path), Path(extract_dir))
         logger.info("Extracted to %s", parquet_dir)
 
-        result = load_dump(str(parquet_dir), host, port, username, password, database, workers)
+        result = load_dump(
+            str(parquet_dir), host, port, username, password, database, workers,
+            process_chunks=process_chunks,
+        )
         result["dump_id"] = dump_id
         return result
     finally:
