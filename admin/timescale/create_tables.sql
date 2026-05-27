@@ -144,6 +144,41 @@ CREATE TABLE mapping.mb_artist_metadata_cache (
     release_group_data      JSONB NOT NULL
 );
 
+CREATE TABLE mapping.mb_event_cache (
+    dirty                BOOLEAN DEFAULT FALSE,
+    last_updated         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    event_mbid           UUID NOT NULL,
+    event_id             INTEGER NOT NULL,
+    event_name           TEXT NOT NULL,
+    begin_date_year      SMALLINT,
+    begin_date_month     SMALLINT,
+    begin_date_day       SMALLINT,
+    end_date_year        SMALLINT,
+    end_date_month       SMALLINT,
+    end_date_day         SMALLINT,
+    event_time           TIMESTAMPTZ,
+    cancelled            BOOLEAN NOT NULL DEFAULT FALSE,
+    ended                BOOLEAN NOT NULL DEFAULT FALSE,
+    event_type_gid       UUID,
+    event_art_presence   TEXT NOT NULL DEFAULT 'absent',
+    place_mbid           UUID,
+    place_name           TEXT,
+    area_mbid            UUID,
+    event_data           JSONB NOT NULL DEFAULT '{}'::jsonb
+);
+
+CREATE TABLE mapping.mb_event_artist_cache (
+    event_mbid           UUID NOT NULL,
+    event_id             INTEGER NOT NULL,
+    artist_mbid          UUID NOT NULL,
+    artist_id            INTEGER NOT NULL,
+    link_id              INTEGER NOT NULL,
+    link_type_gid        UUID NOT NULL,  
+    link_type_name       TEXT NOT NULL,
+    relationship_data    JSONB NOT NULL DEFAULT '{}'::jsonb,
+    last_updated         TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- the various mapping columns should only be null if the match_type is no_match, otherwise the columns should be
 -- non null. we have had bugs where we completely forgot to insert values for a column and it went unchecked because
 -- it is not possible to mark the column as NOT NULL. however, we can use this constraint to enforce the NOT NULL
