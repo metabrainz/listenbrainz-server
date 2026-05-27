@@ -149,6 +149,11 @@ class EntityConfig:
     dimension_table: str  # e.g., 'artist_metadata'
     id_column: str  # e.g., 'artist_id'
     dimension_fields: list[DimensionField] = field(default_factory=list)
+    # SQL predicate (references aliased dimension columns, e.g. "d.artist_name != ''")
+    # that must hold for an entity to be emitted. Set to mirror the pydantic min_length
+    # validators on the LB receive side, so we drop entries here that would otherwise
+    # be rejected downstream with a warning. None means no filter.
+    valid_entity_predicate: Optional[str] = None
 
 
 # Entity configurations for artists, recordings, and release groups
@@ -162,6 +167,7 @@ ARTIST_CONFIG = EntityConfig(
         DimensionField('artist_mbid', 'artist_mbid'),
         DimensionField('artist_name', 'artist_name'),
     ],
+    valid_entity_predicate="d.artist_name != ''",
 )
 
 RECORDING_CONFIG = EntityConfig(
@@ -180,6 +186,7 @@ RECORDING_CONFIG = EntityConfig(
         DimensionField('caa_id', 'caa_id'),
         DimensionField('caa_release_mbid', 'caa_release_mbid'),
     ],
+    valid_entity_predicate="d.artist_name != ''",
 )
 
 RELEASE_GROUP_CONFIG = EntityConfig(
@@ -430,6 +437,16 @@ class StatsCacheManager:
         """Comma-separated raw column names for the dimension dedup subquery."""
         return ', '.join(dim_field.column for dim_field in self.entity_config.dimension_fields)
 
+    def _entity_filter_clause(self) -> str:
+        """Return ``WHERE <predicate>`` for entities that pass LB validation, else ''.
+
+        Used in ``with_metadata`` to drop empty-metadata rows (e.g. recordings
+        whose hashed id collected all metadata-less listens) before they're
+        ranked into the emitted top-N.
+        """
+        pred = self.entity_config.valid_entity_predicate
+        return f"WHERE {pred}" if pred else ""
+
     def _build_tuple_fields(self) -> str:
         """Build tuple fields for groupArray."""
         fields = ['listen_count']
@@ -512,6 +529,7 @@ class StatsCacheManager:
                     {select_fields}
                 FROM top_n t
                 LEFT JOIN dedup_metadata d ON t.{ec.id_column} = d.{ec.id_column}
+                {self._entity_filter_clause()}
             )
             SELECT
                 user_id,
