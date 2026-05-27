@@ -426,6 +426,10 @@ class StatsCacheManager:
             fields.append(f'd.{dim_field.column}')
         return ', '.join(fields)
 
+    def _build_dimension_columns(self) -> str:
+        """Comma-separated raw column names for the dimension dedup subquery."""
+        return ', '.join(dim_field.column for dim_field in self.entity_config.dimension_fields)
+
     def _build_tuple_fields(self) -> str:
         """Build tuple fields for groupArray."""
         fields = ['listen_count']
@@ -460,9 +464,13 @@ class StatsCacheManager:
 
         ec = self.entity_config
         select_fields = self._build_select_fields()
+        dimension_columns = self._build_dimension_columns()
         tuple_fields = self._build_tuple_fields()
         array_map_indices = self._build_array_map_indices()
 
+        # Dedup the ReplacingMergeTree dimension table via ORDER BY ... LIMIT 1 BY
+        # instead of FINAL: FINAL triggers a runtime merge across all parts and runs
+        # once per query, while LIMIT 1 BY does a single sort over a pre-filtered slice.
         query = f"""
             WITH aggregated AS (
                 SELECT
@@ -488,13 +496,22 @@ class StatsCacheManager:
                 FROM ranked
                 WHERE rn <= {{limit:UInt32}}
             ),
+            dedup_metadata AS (
+                SELECT
+                    {ec.id_column},
+                    {dimension_columns}
+                FROM {ec.dimension_table}
+                WHERE {ec.id_column} IN (SELECT {ec.id_column} FROM top_n)
+                ORDER BY {ec.id_column}, updated_at DESC
+                LIMIT 1 BY {ec.id_column}
+            ),
             with_metadata AS (
                 SELECT
                     t.user_id,
                     t.listen_count,
                     {select_fields}
                 FROM top_n t
-                LEFT JOIN {ec.dimension_table} d FINAL ON t.{ec.id_column} = d.{ec.id_column}
+                LEFT JOIN dedup_metadata d ON t.{ec.id_column} = d.{ec.id_column}
             )
             SELECT
                 user_id,
