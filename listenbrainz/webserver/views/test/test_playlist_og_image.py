@@ -11,6 +11,7 @@ from listenbrainz.art.og_image import (
     OPENGRAPH_IMAGE_WIDTH,
     OPENGRAPH_IMAGE_HEIGHT,
     GRID_WIDTH,
+    _MAX_DOWNLOAD_SIZE,
 )
 from listenbrainz.tests.integration import IntegrationTestCase
 
@@ -65,8 +66,10 @@ class TestDownloadImage:
     def test_download_image_success(self, mock_get):
         dummy_png = _create_dummy_png()
         mock_response = MagicMock()
-        mock_response.content = dummy_png
+        mock_response.headers = {"Content-Type": "image/png"}
+        mock_response.iter_content.return_value = [dummy_png]
         mock_response.raise_for_status = MagicMock()
+        mock_response.close = MagicMock()
         mock_get.return_value = mock_response
 
         result = _download_image("https://example.com/image.jpg")
@@ -87,6 +90,66 @@ class TestDownloadImage:
         mock_get.return_value = mock_response
         result = _download_image("https://example.com/image.jpg")
         assert result is None
+
+    @patch("listenbrainz.art.og_image.req.get")
+    def test_download_image_rejects_invalid_content_type(self, mock_get):
+        mock_response = MagicMock()
+        mock_response.raise_for_status = MagicMock()
+        mock_response.headers = {"Content-Type": "text/html; charset=utf-8"}
+        mock_response.close = MagicMock()
+        mock_get.return_value = mock_response
+
+        result = _download_image("https://example.com/image.jpg")
+        assert result is None
+
+    @patch("listenbrainz.art.og_image.req.get")
+    def test_download_image_rejects_oversized_response(self, mock_get):
+        oversized_chunk = b"x" * (_MAX_DOWNLOAD_SIZE + 1)
+        mock_response = MagicMock()
+        mock_response.raise_for_status = MagicMock()
+        mock_response.headers = {"Content-Type": "image/jpeg"}
+        mock_response.iter_content.return_value = [oversized_chunk]
+        mock_response.close = MagicMock()
+        mock_get.return_value = mock_response
+
+        result = _download_image("https://example.com/image.jpg")
+        assert result is None
+
+    @patch("listenbrainz.art.og_image.time.sleep")
+    @patch("listenbrainz.art.og_image.req.get")
+    def test_download_image_retries_on_transient_failure(self, mock_get, mock_sleep):
+        """First attempt fails with a transient error, retry succeeds."""
+        dummy_png = _create_dummy_png()
+
+        fail_response = MagicMock()
+        fail_response.raise_for_status.side_effect = Exception("502 Bad Gateway")
+
+        success_response = MagicMock()
+        success_response.headers = {"Content-Type": "image/png"}
+        success_response.iter_content.return_value = [dummy_png]
+        success_response.raise_for_status = MagicMock()
+        success_response.close = MagicMock()
+
+        mock_get.side_effect = [fail_response, success_response]
+
+        result = _download_image("https://example.com/image.jpg")
+        assert result is not None
+        assert isinstance(result, Image.Image)
+        assert mock_get.call_count == 2
+        mock_sleep.assert_called_once_with(1)
+
+    @patch("listenbrainz.art.og_image.time.sleep")
+    @patch("listenbrainz.art.og_image.req.get")
+    def test_download_image_exhausts_retries(self, mock_get, mock_sleep):
+        """Both attempts fail — should return None after exhausting retries."""
+        mock_response = MagicMock()
+        mock_response.raise_for_status.side_effect = Exception("502 Bad Gateway")
+        mock_get.return_value = mock_response
+
+        result = _download_image("https://example.com/image.jpg")
+        assert result is None
+        assert mock_get.call_count == 2  # initial attempt + 1 retry
+        mock_sleep.assert_called_once_with(1)
 
 
 class TestGeneratePlaylistOgImage:
@@ -150,6 +213,27 @@ class TestGeneratePlaylistOgImage:
         assert mock_download.call_count == 1
         assert mock_single.call_count == 1
         assert mock_grid.call_count == 0
+
+    @patch("listenbrainz.art.og_image._compose_single", wraps=_compose_single)
+    @patch("listenbrainz.art.og_image._compose_grid_2x2", wraps=_compose_grid_2x2)
+    @patch("listenbrainz.art.og_image._download_image")
+    def test_extra_candidates_allow_grid_despite_failures(self, mock_download, mock_grid, mock_single, tmp_path):
+        """With extra candidate URLs, the grid should still work even if some downloads fail."""
+        overlay_path = self._create_overlay_file(tmp_path)
+        good_img = Image.new("RGBA", (500, 500), (255, 0, 0, 255))
+        # 6 candidates: 4 succeed, 2 fail — grid should still be composed
+        mock_download.side_effect = [good_img, None, good_img, good_img, None, good_img]
+
+        urls = [f"https://example.com/art{i}.jpg" for i in range(6)]
+        result = generate_playlist_og_image(urls, overlay_path=overlay_path)
+        assert result is not None
+
+        result_img = Image.open(result)
+        assert result_img.size == (OPENGRAPH_IMAGE_WIDTH, OPENGRAPH_IMAGE_HEIGHT)
+
+        assert mock_download.call_count == 6
+        assert mock_grid.call_count == 1
+        assert mock_single.call_count == 0
 
     @patch("listenbrainz.art.og_image._compose_single", wraps=_compose_single)
     @patch("listenbrainz.art.og_image._compose_grid_2x2", wraps=_compose_grid_2x2)
@@ -244,6 +328,7 @@ class PlaylistOgImageEndpointTestCase(IntegrationTestCase):
         self.assertTrue(resp.data[:4] == b'\x89PNG')
 
         self.assertIn("max-age=86400", resp.headers.get("Cache-Control", ""))
+        self.assertIsNotNone(resp.headers.get("ETag"))
 
     @patch("listenbrainz.webserver.views.art_api.db_playlist.get_by_mbid")
     def test_og_image_playlist_not_found(self, mock_get_playlist):
@@ -309,3 +394,43 @@ class PlaylistOgImageEndpointTestCase(IntegrationTestCase):
                                 playlist_mbid="b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6"))
         self.assertStatus(resp, 302)
         self.assertIn("share-header.png", resp.headers.get("Location", ""))
+
+    @patch("listenbrainz.webserver.views.art_api.generate_playlist_og_image")
+    @patch("listenbrainz.webserver.views.art_api.get_cover_art_options")
+    @patch("listenbrainz.webserver.views.art_api.fetch_playlist_recording_metadata")
+    @patch("listenbrainz.webserver.views.art_api.db_playlist.get_by_mbid")
+    def test_og_image_etag_returns_304(self, mock_get_playlist, mock_fetch_metadata,
+                                       mock_get_cover_options, mock_generate_og):
+        mock_playlist = MagicMock()
+        mock_playlist.is_visible_by.return_value = True
+        mock_playlist.recordings = [MagicMock() for _ in range(4)]
+        mock_get_playlist.return_value = mock_playlist
+
+        mock_get_cover_options.return_value = [
+            {
+                "caa_id": 12345 + i,
+                "caa_release_mbid": f"b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d{i}",
+                "title": f"Track {i}",
+                "entity_mbid": f"e757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d{i}",
+                "artist": f"Artist {i}",
+            }
+            for i in range(4)
+        ]
+
+        dummy_png_buf = io.BytesIO(_create_dummy_png(OPENGRAPH_IMAGE_WIDTH, OPENGRAPH_IMAGE_HEIGHT))
+        mock_generate_og.return_value = dummy_png_buf
+
+        # First request to get the ETag
+        resp = self.client.get(
+            self.custom_url_for('art_api_v1.playlist_og_image',
+                                playlist_mbid="b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6"))
+        self.assert200(resp)
+        etag = resp.headers.get("ETag")
+        self.assertIsNotNone(etag)
+
+        # Second request with If-None-Match should return 304
+        resp = self.client.get(
+            self.custom_url_for('art_api_v1.playlist_og_image',
+                                playlist_mbid="b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6"),
+            headers={"If-None-Match": etag})
+        self.assertStatus(resp, 304)
