@@ -1,6 +1,7 @@
 import io
 import logging
 import os.path
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -12,25 +13,64 @@ logger = logging.getLogger(__name__)
 OPENGRAPH_IMAGE_WIDTH = 1200
 OPENGRAPH_IMAGE_HEIGHT = 630
 
-# cover art takes up the left ~72% of the canvas,
+# cover art takes up the left ~77% of the canvas,
 # the rest is for the LB overlay branding
-GRID_WIDTH = int(OPENGRAPH_IMAGE_WIDTH * 0.72)  # 921px
+GRID_WIDTH = int(OPENGRAPH_IMAGE_WIDTH * 0.77)  # 924px
 
 OVERLAY_PATH = os.path.join("/", "static", "img", "og-overlay.png")
 
 # Timeout for downloading cover art images (seconds)
 DOWNLOAD_TIMEOUT = 5
 
+# Shared process-wide thread pool for downloading cover art.
+# Caps total download threads regardless of request concurrency.
+_OG_EXECUTOR = ThreadPoolExecutor(max_workers=8)
 
-def _download_image(url):
-    """Grab an image from a URL, return as PIL Image or None if anything goes wrong."""
-    try:
-        resp = req.get(url, timeout=DOWNLOAD_TIMEOUT)
-        resp.raise_for_status()
-        return Image.open(io.BytesIO(resp.content)).convert("RGBA")
-    except Exception:
-        logger.warning("Failed to download cover art from %s", url, exc_info=True)
-        return None
+# Content-type allowlist for downloaded images
+_ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+
+# Maximum download size for cover art images (10 MB)
+_MAX_DOWNLOAD_SIZE = 10 * 1024 * 1024
+
+
+def _download_image(url, max_retries=1):
+    """Grab an image from a URL, return as PIL Image or None if anything goes wrong.
+
+    Uses streaming to avoid buffering large responses in memory, validates
+    Content-Type against an allowlist, and enforces a max download size.
+    Retries once on failure with a short backoff to handle transient
+    archive.org errors (e.g. nginx 502/504).
+    """
+    for attempt in range(1 + max_retries):
+        resp = None
+        try:
+            resp = req.get(url, timeout=DOWNLOAD_TIMEOUT, stream=True)
+            resp.raise_for_status()
+
+            content_type = resp.headers.get("Content-Type", "").split(";")[0].strip().lower()
+            if content_type not in _ALLOWED_CONTENT_TYPES:
+                logger.warning("Rejected cover art from %s: unexpected Content-Type %s", url, content_type)
+                return None
+
+            chunks = []
+            bytes_read = 0
+            for chunk in resp.iter_content(chunk_size=8192):
+                bytes_read += len(chunk)
+                if bytes_read > _MAX_DOWNLOAD_SIZE:
+                    logger.warning("Cover art from %s exceeds max size (%d bytes), aborting", url, _MAX_DOWNLOAD_SIZE)
+                    return None
+                chunks.append(chunk)
+
+            return Image.open(io.BytesIO(b"".join(chunks))).convert("RGBA")
+        except Exception:
+            if attempt < max_retries:
+                time.sleep(1)
+            else:
+                logger.warning("Failed to download cover art from %s after %d attempt(s)", url, attempt + 1, exc_info=True)
+        finally:
+            if resp is not None:
+                resp.close()
+    return None
 
 
 def _compose_single(cover):
@@ -59,7 +99,7 @@ def _compose_single(cover):
 
 
 def _compose_grid_2x2(covers):
-    """2x2 grid on the left ~72% of the canvas. Overlay sits on the right."""
+    """2x2 grid on the left ~77% of the canvas. Overlay sits on the right."""
     canvas = Image.new("RGBA", (OPENGRAPH_IMAGE_WIDTH, OPENGRAPH_IMAGE_HEIGHT), (0, 0, 0, 255))
 
     tile_w = GRID_WIDTH // 2
@@ -117,15 +157,23 @@ def generate_playlist_og_image(cover_urls: list[str], overlay_path: str | Path |
         return None
 
     if len(cover_urls) >= 4:
-        # download all 4 concurrently to keep latency reasonable
-        with ThreadPoolExecutor(max_workers=4) as pool:
-            downloaded = list(pool.map(_download_image, cover_urls[:4]))
-        downloaded = [img for img in downloaded if img is not None]
+        # download all candidates concurrently using the shared executor;
+        # we only need 4 to succeed for the grid, but archive.org can be
+        # flaky so extra candidates give us a better chance of filling it
+        futures = [_OG_EXECUTOR.submit(_download_image, url) for url in cover_urls]
+        downloaded = []
+        for future in futures:
+            try:
+                img = future.result(timeout=DOWNLOAD_TIMEOUT * 2)
+            except Exception:
+                img = None
+            if img is not None:
+                downloaded.append(img)
 
-        if len(downloaded) == 4:
-            canvas = _compose_grid_2x2(downloaded)
+        if len(downloaded) >= 4:
+            canvas = _compose_grid_2x2(downloaded[:4])
         elif downloaded:
-            # couldn't get all 4, just use the first one
+            # couldn't get 4, just use the first one
             canvas = _compose_single(downloaded[0])
         else:
             return None
@@ -145,6 +193,6 @@ def generate_playlist_og_image(cover_urls: list[str], overlay_path: str | Path |
 
     buf = io.BytesIO()
     canvas.save(buf, format="PNG", optimize=True)
-   # Reset the file pointer to the beginning of the stream so the image data can be read
+    # Reset the file pointer to the beginning of the stream so the image data can be read
     buf.seek(0)
     return buf
