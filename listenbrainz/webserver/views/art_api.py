@@ -1,3 +1,4 @@
+import hashlib
 from itertools import cycle
 
 from markupsafe import Markup
@@ -867,7 +868,8 @@ def playlist_og_image(playlist_mbid):
     if not images:
         return redirect(fallback_url)
 
-    # Resolve cover art URLs
+    # Resolve cover art URLs — collect extras so the grid can still be
+    # composed even if some archive.org downloads fail intermittently
     cover_art_urls = []
     for img in images:
         caa_id = img.get("caa_id")
@@ -875,11 +877,17 @@ def playlist_og_image(playlist_mbid):
         if caa_id and caa_release_mbid:
             url = f"https://archive.org/download/mbid-{caa_release_mbid}/mbid-{caa_release_mbid}-{caa_id}_thumb500.jpg"
             cover_art_urls.append(url)
-        if len(cover_art_urls) >= 4:
+        if len(cover_art_urls) >= 8:
             break
 
     if not cover_art_urls:
         return redirect(fallback_url)
+
+    # ETag based on the set of cover art URLs. If the playlist's tracks
+    # haven't changed, clients can skip re-downloading the composed image
+    etag = hashlib.md5("|".join(sorted(cover_art_urls)).encode()).hexdigest()
+    if request.headers.get("If-None-Match") == etag:
+        return "", 304
 
     # Generate the composed OG image
     result = generate_playlist_og_image(cover_art_urls)
@@ -889,4 +897,5 @@ def playlist_og_image(playlist_mbid):
     return result.getvalue(), 200, {
         "Content-Type": "image/png",
         "Cache-Control": "public, max-age=86400",
+        "ETag": etag,
     }
