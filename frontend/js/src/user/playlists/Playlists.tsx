@@ -126,15 +126,7 @@ export default class UserPlaylists extends React.Component<
     const isSearchActive = activeSearchQuery.length >= MIN_SEARCH_LENGTH;
 
     if (pageChanged && isSearchActive) {
-      void this.performPlaylistSearch(activeSearchQuery, page).catch(() => {
-        this.setState({ isSearching: false, activeSearchQuery: "" });
-        toast.error(
-          <ToastMsg
-            title="Search failed"
-            message="Unable to search playlists. Please try again."
-          />
-        );
-      });
+      this.fetchSearchResultsForPage(activeSearchQuery, page);
       return;
     }
 
@@ -297,8 +289,17 @@ export default class UserPlaylists extends React.Component<
     });
   };
 
-  isSearchActive = () =>
-    this.state.activeSearchQuery.length >= MIN_SEARCH_LENGTH;
+  fetchSearchResultsForPage = (query: string, page: number) => {
+    this.performPlaylistSearch(query, page).catch(() => {
+      this.setState({ isSearching: false, activeSearchQuery: "" });
+      toast.error(
+        <ToastMsg
+          title="Search failed"
+          message="Unable to search playlists. Please try again."
+        />
+      );
+    });
+  };
 
   // Reset to full playlist list when search is cleared or too short
   resetSearchResults = () => {
@@ -428,9 +429,10 @@ export default class UserPlaylists extends React.Component<
       searchTerm,
       isSearching,
       searchPageCount,
+      activeSearchQuery,
     } = this.state;
     const { currentUser } = this.context;
-    const isSearchActive = this.isSearchActive();
+    const isSearchActive = activeSearchQuery.length >= MIN_SEARCH_LENGTH;
     const activePageCount = isSearchActive ? searchPageCount : pageCount;
 
     return (
