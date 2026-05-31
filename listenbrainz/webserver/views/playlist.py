@@ -1,7 +1,7 @@
 from flask import Blueprint, current_app, render_template, jsonify
 from flask_login import current_user
 
-from listenbrainz.webserver import ts_conn, db_conn
+from listenbrainz.webserver import ts_conn, db_conn, API_PREFIX
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 from listenbrainz.webserver.views.playlist_api import fetch_playlist_recording_metadata
@@ -33,7 +33,7 @@ def playlist_page(playlist_mbid: str):
                 "type": "music:playlist",
                 "url": f'{current_app.config["SERVER_ROOT_URL"]}/playlist/{playlist_mbid}',
                 "music:creator": f'{current_app.config["SERVER_ROOT_URL"]}/user/{playlist.creator}',
-                "image": f'{current_app.config["SERVER_ROOT_URL"]}/1/art/playlist/{playlist_mbid}/opengraph/',
+                "image": f'{current_app.config["API_URL"]}{API_PREFIX}/art/playlist/{playlist_mbid}/opengraph/',
                 "image:width": str(OPENGRAPH_IMAGE_WIDTH),
                 "image:height": str(OPENGRAPH_IMAGE_HEIGHT),
             }
