@@ -25,6 +25,9 @@ CREATE TABLE mapping.mb_event_cache (
     place_name           TEXT,
     area_mbid            UUID,
 
+    rating               SMALLINT,
+    rating_count         INTEGER,
+
     event_data           JSONB NOT NULL DEFAULT '{}'::jsonb
 );
 
