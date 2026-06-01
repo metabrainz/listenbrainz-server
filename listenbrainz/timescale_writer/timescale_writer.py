@@ -7,14 +7,14 @@ import psycopg2
 import orjson
 from brainzutils import metrics
 from flask import current_app
-from kombu import Exchange, Queue, Consumer, Message, Connection
+from kombu import Exchange, Queue, Consumer, Message
 from kombu.entity import PERSISTENT_DELIVERY_MODE
 from kombu.mixins import ConsumerProducerMixin
 from more_itertools import chunked
 
 from listenbrainz import messybrainz
 from listenbrainz.listen import Listen
-from listenbrainz.utils import get_fallback_connection_name
+from listenbrainz.rabbitmq import create_rabbitmq_connection
 from listenbrainz.webserver import create_app, redis_connection, timescale_connection
 from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 from listenbrainz.webserver.views.api_tools import MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
@@ -193,14 +193,7 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
         return len(data)
 
     def init_rabbitmq_connection(self):
-        self.connection = Connection(
-            hostname=current_app.config["RABBITMQ_HOST"],
-            userid=current_app.config["RABBITMQ_USERNAME"],
-            port=current_app.config["RABBITMQ_PORT"],
-            password=current_app.config["RABBITMQ_PASSWORD"],
-            virtual_host=current_app.config["RABBITMQ_VHOST"],
-            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
-        )
+        self.connection = create_rabbitmq_connection(current_app.config)
 
     def start(self):
         while True:

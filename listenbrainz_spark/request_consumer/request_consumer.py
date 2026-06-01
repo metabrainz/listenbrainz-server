@@ -21,13 +21,14 @@ import socket
 import time
 import logging
 
-from kombu import Exchange, Queue, Message, Connection, Consumer
+from kombu import Exchange, Queue, Message, Consumer
 from kombu.entity import PERSISTENT_DELIVERY_MODE
 from kombu.mixins import ConsumerProducerMixin
 
 import listenbrainz_spark
 import listenbrainz_spark.query_map
 from listenbrainz_spark import config, hdfs_connection
+from listenbrainz_spark.rabbitmq import create_rabbitmq_connection
 
 
 RABBITMQ_HEARTBEAT_TIME = 2 * 60 * 60  # 2 hours -- a full dump import takes 40 minutes right now
@@ -119,14 +120,7 @@ class RequestConsumer(ConsumerProducerMixin):
 
     def init_rabbitmq_connection(self):
         connection_name = "spark-request-consumer-" + socket.gethostname()
-        self.connection = Connection(
-            hostname=config.RABBITMQ_HOST,
-            userid=config.RABBITMQ_USERNAME,
-            port=config.RABBITMQ_PORT,
-            password=config.RABBITMQ_PASSWORD,
-            virtual_host=config.RABBITMQ_VHOST,
-            transport_options={"client_properties": {"connection_name": connection_name}}
-        )
+        self.connection = create_rabbitmq_connection(config, connection_name)
 
     def start(self, app_name):
         while True:
