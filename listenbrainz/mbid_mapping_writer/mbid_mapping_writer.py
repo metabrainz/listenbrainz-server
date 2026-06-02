@@ -18,7 +18,7 @@ class MBIDMappingWriter(ConsumerMixin):
         self.app = app
         self.queue = None
         self.connection = None
-        self.unique_exchange = Exchange(self.app.config["UNIQUE_EXCHANGE"], "fanout", durable=False)
+        self.unique_exchange = Exchange(self.app.config["UNIQUE_EXCHANGE"], "fanout", durable=True)
         self.unique_queue = Queue(self.app.config["UNIQUE_QUEUE"], exchange=self.unique_exchange, durable=True)
 
     def get_consumers(self, _, channel):
