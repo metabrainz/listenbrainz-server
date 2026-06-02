@@ -70,7 +70,7 @@ def send_request_to_spark_cluster(query, **params):
         message = _prepare_query_message(query, **params)
         connection = create_rabbitmq_connection(app.config)
         producer = connection.Producer()
-        spark_request_exchange = Exchange(app.config["SPARK_REQUEST_EXCHANGE"], "fanout", durable=False)
+        spark_request_exchange = Exchange(app.config["SPARK_REQUEST_EXCHANGE"], "fanout", durable=True)
         producer.publish(
             message,
             routing_key="",

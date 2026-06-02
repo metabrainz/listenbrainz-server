@@ -164,7 +164,7 @@ def get_incoming_listens_count():
     listen_count = cache.get(cache_key)
     if listen_count is None:
         try:
-            incoming_exchange = Exchange(current_app.config["INCOMING_EXCHANGE"], "fanout", durable=False)
+            incoming_exchange = Exchange(current_app.config["INCOMING_EXCHANGE"], "fanout", durable=True)
             incoming_queue = Queue(current_app.config["INCOMING_QUEUE"], exchange=incoming_exchange, durable=True)
 
             with create_rabbitmq_connection(current_app.config) as conn:

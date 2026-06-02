@@ -16,7 +16,7 @@ class SparkReader(ConsumerMixin):
     def __init__(self, app):
         self.app = app
         self.connection: Connection | None = None
-        self.spark_result_exchange = Exchange(app.config["SPARK_RESULT_EXCHANGE"], "fanout", durable=False)
+        self.spark_result_exchange = Exchange(app.config["SPARK_RESULT_EXCHANGE"], "fanout", durable=True)
         self.spark_result_queue = Queue(app.config["SPARK_RESULT_QUEUE"], exchange=self.spark_result_exchange,
                                         durable=True)
         self.response_handlers = {}

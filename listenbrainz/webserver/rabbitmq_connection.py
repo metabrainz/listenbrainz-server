@@ -34,6 +34,6 @@ def init_rabbitmq_connection(app):
     connection = create_rabbitmq_connection(app.config).ensure_connection(max_retries=CONNECTION_RETRIES)
     pools.set_limit(CONNECTION_LIMIT)
 
-    INCOMING_EXCHANGE = Exchange(app.config["INCOMING_EXCHANGE"], "fanout", durable=False)
-    PLAYING_NOW_EXCHANGE = Exchange(app.config["PLAYING_NOW_EXCHANGE"], "fanout", durable=False)
+    INCOMING_EXCHANGE = Exchange(app.config["INCOMING_EXCHANGE"], "fanout", durable=True)
+    PLAYING_NOW_EXCHANGE = Exchange(app.config["PLAYING_NOW_EXCHANGE"], "fanout", durable=True)
     rabbitmq = producers[connection]
