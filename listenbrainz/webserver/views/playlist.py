@@ -107,17 +107,7 @@ def load_playlist(playlist_mbid: str):
     if playlist is None or not playlist.is_visible_by(current_user_id):
         return jsonify({"error": "Cannot find playlist: %s" % playlist_mbid}), 404
 
-    # MB metadata lookup is optional in dev environments where MB db isn't configured.
-    # Mirror the behaviour of the API endpoint GET /1/playlist/<mbid>?fetch_metadata=false
-    # so the playlist page can still render (and allow client-side sorting) without MB data.
-    fetch_metadata = request.args.get("fetch_metadata", "true").lower() != "false"
-    if fetch_metadata:
-        try:
-            fetch_playlist_recording_metadata(playlist)
-        except Exception:
-            current_app.logger.error(
-                "Error while fetching metadata for a playlist:", exc_info=True
-            )
+    fetch_playlist_recording_metadata(playlist)
 
     images = get_cover_art_options(playlist)
     

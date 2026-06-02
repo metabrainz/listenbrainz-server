@@ -145,75 +145,72 @@ export default function PlaylistPage() {
       const base = tracks ?? [];
       setSortKey(option);
 
-      if (option === "shuffle") {
-        // Keep the same shuffle logic as the main playlists page
-        setDisplayedTracks([...base].sort(() => Math.random() - 0.5));
-        return;
+      switch (option) {
+        case "shuffle": {
+          setDisplayedTracks([...base].sort(() => Math.random() - 0.5));
+          return;
+        }
+        case "default": {
+          setDisplayedTracks(base);
+          return;
+        }
+        case "title": {
+          setDisplayedTracks(
+            [...base].sort((a, b) => {
+              const titleA = a.title ?? "";
+              const titleB = b.title ?? "";
+              const cmp = titleA
+                .toLowerCase()
+                .localeCompare(titleB.toLowerCase());
+              return cmp !== 0 ? cmp : getTieBreaker(a, b);
+            })
+          );
+          return;
+        }
+        case "artist": {
+          setDisplayedTracks(
+            [...base].sort((a, b) => {
+              const artistA = a.creator ?? "";
+              const artistB = b.creator ?? "";
+              const cmp = artistA
+                .toLowerCase()
+                .localeCompare(artistB.toLowerCase());
+              return cmp !== 0 ? cmp : getTieBreaker(a, b);
+            })
+          );
+          return;
+        }
+        case "recently_added": {
+          setDisplayedTracks(
+            [...base].sort((a, b) => {
+              const aTs = Date.parse(getTrackExtension(a)?.added_at || "");
+              const bTs = Date.parse(getTrackExtension(b)?.added_at || "");
+
+              const aValid = !Number.isNaN(aTs);
+              const bValid = !Number.isNaN(bTs);
+
+              // Newest first
+              if (aValid && bValid) {
+                return aTs !== bTs ? bTs - aTs : getTieBreaker(a, b);
+              }
+
+              if (aValid) return -1;
+              if (bValid) return 1;
+
+              return getTieBreaker(a, b);
+            })
+          );
+          return;
+        }
+        default: {
+          setDisplayedTracks(base);
+        }
       }
-
-      if (option === "default") {
-        setDisplayedTracks(base);
-        return;
-      }
-
-      if (option === "title") {
-        setDisplayedTracks(
-          [...base].sort((a, b) => {
-            const titleA = a.title ?? "";
-            const titleB = b.title ?? "";
-            const cmp = titleA
-              .toLowerCase()
-              .localeCompare(titleB.toLowerCase());
-            return cmp !== 0 ? cmp : getTieBreaker(a, b);
-          })
-        );
-        return;
-      }
-
-      if (option === "artist") {
-        setDisplayedTracks(
-          [...base].sort((a, b) => {
-            const artistA = a.creator ?? "";
-            const artistB = b.creator ?? "";
-            const cmp = artistA
-              .toLowerCase()
-              .localeCompare(artistB.toLowerCase());
-            return cmp !== 0 ? cmp : getTieBreaker(a, b);
-          })
-        );
-        return;
-      }
-
-      if (option === "recently_added") {
-        setDisplayedTracks(
-          [...base].sort((a, b) => {
-            const aTs = Date.parse(getTrackExtension(a)?.added_at || "");
-            const bTs = Date.parse(getTrackExtension(b)?.added_at || "");
-
-            const aValid = !Number.isNaN(aTs);
-            const bValid = !Number.isNaN(bTs);
-
-            // Newest first
-            if (aValid && bValid) {
-              return aTs !== bTs ? bTs - aTs : getTieBreaker(a, b);
-            }
-
-            if (aValid) return -1;
-            if (bValid) return 1;
-
-            return getTieBreaker(a, b);
-          })
-        );
-
-        return;
-      }
-      // If we add more sort options in the future, fall back to default order.
-      setDisplayedTracks(base);
     },
     [getTieBreaker, tracks]
   );
 
-  // Keep displayedTracks in sync with playlist changes, while preserving current sortKey.
+  // Re-apply whatever sort option is currently selected when the tracks change.
   React.useEffect(() => {
     setTrackSortOption(sortKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
