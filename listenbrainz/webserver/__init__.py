@@ -91,7 +91,13 @@ def check_ratelimit_token_whitelist(auth_token):
     return auth_token in current_app.config["WHITELISTED_AUTH_TOKENS"]
 
 
-def create_app(debug=None, bypass_pgbouncer=False, use_pool=False, pool_size_overrides=None):
+def create_app(
+        debug=None,
+        bypass_pgbouncer=False,
+        use_pool=False,
+        pool_size_overrides=None,
+        declare_incoming_queue=False,
+):
     """ Generate a Flask app for LB with all configurations done and connections established.
 
     In the Flask app returned, blueprints are not registered.
@@ -109,6 +115,10 @@ def create_app(debug=None, bypass_pgbouncer=False, use_pool=False, pool_size_ove
     `pool_size_overrides` (only used when `use_pool=True`) lets entry points
     shrink the per-worker pool below the consul-configured size. Keys: "db",
     "ts", "meb". Each value is a (pool_size, max_overflow) tuple.
+
+    When `declare_incoming_queue` is True, the RabbitMQ incoming listens queue
+    and its binding are declared during startup. This is intended for the main
+    web/API app so fanout publishes cannot happen before the queue exists.
     """
 
     app = CustomFlask(import_name=__name__)
@@ -228,7 +238,7 @@ def create_app(debug=None, bypass_pgbouncer=False, use_pool=False, pool_size_ove
     # RabbitMQ connection
     from listenbrainz.webserver.rabbitmq_connection import init_rabbitmq_connection
     try:
-        init_rabbitmq_connection(app)
+        init_rabbitmq_connection(app, declare_incoming_queue=declare_incoming_queue)
     except ConnectionError:
         app.logger.critical("RabbitMQ service is not up!", exc_info=True)
 
@@ -313,7 +323,7 @@ def init_admin(app):
 
 def create_web_app(debug=None):
     """ Generate a Flask app for LB with all configurations done, connections established and endpoints added."""
-    app = create_app(debug=debug, use_pool=True)
+    app = create_app(debug=debug, use_pool=True, declare_incoming_queue=True)
     htmx = HTMX(app)
 
     # Static files

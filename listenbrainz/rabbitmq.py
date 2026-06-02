@@ -1,5 +1,3 @@
-from urllib.parse import quote
-
 from kombu import Connection, Exchange, Queue
 
 from listenbrainz.utils import get_fallback_connection_name
@@ -25,9 +23,9 @@ def _get_config_value(config, key, default=None):
 
 
 def _rabbitmq_url(host, port, config):
-    username = quote(str(_get_config_value(config, "RABBITMQ_USERNAME", "")), safe="")
-    password = quote(str(_get_config_value(config, "RABBITMQ_PASSWORD", "")), safe="")
-    vhost = quote(str(_get_config_value(config, "RABBITMQ_VHOST", "/")), safe="")
+    username = _get_config_value(config, "RABBITMQ_USERNAME", "")
+    password = _get_config_value(config, "RABBITMQ_PASSWORD", "")
+    vhost = _get_config_value(config, "RABBITMQ_VHOST", "/")
     return f"amqp://{username}:{password}@{host}:{port}/{vhost}"
 
 

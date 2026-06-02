@@ -1,12 +1,10 @@
-from urllib.parse import quote
-
 from kombu import Connection
 
 
 def _rabbitmq_url(host, port, config):
-    username = quote(str(config.RABBITMQ_USERNAME), safe="")
-    password = quote(str(config.RABBITMQ_PASSWORD), safe="")
-    vhost = quote(str(config.RABBITMQ_VHOST), safe="")
+    username = config.RABBITMQ_USERNAME
+    password = config.RABBITMQ_PASSWORD
+    vhost = config.RABBITMQ_VHOST
     return f"amqp://{username}:{password}@{host}:{port}/{vhost}"
 
 
