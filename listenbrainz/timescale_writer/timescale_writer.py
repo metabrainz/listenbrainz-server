@@ -181,7 +181,8 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
             exchange=self.unique_exchange,
             routing_key="",
             body=orjson.dumps([listen.to_json() for listen in unique]).decode("utf-8"),
-            delivery_mode=PERSISTENT_DELIVERY_MODE
+            delivery_mode=PERSISTENT_DELIVERY_MODE,
+            declare=[self.unique_exchange, self.unique_queue]
         )
 
         if monotonic() > self.metric_submission_time:
