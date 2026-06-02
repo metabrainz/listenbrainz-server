@@ -1,8 +1,23 @@
 from urllib.parse import quote
 
-from kombu import Connection
+from kombu import Connection, Exchange, Queue
 
 from listenbrainz.utils import get_fallback_connection_name
+
+QUORUM_QUEUE_ARGUMENTS = {"x-queue-type": "quorum"}
+
+
+def get_incoming_exchange(config):
+    return Exchange(config["INCOMING_EXCHANGE"], "fanout", durable=True)
+
+
+def get_incoming_queue(config):
+    return Queue(
+        config["INCOMING_QUEUE"],
+        exchange=get_incoming_exchange(config),
+        durable=True,
+        queue_arguments=QUORUM_QUEUE_ARGUMENTS,
+    )
 
 
 def _get_config_value(config, key, default=None):
