@@ -161,16 +161,15 @@ REDIS_NAMESPACE = "SERVICEDOESNOTEXIST_listenbrainz-redis"
 {{end}}
 
 {{ $rabbitmq_key := (printf "docker-server-configs/LB/config.%s.json/rabbitmq_service" (env "DEPLOY_ENV")) }}
-{{- with $rabbitmq_service_name := keyOrDefault $rabbitmq_key "rabbitmq"}}
-{{- if service $rabbitmq_service_name}}
-{{- with index (service $rabbitmq_service_name) 0}}
-RABBITMQ_HOST = "{{.Address}}"
-RABBITMQ_PORT = {{.Port}}
-{{end}}
+{{- $rabbitmq_services := service "rabbitmq-listenbrainz"}}
+{{- if $rabbitmq_services}}
+RABBITMQ_HOSTS = [
+{{- range $rabbitmq_services}}
+    ("{{.Address}}", {{.Port}}),
+{{- end}}
+]
 {{else}}
-RABBITMQ_HOST = "SERVICEDOESNOTEXIST_rabbitmq"
-RABBITMQ_PORT = "SERVICEDOESNOTEXIST_rabbitmq"
-{{end}}
+RABBITMQ_HOSTS = [("SERVICEDOESNOTEXIST_rabbitmq-listenbrainz", "SERVICEDOESNOTEXIST_rabbitmq-listenbrainz")]
 {{end}}
 RABBITMQ_USERNAME = '''{{template "KEY" "rabbitmq_user"}}'''
 RABBITMQ_PASSWORD = '''{{template "KEY" "rabbitmq_pass"}}'''

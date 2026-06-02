@@ -56,8 +56,7 @@ REDIS_PORT = 6379
 REDIS_NAMESPACE = "listenbrainz"
 
 # RabbitMQ
-RABBITMQ_HOST = "rabbitmq"
-RABBITMQ_PORT = 5672
+RABBITMQ_HOSTS = [("rabbitmq", 5672)]
 RABBITMQ_USERNAME = "guest"
 RABBITMQ_PASSWORD = "guest"
 RABBITMQ_VHOST = "/"

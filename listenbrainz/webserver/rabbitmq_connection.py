@@ -1,9 +1,9 @@
 from typing import Optional
 
-from kombu import Connection, pools, producers, Exchange
+from kombu import pools, producers, Exchange
 from kombu.pools import ProducerPool
 
-from listenbrainz.utils import get_fallback_connection_name
+from listenbrainz.rabbitmq import create_rabbitmq_connection
 
 rabbitmq: Optional[ProducerPool] = None
 INCOMING_EXCHANGE: Optional[Exchange] = None
@@ -27,18 +27,11 @@ def init_rabbitmq_connection(app):
     # if RabbitMQ config values are not in the config file
     # raise an error. This is caught in create_app, so the app will continue running.
     # Consul will bring the values back into config once the RabbitMQ service comes up.
-    if "RABBITMQ_HOST" not in app.config:
-        app.logger.critical("RabbitMQ host:port not defined, cannot create RabbitMQ connection...")
+    if not app.config.get("RABBITMQ_HOSTS"):
+        app.logger.critical("RabbitMQ hosts not defined, cannot create RabbitMQ connection...")
         raise ConnectionError("RabbitMQ service is not up!")
 
-    connection = Connection(
-        hostname=app.config["RABBITMQ_HOST"],
-        userid=app.config["RABBITMQ_USERNAME"],
-        port=app.config["RABBITMQ_PORT"],
-        password=app.config["RABBITMQ_PASSWORD"],
-        virtual_host=app.config["RABBITMQ_VHOST"],
-        transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}},
-    ).ensure_connection(max_retries=CONNECTION_RETRIES)
+    connection = create_rabbitmq_connection(app.config).ensure_connection(max_retries=CONNECTION_RETRIES)
     pools.set_limit(CONNECTION_LIMIT)
 
     INCOMING_EXCHANGE = Exchange(app.config["INCOMING_EXCHANGE"], "fanout", durable=False)
