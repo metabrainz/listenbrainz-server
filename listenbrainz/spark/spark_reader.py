@@ -19,16 +19,6 @@ class SparkReader(ConsumerMixin):
         self.spark_result_exchange = Exchange(app.config["SPARK_RESULT_EXCHANGE"], "fanout", durable=True)
         self.spark_result_queue = Queue(app.config["SPARK_RESULT_QUEUE"], exchange=self.spark_result_exchange,
                                         durable=True)
-        self.clickhouse_result_exchange = Exchange(
-            app.config.get("CLICKHOUSE_RESULT_EXCHANGE", "clickhouse_result"),
-            "fanout",
-            durable=False,
-        )
-        self.clickhouse_result_queue = Queue(
-            app.config.get("CLICKHOUSE_RESULT_QUEUE", "clickhouse_result"),
-            exchange=self.clickhouse_result_exchange,
-            durable=True,
-        )
         self.response_handlers = {}
         self.processor: BackgroundJobProcessor | None = None
 
@@ -47,7 +37,7 @@ class SparkReader(ConsumerMixin):
         return [Consumer(
             channel,
             prefetch_count=PREFETCH_COUNT,
-            queues=[self.spark_result_queue, self.clickhouse_result_queue],
+            queues=[self.spark_result_queue],
             on_message=lambda msg: self.callback(msg)
         )]
 

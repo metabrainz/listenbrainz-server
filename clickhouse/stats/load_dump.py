@@ -219,12 +219,6 @@ PROCESS_RAW_LISTENS_SETTINGS = {
 PROCESS_RAW_LISTENS_CHUNKS = 16
 
 
-def _get_config_module():
-    """Return the ClickHouse service config module."""
-    from clickhouse import config
-    return config
-
-
 # =============================================================================
 # ClickHouse client
 # =============================================================================
@@ -627,14 +621,13 @@ def load_from_local(
 # =============================================================================
 
 def load_from_ftp(
-    dump_type: DumpType = DumpType.FULL,
-    ftp_server: str = None,
-    ftp_dir: str = None,
-    host: str = "localhost",
-    port: int = 8123,
-    username: str = "default",
-    password: str = "",
-    database: str = "default",
+    *,
+    dump_type: DumpType,
+    host: str,
+    port: int,
+    username: str,
+    password: str,
+    database: str,
     workers: int = 4,
     process_chunks: int = PROCESS_RAW_LISTENS_CHUNKS,
 ) -> dict:
@@ -646,25 +639,14 @@ def load_from_ftp(
 
     Args:
         dump_type: FULL or INCREMENTAL.
-        ftp_server: FTP server hostname; reads from config if not provided.
-        ftp_dir: Base FTP directory; reads from config if not provided.
 
     Returns dict with 'total_inserted', 'files_completed', 'elapsed', 'errors', 'dump_id'.
     """
-    if ftp_server is None or ftp_dir is None:
-        try:
-            config = _get_config_module()
-            ftp_server = ftp_server or getattr(config, "FTP_SERVER_URI", "ftp.eu.metabrainz.org")
-            ftp_dir = ftp_dir or getattr(config, "FTP_LISTENS_DIR", "/pub/musicbrainz/listenbrainz/")
-        except ImportError:
-            ftp_server = ftp_server or "ftp.eu.metabrainz.org"
-            ftp_dir = ftp_dir or "/pub/musicbrainz/listenbrainz/"
-
     download_dir = tempfile.mkdtemp(prefix="clickhouse_dump_download_")
     extract_dir = tempfile.mkdtemp(prefix="clickhouse_dump_extract_")
 
     try:
-        downloader = FTPDumpDownloader(ftp_server, ftp_dir)
+        downloader = FTPDumpDownloader()
         downloader.connect()
         try:
             archive_path, dump_id = downloader.download_latest_dump(dump_type, download_dir)

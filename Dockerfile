@@ -147,6 +147,18 @@ COPY ./docker/services/spark_reader/spark_reader.service /etc/service/spark_read
 COPY ./docker/services/spark_reader/spark_reader.finish /etc/service/spark_reader/finish
 RUN touch /etc/service/spark_reader/down
 
+# ClickHouse reader
+COPY ./docker/services/clickhouse_reader/consul-template-clickhouse-reader.conf /etc/consul-template-clickhouse-reader.conf
+COPY ./docker/services/clickhouse_reader/clickhouse_reader.service /etc/service/clickhouse_reader/run
+COPY ./docker/services/clickhouse_reader/clickhouse_reader.finish /etc/service/clickhouse_reader/finish
+RUN touch /etc/service/clickhouse_reader/down
+
+# ClickHouse request consumer
+COPY ./docker/services/clickhouse_request_consumer/consul-template-clickhouse-request-consumer.conf /etc/consul-template-clickhouse-request-consumer.conf
+COPY ./docker/services/clickhouse_request_consumer/clickhouse_request_consumer.service /etc/service/clickhouse_request_consumer/run
+COPY ./docker/services/clickhouse_request_consumer/clickhouse_request_consumer.finish /etc/service/clickhouse_request_consumer/finish
+RUN touch /etc/service/clickhouse_request_consumer/down
+
 # Spotify reader
 COPY ./docker/services/spotify_reader/consul-template-spotify-reader.conf /etc/consul-template-spotify-reader.conf
 COPY ./docker/services/spotify_reader/spotify_reader.service /etc/service/spotify_reader/run

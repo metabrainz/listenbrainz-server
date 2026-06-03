@@ -1,8 +1,10 @@
 import unittest
 
 from clickhouse.stats.cache_manager import (
+    ARTIST_CONFIG,
     CacheConfig,
     RECORDING_CONFIG,
+    RELEASE_GROUP_CONFIG,
     StatsCacheManager,
     _format_entity_tuple,
 )
@@ -103,6 +105,58 @@ class StatsCacheManagerMessageTestCase(unittest.TestCase):
         self.assertEqual(entity["artist_mbids"], ["f59c5520-5f46-4d2c-b2c4-822eabf53419"])
         self.assertEqual(entity["artists"][0]["artist_credit_name"], "An Artist")
         self.assertEqual(entity["listen_count"], 3)
+
+
+class StatsCacheManagerQueryTestCase(unittest.TestCase):
+
+    class _CapturingClient:
+        def __init__(self):
+            self.queries = []
+
+        def query(self, query, parameters=None):
+            self.queries.append((query, parameters))
+            return type("Result", (), {"result_rows": []})()
+
+    def _run_query(self, entity_config):
+        manager = StatsCacheManager(CacheConfig(), entity_config)
+        manager.ch_client = self._CapturingClient()
+        manager.compute_top_entities_batch("all_time", [1, 2, 3], limit=10)
+        self.assertEqual(len(manager.ch_client.queries), 1)
+        return manager.ch_client.queries[0][0]
+
+    def test_top_entities_query_does_not_use_final(self):
+        for cfg in (RECORDING_CONFIG, ARTIST_CONFIG):
+            with self.subTest(entity=cfg.entity_type):
+                sql = self._run_query(cfg)
+                self.assertNotIn(" FINAL ", sql)
+                self.assertNotIn(f"{cfg.dimension_table} d FINAL", sql)
+
+    def test_top_entities_query_dedupes_metadata_via_limit_1_by(self):
+        sql = self._run_query(RECORDING_CONFIG)
+        self.assertIn("dedup_metadata AS", sql)
+        self.assertIn("ORDER BY recording_id, updated_at DESC", sql)
+        self.assertIn("LIMIT 1 BY recording_id", sql)
+        self.assertIn("LEFT JOIN dedup_metadata d ON t.recording_id = d.recording_id", sql)
+
+    def test_top_entities_query_prefilters_metadata_by_top_n_ids(self):
+        sql = self._run_query(ARTIST_CONFIG)
+        self.assertIn(
+            "WHERE artist_id IN (SELECT artist_id FROM top_n)",
+            sql,
+        )
+
+    def test_top_entities_query_filters_entities_failing_lb_validation(self):
+        # Artist/recording records require artist_name >= 1 on the LB side; drop empty.
+        for cfg in (ARTIST_CONFIG, RECORDING_CONFIG):
+            with self.subTest(entity=cfg.entity_type):
+                sql = self._run_query(cfg)
+                self.assertIn("d.artist_name != ''", sql)
+
+    def test_top_entities_query_does_not_filter_when_no_predicate(self):
+        # Release groups have no min_length on artist_name; no filter applied.
+        self.assertIsNone(RELEASE_GROUP_CONFIG.valid_entity_predicate)
+        sql = self._run_query(RELEASE_GROUP_CONFIG)
+        self.assertNotIn("d.artist_name != ''", sql)
 
 
 if __name__ == "__main__":

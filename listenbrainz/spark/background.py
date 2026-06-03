@@ -6,7 +6,6 @@ from threading import Thread
 import orjson
 import sentry_sdk
 
-from listenbrainz.clickhouse.handlers import RESPONSE_HANDLERS as CLICKHOUSE_RESPONSE_HANDLERS
 from listenbrainz.spark.handlers import (
     handle_candidate_sets,
     handle_dataframes,
@@ -152,8 +151,6 @@ class BackgroundJobProcessor:
         """ Register handlers for the Spark reader """
         for dataset in self.datasets:
             self.response_handlers.update(dataset.get_handlers())
-
-        self.response_handlers.update(CLICKHOUSE_RESPONSE_HANDLERS)
 
         self.response_handlers.update({
             "echo": handle_echo,
