@@ -15,6 +15,7 @@ from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzDataRecord,
                                                       UserMissingMusicBrainzDataJson)
 from listenbrainz.db import stats as db_stats
+from listenbrainz.db import statistics_generation as db_statistics_generation
 from listenbrainz.db import user as db_user
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db.tests.utils import delete_all_couch_databases
@@ -25,6 +26,7 @@ from listenbrainz.spark.handlers import (
     handle_user_era_activity,
     handle_user_listening_activity,
     handle_user_artist_evolution_activity,
+    handle_statistics_generation_complete,
     notify_mapping_import,
     handle_missing_musicbrainz_data,
     cf_recording_recommendations_complete)
@@ -124,6 +126,19 @@ class HandlersTestCase(DatabaseTestCase):
             last_updated=received.last_updated
         )
         self.assertEqual(received, expected)
+
+    def test_handle_statistics_generation_complete(self):
+        with self.app.app_context():
+            handle_statistics_generation_complete({
+                "type": "statistics_generation_complete",
+                "stats_type": "artists_all_time",
+            })
+
+        timestamps = db_statistics_generation.get_statistics_generation_timestamps(
+            self.db_conn,
+            ["artists_all_time"]
+        )
+        self.assertIn("artists_all_time", timestamps)
 
     def test_handle_user_listening_activity(self):
         data = {

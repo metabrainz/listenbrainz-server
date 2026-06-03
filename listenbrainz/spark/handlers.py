@@ -11,6 +11,7 @@ from sentry_sdk import start_transaction
 
 import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
+import listenbrainz.db.statistics_generation as db_statistics_generation
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
@@ -260,6 +261,10 @@ def handle_fresh_releases(message):
         insert_fresh_releases(message["database"], message["data"])
     except HTTPError as e:
         current_app.logger.error(f"{str(e)}. Response: %s", e.response.json(), exc_info=True)
+
+
+def handle_statistics_generation_complete(message):
+    db_statistics_generation.mark_statistics_generated(db_conn, message["stats_type"])
 
 
 def notify_mapping_import(data):
