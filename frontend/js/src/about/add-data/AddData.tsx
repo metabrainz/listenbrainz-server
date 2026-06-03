@@ -36,6 +36,14 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://bocan.app/">
+              Bòcan
+            </a>
+          </em>
+          , a native macOS music player for people who own their music
+        </li>
+        <li>
+          <em>
             <a href="https://github.com/ciderapp">Cider</a>
           </em>
           , a cross-platform Apple Music player:{" "}
