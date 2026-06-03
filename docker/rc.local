@@ -70,6 +70,18 @@ then
     rm -f /etc/service/spark_reader/down
 fi
 
+if [ "${CONTAINER_NAME}" = "listenbrainz-clickhouse-reader-${DEPLOY_ENV}" ]
+then
+    log Enabling clickhouse reader
+    rm -f /etc/service/clickhouse_reader/down
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-clickhouse-request-consumer-${DEPLOY_ENV}" ]
+then
+    log Enabling clickhouse request consumer
+    rm -f /etc/service/clickhouse_request_consumer/down
+fi
+
 if [ "${CONTAINER_NAME}" = "listenbrainz-labs-api-${DEPLOY_ENV}" ]
 then
     log Enabling api labs

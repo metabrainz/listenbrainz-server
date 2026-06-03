@@ -13,6 +13,8 @@ import time
 from enum import Enum
 from pathlib import Path
 
+from clickhouse import config
+
 logger = logging.getLogger(__name__)
 
 
@@ -29,9 +31,9 @@ class DumpInvalidException(Exception):
 class FTPDumpDownloader:
     """Downloads Spark parquet listen dumps from the ListenBrainz FTP server."""
 
-    def __init__(self, ftp_server: str = "ftp.eu.metabrainz.org", ftp_dir: str = "/pub/musicbrainz/listenbrainz/"):
-        self.ftp_server = ftp_server
-        self.ftp_dir = ftp_dir
+    def __init__(self):
+        self.ftp_server = config.FTP_SERVER_URI
+        self.ftp_dir = config.FTP_LISTENS_DIR
         self.connection = None
 
     def connect(self):
@@ -198,41 +200,3 @@ class FTPDumpDownloader:
         self.connection.cwd('/')
 
         return dump_path, dump_id
-
-
-def download_dump(
-    dump_type: str = "full",
-    download_dir: str = None,
-    ftp_server: str = None,
-    ftp_dir: str = None,
-) -> tuple[str, int]:
-    """
-    Convenience function to download a dump.
-
-    Args:
-        dump_type: "full" or "incremental"
-        download_dir: Directory to save the dump
-        ftp_server: FTP server hostname (default: ftp.eu.metabrainz.org)
-        ftp_dir: Base directory on FTP (default: /pub/musicbrainz/listenbrainz/)
-
-    Returns:
-        Tuple of (path_to_downloaded_file, dump_id)
-    """
-    # Get config values if not provided
-    if ftp_server is None or ftp_dir is None:
-        try:
-            from clickhouse import config
-            ftp_server = ftp_server or getattr(config, 'FTP_SERVER_URI', 'ftp.eu.metabrainz.org')
-            ftp_dir = ftp_dir or getattr(config, 'FTP_LISTENS_DIR', '/pub/musicbrainz/listenbrainz/')
-        except ImportError:
-            ftp_server = ftp_server or 'ftp.eu.metabrainz.org'
-            ftp_dir = ftp_dir or '/pub/musicbrainz/listenbrainz/'
-
-    dtype = DumpType.INCREMENTAL if dump_type == "incremental" else DumpType.FULL
-
-    downloader = FTPDumpDownloader(ftp_server, ftp_dir)
-    try:
-        downloader.connect()
-        return downloader.download_latest_dump(dtype, download_dir)
-    finally:
-        downloader.close()

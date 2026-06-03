@@ -21,19 +21,8 @@ from kombu import Connection, Consumer, Exchange, Queue
 from kombu.entity import PERSISTENT_DELIVERY_MODE
 from kombu.mixins import ConsumerMixin
 
-from clickhouse import query_map
+from clickhouse import config, query_map
 
-
-def _get_config_module():
-    try:
-        from clickhouse import config
-        return config
-    except ImportError:
-        return None
-
-
-def _config_value(config, name, default):
-    return getattr(config, name, default) if config is not None else default
 
 logging.basicConfig(
     level=logging.INFO,
@@ -48,23 +37,22 @@ class ClickHouseRequestConsumer(ConsumerMixin):
     def __init__(self):
         self.connection = None
         self.producer = None
-        self.config = _get_config_module()
 
         # ClickHouse bulk request exchange and queue (stats, cache refresh, dump loading)
         self.clickhouse_exchange = Exchange(
-            _config_value(self.config, "CLICKHOUSE_EXCHANGE", "clickhouse"),
+            config.CLICKHOUSE_EXCHANGE,
             "fanout",
             durable=False,
         )
         self.clickhouse_queue = Queue(
-            _config_value(self.config, "CLICKHOUSE_QUEUE", "clickhouse"),
+            config.CLICKHOUSE_QUEUE,
             exchange=self.clickhouse_exchange,
             durable=True
         )
 
         # Result exchange for sending results back to ListenBrainz
         self.clickhouse_result_exchange = Exchange(
-            _config_value(self.config, "CLICKHOUSE_RESULT_EXCHANGE", "clickhouse_result"),
+            config.CLICKHOUSE_RESULT_EXCHANGE,
             "fanout",
             durable=False,
         )
@@ -157,11 +145,11 @@ class ClickHouseRequestConsumer(ConsumerMixin):
         """Initialize RabbitMQ connection and producer."""
         connection_name = "clickhouse-request-consumer-" + socket.gethostname()
         self.connection = Connection(
-            hostname=_config_value(self.config, "RABBITMQ_HOST", "rabbitmq"),
-            userid=_config_value(self.config, "RABBITMQ_USERNAME", "guest"),
-            port=_config_value(self.config, "RABBITMQ_PORT", 5672),
-            password=_config_value(self.config, "RABBITMQ_PASSWORD", "guest"),
-            virtual_host=_config_value(self.config, "RABBITMQ_VHOST", "/"),
+            hostname=config.RABBITMQ_HOST,
+            userid=config.RABBITMQ_USERNAME,
+            port=config.RABBITMQ_PORT,
+            password=config.RABBITMQ_PASSWORD,
+            virtual_host=config.RABBITMQ_VHOST,
             transport_options={"client_properties": {"connection_name": connection_name}}
         )
         # Create producer for pushing results

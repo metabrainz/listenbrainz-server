@@ -9,46 +9,18 @@ These handlers are invoked by the ClickHouse request consumer via RabbitMQ.
 import logging
 from typing import Iterator, Optional
 
-from kombu import Exchange, Queue
-
+from clickhouse import config
 from clickhouse.stats.bulk_cache_manager import BulkStatsCacheManager
 from clickhouse.stats.cache_manager import (
-    CacheConfig,
     StatsCacheManager,
     ENTITY_CONFIGS,
-    get_cache_config_from_config,
+    get_cache_config,
 )
 from clickhouse.stats.ftp import DumpType
 from clickhouse.stats.load_dump import load_dump, load_from_ftp
 from clickhouse.stats.refresh_metadata_cache import refresh_metadata_caches, PG_QUERIES
 
 logger = logging.getLogger(__name__)
-
-
-# ClickHouse request exchange and queue
-# Used by LB to send stats/dump requests to the ClickHouse service
-CLICKHOUSE_EXCHANGE = Exchange("clickhouse", "fanout", durable=False)
-CLICKHOUSE_QUEUE = Queue("clickhouse", exchange=CLICKHOUSE_EXCHANGE, durable=True)
-
-# ClickHouse result exchange and queue
-# Used by ClickHouse service to send results (stats data, notifications) back to LB
-CLICKHOUSE_RESULT_EXCHANGE = Exchange("clickhouse_result", "fanout", durable=False)
-CLICKHOUSE_RESULT_QUEUE = Queue("clickhouse_result", exchange=CLICKHOUSE_RESULT_EXCHANGE, durable=True)
-
-
-def _get_config_module():
-    """Return the ClickHouse service config module."""
-    from clickhouse import config
-    return config
-
-
-def _get_cache_config() -> CacheConfig:
-    """Get CacheConfig from the ClickHouse config module."""
-    try:
-        return get_cache_config_from_config(_get_config_module())
-    except ImportError:
-        logger.warning("ClickHouse config not found, using defaults")
-        return CacheConfig()
 
 
 def _raise_on_dump_errors(result: dict) -> None:
@@ -71,15 +43,10 @@ def _load_dump_from_path(dump_path: str, dump_type: str, workers: int = 4) -> li
         List of result messages for the response queue
     """
     try:
-        config = _get_config_module()
         result = load_dump(
             directory=dump_path,
-            host=getattr(config, 'CLICKHOUSE_HOST', 'localhost'),
-            port=getattr(config, 'CLICKHOUSE_PORT', 8123),
-            username=getattr(config, 'CLICKHOUSE_USERNAME', 'default'),
-            password=getattr(config, 'CLICKHOUSE_PASSWORD', ''),
-            database=getattr(config, 'CLICKHOUSE_DATABASE', 'default'),
             workers=workers,
+            **_ch_kwargs(),
         )
         _raise_on_dump_errors(result)
         return [{
@@ -108,13 +75,12 @@ def load_incremental_dump(dump_path: str, workers: int = 4) -> list[dict]:
 
 def _ch_kwargs() -> dict:
     """Return ClickHouse connection kwargs from config."""
-    config = _get_config_module()
     return {
-        'host': getattr(config, 'CLICKHOUSE_HOST', 'localhost'),
-        'port': getattr(config, 'CLICKHOUSE_PORT', 8123),
-        'username': getattr(config, 'CLICKHOUSE_USERNAME', 'default'),
-        'password': getattr(config, 'CLICKHOUSE_PASSWORD', ''),
-        'database': getattr(config, 'CLICKHOUSE_DATABASE', 'default'),
+        'host': config.CLICKHOUSE_HOST,
+        'port': config.CLICKHOUSE_PORT,
+        'username': config.CLICKHOUSE_USERNAME,
+        'password': config.CLICKHOUSE_PASSWORD,
+        'database': config.CLICKHOUSE_DATABASE,
     }
 
 
@@ -166,7 +132,7 @@ def run_hourly_stats_job(
     Yields:
         Result messages for the response queue.
     """
-    cache_config = _get_cache_config()
+    cache_config = get_cache_config()
 
     if entity:
         if entity not in ENTITY_CONFIGS:
@@ -225,7 +191,7 @@ def run_full_stats_refresh(
     Yields:
         Result messages for the response queue.
     """
-    cache_config = _get_cache_config()
+    cache_config = get_cache_config()
 
     if entity:
         if entity not in ENTITY_CONFIGS:
@@ -295,7 +261,7 @@ def run_bulk_full_stats_refresh(
     Yields:
         Result messages for the response queue.
     """
-    cache_config = _get_cache_config()
+    cache_config = get_cache_config()
 
     if entity:
         if entity not in ENTITY_CONFIGS:
@@ -362,18 +328,15 @@ def refresh_metadata_cache(
         List of result messages for the response queue.
     """
     try:
-        config = _get_config_module()
-        pg_dsn = getattr(config, 'MUSICBRAINZ_PG_DSN', None)
-        if not pg_dsn:
-            raise ValueError("MUSICBRAINZ_PG_DSN is not configured")
+        pg_dsn = config.MUSICBRAINZ_PG_DSN
 
         import clickhouse_connect
         ch_client = clickhouse_connect.get_client(
-            host=getattr(config, 'CLICKHOUSE_HOST', 'localhost'),
-            port=getattr(config, 'CLICKHOUSE_PORT', 8123),
-            username=getattr(config, 'CLICKHOUSE_USERNAME', 'default'),
-            password=getattr(config, 'CLICKHOUSE_PASSWORD', ''),
-            database=getattr(config, 'CLICKHOUSE_DATABASE', 'default'),
+            host=config.CLICKHOUSE_HOST,
+            port=config.CLICKHOUSE_PORT,
+            username=config.CLICKHOUSE_USERNAME,
+            password=config.CLICKHOUSE_PASSWORD,
+            database=config.CLICKHOUSE_DATABASE,
             compress=False,
             form_encode_query_params=True,
         )
