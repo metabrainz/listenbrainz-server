@@ -17,7 +17,7 @@ from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzData
 from listenbrainz.db import stats as db_stats
 from listenbrainz.db import statistics_generation as db_statistics_generation
 from listenbrainz.db import user as db_user
-import listenbrainz.status_cache as status_cache
+import listenbrainz.shared.status_cache_helpers as status_cache_helpers
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db.tests.utils import delete_all_couch_databases
 from listenbrainz.spark.handlers import (
@@ -130,7 +130,7 @@ class HandlersTestCase(DatabaseTestCase):
 
     def test_handle_statistics_generation_complete(self):
         with self.app.app_context():
-            status_cache.set_stats_timestamps({"artists_all_time": 1}, 60)
+            status_cache_helpers.set_stats_timestamps({"artists_all_time": 1}, 60)
             handle_statistics_generation_complete({
                 "type": "statistics_generation_complete",
                 "stats_type": "artists_all_time",
@@ -141,7 +141,7 @@ class HandlersTestCase(DatabaseTestCase):
             ["artists_all_time"]
         )
         self.assertIn("artists_all_time", timestamps)
-        self.assertIsNone(status_cache.get_stats_timestamps())
+        self.assertIsNone(status_cache_helpers.get_stats_timestamps())
 
     def test_handle_user_listening_activity(self):
         data = {
