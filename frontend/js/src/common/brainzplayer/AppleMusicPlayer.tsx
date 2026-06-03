@@ -164,7 +164,7 @@ export default class AppleMusicPlayer
   };
 
   stop = () => {
-    this.pause();
+    this.appleMusicPlayer?.stop();
   };
 
   playAppleMusicId = async (
