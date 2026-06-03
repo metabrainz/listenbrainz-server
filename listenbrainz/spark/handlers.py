@@ -14,6 +14,7 @@ import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_rec
 import listenbrainz.db.statistics_generation as db_statistics_generation
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+import listenbrainz.shared.status_cache_helpers as status_cache_helpers
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from listenbrainz.db import year_in_music
@@ -265,6 +266,7 @@ def handle_fresh_releases(message):
 
 def handle_statistics_generation_complete(message):
     db_statistics_generation.mark_statistics_generated(db_conn, message["stats_type"])
+    status_cache_helpers.invalidate_stats_timestamps()
 
 
 def notify_mapping_import(data):
