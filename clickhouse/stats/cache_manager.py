@@ -20,6 +20,7 @@ from typing import Any, Callable, Iterator, Optional
 
 import clickhouse_connect
 
+from clickhouse import config
 from clickhouse.stats.schema import ensure_stats_schema
 
 logger = logging.getLogger(__name__)
@@ -230,16 +231,16 @@ def _format_entity_tuple(entity_tuple: tuple, dimension_fields: list[DimensionFi
     return entity
 
 
-def get_cache_config_from_config(config_module) -> CacheConfig:
-    """Create CacheConfig from a config module."""
+def get_cache_config() -> CacheConfig:
+    """Create CacheConfig from ClickHouse config."""
     return CacheConfig(
-        ch_host=getattr(config_module, 'CLICKHOUSE_HOST', 'localhost'),
-        ch_port=getattr(config_module, 'CLICKHOUSE_PORT', 8123),
-        ch_database=getattr(config_module, 'CLICKHOUSE_DATABASE', 'default'),
-        ch_username=getattr(config_module, 'CLICKHOUSE_USERNAME', 'default'),
-        ch_password=getattr(config_module, 'CLICKHOUSE_PASSWORD', ''),
-        top_n=getattr(config_module, 'STATS_TOP_N', 1000),
-        couch_db_prefix=getattr(config_module, 'STATS_COUCH_DB_PREFIX', 'clk'),
+        ch_host=config.CLICKHOUSE_HOST,
+        ch_port=config.CLICKHOUSE_PORT,
+        ch_database=config.CLICKHOUSE_DATABASE,
+        ch_username=config.CLICKHOUSE_USERNAME,
+        ch_password=config.CLICKHOUSE_PASSWORD,
+        top_n=config.STATS_TOP_N,
+        couch_db_prefix=config.STATS_COUCH_DB_PREFIX,
     )
 
 
