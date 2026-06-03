@@ -24,7 +24,14 @@ ARTIST_EVENT_LINK_GIDS = (
 )
 ARTIST_EVENT_LINK_GIDS_SQL = ", ".join([f"'{x}'" for x in ARTIST_EVENT_LINK_GIDS])
 
-EVENT_URL_LINK_GIDS = ()
+EVENT_URL_LINK_GIDS = (
+    "c26808b0-4e67-31a7-a587-913720dfb3f3",  # official homepage
+    "68f5fcaa-b58c-3bfe-9b7c-75c2b56e839a",  # social network
+    "125afc57-4d33-3b63-ab41-848a3a18d3a6",  # songkick
+    "b022d060-e6a8-340f-8c73-6b21b1d090b9",  # wikidata
+    "08a982f7-d754-39b2-8315-d7cae474c641",  # wikipedia
+    "fea46163-dc45-3af9-917e-1798f325d21a",  # youtube
+)
 EVENT_URL_LINK_GIDS_SQL = ", ".join([f"'{x}'" for x in EVENT_URL_LINK_GIDS])
 
 EVENT_PLACE_LINK_GID = "e2c6f697-07dc-38b1-be0b-83d740165532"
