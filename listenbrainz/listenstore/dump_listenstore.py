@@ -336,86 +336,89 @@ class DumpListenStore:
         listen_count = 0
         current_listened_at = None
         conn = timescale.engine.raw_connection()
-        with (conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs):
-            curs.execute(query, args)
-            while True:
-                t0 = time.monotonic()
-                written = 0
-                approx_size = 0
-                data = {
-                    'listened_at': [],
-                    'created': [],
-                    'user_id': [],
-                    'recording_msid': [],
-                    'artist_name': [],
-                    'artist_credit_id': [],
-                    'release_name': [],
-                    'release_mbid': [],
-                    'recording_name': [],
-                    'recording_mbid': [],
-                    'artist_credit_mbids': []
-                }
+        try:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs:
+                curs.execute(query, args)
                 while True:
-                    result = curs.fetchone()
-                    if not result:
+                    t0 = time.monotonic()
+                    written = 0
+                    approx_size = 0
+                    data = {
+                        'listened_at': [],
+                        'created': [],
+                        'user_id': [],
+                        'recording_msid': [],
+                        'artist_name': [],
+                        'artist_credit_id': [],
+                        'release_name': [],
+                        'release_mbid': [],
+                        'recording_name': [],
+                        'recording_mbid': [],
+                        'artist_credit_mbids': []
+                    }
+                    while True:
+                        result = curs.fetchone()
+                        if not result:
+                            break
+
+                        # Either take the original listen metadata or the mapping metadata
+                        if result["artist_credit_id"] is None:
+                            data["artist_name"].append(result["l_artist_name"])
+                            data["release_name"].append(result["l_release_name"])
+                            data["recording_name"].append(result["l_recording_name"])
+                            data["artist_credit_id"].append(None)
+                            data["artist_credit_mbids"].append(result["l_artist_credit_mbids"])
+                            data["release_mbid"].append(result["l_release_mbid"])
+                            data["recording_mbid"].append(result["l_recording_mbid"])
+                            approx_size += len(result["l_artist_name"]) + len(result["l_recording_name"]) \
+                                + len(result["l_release_name"] or "0") + len(result["l_recording_mbid"] or "0") \
+                                + len(result["l_release_mbid"] or "0") + len(str(result["l_artist_credit_mbids"] or 0))
+                        else:
+                            data["artist_name"].append(result["m_artist_name"])
+                            data["release_name"].append(result["m_release_name"])
+                            data["recording_name"].append(result["m_recording_name"])
+                            data["artist_credit_id"].append(result["artist_credit_id"])
+                            data["artist_credit_mbids"].append(result["m_artist_credit_mbids"])
+                            data["release_mbid"].append(result["m_release_mbid"])
+                            data["recording_mbid"].append(result["m_recording_mbid"])
+                            approx_size += len(result["m_artist_name"]) + len(result["m_recording_name"]) \
+                                + len(result["m_release_name"] or "0") + len(result["m_recording_mbid"] or "0") \
+                                + len(result["m_release_mbid"] or "0") + len(str(result["m_artist_credit_mbids"] or 0)) \
+                                + len(str(result["artist_credit_id"]))
+
+                        current_listened_at = result["listened_at"]
+                        data["listened_at"].append(current_listened_at)
+                        data["created"].append(result["created"])
+                        data["user_id"].append(result["user_id"])
+                        data["recording_msid"].append(result["recording_msid"])
+                        approx_size += len(str(result["listened_at"])) + len(str(result["created"])) \
+                                       + len(str(result["user_id"])) + len(result["recording_msid"])
+
+                        written += 1
+                        listen_count += 1
+                        if approx_size > PARQUET_TARGET_SIZE:
+                            break
+
+                    if written == 0:
                         break
 
-                    # Either take the original listen metadata or the mapping metadata
-                    if result["artist_credit_id"] is None:
-                        data["artist_name"].append(result["l_artist_name"])
-                        data["release_name"].append(result["l_release_name"])
-                        data["recording_name"].append(result["l_recording_name"])
-                        data["artist_credit_id"].append(None)
-                        data["artist_credit_mbids"].append(result["l_artist_credit_mbids"])
-                        data["release_mbid"].append(result["l_release_mbid"])
-                        data["recording_mbid"].append(result["l_recording_mbid"])
-                        approx_size += len(result["l_artist_name"]) + len(result["l_recording_name"]) \
-                            + len(result["l_release_name"] or "0") + len(result["l_recording_mbid"] or "0") \
-                            + len(result["l_release_mbid"] or "0") + len(str(result["l_artist_credit_mbids"] or 0))
-                    else:
-                        data["artist_name"].append(result["m_artist_name"])
-                        data["release_name"].append(result["m_release_name"])
-                        data["recording_name"].append(result["m_recording_name"])
-                        data["artist_credit_id"].append(result["artist_credit_id"])
-                        data["artist_credit_mbids"].append(result["m_artist_credit_mbids"])
-                        data["release_mbid"].append(result["m_release_mbid"])
-                        data["recording_mbid"].append(result["m_recording_mbid"])
-                        approx_size += len(result["m_artist_name"]) + len(result["m_recording_name"]) \
-                            + len(result["m_release_name"] or "0") + len(result["m_recording_mbid"] or "0") \
-                            + len(result["m_release_mbid"] or "0") + len(str(result["m_artist_credit_mbids"] or 0)) \
-                            + len(str(result["artist_credit_id"]))
+                    filename = os.path.join(temp_dir, "%d.parquet" % parquet_file_id)
 
-                    current_listened_at = result["listened_at"]
-                    data["listened_at"].append(current_listened_at)
-                    data["created"].append(result["created"])
-                    data["user_id"].append(result["user_id"])
-                    data["recording_msid"].append(result["recording_msid"])
-                    approx_size += len(str(result["listened_at"])) + len(str(result["created"])) \
-                                   + len(str(result["user_id"])) + len(result["recording_msid"])
+                    # Create a pandas dataframe, then write that to a parquet files
+                    df = pd.DataFrame(data, dtype=object)
+                    table = pa.Table.from_pandas(df, schema=SPARK_LISTENS_SCHEMA, preserve_index=False)
+                    pq.write_table(table, filename, flavor="spark", compression="zstd")
+                    file_size = os.path.getsize(filename)
+                    tar_file.add(filename, arcname=os.path.join(archive_dir, "%d.parquet" % parquet_file_id))
+                    os.unlink(filename)
+                    parquet_file_id += 1
 
-                    written += 1
-                    listen_count += 1
-                    if approx_size > PARQUET_TARGET_SIZE:
-                        break
-
-                if written == 0:
-                    break
-
-                filename = os.path.join(temp_dir, "%d.parquet" % parquet_file_id)
-
-                # Create a pandas dataframe, then write that to a parquet files
-                df = pd.DataFrame(data, dtype=object)
-                table = pa.Table.from_pandas(df, schema=SPARK_LISTENS_SCHEMA, preserve_index=False)
-                pq.write_table(table, filename, flavor="spark", compression="zstd")
-                file_size = os.path.getsize(filename)
-                tar_file.add(filename, arcname=os.path.join(archive_dir, "%d.parquet" % parquet_file_id))
-                os.unlink(filename)
-                parquet_file_id += 1
-
-                self.log.info("%d listens dumped for %s at %.2f listens/s (%sMB)",
-                              listen_count, current_listened_at.strftime("%Y-%m-%d"),
-                              written / (time.monotonic() - t0),
-                              str(round(file_size / (1024 * 1024), 3)))
+                    self.log.info("%d listens dumped for %s at %.2f listens/s (%sMB)",
+                                  listen_count, current_listened_at.strftime("%Y-%m-%d"),
+                                  written / (time.monotonic() - t0),
+                                  str(round(file_size / (1024 * 1024), 3)))
+        finally:
+            conn.close()
 
         return parquet_file_id
 
@@ -457,15 +460,24 @@ class DumpListenStore:
         parquet_index = 0
         with uncompressed_dump(location, archive_name, metadata, temp_location=temp_location) as (tar, temp_dir, archive_path):
 
-            for year in range(start_time.year, end_time.year + 1):
-                if year == start_time.year:
+            # iterate one month at a time (rather than one year) so that each write_parquet_files
+            # call buffers only a month of listens in memory and holds its database transaction
+            # open for only a month's worth of processing. dumping a full year at once buffers the
+            # entire year's joined result set client-side and OOMs the process.
+            start_year, start_month = start_time.year, start_time.month
+            end_year, end_month = end_time.year, end_time.month
+            year, month = start_year, start_month
+            while (year, month) <= (end_year, end_month):
+                if year == start_year and month == start_month:
                     start = start_time
                 else:
-                    start = datetime(year=year, day=1, month=1)
-                if year == end_time.year:
+                    start = datetime(year=year, month=month, day=1)
+                if year == end_year and month == end_month:
                     end = end_time
+                elif month == 12:
+                    end = datetime(year=year + 1, month=1, day=1)
                 else:
-                    end = datetime(year=year + 1, day=1, month=1)
+                    end = datetime(year=year, month=month + 1, day=1)
 
                 self.log.info(
                     "dump %s to %s" % (start.strftime("%Y-%m-%d %H:%M:%S"), end.strftime("%Y-%m-%d %H:%M:%S")))
@@ -479,6 +491,11 @@ class DumpListenStore:
                 except Exception as err:
                     self.log.exception("likely test failure: " + str(err))
                     raise
+
+                if month == 12:
+                    year, month = year + 1, 1
+                else:
+                    month += 1
 
         self.log.info('ListenBrainz spark listen dump done!')
         self.log.info('Dump present at %s!', archive_path)
