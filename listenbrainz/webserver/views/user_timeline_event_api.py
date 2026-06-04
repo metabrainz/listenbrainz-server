@@ -28,6 +28,7 @@ from flask import Blueprint, jsonify, request, current_app
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
+import listenbrainz.synapse_client as synapse_client
 from data.model.listen import APIListen
 from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, \
     SimilarUserTimelineEvent, UserTimelineEventType, \
@@ -108,6 +109,11 @@ def create_user_recording_recommendation_event(user_name):
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
 
+    fetch_track_metadata_for_items(ts_conn, [event.metadata])
+    followers = [str(f['musicbrainz_row_id'])
+                 for f in db_user_relationship.get_followers_of_user(db_conn, user['id'])]
+    synapse_client.publish_recording_recommendation(followers, user_name, event.metadata.track_metadata)
+
     event_data = event.dict()
     event_data['created'] = int(event_data['created'].timestamp())
     event_data['event_type'] = event_data['event_type'].value
@@ -166,6 +172,9 @@ def create_user_notification_event(user_name):
             db_conn, user['id'], metadata)
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
+
+    synapse_client.publish_notification(
+        [str(user['musicbrainz_row_id'])], creator['musicbrainz_id'], message)
 
     event_data = event.dict()
     event_data['created'] = int(event_data['created'].timestamp())
@@ -235,6 +244,10 @@ def create_user_cb_review_event(user_name):
     )
     event = db_user_timeline_event.create_user_cb_review_event(
         db_conn, user["id"], metadata)
+
+    followers = [str(f['musicbrainz_row_id'])
+                 for f in db_user_relationship.get_followers_of_user(db_conn, user['id'])]
+    synapse_client.publish_cb_review(followers, user_name, review_id, review.name)
 
     event_data = event.dict()
     event_data["created"] = int(event_data["created"].timestamp())
@@ -711,6 +724,16 @@ def create_personal_recommendation_event(user_name):
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
 
+    fetch_track_metadata_for_items(ts_conn, [event.metadata])
+    recipient_users = db_user.get_many_users_by_mb_id(db_conn, event.metadata.users)
+    recipient_ids = [
+        str(recipient_users[recipient.lower()]['musicbrainz_row_id'])
+        for recipient in event.metadata.users
+        if recipient.lower() in recipient_users
+    ]
+    synapse_client.publish_personal_recommendation(
+        recipient_ids, user_name, event.metadata.track_metadata, event.metadata.blurb_content)
+
     event_data = event.dict()
     event_data['created'] = int(event_data['created'].timestamp())
     event_data['event_type'] = event_data['event_type'].value
@@ -773,11 +796,18 @@ def create_thanks_event(user_name):
         if not result:
             raise APIBadRequest(
                 f"{event_type} event with id {row_id} not found")
-        thankee_username = db_user.get_users_by_id(
-            db_conn, [result.user_id])[result.user_id]
+        thankee_user = db_user.get_by_mb_id(
+            db_conn, db_user.get_users_by_id(db_conn, [result.user_id])[result.user_id])
+        thankee_username = thankee_user['musicbrainz_id']
         if db_user_relationship.is_following_user(db_conn, user['id'], result.user_id):
             db_user_timeline_event.create_thanks_event(
                 db_conn, user['id'], user_name, result.user_id, thankee_username, metadata)
+            # PinnedRecording extends MsidMbidModel directly; recommendation events wrap it in .metadata
+            msid_mbid_item = result if hasattr(result, 'track_metadata') else result.metadata
+            fetch_track_metadata_for_items(ts_conn, [msid_mbid_item])
+            synapse_client.publish_thanks(
+                [str(thankee_user['musicbrainz_row_id'])], user_name,
+                msid_mbid_item.track_metadata, metadata.blurb_content)
             return jsonify({"status": "ok"})
         else:
             raise APIUnauthorized("You cannot thank events of this user")

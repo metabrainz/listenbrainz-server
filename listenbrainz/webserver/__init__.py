@@ -237,6 +237,10 @@ def create_app(
     except ConnectionError:
         app.logger.critical("RabbitMQ service is not up!", exc_info=True)
 
+    # Synapse push notification client (optional, requires SYNAPSE_ENABLED = True in config)
+    from listenbrainz.synapse_client import init_synapse_client
+    init_synapse_client(app)
+
     if app.config['MB_DATABASE_URI']:
         from brainzutils import musicbrainz_db
         musicbrainz_db.init_db_engine(app.config['MB_DATABASE_URI'])
