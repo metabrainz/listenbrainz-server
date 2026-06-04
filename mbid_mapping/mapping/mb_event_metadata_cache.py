@@ -151,7 +151,8 @@ class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
                         "1bfefc05-dbbb-4aaa-8d1b-6ddc00114eb7",
                         "9c81bb52-87be-48d5-a7cb-da91f6c94b5e",
                         "a777f05b-a934-4648-9a5c-60284b588c0e",
-                        "4996ec02-a2c6-405d-99b7-c545e3ad040a"
+                        "4996ec02-a2c6-405d-99b7-c545e3ad040a",
+                        "ab234290-d27d-45b6-9778-d21945906996",
                     )
                 ]
             ]
