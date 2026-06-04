@@ -1,0 +1,65 @@
+{{- define "KEY" -}}
+    {{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .)  (printf "KEYDOESNOTEXIST_%s" .) }}
+{{- end -}}
+
+# Put everything after the defines otherwise the rendered config might eat up some newlines
+
+# ClickHouse connection settings
+{{if service "clickhouse-listenbrainz"}}
+{{with index (service "clickhouse-listenbrainz") 0}}
+CLICKHOUSE_HOST = "{{.Address}}"
+CLICKHOUSE_PORT = {{.Port}}
+{{end}}
+{{else}}
+CLICKHOUSE_HOST = "SERVICEDOESNOTEXIST_clickhouse-listenbrainz"
+CLICKHOUSE_PORT = "SERVICEDOESNOTEXIST_clickhouse-listenbrainz"
+{{end}}
+CLICKHOUSE_DATABASE = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/clickhouse_database" (env "DEPLOY_ENV")) "default" }}'''
+CLICKHOUSE_USERNAME = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/clickhouse_username" (env "DEPLOY_ENV")) "default" }}'''
+CLICKHOUSE_PASSWORD = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/clickhouse_password" (env "DEPLOY_ENV")) "" }}'''
+
+# RabbitMQ connection settings
+{{- $rabbitmq_services := service "rabbitmq-listenbrainz"}}
+{{- if $rabbitmq_services}}
+RABBITMQ_HOSTS = [
+{{- range $rabbitmq_services}}
+    ("{{.Address}}", {{.Port}}),
+{{- end}}
+]
+{{else}}
+RABBITMQ_HOSTS = [("SERVICEDOESNOTEXIST_rabbitmq-listenbrainz", "SERVICEDOESNOTEXIST_rabbitmq-listenbrainz")]
+{{end}}
+RABBITMQ_USERNAME = '''{{template "KEY" "rabbitmq_user"}}'''
+RABBITMQ_PASSWORD = '''{{template "KEY" "rabbitmq_pass"}}'''
+RABBITMQ_VHOST = '''{{template "KEY" "rabbitmq_vhost"}}'''
+
+# RabbitMQ exchanges and queues for ClickHouse operations
+CLICKHOUSE_EXCHANGE = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/clickhouse_exchange" (env "DEPLOY_ENV")) "clickhouse" }}'''
+CLICKHOUSE_QUEUE = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/clickhouse_queue" (env "DEPLOY_ENV")) "clickhouse" }}'''
+CLICKHOUSE_RESULT_EXCHANGE = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/clickhouse_result_exchange" (env "DEPLOY_ENV")) "clickhouse_result" }}'''
+
+# MusicBrainz PostgreSQL DSN for metadata cache refresh.
+{{- $musicbrainz_up := (keyOrDefault (printf "docker-server-configs/LB/config.%s.json/musicbrainz_up" (env "DEPLOY_ENV")) "false") }}
+{{- if $musicbrainz_up | parseBool}}
+    {{if service "virtual.virtual-pgbouncer-slave"}}
+    {{with index (service "virtual.virtual-pgbouncer-slave") 0}}
+MUSICBRAINZ_PG_DSN = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrainz_db'
+    {{end}}
+    {{else if service "virtual.virtual-pgbouncer-master"}}
+    {{with index (service "virtual.virtual-pgbouncer-master") 0}}
+MUSICBRAINZ_PG_DSN = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrainz_db'
+    {{end}}
+    {{else}}
+MUSICBRAINZ_PG_DSN = "SERVICEDOESNOTEXIST_pgbouncer-slave_pgbouncer-master"
+    {{end}}
+{{else}}
+MUSICBRAINZ_PG_DSN = ""
+{{end}}
+
+# FTP settings for dump download
+FTP_SERVER_URI = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/ftp_server_uri" (env "DEPLOY_ENV")) "ftp.eu.metabrainz.org" }}'''
+FTP_LISTENS_DIR = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/ftp_listens_dir" (env "DEPLOY_ENV")) "/pub/musicbrainz/listenbrainz/" }}'''
+
+# Stats settings
+STATS_COUCH_DB_PREFIX = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/stats_couch_db_prefix" (env "DEPLOY_ENV")) "clk" }}'''
+STATS_TOP_N = {{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/stats_top_n" (env "DEPLOY_ENV")) "1000" }}

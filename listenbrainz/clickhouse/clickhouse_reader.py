@@ -14,6 +14,7 @@ from kombu import Consumer, Exchange, Queue
 from kombu.mixins import ConsumerMixin
 
 from listenbrainz.clickhouse.handlers import get_handler
+from listenbrainz.db import couchdb
 from listenbrainz.rabbitmq import create_rabbitmq_connection
 from listenbrainz.webserver import create_app, db_conn
 
@@ -22,11 +23,27 @@ logger = logging.getLogger(__name__)
 PREFETCH_COUNT = 100
 
 
+def init_clickhouse_reader_couchdb(app):
+    """Initialize CouchDB for the ClickHouse result reader."""
+    couchdb.init(
+        app.config["CLICKHOUSE_READER_COUCHDB_USER"],
+        app.config["CLICKHOUSE_READER_COUCHDB_ADMIN_KEY"],
+        app.config["CLICKHOUSE_READER_COUCHDB_HOST"],
+        app.config["CLICKHOUSE_READER_COUCHDB_PORT"],
+    )
+    app.logger.info(
+        "Initialized ClickHouse reader CouchDB connection: %s:%s",
+        app.config["CLICKHOUSE_READER_COUCHDB_HOST"],
+        app.config["CLICKHOUSE_READER_COUCHDB_PORT"],
+    )
+
+
 class ClickHouseReader(ConsumerMixin):
     """Consumer for ClickHouse result messages."""
 
     def __init__(self, app):
         self.app = app
+        init_clickhouse_reader_couchdb(app)
         self.connection = None
         self.clickhouse_result_exchange = Exchange(
             app.config["CLICKHOUSE_RESULT_EXCHANGE"],
