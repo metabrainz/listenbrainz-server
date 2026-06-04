@@ -6,8 +6,7 @@ CLICKHOUSE_USERNAME = "default"
 CLICKHOUSE_PASSWORD = ""
 
 # RabbitMQ connection settings
-RABBITMQ_HOST = "rabbitmq"
-RABBITMQ_PORT = 5672
+RABBITMQ_HOSTS = [("rabbitmq", 5672)]
 RABBITMQ_USERNAME = "guest"
 RABBITMQ_PASSWORD = "guest"
 RABBITMQ_VHOST = "/"
@@ -19,7 +18,6 @@ CLICKHOUSE_QUEUE = "clickhouse"
 
 # Results sent back to ListenBrainz
 CLICKHOUSE_RESULT_EXCHANGE = "clickhouse_result"
-CLICKHOUSE_RESULT_QUEUE = "clickhouse_result"
 
 # MusicBrainz PostgreSQL DSN (for metadata cache refresh)
 MUSICBRAINZ_PG_DSN = "postgresql://musicbrainz:password@localhost:5432/musicbrainz_db"
@@ -31,4 +29,3 @@ FTP_LISTENS_DIR = "/pub/musicbrainz/listenbrainz/"
 # Stats settings
 STATS_COUCH_DB_PREFIX = "clk"
 STATS_TOP_N = 1000  # Number of top entities to cache per user
-STATS_BATCH_SIZE = 1000  # Number of users to process per batch

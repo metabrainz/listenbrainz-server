@@ -105,6 +105,12 @@ COUCHDB_ADMIN_KEY = "listenbrainz"
 # Prefix is used verbatim; include the trailing separator, e.g. "test_".
 COUCHDB_DATABASE_PREFIX = ""
 
+# CouchDB instance used by the ClickHouse result reader.
+CLICKHOUSE_READER_COUCHDB_HOST = "couchdb-clickhouse"
+CLICKHOUSE_READER_COUCHDB_PORT = 5984
+CLICKHOUSE_READER_COUCHDB_USER = "listenbrainz"
+CLICKHOUSE_READER_COUCHDB_ADMIN_KEY = "listenbrainz"
+
 # MusicBrainz OAuth
 OAUTH_BASE_URL = "https://musicbrainz.org"
 OAUTH_CLIENT_ID = "CLIENT_ID"

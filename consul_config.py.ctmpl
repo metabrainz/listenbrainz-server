@@ -153,6 +153,19 @@ COUCHDB_USER = "listenbrainz"
 COUCHDB_ADMIN_KEY = '''{{template "KEY" "couchdb_admin_key"}}'''
 COUCHDB_DATABASE_PREFIX = '''{{template "KEY_OPTIONAL" "couchdb_database_prefix"}}'''
 
+# CouchDB instance used by the ClickHouse result reader.
+{{if service "couchdb-clickhouse"}}
+{{with index (service "couchdb-clickhouse") 0}}
+CLICKHOUSE_READER_COUCHDB_HOST = "{{.Address}}"
+CLICKHOUSE_READER_COUCHDB_PORT = {{.Port}}
+{{end}}
+{{else}}
+CLICKHOUSE_READER_COUCHDB_HOST = "SERVICEDOESNOTEXIST_couchdb-clickhouse"
+CLICKHOUSE_READER_COUCHDB_PORT = "SERVICEDOESNOTEXIST_couchdb-clickhouse"
+{{end}}
+CLICKHOUSE_READER_COUCHDB_USER = '''{{template "KEY" "clickhouse_reader_couchdb_user"}}'''
+CLICKHOUSE_READER_COUCHDB_ADMIN_KEY = '''{{template "KEY" "clickhouse_reader_couchdb_admin_key"}}'''
+
 {{if service "listenbrainz-redis"}}
 {{with index (service "listenbrainz-redis") 0}}
 REDIS_HOST = "{{.Address}}"

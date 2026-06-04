@@ -1,9 +1,9 @@
 import click
 import orjson
-from kombu import Connection, Exchange
+from kombu import Exchange
 from kombu.entity import PERSISTENT_DELIVERY_MODE
 
-from listenbrainz.utils import get_fallback_connection_name
+from listenbrainz.rabbitmq import create_rabbitmq_connection
 from listenbrainz.webserver import create_app
 
 
@@ -18,14 +18,7 @@ def send_request_to_clickhouse(query, **params):
     with app.app_context():
         message = orjson.dumps({"query": query, "params": params})
 
-        connection = Connection(
-            hostname=app.config["RABBITMQ_HOST"],
-            userid=app.config["RABBITMQ_USERNAME"],
-            port=app.config["RABBITMQ_PORT"],
-            password=app.config["RABBITMQ_PASSWORD"],
-            virtual_host=app.config["RABBITMQ_VHOST"],
-            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
-        )
+        connection = create_rabbitmq_connection(app.config)
 
         clickhouse_exchange = Exchange(app.config.get("CLICKHOUSE_EXCHANGE", "clickhouse"), "fanout", durable=False)
 

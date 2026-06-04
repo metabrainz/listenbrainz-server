@@ -31,6 +31,30 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def _rabbitmq_url(host, port):
+    return (
+        f"amqp://{config.RABBITMQ_USERNAME}:{config.RABBITMQ_PASSWORD}"
+        f"@{host}:{port}/{config.RABBITMQ_VHOST}"
+    )
+
+
+def get_rabbitmq_urls():
+    """Return one or more RabbitMQ broker URLs from RABBITMQ_HOSTS."""
+    if not config.RABBITMQ_HOSTS:
+        raise ConnectionError(
+            "RabbitMQ hosts not defined, cannot create RabbitMQ connection..."
+        )
+
+    return [_rabbitmq_url(host, port) for host, port in config.RABBITMQ_HOSTS]
+
+
+def create_rabbitmq_connection(connection_name):
+    return Connection(
+        hostname=get_rabbitmq_urls(),
+        transport_options={"client_properties": {"connection_name": connection_name}},
+    )
+
+
 class ClickHouseRequestConsumer(ConsumerMixin):
     """Consumer for ClickHouse stats and management requests."""
 
@@ -144,14 +168,7 @@ class ClickHouseRequestConsumer(ConsumerMixin):
     def init_rabbitmq_connection(self):
         """Initialize RabbitMQ connection and producer."""
         connection_name = "clickhouse-request-consumer-" + socket.gethostname()
-        self.connection = Connection(
-            hostname=config.RABBITMQ_HOST,
-            userid=config.RABBITMQ_USERNAME,
-            port=config.RABBITMQ_PORT,
-            password=config.RABBITMQ_PASSWORD,
-            virtual_host=config.RABBITMQ_VHOST,
-            transport_options={"client_properties": {"connection_name": connection_name}}
-        )
+        self.connection = create_rabbitmq_connection(connection_name)
         # Create producer for pushing results
         self.producer = self.connection.Producer()
 

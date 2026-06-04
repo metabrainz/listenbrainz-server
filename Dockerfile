@@ -250,7 +250,8 @@ COPY . /code/listenbrainz/
 WORKDIR /code/listenbrainz
 # Ensure we use the right files and folders by removing duplicates
 RUN rm -rf ./frontend/
-RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbrainz/config.pyc
+RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbrainz/config.pyc \
+    /code/listenbrainz/clickhouse/config.py /code/listenbrainz/clickhouse/config.pyc
 
 ARG GIT_COMMIT_SHA
 LABEL org.label-schema.vcs-ref=$GIT_COMMIT_SHA

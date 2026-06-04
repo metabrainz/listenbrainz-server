@@ -9,22 +9,28 @@ cd /code/listenbrainz
 
 log run-lb-command starting "$@"
 
-# we grep the config file rendered by consul to check for missing keys
-keyerrors=$(grep KEYDOESNOTEXIST listenbrainz/config.py)
-if [ -n "$keyerrors" ]; then
-  log "Found keys that are missing from consul"
-  echo "$keyerrors"
-  log "Config file is as follows"
-  cat listenbrainz/config.py
-  exit 10
-fi
-serviceerrors=$(grep SERVICEDOESNOTEXIST listenbrainz/config.py)
-if [ -n "$serviceerrors" ]; then
-  log "Found services that are missing from consul"
-  echo "$serviceerrors"
-  log "Config file is as follows"
-  cat listenbrainz/config.py
-  exit 11
-fi
+# we grep config files rendered by consul to check for missing keys/services
+for config_file in listenbrainz/config.py clickhouse/config.py; do
+  if [ ! -f "$config_file" ]; then
+    continue
+  fi
+
+  keyerrors=$(grep KEYDOESNOTEXIST "$config_file")
+  if [ -n "$keyerrors" ]; then
+    log "Found keys that are missing from consul in $config_file"
+    echo "$keyerrors"
+    log "Config file is as follows"
+    cat "$config_file"
+    exit 10
+  fi
+  serviceerrors=$(grep SERVICEDOESNOTEXIST "$config_file")
+  if [ -n "$serviceerrors" ]; then
+    log "Found services that are missing from consul in $config_file"
+    echo "$serviceerrors"
+    log "Config file is as follows"
+    cat "$config_file"
+    exit 11
+  fi
+done
 
 exec "$@"
