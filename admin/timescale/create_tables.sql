@@ -166,7 +166,7 @@ CREATE TABLE mapping.mb_event_cache (
     area_mbid            UUID,
     rating               SMALLINT,
     rating_count         INTEGER,
-    event_data           JSONB NOT NULL DEFAULT '{}'::jsonb
+    event_data           JSONB NOT NULL
 );
 
 CREATE TABLE mapping.mb_event_artist_cache (
@@ -177,7 +177,7 @@ CREATE TABLE mapping.mb_event_artist_cache (
     link_id              INTEGER NOT NULL,
     link_type_gid        UUID NOT NULL,  
     link_type_name       TEXT NOT NULL,
-    relationship_data    JSONB NOT NULL DEFAULT '{}'::jsonb,
+    relationship_data    JSONB NOT NULL,
     last_updated         TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
