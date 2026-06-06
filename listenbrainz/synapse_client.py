@@ -5,26 +5,37 @@ Synapse event publisher for ListenBrainz.
 import logging
 
 import orjson
-from kombu import Exchange, Queue
+from kombu import Connection, Exchange, Queue, pools
 
 logger = logging.getLogger(__name__)
-
-# Constants
-_QUEUE = Queue("events.ingest", Exchange("", "direct"), routing_key="events.ingest", durable=True)
-_TENANT_ID = "listenbrainz"
-_LB_BASE_URL = "https://listenbrainz.org"
 
 MAX_RECIPIENTS_PER_EVENT = 5000
 
 _enabled: bool = False
+_queue: Queue | None = None
+_TENANT_ID: str = "listenbrainz"
+_lb_base_url: str = "https://listenbrainz.org"
+_producer_pool = None
+SYNAPSE_QUEUE = "events.ingest"
 
 
 def init_synapse_client(app) -> None:
     """Call once from the Flask app factory when SYNAPSE_ENABLED is True."""
-    global _enabled
-    if app.config.get("SYNAPSE_ENABLED", False):
-        _enabled = True
-        app.logger.info("Synapse client enabled — events will be published to %s", _QUEUE.name)
+    global _enabled, _queue, _lb_base_url, _producer_pool
+
+    if not app.config.get("SYNAPSE_ENABLED", False):
+        return
+
+    rabbitmq_url = app.config.get("SYNAPSE_RABBITMQ_URL")
+    if not rabbitmq_url:
+        app.logger.error("SYNAPSE_ENABLED is True but SYNAPSE_RABBITMQ_URL is not set — Synapse disabled")
+        return
+
+    _lb_base_url = app.config.get("SYNAPSE_LB_BASE_URL", "https://listenbrainz.org").rstrip("/")
+    _queue = Queue(SYNAPSE_QUEUE, Exchange("", "direct"), routing_key=SYNAPSE_QUEUE, durable=True)
+    _producer_pool = pools.producers[Connection(rabbitmq_url)]
+    _enabled = True
+    app.logger.info("Synapse client enabled — broker %s, queue %s", rabbitmq_url, SYNAPSE_QUEUE)
 
 
 # ---------------------------------------------------------------------------
@@ -124,22 +135,17 @@ def _publish(recipients: list[str], event_type: str, payload: dict) -> None:
     if not _enabled or not recipients:
         return
 
-    from listenbrainz.webserver import rabbitmq_connection
-    if rabbitmq_connection.rabbitmq is None:
-        return
-
-    # De-dupe, stringify, preserve order. Chunk so no event exceeds the cap.
     recipients = list(dict.fromkeys(str(r) for r in recipients if r))
     if not recipients:
         return
 
     try:
-        with rabbitmq_connection.rabbitmq.acquire(block=True, timeout=5) as producer:
+        with _producer_pool.acquire(block=True, timeout=5) as producer:
             for i in range(0, len(recipients), MAX_RECIPIENTS_PER_EVENT):
                 chunk = recipients[i:i + MAX_RECIPIENTS_PER_EVENT]
                 producer.publish(
                     exchange="",
-                    routing_key="events.ingest",
+                    routing_key=_queue.name,
                     body=orjson.dumps({
                         "tenant_id": _TENANT_ID,
                         "event_type": event_type,
@@ -149,7 +155,7 @@ def _publish(recipients: list[str], event_type: str, payload: dict) -> None:
                     delivery_mode=2,
                     retry=True,
                     retry_policy={"max_retries": 3},
-                    declare=[_QUEUE],
+                    declare=[_queue],
                 )
     except Exception:
         logger.error("Failed to publish %s event to Synapse (%d recipients)",
@@ -159,7 +165,7 @@ def _publish(recipients: list[str], event_type: str, payload: dict) -> None:
 def _build_actor(username: str) -> dict:
     return {
         "username": username,
-        "url": f"{_LB_BASE_URL}/user/{username}",
+        "url": f"{_lb_base_url}/user/{username}",
     }
 
 
@@ -187,6 +193,6 @@ def _build_recording(track_metadata: dict) -> dict | None:
     mbid = mbid_mapping.get("recording_mbid")
     if mbid:
         recording["mbid"] = mbid
-        recording["url"] = f"{_LB_BASE_URL}/music/recording/{mbid}"
+        recording["url"] = f"{_lb_base_url}/music/recording/{mbid}"
 
     return recording
