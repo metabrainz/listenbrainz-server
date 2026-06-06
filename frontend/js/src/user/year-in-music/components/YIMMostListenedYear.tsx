@@ -4,7 +4,7 @@ import * as React from "react";
 import Tooltip from "react-tooltip";
 import { ResponsiveBar } from "@nivo/bar";
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { type AxisLegendPosition } from "@nivo/axes";
+import { AxisLegendPosition } from "@nivo/axes";
 import { isEmpty, range, uniq } from "lodash";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { useMediaQuery } from "../../../explore/fresh-releases/utils";

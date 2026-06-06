@@ -1,6 +1,6 @@
 import { ResponsiveStream, TooltipProps } from "@nivo/stream";
 // eslint-disable-next-line import/no-extraneous-dependencies
-import {  type OrdinalColorScaleConfig } from "@nivo/colors";
+import { OrdinalColorScaleConfig } from "@nivo/colors";
 import * as React from "react";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

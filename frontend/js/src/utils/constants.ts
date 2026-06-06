@@ -32,7 +32,7 @@ export enum FlairEnum {
 // A union type for the label strings, based on the enum above 
 export type FlairName = keyof typeof FlairEnum;
 // A union type for the flair css strings, based on the enum values above 
-export type Flair = `${FlairEnum}`; 
+export type Flair = FlairEnum; 
 
 // Note: This UUID regexp has a capturing group but no start or end of string character to make it reusable
 const uuid = "([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})"

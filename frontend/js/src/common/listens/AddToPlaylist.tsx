@@ -3,6 +3,7 @@ import { has } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFileCirclePlus,
+  faMagnifyingGlass,
   faPlusCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
@@ -34,6 +35,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
   const { listen } = props;
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const [playlists, setPlaylists] = React.useState<Array<JSPFObject>>([]);
+  const [searchQuery, setSearchQuery] = React.useState("");
 
   React.useEffect(() => {
     async function loadPlaylists() {
@@ -134,6 +136,16 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
     modal.hide();
   }, [listen, modal]);
 
+  const filteredPlaylists = React.useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return playlists;
+    }
+    return playlists.filter((jspfObject) =>
+      jspfObject.playlist.title.toLowerCase().includes(normalizedQuery)
+    );
+  }, [playlists, searchQuery]);
+
   const trackName = getTrackName(listen);
   return (
     <Modal
@@ -152,6 +164,20 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
           Add the track <i>{trackName}</i> to one or more of your playlists
           below:
         </p>
+        <div className="input-group mb-2">
+          <span className="input-group-text">
+            <FontAwesomeIcon icon={faMagnifyingGlass} />
+          </span>
+          <input
+            type="search"
+            id="add-to-playlist-search"
+            className="form-control"
+            placeholder="Search playlists…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search playlists"
+          />
+        </div>
         <div
           className="list-group"
           style={{ maxHeight: "50vh", overflow: "auto" }}
@@ -163,21 +189,27 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
           >
             <FontAwesomeIcon icon={faFileCirclePlus} /> Create new playlist
           </button>
-          {playlists?.map((jspfObject) => {
-            const { playlist } = jspfObject;
-            return (
-              <button
-                type="button"
-                key={playlist.identifier}
-                className="list-group-item list-group-item-action"
-                name={playlist.title}
-                data-playlist-identifier={playlist.identifier}
-                onClick={addToPlaylist}
-              >
-                {playlist.title}
-              </button>
-            );
-          })}
+          {filteredPlaylists.length === 0 && searchQuery.trim() !== "" ? (
+            <p className="text-muted text-center mt-2">
+              No playlists found for &ldquo;{searchQuery.trim()}&rdquo;.
+            </p>
+          ) : (
+            filteredPlaylists.map((jspfObject) => {
+              const { playlist } = jspfObject;
+              return (
+                <button
+                  type="button"
+                  key={playlist.identifier}
+                  className="list-group-item list-group-item-action"
+                  name={playlist.title}
+                  data-playlist-identifier={playlist.identifier}
+                  onClick={addToPlaylist}
+                >
+                  {playlist.title}
+                </button>
+              );
+            })
+          )}
         </div>
       </Modal.Body>
       <Modal.Footer>
