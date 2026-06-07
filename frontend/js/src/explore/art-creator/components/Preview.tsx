@@ -64,6 +64,12 @@ const Preview = React.forwardRef(function PreviewComponent(
       {...svgProps}
     >
       <style>
+        {`
+          a, a:visited, a:link, a:hover {
+            fill: inherit;
+            stroke: inherit;
+          }
+        `}
         {!showCaption
           ? ` .caption { display: none; } `
           : `.caption text > tspan { fill: white; }`}

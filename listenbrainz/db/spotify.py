@@ -44,6 +44,7 @@ def get_user(db_conn, user_id: int) -> Optional[dict]:
              , token_expires
              , scopes
              , latest_listened_at
+             , status
              , error
           FROM external_service_oauth
           JOIN "user"

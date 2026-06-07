@@ -4,10 +4,11 @@ from time import time
 from brainzutils import cache
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, request, jsonify, current_app
-from kombu import Connection, Queue, Exchange
+from kombu import Queue, Exchange
 from kombu.exceptions import KombuError
 
 import listenbrainz.db.stats as db_stats
+from listenbrainz.rabbitmq import create_rabbitmq_connection
 from listenbrainz.db.dump_entry import get_dump_entries, get_dump_entry
 from listenbrainz.db.playlist import get_recommendation_playlists_for_user
 from listenbrainz.webserver import db_conn, ts_conn
@@ -163,15 +164,10 @@ def get_incoming_listens_count():
     listen_count = cache.get(cache_key)
     if listen_count is None:
         try:
-            incoming_exchange = Exchange(current_app.config["INCOMING_EXCHANGE"], "fanout", durable=False)
+            incoming_exchange = Exchange(current_app.config["INCOMING_EXCHANGE"], "fanout", durable=True)
             incoming_queue = Queue(current_app.config["INCOMING_QUEUE"], exchange=incoming_exchange, durable=True)
 
-            with Connection(hostname=current_app.config["RABBITMQ_HOST"],
-                            userid=current_app.config["RABBITMQ_USERNAME"],
-                            port=current_app.config["RABBITMQ_PORT"],
-                            password=current_app.config["RABBITMQ_PASSWORD"],
-                            virtual_host=current_app.config["RABBITMQ_VHOST"]) as conn:
-
+            with create_rabbitmq_connection(current_app.config) as conn:
                 _, listen_count, _ = incoming_queue.queue_declare(channel=conn.channel(), passive=True)
         except KombuError as err:
             current_app.logger.error("RabbitMQ is currently not available. Error: %s" % (str(err)))

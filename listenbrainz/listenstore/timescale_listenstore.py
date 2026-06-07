@@ -262,6 +262,7 @@ class TimescaleListenStore:
                         , mbc.artist_mbids::TEXT[]
                         , (mbc.release_data->>'caa_id')::bigint AS caa_id
                         , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
+                        , mbc.recording_data->'url_rels' AS url_rels
                         , array_agg(artist->>'name' ORDER BY position) AS ac_names
                         , array_agg(artist->>'join_phrase' ORDER BY position) AS ac_join_phrases
                      FROM selected_listens sl
@@ -283,6 +284,7 @@ class TimescaleListenStore:
                         , release_data->>'name'
                         , release_data->>'caa_id'
                         , release_data->>'caa_release_mbid'
+                        , recording_data->'url_rels'
                  ORDER BY listened_at """ + ORDER_TEXT[order] + " LIMIT :limit"
 
         if from_ts and to_ts:
@@ -356,7 +358,8 @@ class TimescaleListenStore:
                     ac_join_phrases=result.ac_join_phrases,
                     user_name=user["musicbrainz_id"],
                     caa_id=result.caa_id,
-                    caa_release_mbid=result.caa_release_mbid
+                    caa_release_mbid=result.caa_release_mbid,
+                    url_rels=result.url_rels
                 ))
 
                 if len(listens) == limit:
@@ -431,6 +434,7 @@ class TimescaleListenStore:
                          , mbc.artist_mbids::TEXT[]
                          , (mbc.release_data->>'caa_id')::bigint AS caa_id
                          , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
+                         , mbc.recording_data->'url_rels' AS url_rels
                          , array_agg(artist->>'name' ORDER BY position) AS ac_names
                          , array_agg(artist->>'join_phrase' ORDER BY position) AS ac_join_phrases            
                       FROM selected_listens l
@@ -449,6 +453,7 @@ class TimescaleListenStore:
                          , mbc.artist_mbids
                          , mbc.release_data->>'caa_id'
                          , mbc.release_data->>'caa_release_mbid'
+                         , mbc.recording_data->'url_rels'
                   ORDER BY listened_at DESC
                      LIMIT :limit
         """
@@ -475,7 +480,8 @@ class TimescaleListenStore:
                 ac_join_phrases=result.ac_join_phrases,
                 user_name=user_name,
                 caa_id=result.caa_id,
-                caa_release_mbid=result.caa_release_mbid
+                caa_release_mbid=result.caa_release_mbid,
+                url_rels=result.url_rels
             ))
         return listens
 
@@ -530,6 +536,7 @@ class TimescaleListenStore:
                          , mbc.artist_mbids::TEXT[]
                          , (mbc.release_data->>'caa_id')::bigint AS caa_id
                          , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
+                         , mbc.recording_data->'url_rels' AS url_rels
                          , array_agg(artist->>'name' ORDER BY position) AS ac_names
                          , array_agg(artist->>'join_phrase' ORDER BY position) AS ac_join_phrases            
                       FROM selected_listens l
@@ -548,6 +555,7 @@ class TimescaleListenStore:
                          , mbc.artist_mbids
                          , mbc.release_data->>'caa_id'
                          , mbc.release_data->>'caa_release_mbid'
+                         , mbc.recording_data->'url_rels'
                   ORDER BY listened_at DESC
                     LIMIT :limit
         """
@@ -574,7 +582,8 @@ class TimescaleListenStore:
                 ac_join_phrases=result.ac_join_phrases,
                 user_name=user_name,
                 caa_id=result.caa_id,
-                caa_release_mbid=result.caa_release_mbid
+                caa_release_mbid=result.caa_release_mbid,
+                url_rels=result.url_rels
             ))
 
         return listens

@@ -188,6 +188,10 @@ export default class YoutubePlayer
     this.youtubePlayer?.cueVideoById("");
   };
 
+  pause = () => {
+    this.youtubePlayer?.pauseVideo();
+  };
+
   onReady = (event: YT.PlayerEvent): void => {
     this.youtubePlayer = event.target;
   };
@@ -349,7 +353,7 @@ export default class YoutubePlayer
     return false;
   };
 
-  playListen = (listen: Listen | JSPFTrack) => {
+  playListen = (listen: Listen | JSPFTrack, streamingUrl?: string) => {
     const youtubeId = YoutubePlayer.getVideoIDFromListen(listen);
 
     if (youtubeId) {

@@ -3,11 +3,12 @@ from operator import attrgetter
 import sqlalchemy
 import psycopg2
 from datasethoster import RequestSource
+
 from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery, MBIDMappingInput
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MATCH_TYPES, MATCH_TYPE_EXACT_MATCH
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery, \
     ArtistCreditRecordingLookupInput
-from listenbrainz.db import timescale
+from listenbrainz.webserver import ts_conn
 
 
 MAX_THREADS = 2
@@ -21,37 +22,36 @@ def filter_incoming_listens(msids, stats, app, debug):
     # or if the msid was last checked more than 2 weeks ago and no match was
     # found at that time, which means we should re-check the item
     listens_to_check = []
-    with timescale.engine.connect() as connection:
-        query = """
-            SELECT t.recording_msid
-                 , mm.match_type
-        -- unable to use values here because sqlachemy having trouble to pass list/tuple to values clause
-              FROM unnest(:msids) AS t(recording_msid)
-         LEFT JOIN mbid_mapping mm
-                ON t.recording_msid::uuid = mm.recording_msid
-             WHERE mm.last_updated = '1970-01-01'  -- msid marked for rechecking manually
-                OR mm.check_again <= NOW()     -- msid not found last time, marked for rechecking
-                OR (mm.check_again IS NULL AND mm.recording_mbid IS NULL)  -- msid not found last time, not marked for rechecking because existed prior to rechecking existed
-                OR mm.recording_msid IS NULL   -- msid seen for first time
-        """
-        curs = connection.execute(sqlalchemy.text(query), {"msids": list(msids.keys())})
-        msids_to_check = curs.fetchall()
+    query = """
+        SELECT t.recording_msid
+             , mm.match_type
+    -- unable to use values here because sqlachemy having trouble to pass list/tuple to values clause
+          FROM unnest(:msids) AS t(recording_msid)
+     LEFT JOIN mbid_mapping mm
+            ON t.recording_msid::uuid = mm.recording_msid
+         WHERE mm.last_updated = '1970-01-01'  -- msid marked for rechecking manually
+            OR mm.check_again <= NOW()     -- msid not found last time, marked for rechecking
+            OR (mm.check_again IS NULL AND mm.recording_mbid IS NULL)  -- msid not found last time, not marked for rechecking because existed prior to rechecking existed
+            OR mm.recording_msid IS NULL   -- msid seen for first time
+    """
+    curs = ts_conn.execute(sqlalchemy.text(query), {"msids": list(msids.keys())})
+    msids_to_check = curs.fetchall()
 
-        rem_msids = []
-        for row in msids_to_check:
-            rem_msids.append(row.recording_msid)
-            listen = msids[row.recording_msid]
-            listens_to_check.append(listen)
+    rem_msids = []
+    for row in msids_to_check:
+        rem_msids.append(row.recording_msid)
+        listen = msids[row.recording_msid]
+        listens_to_check.append(listen)
 
-            if row.match_type:
-                stats["listens_matched"] += 1
+        if row.match_type:
+            stats["listens_matched"] += 1
 
-        stats["processed"] += len(msids_to_check)
+    stats["processed"] += len(msids_to_check)
 
-        if debug:
-            for msid in msids:
-                if msid not in msids_to_check:
-                    app.logger.info(f"Remove {msid}, since a match exists")
+    if debug:
+        for msid in msids:
+            if msid not in msids_to_check:
+                app.logger.info(f"Remove {msid}, since a match exists")
 
     return listens_to_check
 
@@ -60,8 +60,16 @@ def process_listens(app, listens, priority):
     """Given a set of listens, look up each one and then save the results to
        the DB. Note: Legacy listens to not need to be checked to see if
        a result alrady exists in the DB -- the selection of legacy listens
-       has already taken care of this."""
+       has already taken care of this.
 
+       Wrapped in an app context so worker threads can use the ts_conn /
+       db_conn LocalProxies. teardown_appcontext closes those on exit which
+       returns the SQLAlchemy connections to the global pools."""
+    with app.app_context():
+        return _process_listens(app, listens, priority)
+
+
+def _process_listens(app, listens, priority):
     from listenbrainz.mbid_mapping_writer.job_queue import NEW_LISTEN, RECHECK_LISTEN
 
     stats = {"processed": 0, "total": 0, "errors": 0, "listen_count": 0, "listens_matched": 0}
@@ -88,8 +96,13 @@ def process_listens(app, listens, priority):
     if len(listens_to_check) == 0:
         return stats
 
-    conn = timescale.engine.raw_connection()
-    with conn.cursor() as curs:
+    # Reach into the SQLAlchemy connection for a raw psycopg2 cursor since the
+    # INSERT statements below use psycopg2 %s placeholders. Commits and
+    # rollbacks go through ts_conn so SQLAlchemy's transaction state stays
+    # consistent. The connection itself is released back to the pool by
+    # teardown_appcontext when this worker's app_context exits.
+    raw_conn = ts_conn.connection
+    with raw_conn.cursor() as curs:
         try:
             # Try an exact lookup (in postgres) first.
             matches, remaining_listens, stats = lookup_listens(
@@ -176,15 +189,15 @@ def process_listens(app, listens, priority):
 
         except psycopg2.errors.CardinalityViolation:
             app.logger.error("CardinalityViolation on insert to mbid mapping\n", exc_info=True)
-            conn.rollback()
+            ts_conn.rollback()
             return
 
         except (psycopg2.OperationalError, psycopg2.errors.DatatypeMismatch) as err:
             app.logger.info("Cannot insert MBID mapping rows. (%s)" % str(err))
-            conn.rollback()
+            ts_conn.rollback()
             return
 
-    conn.commit()
+    ts_conn.commit()
 
     return stats
 

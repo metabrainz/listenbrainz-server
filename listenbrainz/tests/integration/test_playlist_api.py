@@ -1186,7 +1186,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual(
             response.json["error"],
-            "Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
+            "Missing scopes playlist-modify-public, playlist-modify-private to export playlists."
             " Please relink your spotify account from ListenBrainz settings with appropriate scopes"
             " to use this feature."
         )

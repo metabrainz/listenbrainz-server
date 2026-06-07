@@ -36,9 +36,10 @@ source "admin/functions.sh"
 # exits, so we sanitise it here in case it was included in the environment.
 DUMP_INTERMEDIATE_DIR=""
 
-if [ "$CONTAINER_NAME" == "listenbrainz-cron-prod" ] && [ "$PROD" == "prod" ]
+if [ "$DEPLOY_ENV" == "prod" ] && \
+   { [ "$CONTAINER_NAME" == "listenbrainz-cron-prod" ] || [ "$CONTAINER_NAME" == "listenbrainz-full-dumps-cron-prod" ]; }
 then
-    echo "Running in listenbrainz-cron-prod container, good!"
+    echo "Running in $CONTAINER_NAME container, good!"
 else
     echo "This container is not the production cron container, exiting..."
     exit
