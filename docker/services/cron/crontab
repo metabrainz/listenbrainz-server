@@ -39,8 +39,7 @@ MAILTO=""
 # Request user fresh releases daily
 0 3 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark request_fresh_releases --threshold 10 >> /logs/fresh_releases.log 2>&1
 
-## Trigger a full dump on 1st and 15th of every month, in the middle of the night, do not block to wait for lock.
-0 4 1,15 * * root flock -x -n /var/lock/lb-full-dumps.lock /code/listenbrainz/admin/create-dumps.sh full >> /logs/full_dumps.log 2>&1
+# Full dumps run in a separate cron container using full-dumps-crontab.
 
 # run job to update msids with mapped mbids daily
 0 6 * * * root /usr/local/bin/python /code/listenbrainz/manage.py update-msid-tables >> /logs/msid-updater.log 2>&1

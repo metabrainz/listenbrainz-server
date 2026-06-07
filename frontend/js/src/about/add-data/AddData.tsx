@@ -36,6 +36,14 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://bocan.app/">
+              Bòcan
+            </a>
+          </em>
+          , a native macOS music player for people who own their music
+        </li>
+        <li>
+          <em>
             <a href="https://github.com/ciderapp">Cider</a>
           </em>
           , a cross-platform Apple Music player:{" "}
@@ -334,6 +342,13 @@ export default function AddData() {
           , a Mac menu bar utility for displaying the current track, submits
           Apple Music and Spotify listens
         </li>
+        <li>
+          <em>
+            <a href="https://unstream.stream/">Unstream</a>
+          </em>
+          , a MacOS app and browser extension that detects and submits your
+          listens, and shows the best ways to support your favorite artists
+        </li>
       </ul>
 
       <h4>Browser extensions</h4>
@@ -369,6 +384,12 @@ export default function AddData() {
             </a>
           </em>
           , a scrobbling application for Android Devices
+        </li>
+        <li>
+          <em>
+            <a href="https://boomingmusic.vercel.app/">Booming Music</a>
+          </em>
+          , a clean and fast, and Material You music player for Android
         </li>
       </ul>
 

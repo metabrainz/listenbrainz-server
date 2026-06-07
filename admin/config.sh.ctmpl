@@ -42,5 +42,5 @@ RSYNC_SAMPLE_KEY='{{template "KEY" "user_home"}}/.ssh/rsync-listenbrainz-dumps-s
 
 # Check to make sure that this container is the prod cron container, otherwise never rsync anything!
 # these variables may also be read by the dump command in python so export to ensure availability
-export PROD="{{ (env "DEPLOY_ENV") }}"
+export DEPLOY_ENV="{{ (env "DEPLOY_ENV") }}"
 export CONTAINER_NAME="{{ (env "CONTAINER_NAME") }}"

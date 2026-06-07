@@ -384,7 +384,7 @@ def recording_entity(recording_mbid: str):
         return jsonify({"error": "Provided recording mbid is invalid: %s" % recording_mbid}), 400
 
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-            psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+            psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"]) as ts_conn, \
             mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
             ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
         recording_data = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, [recording_mbid])
@@ -422,7 +422,7 @@ def recording_entity(recording_mbid: str):
 
     release_group_mbids = [rg["mbid"] for rg in release_groups_data]
     try:
-        with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+        with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"]) as ts_conn, \
                 ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
             popularity_data, _ = popularity.get_counts(ts_curs, "release_group", release_group_mbids)
     except Exception:

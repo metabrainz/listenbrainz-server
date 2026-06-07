@@ -8,6 +8,7 @@ from brainzutils import cache, metrics, sentry
 from brainzutils.flask import CustomFlask
 from flask import request, url_for, redirect, g
 from flask_login import current_user
+from sqlalchemy.pool import QueuePool
 from werkzeug.local import LocalProxy
 from flask_htmx import HTMX
 
@@ -90,10 +91,29 @@ def check_ratelimit_token_whitelist(auth_token):
     return auth_token in current_app.config["WHITELISTED_AUTH_TOKENS"]
 
 
-def create_app(debug=None):
+def create_app(
+        debug=None,
+        bypass_pgbouncer=False,
+        use_pool=False,
+        pool_size_overrides=None,
+):
     """ Generate a Flask app for LB with all configurations done and connections established.
 
     In the Flask app returned, blueprints are not registered.
+
+    When `bypass_pgbouncer` is True, the timescale engine connects directly to the
+    timescale database instead of going through pgbouncer.
+
+    When `use_pool` is True, the LB postgres, timescale, and metabrainz engines
+    use SQLAlchemy QueuePools sized from config. This is intended for the uwsgi
+    entry points (webserver, api_compat) where many requests share a worker.
+    Other callers (manage.py, mbid_mapping_writer, background_tasks, etc.) keep
+    the NullPool default since they're single-purpose, often short-lived, and
+    don't benefit from a long-lived pool.
+
+    `pool_size_overrides` (only used when `use_pool=True`) lets entry points
+    shrink the per-worker pool below the consul-configured size. Keys: "db",
+    "ts", "meb". Each value is a (pool_size, max_overflow) tuple.
     """
 
     app = CustomFlask(import_name=__name__)
@@ -130,14 +150,56 @@ def create_app(debug=None):
         ts_connect = create_test_timescale_connect_strings()
         db.init_db_connection(db_connect["DB_CONNECT"])
         timescale.init_db_connection(ts_connect["DB_CONNECT"])
+    elif use_pool:
+        overrides = pool_size_overrides or {}
+        db_size, db_overflow = overrides.get(
+            "db",
+            (app.config.get("DB_POOL_SIZE"), app.config.get("DB_POOL_MAX_OVERFLOW"))
+        )
+        ts_size, ts_overflow = overrides.get(
+            "ts",
+            (app.config.get("TIMESCALE_POOL_SIZE"), app.config.get("TIMESCALE_POOL_MAX_OVERFLOW"))
+        )
+        meb_size, meb_overflow = overrides.get(
+            "meb",
+            (app.config.get("MEB_POOL_SIZE"), app.config.get("MEB_POOL_MAX_OVERFLOW"))
+        )
+
+        db.init_db_connection(
+            app.config["SQLALCHEMY_DATABASE_URI"],
+            poolclass=QueuePool,
+            pool_size=db_size,
+            max_overflow=db_overflow,
+            pool_pre_ping=True,
+        )
+        timescale_uri_config = "SQLALCHEMY_TIMESCALE_URI" if bypass_pgbouncer else "SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"
+        timescale.init_db_connection(
+            app.config[timescale_uri_config],
+            poolclass=QueuePool,
+            pool_size=ts_size,
+            max_overflow=ts_overflow,
+            pool_pre_ping=True,
+        )
+        if app.config.get("SQLALCHEMY_METABRAINZ_URI", None):
+            donation.init_meb_db_connection(
+                app.config["SQLALCHEMY_METABRAINZ_URI"],
+                poolclass=QueuePool,
+                pool_size=meb_size,
+                max_overflow=meb_overflow,
+                pool_pre_ping=True,
+            )
     else:
         db.init_db_connection(app.config["SQLALCHEMY_DATABASE_URI"])
-        timescale.init_db_connection(app.config["SQLALCHEMY_TIMESCALE_URI"])
+        timescale_uri_config = "SQLALCHEMY_TIMESCALE_URI" if bypass_pgbouncer else "SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"
+        timescale.init_db_connection(app.config[timescale_uri_config])
         if app.config.get("SQLALCHEMY_METABRAINZ_URI", None):
             donation.init_meb_db_connection(app.config["SQLALCHEMY_METABRAINZ_URI"])
 
-    @app.teardown_request
+    @app.teardown_appcontext
     def close_connection(exception):
+        # teardown_appcontext fires for both web requests (app context wraps
+        # the request context) and bare app contexts (e.g. the mbid mapping
+        # writer's worker threads that use `with app.app_context():`).
         _db_conn = getattr(g, "_db_conn", None)
         if _db_conn is not None:
             _db_conn.close()
@@ -147,6 +209,11 @@ def create_app(debug=None):
         if _ts_conn is not None:
             _ts_conn.close()
             del g._ts_conn
+
+        _meb_conn = getattr(g, "_meb_conn", None)
+        if _meb_conn is not None:
+            _meb_conn.close()
+            del g._meb_conn
 
     # Redis connection
     from listenbrainz.webserver.redis_connection import init_redis_connection
@@ -192,8 +259,20 @@ def create_app(debug=None):
 
     @app.after_request
     def add_cache_header(response):
-        response.cache_control.private = True
-        response.cache_control.public = False
+        if request.path.startswith('/static'):
+            # cache hashed assets (JS + CSS) for 1 year
+            hashed_assets_max_age = 31536000
+            # cache image assets for 1 week
+            image_assets_max_age = 604800
+            response.cache_control.public = True
+            if request.path.startswith('/static/dist'):
+                response.cache_control.immutable = True
+                response.cache_control.max_age = hashed_assets_max_age
+            elif request.path.startswith('/static/img'):
+                response.cache_control.max_age = image_assets_max_age
+        else:
+            response.cache_control.private = True
+            response.cache_control.public = False
         return response
 
     # Template utilities
@@ -231,7 +310,7 @@ def init_admin(app):
     admin.add_view(ReportedUserAdminView(ReportedUsersModel, model.db.session, endpoint='reported_users_model'))
 
     # can be empty incase timescale listenstore is down
-    if app.config['SQLALCHEMY_TIMESCALE_URI']:
+    if app.config['SQLALCHEMY_TIMESCALE_PGBOUNCER_URI']:
         # playlist admin views require timescale database, only register if listenstore is available
         admin.add_view(PlaylistAdminView(PlaylistModel, model.db.session, endpoint='playlist_model'))
         admin.add_view(PlaylistRecordingAdminView(PlaylistRecordingModel, model.db.session, endpoint='playlist_recording_model'))
@@ -239,7 +318,7 @@ def init_admin(app):
 
 def create_web_app(debug=None):
     """ Generate a Flask app for LB with all configurations done, connections established and endpoints added."""
-    app = create_app(debug=debug)
+    app = create_app(debug=debug, use_pool=True)
     htmx = HTMX(app)
 
     # Static files
@@ -294,7 +373,18 @@ def create_api_compat_app(debug=None):
     need to create a different app and only register the api_compat blueprints
     """
 
-    app = create_app(debug=debug)
+    # api_compat uwsgi runs many single-threaded processes (no `threads = N`),
+    # so each worker only ever needs one connection at a time. Cap the per-worker
+    # pool tightly so we don't blow past pgbouncer's max_client_conn.
+    app = create_app(
+        debug=debug,
+        use_pool=True,
+        pool_size_overrides={
+            "db": (1, 1),
+            "ts": (1, 1),
+            "meb": (1, 1),
+        },
+    )
 
     import listenbrainz.webserver.static_manager as static_manager
     static_manager.read_manifest()

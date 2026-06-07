@@ -11,12 +11,17 @@ received by the maintainers, it is possible that the cron jobs are not setup pro
 
 Logs
 ^^^^
-Looking at the logs is a good starting point to debug dump failures, the log file is located at :file:`/logs/dumps.log`
-inside the listenbrainz-cron-prod container. The output of dump-related jobs is `redirected in the crontab <https://github.com/metabrainz/listenbrainz-server/blob/1f2e2634126a32a75bdb717b741d55099f4dd411/docker/services/cron/crontab#L8-L19>`_
-. Open a bash shell in the cron container by running :code:`docker exec -it listenbrainz-cron-prod bash`.
+Looking at the logs is a good starting point to debug dump failures. Incremental, feedback, and canonical dump jobs
+run in the :code:`listenbrainz-cron-prod` container. Full dump jobs run in the
+:code:`listenbrainz-full-dumps-cron-prod` container. The output of dump-related jobs is redirected in the crontab files
+under :file:`docker/services/cron/`.
+
+For full dumps, inspect :file:`/logs/full_dumps.log` inside the full-dumps cron container:
+:code:`docker exec -it listenbrainz-full-dumps-cron-prod bash`. For other dump jobs, open a bash shell in the regular
+cron container by running :code:`docker exec -it listenbrainz-cron-prod bash`.
 
 This file is large, so use :command:`tail` instead of :command:`cat` to view the logs. For example:
-:code:`tail -n 500 /logs/dumps.log` will list the last 500 lines of the log file.
+:code:`tail -n 500 /logs/full_dumps.log` will list the last 500 lines of the full dumps log file.
 
 From the log file, you should probably be able to see whether the error occurred in python part of the code or bash
 script. If you see a python stack trace, it is likely that sentry recorded the error too. The `sentry view <https://sentry.metabrainz.org/organizations/metabrainz/issues/?project=15>`_
@@ -41,13 +46,14 @@ before failing. To be sure, check the :code:`data_dump` table in the database. I
 
 Also the bash script to create dumps performs setup, cleanup and syncing to FTP tasks so do not invoke the python
 command directly. The bash script forwards arguments to the python command so you can pass any arguments that the python
-command accepts to it as well. See the current version of the script in the repository for more details. Here is an
-example of how you can manually specify the id of the dump (copied the cronjob command at the time of writing and
-added the argument before redirecting):
+command accepts to it as well. Run full dump commands from :code:`listenbrainz-full-dumps-cron-prod`; run other dump
+commands from :code:`listenbrainz-cron-prod`. See the current version of the script in the repository for more details.
+Here is an example of how you can manually specify the id of the dump (copied the cronjob command at the time of writing
+and added the argument before redirecting):
 
 .. code:: bash
 
-    flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh incremental --dump-id 700 >> /logs/dumps.log 2>&1
+    flock -x -n /var/lock/lb-incremental-dumps.lock /code/listenbrainz/admin/create-dumps.sh incremental --dump-id 700 >> /logs/incremental_dumps.log 2>&1
 
 .. note::
 

@@ -1,12 +1,13 @@
 from typing import Optional
 
-from kombu import Connection, pools, producers, Exchange
+from kombu import pools, producers, Exchange, Queue
 from kombu.pools import ProducerPool
 
-from listenbrainz.utils import get_fallback_connection_name
+from listenbrainz.rabbitmq import create_rabbitmq_connection, get_incoming_exchange, get_incoming_queue
 
 rabbitmq: Optional[ProducerPool] = None
 INCOMING_EXCHANGE: Optional[Exchange] = None
+INCOMING_QUEUE: Optional[Queue] = None
 PLAYING_NOW_EXCHANGE: Optional[Exchange] = None
 
 CONNECTION_RETRIES = 10
@@ -16,10 +17,15 @@ CONNECTION_LIMIT = 25
 def init_rabbitmq_connection(app):
     """Initialize the webserver rabbitmq connection.
 
-    This initializes _rabbitmq as a connection pool from which new RabbitMQ
-    connections can be acquired.
+    This initializes ``rabbitmq`` as a connection pool from which new RabbitMQ
+    producers can be acquired. ``confirm_publish`` is enabled on the connection so
+    every publish waits for a broker acknowledgement; this lets ``publish_data_to_queue``
+    retry/fail loudly instead of silently dropping listens. The incoming queue is no
+    longer declared here at startup: producers declare it themselves on publish (see
+    ``publish_data_to_queue``) so that every entry point writing listens (web, api_compat,
+    spotify/lastfm importers, ...) guarantees the queue and its binding exist.
     """
-    global rabbitmq, INCOMING_EXCHANGE, PLAYING_NOW_EXCHANGE
+    global rabbitmq, INCOMING_EXCHANGE, INCOMING_QUEUE, PLAYING_NOW_EXCHANGE
 
     if rabbitmq is not None:
         return
@@ -27,20 +33,17 @@ def init_rabbitmq_connection(app):
     # if RabbitMQ config values are not in the config file
     # raise an error. This is caught in create_app, so the app will continue running.
     # Consul will bring the values back into config once the RabbitMQ service comes up.
-    if "RABBITMQ_HOST" not in app.config:
-        app.logger.critical("RabbitMQ host:port not defined, cannot create RabbitMQ connection...")
+    if not app.config.get("RABBITMQ_HOSTS"):
+        app.logger.critical("RabbitMQ hosts not defined, cannot create RabbitMQ connection...")
         raise ConnectionError("RabbitMQ service is not up!")
 
-    connection = Connection(
-        hostname=app.config["RABBITMQ_HOST"],
-        userid=app.config["RABBITMQ_USERNAME"],
-        port=app.config["RABBITMQ_PORT"],
-        password=app.config["RABBITMQ_PASSWORD"],
-        virtual_host=app.config["RABBITMQ_VHOST"],
-        transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}},
+    connection = create_rabbitmq_connection(
+        app.config,
+        transport_options={"confirm_publish": True},
     ).ensure_connection(max_retries=CONNECTION_RETRIES)
     pools.set_limit(CONNECTION_LIMIT)
 
-    INCOMING_EXCHANGE = Exchange(app.config["INCOMING_EXCHANGE"], "fanout", durable=False)
-    PLAYING_NOW_EXCHANGE = Exchange(app.config["PLAYING_NOW_EXCHANGE"], "fanout", durable=False)
+    INCOMING_EXCHANGE = get_incoming_exchange(app.config)
+    INCOMING_QUEUE = get_incoming_queue(app.config)
+    PLAYING_NOW_EXCHANGE = Exchange(app.config["PLAYING_NOW_EXCHANGE"], "fanout", durable=True)
     rabbitmq = producers[connection]
