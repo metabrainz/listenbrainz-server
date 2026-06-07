@@ -312,6 +312,7 @@ export default function AddTagSelect(props: {
             flexWrap: "nowrap",
             overflowX: "auto",
             paddingRight: "3.5em",
+            scrollbarWidth: "thin",
             "::-webkit-scrollbar": {
               height: "5px",
               backgroundColor: "#f5f5f5",

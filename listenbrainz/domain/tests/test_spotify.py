@@ -50,9 +50,9 @@ class SpotifyServiceTestCase(NonAPIIntegrationTestCase):
             'expires_in': 3600,
             'scope': 'user-read-currently-playing user-read-recently-played',
         })
-        self.service.update_user_import_status(
-            user_id_3,
-            error="add an error and check this user doesn't get selected",
+        self.service.update_status(
+            user_id_3, "Error", 0,
+            error_message="add an error and check this user doesn't get selected",
             retry=False
         )
 

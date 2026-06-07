@@ -1,12 +1,12 @@
 import json
 import time
 
-from kombu import Exchange, Queue, Connection, Consumer, Message
+from kombu import Exchange, Queue, Consumer, Message
 from kombu.mixins import ConsumerMixin
 
 from listenbrainz.metadata_cache.crawler import Crawler
 from listenbrainz.metadata_cache.handler import BaseHandler
-from listenbrainz.utils import get_fallback_connection_name
+from listenbrainz.rabbitmq import create_rabbitmq_connection
 
 
 class ServiceMetadataCache(ConsumerMixin):
@@ -18,7 +18,7 @@ class ServiceMetadataCache(ConsumerMixin):
 
         self.connection = None
         self.service_channel = None
-        self.unique_exchange = Exchange(self.app.config["UNIQUE_EXCHANGE"], "fanout", durable=False)
+        self.unique_exchange = Exchange(self.app.config["UNIQUE_EXCHANGE"], "fanout", durable=True)
         # this queue gets album ids from listens
         self.listens_queue = Queue(
             self.app.config["SPOTIFY_METADATA_QUEUE"],
@@ -65,14 +65,7 @@ class ServiceMetadataCache(ConsumerMixin):
         message.ack()
 
     def init_rabbitmq_connection(self):
-        self.connection = Connection(
-            hostname=self.app.config["RABBITMQ_HOST"],
-            userid=self.app.config["RABBITMQ_USERNAME"],
-            port=self.app.config["RABBITMQ_PORT"],
-            password=self.app.config["RABBITMQ_PASSWORD"],
-            virtual_host=self.app.config["RABBITMQ_VHOST"],
-            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
-        )
+        self.connection = create_rabbitmq_connection(self.app.config)
 
     def start(self):
         while True:

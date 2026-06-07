@@ -1,0 +1,55 @@
+{
+    "lovedtracks": {
+        "track": [
+            {
+                "name": "Die Yung",
+                "mbid": "",
+                "url": "https:\/\/libre.fm\/artist\/death+souljah\/album\/Back+To+The+Witch+House\/track\/Die+Yung",
+                "date": {
+                    "#text": "17 Feb 2026 13:53 GMT",
+                    "uts": "1771336383"
+                },
+                "artist": {
+                    "name": "Death Souljah",
+                    "mbid": "7b564b37-37be-45b7-9a12-c57e6dc83fab",
+                    "url": "https:\/\/libre.fm\/artist\/Death+Souljah\/"
+                }
+            },
+            {
+                "name": "KNOW MY NAME",
+                "mbid": "",
+                "url": "https:\/\/libre.fm\/artist\/Aeter\/album\/SKIN+TURNS+RED\/track\/KNOW+MY+NAME",
+                "date": {
+                    "#text": "14 Feb 2026 15:39 GMT",
+                    "uts": "1771083596"
+                },
+                "artist": {
+                    "name": "aeter",
+                    "mbid": "",
+                    "url": "https:\/\/libre.fm\/artist\/aeter\/"
+                }
+            },
+            {
+                "name": "IF ONLY THE BRIDE USED HER EYES",
+                "mbid": "",
+                "url": "https:\/\/libre.fm\/artist\/Aeter\/album\/SKIN+TURNS+RED\/track\/IF+ONLY+THE+BRIDE+USED+HER+EYES",
+                "date": {
+                    "#text": "14 Feb 2026 15:32 GMT",
+                    "uts": "1771083147"
+                },
+                "artist": {
+                    "name": "aeter",
+                    "mbid": "",
+                    "url": "https:\/\/libre.fm\/artist\/aeter\/"
+                }
+            }
+        ],
+        "@attr": {
+            "user": "usomi",
+            "page": "1",
+            "perPage": "3",
+            "totalPages": "2",
+            "total": "6"
+        }
+    }
+}

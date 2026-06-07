@@ -31,3 +31,5 @@ services:
     environment:
       PYTHONDONTWRITEBYTECODE: 1
       USER: root
+      SPARK_DRIVER_MEMORY: 2g
+      SPARK_DRIVER_MEMORY_OVERHEAD: 600m

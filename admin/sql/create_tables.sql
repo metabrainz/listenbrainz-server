@@ -9,7 +9,7 @@ CREATE TABLE "user" (
   latest_import         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT TIMESTAMP 'epoch',
   gdpr_agreed           TIMESTAMP WITH TIME ZONE,
   musicbrainz_row_id    INTEGER NOT NULL,
-  login_id              TEXT NOT NULL DEFAULT uuid_generate_v4()::text,
+  login_id              TEXT NOT NULL DEFAULT gen_random_uuid()::text,
   email                 TEXT,
   is_paused             BOOLEAN NOT NULL DEFAULT FALSE
 );

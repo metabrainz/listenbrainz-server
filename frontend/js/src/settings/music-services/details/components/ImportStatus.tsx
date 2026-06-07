@@ -16,6 +16,7 @@ type ImportStatusProps = {
 export enum ImportStatusT {
   inProgress = "Importing",
   complete = "Synced",
+  error = "Error",
 }
 export default function ImportStatus({ serviceName }: ImportStatusProps) {
   const [loading, setLoading] = React.useState(false);
@@ -59,6 +60,8 @@ export default function ImportStatus({ serviceName }: ImportStatusProps) {
     bsColorClass = "success";
   } else if (importData?.status?.state === ImportStatusT.inProgress) {
     bsColorClass = "info";
+  } else if (importData?.status?.state === ImportStatusT.error) {
+    bsColorClass = "danger";
   }
 
   const statusString = importData?.status?.state ?? "N/A";
@@ -94,6 +97,15 @@ export default function ImportStatus({ serviceName }: ImportStatusProps) {
 
           {!loading && !importData && (
             <p className="text-muted">No active import data found.</p>
+          )}
+
+          {!loading && importData?.error && (
+            <div className="mt-3">
+              <strong>Error:</strong>
+              <p className="text-danger mb-0">
+                {importData.error?.message ?? "An unknown error occurred."}
+              </p>
+            </div>
           )}
 
           {!loading && importData && (

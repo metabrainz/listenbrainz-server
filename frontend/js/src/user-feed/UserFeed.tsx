@@ -56,7 +56,7 @@ import type { FeedFetchParams } from "./types";
 import { EventType } from "./types";
 import Card from "../components/Card";
 import {
-  addListenToBottomOfAmbientQueueAtom,
+  addMultipleListensToBottomOfAmbientQueueAtom,
   setAmbientQueueAtom,
 } from "../common/brainzplayer/BrainzPlayerAtoms";
 
@@ -155,8 +155,8 @@ type UserFeedLoaderData = UserFeedPageProps;
 export default function UserFeedPage() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
   const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
-  const addListenToBottomOfAmbientQueue = useSetAtom(
-    addListenToBottomOfAmbientQueueAtom
+  const addListensToBottomOfAmbientQueue = useSetAtom(
+    addMultipleListensToBottomOfAmbientQueueAtom
   );
 
   const prevListens = React.useRef<Listen[]>([]);
@@ -222,15 +222,38 @@ export default function UserFeedPage() {
   >([]);
 
   React.useEffect(() => {
-    async function fetchThankedEvents(missingEventsIDs: number[]) {
+    async function fetchThankedEvents(
+      missingEvents: Array<{ id: number; type: string }>
+    ) {
       // Prefetch each missing original event missing from thank you events
       // separately from fetching the feed pages
-      const promises = missingEventsIDs.map((eventId) => {
+      const promises = missingEvents.map(({ id, type }) => {
+        // recording_pin events are not regular timeline events but rather pins from a separate database table
+        if (type === EventType.RECORDING_PIN) {
+          return queryClient.ensureQueryData({
+            queryKey: ["pin", id],
+            queryFn: async () => {
+              const pin = await APIService.getPin(id);
+              // Format as a TimelineEvent for consistency with other feed events
+              return {
+                id: pin.row_id,
+                event_type: EventType.RECORDING_PIN,
+                user_name: pin.user_name,
+                created: pin.created,
+                metadata: {
+                  ...pin,
+                  listened_at: pin.created,
+                },
+                hidden: false,
+              } as TimelineEvent<PinEventMetadata>;
+            },
+          });
+        }
         return queryClient.ensureQueryData({
-          queryKey: ["feed-event", eventId],
+          queryKey: ["feed-event", id],
           queryFn: () =>
             APIService.getFeedEvent(
-              eventId,
+              id,
               currentUser.name,
               currentUser.auth_token as string
             ),
@@ -249,18 +272,21 @@ export default function UserFeedPage() {
       setSeparatelyLoadedEvents(resultsArray);
     }
     const feedEvents = data?.pages.map((page) => page.events).flat();
-    // Extract IDs of events referenced in thank you events currently in cache
-    const thankYouOriginalEventIds = feedEvents
+    // Extract IDs and types of events referenced in thank you events currently in cache
+    const thankYouOriginalEvents = feedEvents
       ?.filter((ev) => ev.event_type === EventType.THANKS)
       .map((ev) => {
         const metadata = ev.metadata as ThanksMetadata;
-        return metadata.original_event_id;
+        return {
+          id: metadata.original_event_id,
+          type: metadata.original_event_type,
+        };
       });
-    const missingEventsIDs = thankYouOriginalEventIds?.filter(
-      (originalEventId) => !feedEvents?.some((ev) => ev.id === originalEventId)
+    const missingEvents = thankYouOriginalEvents?.filter(
+      ({ id }) => !feedEvents?.some((ev) => ev.id === id)
     );
-    if (missingEventsIDs?.length) {
-      fetchThankedEvents(missingEventsIDs);
+    if (missingEvents?.length) {
+      fetchThankedEvents(missingEvents);
     }
   }, [data, APIService, currentUser, queryClient]);
 
@@ -279,7 +305,7 @@ export default function UserFeedPage() {
       const newListens = listens.filter(
         (listen) => !prevListens.current?.includes(listen)
       );
-      addListenToBottomOfAmbientQueue(newListens);
+      addListensToBottomOfAmbientQueue(newListens);
     }
 
     prevListens.current = listens;
@@ -795,7 +821,7 @@ export default function UserFeedPage() {
             <button
               type="button"
               className="btn btn-info btn-rounded play-tracks-button text-nowrap"
-              title="Play album"
+              title="Play all"
               onClick={() => {
                 window.postMessage(
                   {

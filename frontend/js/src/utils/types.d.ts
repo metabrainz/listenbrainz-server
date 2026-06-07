@@ -44,12 +44,18 @@ declare type MBIDMappingArtist = {
   join_phrase: string;
 };
 
+declare type MBIDMappingUrlRel = {
+  type: string;
+  url: string;
+};
+
 declare type MBIDMapping = {
   recording_name?: string;
   recording_mbid: string;
   release_mbid: string;
   artist_mbids: Array<string>;
   artists?: Array<MBIDMappingArtist>;
+  url_rels?: Array<MBIDMappingUrlRel>;
   caa_id?: number;
   caa_release_mbid?: string;
   release_group_mbid?: string;
@@ -111,6 +117,10 @@ declare type LatestImportResponse = {
   status?: {
     state: ImportStatusT;
     count: number;
+  };
+  error?: {
+    retry: boolean;
+    message?: string;
   };
 };
 
@@ -532,6 +542,7 @@ declare type PinnedRecording = {
   recording_mbid: string | null;
   recording_msid?: string;
   track_metadata: TrackMetadata;
+  user_name?: string | null;
 };
 
 /** For recommending a track from the front-end */
@@ -748,15 +759,15 @@ declare type SearchUser = {
 };
 
 declare type BrainzPlayerSettings = {
-  youtubeEnabled?: boolean;
-  spotifyEnabled?: boolean;
-  soundcloudEnabled?: boolean;
-  appleMusicEnabled?: boolean;
-  internetArchiveEnabled?: boolean;
-  funkwhaleEnabled?: boolean;
-  navidromeEnabled?: boolean;
-  brainzplayerEnabled?: boolean;
-  dataSourcesPriority?: Array<
+  youtubeEnabled : boolean;
+  spotifyEnabled : boolean;
+  soundcloudEnabled : boolean;
+  appleMusicEnabled : boolean;
+  internetArchiveEnabled : boolean;
+  funkwhaleEnabled : boolean;
+  navidromeEnabled : boolean;
+  brainzplayerEnabled : boolean;
+  dataSourcesPriority : Array<
     | "spotify"
     | "youtube"
     | "soundcloud"

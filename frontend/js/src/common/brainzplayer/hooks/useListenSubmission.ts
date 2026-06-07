@@ -1,6 +1,8 @@
 import * as React from "react";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
-import { assign, cloneDeep, omit } from "lodash";
+import { assign, cloneDeep } from "lodash";
+import { useEffect, useMemo } from "react";
+import { toast } from "react-toastify";
 import {
   currentListenAtom,
   currentDataSourceIndexAtom,
@@ -12,12 +14,17 @@ import {
   listenSubmittedAtom,
 } from "../BrainzPlayerAtoms";
 import { DataSourceTypes } from "../BrainzPlayer";
+import {
+  saveFailedListen,
+  getFailedListens,
+  removeFailedListen,
+} from "../../../utils/listenStorage";
+import APIService from "../../../utils/APIService";
+import { ToastMsg } from "../../../notifications/Notifications";
 
 interface ListenSubmissionProps {
   currentUser: ListenBrainzUser;
   listenBrainzAPIBaseURI: string;
-  onError: (error: any, title: string) => void;
-  onWarning: (message: string, title: string) => void;
   dataSourceRefs: React.RefObject<DataSourceTypes>[];
 }
 
@@ -28,11 +35,65 @@ interface ListenSubmissionProps {
 const useListenSubmission = ({
   currentUser,
   listenBrainzAPIBaseURI,
-  onError,
-  onWarning,
   dataSourceRefs,
 }: ListenSubmissionProps) => {
   const store = useStore();
+  const apiService = useMemo(() => new APIService(listenBrainzAPIBaseURI), [
+    listenBrainzAPIBaseURI,
+  ]);
+  const retryOfflineListens = React.useCallback(async () => {
+    if (!navigator.onLine) return;
+
+    const failedListens = await getFailedListens();
+    const failedListensCount = failedListens.length;
+    if (failedListensCount === 0) return;
+
+    toast.info(
+      ToastMsg({
+        title: "Back online",
+        message: `Retrying ${failedListensCount} unsent listens...`,
+      }),
+      {
+        toastId: "retry-submissions",
+      }
+    );
+
+    try {
+      if (!currentUser || !currentUser.auth_token) return;
+      const payload = failedListens.map((item) => item.listen);
+      await apiService.submitListens(currentUser.auth_token, "import", payload);
+      await Promise.all(
+        failedListens.map((item) => removeFailedListen(item.id))
+      );
+    } catch (error) {
+      toast.error(
+        ToastMsg({
+          title: "Retry failed",
+          message: error.toString(),
+        }),
+        {
+          toastId: "retry-failed",
+        }
+      );
+      return;
+    }
+    toast.success(
+      ToastMsg({
+        title: "Listens submitted",
+        message: `Successfully submitted ${failedListensCount} saved listens.`,
+      }),
+      {
+        toastId: "offline-listens-success",
+      }
+    );
+  }, [currentUser, apiService]);
+  useEffect(() => {
+    window.addEventListener("online", retryOfflineListens);
+    retryOfflineListens();
+    return () => {
+      window.removeEventListener("online", retryOfflineListens);
+    };
+  }, [retryOfflineListens]);
 
   // Atom values
   const currentListen = useAtomValue(currentListenAtom);
@@ -121,11 +182,7 @@ const useListenSubmission = ({
   ]);
 
   const submitListenToListenBrainz = React.useCallback(
-    async (
-      listenType: ListenType,
-      listen: BaseListenFormat,
-      retries: number = 3
-    ): Promise<void> => {
+    async (listenType: ListenType, listen: BaseListenFormat): Promise<void> => {
       const dataSource = dataSourceRefs[getCurrentDataSourceIndex()];
 
       if (!currentUser || !currentUser.auth_token) {
@@ -141,56 +198,27 @@ const useListenSubmission = ({
         (dataSource?.current && !dataSource.current.datasourceRecordsListens())
       ) {
         try {
-          const { auth_token } = currentUser;
-          let processedPayload = listen;
-
-          // When submitting playing_now listens, listened_at must NOT be present
-          if (isPlayingNowType) {
-            processedPayload = omit(listen, "listened_at") as Listen;
-          }
-
-          const struct = {
-            listen_type: listenType,
-            payload: [processedPayload],
-          } as SubmitListensPayload;
-
-          const url = `${listenBrainzAPIBaseURI}/submit-listens`;
-
-          const response = await fetch(url, {
-            method: "POST",
-            headers: {
-              Authorization: `Token ${auth_token}`,
-              "Content-Type": "application/json;charset=UTF-8",
-            },
-            body: JSON.stringify(struct),
-          });
-
-          if (!response.ok) {
-            throw new Error(response.statusText);
-          }
+          await apiService.submitListens(currentUser.auth_token, listenType, [
+            listen,
+          ]);
         } catch (error) {
-          if (retries > 0) {
-            // Retry with exponential backoff
-            await new Promise((resolve) => {
-              setTimeout(resolve, 3000 * (4 - retries)); // 3s, 6s, 9s
-            });
-            await submitListenToListenBrainz(listenType, listen, retries - 1);
-          } else if (!isPlayingNowType) {
-            onWarning(
-              error instanceof Error ? error.message : error.toString(),
-              "Could not save this listen"
+          if (!isPlayingNowType) {
+            await saveFailedListen(listen as Listen);
+            toast.warning(
+              ToastMsg({
+                title: "Submission failed",
+                message:
+                  "Connection lost. Listens are saved locally to retry later.",
+              }),
+              {
+                toastId: "offline",
+              }
             );
           }
         }
       }
     },
-    [
-      dataSourceRefs,
-      getCurrentDataSourceIndex,
-      currentUser,
-      listenBrainzAPIBaseURI,
-      onWarning,
-    ]
+    [dataSourceRefs, getCurrentDataSourceIndex, currentUser, apiService]
   );
 
   const submitCurrentListen = React.useCallback(async (): Promise<void> => {

@@ -37,7 +37,7 @@ RUN apt-get update \
 
 # PostgreSQL client
 RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-ENV PG_MAJOR=12
+ENV PG_MAJOR=14
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" $PG_MAJOR > /etc/apt/sources.list.d/pgdg.list
 RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-$PG_MAJOR \
@@ -216,12 +216,15 @@ RUN touch /etc/service/uwsgi/down
 
 COPY ./docker/rc.local /etc/rc.local
 
-# crontab
-COPY ./docker/services/cron/crontab /etc/cron.d/crontab
-RUN chmod 0644 /etc/cron.d/crontab
+# crontabs
+RUN mkdir -p /etc/listenbrainz-crontabs
+COPY ./docker/services/cron/crontab /etc/listenbrainz-crontabs/crontab
+COPY ./docker/services/cron/full-dumps-crontab /etc/listenbrainz-crontabs/full-dumps-crontab
+RUN chmod 0644 /etc/listenbrainz-crontabs/*
 
 # copy the compiled js files and statis assets from image to prod
 COPY --from=listenbrainz-frontend-prod /code/frontend/robots.txt /static/
+COPY --from=listenbrainz-frontend-prod /code/frontend/favicon.ico /static/
 COPY --from=listenbrainz-frontend-prod /code/frontend/sound /static/sound
 COPY --from=listenbrainz-frontend-prod /code/frontend/fonts /static/fonts
 COPY --from=listenbrainz-frontend-prod /code/frontend/img /static/img

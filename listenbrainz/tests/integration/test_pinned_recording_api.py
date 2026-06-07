@@ -291,6 +291,37 @@ class PinnedRecAPITestCase(IntegrationTestCase):
 
     @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items',
            fetch_track_metadata_for_pins)
+    def test_get_pin_by_id(self):
+        """Tests that get_pin_by_id endpoint returns 200 with correct pin data"""
+        # pin a recording for the user
+        pinned = self.pin_single_sample(self.user["id"], 0)
+        pin = db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"])
+
+        response = self.client.get(
+            self.custom_url_for("pinned_rec_api_bp_v1.get_pin_by_id", row_id=pin.row_id)
+        )
+
+        self.assert200(response)
+        data = json.loads(response.data)
+
+        pin_data = data["pinned_recording"]
+        self.assertEqual(pin_data["row_id"], pin.row_id)
+        self.assertEqual(pin_data["recording_msid"], self.pinned_rec_samples[0]["recording_msid"])
+        self.assertEqual(pin_data["recording_mbid"], self.pinned_rec_samples[0]["recording_mbid"])
+        self.assertEqual(pin_data["blurb_content"], self.pinned_rec_samples[0]["blurb_content"])
+        self.assertEqual(pin_data["user_name"], self.user["musicbrainz_id"])
+
+    def test_get_pin_by_id_not_found(self):
+        """Tests that get_pin_by_id endpoint returns 404 when pin with row_id is not found"""
+        response = self.client.get(
+            self.custom_url_for("pinned_rec_api_bp_v1.get_pin_by_id", row_id=999999999)
+        )
+
+        self.assert404(response)
+        self.assertEqual(response.json["code"], 404)
+
+    @patch('listenbrainz.webserver.views.pinned_recording_api.fetch_track_metadata_for_items',
+           fetch_track_metadata_for_pins)
     def test_get_pins_for_user(self):
         """Test that valid response is received with 200 code"""
 

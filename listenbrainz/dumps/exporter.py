@@ -80,6 +80,7 @@ def dump_database(db_name, locations, dump_time=datetime.today(), threads=DUMP_D
         current_app.logger.info(f"Creating dump of {dump_type} data...")
         tables_collection = tables_dict[dump_type]
         location = locations[dump_type]
+        temp_location = locations[f"{dump_type}_temp"]
         try:
             dump_locations[dump_type] = _create_dump(
                 location=location,
@@ -88,6 +89,7 @@ def dump_database(db_name, locations, dump_time=datetime.today(), threads=DUMP_D
                 schema_version=schema_version,
                 dump_time=dump_time,
                 threads=threads,
+                temp_location=temp_location
             )
         except Exception:
             current_app.logger.critical(f"Unable to create {dump_type} db dump due to error: ", exc_info=True)
@@ -181,7 +183,7 @@ def create_sample_dump(location, dump_time=datetime.today(), threads=DUMP_DEFAUL
 
 
 def _create_dump(location: str, dump_type: str, schema_version: int, dump_time: datetime,
-                 tables_collection: DumpTablesCollection | None = None, threads=DUMP_DEFAULT_THREAD_COUNT):
+                 tables_collection: DumpTablesCollection | None = None, threads=DUMP_DEFAULT_THREAD_COUNT, temp_location: str = None):
     """ Creates a dump of the provided tables at the location passed
 
         Arguments:
@@ -201,7 +203,7 @@ def _create_dump(location: str, dump_type: str, schema_version: int, dump_time: 
     )
 
     metadata = {"SCHEMA_SEQUENCE": schema_version, "TIMESTAMP": dump_time}
-    with zstd_dump(location, archive_name, metadata, threads) as (zstd, tar, temp_dir, archive_path):
+    with zstd_dump(location, archive_name, metadata, threads, temp_location=temp_location) as (zstd, tar, temp_dir, archive_path):
         archive_tables_dir = os.path.join(temp_dir, "lbdump")
         create_path(archive_tables_dir)
 
@@ -342,19 +344,21 @@ def write_dump_metadata(tar: TarFile, temp_dir: str, archive_name: str,
 
 
 @contextlib.contextmanager
-def uncompressed_dump(location: str, archive_name: str, metadata: dict[str, int | datetime | str]) -> Generator[
-    tuple[TarFile, str, str], Any, None]:
+def uncompressed_dump(
+    location: str, archive_name: str, metadata: dict[str, int | datetime | str], temp_location: str = None
+) -> Generator[tuple[TarFile, str, str], Any, None]:
     """ Create an uncompressed dump of the database in the specified location """
     archive_path = os.path.join(location, f"{archive_name}.tar")
-    with tarfile.open(archive_path, mode="w") as tar, TemporaryDirectory() as temp_dir:
+    with tarfile.open(archive_path, mode="w") as tar, TemporaryDirectory(dir=temp_location) as temp_dir:
         write_dump_metadata(tar, temp_dir, archive_name, metadata)
         yield tar, temp_dir, archive_path
 
 
 @contextlib.contextmanager
-def zstd_dump(location: str, archive_name: str, metadata: dict[str, int | datetime | str],
-              threads: int = DUMP_DEFAULT_THREAD_COUNT) -> \
-        Generator[tuple[Popen[bytes], TarFile, str, str], Any, None]:
+def zstd_dump(
+    location: str, archive_name: str, metadata: dict[str, int | datetime | str],
+    threads: int = DUMP_DEFAULT_THREAD_COUNT, temp_location: str = None
+) -> Generator[tuple[Popen[bytes], TarFile, str, str], Any, None]:
     """ Create a zstd compressed dump of the database in the specified location """
     archive_path = os.path.join(location, f"{archive_name}.tar.zst")
 
@@ -362,7 +366,7 @@ def zstd_dump(location: str, archive_name: str, metadata: dict[str, int | dateti
         zstd_command = ["zstd", "--compress", f"-T{threads}", "-10"]
         zstd = subprocess.Popen(zstd_command, stdin=subprocess.PIPE, stdout=archive)
 
-        with tarfile.open(fileobj=zstd.stdin, mode="w|") as tar, TemporaryDirectory() as temp_dir:
+        with tarfile.open(fileobj=zstd.stdin, mode="w|") as tar, TemporaryDirectory(dir=temp_location) as temp_dir:
             write_dump_metadata(tar, temp_dir, archive_name, metadata)
 
             yield zstd, tar, temp_dir, archive_path

@@ -1,0 +1,4 @@
+MAILTO=""
+
+## Trigger a full dump on 1st and 15th of every month, in the middle of the night, do not block to wait for lock.
+0 4 1,15 * * root flock -x -n /var/lock/lb-full-dumps.lock /code/listenbrainz/admin/create-dumps.sh full >> /logs/full_dumps.log 2>&1

@@ -16,12 +16,16 @@ RECENT_DONOR_CACHE_KEY = "recent_donors"
 DONOR_CACHE_TIMEOUT = 10 * 60
 
 
-def init_meb_db_connection(connect_str):
-    """Initializes database connection using the specified Flask app."""
+def init_meb_db_connection(connect_str, poolclass=NullPool, **engine_kwargs):
+    """Initializes database connection using the specified Flask app.
+
+    Pass poolclass=QueuePool (and pool_size, max_overflow, pool_pre_ping via
+    engine_kwargs) for long-running services where connection reuse matters.
+    """
     global engine
     while True:
         try:
-            engine = create_engine(connect_str, poolclass=NullPool)
+            engine = create_engine(connect_str, poolclass=poolclass, **engine_kwargs)
             break
         except psycopg2.OperationalError as e:
             print("Couldn't establish connection to db: {}".format(str(e)))
@@ -124,7 +128,6 @@ def get_recent_donors(meb_conn, db_conn, count: int, offset: int):
           FROM payment
          WHERE editor_id IS NOT NULL
            AND is_donation = 't'
-           AND (anonymous != 't' OR anonymous IS NULL)
            AND payment_date >= (NOW() - INTERVAL '1 year')
       ORDER BY payment_date DESC
     """
@@ -152,7 +155,6 @@ def get_biggest_donors(meb_conn, db_conn, count: int, offset: int):
           FROM payment
          WHERE editor_id IS NOT NULL
            AND is_donation = 't'
-           AND (anonymous != 't' OR anonymous IS NULL)
            AND payment_date >= (NOW() - INTERVAL '1 year')
         )
         SELECT editor_name
@@ -209,7 +211,6 @@ def are_users_eligible_donors(meb_conn, musicbrainz_row_ids: list[int]):
                   FROM payment
                  WHERE editor_id = e.editor_id
                    AND is_donation = 't'
-                   AND (anonymous != 't' OR anonymous IS NULL)
                    AND payment_date >= (NOW() - INTERVAL '1 year')
                ) AS show_flair
           FROM unnest(:editor_ids) as e (editor_id)

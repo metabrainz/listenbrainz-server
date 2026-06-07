@@ -35,7 +35,10 @@ import {
 import FollowButton from "../../components/follow/FollowButton";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import { ToastMsg } from "../../../notifications/Notifications";
-import SEO, { YIMYearMetaTags } from "../SEO";
+import {
+  LegacyYIMSEO as SEO,
+  LegacyYIMYearMetaTags as YIMYearMetaTags,
+} from "../SEO";
 import { RouteQuery } from "../../../utils/Loader";
 import { setAmbientQueueAtom } from "../../../common/brainzplayer/BrainzPlayerAtoms";
 

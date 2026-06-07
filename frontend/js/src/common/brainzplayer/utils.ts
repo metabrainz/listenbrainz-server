@@ -24,7 +24,6 @@ const getBrainzPlayerQueueItemKey = (listen: Listen): string =>
     listen.listened_at
   }-${listen.inserted_at}`;
 
-// eslint-disable-next-line import/prefer-default-export
 export function listenOrJSPFTrackToQueueItem(
   track: Listen | JSPFTrack
 ): BrainzPlayerQueueItem {
@@ -32,7 +31,7 @@ export function listenOrJSPFTrackToQueueItem(
   if (has(track, "title")) {
     listenTrack = JSPFTrackToListen(track as JSPFTrack);
   } else {
-    listenTrack = cloneDeep(track as BrainzPlayerQueueItem);
+    listenTrack = cloneDeep(track as Listen);
   }
   const queueItem = {
     ...listenTrack,

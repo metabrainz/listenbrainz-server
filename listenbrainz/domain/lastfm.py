@@ -1,14 +1,4 @@
-import logging
-import uuid
-
-import requests
 from flask import current_app
-from psycopg2.extras import execute_values
-from psycopg2.sql import SQL, Identifier
-from requests.adapters import HTTPAdapter, Retry
-from sqlalchemy import text
-
-from brainzutils import musicbrainz_db
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import external_service_oauth
@@ -85,26 +75,10 @@ def fetch_lfm_feedback(lfm_user: str):
             items.append(item)
 
     return items, total_count
+from listenbrainz.domain.audioscrobbler import AudioscrobblerService
 
 
-def bulk_get_msids(connection, items):
-    """ Fetch msids for all the specified items (recording, artist_credit) in batches. """
-    query = """
-        SELECT DISTINCT ON (key)
-               lower(s.recording)  || '-' || lower(s.artist_credit) AS key
-             , s.gid::text AS recording_msid
-          FROM messybrainz.submissions s
-         WHERE EXISTS(
-                    SELECT 1
-                      FROM (VALUES %s) AS t(track_name, artist_name)
-                     WHERE lower(s.recording) = lower(t.track_name)
-                       AND lower(s.artist_credit) = lower(t.artist_name)
-               )
-      ORDER BY key, s.submitted, recording_msid 
-    """
-    curs = connection.connection.cursor()
-    result = execute_values(curs, query, [(x["track_name"], x["artist_name"]) for x in items], fetch=True)
-    return {r[0]: r[1] for r in result}
+class LastfmService(AudioscrobblerService):
 
 
 def import_feedback(user_id: int, lfm_user: str):
@@ -159,11 +133,10 @@ class BaseLastfmService(ImporterService):
             db_conn, user_id=user_id, service=self.service, access_token=None, refresh_token=None,
             token_expires_ts=None, record_listens=True, scopes=[], external_user_id=token["external_user_id"],
             latest_listened_at=token["latest_listened_at"]
-        )
-        return True
-
-
-class LastfmService(BaseLastfmService):
-
     def __init__(self):
-        super().__init__(ExternalServiceType.LASTFM)
+        super().__init__(
+            ExternalServiceType.LASTFM,
+            api_url=current_app.config["LASTFM_API_URL"],
+            api_key=current_app.config["LASTFM_API_KEY"],
+        )
+
