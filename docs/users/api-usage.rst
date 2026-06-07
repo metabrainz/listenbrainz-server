@@ -120,8 +120,10 @@ you to start sending release information if you have it.
 Love/hate feedback
 ------------------
 
-To provide love/hate feedback on listens, you need a recording mbid. If you do not
-have a recording mbid, you can look it up using the metadata endpoints. See `Lookup MBIDs`_
+To provide love/hate feedback on listens, you need a recording MBID or a recording MSID.
+If you submit a playing_now listen, you can set the parameter :code:`return_msid` to
+:true: to get the recording_msid in the response body. See the :ref:`submit-listens` example for more details.
+If you have neither, you can look up the MBID using the metadata endpoints. See `Lookup MBIDs`_
 for an example of the same. Here is an example of how to submit love/hate feedback using
 the ListenBrainz API. Refer to :ref:`feedback-api` for more details.
 

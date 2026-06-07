@@ -1,10 +1,11 @@
 import * as React from "react";
 
 import { Navigate, Outlet } from "react-router";
-import type { RouteObject, LoaderFunctionArgs } from "react-router";
-import { isEmpty } from "lodash";
-import RouteLoader, { RouteQueryLoader, RouteQuery } from "../../utils/Loader";
-import queryClient from "../../utils/QueryClient";
+import type { RouteObject } from "react-router";
+import RouteLoader, { RouteQueryLoader } from "../../utils/Loader";
+
+import { routeQueryLoader as yearInMusicLayoutLoader } from "../year-in-music/layout";
+import { LATEST_YEAR_IN_MUSIC_YEAR } from "../year-in-music/YearInMusic";
 
 const getUserRoutes = (): RouteObject[] => {
   const routes = [
@@ -191,6 +192,34 @@ const getUserRoutes = (): RouteObject[] => {
             Component: async () => {
               return (await import("../year-in-music/2021/YearInMusic2021"))
                 .YearInMusicWrapper;
+            },
+          },
+        },
+      ],
+    },
+    {
+      path: "/user/:username/year-in-music/",
+      id: "year-in-music-layout",
+      lazy: {
+        Component: async () => {
+          return (await import("../year-in-music/layout")).default;
+        },
+      },
+      // We're not using a lazy loader here because we want to load the year-in-music layout first
+      loader: yearInMusicLayoutLoader,
+      children: [
+        {
+          index: true,
+          element: <Navigate to={`./${LATEST_YEAR_IN_MUSIC_YEAR}/`} replace />,
+        },
+        {
+          path: ":year/",
+          lazy: {
+            loader: async () => {
+              return RouteQueryLoader(`year-in-music`);
+            },
+            Component: async () => {
+              return (await import("../year-in-music/YearInMusic")).default;
             },
           },
         },

@@ -148,3 +148,6 @@ listenbrainz_spark/recommendations/html_files*
 
 # IDE configs
 .idea
+
+# Test data
+!**/*.scrobbler.log

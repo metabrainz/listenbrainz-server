@@ -4,9 +4,9 @@ import time
 from kombu.mixins import ConsumerMixin
 
 from listenbrainz.listen import Listen, NowPlayingListen
-from listenbrainz.utils import get_fallback_connection_name
+from listenbrainz.rabbitmq import create_rabbitmq_connection
 
-from kombu import Connection, Exchange, Queue, Consumer
+from kombu import Exchange, Queue, Consumer
 
 
 class ListensDispatcher(ConsumerMixin):
@@ -20,8 +20,8 @@ class ListensDispatcher(ConsumerMixin):
         # we create the other channel here. we also need to handle its cleanup later
         self.playing_now_channel = None
 
-        self.unique_exchange = Exchange(app.config["UNIQUE_EXCHANGE"], "fanout", durable=False)
-        self.playing_now_exchange = Exchange(app.config["PLAYING_NOW_EXCHANGE"], "fanout", durable=False)
+        self.unique_exchange = Exchange(app.config["UNIQUE_EXCHANGE"], "fanout", durable=True)
+        self.playing_now_exchange = Exchange(app.config["PLAYING_NOW_EXCHANGE"], "fanout", durable=True)
         self.websockets_queue = Queue(app.config["WEBSOCKETS_QUEUE"], exchange=self.unique_exchange, durable=True)
         self.playing_now_queue = Queue(app.config["PLAYING_NOW_QUEUE"], exchange=self.playing_now_exchange,
                                        durable=True)
@@ -50,14 +50,7 @@ class ListensDispatcher(ConsumerMixin):
             self.playing_now_channel.close()
 
     def init_rabbitmq_connection(self):
-        self.connection = Connection(
-            hostname=self.app.config["RABBITMQ_HOST"],
-            userid=self.app.config["RABBITMQ_USERNAME"],
-            port=self.app.config["RABBITMQ_PORT"],
-            password=self.app.config["RABBITMQ_PASSWORD"],
-            virtual_host=self.app.config["RABBITMQ_VHOST"],
-            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
-        )
+        self.connection = create_rabbitmq_connection(self.app.config)
 
     def start(self):
         while True:

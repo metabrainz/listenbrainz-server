@@ -40,8 +40,8 @@ class MappingTestCase(TimescaleTestCase):
 
             self.ts_conn.execute(text("""
                 INSERT INTO mapping.mb_metadata_cache
-                        (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
-                 VALUES (:recording_mbid ::UUID, :artist_mbids ::UUID[], :release_mbid ::UUID, :recording_data, :artist_data, :tag_data, :release_data, 'f')
+                        (recording_mbid, recording_id, artist_mbids, artist_ids, release_mbid, release_id, recording_data, artist_data, tag_data, release_data, dirty)
+                 VALUES (:recording_mbid ::UUID, 1, :artist_mbids ::UUID[], '{1}'::INTEGER[], :release_mbid ::UUID, 1, :recording_data, :artist_data, :tag_data, :release_data, 'f')
             """), {
                 "recording_mbid": recording["recording_mbid"],
                 "artist_mbids": recording["artist_mbids"],

@@ -11,7 +11,7 @@ from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 from brainzutils.mail import send_mail
 
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.domain.external_service import ExternalServiceError
+from listenbrainz.domain.external_service import ExternalServiceError, ListensImporterUserError
 from listenbrainz.webserver.errors import ListenValidationError
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_IMPORT, insert_payload, validate_listen, \
@@ -139,15 +139,23 @@ class ListensImporter(abc.ABC):
         failure = 0
         for user in users:
             try:
-                if user['is_paused']:
+                if user["is_paused"]:
                     continue
 
                 self._listens_imported_since_last_update += self.process_one_user(user)
                 success += 1
+            except ListensImporterUserError:
+                current_app.logger.info(
+                    f"{self.name} could not import listens for user %s:",
+                    user['musicbrainz_id'],
+                    exc_info=True
+                )
+                failure += 1
             except (DatabaseException, DatabaseError, SQLAlchemyError):
                 listenbrainz.webserver.db_conn.rollback()
                 current_app.logger.error(f'{self.name} could not import listens for user %s:',
                                          user['musicbrainz_id'], exc_info=True)
+                failure += 1
             except Exception:
                 current_app.logger.error(f'{self.name} could not import listens for user %s:',
                                          user['musicbrainz_id'], exc_info=True)

@@ -1,5 +1,5 @@
 import { atom, getDefaultStore, useAtom } from "jotai";
-import { atomWithReset, atomWithStorage } from "jotai/utils";
+import { atomWithReset, atomWithStorage, RESET } from "jotai/utils";
 import { faRepeat } from "@fortawesome/free-solid-svg-icons";
 import { isEqual } from "lodash";
 import { faRepeatOnce } from "../../utils/icons";
@@ -72,6 +72,7 @@ export const currentTrackCoverURLAtom = atomWithReset<string | undefined>(
 export const playerPausedAtom = atomWithReset<boolean>(true);
 export const isActivatedAtom = atomWithReset<boolean>(false);
 export const volumeAtom = atomWithStorage<number>("brainzplayer-volume", 100);
+export const showVolumeSliderAtom = atomWithReset<boolean>(false);
 export const durationMsAtom = atomWithReset<number>(0);
 export const progressMsAtom = atomWithReset<number>(0);
 export const updateTimeAtom = atomWithReset<number>(performance.now());
@@ -237,7 +238,7 @@ export const removeTrackFromAmbientQueueAtom = atom(
 
 export const addListenToTopOfQueueAtom = atom(
   null,
-  (get, set, trackData: any) => {
+  (get, set, trackData: Listen | JSPFTrack) => {
     const trackToAdd = listenOrJSPFTrackToQueueItem(trackData);
     const queue = get(queueAtom);
     const currentListenIndex = get(currentListenIndexAtom);
@@ -252,7 +253,7 @@ export const addListenToTopOfQueueAtom = atom(
 
 export const addListenToBottomOfQueueAtom = atom(
   null,
-  (get, set, trackData: any) => {
+  (get, set, trackData: Listen | JSPFTrack) => {
     const trackToAdd = listenOrJSPFTrackToQueueItem(trackData);
     const queue = get(queueAtom);
     set(queueAtom, [...queue, trackToAdd]);
@@ -261,23 +262,49 @@ export const addListenToBottomOfQueueAtom = atom(
 
 export const addListenToBottomOfAmbientQueueAtom = atom(
   null,
-  (get, set, trackData: any) => {
+  (get, set, trackData: Listen | JSPFTrack) => {
     const trackToAdd = listenOrJSPFTrackToQueueItem(trackData);
     const ambientQueue = get(ambientQueueAtom);
     set(ambientQueueAtom, [...ambientQueue, trackToAdd]);
   }
 );
 
-export const clearQueueAfterCurrentAndSetAmbientQueueAtom = atom(
+export const clearQueuesBeforeListenAndSetQueuesAtom = atom(
   null,
-  (get, set, data: BrainzPlayerQueue) => {
-    const currentListenIndex = get(currentListenIndexAtom);
+  (get, set, listen: Listen | JSPFTrack) => {
     const queue = get(queueAtom);
-    const updatedQueue = queue.slice(0, currentListenIndex + 1);
-    const newAmbientQueue = [...data].map(listenOrJSPFTrackToQueueItem);
+    const ambientQueue = get(ambientQueueAtom);
+    const listenAsQueueItem = listenOrJSPFTrackToQueueItem(listen);
+    const listenIndexInQueue = queue.findIndex(
+      (item) => item.id === listenAsQueueItem.id
+    );
+    const listenIndexInAmbientQueue = ambientQueue.findIndex(
+      (item) => item.id === listenAsQueueItem.id
+    );
+    if (listenIndexInQueue !== -1) {
+      // If the track is in the regular queue, skip directly to it, clearing queue before that point
+      set(queueAtom, queue.slice(listenIndexInQueue));
+    } else {
+      // If the track is not in the regular queue, add it to the top after currently playing.
+      set(addListenToTopOfQueueAtom, listen);
+      if (listenIndexInAmbientQueue !== -1) {
+        // Clear the ambient queue until that point so that playback continues from there.
+        set(
+          ambientQueueAtom,
+          ambientQueue.slice(listenIndexInAmbientQueue + 1)
+        );
+      }
+    }
+  }
+);
 
-    set(queueAtom, updatedQueue);
-    set(ambientQueueAtom, newAmbientQueue);
+export const replaceQueueAndResetAtom = atom(
+  null,
+  (get, set, data: (Listen | JSPFTrack)[]) => {
+    const newQueue = data.map(listenOrJSPFTrackToQueueItem);
+    set(queueAtom, newQueue);
+    set(ambientQueueAtom, RESET);
+    set(currentListenIndexAtom, RESET);
   }
 );
 
@@ -289,9 +316,9 @@ export const moveAmbientQueueItemsToQueueAtom = atom(null, (get, set) => {
   set(ambientQueueAtom, []);
 });
 
-export const addMultipleListenToBottomOfAmbientQueueAtom = atom(
+export const addMultipleListensToBottomOfAmbientQueueAtom = atom(
   null,
-  (get, set, tracksData: BrainzPlayerQueue) => {
+  (get, set, tracksData: Array<Listen | JSPFTrack>) => {
     const tracksToAdd = tracksData.map(listenOrJSPFTrackToQueueItem);
     const ambientQueue = get(ambientQueueAtom);
     set(ambientQueueAtom, [...ambientQueue, ...tracksToAdd]);
@@ -332,6 +359,7 @@ export const useBrainzPlayerAtoms = () => ({
   continuousPlaybackTimeAtom,
   volumeAtom,
   queueRepeatModeAtom,
+  showVolumeSliderAtom,
 
   // Action atoms
   setAmbientQueueAtom,
@@ -344,9 +372,10 @@ export const useBrainzPlayerAtoms = () => ({
   addListenToTopOfQueueAtom,
   addListenToBottomOfQueueAtom,
   addListenToBottomOfAmbientQueueAtom,
-  clearQueueAfterCurrentAndSetAmbientQueueAtom,
+  replaceQueueAndResetAtom,
+  clearQueuesBeforeListenAndSetQueuesAtom,
   moveAmbientQueueItemsToQueueAtom,
-  addMultipleListenToBottomOfAmbientQueueAtom,
+  addMultipleListensToBottomOfAmbientQueueAtom,
 
   // Derived atoms
   currentTrackAtom,

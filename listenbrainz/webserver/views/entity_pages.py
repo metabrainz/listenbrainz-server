@@ -56,27 +56,25 @@ def get_cover_art_for_artist(release_groups):
             }
             covers.append(cover)
 
+    # Select the best layout based on available cover art
+    selected_layout = CoverArtGenerator.select_best_layout(len(covers))
+    if selected_layout is None:
+        return None
+
     cac = CoverArtGenerator(
         current_app.config["MB_DATABASE_URI"],
-        4,
+        selected_layout["dimension"],
         400,
         "transparent",
         True,
         False,
         server_root_url=current_app.config["SERVER_ROOT_URL"]
     )
-    images = cac.generate_from_caa_ids(covers, [
-        "0,1,4,5",
-        "10,11,14,15",
-        "2",
-        "3",
-        "6",
-        "7",
-        "8",
-        "9",
-        "12",
-        "13",
-      ], None, 250)
+    images = cac.generate_from_caa_ids(
+        covers,
+        layout=selected_layout["layout"],
+        cover_art_size=250
+    )
     return render_template(
         "art/svg-templates/simple-grid.svg",
         background="transparent",
@@ -386,7 +384,7 @@ def recording_entity(recording_mbid: str):
         return jsonify({"error": "Provided recording mbid is invalid: %s" % recording_mbid}), 400
 
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-            psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+            psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"]) as ts_conn, \
             mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
             ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
         recording_data = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, [recording_mbid])
@@ -424,7 +422,7 @@ def recording_entity(recording_mbid: str):
 
     release_group_mbids = [rg["mbid"] for rg in release_groups_data]
     try:
-        with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+        with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"]) as ts_conn, \
                 ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
             popularity_data, _ = popularity.get_counts(ts_curs, "release_group", release_group_mbids)
     except Exception:

@@ -261,10 +261,13 @@ class UserViewsTestCase(IntegrationTestCase):
     def test_user_pins(self):
         self.ts_conn.execute(text("""
             INSERT INTO mapping.mb_metadata_cache
-                               (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
+                               (recording_mbid, recording_id, artist_mbids, artist_ids, release_mbid, release_id, recording_data, artist_data, tag_data, release_data, dirty)
                 VALUES ('1fe669c9-5a2b-4dcb-9e95-77480d1e732e'
+                      , 1
                       , '{5b24fbab-c58f-4c37-a59d-ab232e2d98c4}'::UUID[]
+                      , '{1}'::INTEGER[]
                       , '607cc05a-e462-4f39-91b5-e9322544e0a6'
+                      , 1
                       , '{"name": "The Final Confrontation, Part 1", "rels": [], "length": 312000}'
                       , '{"name": "Danny Elfman", "artist_credit_id": 204, "artists": [{"area": "United States", "rels": {"youtube": "https://www.youtube.com/channel/UCjhIy2xUURhJvN0S7s_ztuw", "wikidata": "https://www.wikidata.org/wiki/Q193338", "streaming": "https://music.apple.com/gb/artist/486493", "free streaming": "https://www.deezer.com/artist/760", "social network": "https://www.instagram.com/dannyelfman/", "official homepage": "https://www.dannyelfman.com/", "purchase for download": "https://itunes.apple.com/us/artist/id486493"}, "type": "Person", "gender": "Male", "begin_year": 1953, "name": "Danny Elfman", "join_phrase": ""}]}'
                       , '{"artist": [], "recording": [], "release_group": []}'

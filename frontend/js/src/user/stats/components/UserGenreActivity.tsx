@@ -17,10 +17,6 @@ export type UserGenreActivityProps = {
 
 export type UserGenreActivityGraphProps = {
   rawData: GenreHourData[];
-  isLoading?: boolean;
-  hasError?: boolean;
-  errorMessage?: string;
-  className?: string;
 };
 
 type ProcessedTimeframeData = {
@@ -139,10 +135,6 @@ function TimeMarker({
 
 export function UserGenreActivityGraph({
   rawData,
-  isLoading = false,
-  hasError = false,
-  errorMessage = "",
-  className = "user-stats-card",
 }: UserGenreActivityGraphProps) {
   const colorScale = scaleSequential(interpolateRainbow).domain([0, 24]);
   const timezoneOffset = React.useMemo(() => getRoundedTimezoneOffset(), []);
@@ -257,73 +249,45 @@ export function UserGenreActivityGraph({
   const timeMarkersConfig = getTimeMarkersConfig();
 
   return (
-    <Card className={className} data-testid="user-genre-activity">
-      <div className="row">
-        <div className="col-xs-10">
-          <h3 className="capitalize-bold">Genre Activity</h3>
-        </div>
-      </div>
-      <Loader isLoading={isLoading}>
-        {hasError ? (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minHeight: "inherit",
-            }}
-          >
-            <span style={{ fontSize: isMobile ? 18 : 24 }}>
-              <FontAwesomeIcon icon={faExclamationCircle} /> {errorMessage}
-            </span>
-          </div>
-        ) : (
-          <div className="row">
-            <div className="col-xs-12">
-              <div
-                style={{
-                  position: "relative",
-                  height: `${chartConfig.height}px`,
-                  width: "100%",
-                  margin: "0 auto",
-                  overflow: "hidden",
-                }}
-              >
-                {timeMarkersConfig.map((marker, index) => (
-                  <TimeMarker
-                    key={marker.label}
-                    position={marker.position}
-                    label={marker.label}
-                    isMobile={isMobile}
-                  />
-                ))}
-                <ResponsivePie
-                  data={chartData}
-                  margin={chartConfig.margin}
-                  innerRadius={chartConfig.innerRadius}
-                  padAngle={0.7}
-                  activeOuterRadiusOffset={isMobile ? 4 : 8}
-                  cornerRadius={isMobile ? 6 : 10}
-                  colors={(d) => d.data.color}
-                  arcLabel={(d) => `${d.data.actualValue}`}
-                  arcLinkLabel={(d) => d.data.displayName}
-                  arcLabelsSkipAngle={chartConfig.arcLabelsSkipAngle}
-                  arcLabelsTextColor="#333333"
-                  arcLinkLabelsSkipAngle={isMobile ? 20 : 10}
-                  arcLinkLabelsTextColor="#333333"
-                  arcLinkLabelsThickness={isMobile ? 1 : 2}
-                  arcLinkLabelsOffset={isMobile ? -5 : 0}
-                  tooltip={CustomTooltip}
-                  animate
-                  motionConfig="gentle"
-                  legends={[]}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </Loader>
-    </Card>
+    <div
+      style={{
+        position: "relative",
+        height: `${chartConfig.height}px`,
+        width: "100%",
+        margin: "0 auto",
+        overflow: "hidden",
+      }}
+    >
+      {timeMarkersConfig.map((marker, index) => (
+        <TimeMarker
+          key={marker.label}
+          position={marker.position}
+          label={marker.label}
+          isMobile={isMobile}
+        />
+      ))}
+      <ResponsivePie
+        data={chartData}
+        margin={chartConfig.margin}
+        innerRadius={chartConfig.innerRadius}
+        padAngle={0.7}
+        activeOuterRadiusOffset={isMobile ? 4 : 8}
+        cornerRadius={isMobile ? 6 : 10}
+        colors={(d) => d.data.color}
+        arcLabel={(d) => `${d.data.actualValue}`}
+        arcLinkLabel={(d) => d.data.displayName}
+        arcLabelsSkipAngle={chartConfig.arcLabelsSkipAngle}
+        arcLabelsTextColor="#333333"
+        arcLinkLabelsSkipAngle={isMobile ? 20 : 10}
+        arcLinkLabelsTextColor="#333333"
+        arcLinkLabelsThickness={isMobile ? 1 : 2}
+        arcLinkLabelsOffset={isMobile ? -5 : 0}
+        tooltip={CustomTooltip}
+        animate
+        motionConfig="gentle"
+        legends={[]}
+      />
+    </div>
   );
 }
 
@@ -332,6 +296,7 @@ export function UserGenreActivityStats({
   range,
 }: UserGenreActivityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
+  const isMobile = useMediaQuery("(max-width: 767px)");
 
   const { data: loaderData, isLoading: loading } = useQuery({
     queryKey: ["userGenreActivity", user?.name, range],
@@ -384,12 +349,35 @@ export function UserGenreActivityStats({
   }, [rawData]);
 
   return (
-    <UserGenreActivityGraph
-      rawData={genreActivityData}
-      isLoading={loading}
-      hasError={hasError}
-      errorMessage={errorMessage}
-    />
+    <Card className="user-stats-card" data-testid="user-genre-activity">
+      <div className="row">
+        <div className="col-xs-10">
+          <h3 className="capitalize-bold">Genre Activity</h3>
+        </div>
+      </div>
+      <Loader isLoading={loading}>
+        {hasError ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: "inherit",
+            }}
+          >
+            <span style={{ fontSize: isMobile ? 18 : 24 }}>
+              <FontAwesomeIcon icon={faExclamationCircle} /> {errorMessage}
+            </span>
+          </div>
+        ) : (
+          <div className="row">
+            <div className="col-xs-12">
+              <UserGenreActivityGraph rawData={genreActivityData} />
+            </div>
+          </div>
+        )}
+      </Loader>
+    </Card>
   );
 }
 

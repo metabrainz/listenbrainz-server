@@ -45,6 +45,19 @@ class RedisListenStore:
         """
         cache.set(self.PLAYING_NOW_KEY + str(user_id), orjson.dumps(listen), expirein=expire_time)
 
+    def delete_playing_now(self, user_id):
+        """ Delete the current playing_now for a user from Redis.
+
+        Args:
+            user_id (int): the row ID of the user
+
+        Returns:
+            bool: True if the playing_now was deleted, False if it didn't exist
+        """
+        key = self.PLAYING_NOW_KEY + str(user_id)
+        deleted = cache.delete(key)
+        return deleted > 0
+
     def check_connection(self):
         """ Pings the redis server to check if the connection works or not """
         try:

@@ -414,27 +414,28 @@ export default function Listen() {
     [currentUser?.name, deletedListen, deleteListenMutation]
   );
 
-  const onChangeDateTimePicker = async (newDateTimePickerValue: Date) => {
-    if (!newDateTimePickerValue) {
+  const onChangeDateTimePicker = async (selectedDate: Date) => {
+    if (!selectedDate) {
       return;
     }
-    setDateTimePickerValue(newDateTimePickerValue);
-    let minJSTimestamp;
-    if (Array.isArray(newDateTimePickerValue)) {
-      // Range of dates
-      minJSTimestamp = newDateTimePickerValue[0].getTime();
-    } else {
-      minJSTimestamp = newDateTimePickerValue.getTime();
-    }
+    setDateTimePickerValue(selectedDate);
 
-    // Constrain to oldest listen TS for that user
-    const minTimestampInSeconds = Math.max(
-      // convert JS time (milliseconds) to seconds
-      Math.round(minJSTimestamp / 1000),
-      oldestListenTs
+    // Calculate the start of the next day locally
+    const dayStart = new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      selectedDate.getDate()
     );
+    const nextLocalDayStart = new Date(dayStart);
+    nextLocalDayStart.setDate(nextLocalDayStart.getDate() + 1);
 
-    setSearchParams({ min_ts: minTimestampInSeconds.toString() });
+    // Use the start of the next day as the exclusive upper bound (max_ts)
+    const maxJSTimestamp = nextLocalDayStart.getTime();
+
+    // convert JS time (milliseconds) to seconds
+    const maxTimestampInSeconds = Math.round(maxJSTimestamp / 1000);
+
+    setSearchParams({ max_ts: maxTimestampInSeconds.toString() });
   };
 
   let allListenables = listens;

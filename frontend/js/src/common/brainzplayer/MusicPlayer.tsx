@@ -64,6 +64,7 @@ function PlaybackControlButton(props: PlaybackControlButtonProps) {
         disabled ? "disabled" : ""
       }`}
       title={title}
+      aria-label={title}
       onClick={disabled ? noop : action}
       type="button"
       tabIndex={0}

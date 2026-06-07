@@ -125,9 +125,13 @@
 
   .timestamp {
     margin-top: 1em;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+
     > h5 {
       font-weight: 700;
       font-size: 16px;
+      margin-bottom: 1em;
     }
   }
   .timestamp-active {
@@ -144,19 +148,32 @@
     display: flex;
     flex-wrap: wrap;
     gap: 1em;
-    align-items: flex-end;
+    align-items: center;
+
+    > * {
+      flex: auto;
+    }
+
     .timestamp-date-picker {
-      margin-left: auto;
-      margin-right: auto;
+      align-self: stretch;
+      .react-datetime-picker__wrapper {
+        font-size: 1.4rem;
+        padding: 0.25em 0.5em;
+        border: 1px solid $gray-400;
+        border-radius: 4px;
+      }
     }
     .pill {
-      min-width: 7em;
       margin: 0;
     }
-    label + label {
-      margin-left: 1.3em;
+
+    @media (min-width: 576px) {
+      .timestamp-date-picker {
+        flex: 2 0 auto;
+      }
     }
   }
+
   .add-album-track {
     display: flex;
     gap: 1em;

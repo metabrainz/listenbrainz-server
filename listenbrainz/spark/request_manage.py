@@ -6,11 +6,10 @@ import click
 import orjson
 from click import UsageError
 from dateutil.relativedelta import relativedelta, MO
-from kombu import Connection
 from kombu.entity import PERSISTENT_DELIVERY_MODE, Exchange
 
+from listenbrainz.rabbitmq import create_rabbitmq_connection
 from listenbrainz.troi.weekly_playlists import get_users_for_weekly_playlists
-from listenbrainz.utils import get_fallback_connection_name
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.webserver import create_app
 
@@ -69,16 +68,9 @@ def send_request_to_spark_cluster(query, **params):
     app = create_app()
     with app.app_context():
         message = _prepare_query_message(query, **params)
-        connection = Connection(
-            hostname=app.config["RABBITMQ_HOST"],
-            userid=app.config["RABBITMQ_USERNAME"],
-            port=app.config["RABBITMQ_PORT"],
-            password=app.config["RABBITMQ_PASSWORD"],
-            virtual_host=app.config["RABBITMQ_VHOST"],
-            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
-        )
+        connection = create_rabbitmq_connection(app.config)
         producer = connection.Producer()
-        spark_request_exchange = Exchange(app.config["SPARK_REQUEST_EXCHANGE"], "fanout", durable=False)
+        spark_request_exchange = Exchange(app.config["SPARK_REQUEST_EXCHANGE"], "fanout", durable=True)
         producer.publish(
             message,
             routing_key="",
@@ -309,7 +301,7 @@ def parse_list(ctx, param, value):
 def request_model(rank, itr, lmbda, alpha, use_transformed_listencounts):
     """ Send the cluster a request to train the model.
 
-    For more details refer to https://spark.apache.org/docs/2.1.0/mllib-collaborative-filtering.html
+    For more details refer to https://spark.apache.org/docs/latest/mllib-collaborative-filtering.html
     """
     params = {
         'ranks': rank,
@@ -461,27 +453,33 @@ def request_yim_similar_users(year: int):
 @cli.command(name="request_yim_top_missed_recordings")
 @click.option("--year", type=int, help="Year for which to generate the playlists",
               default=date.today().year)
-def request_yim_top_missed_recordings(year: int):
+@click.option("--export-to-spotify/--no-export-to-spotify", is_flag=True, default=True,
+              help="Whether to export the generated playlists to Spotify.")
+def request_yim_top_missed_recordings(year: int, export_to_spotify: bool):
     """ Send the cluster a request to generate tracks of the year data and then
      once the data has been imported generate YIM playlists. """
-    send_request_to_spark_cluster("year_in_music.top_missed_recordings", year=year)
+    send_request_to_spark_cluster("year_in_music.top_missed_recordings", year=year, export_to_spotify=export_to_spotify)
 
 
 @cli.command(name="request_yim_top_discoveries")
 @click.option("--year", type=int, help="Year for which to generate the playlists",
               default=date.today().year)
-def request_yim_top_discoveries(year: int):
+@click.option("--export-to-spotify/--no-export-to-spotify", is_flag=True, default=True,
+              help="Whether to export the generated playlists to Spotify.")
+def request_yim_top_discoveries(year: int, export_to_spotify: bool):
     """ Send the cluster a request to generate tracks of the year data and then
      once the data has been imported generate YIM playlists. """
-    send_request_to_spark_cluster("year_in_music.top_discoveries", year=year)
+    send_request_to_spark_cluster("year_in_music.top_discoveries", year=year, export_to_spotify=export_to_spotify)
 
 
 @cli.command(name="request_year_in_music")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
 @click.option("--import-pg-tables/--no-import-pg-tables", is_flag=True, default=True, help="whether to import the pg tables before generating the stats.")
+@click.option("--export-to-spotify/--no-export-to-spotify", is_flag=True, default=True,
+              help="Whether to export the generated playlists to Spotify.")
 @click.pass_context
-def request_year_in_music(ctx, year: int, import_pg_tables: bool):
+def request_year_in_music(ctx, year: int, import_pg_tables: bool, export_to_spotify: bool):
     """ Send the cluster a request to generate all year in music statistics. """
     send_request_to_spark_cluster("echo.echo", message={"year": year, "action": "year_in_music_start"})
     if import_pg_tables:
@@ -498,8 +496,8 @@ def request_year_in_music(ctx, year: int, import_pg_tables: bool):
     ctx.invoke(request_yim_similar_users, year=year)
     ctx.invoke(request_yim_new_artists_discovered, year=year)
     ctx.invoke(request_yim_listening_time, year=year)
-    ctx.invoke(request_yim_top_missed_recordings, year=year)
-    ctx.invoke(request_yim_top_discoveries, year=year)
+    ctx.invoke(request_yim_top_missed_recordings, year=year, export_to_spotify=export_to_spotify)
+    ctx.invoke(request_yim_top_discoveries, year=year, export_to_spotify=export_to_spotify)
     send_request_to_spark_cluster("echo.echo", message={"year": year, "action": "year_in_music_end"})
 
 

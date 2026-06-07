@@ -66,6 +66,7 @@ class Listen(object):
         'origin_url',
         'music_service',
         'music_service_name',
+        'label',
     )
 
     TOP_LEVEL_KEYS = (
@@ -81,16 +82,16 @@ class Listen(object):
         self.user_name = user_name
 
         # determine the type of timestamp and do the right thing
-        if isinstance(timestamp, int) or isinstance(timestamp, float):
-            self.ts_since_epoch = int(timestamp)
-            self.timestamp = datetime.fromtimestamp(self.ts_since_epoch, timezone.utc)
-        else:
-            if timestamp:
+        if timestamp:
+            if isinstance(timestamp, datetime):
                 self.timestamp = timestamp
                 self.ts_since_epoch = int(self.timestamp.timestamp())
             else:
-                self.timestamp = None
-                self.ts_since_epoch = None
+                self.ts_since_epoch = int(timestamp)
+                self.timestamp = datetime.fromtimestamp(self.ts_since_epoch, timezone.utc)
+        else:
+            self.timestamp = None
+            self.ts_since_epoch = None
 
         self.recording_msid = recording_msid
         self.inserted_timestamp = inserted_timestamp
@@ -131,7 +132,7 @@ class Listen(object):
     def from_timescale(cls, listened_at, user_id, created, recording_msid, track_metadata,
                        recording_mbid=None, recording_name=None, release_mbid=None, artist_mbids=None,
                        ac_names=None, ac_join_phrases=None, user_name=None,
-                       caa_id=None, caa_release_mbid=None):
+                       caa_id=None, caa_release_mbid=None, url_rels=None):
         """Factory to make Listen() objects from a timescale dict"""
         if recording_mbid is not None:
             track_metadata["mbid_mapping"] = {"recording_mbid": str(recording_mbid)}
@@ -157,6 +158,9 @@ class Listen(object):
             if caa_id is not None and caa_release_mbid is not None:
                 track_metadata["mbid_mapping"]["caa_id"] = caa_id
                 track_metadata["mbid_mapping"]["caa_release_mbid"] = caa_release_mbid
+
+            if url_rels:
+                track_metadata["mbid_mapping"]["url_rels"] = url_rels
 
         return cls(
             user_id=user_id,
@@ -231,6 +235,7 @@ class NowPlayingListen:
     def to_api(self):
         return {
             "track_metadata": self.data,
+            'user_name': self.user_name,
             "playing_now": True
         }
 

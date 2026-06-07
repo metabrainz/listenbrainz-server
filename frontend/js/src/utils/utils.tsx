@@ -6,6 +6,7 @@ import { Rating } from "react-simple-star-rating";
 import { toast } from "react-toastify";
 import { Link } from "react-router";
 import ReactMarkdown from "react-markdown";
+import { formatDuration, intervalToDuration } from "date-fns";
 import SpotifyPlayer from "../common/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../common/brainzplayer/YoutubePlayer";
 import NamePill from "../personal-recommendations/NamePill";
@@ -353,13 +354,14 @@ const removeFeaturingArtists = (artistName: string): string => {
 const performNavidromeSearch = async (
   instanceURL: string,
   authParams: string,
-  query: string
+  query: string,
+  signal?: AbortSignal
 ): Promise<NavidromeTrack | null> => {
   const searchUrl = `${instanceURL}/rest/search3?query=${encodeURIComponent(
     query
   )}&songCount=1&${authParams}`;
 
-  const response = await fetch(searchUrl);
+  const response = await fetch(searchUrl, { signal });
 
   if (!response.ok) {
     let errorBody: any = {};
@@ -392,7 +394,8 @@ const searchForNavidromeTrack = async (
   instanceURL: string,
   authParams: string,
   trackName?: string,
-  artistName?: string
+  artistName?: string,
+  signal?: AbortSignal
 ): Promise<NavidromeTrack | null> => {
   if (!instanceURL || !authParams) {
     throw new Error(
@@ -410,7 +413,8 @@ const searchForNavidromeTrack = async (
     const result = await performNavidromeSearch(
       instanceURL,
       authParams,
-      fullQuery
+      fullQuery,
+      signal
     );
     if (result) {
       return result;
@@ -422,7 +426,8 @@ const searchForNavidromeTrack = async (
     const fallbackResult = await performNavidromeSearch(
       instanceURL,
       authParams,
-      cleanedQuery
+      cleanedQuery,
+      signal
     );
     if (fallbackResult) {
       return fallbackResult;
@@ -430,6 +435,11 @@ const searchForNavidromeTrack = async (
 
     return null;
   } catch (error) {
+    // Allow AbortError to pass through for caller to handle
+    if (error.name === "AbortError") {
+      throw error;
+    }
+
     if (
       error.message ===
         "Missing Navidrome instance URL or authentication parameters" ||
@@ -719,6 +729,11 @@ const preciseTimestamp = (
     default:
       return `${timeago.ago(listened_at)}`;
   }
+};
+const formatSecondsDuration = (seconds: number): string => {
+  return formatDuration(intervalToDuration({ start: 0, end: seconds * 1000 }), {
+    format: ["months", "days", "hours", "minutes"],
+  });
 };
 // recieves or unix epoch timestamp int or ISO datetime string
 const fullLocalizedDateFromTimestampOrISODate = (
@@ -1163,27 +1178,51 @@ const getAlbumArtFromReleaseMBID = async (
   return undefined;
 };
 
+const fetchSpotifyTrackInfo = async (
+  spotifyTrackId: string,
+  accessToken: string
+): Promise<Response | undefined> => {
+  try {
+    return await fetch(`https://api.spotify.com/v1/tracks/${spotifyTrackId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+  } catch (error) {
+    return undefined;
+  }
+};
+
 const getAlbumArtFromSpotifyTrackID = async (
   spotifyTrackID: string,
   spotifyUser?: SpotifyUser
 ): Promise<string | undefined> => {
-  const APIBaseURI = "https://api.spotify.com/v1";
   if (!spotifyUser || !spotifyTrackID) {
     return undefined;
   }
-  try {
-    const response = await fetch(`${APIBaseURI}/tracks/${spotifyTrackID}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${spotifyUser?.access_token}`,
-      },
-    });
-    if (response.ok) {
+  let response = await fetchSpotifyTrackInfo(
+    spotifyTrackID,
+    spotifyUser.access_token!!
+  );
+  if (response?.status === 401) {
+    try {
+      const newToken = await APIServiceInstance.refreshSpotifyToken();
+      if (newToken) {
+        response = await fetchSpotifyTrackInfo(spotifyTrackID, newToken);
+      }
+    } catch (error) {
+      return undefined;
+    }
+  }
+
+  if (response?.ok) {
+    try {
       const track: SpotifyTrack = await response.json();
       return track.album?.images?.[0]?.url;
+    } catch (error) {
+      return undefined;
     }
-  } catch (error) {
-    return undefined;
   }
   return undefined;
 };
@@ -1206,10 +1245,11 @@ const getAlbumArtFromListenMetadataKey = (
     listen.track_metadata?.additional_info?.release_mbid;
   const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
   const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
+  const releaseGroupMbid = getReleaseGroupMBID(listen);
 
-  return `ca:${userSubmittedReleaseMBID ?? ""}:${caaId ?? ""}:${
-    caaReleaseMbid ?? ""
-  }`;
+  return `ca:${userSubmittedReleaseMBID ?? releaseGroupMbid ?? ""}:${
+    caaId ?? ""
+  }:${caaReleaseMbid ?? releaseGroupMbid ?? ""}`;
 };
 
 const getAlbumArtFromListenMetadata = async (
@@ -1225,7 +1265,13 @@ const getAlbumArtFromListenMetadata = async (
     SpotifyPlayer.hasPermissions(spotifyUser)
   ) {
     const trackID = SpotifyPlayer.getSpotifyTrackIDFromListen(listen);
-    return getAlbumArtFromSpotifyTrackID(trackID, spotifyUser);
+    const spotifyAlbumArt = await getAlbumArtFromSpotifyTrackID(
+      trackID,
+      spotifyUser
+    );
+    if (spotifyAlbumArt) {
+      return spotifyAlbumArt;
+    }
   }
   /** Could not load image from music service, fetching from CoverArtArchive if MBID is available */
   // directly access additional_info.release_mbid instead of using getReleaseMBID because we only want
@@ -1237,6 +1283,8 @@ const getAlbumArtFromListenMetadata = async (
     listen.track_metadata?.additional_info?.release_group_mbid;
   const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
   const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
+  const mappingReleaseGroupMbid =
+    listen.track_metadata?.mbid_mapping?.release_group_mbid;
   if (userSubmittedReleaseMBID || userSubmittedReleaseGroupMBID) {
     // try getting the cover art using user submitted release mbid. if user submitted release mbid
     // does not have a cover art and the mapper matched to a different release, try to fallback to
@@ -1254,6 +1302,15 @@ const getAlbumArtFromListenMetadata = async (
   // user submitted release mbids not found, check if there is a match from mbid mapper.
   if (caaId && caaReleaseMbid) {
     return generateAlbumArtThumbnailLink(caaId, caaReleaseMbid);
+  }
+  // Fallback: use the release group MBID from the automatic mapping, if available
+  if (mappingReleaseGroupMbid) {
+    const releaseGroupAlbumArt = await getAlbumArtFromReleaseGroupMBID(
+      mappingReleaseGroupMbid
+    );
+    if (releaseGroupAlbumArt) {
+      return releaseGroupAlbumArt;
+    }
   }
   /* We are putting Youtube thumbnails as last resort fallback as the quality
   and format is usually not very good, user preferring proper cover art. */
@@ -1415,6 +1472,7 @@ export {
   getAlbumLink,
   formatWSMessageToListen,
   preciseTimestamp,
+  formatSecondsDuration,
   fullLocalizedDateFromTimestampOrISODate,
   convertDateToUnixTimestamp,
   getPageProps,

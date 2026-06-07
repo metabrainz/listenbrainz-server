@@ -123,7 +123,7 @@ export default function ListenCard(props: ListenCardProps) {
     APIService,
     currentUser,
     userPreferences,
-    spotifyAuth
+    spotifyAuth,
   } = React.useContext(GlobalAppContext);
   const isMobile = useMediaQuery("(max-width: 480px)");
 
@@ -287,15 +287,23 @@ export default function ListenCard(props: ListenCardProps) {
   const renderBrainzplayer =
     userPreferences?.brainzplayer?.brainzplayerEnabled ?? true;
 
+  const isCurrentUsersListen =
+    !!currentUser?.name && displayListen.user_name === currentUser.name;
   let timeStampForDisplay;
   if (customTimestamp) {
     timeStampForDisplay = customTimestamp;
   } else if (displayListen.playing_now) {
     timeStampForDisplay = (
       <span className="listen-time">
-        <Link to="/listening-now/">
-          <FontAwesomeIcon icon={faMusic as IconProp} /> Listening now &#8212;
-        </Link>
+        {isCurrentUsersListen ? (
+          <Link to="/listening-now/">
+            <FontAwesomeIcon icon={faMusic as IconProp} /> Listening now &#8212;
+          </Link>
+        ) : (
+          <>
+            <FontAwesomeIcon icon={faMusic as IconProp} /> Listening now &#8212;
+          </>
+        )}
       </span>
     );
   } else {
@@ -422,13 +430,17 @@ export default function ListenCard(props: ListenCardProps) {
                         text="Play Next"
                         icon={faPlay}
                         title="Play Next"
-                        action={addListenToTopOfQueue}
+                        action={() => {
+                          addListenToTopOfQueue(listenProp);
+                        }}
                       />
                       <ListenControl
                         text="Add to Queue"
                         icon={faPlusCircle}
                         title="Add to Queue"
-                        action={addListenToBottomOfQueue}
+                        action={() => {
+                          addListenToBottomOfQueue(listenProp);
+                        }}
                       />
                     </>
                   )}

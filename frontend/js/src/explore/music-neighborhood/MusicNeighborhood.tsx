@@ -145,21 +145,31 @@ export default function MusicNeighborhood() {
   const fetchArtistInfo = React.useCallback(
     async (artistMBID: string): Promise<ArtistInfoType> => {
       const [
-        artistInformation,
-        wikipediaData,
-        topRecordingsForArtist,
-        topAlbumsForArtist,
-      ]: [
-        Array<MusicBrainzArtist>,
-        string,
-        Array<RecordingType>,
-        Array<ReleaseGroupType>
-      ] = await Promise.all([
+        artistInformationResult,
+        wikipediaDataResult,
+        topRecordingsResult,
+        topAlbumsResult,
+      ] = await Promise.allSettled([
         APIService.lookupMBArtist(artistMBID, ""),
         APIService.getArtistWikipediaExtract(artistMBID),
         APIService.getTopRecordingsForArtist(artistMBID),
         APIService.getTopReleaseGroupsForArtist(artistMBID),
       ]);
+
+      const artistInformation =
+        artistInformationResult.status === "fulfilled"
+          ? artistInformationResult.value
+          : [];
+      const wikipediaData =
+        wikipediaDataResult.status === "fulfilled"
+          ? wikipediaDataResult.value
+          : "";
+      const topRecordingsForArtist =
+        topRecordingsResult.status === "fulfilled"
+          ? topRecordingsResult.value
+          : [];
+      const topAlbumsForArtist =
+        topAlbumsResult.status === "fulfilled" ? topAlbumsResult.value : [];
 
       const birthAreaData = {
         born: artistInformation[0]?.begin_year || "Unknown",

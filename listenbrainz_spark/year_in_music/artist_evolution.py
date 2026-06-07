@@ -5,7 +5,7 @@ from listenbrainz_spark.year_in_music.utils import setup_listens_for_year
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import read_files_from_HDFS
 
-USERS_PER_MESSAGE = 1000
+USERS_PER_MESSAGE = 500
 
 
 def get_artist_evolution_activity(year):

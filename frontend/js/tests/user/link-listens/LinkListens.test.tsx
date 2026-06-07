@@ -3,7 +3,7 @@ import * as React from "react";
 import { HttpResponse, http } from "msw";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SetupServerApi, setupServer } from "msw/node";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import { RouterProvider, createMemoryRouter } from "react-router";
 import userEvent from "@testing-library/user-event";
 import * as missingDataProps from "../../__mocks__/missingMBDataProps.json";
@@ -78,9 +78,7 @@ describe("LinkListensPage", () => {
       },
       false
     );
-    await screen.findByText(
-      textContentMatcher("Link with MusicBrainz")
-    );
+    await screen.findByText(textContentMatcher("Link with MusicBrainz"));
     const albumGroups = await screen.findAllByRole("heading", { level: 3 });
     // 25 groups per page
     // These albums should be grouped and sorted by size before being paginated and displayed
@@ -121,7 +119,11 @@ describe("LinkListensPage", () => {
         exact: false,
       })
     ).toBeNull();
-    await screen.findByText("Broadchurch (Music From The Original TV Series)");
+    await waitFor(async () => {
+      await screen.findByText(
+        "Broadchurch (Music From The Original TV Series)"
+      );
+    });
 
     const prevButton = screen.getByText("Previous", { exact: false });
     await user.click(prevButton);

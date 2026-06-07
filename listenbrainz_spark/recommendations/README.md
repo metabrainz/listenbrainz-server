@@ -72,7 +72,7 @@ The recommendation generation process has been divided into four stages.
 
   By default, alpha = 3.0
 
-  For more information on model parameters refer to the [official documentation](https://spark.apache.org/docs/2.1.0/mllib-collaborative-filtering.html).
+  For more information on model parameters refer to the [official documentation](https://spark.apache.org/docs/latest/mllib-collaborative-filtering.html).
 
 
 - **Stage 3**: Generate candidate sets.

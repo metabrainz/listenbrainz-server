@@ -94,6 +94,7 @@ describe("FreshReleases", () => {
     await waitFor(() => {
       expect(mockFetchUserFreshReleases).toHaveBeenCalledWith(
         "chinmaykunkikar",
+        7,
         true,
         true,
         "release_date"
