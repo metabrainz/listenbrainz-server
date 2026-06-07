@@ -12,6 +12,8 @@ type ReleaseTimelineProps = {
   releases: Array<FreshReleaseItem>;
   order: SortOption;
   direction: SortDirection;
+  releaseCardGridRef?: React.RefObject<HTMLDivElement>;
+  onDraggingChange?: (isDragging: boolean) => void;
 };
 
 interface MappedMark {
@@ -225,13 +227,25 @@ function getAbsoluteTop(el: HTMLElement): number {
 }
 
 export default function ReleaseTimeline(props: ReleaseTimelineProps) {
-  const { releases, order, direction } = props;
+  const {
+    releases,
+    order,
+    direction,
+    onDraggingChange,
+    releaseCardGridRef,
+  } = props;
 
   const [thumbSize, setThumbSize] = React.useState<number>(30);
   const [currentValue, setCurrentValue] = React.useState<number>(0);
   const [mappedMarks, setMappedMarks] = React.useState<MappedMark[]>([]);
   const [isDragging, setIsDragging] = React.useState(false);
   const trackRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (onDraggingChange) {
+      onDraggingChange(isDragging);
+    }
+  }, [isDragging, onDraggingChange]);
 
   const screenMd = useMediaQuery("(max-width: 992px)");
 
@@ -247,7 +261,9 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
 
   React.useEffect(() => {
     const updateThumbSize = () => {
-      const container = document.getElementById("release-card-grids");
+      const container =
+        releaseCardGridRef?.current ||
+        document.getElementById("release-card-grids");
       if (!container || !trackRef.current) return;
       const trackLength = screenMd
         ? trackRef.current.offsetWidth
@@ -278,7 +294,9 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
 
   const scrollToPosition = React.useCallback(
     (percent: number, behavior: ScrollBehavior = "smooth") => {
-      const element = document.getElementById("release-card-grids");
+      const element =
+        releaseCardGridRef?.current ||
+        document.getElementById("release-card-grids");
       if (!element) return;
       const containerTop = getAbsoluteTop(element);
       const pageMaxScroll = Math.max(
@@ -342,7 +360,9 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
 
   React.useEffect(() => {
     const handleScroll = debounce(() => {
-      const container = document.getElementById("release-card-grids");
+      const container =
+        releaseCardGridRef?.current ||
+        document.getElementById("release-card-grids");
       if (!container || isDragging) return;
       const containerTop = getAbsoluteTop(container);
       const pageMaxScroll = Math.max(
