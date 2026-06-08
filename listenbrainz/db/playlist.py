@@ -936,7 +936,7 @@ def insert_recordings(db_conn, ts_conn, playlist_id: int, recordings: List[model
                FROM unnest(
                         :playlist_ids,
                         :positions,
-                        :mbids::uuid[],
+                        CAST(:mbids AS uuid[]),
                         :added_by_ids,
                         :created_times
                     )
