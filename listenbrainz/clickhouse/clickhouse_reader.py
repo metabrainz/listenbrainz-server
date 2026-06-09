@@ -86,15 +86,17 @@ class ClickHouseReader(ConsumerMixin):
 
         try:
             with self.app.app_context():
-                handler(response)
-        except Exception as e:
-            self.app.logger.error(
-                "Error in ClickHouse handler for '%s': %s",
-                response_type, str(e), exc_info=True
-            )
-            sentry_sdk.capture_exception(e)
+                try:
+                    handler(response)
+                except Exception as e:
+                    self.app.logger.error(
+                        "Error in ClickHouse handler for '%s': %s",
+                        response_type, str(e), exc_info=True
+                    )
+                    sentry_sdk.capture_exception(e)
+                finally:
+                    db_conn.rollback()
         finally:
-            db_conn.rollback()
             message.ack()
 
     def get_consumers(self, _, channel):
