@@ -32,7 +32,9 @@ class FakeClient:
         self.commands = []
         self.queries = []
         self.stream_calls = []
+        self.stream_parameters = []
         self.row_count = 0
+        self.user_ids = []
         self.max_created = None
         self.period_bounds = (date(2026, 1, 1), date(2026, 12, 31))
         self.stream_blocks_by_marker: dict[str, list[list[tuple]]] = {}
@@ -48,6 +50,8 @@ class FakeClient:
                 self.result_rows = rows
                 self.first_row = rows[0] if rows else None
 
+        if "distinct user_id" in sql.lower():
+            return _Result([(uid,) for uid in self.user_ids])
         if "count()" in sql.lower() or "select count(" in sql.lower():
             return _Result([(self.row_count,)])
         if "max(created)" in sql:
@@ -61,6 +65,7 @@ class FakeClient:
     @contextmanager
     def query_row_block_stream(self, sql, parameters=None):
         self.stream_calls.append(sql)
+        self.stream_parameters.append(parameters or {})
         marker = next(
             (m for m in self.stream_blocks_by_marker if m in sql),
             None,
@@ -133,6 +138,15 @@ class BulkIntermediateTableSqlTestCase(unittest.TestCase):
         sql = BulkStatsCacheManager(CacheConfig(), RECORDING_CONFIG).build_top_n_query("all_time")
         self.assertIn("d.artist_name != ''", sql)
 
+    def test_top_n_query_adds_user_filter_only_when_chunked(self):
+        manager = BulkStatsCacheManager(CacheConfig(), RECORDING_CONFIG)
+
+        self.assertNotIn("user_id IN", manager.build_top_n_query("all_time"))
+        self.assertIn(
+            "user_id IN {user_ids:Array(UInt32)}",
+            manager.build_top_n_query("all_time", chunked=True),
+        )
+
 
 class BulkRunFullRefreshTestCase(unittest.TestCase):
 
@@ -189,6 +203,46 @@ class BulkRunFullRefreshTestCase(unittest.TestCase):
             self.assertEqual(data_msg["entity"], "artists")
             self.assertIn(data_msg["stats_range"], TIME_RANGES)
             self.assertEqual(len(data_msg["data"]), 2)
+
+    def test_all_time_chunking_issues_one_ranking_query_per_user_chunk(self):
+        manager = BulkStatsCacheManager(CacheConfig(top_n=10), ARTIST_CONFIG)
+        client = FakeClient()
+        client.row_count = 5
+        client.user_ids = [1, 2, 3, 4, 5]
+        client.max_created = datetime(2026, 5, 27, tzinfo=timezone.utc)
+        sample_block = [(1, [("mbid-a", "Artist A", 5)])]
+        client.stream_blocks_by_marker["count_all_time"] = [sample_block]
+        manager.ch_client = client
+
+        list(manager.run_bulk_full_refresh(all_time_user_chunk_size=2))
+
+        all_time_calls = [
+            (sql, params)
+            for sql, params in zip(client.stream_calls, client.stream_parameters)
+            if "user_id IN" in sql
+        ]
+        # 5 users in chunks of 2 -> 3 ranking queries, each scoped to its chunk.
+        self.assertEqual(len(all_time_calls), 3)
+        self.assertEqual(
+            [params["user_ids"] for _, params in all_time_calls],
+            [[1, 2], [3, 4], [5]],
+        )
+        # Other time ranges are not chunked.
+        non_chunked = [sql for sql in client.stream_calls if "user_id IN" not in sql]
+        self.assertEqual(len(non_chunked), len(TIME_RANGES) - 1)
+
+    def test_all_time_not_chunked_when_chunk_size_unset(self):
+        manager = BulkStatsCacheManager(CacheConfig(top_n=10), RECORDING_CONFIG)
+        client = FakeClient()
+        client.row_count = 5
+        client.user_ids = [1, 2, 3, 4, 5]
+        client.max_created = datetime(2026, 5, 27, tzinfo=timezone.utc)
+        manager.ch_client = client
+
+        list(manager.run_bulk_full_refresh())
+
+        self.assertEqual(len(client.stream_calls), len(TIME_RANGES))
+        self.assertFalse(any("user_id IN" in sql for sql in client.stream_calls))
 
     def test_intermediate_table_dropped_even_when_streaming_raises(self):
         manager = BulkStatsCacheManager(CacheConfig(), RECORDING_CONFIG)
