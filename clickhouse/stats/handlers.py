@@ -22,6 +22,16 @@ from clickhouse.stats.refresh_metadata_cache import refresh_metadata_caches, PG_
 
 logger = logging.getLogger(__name__)
 
+# Per-entity user chunk size for the memory-heavy all_time ranking in bulk
+# refreshes. The all_time window scan is ranked in user chunks to bound peak
+# memory. Recordings have far more distinct (user, entity) pairs than artists or
+# release groups, so they use a smaller chunk.
+ALL_TIME_USER_CHUNK_SIZES = {
+    'artists': 1000,
+    'recordings': 250,
+    'release_groups': 1000,
+}
+
 
 def _raise_on_dump_errors(result: dict) -> None:
     errors = result.get('errors') or []
@@ -288,6 +298,7 @@ def run_bulk_full_stats_refresh(
             for message in manager.run_bulk_full_refresh(
                 message_batch_size=message_batch_size,
                 user_flush_size=user_flush_size,
+                all_time_user_chunk_size=ALL_TIME_USER_CHUNK_SIZES.get(entity_type),
             ):
                 yield message
                 message_count += 1

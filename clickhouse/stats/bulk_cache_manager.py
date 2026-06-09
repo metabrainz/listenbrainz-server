@@ -92,14 +92,21 @@ class BulkStatsCacheManager(StatsCacheManager):
         )
         return result.first_row[0]
 
-    def build_top_n_query(self, time_range: str) -> str:
-        """Top-N ranking query over the intermediate table for one time_range."""
+    def build_top_n_query(self, time_range: str, chunked: bool = False) -> str:
+        """Top-N ranking query over the intermediate table for one time_range.
+
+        When ``chunked`` is True the ranking is restricted to the user_ids
+        passed at query time via the ``user_ids`` parameter, so callers can
+        process the all_time range in bounded user chunks instead of ranking
+        every user in a single memory-heavy window scan.
+        """
         ec = self.entity_config
         count_column = f"count_{time_range}"
         select_fields = self._build_select_fields()
         dimension_columns = self._build_dimension_columns()
         tuple_fields = self._build_tuple_fields()
         array_map_indices = self._build_array_map_indices()
+        user_filter = "AND user_id IN {user_ids:Array(UInt32)}" if chunked else ""
 
         return f"""
             WITH ranked AS (
@@ -111,7 +118,7 @@ class BulkStatsCacheManager(StatsCacheManager):
                         PARTITION BY user_id ORDER BY {count_column} DESC
                     ) AS rn
                 FROM {self.intermediate_table_name}
-                WHERE {count_column} > 0
+                WHERE {count_column} > 0 {user_filter}
             ),
             top_n AS (
                 SELECT user_id, {ec.id_column}, listen_count
@@ -150,15 +157,29 @@ class BulkStatsCacheManager(StatsCacheManager):
             ORDER BY user_id
         """
 
-    def stream_top_n_for_range(self, time_range: str, limit: int):
-        """Yield (user_id, entity_tuples) rows from the top-N ranking for a time_range."""
-        query = self.build_top_n_query(time_range)
+    def stream_top_n_for_range(self, time_range: str, limit: int, user_ids: list[int] | None = None):
+        """Yield (user_id, entity_tuples) rows from the top-N ranking for a time_range.
+
+        If ``user_ids`` is provided the ranking is restricted to those users,
+        letting callers process a single time_range in bounded chunks.
+        """
+        query = self.build_top_n_query(time_range, chunked=user_ids is not None)
+        parameters = {"limit": limit}
+        if user_ids is not None:
+            parameters["user_ids"] = user_ids
         with self.ch_client.query_row_block_stream(
-            query, parameters={"limit": limit}
+            query, parameters=parameters
         ) as stream:
             for block in stream:
                 for row in block:
                     yield row[0], row[1]
+
+    def get_intermediate_user_ids(self) -> list[int]:
+        """Return the sorted distinct user_ids present in the intermediate table."""
+        result = self.ch_client.query(
+            f"SELECT DISTINCT user_id FROM {self.intermediate_table_name} ORDER BY user_id"
+        )
+        return [row[0] for row in result.result_rows]
 
     def _flush_user_batch(
         self,
@@ -183,10 +204,46 @@ class BulkStatsCacheManager(StatsCacheManager):
             yield msg
         self.update_user_cache_state(list(user_batch.keys()), time_range, max_created)
 
+    def _accumulate_and_flush(
+        self,
+        rows,
+        time_range: str,
+        from_ts: int,
+        to_ts: int,
+        database: str,
+        message_batch_size: int,
+        user_flush_size: int,
+        max_created,
+    ) -> Iterator[dict]:
+        """Accumulate streamed (user_id, tuples) rows and emit flushed messages.
+
+        Buffers up to ``user_flush_size`` users before flushing, then flushes
+        any remainder, so a single call fully drains ``rows``.
+        """
+        ec = self.entity_config
+        user_batch: dict[int, list[dict]] = {}
+        for user_id, entity_tuples in rows:
+            user_batch[user_id] = [
+                _format_entity_tuple(t, ec.dimension_fields)
+                for t in entity_tuples
+            ]
+            if len(user_batch) >= user_flush_size:
+                yield from self._flush_user_batch(
+                    time_range, user_batch, from_ts, to_ts,
+                    database, message_batch_size, max_created,
+                )
+                user_batch = {}
+
+        yield from self._flush_user_batch(
+            time_range, user_batch, from_ts, to_ts,
+            database, message_batch_size, max_created,
+        )
+
     def run_bulk_full_refresh(
         self,
         message_batch_size: int = 100,
         user_flush_size: int = 5000,
+        all_time_user_chunk_size: int | None = None,
     ) -> Iterator[dict]:
         """Stream a full refresh via one daily-table scan + per-time-range ranking.
 
@@ -199,6 +256,10 @@ class BulkStatsCacheManager(StatsCacheManager):
             user_flush_size: Users to accumulate from the streaming result before
                 emitting messages and updating cache state. Decouples ClickHouse
                 block size from RMQ message size.
+            all_time_user_chunk_size: If set, the all_time range is ranked in
+                chunks of this many user_ids per ClickHouse query instead of one
+                window scan over all users. Bounds peak memory for large entities
+                (e.g. recordings); other time ranges are unaffected.
         """
         ec = self.entity_config
         logger.info("Starting bulk full refresh for %s...", ec.entity_type)
@@ -237,34 +298,35 @@ class BulkStatsCacheManager(StatsCacheManager):
 
                 self.clear_user_cache_state_for_time_range(time_range)
 
-                user_batch: dict[int, list[dict]] = {}
                 data_messages = 0
                 stream_start = time.perf_counter()
 
-                for user_id, entity_tuples in self.stream_top_n_for_range(
-                    time_range, self.config.top_n,
-                ):
-                    user_batch[user_id] = [
-                        _format_entity_tuple(t, ec.dimension_fields)
-                        for t in entity_tuples
+                if time_range == 'all_time' and all_time_user_chunk_size:
+                    user_ids = self.get_intermediate_user_ids()
+                    logger.info(
+                        "  all_time: ranking %d users in chunks of %d",
+                        len(user_ids), all_time_user_chunk_size,
+                    )
+                    row_sources = (
+                        self.stream_top_n_for_range(
+                            time_range, self.config.top_n,
+                            user_ids=user_ids[i:i + all_time_user_chunk_size],
+                        )
+                        for i in range(0, len(user_ids), all_time_user_chunk_size)
+                    )
+                else:
+                    row_sources = [
+                        self.stream_top_n_for_range(time_range, self.config.top_n)
                     ]
-                    if len(user_batch) >= user_flush_size:
-                        for msg in self._flush_user_batch(
-                            time_range, user_batch, from_ts, to_ts,
-                            database, message_batch_size, max_created,
-                        ):
-                            yield msg
-                            data_messages += 1
-                            total_messages += 1
-                        user_batch = {}
 
-                for msg in self._flush_user_batch(
-                    time_range, user_batch, from_ts, to_ts,
-                    database, message_batch_size, max_created,
-                ):
-                    yield msg
-                    data_messages += 1
-                    total_messages += 1
+                for rows in row_sources:
+                    for msg in self._accumulate_and_flush(
+                        rows, time_range, from_ts, to_ts,
+                        database, message_batch_size, user_flush_size, max_created,
+                    ):
+                        yield msg
+                        data_messages += 1
+                        total_messages += 1
 
                 logger.info(
                     "  %s: %d data messages in %.1fs",
