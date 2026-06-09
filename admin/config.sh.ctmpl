@@ -40,6 +40,13 @@ RSYNC_SPARK_KEY='{{template "KEY" "user_home"}}/.ssh/rsync-listenbrainz-dumps-sp
 RSYNC_MBCANONICAL_KEY='{{template "KEY" "user_home"}}/.ssh/rsync-listenbrainz-dumps-canonical'
 RSYNC_SAMPLE_KEY='{{template "KEY" "user_home"}}/.ssh/rsync-listenbrainz-dumps-sample'
 
+# StaticBrainz static asset upload configuration.
+STATICBRAINZ_SERVERS="{{keyOrDefault "docker-server-configs/LB/create-dumps-config.json/staticbrainz_servers" ""}}"
+RSYNC_STATICBRAINZ_KEY='{{template "KEY" "user_home"}}/.ssh/rsync-listenbrainz-staticbrainz'
+STATICBRAINZ_SOURCE_DIR="{{keyOrDefault "docker-server-configs/LB/create-dumps-config.json/staticbrainz_source_dir" "/static"}}"
+STATICBRAINZ_DESTINATION_DIR="{{keyOrDefault "docker-server-configs/LB/create-dumps-config.json/staticbrainz_destination_dir" "./"}}"
+STATICBRAINZ_PRECOMPRESS="{{keyOrDefault "docker-server-configs/LB/create-dumps-config.json/staticbrainz_precompress" "1"}}"
+
 # Check to make sure that this container is the prod cron container, otherwise never rsync anything!
 # these variables may also be read by the dump command in python so export to ensure availability
 export DEPLOY_ENV="{{ (env "DEPLOY_ENV") }}"
