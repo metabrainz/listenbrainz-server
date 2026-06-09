@@ -9,13 +9,13 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, target-densityDpi=device-dpi, minimal-ui' />
 
-  <link rel="icon" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16.png') }}" type="image/png" />
-  <link rel="icon" sizes="256x256" href="{{ url_for('static', filename='img/favicon-256.png') }}" type="image/png" />
-  <link rel="icon" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32.png') }}" type="image/png" />
-  <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" sizes="48x48">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
-  <link rel="manifest" href="{{ url_for('static', filename='img/site.webmanifest') }}">
-  <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml" sizes="any">
+  <link rel="icon" sizes="16x16" href="{{ static_url('img/favicon-16.png') }}" type="image/png" />
+  <link rel="icon" sizes="256x256" href="{{ static_url('img/favicon-256.png') }}" type="image/png" />
+  <link rel="icon" sizes="32x32" href="{{ static_url('img/favicon-32.png') }}" type="image/png" />
+  <link rel="icon" href="{{ static_url('img/favicon.ico') }}" sizes="48x48">
+  <link rel="apple-touch-icon" href="{{ static_url('img/apple-touch-icon.png') }}">
+  <link rel="manifest" href="{{ static_url('img/site.webmanifest') }}">
+  <link rel="icon" href="{{ static_url('img/favicon.svg') }}" type="image/svg+xml" sizes="any">
   
   {# The css file has a .less extension in the manifest file entry (due to its original name in Webpack entry) #}
   <link href="{{ get_static_path('vendors.scss') }}" rel="stylesheet" media="screen" />
@@ -47,7 +47,7 @@
       <div class="row align-items-baseline">
         <div class="col-sm-12 col-md-6">
           <h3>
-            <img src="{{ url_for('static', filename='img/listenbrainz-logo.svg') }}" width="180" alt="ListenBrainz"/>
+            <img src="{{ static_url('img/listenbrainz-logo.svg') }}" width="180" alt="ListenBrainz"/>
           </h3>
           <br/>
           <p`>
@@ -69,28 +69,28 @@
           <h3 class="text-brand text-body">Useful Links</h3>
           <ul class="list-unstyled">
             <li>
-              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <a href="https://metabrainz.org/donate" target="_blank" rel="noopener noreferrer" >Donate</a>
+              <img src="{{ static_url('img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <a href="https://metabrainz.org/donate" target="_blank" rel="noopener noreferrer" >Donate</a>
             </li>
             <li>
-              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <a href="https://wiki.musicbrainz.org/Main_Page" target="_blank" rel="noopener noreferrer" >Wiki</a>
+              <img src="{{ static_url('img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <a href="https://wiki.musicbrainz.org/Main_Page" target="_blank" rel="noopener noreferrer" >Wiki</a>
             </li>
             <li>
-              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <a href="https://community.metabrainz.org/" target="_blank" rel="noopener noreferrer" >Community</a>
+              <img src="{{ static_url('img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <a href="https://community.metabrainz.org/" target="_blank" rel="noopener noreferrer" >Community</a>
             </li>
             <li>
-              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <a href="https://blog.metabrainz.org/" target="_blank" rel="noopener noreferrer" >Blog</a>
+              <img src="{{ static_url('img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <a href="https://blog.metabrainz.org/" target="_blank" rel="noopener noreferrer" >Blog</a>
             </li>
             <li>
-              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <a href="https://www.redbubble.com/people/metabrainz/shop" target="_blank" rel="noopener noreferrer" >Shop</a>
+              <img src="{{ static_url('img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <a href="https://www.redbubble.com/people/metabrainz/shop" target="_blank" rel="noopener noreferrer" >Shop</a>
             </li>
             <li>
-              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <a href="https://metabrainz.org/" target="_blank" rel="noopener noreferrer" >MetaBrainz</a>
+              <img src="{{ static_url('img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <a href="https://metabrainz.org/" target="_blank" rel="noopener noreferrer" >MetaBrainz</a>
             </li>
             <li class="visible-xs">
-              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <a href="https://github.com/metabrainz/listenbrainz-server" target="_blank" rel="noopener noreferrer" >Contribute Here</a>
+              <img src="{{ static_url('img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <a href="https://github.com/metabrainz/listenbrainz-server" target="_blank" rel="noopener noreferrer" >Contribute Here</a>
             </li>
             <li class="visible-xs">
-              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <a href="https://tickets.metabrainz.org/" target="_blank" rel="noopener noreferrer" >Bug Tracker</a>
+              <img src="{{ static_url('img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <a href="https://tickets.metabrainz.org/" target="_blank" rel="noopener noreferrer" >Bug Tracker</a>
             </li>
           </ul>
         </div>
@@ -98,22 +98,22 @@
           <h3 class="text-brand text-body">Fellow Projects</h3>
           <ul class="list-unstyled">
             <li>
-              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/>  <img src="{{ url_for('static', filename='img/meb-icons/MusicBrainz.svg') }}" width="18" height="18" alt="MusicBrainz"/> <a href="https://musicbrainz.org/" target="_blank" rel="noopener noreferrer" >MusicBrainz</a>
+              <img src="{{ static_url('img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/>  <img src="{{ static_url('img/meb-icons/MusicBrainz.svg') }}" width="18" height="18" alt="MusicBrainz"/> <a href="https://musicbrainz.org/" target="_blank" rel="noopener noreferrer" >MusicBrainz</a>
             </li>
             <li>
-              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/>  <img src="{{ url_for('static', filename='img/meb-icons/CritiqueBrainz.svg') }}" width="18" height="18" alt="CritiqueBrainz"/> <a href="https://critiquebrainz.org/" target="_blank" rel="noopener noreferrer" >CritiqueBrainz</a>
+              <img src="{{ static_url('img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/>  <img src="{{ static_url('img/meb-icons/CritiqueBrainz.svg') }}" width="18" height="18" alt="CritiqueBrainz"/> <a href="https://critiquebrainz.org/" target="_blank" rel="noopener noreferrer" >CritiqueBrainz</a>
             </li>
             <li class="item-list-a">
-              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <img src="{{ url_for('static', filename='img/meb-icons/Picard.svg') }}" width="18" height="18" alt="Picard"/> <a href="https://picard.musicbrainz.org/" target="_blank" rel="noopener noreferrer" >Picard</a>
+              <img src="{{ static_url('img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <img src="{{ static_url('img/meb-icons/Picard.svg') }}" width="18" height="18" alt="Picard"/> <a href="https://picard.musicbrainz.org/" target="_blank" rel="noopener noreferrer" >Picard</a>
             </li>
             <li>
-              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <img src="{{ url_for('static', filename='img/meb-icons/BookBrainz.svg') }}" width="18" height="18" alt="BookBrainz"/> <a href="https://bookbrainz.org/" target="_blank" rel="noopener noreferrer" >BookBrainz</a>
+              <img src="{{ static_url('img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <img src="{{ static_url('img/meb-icons/BookBrainz.svg') }}" width="18" height="18" alt="BookBrainz"/> <a href="https://bookbrainz.org/" target="_blank" rel="noopener noreferrer" >BookBrainz</a>
             </li>
             <li>
-              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <img src="{{ url_for('static', filename='img/meb-icons/AcousticBrainz.svg') }}" width="18" height="18" alt="AcousticBrainz"/> <a href="https://acousticbrainz.org/" target="_blank" rel="noopener noreferrer" >AcousticBrainz</a>
+              <img src="{{ static_url('img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <img src="{{ static_url('img/meb-icons/AcousticBrainz.svg') }}" width="18" height="18" alt="AcousticBrainz"/> <a href="https://acousticbrainz.org/" target="_blank" rel="noopener noreferrer" >AcousticBrainz</a>
             </li>
             <li>
-              <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <img src="{{ url_for('static', filename='img/meb-icons/CoverArtArchive.svg') }}" width="18" height="18" alt="CoverArtArchive"/> <a href="https://coverartarchive.org" target="_blank" rel="noopener noreferrer" >Cover Art Archive</a>
+              <img src="{{ static_url('img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <img src="{{ static_url('img/meb-icons/CoverArtArchive.svg') }}" width="18" height="18" alt="CoverArtArchive"/> <a href="https://coverartarchive.org" target="_blank" rel="noopener noreferrer" >Cover Art Archive</a>
             </li>
           </ul>
         </div>
@@ -126,7 +126,7 @@
         </div>
         <div class="col-md-6">
           <p class="section-line">
-            Brought to you by <img src="{{ url_for('static', filename='img/meb-icons/MetaBrainz.svg') }}" width="30" height="30" alt="MetaBrainz"/> <span class="color-a"> MetaBrainz Foundation </span>
+            Brought to you by <img src="{{ static_url('img/meb-icons/MetaBrainz.svg') }}" width="30" height="30" alt="MetaBrainz"/> <span class="color-a"> MetaBrainz Foundation </span>
           </p>
         </div>
         <div class="col-md-3 d-none d-md-block hidden-xs">
@@ -141,7 +141,7 @@
   {%- endblock -%}
 
   {%- block scripts -%}
-  <script src="{{ url_for('static', filename='js/lib/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ static_url('js/lib/bootstrap.bundle.min.js') }}"></script>
   {%- endblock -%}
 </body>
 </html>
