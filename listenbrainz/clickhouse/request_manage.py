@@ -20,7 +20,7 @@ def send_request_to_clickhouse(query, **params):
 
         connection = create_rabbitmq_connection(app.config)
 
-        clickhouse_exchange = Exchange(app.config.get("CLICKHOUSE_EXCHANGE", "clickhouse"), "fanout", durable=False)
+        clickhouse_exchange = Exchange(app.config.get("CLICKHOUSE_EXCHANGE", "clickhouse"), "fanout", durable=True)
 
         with connection.Producer() as producer:
             producer.publish(

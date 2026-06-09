@@ -66,7 +66,7 @@ class ClickHouseRequestConsumer(ConsumerMixin):
         self.clickhouse_exchange = Exchange(
             config.CLICKHOUSE_EXCHANGE,
             "fanout",
-            durable=False,
+            durable=True,
         )
         self.clickhouse_queue = Queue(
             config.CLICKHOUSE_QUEUE,
@@ -78,7 +78,7 @@ class ClickHouseRequestConsumer(ConsumerMixin):
         self.clickhouse_result_exchange = Exchange(
             config.CLICKHOUSE_RESULT_EXCHANGE,
             "fanout",
-            durable=False,
+            durable=True,
         )
 
     def get_result(self, request: dict) -> Iterable[dict] | None:
