@@ -9,7 +9,7 @@
 # Optional configuration:
 #   STATICBRAINZ_SOURCE_DIR: local source directory, defaults to /static
 #   STATICBRAINZ_DESTINATION_DIR: remote destination, defaults to ./
-#   STATICBRAINZ_RSYNC_OPTIONS: rsync options, defaults to preserving remote files
+#   STATICBRAINZ_RSYNC_OPTIONS: rsync options, defaults to mirroring the source tree
 #   STATICBRAINZ_PRECOMPRESS: set to 0 to skip gzip sidecar creation
 
 set -euo pipefail
@@ -52,7 +52,7 @@ fi
 
 STATICBRAINZ_SOURCE_DIR=${STATICBRAINZ_SOURCE_DIR:-/static}
 STATICBRAINZ_DESTINATION_DIR=${STATICBRAINZ_DESTINATION_DIR:-./}
-STATICBRAINZ_RSYNC_OPTIONS=${STATICBRAINZ_RSYNC_OPTIONS:---archive --compress}
+STATICBRAINZ_RSYNC_OPTIONS=${STATICBRAINZ_RSYNC_OPTIONS:---recursive --delete --times --compress}
 STATICBRAINZ_PRECOMPRESS=${STATICBRAINZ_PRECOMPRESS:-1}
 
 if [ -z "${STATICBRAINZ_SERVERS:-}" ]; then
