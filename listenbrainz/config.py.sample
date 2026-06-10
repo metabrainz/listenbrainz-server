@@ -190,6 +190,11 @@ SOUNDCLOUD_CLIENT_ID = 'needs a non empty default value for tests, change this'
 SOUNDCLOUD_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
 SOUNDCLOUD_REDIRECT_URI = f'{SERVER_ROOT_URL}/settings/music-services/soundcloud/callback/'
 
+# TIDAL
+TIDAL_CLIENT_ID = 'needs a non empty default value for tests, change this'
+TIDAL_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
+TIDAL_REDIRECT_URI = f'{SERVER_ROOT_URL}/settings/music-services/tidal/callback/'
+
 # CRITIQUEBRAINZ
 CRITIQUEBRAINZ_CLIENT_ID = 'needs a non empty default value for tests, change this'
 CRITIQUEBRAINZ_CLIENT_SECRET = 'needs a non empty default value for tests, change this'

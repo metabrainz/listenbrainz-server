@@ -843,6 +843,7 @@ type GlobalAppProps = {
   appleMusic?: AppleMusicUser;
   funkwhale?: FunkwhaleUser;
   navidrome?: NavidromeUser;
+  tidal?: TidalUser;
   user_preferences?: UserPreferences;
   flair?: Flair;
 };
@@ -893,6 +894,7 @@ const getPageProps = async (): Promise<{
       appleMusic,
       funkwhale,
       navidrome,
+      tidal,
       sentry_traces_sample_rate,
       sentry_dsn,
       user_preferences,
@@ -926,6 +928,7 @@ const getPageProps = async (): Promise<{
       appleAuth: appleMusic,
       funkwhaleAuth: funkwhale,
       navidromeAuth: navidrome,
+      tidalAuth: tidal,
       musicbrainzAuth: {
         ...musicbrainz,
         refreshMBToken: async function refreshMBToken() {

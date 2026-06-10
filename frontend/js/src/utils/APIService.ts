@@ -316,6 +316,10 @@ export default class APIService {
     return this.refreshAccessToken("soundcloud");
   };
 
+  refreshTidalToken = async (): Promise<string> => {
+    return this.refreshAccessToken("tidal");
+  };
+
   refreshYoutubeToken = async (): Promise<string> => {
     return this.refreshAccessToken("youtube");
   };

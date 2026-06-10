@@ -22,6 +22,7 @@ type MusicServicesLoaderData = {
   current_lastfm_permissions: string;
   current_funkwhale_permission: string;
   current_navidrome_permissions: string;
+  current_tidal_permissions: string;
   current_lastfm_settings?: {
     external_user_id?: string;
     latest_listened_at?: string;
@@ -45,6 +46,7 @@ export default function MusicServices() {
     currentUser,
     funkwhaleAuth,
     navidromeAuth,
+    tidalAuth,
   } = React.useContext(GlobalAppContext);
 
   const loaderData = useLoaderData() as MusicServicesLoaderData;
@@ -59,6 +61,7 @@ export default function MusicServices() {
     lastfm: loaderData.current_lastfm_permissions,
     funkwhale: loaderData.current_funkwhale_permission,
     navidrome: loaderData.current_navidrome_permissions,
+    tidal: loaderData.current_tidal_permissions,
     librefm: loaderData.current_librefm_permissions,
   });
 
@@ -137,6 +140,9 @@ export default function MusicServices() {
               navidromeAuth.md5_auth_token = undefined;
               navidromeAuth.salt = undefined;
             }
+            break;
+          case "tidal":
+            if (tidalAuth) tidalAuth.access_token = undefined;
             break;
           default:
             break;
@@ -921,6 +927,46 @@ export default function MusicServices() {
                 />
               </div>
             </form>
+          </div>
+        </div>
+
+        <div className="card" id="tidal">
+          <div className="card-header">
+            <h3 className="card-title">Tidal</h3>
+          </div>
+          <div className="card-body">
+            <p>
+              Connect to your Tidal account to play music on ListenBrainz.
+              <br />
+              <small>
+                Full length playback requires a Tidal HiFi or Premium
+                subscription.
+                <br />
+                To play music, your browser must allow autoplaying media on
+                listenbrainz.org.
+              </small>
+            </p>
+            <br />
+            <div className="music-service-selection">
+              <form onSubmit={(e) => e.preventDefault()}>
+                <ServicePermissionButton
+                  service="tidal"
+                  current={permissions.tidal}
+                  value="listen"
+                  title="Play music on ListenBrainz"
+                  details="Connect to your Tidal account to play music using Tidal on ListenBrainz."
+                  handlePermissionChange={handlePermissionChange}
+                />
+                <ServicePermissionButton
+                  service="tidal"
+                  current={permissions.tidal}
+                  value="disable"
+                  title="Disable"
+                  details="You will not be able to listen to music on ListenBrainz using Tidal."
+                  handlePermissionChange={handlePermissionChange}
+                />
+              </form>
+            </div>
           </div>
         </div>
 

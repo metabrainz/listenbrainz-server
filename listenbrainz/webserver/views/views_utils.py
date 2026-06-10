@@ -10,6 +10,7 @@ from listenbrainz.domain.funkwhale import FunkwhaleService
 from listenbrainz.db import funkwhale as db_funkwhale
 from listenbrainz.domain.navidrome import NavidromeService
 import listenbrainz.db.navidrome as db_navidrome
+from listenbrainz.domain.tidal import TidalService
 from listenbrainz.webserver import db_conn
 
 
@@ -138,3 +139,18 @@ def get_current_navidrome_user():
     navidrome_service = NavidromeService()
     details = navidrome_service.get_user(current_user.id)
     return details or {}
+
+
+def get_current_tidal_user():
+    """Returns the Tidal access token for the current authenticated user.
+    If the user is unauthenticated or has not linked their Tidal account, returns empty dict."""
+    if not current_user.is_authenticated:
+        return {}
+    service = TidalService()
+    user = service.get_user(current_user.id)
+    if user is None:
+        return {}
+    return {
+        "access_token": user["access_token"],
+        "client_id": current_app.config["TIDAL_CLIENT_ID"],
+    }

@@ -32,6 +32,7 @@ from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, AP
 from listenbrainz.webserver.login import api_login_required
 from listenbrainz.domain.funkwhale import FunkwhaleService
 from listenbrainz.domain.navidrome import NavidromeService
+from listenbrainz.domain.tidal import TidalService, TIDAL_SCOPES
 from listenbrainz.db import funkwhale as db_funkwhale
 
 
@@ -194,6 +195,8 @@ def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False, 
             return FunkwhaleService()
         elif not exclude_navidrome and service == ExternalServiceType.NAVIDROME:
             return NavidromeService()
+        elif service == ExternalServiceType.TIDAL:
+            return TidalService()
     except KeyError:
         raise NotFound("Service %s is invalid." % (name,))
 
@@ -243,6 +246,10 @@ def music_services_details():
     navidrome_connection = navidrome_service.get_user(current_user.id, include_token=False)
     current_navidrome_permissions = "listen" if navidrome_connection else "disable"
 
+    tidal_service = TidalService()
+    tidal_user = tidal_service.get_user(current_user.id)
+    current_tidal_permissions = "listen" if tidal_user else "disable"
+
     data: dict[str, Any] = {
         "current_spotify_permissions": current_spotify_permissions,
         "current_critiquebrainz_permissions": current_critiquebrainz_permissions,
@@ -253,6 +260,7 @@ def music_services_details():
         "funkwhale_host_urls": funkwhale_host_urls,
         "current_navidrome_permissions": current_navidrome_permissions,
         "current_librefm_permissions": current_librefm_permissions,
+        "current_tidal_permissions": current_tidal_permissions,
     }
     if lastfm_user:
         data["current_lastfm_settings"] = {
@@ -553,6 +561,8 @@ def music_services_disconnect(service_name: str):
                 return jsonify({"url": service.get_authorize_url(permissions)})
         elif service_name == 'soundcloud':
             return jsonify({"url": service.get_authorize_url([])})
+        elif service_name == 'tidal':
+            return jsonify({"url": service.get_authorize_url(TIDAL_SCOPES)})
         elif service_name == 'critiquebrainz':
             if action:
                 return jsonify({"url": service.get_authorize_url(CRITIQUEBRAINZ_SCOPES)})
