@@ -281,6 +281,14 @@ def music_services_callback(service_name: str):
     # Check for error parameter first
     error = request.args.get("error")
     if error:
+        if isinstance(service, SoundCloudService):
+            session.pop("soundcloud_code_verifier", None)
+            session.pop("soundcloud_state", None)
+            return redirect(url_for(
+                "settings.index",
+                path="music-services/details",
+                soundcloud_error="SoundCloud authorization was denied"
+            ))
         return redirect(url_for("settings.index", path="music-services/details"))
 
     code = request.args.get("code")
@@ -329,7 +337,38 @@ def music_services_callback(service_name: str):
             session.pop("funkwhale_host_url", None)
             session.pop("funkwhale_user_id", None)
 
-    token = service.fetch_access_token(code)
+    if isinstance(service, SoundCloudService):
+        state = request.args.get("state")
+        stored_state = session.pop("soundcloud_state", None)
+        if not state or state != stored_state:
+            current_app.logger.error("SoundCloud OAuth state mismatch. Expected: %s, Got: %s", stored_state, state)
+            session.pop("soundcloud_code_verifier", None)
+            return redirect(url_for(
+                "settings.index",
+                path="music-services/details",
+                soundcloud_error="SoundCloud authorization failed: invalid state"
+            ))
+
+        code_verifier = session.pop("soundcloud_code_verifier", None)
+        if not code_verifier:
+            current_app.logger.error("SoundCloud PKCE code verifier missing from session for user %s", current_user.id)
+            return redirect(url_for(
+                "settings.index",
+                path="music-services/details",
+                soundcloud_error="SoundCloud authorization failed: please try again"
+            ))
+
+        try:
+            token = service.fetch_access_token(code, code_verifier=code_verifier)
+        except Exception:
+            current_app.logger.error("SoundCloud token exchange failed for user %s", current_user.id, exc_info=True)
+            return redirect(url_for(
+                "settings.index",
+                path="music-services/details",
+                soundcloud_error="SoundCloud authorization failed: could not exchange token"
+            ))
+    else:
+        token = service.fetch_access_token(code)
 
     service.add_new_user(current_user.id, token)
     return redirect(url_for("settings.index", path="music-services/details"))
@@ -552,7 +591,16 @@ def music_services_disconnect(service_name: str):
             if permissions:
                 return jsonify({"url": service.get_authorize_url(permissions)})
         elif service_name == 'soundcloud':
-            return jsonify({"url": service.get_authorize_url([])})
+            code_verifier, code_challenge = SoundCloudService.generate_pkce_pair()
+            state = base64.b64encode(os.urandom(32)).decode("utf-8")
+            session["soundcloud_code_verifier"] = code_verifier
+            session["soundcloud_state"] = state
+            return jsonify({"url": service.get_authorize_url(
+                [],
+                state=state,
+                code_challenge=code_challenge,
+                code_challenge_method="S256"
+            )})
         elif service_name == 'critiquebrainz':
             if action:
                 return jsonify({"url": service.get_authorize_url(CRITIQUEBRAINZ_SCOPES)})
