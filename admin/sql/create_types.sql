@@ -4,6 +4,10 @@ CREATE TYPE mb_missing_data_source_enum AS ENUM('cf', 'artist_map');
 
 CREATE TYPE user_relationship_enum AS ENUM('follow');
 
+CREATE TYPE user_artist_relationship_enum AS ENUM('follow');
+
+CREATE TYPE event_interaction_enum AS ENUM('watch');
+
 CREATE TYPE recommendation_feedback_type_enum AS ENUM('like', 'love', 'dislike', 'hate', 'bad_recommendation');
 
 CREATE TYPE user_timeline_event_type_enum AS ENUM('recording_recommendation', 'notification', 'critiquebrainz_review', 'personal_recording_recommendation', 'thanks');
