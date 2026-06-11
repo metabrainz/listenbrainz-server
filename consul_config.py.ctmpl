@@ -12,6 +12,10 @@
     json.loads('''{{template "KEY" .}}''')
 {{- end -}}
 
+{{- define "KEY_OPTIONAL" -}}
+  {{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) "" }}
+{{- end -}}
+
 # Put everything after the defines otherwise the rendered config might eat up some newlines
 import os
 import json
@@ -30,7 +34,7 @@ REMEMBER_COOKIE_HTTPONLY = True
 
 {{if service "virtual.virtual-pgbouncer-master"}}
 {{with index (service "virtual.virtual-pgbouncer-master") 0}}
-SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
+SQLALCHEMY_DATABASE_URI = "postgresql://{{template "KEY" "listenbrainz_db_user"}}:{{template "KEY" "listenbrainz_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listenbrainz_db"}}"
 POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/postgres"
 SQLALCHEMY_METABRAINZ_URI = "postgresql://metabrainz:metabrainz@{{.Address}}:{{.Port}}/metabrainz_db"
 {{end}}
@@ -76,9 +80,9 @@ MB_DATABASE_URI = ""
 {{- if $listenstore_up | parseBool}}
     {{- if service "timescale-listenbrainz"}}
     {{with index (service "timescale-listenbrainz") 0}}
-SQLALCHEMY_TIMESCALE_URI = """postgresql://listenbrainz_ts:{{template "KEY" "timescale_lb_password"}}@{{.Address}}:{{.Port}}/listenbrainz_ts"""
+SQLALCHEMY_TIMESCALE_URI = """postgresql://{{template "KEY" "timescale_lb_user"}}:{{template "KEY" "timescale_lb_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "timescale_db"}}"""
 TIMESCALE_ADMIN_URI = """postgresql://postgres:{{template "KEY" "timescale_admin_password"}}@{{.Address}}:{{.Port}}/postgres"""
-TIMESCALE_ADMIN_LB_URI = """postgresql://postgres:{{template "KEY" "timescale_admin_password"}}@{{.Address}}:{{.Port}}/listenbrainz_ts"""
+TIMESCALE_ADMIN_LB_URI = """postgresql://postgres:{{template "KEY" "timescale_admin_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "timescale_db"}}"""
     {{end}}
     {{else}}
 SQLALCHEMY_TIMESCALE_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
@@ -87,7 +91,7 @@ TIMESCALE_ADMIN_LB_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
     {{end}}
     {{- if service "pgbouncer-listenbrainz"}}
     {{with index (service "pgbouncer-listenbrainz") 0}}
-SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = """postgresql://listenbrainz_ts:{{template "KEY" "timescale_lb_password"}}@{{.Address}}:{{.Port}}/listenbrainz_ts"""
+SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = """postgresql://{{template "KEY" "timescale_lb_user"}}:{{template "KEY" "timescale_lb_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "timescale_db"}}"""
 # for use in playlists admin view
 SQLALCHEMY_BINDS = {
    'timescale': SQLALCHEMY_TIMESCALE_PGBOUNCER_URI
@@ -147,12 +151,13 @@ COUCHDB_PORT = 5984
 {{end}}
 COUCHDB_USER = "listenbrainz"
 COUCHDB_ADMIN_KEY = '''{{template "KEY" "couchdb_admin_key"}}'''
+COUCHDB_DATABASE_PREFIX = '''{{template "KEY_OPTIONAL" "couchdb_database_prefix"}}'''
 
 {{if service "listenbrainz-redis"}}
 {{with index (service "listenbrainz-redis") 0}}
 REDIS_HOST = "{{.Address}}"
 REDIS_PORT = {{.Port}}
-REDIS_NAMESPACE = "listenbrainz"
+REDIS_NAMESPACE = '''{{template "KEY" "redis_namespace"}}'''
 {{end}}
 {{else}}
 REDIS_HOST = "SERVICEDOESNOTEXIST_listenbrainz-redis"
@@ -200,12 +205,13 @@ EXTERNAL_SERVICES_APPLE_CACHE_QUEUE = '''{{template "KEY" "external_services_app
 EXTERNAL_SERVICES_SOUNDCLOUD_CACHE_QUEUE = '''{{template "KEY" "external_services_soundcloud_cache"}}'''
 EXTERNAL_SERVICES_IA_CACHE_QUEUE = '''{{template "KEY" "external_services_ia_cache"}}'''
 
-MUSICBRAINZ_BASE_URL = "https://musicbrainz.org"
+OAUTH_BASE_URL = '''{{template "KEY" "oauth/base_url"}}'''
+REGISTRATION_URL = f"{OAUTH_BASE_URL}/register"
 OAUTH_CLIENT_ID = '''{{template "KEY" "oauth/client_id"}}'''
 OAUTH_CLIENT_SECRET = '''{{template "KEY" "oauth/client_secret"}}'''
-OAUTH_AUTHORIZE_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/authorize"
-OAUTH_TOKEN_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/token"
-OAUTH_INTROSPECTION_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/introspect"
+OAUTH_AUTHORIZE_URL = f"{OAUTH_BASE_URL}/new-oauth2/authorize"
+OAUTH_TOKEN_URL = f"{OAUTH_BASE_URL}/new-oauth2/token"
+OAUTH_INTROSPECTION_URL = f"{OAUTH_BASE_URL}/new-oauth2/introspect"
 
 LASTFM_API_URL = '''{{template "KEY" "lastfm_api_url"}}'''
 LASTFM_API_KEY = '''{{template "KEY" "lastfm_api_key"}}'''

@@ -6,6 +6,7 @@ import { FlairEnum, FlairName, Flair } from "./constants";
 export type GlobalAppContextT = {
   APIService: APIService;
   websocketsUrl: string;
+  registrationUrl?: string;
   currentUser: ListenBrainzUser;
   spotifyAuth?: SpotifyUser;
   youtubeAuth?: YoutubeUser;
@@ -27,6 +28,7 @@ const apiService = new APIService(`${window.location.origin}/1`);
 export const defaultGlobalContext: GlobalAppContextT = {
   APIService: apiService,
   websocketsUrl: "",
+  registrationUrl: "",
   currentUser: {} as ListenBrainzUser,
   spotifyAuth: {},
   youtubeAuth: {},

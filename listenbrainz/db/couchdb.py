@@ -18,9 +18,10 @@ _user = None
 _admin_key = None
 _host = None
 _port = None
+_database_prefix = ""
 
 
-def init(user, password, host, port):
+def init(user, password, host, port, database_prefix):
     """
     Initialize config to connect to couchdb instance.
     
@@ -29,16 +30,32 @@ def init(user, password, host, port):
         password: couchdb admin password
         host: couchdb service host
         port: couchdb service port
+        database_prefix: prefix to apply to all application couchdb database names
     """
-    global _user, _admin_key, _host, _port
+    global _user, _admin_key, _host, _port, _database_prefix
     _user = user
     _admin_key = password
     _host = host
     _port = port
+    _database_prefix = database_prefix
 
 
 def get_base_url():
     return f"http://{_user}:{_admin_key}@{_host}:{_port}"
+
+
+def _add_database_prefix(database: str):
+    return f"{_database_prefix}{database}"
+
+
+def _remove_database_prefix(database: str):
+    if _database_prefix and database.startswith(_database_prefix):
+        return database[len(_database_prefix):]
+    return database
+
+
+def _get_database_url(database: str):
+    return f"{get_base_url()}/{_add_database_prefix(database)}"
 
 
 def create_database(database: str):
@@ -50,7 +67,7 @@ def create_database(database: str):
     Args:
          database: the database's name
     """
-    databases_url = f"{get_base_url()}/{database}"
+    databases_url = _get_database_url(database)
     response = requests.put(databases_url)
     response.raise_for_status()
 
@@ -70,7 +87,12 @@ def list_databases(prefix: str) -> list[str]:
     response.raise_for_status()
     all_databases = response.json()
 
-    databases = [database for database in all_databases if database.startswith(prefix)]
+    prefixed_prefix = _add_database_prefix(prefix)
+    databases = [
+        _remove_database_prefix(database)
+        for database in all_databases
+        if database.startswith(prefixed_prefix)
+    ]
     databases.sort(reverse=True)
     return databases
 
@@ -98,7 +120,7 @@ def delete_database(prefix: str):
         if check_database_lock(database):
             retained.append(database)
         else:
-            response = requests.delete(f"{get_base_url()}/{database}")
+            response = requests.delete(_get_database_url(database))
             response.raise_for_status()
             deleted.append(database)
 
@@ -117,10 +139,9 @@ def fetch_data(prefix: str, user_id: int):
          user_id: the user to retrieve data for
     """
     databases = list_databases(prefix)
-    base_url = get_base_url()
 
     for database in databases:
-        document_url = f"{base_url}/{database}/{user_id}"
+        document_url = f"{_get_database_url(database)}/{user_id}"
         response = requests.get(document_url)
         if response.status_code == 404:
             continue
@@ -136,8 +157,7 @@ def fetch_exact_data(database: str, document_id: str):
          database: the database name to retrieve data from
          document_id: the document_id to retrieve data for
     """
-    base_url = get_base_url()
-    document_url = f"{base_url}/{database}/{document_id}"
+    document_url = f"{_get_database_url(database)}/{document_id}"
     response = requests.get(document_url)
     if response.status_code == 404:
         return None
@@ -150,7 +170,7 @@ def insert_data(database: str, data: list[dict]):
         docs = orjson.dumps({"docs": data})
 
     with start_span(op="http", name="insert docs in couchdb using api"):
-        couchdb_url = f"{get_base_url()}/{database}/_bulk_docs"
+        couchdb_url = f"{_get_database_url(database)}/_bulk_docs"
         response = requests.post(couchdb_url, data=docs, headers={"Content-Type": "application/json"})
         response.raise_for_status()
 
@@ -167,7 +187,7 @@ def insert_data(database: str, data: list[dict]):
 
     with start_span(op="http", name="retrieving conflicts from database"):
         response = requests.post(
-            f"{get_base_url()}/{database}/_bulk_get",
+            f"{_get_database_url(database)}/_bulk_get",
             data=conflict_docs,
             headers={"Content-Type": "application/json"}
         )
@@ -213,7 +233,7 @@ def delete_data(database: str, doc_id: int | str):
          database: the database to delete data from
          doc_id: the id of the document to delete
     """
-    document_url = f"{get_base_url()}/{database}/{doc_id}"
+    document_url = f"{_get_database_url(database)}/{doc_id}"
     response = requests.head(document_url)
     response.raise_for_status()
 
@@ -226,7 +246,7 @@ def check_database_lock(database: str):
     """ Checks whether a database is "currently locked" by checking the existence of
      DATABASE_LOCK_FILE. A database is usually locked only during dumps.
     """
-    url = f"{get_base_url()}/{database}/{DATABASE_LOCK_FILE}"
+    url = f"{_get_database_url(database)}/{DATABASE_LOCK_FILE}"
     response = requests.get(url)
     return response.status_code == 200
 
@@ -238,7 +258,7 @@ def lock_database(database: str):
         The onus is the on other users to check for existence of the LOCK file before deleting a
         database.
     """
-    document_url = f"{get_base_url()}/{database}/{DATABASE_LOCK_FILE}"
+    document_url = f"{_get_database_url(database)}/{DATABASE_LOCK_FILE}"
     # TODO: figure out why PUT works but POST fails with a weird referer header error
     response = requests.put(document_url, json={})
     response.raise_for_status()
@@ -291,7 +311,7 @@ def dump_database(prefix: str, fp: BinaryIO):
 
     try:
         with _get_requests_session() as http:
-            database_url = f"{get_base_url()}/{database}"
+            database_url = _get_database_url(database)
             response = http.get(database_url)
             total_docs = response.json()["doc_count"]
 
