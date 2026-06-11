@@ -58,9 +58,11 @@ function calculateMapping(
   if (maxShifted > 100) {
     const scale = 100 / maxShifted;
     mappedMarks.forEach((m) => {
+      /* eslint-disable no-param-reassign */
       m.shiftedPercent *= scale;
       // Ensure we don't accidentally shift things before 0
       m.shiftedPercent = Math.max(0, m.shiftedPercent);
+      /* eslint-enable no-param-reassign */
     });
   }
 
@@ -77,7 +79,7 @@ function mapLinearToVisual(linearPercent: number, mapping: MappedMark[]) {
 
   let i = 0;
   while (i < mapping.length - 1 && mapping[i + 1].percent < linearPercent) {
-    i++;
+    i += 1;
   }
 
   const m1 = mapping[i];
@@ -99,7 +101,7 @@ function unmapVisualToLinear(visualPercent: number, mapping: MappedMark[]) {
     i < mapping.length - 1 &&
     mapping[i + 1].shiftedPercent < visualPercent
   ) {
-    i++;
+    i += 1;
   }
 
   const m1 = mapping[i];
@@ -425,6 +427,11 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     <div className="releases-timeline">
       <div
         ref={trackRef}
+        role="slider"
+        tabIndex={0}
+        aria-valuenow={visualPercent.toFixed(0)}
+        aria-valuemin={0}
+        aria-valuemax={100}
         className="timeline-track vertical"
         onMouseDown={onStart}
         onTouchStart={onStart}
