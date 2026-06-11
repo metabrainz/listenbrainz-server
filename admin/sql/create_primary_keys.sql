@@ -19,6 +19,10 @@ ALTER TABLE missing_musicbrainz_data ADD CONSTRAINT missing_mb_data_pkey PRIMARY
 
 ALTER TABLE user_relationship ADD CONSTRAINT user_relationship_pkey PRIMARY KEY (user_0, user_1, relationship_type);
 
+ALTER TABLE user_artist_relationship ADD CONSTRAINT user_artist_relationship_pkey PRIMARY KEY (user_id, artist_mbid, relationship_type);
+
+ALTER TABLE event_interaction ADD CONSTRAINT event_interaction_pkey PRIMARY KEY (user_id, event_mbid, interaction_type);
+
 ALTER TABLE recommendation_feedback ADD CONSTRAINT recommendation_feedback_pkey PRIMARY KEY (id);
 
 ALTER TABLE pinned_recording ADD CONSTRAINT pinned_recording_pkey PRIMARY KEY (id);
