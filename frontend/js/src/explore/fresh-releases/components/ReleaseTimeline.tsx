@@ -429,7 +429,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
         ref={trackRef}
         role="slider"
         tabIndex={0}
-        aria-valuenow={visualPercent.toFixed(0)}
+        aria-valuenow={Number(visualPercent.toFixed(0)) || 0}
         aria-valuemin={0}
         aria-valuemax={100}
         className="timeline-track vertical"
