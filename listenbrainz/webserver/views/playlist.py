@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, render_template, jsonify, request
+from flask import Blueprint, current_app, render_template, jsonify
 from flask_login import current_user
 
 from listenbrainz.webserver import ts_conn, db_conn
