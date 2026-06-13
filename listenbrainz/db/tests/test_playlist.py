@@ -165,6 +165,35 @@ class PlaylistTestCase(IntegrationTestCase):
         self.assertEqual(count, 3)
         self.assertEqual({p.name for p in playlists}, {playlist_1.name, playlist_2.name, playlist_3.name})
 
+        playlists, count = db_playlist.search_playlists_for_user(
+            self.db_conn, self.ts_conn, self.user_1['id'], "test", viewer_id=self.user_1['id'],
+            playlist_type="owned"
+        )
+
+        # Owned search should only include playlists created by user_1.
+        self.assertEqual(len(playlists), 2)
+        self.assertEqual(count, 2)
+        self.assertEqual({p.name for p in playlists}, {playlist_1.name, playlist_3.name})
+
+        playlists, count = db_playlist.search_playlists_for_user(
+            self.db_conn, self.ts_conn, self.user_1['id'], "test", viewer_id=self.user_1['id'],
+            playlist_type="collaborative"
+        )
+
+        # user_1 is not a collaborator on any playlist in this test data.
+        self.assertEqual(len(playlists), 0)
+        self.assertEqual(count, 0)
+
+        playlists, count = db_playlist.search_playlists_for_user(
+            self.db_conn, self.ts_conn, self.user_2['id'], "test", viewer_id=self.user_2['id'],
+            playlist_type="collaborative"
+        )
+
+        # Collaborative search for user_2 should only include playlist_1.
+        self.assertEqual(len(playlists), 1)
+        self.assertEqual(count, 1)
+        self.assertEqual(playlists[0].name, playlist_1.name)
+
     def test_delete_deletes_user_playlists(self):
         """Tests that deleting a user also deletes their playlists"""
         query = text('INSERT INTO "user" (id, musicbrainz_id, musicbrainz_row_id, auth_token) VALUES (:user_id, :mb_id, :mb_row_id, :token)')

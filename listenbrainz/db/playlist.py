@@ -387,6 +387,7 @@ def search_playlists_for_user(
     offset: int = 0,
     viewer_id: Optional[int] = None,
     include_global: bool = False,
+    playlist_type: Optional[str] = None,
 ):
     """
     Search for playlists associated with a user by name or description.
@@ -404,6 +405,10 @@ def search_playlists_for_user(
             - If set to the same as ``user_id``, all associated playlists are visible.
         include_global: If True, also include all public playlists globally in addition to
             the user's associated playlists. Default: False.
+        playlist_type: Restrict which playlists are searched.
+            - ``None``: search playlists the user created, or collaborates on.
+            - ``"owned"``: search only playlists created by the user.
+            - ``"collaborative"``: search only playlists the user collaborates on.
 
     Returns:
         a tuple (playlists, total_playlists)
@@ -443,20 +448,32 @@ def search_playlists_for_user(
             )
         """
 
-    # Build the association condition: user's playlists OR (if include_global) all public playlists
-    global_condition = "OR pl.public = true" if include_global else ""
-    association_condition = f"""\
-        (
-            pl.creator_id = :user_id
-         OR pl.created_for_id = :user_id
-         OR EXISTS (
+    # Build the association condition based on the requested playlist type.
+    if playlist_type == "collaborative":
+        association_condition = """\
+            EXISTS (
                 SELECT 1
                   FROM playlist.playlist_collaborator pc_target
                  WHERE pc_target.playlist_id = pl.id
                    AND pc_target.collaborator_id = :user_id
-            ) {global_condition}
-        )
-    """
+            )
+        """
+    elif playlist_type == "owned":
+        association_condition = "pl.creator_id = :user_id"
+    else:
+        global_condition = "OR pl.public = true" if include_global else ""
+        association_condition = f"""\
+            (
+                pl.creator_id = :user_id
+             OR pl.created_for_id = :user_id
+             OR EXISTS (
+                    SELECT 1
+                      FROM playlist.playlist_collaborator pc_target
+                     WHERE pc_target.playlist_id = pl.id
+                       AND pc_target.collaborator_id = :user_id
+                ) {global_condition}
+            )
+        """
 
     query = text(f"""
     WITH candidate_playlists AS (
