@@ -13,11 +13,10 @@ logger = logging.getLogger(__name__)
 
 MAX_RECIPIENTS_PER_EVENT = 5000
 
-_enabled: bool = False
 _queue: Queue | None = None
-_TENANT_ID: str = "listenbrainz"
 _lb_base_url: str = "https://listenbrainz.org"
 _producer_pool = None
+
 SYNAPSE_EXCHANGE = "events.ingest"
 SYNAPSE_QUEUE = "events.ingest"
 SYNAPSE_ROUTING_KEY = "event"
@@ -25,7 +24,7 @@ SYNAPSE_ROUTING_KEY = "event"
 
 def init_synapse_client(app) -> None:
     """Call once from the Flask app factory. Uses LB's existing RabbitMQ connection."""
-    global _enabled, _queue, _lb_base_url, _producer_pool
+    global _queue, _lb_base_url, _producer_pool
 
     if not app.config.get("RABBITMQ_HOSTS"):
         return
@@ -33,9 +32,12 @@ def init_synapse_client(app) -> None:
     _lb_base_url = app.config.get("SERVER_ROOT_URL", "https://listenbrainz.org").rstrip("/")
     exchange = Exchange(SYNAPSE_EXCHANGE, "direct", durable=True)
     _queue = Queue(SYNAPSE_QUEUE, exchange=exchange, routing_key=SYNAPSE_ROUTING_KEY, durable=True)
-    connection = create_rabbitmq_connection(app.config, connection_name="synapse-publisher")
+    connection = create_rabbitmq_connection(
+        app.config,
+        connection_name="synapse-publisher",
+        transport_options={"confirm_publish": True},
+    )
     _producer_pool = pools.producers[connection]
-    _enabled = True
     app.logger.info("Synapse client enabled — exchange %s queue %s", SYNAPSE_EXCHANGE, SYNAPSE_QUEUE)
 
 
@@ -61,13 +63,10 @@ def publish_personal_recommendation(recipients: list[str], actor: str, track_met
     recording = _build_recording(track_metadata)
     if not recording:
         return
-    payload = {
+    _publish(recipients, "personal_recording_recommendation", _with_blurb({
         "actor": _build_actor(actor),
         "recording": recording,
-    }
-    if blurb:
-        payload["message"] = blurb
-    _publish(recipients, "personal_recording_recommendation", payload)
+    }, blurb))
 
 
 def publish_notification(recipients: list[str], creator: str, message: str) -> None:
@@ -93,13 +92,10 @@ def publish_thanks(recipients: list[str], actor: str, track_metadata: dict, blur
     recording = _build_recording(track_metadata)
     if not recording:
         return
-    payload = {
+    _publish(recipients, "thanks", _with_blurb({
         "actor": _build_actor(actor),
         "recording": recording,
-    }
-    if blurb:
-        payload["message"] = blurb
-    _publish(recipients, "thanks", payload)
+    }, blurb))
 
 
 def publish_follow(recipients: list[str], follower: str) -> None:
@@ -112,13 +108,10 @@ def publish_recording_pin(recipients: list[str], actor: str, track_metadata: dic
     recording = _build_recording(track_metadata)
     if not recording:
         return
-    payload = {
+    _publish(recipients, "recording_pin", _with_blurb({
         "actor": _build_actor(actor),
         "recording": recording,
-    }
-    if blurb:
-        payload["message"] = blurb
-    _publish(recipients, "recording_pin", payload)
+    }, blurb))
 
 
 # ---------------------------------------------------------------------------
@@ -126,7 +119,7 @@ def publish_recording_pin(recipients: list[str], actor: str, track_metadata: dic
 # ---------------------------------------------------------------------------
 
 def _publish(recipients: list[str], event_type: str, payload: dict) -> None:
-    if not _enabled or not recipients:
+    if _producer_pool is None:
         return
 
     recipients = list(dict.fromkeys(str(r) for r in recipients if r))
@@ -141,19 +134,25 @@ def _publish(recipients: list[str], event_type: str, payload: dict) -> None:
                     exchange=SYNAPSE_EXCHANGE,
                     routing_key=SYNAPSE_ROUTING_KEY,
                     body=orjson.dumps({
-                        "tenant_id": _TENANT_ID,
+                        "tenant_id": "listenbrainz",
                         "event_type": event_type,
                         "recipients": chunk,
                         "payload": payload,
                     }),
+                    content_type="application/json",
+                    content_encoding="utf-8",
                     delivery_mode=2,
-                    retry=True,
-                    retry_policy={"max_retries": 3},
                     declare=[_queue],
                 )
     except Exception:
         logger.error("Failed to publish %s event to Synapse (%d recipients)",
                      event_type, len(recipients), exc_info=True)
+
+
+def _with_blurb(payload: dict, blurb: str | None) -> dict:
+    if blurb:
+        payload["message"] = blurb
+    return payload
 
 
 def _build_actor(username: str) -> dict:

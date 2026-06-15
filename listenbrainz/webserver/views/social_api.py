@@ -112,7 +112,7 @@ def follow_user(user_name: str):
         current_app.logger.error("Error while trying to insert a relationship: %s", str(e))
         raise APIInternalServerError("Something went wrong, please try again later")
 
-    synapse_client.publish_follow([str(user["id"])], current_user["musicbrainz_id"])
+    synapse_client.publish_follow([str(user["musicbrainz_row_id"])], current_user["musicbrainz_id"])
 
     return jsonify({"status": "ok"})
 
