@@ -2,6 +2,7 @@ from flask import Blueprint, current_app, jsonify
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
+from listenbrainz import synapse_client
 from listenbrainz.webserver import db_conn
 
 from listenbrainz.webserver.decorators import crossdomain
@@ -110,6 +111,8 @@ def follow_user(user_name: str):
     except Exception as e:
         current_app.logger.error("Error while trying to insert a relationship: %s", str(e))
         raise APIInternalServerError("Something went wrong, please try again later")
+
+    synapse_client.publish_follow([str(user["id"])], current_user["musicbrainz_id"])
 
     return jsonify({"status": "ok"})
 

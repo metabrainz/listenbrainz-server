@@ -249,9 +249,3 @@ FUNKWHALE_CALLBACK_URL = f'{SERVER_ROOT_URL}/settings/music-services/funkwhale/c
 NAVIDROME_ENCRYPTION_KEY = ""
 
 BACKGROUND_TASKS_SLEEP_TIME = 1
-
-# Synapse push notification service
-# Uses the same RabbitMQ broker as the main LB connection (RABBITMQ_HOSTS).
-SYNAPSE_ENABLED = False
-SYNAPSE_LB_BASE_URL = SERVER_ROOT_URL
-SYNAPSE_RABBITMQ_URL = ""

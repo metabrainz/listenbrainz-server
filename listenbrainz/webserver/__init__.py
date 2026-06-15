@@ -237,7 +237,7 @@ def create_app(
     except ConnectionError:
         app.logger.critical("RabbitMQ service is not up!", exc_info=True)
 
-    # Synapse push notification client (optional, requires SYNAPSE_ENABLED = True in config)
+    # Synapse push notification client
     from listenbrainz.synapse_client import init_synapse_client
     init_synapse_client(app)
 

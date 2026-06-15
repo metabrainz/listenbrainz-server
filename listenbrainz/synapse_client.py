@@ -5,7 +5,9 @@ Synapse event publisher for ListenBrainz.
 import logging
 
 import orjson
-from kombu import Connection, Exchange, Queue, pools
+from kombu import Exchange, Queue, pools
+
+from listenbrainz.rabbitmq import create_rabbitmq_connection
 
 logger = logging.getLogger(__name__)
 
@@ -16,26 +18,25 @@ _queue: Queue | None = None
 _TENANT_ID: str = "listenbrainz"
 _lb_base_url: str = "https://listenbrainz.org"
 _producer_pool = None
+SYNAPSE_EXCHANGE = "events.ingest"
 SYNAPSE_QUEUE = "events.ingest"
+SYNAPSE_ROUTING_KEY = "event"
 
 
 def init_synapse_client(app) -> None:
-    """Call once from the Flask app factory when SYNAPSE_ENABLED is True."""
+    """Call once from the Flask app factory. Uses LB's existing RabbitMQ connection."""
     global _enabled, _queue, _lb_base_url, _producer_pool
 
-    if not app.config.get("SYNAPSE_ENABLED", False):
+    if not app.config.get("RABBITMQ_HOSTS"):
         return
 
-    rabbitmq_url = app.config.get("SYNAPSE_RABBITMQ_URL")
-    if not rabbitmq_url:
-        app.logger.error("SYNAPSE_ENABLED is True but SYNAPSE_RABBITMQ_URL is not set — Synapse disabled")
-        return
-
-    _lb_base_url = app.config.get("SYNAPSE_LB_BASE_URL", "https://listenbrainz.org").rstrip("/")
-    _queue = Queue(SYNAPSE_QUEUE, Exchange("", "direct"), routing_key=SYNAPSE_QUEUE, durable=True)
-    _producer_pool = pools.producers[Connection(rabbitmq_url)]
+    _lb_base_url = app.config.get("SERVER_ROOT_URL", "https://listenbrainz.org").rstrip("/")
+    exchange = Exchange(SYNAPSE_EXCHANGE, "direct", durable=True)
+    _queue = Queue(SYNAPSE_QUEUE, exchange=exchange, routing_key=SYNAPSE_ROUTING_KEY, durable=True)
+    connection = create_rabbitmq_connection(app.config, connection_name="synapse-publisher")
+    _producer_pool = pools.producers[connection]
     _enabled = True
-    app.logger.info("Synapse client enabled — broker %s, queue %s", rabbitmq_url, SYNAPSE_QUEUE)
+    app.logger.info("Synapse client enabled — exchange %s queue %s", SYNAPSE_EXCHANGE, SYNAPSE_QUEUE)
 
 
 # ---------------------------------------------------------------------------
@@ -53,7 +54,6 @@ def publish_recording_recommendation(recipients: list[str], actor: str, track_me
     _publish(recipients, "recording_recommendation", {
         "actor": _build_actor(actor),
         "recording": recording,
-        "summary": f"{actor} recommended {recording['track_name']} by {recording['artist_name']}",
     })
 
 
@@ -64,7 +64,6 @@ def publish_personal_recommendation(recipients: list[str], actor: str, track_met
     payload = {
         "actor": _build_actor(actor),
         "recording": recording,
-        "summary": f"{actor} recommended {recording['track_name']} by {recording['artist_name']} to you",
     }
     if blurb:
         payload["message"] = blurb
@@ -75,7 +74,6 @@ def publish_notification(recipients: list[str], creator: str, message: str) -> N
     _publish(recipients, "notification", {
         "actor": _build_actor(creator),
         "message": message,
-        "summary": message,
     })
 
 
@@ -88,7 +86,6 @@ def publish_cb_review(recipients: list[str], actor: str, review_id: str, entity_
             "type": "review",
             "url": f"https://critiquebrainz.org/review/{review_id}",
         },
-        "summary": f"{actor} reviewed {entity_name}",
     })
 
 
@@ -99,7 +96,6 @@ def publish_thanks(recipients: list[str], actor: str, track_metadata: dict, blur
     payload = {
         "actor": _build_actor(actor),
         "recording": recording,
-        "summary": f"{actor} thanked you for recommending {recording['track_name']} by {recording['artist_name']}",
     }
     if blurb:
         payload["message"] = blurb
@@ -109,7 +105,6 @@ def publish_thanks(recipients: list[str], actor: str, track_metadata: dict, blur
 def publish_follow(recipients: list[str], follower: str) -> None:
     _publish(recipients, "follow", {
         "actor": _build_actor(follower),
-        "summary": f"{follower} started following you",
     })
 
 
@@ -120,7 +115,6 @@ def publish_recording_pin(recipients: list[str], actor: str, track_metadata: dic
     payload = {
         "actor": _build_actor(actor),
         "recording": recording,
-        "summary": f"{actor} pinned {recording['track_name']} by {recording['artist_name']}",
     }
     if blurb:
         payload["message"] = blurb
@@ -144,8 +138,8 @@ def _publish(recipients: list[str], event_type: str, payload: dict) -> None:
             for i in range(0, len(recipients), MAX_RECIPIENTS_PER_EVENT):
                 chunk = recipients[i:i + MAX_RECIPIENTS_PER_EVENT]
                 producer.publish(
-                    exchange="",
-                    routing_key=_queue.name,
+                    exchange=SYNAPSE_EXCHANGE,
+                    routing_key=SYNAPSE_ROUTING_KEY,
                     body=orjson.dumps({
                         "tenant_id": _TENANT_ID,
                         "event_type": event_type,
