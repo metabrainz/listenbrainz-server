@@ -5,9 +5,7 @@ Synapse event publisher for ListenBrainz.
 import logging
 
 import orjson
-from kombu import Exchange, Queue, pools
-
-from listenbrainz.rabbitmq import create_rabbitmq_connection
+from kombu import Connection, Exchange, Queue, pools
 
 logger = logging.getLogger(__name__)
 
@@ -23,19 +21,26 @@ SYNAPSE_ROUTING_KEY = "event"
 
 
 def init_synapse_client(app) -> None:
-    """Call once from the Flask app factory. Uses LB's existing RabbitMQ connection."""
+    """Call once from the Flask app factory."""
     global _queue, _lb_base_url, _producer_pool
 
-    if not app.config.get("RABBITMQ_HOSTS"):
+    hosts = app.config.get("RABBITMQ_HOSTS")
+    if not hosts:
         return
 
     _lb_base_url = app.config.get("SERVER_ROOT_URL", "https://listenbrainz.org").rstrip("/")
     exchange = Exchange(SYNAPSE_EXCHANGE, "direct", durable=True)
     _queue = Queue(SYNAPSE_QUEUE, exchange=exchange, routing_key=SYNAPSE_ROUTING_KEY, durable=True)
-    connection = create_rabbitmq_connection(
-        app.config,
-        connection_name="synapse-publisher",
-        transport_options={"confirm_publish": True},
+
+    username = app.config.get("RABBITMQ_USERNAME", "")
+    password = app.config.get("RABBITMQ_PASSWORD", "")
+    urls = [f"amqp://{username}:{password}@{host}:{port}//synapse" for host, port in hosts]
+    connection = Connection(
+        hostname=urls,
+        transport_options={
+            "confirm_publish": True,
+            "client_properties": {"connection_name": "synapse-publisher"},
+        },
     )
     _producer_pool = pools.producers[connection]
     app.logger.info("Synapse client enabled — exchange %s queue %s", SYNAPSE_EXCHANGE, SYNAPSE_QUEUE)
