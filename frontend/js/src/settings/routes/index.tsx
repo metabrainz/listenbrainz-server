@@ -1,7 +1,23 @@
 import * as React from "react";
-import { Navigate, type RouteObject } from "react-router";
+import { Navigate } from "react-router";
+import type { RouteObject, ShouldRevalidateFunction } from "react-router";
 import RouteLoader, { RouteQueryLoader } from "../../utils/Loader";
 import ErrorBoundary from "../../error/ErrorBoundary";
+
+const shouldRevalidateLinkListens: ShouldRevalidateFunction = ({
+  currentUrl,
+  nextUrl,
+  defaultShouldRevalidate,
+}) => {
+  // Pagination is client-side; changing ?page= should not refetch the data.
+  if (
+    currentUrl.pathname === nextUrl.pathname &&
+    currentUrl.search !== nextUrl.search
+  ) {
+    return false;
+  }
+  return defaultShouldRevalidate;
+};
 
 const getSettingsRoutes = (): RouteObject[] => {
   const routes = [
@@ -70,6 +86,7 @@ const getSettingsRoutes = (): RouteObject[] => {
               return RouteQueryLoader("link-listens");
             },
           },
+          shouldRevalidate: shouldRevalidateLinkListens,
         },
         {
           path: "select_timezone/",

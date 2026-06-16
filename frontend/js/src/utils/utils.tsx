@@ -834,6 +834,7 @@ type SentryProps = {
 type GlobalAppProps = {
   api_url: string;
   websockets_url: string;
+  registration_url?: string;
   current_user: ListenBrainzUser;
   spotify?: SpotifyUser;
   youtube?: YoutubeUser;
@@ -885,6 +886,7 @@ const getPageProps = async (): Promise<{
       current_user,
       api_url,
       websockets_url,
+      registration_url,
       spotify,
       youtube,
       soundcloud,
@@ -918,6 +920,7 @@ const getPageProps = async (): Promise<{
     globalAppContext = {
       APIService: apiService,
       websocketsUrl: websockets_url,
+      registrationUrl: registration_url,
       currentUser: current_user,
       spotifyAuth: spotify,
       youtubeAuth: youtube,
@@ -1458,6 +1461,15 @@ export function getObjectForURLSearchParams(
 
 export function getBaseUrl(): string {
   return window.location.origin;
+}
+
+export function getRegistrationUrl(registrationUrl?: string): string {
+  if (!registrationUrl) {
+    return "";
+  }
+  const url = new URL(registrationUrl);
+  url.searchParams.set("returnto", window.document.location.href);
+  return url.toString();
 }
 
 export {
