@@ -725,12 +725,11 @@ def create_personal_recommendation_event(user_name):
         raise APIInternalServerError("Something went wrong, please try again.")
 
     fetch_track_metadata_for_items(ts_conn, [event.metadata])
-    recipient_users = db_user.get_many_users_by_mb_id(db_conn, event.metadata.users)
-    recipient_ids = [
-        str(recipient_users[recipient.lower()]['musicbrainz_row_id'])
-        for recipient in event.metadata.users
-        if recipient.lower() in recipient_users
-    ]
+    lb_id_to_username = db_user.get_users_by_id(db_conn, [int(uid) for uid in event.metadata.users if uid])
+
+    recipient_users = db_user.get_many_users_by_mb_id(db_conn, list(lb_id_to_username.values()))
+    recipient_ids = [str(u['musicbrainz_row_id']) for u in recipient_users.values()]
+
     synapse_client.publish_personal_recommendation(
         recipient_ids, user_name, event.metadata.track_metadata, event.metadata.blurb_content)
 
