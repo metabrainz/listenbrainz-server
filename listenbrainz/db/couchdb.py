@@ -72,26 +72,26 @@ def create_database(database: str):
     response.raise_for_status()
 
 
-def list_databases(prefix: str) -> list[str]:
-    """ List all couchdb database whose name starts with the given prefix
+def list_databases(stat_prefix: str) -> list[str]:
+    """ List all couchdb database whose name starts with the given stat prefix
     sorted in the descending order of creation.
 
     Consider statistics, we generate those daily and create a new database each time for each
-    stat daily. We name databases as `prefix_YYYYMMDD` where prefix describes the stat name and
-    YYYYMMDD is the date. After statistics for the day have been inserted, we want to get rid
-    of the older database for that stat. This method looks up all the databases whose name starts
-    with the given prefix.
+    stat daily. We name databases as `stat_prefix_YYYYMMDD` where stat_prefix describes the stat
+    name and YYYYMMDD is the date. After statistics for the day have been inserted, we want to get
+    rid of the older database for that stat. This method looks up all the databases whose name
+    starts with the given stat prefix.
     """
     databases_url = f"{get_base_url()}/_all_dbs"
     response = requests.get(databases_url)
     response.raise_for_status()
     all_databases = response.json()
 
-    prefixed_prefix = _add_database_prefix(prefix)
+    database_prefixed_stat_prefix = _add_database_prefix(stat_prefix)
     databases = [
         _remove_database_prefix(database)
         for database in all_databases
-        if database.startswith(prefixed_prefix)
+        if database.startswith(database_prefixed_stat_prefix)
     ]
     databases.sort(reverse=True)
     return databases
