@@ -206,7 +206,6 @@ EXTERNAL_SERVICES_SOUNDCLOUD_CACHE_QUEUE = '''{{template "KEY" "external_service
 EXTERNAL_SERVICES_IA_CACHE_QUEUE = '''{{template "KEY" "external_services_ia_cache"}}'''
 
 OAUTH_BASE_URL = '''{{template "KEY" "oauth/base_url"}}'''
-REGISTRATION_URL = f"{OAUTH_BASE_URL}/register"
 OAUTH_CLIENT_ID = '''{{template "KEY" "oauth/client_id"}}'''
 OAUTH_CLIENT_SECRET = '''{{template "KEY" "oauth/client_secret"}}'''
 OAUTH_AUTHORIZE_URL = f"{OAUTH_BASE_URL}/new-oauth2/authorize"

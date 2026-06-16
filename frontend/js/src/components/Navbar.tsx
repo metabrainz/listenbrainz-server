@@ -5,10 +5,9 @@ import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Username from "../common/Username";
 import buildAuthUrl from "../utils/auth";
-import { getRegistrationUrl } from "../utils/utils";
 
 function Navbar() {
-  const { currentUser, registrationUrl } = React.useContext(GlobalAppContext);
+  const { currentUser } = React.useContext(GlobalAppContext);
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = React.useState("");

@@ -7,6 +7,7 @@ from listenbrainz.webserver.timescale_connection import _ts as ts
 import listenbrainz.db.user as db_user
 
 _session_key = "musicbrainz"
+LOGIN_HINTS = {"login", "register"}
 
 
 class MusicBrainzAuthSessionError(Exception):
@@ -59,7 +60,7 @@ def get_authentication_uri(login_hint=None):
         "state": csrf,
         "access_type": "offline",
     }
-    if login_hint:
+    if login_hint in LOGIN_HINTS:
         kwargs["login_hint"] = login_hint
     return MusicBrainzService().get_authorize_url(MUSICBRAINZ_SCOPES, **kwargs)
 

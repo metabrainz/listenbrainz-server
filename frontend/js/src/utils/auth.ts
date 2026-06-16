@@ -1,10 +1,13 @@
 /**
  * Build a URL for MetaBrainz OAuth authentication.
- * @param loginHint - The login hint to pass to MetaBrainz ("login" or "register")
+ * @param loginHint - The login hint to pass to MetaBrainz
  * @param next - Optional URL to redirect to after login (defaults to current page)
  * @returns The full authentication URL
  */
-export default function buildAuthUrl(loginHint: string, next?: string): string {
+export default function buildAuthUrl(
+  loginHint: "login" | "register",
+  next?: string
+): string {
   const params = new URLSearchParams({ login_hint: loginHint });
   const nextUrl = next ?? window.location.href;
   if (nextUrl) {

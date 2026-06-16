@@ -34,7 +34,6 @@ import Blob from "./Blob";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { RouteQuery } from "../utils/Loader";
 import buildAuthUrl from "../utils/auth";
-import { getRegistrationUrl } from "../utils/utils";
 
 type HomePageProps = {
   listenCount: number;
@@ -43,7 +42,6 @@ type HomePageProps = {
 
 function HomePage() {
   const location = useLocation();
-  const { registrationUrl } = React.useContext(GlobalAppContext);
   const { data } = useQuery<HomePageProps>(
     RouteQuery(["home"], location.pathname)
   );
@@ -70,10 +68,7 @@ function HomePage() {
   }, []);
 
   const createAccountButton = (
-    <a
-      className="create-account-button"
-      href={getRegistrationUrl(registrationUrl)}
-    >
+    <a className="create-account-button" href={buildAuthUrl("register")}>
       Create Account
     </a>
   );
