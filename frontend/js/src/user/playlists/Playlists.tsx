@@ -345,8 +345,9 @@ export default class UserPlaylists extends React.Component<
       getSearchTypeForPlaylistTab(playlistType)
     );
 
-    const playlistsFromApi = result.playlists ?? [];
-    const playlists = playlistsFromApi.map((pl: any) => pl.playlist);
+    const playlists = (result.playlists ?? []).map(
+      (playlistObject) => playlistObject.playlist
+    );
 
     const total = result.playlist_count ?? playlists.length;
     const searchPageCount = Math.max(1, Math.ceil(total / PLAYLISTS_PAGE_SIZE));
