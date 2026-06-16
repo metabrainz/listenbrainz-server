@@ -15,7 +15,7 @@ class WebhookReceiverTestCase(IntegrationTestCase):
 
     def setUp(self):
         super().setUp()
-        self.app.config["METABRAINZ_WEBHOOK_SECRET"] = "mebw_test_secret_1234567890"
+        self.app.config["OAUTH_WEBHOOK_SECRET"] = "mebw_test_secret_1234567890"
 
     def _generate_signature(self, payload_bytes: bytes, secret: str) -> str:
         """Helper to generate HMAC-SHA256 signature."""
@@ -29,7 +29,7 @@ class WebhookReceiverTestCase(IntegrationTestCase):
     def _send_webhook(self, event_type: str, payload: dict, secret: str = None, delivery_id: str = None):
         """Helper to send a webhook request."""
         if secret is None:
-            secret = self.app.config["METABRAINZ_WEBHOOK_SECRET"]
+            secret = self.app.config["OAUTH_WEBHOOK_SECRET"]
 
         if delivery_id is None:
             delivery_id = str(uuid.uuid4())
@@ -104,7 +104,7 @@ class WebhookReceiverTestCase(IntegrationTestCase):
         """Test webhook with invalid JSON payload."""
         delivery_id = str(uuid.uuid4())
         payload_bytes = b"invalid json {{"
-        secret = self.app.config["METABRAINZ_WEBHOOK_SECRET"]
+        secret = self.app.config["OAUTH_WEBHOOK_SECRET"]
         signature = self._generate_signature(payload_bytes, secret)
 
         headers = {
@@ -132,7 +132,7 @@ class WebhookReceiverTestCase(IntegrationTestCase):
 
     def test_webhook_without_secret_configured(self):
         """Test webhook when secret is not configured."""
-        self.app.config["METABRAINZ_WEBHOOK_SECRET"] = None
+        self.app.config["OAUTH_WEBHOOK_SECRET"] = None
 
         payload = {"user_id": 789}
         response, _ = self._send_webhook("user.created", payload, secret="mebw_ssss")
@@ -168,7 +168,7 @@ class WebhookReceiverTestCase(IntegrationTestCase):
         }
 
         delivery_id = str(uuid.uuid4())
-        secret = self.app.config["METABRAINZ_WEBHOOK_SECRET"]
+        secret = self.app.config["OAUTH_WEBHOOK_SECRET"]
 
         # Generate signature for original payload
         original_payload_bytes = json.dumps(payload, separators=(",", ":")).encode("utf-8")

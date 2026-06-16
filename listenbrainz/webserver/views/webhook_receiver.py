@@ -71,9 +71,9 @@ def receive_metabrainz_webhook():
             "required": ["X-MetaBrainz-Event", "X-MetaBrainz-Delivery", "X-MetaBrainz-Signature-256"]
         }), 400
 
-    webhook_secret = current_app.config.get("METABRAINZ_WEBHOOK_SECRET")
+    webhook_secret = current_app.config.get("OAUTH_WEBHOOK_SECRET")
     if not webhook_secret:
-        current_app.logger.error("METABRAINZ_WEBHOOK_SECRET not configured")
+        current_app.logger.error("OAUTH_WEBHOOK_SECRET not configured")
         return jsonify({"error": "Webhook receiver not properly configured"}), 503
 
     payload_bytes = request.get_data()
