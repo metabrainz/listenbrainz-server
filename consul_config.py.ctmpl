@@ -209,9 +209,9 @@ OAUTH_BASE_URL = '''{{template "KEY" "oauth/base_url"}}'''
 OAUTH_CLIENT_ID = '''{{template "KEY" "oauth/client_id"}}'''
 OAUTH_CLIENT_SECRET = '''{{template "KEY" "oauth/client_secret"}}'''
 OAUTH_WEBHOOK_SECRET = '''{{template "KEY" "oauth/webhook_secret"}}'''
-OAUTH_AUTHORIZE_URL = f"{OAUTH_BASE_URL}/new-oauth2/authorize"
-OAUTH_TOKEN_URL = f"{OAUTH_BASE_URL}/new-oauth2/token"
-OAUTH_INTROSPECTION_URL = f"{OAUTH_BASE_URL}/new-oauth2/introspect"
+OAUTH_AUTHORIZE_URL = f"{OAUTH_BASE_URL}/oauth2/authorize"
+OAUTH_TOKEN_URL = f"{OAUTH_BASE_URL}/oauth2/token"
+OAUTH_INTROSPECTION_URL = f"{OAUTH_BASE_URL}/oauth2/introspect"
 
 LASTFM_API_URL = '''{{template "KEY" "lastfm_api_url"}}'''
 LASTFM_API_KEY = '''{{template "KEY" "lastfm_api_key"}}'''

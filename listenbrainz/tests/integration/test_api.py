@@ -968,7 +968,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         with open(self.path_to_data_file('valid_single.json'), 'r') as f:
             payload = json.load(f)
 
-        mock_requests.post("https://musicbrainz.org/new-oauth2/introspect", json={"active": False})
+        mock_requests.post("https://musicbrainz.org/oauth2/introspect", json={"active": False})
         response = self.client.post(
             self.custom_url_for('api_v1.submit_listen'),
             data=json.dumps(payload),
@@ -978,7 +978,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert401(response)
         self.assertEqual(response.json["error"], "Invalid access token.")
 
-        mock_requests.post("https://musicbrainz.org/new-oauth2/introspect", json={
+        mock_requests.post("https://musicbrainz.org/oauth2/introspect", json={
             "active": True,
             "client_id": "abc",
             "token_type": "Bearer",
@@ -998,7 +998,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert401(response)
         self.assertEqual(response.json["error"], "Invalid access token.")
 
-        mock_requests.post("https://musicbrainz.org/new-oauth2/introspect", json={
+        mock_requests.post("https://musicbrainz.org/oauth2/introspect", json={
             "active": True,
             "client_id": "abc",
             "token_type": "Bearer",
