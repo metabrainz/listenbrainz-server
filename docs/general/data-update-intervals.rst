@@ -28,7 +28,7 @@ This complicated schedule is caused by ListenBrainz having a lot of interconnect
 different scales. For more details, read on!
 
 .. [#f1] Listens via a connected Spotify account may not be submitted immediately, causing a short delay
-.. [#f2] Statistics may take longer on the 1st and 15th of each month
+.. [#f2] "New listens" means listens played recently. Imported or backdated listens only appear in statistics after the next full dump (1st or 15th); see `User Statistics`_.
 .. [#f3] To generate daily playlists, follow `troi-bot <https://listenbrainz.org/user/troi-bot/>`_.
 
 Listens and Listen Counts
@@ -64,6 +64,11 @@ import a new full data dump on the 2nd and 16th day of the month.
 
 For example: If you delete a listen on the 5th day of the month, you can expect that the statistics generated
 on the 17th will reflect the current stats of your listens as of the end of the 14th day of the month.
+
+Imported and backdated listens are a special case. The daily update only recalculates statistics for listens
+played recently, so an imported history — whose listens are dated months or years ago — is skipped until the next
+full dump rebuilds all statistics from scratch. After a large import, allow up to two weeks for it to appear in
+your statistics; your listen counts update immediately.
 
 We recognize that this is less than ideal – we’re considering how to improve this and to make the ingestion
 of listens and the deletion of listens both happen in real time.
