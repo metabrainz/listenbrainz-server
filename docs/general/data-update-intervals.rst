@@ -9,6 +9,7 @@ System                                          Update schedule
 Receiving listens, updating listen counts		Immediate [#f1]_
 Deleting listens					                  Removed at the top of the next hour (UTC)
 Updating statistics for new listens			    Daily [#f2]_
+Updating statistics for older listens/imports   1st and 15th of each month
 Artist/album stats				                  Daily
 Removing deleted listens from stats			    On the 2nd and 16th of each month
 Full dumps						                      1st and 15th of each month
@@ -28,7 +29,7 @@ This complicated schedule is caused by ListenBrainz having a lot of interconnect
 different scales. For more details, read on!
 
 .. [#f1] Listens via a connected Spotify account may not be submitted immediately, causing a short delay
-.. [#f2] "New listens" means listens played recently. Imported or backdated listens only appear in statistics after the next full dump (1st or 15th); see `User Statistics`_.
+.. [#f2] Statistics may take longer on the 1st and 15th of each month
 .. [#f3] To generate daily playlists, follow `troi-bot <https://listenbrainz.org/user/troi-bot/>`_.
 
 Listens and Listen Counts
