@@ -19,6 +19,14 @@ LISTENBRAINZ_USER_ID = 23944
 DELETED_USER_ID = 2615344
 DELETED_USER_NAME = "deleted_lb_user"
 
+SEARCH_PLAYLIST_SORTS = {
+    "relevance": "mp.name_similarity DESC, mp.description_similarity DESC",
+    "dateCreated": "pl.created DESC",
+    "dateUpdated": "pl.last_updated DESC NULLS LAST, pl.created DESC",
+    "title": "pl.name ASC",
+    "creator": "pl.creator_id ASC",
+}
+
 # These are the recommendation troi patches that we showcase on the recommendations page for each user
 RECOMMENDATION_PATCHES = (
     'daily-jams',
@@ -388,6 +396,7 @@ def search_playlists_for_user(
     viewer_id: Optional[int] = None,
     include_global: bool = False,
     playlist_type: Optional[str] = None,
+    sort: str = "relevance",
 ):
     """
     Search for playlists associated with a user by name or description.
@@ -409,12 +418,16 @@ def search_playlists_for_user(
             - ``None``: search playlists the user created, or collaborates on.
             - ``"owned"``: search only playlists created by the user.
             - ``"collaborative"``: search only playlists the user collaborates on.
+        sort: How to order search results. One of ``relevance``, ``dateCreated``,
+            ``dateUpdated``, ``title``, or ``creator``. Default: ``relevance``.
 
     Returns:
         a tuple (playlists, total_playlists)
     """
     if count == 0:
         count = None
+
+    order_clause = SEARCH_PLAYLIST_SORTS.get(sort, SEARCH_PLAYLIST_SORTS["relevance"])
 
     params = {
         "query": query,
@@ -489,9 +502,6 @@ def search_playlists_for_user(
           FROM candidate_playlists
          WHERE name_similarity > 0.1
             OR description_similarity > 0.1
-         ORDER BY name_similarity DESC, description_similarity DESC
-         LIMIT :count
-        OFFSET :offset
     )
     SELECT pl.id
          , pl.mbid
@@ -512,7 +522,9 @@ def search_playlists_for_user(
         ON pl.id = mp.id
  LEFT JOIN playlist.playlist AS copy
         ON pl.copied_from_id = copy.id
-  ORDER BY mp.name_similarity DESC, mp.description_similarity DESC
+  ORDER BY {order_clause}
+     LIMIT :count
+    OFFSET :offset
     """)
 
     result = ts_conn.execute(query, params)

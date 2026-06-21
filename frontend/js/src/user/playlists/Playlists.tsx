@@ -51,13 +51,10 @@ export type UserPlaylistsState = {
   sortBy: SortOption;
   view: PlaylistView;
   searchTerm: string;
-  activeSearchQuery: string;
-  searchPage: number;
-  isSearching: boolean;
-  searchPageCount: number;
 };
 
-enum SortOption {
+export enum SortOption {
+  RELEVANCE = "relevance",
   DATE_CREATED = "dateCreated",
   DATE_UPDATED = "dateUpdated",
   TITLE = "title",
@@ -65,20 +62,42 @@ enum SortOption {
   RANDOM = "random",
 }
 
+type BrowseSortOption =
+  | SortOption.DATE_CREATED
+  | SortOption.DATE_UPDATED
+  | SortOption.TITLE
+  | SortOption.CREATOR;
+
+type PlaylistSortCriterion = (playlist: JSPFPlaylist) => string | number;
+type PlaylistSortOrder = "asc" | "desc";
+
+function isBrowseSortOption(option: SortOption): option is BrowseSortOption {
+  return (
+    option === SortOption.DATE_CREATED ||
+    option === SortOption.DATE_UPDATED ||
+    option === SortOption.TITLE ||
+    option === SortOption.CREATOR
+  );
+}
+
 type UserPlaylistsLoaderData = UserPlaylistsProps;
 
 type UserPlaylistsClassProps = UserPlaylistsProps & {
   page: number;
   playlistType: PlaylistType;
+  searchQuery: string;
+  urlSort: SortOption;
   handleClickPrevious: () => void;
   handleClickNext: () => void;
-  resetToPageOne: () => void;
   handleSetPlaylistType: (newType: PlaylistType) => void;
+  onSearchSubmit: (query: string) => void;
+  onSortChangeDuringSearch: (sort: SortOption) => void;
   initialView: PlaylistView;
   setPersistentView: (view: PlaylistView) => void;
   initialSort: SortOption;
   setPersistentSort: (sort: SortOption) => void;
 };
+
 const playlistViewAtom = atomWithStorage<PlaylistView>(
   "lb_playlists_overview_view",
   PlaylistView.GRID
@@ -91,16 +110,7 @@ const playlistTypeAtom = atomWithStorage<string>(
   "lb_playlists_overview_type",
   ""
 );
-const MIN_SEARCH_LENGTH = 3;
-const PLAYLISTS_PAGE_SIZE = 25;
-
-const getSearchTypeForPlaylistTab = (
-  playlistType: PlaylistType
-): "owned" | "collaborative" => {
-  return playlistType === PlaylistType.collaborations
-    ? "collaborative"
-    : "owned";
-};
+export const MIN_SEARCH_LENGTH = 3;
 
 export default class UserPlaylists extends React.Component<
   UserPlaylistsClassProps,
@@ -111,22 +121,26 @@ export default class UserPlaylists extends React.Component<
 
   constructor(props: UserPlaylistsClassProps) {
     super(props);
-    const { playlists, pageCount, initialView, initialSort } = props;
+    const { playlists, initialView, initialSort, searchQuery, urlSort } = props;
+    const isSearchActive = searchQuery.length >= MIN_SEARCH_LENGTH;
     this.state = {
       playlists: playlists?.map((pl) => pl.playlist) ?? [],
-      sortBy: initialSort,
+      sortBy: isSearchActive ? urlSort : initialSort,
       view: initialView,
-      searchTerm: "",
-      activeSearchQuery: "",
-      searchPage: 1,
-      isSearching: false,
-      searchPageCount: pageCount,
+      searchTerm: searchQuery,
     };
   }
 
   componentDidUpdate(prevProps: Readonly<UserPlaylistsClassProps>): void {
-    const { playlists, initialView, initialSort, playlistType } = this.props;
-    const { sortBy, activeSearchQuery } = this.state;
+    const {
+      playlists,
+      initialView,
+      initialSort,
+      playlistType,
+      searchQuery,
+      urlSort,
+    } = this.props;
+    const { sortBy } = this.state;
 
     if (prevProps.playlistType !== playlistType) {
       this.setState(
@@ -134,35 +148,57 @@ export default class UserPlaylists extends React.Component<
           playlists: playlists.map((pl) => pl.playlist),
           sortBy: initialSort,
           view: initialView,
-          activeSearchQuery: "",
           searchTerm: "",
-          searchPage: 1,
         },
         () => {
-          this.setSortOption(initialSort);
+          this.applyBrowseSort(initialSort);
         }
       );
       return;
     }
-    if (prevProps.playlists !== playlists && !activeSearchQuery) {
+
+    if (prevProps.searchQuery !== searchQuery) {
+      const isSearchActive = this.isSearchActive();
       this.setState(
         {
-          playlists: playlists.map((pl) => pl.playlist),
+          searchTerm: searchQuery,
+          sortBy: isSearchActive ? urlSort : initialSort,
         },
         () => {
-          this.setSortOption(sortBy || initialSort);
+          if (!isSearchActive) {
+            this.applyBrowseSort(initialSort);
+          }
         }
       );
     }
+
+    if (prevProps.urlSort !== urlSort && this.isSearchActive()) {
+      this.setState({ sortBy: urlSort });
+    }
+
+    if (prevProps.playlists !== playlists) {
+      this.setState({ playlists: playlists.map((pl) => pl.playlist) }, () => {
+        if (!this.isSearchActive()) {
+          this.applyBrowseSort(sortBy || initialSort);
+        }
+      });
+    }
+
     if (prevProps.initialView !== initialView) {
       this.setState({ view: initialView });
     }
-    if (prevProps.initialSort !== initialSort) {
+
+    if (prevProps.initialSort !== initialSort && !this.isSearchActive()) {
       this.setState({ sortBy: initialSort }, () => {
-        this.setSortOption(initialSort);
+        this.applyBrowseSort(initialSort);
       });
     }
   }
+
+  isSearchActive = () => {
+    const { searchQuery } = this.props;
+    return searchQuery.length >= MIN_SEARCH_LENGTH;
+  };
 
   alertNotAuthorized = () => {
     toast.error(
@@ -191,7 +227,6 @@ export default class UserPlaylists extends React.Component<
   };
 
   onPlaylistEdited = async (playlist: JSPFPlaylist): Promise<void> => {
-    // Once API call succeeds, update playlist in state
     const { playlists } = this.state;
     const playlistsCopy = [...playlists];
     const playlistIndex = playlistsCopy.findIndex(
@@ -234,7 +269,7 @@ export default class UserPlaylists extends React.Component<
     return currentUser?.name === user.name;
   };
 
-  setSortOption = (option: SortOption) => {
+  applyBrowseSort = (option: SortOption) => {
     const { playlists } = this.state;
     const { setPersistentSort } = this.props;
     setPersistentSort(option);
@@ -246,33 +281,40 @@ export default class UserPlaylists extends React.Component<
       return;
     }
 
-    const sortPlaylists = (criteria: any, orders: any) =>
-      orderBy([...playlists], criteria, orders);
+    if (option === SortOption.RELEVANCE) {
+      return;
+    }
 
-    const criterias = {
-      [SortOption.DATE_CREATED]: (pl: JSPFPlaylist) =>
-        new Date(pl.date).getTime(),
-      [SortOption.TITLE]: (pl: JSPFPlaylist) => pl.title.toLowerCase(),
-      [SortOption.CREATOR]: (pl: JSPFPlaylist) => pl.creator.toLowerCase(),
-      [SortOption.DATE_UPDATED]: (pl: JSPFPlaylist) =>
+    if (!isBrowseSortOption(option)) {
+      return;
+    }
+
+    const sortPlaylists = (
+      criteria: PlaylistSortCriterion[],
+      sortOrders: PlaylistSortOrder[]
+    ): JSPFPlaylist[] => orderBy([...playlists], criteria, sortOrders);
+
+    const criterias: Record<BrowseSortOption, PlaylistSortCriterion> = {
+      [SortOption.DATE_CREATED]: (pl) => new Date(pl.date).getTime(),
+      [SortOption.TITLE]: (pl) => pl.title.toLowerCase(),
+      [SortOption.CREATOR]: (pl) => pl.creator.toLowerCase(),
+      [SortOption.DATE_UPDATED]: (pl) =>
         getPlaylistExtension(pl)?.last_modified_at || pl.date,
     };
 
-    const orders = {
-      [SortOption.DATE_CREATED]: ["desc"],
-      [SortOption.TITLE]: ["asc"],
-      [SortOption.CREATOR]: ["asc"],
-      [SortOption.DATE_UPDATED]: ["desc"],
+    const orders: Record<BrowseSortOption, PlaylistSortOrder> = {
+      [SortOption.DATE_CREATED]: "desc",
+      [SortOption.TITLE]: "asc",
+      [SortOption.CREATOR]: "asc",
+      [SortOption.DATE_UPDATED]: "desc",
     };
 
-    const sortingCriteriaBasedOnOption = [
-      criterias[option as keyof typeof criterias],
-      ...Object.values(criterias).filter(
-        (c) => c !== criterias[option as keyof typeof criterias]
-      ),
+    const sortingCriteriaBasedOnOption: PlaylistSortCriterion[] = [
+      criterias[option],
+      ...Object.values(criterias).filter((c) => c !== criterias[option]),
     ];
 
-    const sortingOrdersBasedOnOption = [
+    const sortingOrdersBasedOnOption: PlaylistSortOrder[] = [
       orders[option],
       ...Object.values(orders).filter((o) => o !== orders[option]),
     ];
@@ -288,117 +330,43 @@ export default class UserPlaylists extends React.Component<
     });
   };
 
-  fetchSearchResultsForPage = (query: string, page: number) => {
-    this.performPlaylistSearch(query, page).catch(() => {
-      this.setState({ isSearching: false, activeSearchQuery: "" });
-      toast.error(
-        <ToastMsg
-          title="Search failed"
-          message="Unable to search playlists. Please try again."
-        />
-      );
-    });
-  };
-
-  // Reset to full playlist list when search is cleared or too short
-  resetSearchResults = () => {
-    const {
-      playlists,
-      initialSort,
-      pageCount,
-      resetToPageOne,
-      page,
-    } = this.props;
-    const { sortBy } = this.state;
-
-    if (page !== 1) {
-      resetToPageOne();
+  setSortOption = (option: SortOption) => {
+    const { onSortChangeDuringSearch } = this.props;
+    if (this.isSearchActive()) {
+      onSortChangeDuringSearch(option);
+      this.setState({ sortBy: option });
+      return;
     }
-
-    this.setState(
-      {
-        playlists: playlists.map((pl) => pl.playlist),
-        activeSearchQuery: "",
-        searchPage: 1,
-        isSearching: false,
-        searchPageCount: pageCount,
-      },
-      () => {
-        const activeSort = sortBy || initialSort;
-        this.setSortOption(activeSort);
-      }
-    );
-  };
-
-  performPlaylistSearch = async (query: string, page: number) => {
-    const { APIService } = this.context;
-    const { user, initialSort, playlistType } = this.props;
-    const { sortBy } = this.state;
-
-    this.setState({ isSearching: true });
-    const offset = (page - 1) * PLAYLISTS_PAGE_SIZE;
-    const result = await APIService.searchPlaylistsForUser(
-      query,
-      user.name,
-      PLAYLISTS_PAGE_SIZE,
-      offset,
-      getSearchTypeForPlaylistTab(playlistType)
-    );
-
-    const playlists = (result.playlists ?? []).map(
-      (playlistObject) => playlistObject.playlist
-    );
-
-    const total = result.playlist_count ?? playlists.length;
-    const searchPageCount = Math.max(1, Math.ceil(total / PLAYLISTS_PAGE_SIZE));
-
-    this.setState(
-      {
-        playlists,
-        searchPageCount,
-        isSearching: false,
-      },
-      () => {
-        const activeSort = sortBy || initialSort;
-        this.setSortOption(activeSort);
-      }
-    );
+    this.applyBrowseSort(option);
   };
 
   handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
-
+    const { onSearchSubmit } = this.props;
     const { searchTerm } = this.state;
-    const query = searchTerm.trim();
-
-    if (!query || query.length < MIN_SEARCH_LENGTH) {
-      this.resetSearchResults();
-      return;
-    }
-
-    this.setState({ activeSearchQuery: query, searchPage: 1 }, () => {
-      this.fetchSearchResultsForPage(query, 1);
-    });
+    onSearchSubmit(searchTerm.trim());
   };
 
-  handleSearchClickNext = () => {
-    const { searchPage, searchPageCount, activeSearchQuery } = this.state;
-    if (searchPage < searchPageCount) {
-      const nextPage = searchPage + 1;
-      this.setState({ searchPage: nextPage }, () => {
-        this.fetchSearchResultsForPage(activeSearchQuery, nextPage);
-      });
-    }
-  };
+  renderSortOptions = () => {
+    const isSearchActive = this.isSearchActive();
+    const options = [
+      ...(isSearchActive
+        ? [{ value: SortOption.RELEVANCE, label: "Best match" }]
+        : []),
+      { value: SortOption.DATE_CREATED, label: "Date Created" },
+      { value: SortOption.DATE_UPDATED, label: "Date Updated" },
+      { value: SortOption.TITLE, label: "Title" },
+      { value: SortOption.CREATOR, label: "Creator" },
+      ...(!isSearchActive
+        ? [{ value: SortOption.RANDOM, label: "Random" }]
+        : []),
+    ];
 
-  handleSearchClickPrevious = () => {
-    const { searchPage, activeSearchQuery } = this.state;
-    if (searchPage > 1) {
-      const previousPage = searchPage - 1;
-      this.setState({ searchPage: previousPage }, () => {
-        this.fetchSearchResultsForPage(activeSearchQuery, previousPage);
-      });
-    }
+    return options.map((option) => (
+      <option key={option.value} value={option.value}>
+        {option.label}
+      </option>
+    ));
   };
 
   render() {
@@ -411,20 +379,8 @@ export default class UserPlaylists extends React.Component<
       handleClickNext,
       setPersistentView,
     } = this.props;
-    const {
-      playlists,
-      sortBy,
-      view,
-      searchTerm,
-      isSearching,
-      searchPage,
-      searchPageCount,
-      activeSearchQuery,
-    } = this.state;
+    const { playlists, sortBy, view, searchTerm } = this.state;
     const { currentUser } = this.context;
-    const isSearchActive = activeSearchQuery.length >= MIN_SEARCH_LENGTH;
-    const activePage = isSearchActive ? searchPage : page;
-    const activePageCount = isSearchActive ? searchPageCount : pageCount;
 
     return (
       <div role="main" id="playlists-page">
@@ -459,7 +415,7 @@ export default class UserPlaylists extends React.Component<
                 type="secondary"
                 onClick={() => {
                   this.setState({ view: PlaylistView.GRID });
-                  setPersistentView(PlaylistView.GRID); // Atom/Storage..
+                  setPersistentView(PlaylistView.GRID);
                 }}
                 title="Grid view"
               >
@@ -490,11 +446,7 @@ export default class UserPlaylists extends React.Component<
                 className="form-select"
                 style={{ width: "200px" }}
               >
-                <option value={SortOption.DATE_CREATED}>Date Created</option>
-                <option value={SortOption.DATE_UPDATED}>Date Updated</option>
-                <option value={SortOption.TITLE}>Title</option>
-                <option value={SortOption.CREATOR}>Creator</option>
-                <option value={SortOption.RANDOM}>Random</option>
+                {this.renderSortOptions()}
               </select>
             </div>
 
@@ -509,7 +461,7 @@ export default class UserPlaylists extends React.Component<
                     this.setState({ searchTerm: e.target.value })
                   }
                 />
-                <button type="submit" disabled={isSearching}>
+                <button type="submit">
                   <FontAwesomeIcon icon={faMagnifyingGlass as IconProp} />
                 </button>
               </form>
@@ -638,16 +590,10 @@ export default class UserPlaylists extends React.Component<
           onPlaylistEdited={this.onPlaylistEdited}
           onPlaylistDeleted={this.onPlaylistDeleted}
           view={view}
-          page={activePage}
-          handleClickPrevious={
-            isSearchActive
-              ? this.handleSearchClickPrevious
-              : handleClickPrevious
-          }
-          handleClickNext={
-            isSearchActive ? this.handleSearchClickNext : handleClickNext
-          }
-          pageCount={activePageCount}
+          page={page}
+          handleClickPrevious={handleClickPrevious}
+          handleClickNext={handleClickNext}
+          pageCount={pageCount}
         >
           {this.isCurrentUserPage() && [
             <Card
@@ -674,16 +620,28 @@ export default class UserPlaylists extends React.Component<
     );
   }
 }
+
+const parseUrlSort = (sortParam: string | null): SortOption => {
+  const validSorts = Object.values(SortOption);
+  if (sortParam && validSorts.includes(sortParam as SortOption)) {
+    return sortParam as SortOption;
+  }
+  return SortOption.RELEVANCE;
+};
+
 export function UserPlaylistsWrapper() {
   const data = useLoaderData() as UserPlaylistsLoaderData;
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParamsObj = getObjectForURLSearchParams(searchParams);
+  const skipTypeRestoreRef = React.useRef(false);
   const [persistentView, setPersistentView] = useAtom(playlistViewAtom);
   const [persistentSort, setPersistentSort] = useAtom(playlistSortAtom);
   const [persistentType, setPersistentType] = useAtom(playlistTypeAtom);
   const currPageNoStr = searchParams.get("page") || "1";
   const currPageNo = parseInt(currPageNoStr, 10);
   const type = searchParams.get("type") || persistentType;
+  const searchQuery = searchParams.get("search") || "";
+  const urlSort = parseUrlSort(searchParams.get("sort"));
 
   const handleClickPrevious = () => {
     setSearchParams({
@@ -699,42 +657,73 @@ export function UserPlaylistsWrapper() {
     });
   };
 
-  const resetToPageOne = () => {
-    if (currPageNo !== 1) {
-      setSearchParams({ ...searchParamsObj, page: "1" });
-    }
-  };
-
   const playlistType =
     type === "collaborative"
       ? PlaylistType.collaborations
       : PlaylistType.playlists;
 
   const handleSetPlaylistType = (newType: PlaylistType) => {
-    const newParams = { ...searchParamsObj };
+    skipTypeRestoreRef.current = true;
+    const newParams: Record<string, string> = { page: "1" };
     if (newType === PlaylistType.collaborations) {
       newParams.type = "collaborative";
       setPersistentType("collaborative");
     } else {
-      delete newParams?.type;
       setPersistentType("");
     }
     setSearchParams(newParams);
   };
+
+  const onSearchSubmit = (query: string) => {
+    const newParams: Record<string, string> = {
+      ...searchParamsObj,
+      page: "1",
+    };
+    if (!query || query.length < MIN_SEARCH_LENGTH) {
+      delete newParams.search;
+      delete newParams.sort;
+    } else {
+      newParams.search = query;
+      newParams.sort = SortOption.RELEVANCE;
+    }
+    setSearchParams(newParams);
+  };
+
+  const onSortChangeDuringSearch = (sort: SortOption) => {
+    const newParams: Record<string, string> = {
+      ...searchParamsObj,
+      sort,
+      page: "1",
+    };
+    setSearchParams(newParams);
+  };
+
   React.useEffect(() => {
+    if (skipTypeRestoreRef.current) {
+      skipTypeRestoreRef.current = false;
+      return;
+    }
     if (!searchParams.get("type") && persistentType === "collaborative") {
-      setSearchParams({ ...searchParamsObj, type: "collaborative" });
+      const newParams: Record<string, string> = {
+        page: searchParams.get("page") || "1",
+        type: "collaborative",
+      };
+      setSearchParams(newParams);
     }
   }, [searchParams, persistentType]);
+
   return (
     <UserPlaylists
       {...data}
       page={currPageNo}
       playlistType={playlistType}
+      searchQuery={searchQuery}
+      urlSort={urlSort}
       handleClickPrevious={handleClickPrevious}
       handleClickNext={handleClickNext}
-      resetToPageOne={resetToPageOne}
       handleSetPlaylistType={handleSetPlaylistType}
+      onSearchSubmit={onSearchSubmit}
+      onSortChangeDuringSearch={onSortChangeDuringSearch}
       initialView={persistentView}
       setPersistentView={setPersistentView}
       initialSort={persistentSort}

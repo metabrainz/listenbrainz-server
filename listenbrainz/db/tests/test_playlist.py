@@ -194,6 +194,35 @@ class PlaylistTestCase(IntegrationTestCase):
         self.assertEqual(count, 1)
         self.assertEqual(playlists[0].name, playlist_1.name)
 
+        playlist_a = WritablePlaylist(
+            name="alpha_search_playlist",
+            creator_id=self.user_1['id'],
+            description="search sort test",
+            collaborator_ids=[],
+            collaborators=[],
+            public=True,
+            additional_metadata={}
+        )
+        playlist_z = WritablePlaylist(
+            name="zulu_search_playlist",
+            creator_id=self.user_1['id'],
+            description="search sort test",
+            collaborator_ids=[],
+            collaborators=[],
+            public=True,
+            additional_metadata={}
+        )
+        db_playlist.create(self.db_conn, self.ts_conn, playlist_a)
+        db_playlist.create(self.db_conn, self.ts_conn, playlist_z)
+
+        playlists, count = db_playlist.search_playlists_for_user(
+            self.db_conn, self.ts_conn, self.user_1['id'], "search sort",
+            viewer_id=self.user_1['id'], playlist_type="owned", sort="title"
+        )
+        self.assertEqual(count, 2)
+        self.assertEqual(playlists[0].name, playlist_a.name)
+        self.assertEqual(playlists[1].name, playlist_z.name)
+
     def test_delete_deletes_user_playlists(self):
         """Tests that deleting a user also deletes their playlists"""
         query = text('INSERT INTO "user" (id, musicbrainz_id, musicbrainz_row_id, auth_token) VALUES (:user_id, :mb_id, :mb_row_id, :token)')
