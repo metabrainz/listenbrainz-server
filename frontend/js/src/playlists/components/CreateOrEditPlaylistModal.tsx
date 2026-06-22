@@ -4,11 +4,13 @@ import { Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { omit, isEqual } from "lodash";
 import { Link } from "react-router";
+import CreatableSelect from "react-select/creatable";
 import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
   getPlaylistExtension,
   getPlaylistId,
   isPlaylistOwner,
+  MAX_PLAYLIST_TAG_LENGTH,
 } from "../utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import UserSearch from "../../common/UserSearch";
@@ -47,9 +49,59 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
   const [collaborators, setCollaborators] = React.useState<string[]>(
     customFields?.collaborators ?? []
   );
+  const originalTags = React.useMemo(() => {
+    const md = customFields?.additional_metadata as
+      | JSPFPlaylistMetadata
+      | undefined;
+    return md?.tags ?? [];
+  }, [customFields]);
+  const [playlistTags, setPlaylistTags] = React.useState<string[]>(
+    originalTags
+  );
   const collaboratorsWithoutOwner = collaborators.filter(
     (username) => username.toLowerCase() !== currentUser.name
   );
+
+  const [ownerPlaylistTagOptions, setOwnerPlaylistTagOptions] = React.useState<
+    { value: string; label: string }[]
+  >([]);
+
+  React.useEffect(() => {
+    if (!currentUser?.name || !currentUser?.auth_token) {
+      setOwnerPlaylistTagOptions([]);
+      return () => {};
+    }
+
+    let cancelled = false;
+
+    const fetchTags = async () => {
+      try {
+        const response = await APIService.getUserPlaylistTags(
+          currentUser.name,
+          currentUser.auth_token
+        );
+
+        if (cancelled) return;
+
+        setOwnerPlaylistTagOptions(
+          (response?.tags ?? []).map(({ tag }) => ({
+            value: tag,
+            label: tag,
+          }))
+        );
+      } catch {
+        if (!cancelled) {
+          setOwnerPlaylistTagOptions([]);
+        }
+      }
+    };
+
+    fetchTags();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser?.name, currentUser?.auth_token]);
 
   const createPlaylist = React.useCallback(async (): Promise<
     JSPFPlaylist | undefined
@@ -224,15 +276,74 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
   ]);
 
   const onSubmit = async (event: React.SyntheticEvent) => {
+    event.preventDefault();
+    const normalize = (tags: string[]) =>
+      Array.from(
+        new Set(
+          tags
+            .map((t) => t.trim())
+            .filter(Boolean)
+            .map((t) => t.toLowerCase())
+        )
+      );
     try {
-      let newPlaylist;
+      let newPlaylist: JSPFPlaylist | undefined;
       if (isEdit) {
         newPlaylist = await editPlaylist();
       } else {
         // Creating a new playlist
         newPlaylist = await createPlaylist();
       }
-      modal.resolve(newPlaylist);
+      let playlistToResolve = newPlaylist;
+      const authToken = currentUser?.auth_token;
+      if (newPlaylist && authToken) {
+        const newPlaylistId = getPlaylistId(newPlaylist);
+        if (newPlaylistId) {
+          const nextTags = normalize(playlistTags);
+          const prevTags = normalize(originalTags);
+          const toAdd = nextTags.filter((t) => !prevTags.includes(t));
+          const toRemove = prevTags.filter((t) => !nextTags.includes(t));
+
+          if (toAdd.length) {
+            await APIService.addPlaylistTags(authToken, newPlaylistId, toAdd);
+          }
+          if (toRemove.length) {
+            await Promise.all(
+              toRemove.map((t) =>
+                APIService.removePlaylistTag(authToken, newPlaylistId, t)
+              )
+            );
+          }
+          // Re-fetch so returned JSPF includes tags in additional_metadata (and
+          // other metadata the edit payload does not resend).
+          try {
+            const response = await APIService.getPlaylist(
+              newPlaylistId,
+              authToken
+            );
+            const jspf: JSPFObject = await response.json();
+            playlistToResolve = jspf.playlist;
+          } catch (err) {
+            console.error(err);
+            const ext = getPlaylistExtension(newPlaylist);
+            playlistToResolve = {
+              ...newPlaylist,
+              extension: {
+                ...newPlaylist.extension,
+                [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
+                  ...ext,
+                  public: ext?.public ?? true,
+                  additional_metadata: {
+                    ...ext?.additional_metadata,
+                    tags: nextTags,
+                  },
+                },
+              },
+            } as JSPFPlaylist;
+          }
+        }
+      }
+      modal.resolve(playlistToResolve);
       modal.hide();
     } catch (error) {
       toast.error(
@@ -373,6 +484,40 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
             onSelectUser={addCollaborator}
             placeholder="Add collaborator"
             clearOnSelect
+          />
+        </div>
+
+        <div className="mb-4">
+          <label
+            className="form-label"
+            style={{ display: "block" }}
+            htmlFor="playlist-tags"
+          >
+            Tags
+          </label>
+          <CreatableSelect
+            inputId="playlist-tags"
+            isMulti
+            isClearable={false}
+            placeholder="Add tag"
+            value={playlistTags.map((t) => ({ value: t, label: t }))}
+            options={ownerPlaylistTagOptions}
+            onChange={(values) => {
+              const tags = (values ?? []).map((v) => v.value);
+              if (tags.some((t) => t.trim().length > MAX_PLAYLIST_TAG_LENGTH)) {
+                toast.error(
+                  <ToastMsg
+                    title="Tag"
+                    message={`Keep the tag length less than ${MAX_PLAYLIST_TAG_LENGTH} chars.`}
+                  />,
+                  { toastId: "playlist-tag-length-error" }
+                );
+                return;
+              }
+              setPlaylistTags(tags);
+            }}
+            // Keep it consistent with existing form look
+            classNamePrefix="lb-tags"
           />
         </div>
       </Modal.Body>
