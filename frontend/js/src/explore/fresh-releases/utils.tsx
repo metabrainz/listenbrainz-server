@@ -39,12 +39,9 @@ export function useMediaQuery(queryStr: string) {
 
   const [matches, setMatches] = useState<boolean>(getMatches(queryStr));
 
-  function handleChange() {
-    setMatches(getMatches(queryStr));
-  }
-
   useEffect(() => {
     const matchMedia = window.matchMedia(queryStr);
+    const handleChange = () => setMatches(getMatches(queryStr));
     handleChange();
     matchMedia.addEventListener("change", handleChange);
     return () => {
