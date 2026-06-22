@@ -1,3 +1,5 @@
+@use "sass:map";
+
 $playlist-background-color: $body-tertiary-bg;
 $description-lines: 2;
 $long-description-lines: 8;
@@ -7,6 +9,248 @@ $long-description-lines: 8;
   align-items: end;
   margin-top: 0.8rem;
   gap: 1rem;
+  flex-wrap: wrap;
+
+  @media (max-width: map.get($grid-breakpoints, "md")) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .playlist-view-controls,
+  .playlist-sort-controls {
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: map.get($grid-breakpoints, "sm")) {
+    .playlist-sort-controls {
+      flex-direction: column;
+      align-items: stretch;
+
+      .form-select {
+        width: 100% !important;
+      }
+    }
+  }
+}
+
+.playlists-page-layout {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+
+  @media (max-width: map.get($grid-breakpoints, "lg")) {
+    flex-direction: column;
+    gap: 1rem;
+
+    .playlists-page-main {
+      order: 2;
+    }
+
+    .playlist-tags-sidebar {
+      order: 1;
+    }
+  }
+}
+
+.playlists-page-main {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.playlist-tags-sidebar {
+  width: 360px;
+  flex-shrink: 0;
+  border: 1px solid $border-color;
+  border-radius: 12px;
+  padding: 1rem;
+  background: $body-bg;
+  position: sticky;
+  top: 1rem;
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  @media (max-width: map.get($grid-breakpoints, "xl")) {
+    width: min(320px, 30vw);
+  }
+
+  @media (max-width: map.get($grid-breakpoints, "lg")) {
+    width: 100%;
+    position: static;
+    top: auto;
+  }
+
+  @media (max-width: map.get($grid-breakpoints, "sm")) {
+    padding: 0.75rem;
+    border-radius: 8px;
+  }
+
+  .playlist-tags-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .playlist-tags-title {
+    font-weight: 600;
+  }
+
+  .playlist-tags-clear {
+    padding: 0;
+    text-decoration: none;
+  }
+
+  .playlist-tags-selected {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    flex-shrink: 0;
+    max-height: 6rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .playlist-tags-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 52rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    padding-right: 0.25rem;
+
+    @media (max-width: map.get($grid-breakpoints, "xl")) {
+      max-height: 40rem;
+    }
+
+    @media (max-width: map.get($grid-breakpoints, "lg")) {
+      max-height: 20rem;
+    }
+
+    @media (max-width: map.get($grid-breakpoints, "sm")) {
+      max-height: 16rem;
+    }
+  }
+
+  .playlist-tag-chip {
+    border: 1px solid $border-color;
+    background: rgba($blue, 0.08);
+    color: $gray-800;
+    border-radius: 999px;
+    padding: 0.35rem 0.75rem;
+    font-size: 1.2rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .playlist-tag-chip-x {
+    font-size: 1.5rem;
+    line-height: 1;
+    color: $gray-600;
+  }
+
+  .playlist-tag-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    min-width: 0;
+    padding: 0.65rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid $border-color;
+    background: $body-tertiary-bg;
+    text-align: left;
+
+    @media (max-width: map.get($grid-breakpoints, "sm")) {
+      gap: 0.5rem;
+      padding: 0.5rem 0.65rem;
+    }
+
+    &:hover {
+      border-color: $blue;
+    }
+
+    &.active {
+      border-color: $blue;
+      background: rgba($blue, 0.08);
+    }
+  }
+
+  .playlist-tag-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #353070;
+    flex-shrink: 0;
+  }
+
+  .playlist-tag-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .playlist-tag-count {
+    background: $gray-200;
+    color: $gray-700;
+    border-radius: 999px;
+    padding: 0.1rem 0.5rem;
+    font-size: 0.85rem;
+  }
+}
+
+.playlist-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+  margin-top: 0.25rem;
+}
+
+.playlist-tag-badge {
+  background: $gray-200;
+  color: $gray-800;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 1rem;
+}
+
+.playlist-tag-more {
+  color: $gray-600;
+  font-size: 1.2rem;
+  align-self: center;
+}
+
+.playlist-header-tags {
+  .playlist-tag-badge {
+    font-size: 1.2rem;
+  }
+
+  .playlist-tag-more {
+    font-size: 1rem;
+  }
+
+  @media (max-width: map.get($grid-breakpoints, "md")) {
+    .playlist-tag-badge {
+      font-size: 1rem;
+    }
+  }
+}
+
+.entity-page-header .playlist-info {
+  @media (max-width: map.get($grid-breakpoints, "md")) {
+    min-width: 0;
+    max-height: none;
+    overflow: visible;
+  }
 }
 
 .playlist-info .description {
@@ -28,6 +272,21 @@ $long-description-lines: 8;
     height: 15em !important;
     position: relative;
     overflow: hidden;
+
+    @media (max-width: map.get($grid-breakpoints, "xl")) {
+      width: calc(33.333% - 1em);
+      min-width: 12rem;
+    }
+
+    @media (max-width: map.get($grid-breakpoints, "lg")) {
+      width: calc(50% - 1em);
+    }
+
+    @media (max-width: map.get($grid-breakpoints, "sm")) {
+      width: calc(100% - 1em);
+      height: auto !important;
+      min-height: 12rem;
+    }
 
     .playlist-card-action-dropdown {
       position: absolute;
@@ -75,6 +334,12 @@ $long-description-lines: 8;
     border-radius: 10px;
     gap: 3rem;
 
+    @media (max-width: map.get($grid-breakpoints, "md")) {
+      flex-direction: column;
+      gap: 1rem;
+      padding: 0.75rem;
+    }
+
     @media (max-width: 640px) {
       gap: 0;
     }
@@ -88,11 +353,23 @@ $long-description-lines: 8;
       justify-content: space-between;
       width: 100%;
       gap: 0.8rem;
+      min-width: 0;
+
+      @media (max-width: map.get($grid-breakpoints, "md")) {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
 
       .playlist-info {
         display: flex;
         align-items: center;
         gap: 2rem;
+        min-width: 0;
+
+        @media (max-width: map.get($grid-breakpoints, "md")) {
+          gap: 1rem;
+          align-items: flex-start;
+        }
 
         .playlist-index {
           min-width: 2rem;
@@ -118,12 +395,20 @@ $long-description-lines: 8;
           color: #353070;
           text-decoration: none;
         }
+
+        @media (max-width: map.get($grid-breakpoints, "md")) {
+          font-size: 1.35rem;
+        }
       }
     }
 
     .playlist-more-info {
       align-self: center;
       flex-shrink: 0;
+
+      @media (max-width: map.get($grid-breakpoints, "md")) {
+        align-self: flex-start;
+      }
 
       .playlist-stats {
         display: flex;
@@ -141,6 +426,11 @@ $long-description-lines: 8;
     .playlist-actions {
       align-self: center;
       margin: 1rem;
+
+      @media (max-width: map.get($grid-breakpoints, "md")) {
+        align-self: flex-end;
+        margin: 0;
+      }
     }
   }
 }
@@ -156,8 +446,25 @@ $long-description-lines: 8;
   color: white;
   text-align: center;
 
+  @media (max-width: map.get($grid-breakpoints, "xl")) {
+    width: calc(33.333% - 1em);
+    min-width: 12rem;
+  }
+
+  @media (max-width: map.get($grid-breakpoints, "lg")) {
+    width: calc(50% - 1em);
+  }
+
+  @media (max-width: map.get($grid-breakpoints, "sm")) {
+    width: calc(100% - 1em);
+  }
+
   &.list-view {
     width: auto;
+
+    @media (max-width: map.get($grid-breakpoints, "sm")) {
+      width: calc(100% - 1em);
+    }
   }
 
   > div {

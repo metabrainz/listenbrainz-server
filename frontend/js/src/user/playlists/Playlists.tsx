@@ -38,6 +38,9 @@ import {
 import PlaylistView from "./playlistView.d";
 import { faGrid, faStacked } from "../../utils/icons";
 import { getObjectForURLSearchParams } from "../../utils/utils";
+import PlaylistTagsSidebar, {
+  PlaylistTag,
+} from "./components/PlaylistTagsSidebar";
 
 export type UserPlaylistsProps = {
   playlists: JSPFObject[];
@@ -51,6 +54,7 @@ export type UserPlaylistsState = {
   sortBy: SortOption;
   view: PlaylistView;
   searchTerm: string;
+  tags: PlaylistTag[];
 };
 
 export enum SortOption {
@@ -97,6 +101,8 @@ type UserPlaylistsClassProps = UserPlaylistsProps & {
   setPersistentView: (view: PlaylistView) => void;
   initialSort: SortOption;
   setPersistentSort: (sort: SortOption) => void;
+  activeTags: string[];
+  setActiveTags: (tags: string[]) => void;
 };
 
 const playlistViewAtom = atomWithStorage<PlaylistView>(
@@ -129,7 +135,12 @@ export default class UserPlaylists extends React.Component<
       sortBy: isSearchActive ? urlSort : initialSort,
       view: initialView,
       searchTerm: searchQuery,
+      tags: [],
     };
+  }
+
+  componentDidMount(): void {
+    this.loadTags();
   }
 
   componentDidUpdate(prevProps: Readonly<UserPlaylistsClassProps>): void {
@@ -153,6 +164,7 @@ export default class UserPlaylists extends React.Component<
         },
         () => {
           this.applyBrowseSort(initialSort);
+          this.loadTags();
         }
       );
       return;
@@ -183,6 +195,11 @@ export default class UserPlaylists extends React.Component<
           this.applyBrowseSort(sortBy || initialSort);
         }
       });
+    }
+
+    const { user } = this.props;
+    if (prevProps.user?.name !== user?.name) {
+      this.loadTags();
     }
 
     if (prevProps.initialView !== initialView) {
@@ -274,24 +291,39 @@ export default class UserPlaylists extends React.Component<
       (pl) => getPlaylistId(pl) === getPlaylistId(playlist)
     );
     playlistsCopy[playlistIndex] = playlist;
-    this.setState({
-      playlists: playlistsCopy,
-    });
+    this.setState(
+      {
+        playlists: playlistsCopy,
+      },
+      () => {
+        this.loadTags();
+      }
+    );
   };
 
   onPlaylistCreated = async (playlist: JSPFPlaylist): Promise<void> => {
     const { playlists } = this.state;
-    this.setState({
-      playlists: [playlist, ...playlists],
-    });
+    this.setState(
+      {
+        playlists: [playlist, ...playlists],
+      },
+      () => {
+        this.loadTags();
+      }
+    );
   };
 
   onPlaylistDeleted = (deletedPlaylist: JSPFPlaylist): void => {
-    this.setState((prevState) => ({
-      playlists: prevState.playlists?.filter(
-        (pl) => getPlaylistId(pl) !== getPlaylistId(deletedPlaylist)
-      ),
-    }));
+    this.setState(
+      (prevState) => ({
+        playlists: prevState.playlists?.filter(
+          (pl) => getPlaylistId(pl) !== getPlaylistId(deletedPlaylist)
+        ),
+      }),
+      () => {
+        this.loadTags();
+      }
+    );
   };
 
   alertMustBeLoggedIn = () => {
@@ -410,6 +442,23 @@ export default class UserPlaylists extends React.Component<
     ));
   };
 
+  loadTags = async () => {
+    const { APIService, currentUser } = this.context;
+    const { user, playlistType } = this.props;
+    try {
+      const userToken =
+        currentUser?.name === user?.name ? currentUser?.auth_token : undefined;
+      const response = await APIService.getUserPlaylistTags(
+        user.name,
+        userToken,
+        playlistType === PlaylistType.collaborations
+      );
+      this.setState({ tags: response?.tags ?? [] });
+    } catch (error) {
+      this.setState({ tags: [] });
+    }
+  };
+
   render() {
     const {
       user,
@@ -420,8 +469,10 @@ export default class UserPlaylists extends React.Component<
       handleClickPrevious,
       handleClickNext,
       setPersistentView,
+      activeTags,
+      setActiveTags,
     } = this.props;
-    const { playlists, sortBy, view, searchTerm } = this.state;
+    const { playlists, sortBy, view, searchTerm, tags } = this.state;
     const { currentUser } = this.context;
 
     return (
@@ -629,42 +680,51 @@ export default class UserPlaylists extends React.Component<
           </div>
         </div>
 
-        <PlaylistsList
-          onCopiedPlaylist={this.onCopiedPlaylist}
-          playlists={playlists}
-          activeSection={playlistType}
-          onPlaylistEdited={this.onPlaylistEdited}
-          onPlaylistDeleted={this.onPlaylistDeleted}
-          view={view}
-          page={page}
-          isLoading={isLoading}
-          loaderText={this.getLoaderText()}
-          emptyMessage={this.getEmptyMessage()}
-          handleClickPrevious={handleClickPrevious}
-          handleClickNext={handleClickNext}
-          pageCount={pageCount}
-        >
-          {this.isCurrentUserPage() && [
-            <Card
-              key="new-playlist"
-              className={`new-playlist ${
-                view === PlaylistView.LIST ? "list-view" : ""
-              }`}
-              onClick={() => {
-                NiceModal.show<JSPFPlaylist, any>(
-                  CreateOrEditPlaylistModal
-                ).then((playlist) => {
-                  this.onPlaylistCreated(playlist);
-                });
-              }}
+        <div className="playlists-page-layout">
+          <div className="playlists-page-main">
+            <PlaylistsList
+              onCopiedPlaylist={this.onCopiedPlaylist}
+              playlists={playlists}
+              activeSection={playlistType}
+              onPlaylistEdited={this.onPlaylistEdited}
+              onPlaylistDeleted={this.onPlaylistDeleted}
+              view={view}
+              page={page}
+              isLoading={isLoading}
+              loaderText={this.getLoaderText()}
+              emptyMessage={this.getEmptyMessage()}
+              handleClickPrevious={handleClickPrevious}
+              handleClickNext={handleClickNext}
+              pageCount={pageCount}
             >
-              <div>
-                <FontAwesomeIcon icon={faPlusCircle as IconProp} size="2x" />
-                <span>Create new playlist</span>
-              </div>
-            </Card>,
-          ]}
-        </PlaylistsList>
+              {this.isCurrentUserPage() && [
+                <Card
+                  key="new-playlist"
+                  className={`new-playlist ${
+                    view === PlaylistView.LIST ? "list-view" : ""
+                  }`}
+                  onClick={() => {
+                    NiceModal.show<JSPFPlaylist, any>(
+                      CreateOrEditPlaylistModal
+                    ).then((playlist) => {
+                      this.onPlaylistCreated(playlist);
+                    });
+                  }}
+                >
+                  <div>
+                    <FontAwesomeIcon icon={faPlusCircle as IconProp} size="2x" />
+                    <span>Create new playlist</span>
+                  </div>
+                </Card>,
+              ]}
+            </PlaylistsList>
+          </div>
+          <PlaylistTagsSidebar
+            tags={tags}
+            activeTags={activeTags}
+            onChangeTags={setActiveTags}
+          />
+        </div>
       </div>
     );
   }
@@ -695,6 +755,10 @@ export function UserPlaylistsWrapper() {
   const type = searchParams.get("type") || persistentType;
   const searchQuery = searchParams.get("search") || "";
   const urlSort = parseUrlSort(searchParams.get("sort"));
+  const activeTags = (searchParams.get("tag") || "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
 
   const handleClickPrevious = () => {
     setSearchParams({
@@ -723,6 +787,20 @@ export function UserPlaylistsWrapper() {
       setPersistentType("collaborative");
     } else {
       setPersistentType("");
+    }
+    delete newParams.tag;
+    setSearchParams(newParams);
+  };
+
+  const setActiveTags = (tags: string[]) => {
+    const newParams: Record<string, string> = {
+      ...searchParamsObj,
+      page: "1",
+    };
+    if (tags.length) {
+      newParams.tag = tags.join(",");
+    } else {
+      delete newParams.tag;
     }
     setSearchParams(newParams);
   };
@@ -765,6 +843,14 @@ export function UserPlaylistsWrapper() {
     }
   }, [searchParams, persistentType]);
 
+  React.useEffect(() => {
+    if (searchParams.get("type") === "collaborative") {
+      setPersistentType("collaborative");
+    } else if (!searchParams.get("type")) {
+      setPersistentType("");
+    }
+  }, [searchParams, setPersistentType]);
+
   return (
     <UserPlaylists
       {...data}
@@ -782,6 +868,8 @@ export function UserPlaylistsWrapper() {
       setPersistentView={setPersistentView}
       initialSort={persistentSort}
       setPersistentSort={setPersistentSort}
+      activeTags={activeTags}
+      setActiveTags={setActiveTags}
     />
   );
 }

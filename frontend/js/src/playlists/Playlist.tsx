@@ -483,6 +483,9 @@ export default function PlaylistPage() {
 
   const userHasRightToEdit = hasRightToEdit();
   const customFields = getPlaylistExtension(playlist);
+  const playlistTags: string[] =
+    (customFields?.additional_metadata as JSPFPlaylistMetadata | undefined)
+      ?.tags ?? [];
 
   React.useEffect(() => {
     setAmbientQueue(tracks);
@@ -549,7 +552,16 @@ export default function PlaylistPage() {
               </Link>
             </div>
           </div>
-          <div className="details">
+          <div className="details h4">
+            {playlistTags.length > 0 && (
+              <div className="playlist-tags-row playlist-header-tags">
+                {playlistTags.map((tag) => (
+                  <span key={tag} className="playlist-tag-badge">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
             <div>
               {customFields?.collaborators &&
                 Boolean(customFields.collaborators.length) && (
