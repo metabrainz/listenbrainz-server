@@ -1046,13 +1046,59 @@ export default class APIService {
     return response.status;
   };
 
+  addPlaylistTags = async (
+    userToken: string,
+    playlistMBID: string,
+    tags: string[]
+  ): Promise<number> => {
+    if (!playlistMBID) {
+      throw new SyntaxError("Playlist MBID is missing");
+    }
+    const url = `${this.APIBaseURI}/playlist/${playlistMBID}/tags`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ tags }),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
+  removePlaylistTag = async (
+    userToken: string,
+    playlistMBID: string,
+    tag: string
+  ): Promise<number> => {
+    if (!playlistMBID) {
+      throw new SyntaxError("Playlist MBID is missing");
+    }
+    if (!tag) {
+      throw new SyntaxError("Tag is missing");
+    }
+    const url = `${
+      this.APIBaseURI
+    }/playlist/${playlistMBID}/tags/${encodeURIComponent(tag)}`;
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
   getUserPlaylists = async (
     userName: string,
     userToken?: string,
     offset: number = 0,
     count: number = 25,
     createdFor: boolean = false,
-    collaborator: boolean = false
+    collaborator: boolean = false,
+    tag?: string
   ): Promise<{
     playlists: JSPFObject[];
     playlist_count: number;
@@ -1069,17 +1115,47 @@ export default class APIService {
       };
     }
 
+    const queryParams: Array<string> = [`offset=${offset}`, `count=${count}`];
+    if (tag) {
+      queryParams.push(`tag=${encodeURIComponent(tag)}`);
+    }
     const url = `${this.APIBaseURI}/user/${encodeURIComponent(
       userName
     )}/playlists${createdFor ? "/createdfor" : ""}${
       collaborator ? "/collaborator" : ""
-    }?offset=${offset}&count=${count}`;
+    }?${queryParams.join("&")}`;
 
     const response = await fetch(url, {
       method: "GET",
       headers,
     });
 
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getUserPlaylistTags = async (
+    userName: string,
+    userToken?: string,
+    collaborated: boolean = false
+  ): Promise<{ tags: Array<{ tag: string; count: number }> }> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    let headers;
+    if (userToken) {
+      headers = {
+        Authorization: `Token ${userToken}`,
+      };
+    }
+    const collaboratorParam = collaborated ? "?collaborator=true" : "";
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/playlists/tags${collaboratorParam}`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers,
+    });
     await this.checkStatus(response);
     return response.json();
   };
@@ -2293,7 +2369,9 @@ export default class APIService {
     searchQuery: string,
     musicbrainzID: string,
     count: number = 25,
-    offset: number = 0
+    offset: number = 0,
+    type?: "owned" | "collaborative",
+    tag?: string
   ): Promise<PlaylistTypeSearchResult> => {
     const url = new URL(
       `${this.APIBaseURI}/user/${encodeURIComponent(
@@ -2303,6 +2381,12 @@ export default class APIService {
     url.searchParams.set("query", searchQuery);
     url.searchParams.set("count", count.toString());
     url.searchParams.set("offset", offset.toString());
+    if (type) {
+      url.searchParams.set("type", type);
+    }
+    if (tag) {
+      url.searchParams.set("tag", tag);
+    }
     const response = await fetch(url.toString());
     await this.checkStatus(response);
     return response.json();
