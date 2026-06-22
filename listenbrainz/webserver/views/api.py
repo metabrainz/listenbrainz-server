@@ -642,9 +642,12 @@ def get_playlists_for_user(playlist_user_name):
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
     include_private = True if user and user["id"] == playlist_user["id"] else False
+    tag_param = request.args.get("tag")
+    tags = tag_param.split(",") if tag_param else None
     playlists, playlist_count = db_playlist.get_playlists_for_user(db_conn, ts_conn, playlist_user["id"],
                                                                    include_private=include_private,
-                                                                   load_recordings=False, count=count, offset=offset)
+                                                                   load_recordings=False, count=count, offset=offset,
+                                                                   tags=tags)
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
@@ -675,7 +678,8 @@ def get_playlists_created_for_user(playlist_user_name):
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
     playlists, playlist_count = db_playlist.get_playlists_created_for_user(
-        db_conn, ts_conn, playlist_user["id"], load_recordings=False, count=count, offset=offset
+        db_conn, ts_conn, playlist_user["id"], load_recordings=False, count=count, offset=offset,
+        tags=request.args.get("tag").split(",") if request.args.get("tag") else None
     )
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
@@ -715,7 +719,8 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
                                                                           include_private=include_private,
                                                                           load_recordings=False,
                                                                           count=count,
-                                                                          offset=offset)
+                                                                          offset=offset,
+                                                                          tags=request.args.get("tag").split(",") if request.args.get("tag") else None)
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
@@ -788,13 +793,37 @@ def search_user_playlist(playlist_user_name):
     if not query or len(query) < 3:
         log_raise_400("Query string must be at least 3 characters long.")
 
+    tag_param = request.args.get("tag")
+    tags = tag_param.split(",") if tag_param else None
+
     viewer_id = user["id"] if user else None
     playlists, playlist_count = db_playlist.search_playlists_for_user(
         db_conn, ts_conn, playlist_user["id"], query, count, offset,
-        viewer_id=viewer_id, include_global=include_global, playlist_type=playlist_type
+        viewer_id=viewer_id, include_global=include_global,
+        playlist_type=playlist_type, tags=tags,
     )
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
+
+
+@api_bp.get("/user/<playlist_user_name>/playlists/tags")
+@crossdomain
+@ratelimit()
+def get_playlist_tags_for_user(playlist_user_name):
+    user = validate_auth_header(optional=True)
+    playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
+    if playlist_user is None:
+        raise APINotFound("Cannot find user: %s" % playlist_user_name)
+
+    include_private = True if user and user["id"] == playlist_user["id"] else False
+    collaborated_only = parse_boolean_arg("collaborator", False)
+    tags = db_playlist.get_tags_for_user(
+        ts_conn,
+        playlist_user["id"],
+        include_private=include_private,
+        collaborated_only=collaborated_only,
+    )
+    return jsonify({"tags": tags})
 
 
 @api_bp.get("/user/<mb_username:user_name>/services")
