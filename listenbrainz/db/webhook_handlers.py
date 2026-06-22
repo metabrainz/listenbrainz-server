@@ -42,8 +42,8 @@ def handle_user_updated(payload: dict[str, Any], delivery_id: str) -> None:
     Payload structure:
     {
         "user_id": <int>,  # corresponds to musicbrainz_row_id
-        "old": {"username": <str>, "email": <str>},  # fields that changed (optional keys)
-        "new": {"username": <str>, "email": <str>}   # new values (optional keys)
+        "old": {"name": <str>, "email": <str>},  # fields that changed (optional keys)
+        "new": {"name": <str>, "email": <str>}   # new values (optional keys)
     }
 
     Args:
@@ -53,11 +53,11 @@ def handle_user_updated(payload: dict[str, Any], delivery_id: str) -> None:
     user_id = payload["user_id"]
     new_data = payload.get("new", {})
 
-    new_username = new_data.get("username")
+    new_username = new_data.get("name")
     new_email = new_data.get("email")
 
     if not new_username and not new_email:
-        logger.info(f"No username or email update in user.updated webhook for user_id={user_id}")
+        logger.info(f"No name or email update in user.updated webhook for user_id={user_id}")
         return
 
     user = db_user.get_by_mb_row_id(db_conn, user_id, fetch_email=True)
