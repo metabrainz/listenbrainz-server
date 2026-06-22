@@ -34,6 +34,20 @@ playlist_api_bp = Blueprint('playlist_api_v1', __name__)
 MAX_RECORDINGS_PER_ADD = 100
 DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
 
+
+def _validate_tags_payload(data):
+    if not isinstance(data, dict):
+        log_raise_400("Invalid JSON document submitted.")
+    tags = data.get("tags")
+    if tags is None:
+        log_raise_400("Missing 'tags' in request body.")
+    if type(tags) not in (list, tuple):
+        log_raise_400("'tags' must be a list.")
+    for tag in tags:
+        if type(tag) != str:
+            log_raise_400("Tag values must be strings.")
+    return tags
+
 supported_services = {
     "spotify": SpotifyService,
     "apple_music": AppleService,
@@ -856,6 +870,64 @@ def copy_playlist(playlist_mbid):
         raise APIInternalServerError("Failed to copy the playlist. Please try again.")
 
     return jsonify({'status': 'ok', 'playlist_mbid': new_playlist.mbid})
+
+
+@playlist_api_bp.post("/<playlist_mbid>/tags")
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def add_playlist_tags(playlist_mbid):
+    """Add one or more tags to a playlist.
+
+    Only the playlist owner can edit tags. Collaborators can view tags but cannot modify them.
+    """
+    user = validate_auth_header()
+
+    if not is_valid_uuid(playlist_mbid):
+        log_raise_400("Provided playlist ID is invalid.")
+
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, False)
+    if playlist is None or not playlist.is_visible_by(user["id"]):
+        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+
+    if playlist.creator_id != user["id"]:
+        raise APIForbidden("You are not allowed to edit tags on this playlist.")
+
+    tags = _validate_tags_payload(request.json)
+    try:
+        db_playlist.add_tags_to_playlist(ts_conn, playlist.id, tags)
+    except Exception:
+        current_app.logger.error("Error while adding tags to playlist: ", exc_info=True)
+        raise APIInternalServerError("Failed to add tags to the playlist. Please try again.")
+
+    return jsonify({"status": "ok"})
+
+
+@playlist_api_bp.delete("/<playlist_mbid>/tags/<path:tag>")
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def delete_playlist_tag(playlist_mbid, tag):
+    """Remove a tag from a playlist. Only the playlist owner can edit tags."""
+    user = validate_auth_header()
+
+    if not is_valid_uuid(playlist_mbid):
+        log_raise_400("Provided playlist ID is invalid.")
+
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, False)
+    if playlist is None or not playlist.is_visible_by(user["id"]):
+        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+
+    if playlist.creator_id != user["id"]:
+        raise APIForbidden("You are not allowed to edit tags on this playlist.")
+
+    try:
+        db_playlist.remove_tag_from_playlist(ts_conn, playlist.id, tag)
+    except Exception:
+        current_app.logger.error("Error while removing tag from playlist: ", exc_info=True)
+        raise APIInternalServerError("Failed to remove the tag from the playlist. Please try again.")
+
+    return jsonify({"status": "ok"})
 
 
 @playlist_api_bp.route("/<playlist_mbid>/export/<service>", methods=["POST", "OPTIONS"])
