@@ -8,7 +8,8 @@ from listenbrainz.webserver import flash, db_conn
 import listenbrainz.db.user as db_user
 import datetime
 
-from listenbrainz.webserver.login.provider import MusicBrainzAuthSessionError, MusicBrainzAuthNoEmailError
+from listenbrainz.webserver.login.provider import MusicBrainzAuthSessionError
+from listenbrainz.webserver.utils import EMAIL_REQUIRED_BLOG_URL, METABRAINZ_PROFILE_URL
 
 login_bp = Blueprint('login', __name__)
 
@@ -30,19 +31,20 @@ def musicbrainz():
 def musicbrainz_post():
     """Callback endpoint."""
 
-    no_email_warning = Markup('You have not provided an email address. Please provide an '
-                              '<a href="https://musicbrainz.org/account/edit">email address</a> '
-                              'and make sure you verify the email before proceeding.')
-    blog_link = Markup('Read this <a href="https://blog.metabrainz.org/?p=8915">blog post</a> '
-                       'to understand why we need your email. You can provide us with an email on your '
-                       '<a href="https://musicbrainz.org/account/edit">MusicBrainz account</a> page.')
+    no_email_warning = Markup(
+        'Your MetaBrainz account does not have a verified email address. '
+        'Please check your inbox for a verification email, or go to your '
+        f'<a href="{METABRAINZ_PROFILE_URL}">MetaBrainz profile page</a> to verify your email '
+        'before submitting listens or connecting music services. '
+        f'Read this <a href="{EMAIL_REQUIRED_BLOG_URL}">blog post</a> '
+        'to understand why we need your email.'
+    )
 
     if provider.validate_post_login():
         try:
             user = provider.get_user()
-            if current_app.config["REJECT_NEW_USERS_WITHOUT_EMAIL"] and not user["email"]:
-                # existing user without email, show a warning
-                flash.warning(no_email_warning + 'to submit listens. ' + blog_link)
+            if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
+                flash.warning(no_email_warning)
 
             db_user.update_last_login(db_conn, user["musicbrainz_id"])
             login_user(User.from_dbrow(user),
@@ -53,9 +55,6 @@ def musicbrainz_post():
                 return redirect(next)
         except MusicBrainzAuthSessionError:
             flash.error("Login failed.")
-        except MusicBrainzAuthNoEmailError:
-            # new user without email tried to create an account
-            flash.error(no_email_warning + 'before creating a ListenBrainz account. ' + blog_link)
     else:
         flash.error("Login failed.")
     return redirect(url_for('index.index_pages', path=''))

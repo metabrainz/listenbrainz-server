@@ -17,6 +17,7 @@ import { faLastfmSquare, faSpotify } from "@fortawesome/free-brands-svg-icons";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import Loader from "../../components/Loader";
+import { EmailVerificationRequiredAlert } from "../../utils/emailVerification";
 
 type ImportListensLoaderData = {
   user_has_email: boolean;
@@ -469,16 +470,7 @@ export default function ImportListens() {
       </Helmet>
       <h2 className="page-title">Import your listening history</h2>
       {!userHasEmail && (
-        <div className="alert alert-danger">
-          You have not provided an email address. Please provide an{" "}
-          <a href="https://musicbrainz.org/account/edit">email address</a> and{" "}
-          <em>verify it</em> to submit listens. Read this{" "}
-          <a href="https://blog.metabrainz.org/?p=8915">blog post</a> to
-          understand why we need your email. You can provide us with an email on
-          your{" "}
-          <a href="https://musicbrainz.org/account/edit">MusicBrainz account</a>{" "}
-          page.
-        </div>
+        <EmailVerificationRequiredAlert action="submitting listens" />
       )}
       <p>
         This page allows you to import your history backup files from

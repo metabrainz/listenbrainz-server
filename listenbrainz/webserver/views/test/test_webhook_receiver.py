@@ -231,7 +231,8 @@ class WebhookReceiverTestCase(IntegrationTestCase):
         update_payload = {
             "user_id": 456,
             "old": {"username": "newusername", "email": "new@example.com"},
-            "new": {"username": "user-456", "email": "user-456@example.com"}
+            "new": {"username": "user-456", "email": "user-456@example.com"},
+            "updated_at": "2026-06-19T09:30:00+00:00",
         }
         response, _ = self._send_webhook("user.updated", update_payload)
         self.assert200(response)

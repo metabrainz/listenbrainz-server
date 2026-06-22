@@ -43,7 +43,8 @@ def handle_user_updated(payload: dict[str, Any], delivery_id: str) -> None:
     {
         "user_id": <int>,  # corresponds to musicbrainz_row_id
         "old": {"name": <str>, "email": <str>},  # fields that changed (optional keys)
-        "new": {"name": <str>, "email": <str>}   # new values (optional keys)
+        "new": {"name": <str>, "email": <str>},  # new values (optional keys)
+        "updated_at": <str>  # time the email was confirmed, if the email changed
     }
 
     Args:
@@ -54,9 +55,9 @@ def handle_user_updated(payload: dict[str, Any], delivery_id: str) -> None:
     new_data = payload.get("new", {})
 
     new_username = new_data.get("name")
-    new_email = new_data.get("email")
+    has_email_update = "email" in new_data
 
-    if not new_username and not new_email:
+    if not new_username and not has_email_update:
         logger.info(f"No name or email update in user.updated webhook for user_id={user_id}")
         return
 
@@ -69,7 +70,7 @@ def handle_user_updated(payload: dict[str, Any], delivery_id: str) -> None:
         db_conn,
         lb_id=user["id"],
         musicbrainz_id=new_username or user["musicbrainz_id"],
-        email=new_email or user["email"]
+        email=new_data["email"] if has_email_update else user["email"]
     )
 
 

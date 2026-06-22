@@ -15,11 +15,6 @@ class MusicBrainzAuthSessionError(Exception):
     pass
 
 
-class MusicBrainzAuthNoEmailError(Exception):
-    """Raised when a user has no email address on MusicBrainz"""
-    pass
-
-
 def get_user():
     """Function should fetch user data from database, or, if necessary, create it, and return it."""
     service = MusicBrainzService()
@@ -33,14 +28,12 @@ def get_user():
         # get_auth_session raises a KeyError if it was unable to get the required data from `code`
         raise MusicBrainzAuthSessionError()
 
-    user = db_user.get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id)
+    user = db_user.get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id, fetch_email=True)
 
     if user is None:
         db_user.create(db_conn, musicbrainz_row_id, musicbrainz_id)
-        user = db_user.get_by_mb_id(db_conn, musicbrainz_id)
+        user = db_user.get_by_mb_id(db_conn, musicbrainz_id, fetch_email=True)
         ts.set_empty_values_for_user(user["id"])
-
-    # todo: discuss new way to handle reject new users with unverified emails
 
     # save user's MB OAuth token, this check cannot be merged with the previous signup/login check because
     # we have a different service user row for each LB deployment but a common user row for all three
