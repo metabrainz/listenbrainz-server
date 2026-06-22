@@ -167,7 +167,13 @@ function createMarks(
       ? format(closestTo(new Date(recentDateStr), dates)!, "yyyy-MM-dd")
       : recentDateStr;
 
-    dataArr.push(recentDateStr === closestDateStr ? "Today" : "Recent");
+    const todayLabel = recentDateStr === closestDateStr ? "Today" : "Recent";
+    dataArr.push(
+      <span className="mark-label-today">
+        <FontAwesomeIcon icon={faCalendarCheck} className="calendar-icon" />
+        {todayLabel}
+      </span>
+    );
     percentArr.push(cummulativeMap.get(closestDateStr)!);
   } else if (order === "artist_credit_name" || order === "release_name") {
     const counts = countBy(releases, (item: FreshReleaseItem) =>
@@ -283,7 +289,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     updateThumbSize();
     window.addEventListener("resize", updateThumbSize);
     return () => window.removeEventListener("resize", updateThumbSize);
-  }, [releases, screenMd]);
+  }, [releases, screenMd, releaseCardGridRef]);
 
   React.useEffect(() => {
     if (isDragging) {
@@ -314,7 +320,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
         behavior,
       });
     },
-    []
+    [releaseCardGridRef]
   );
 
   const handleMove = React.useCallback(
@@ -382,7 +388,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       handleScroll.cancel();
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [isDragging]);
+  }, [isDragging, releaseCardGridRef]);
 
   const getTooltipData = () => {
     if (!releases.length) return null;

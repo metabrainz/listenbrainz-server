@@ -36,7 +36,6 @@
 }
 
 .releases-page {
-
   // FILTERS
   .filters-main {
     top: 1rem;
@@ -142,9 +141,11 @@
             content: "";
             height: 100%;
             width: 3rem;
-            background: linear-gradient(90deg,
-                rgba(255, 255, 255, 1) 50%,
-                rgba(255, 255, 255, 0) 100%);
+            background: linear-gradient(
+              90deg,
+              rgba(255, 255, 255, 1) 50%,
+              rgba(255, 255, 255, 0) 100%
+            );
             position: absolute;
             top: 0;
             left: 0;
@@ -155,9 +156,11 @@
             content: "";
             height: 100%;
             width: 3rem;
-            background: linear-gradient(-90deg,
-                rgba(255, 255, 255, 1) 50%,
-                rgba(255, 255, 255, 0) 100%);
+            background: linear-gradient(
+              -90deg,
+              rgba(255, 255, 255, 1) 50%,
+              rgba(255, 255, 255, 0) 100%
+            );
             position: absolute;
             top: 0;
             right: 0;
@@ -303,17 +306,19 @@
 
       .tick-mark {
         width: 8px;
-        height: 1px;
-        background-color: color.adjust($asphalt, $lightness: 60%);
+        height: 2px;
+        background-color: color.adjust($asphalt, $lightness: 50%);
         flex-shrink: 0;
       }
 
       .mark-label {
-        font-size: 0.85rem;
-        color: color.adjust($asphalt, $lightness: 20%);
-        margin-left: 4px;
+        font-size: 1rem;
+        font-weight: 500;
+        color: color.adjust($asphalt, $lightness: 10%);
+        margin-left: 5px;
         background: transparent;
         padding: 0;
+        line-height: 1.2;
       }
     }
 
@@ -325,18 +330,20 @@
       transform: translateX(-50%);
 
       .tick-mark {
-        width: 1px;
+        width: 2px;
         height: 8px;
-        background-color: color.adjust($asphalt, $lightness: 60%);
+        background-color: color.adjust($asphalt, $lightness: 50%);
         flex-shrink: 0;
       }
 
       .mark-label {
-        font-size: 0.85rem;
-        color: color.adjust($asphalt, $lightness: 20%);
+        font-size: 1rem;
+        font-weight: 500;
+        color: color.adjust($asphalt, $lightness: 10%);
         margin-top: 4px;
         background: transparent;
         padding: 0;
+        line-height: 1.2;
       }
     }
   }
@@ -395,6 +402,18 @@
       font-weight: 600;
       text-transform: capitalize;
       margin-top: 0.2rem;
+    }
+  }
+
+  .mark-label-today {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-weight: 700;
+    color: $blue;
+
+    .calendar-icon {
+      font-size: 0.85em;
     }
   }
 }
@@ -477,7 +496,6 @@
       padding-right: 90px; // space for the right-docked timeline
     }
   }
-
 
   .sidebar-fresh-releases {
     max-height: 85vh;
