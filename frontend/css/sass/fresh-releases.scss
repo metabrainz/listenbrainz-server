@@ -484,11 +484,6 @@
   display: flex;
   gap: 1.5em;
 
-  @media screen and (min-width: map.get($grid-breakpoints, "lg")) {
-    // make the sidebar flush with the right-hand side on larger sizes
-    margin-right: -15px !important;
-  }
-
   .releases-page {
     flex: 1;
 
@@ -499,9 +494,11 @@
 
   .sidebar-fresh-releases {
     max-height: 85vh;
+    margin-right: -15px;
 
     @media screen and (max-width: map.get($grid-breakpoints, "lg")) {
       max-height: calc(100vh - $brainzplayer-height);
+      margin-right: -8px;
     }
   }
 }
