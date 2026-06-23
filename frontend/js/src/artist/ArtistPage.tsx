@@ -372,7 +372,7 @@ export default function ArtistPage(): JSX.Element {
                 className="btn btn-info"
                 to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
               >
-                <FontAwesomeIcon icon={faPlayCircle} /> Radio
+                <FontAwesomeIcon icon={faPlayCircle} /> Artist Radio
               </Link>
               <button
                 type="button"
