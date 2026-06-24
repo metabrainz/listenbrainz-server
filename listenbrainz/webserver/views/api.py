@@ -762,8 +762,12 @@ def search_user_playlist(playlist_user_name):
     :queryparam offset: the offset of the playlists to return. Default: 0.
     :queryparam include_global: if true, also include all public playlists globally in addition to
         the user's associated playlists. Default: false.
+    :queryparam type: restrict which playlists are searched. If ``collaborative``, search only
+        playlists the user collaborates on. If ``owned``, search only playlists created by the user.
+        If omitted, search all playlists associated with the user.
 
     :statuscode 200: success
+    :statuscode 400: invalid query string or type, see error message for details.
     :statuscode 404: user not found
     :resheader Content-Type: *application/json*
     """
@@ -777,14 +781,17 @@ def search_user_playlist(playlist_user_name):
     count = get_non_negative_param("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = get_non_negative_param("offset", 0)
     include_global = parse_boolean_arg("include_global", False)
+    playlist_type = request.args.get("type")
+    if playlist_type and playlist_type not in ("collaborative", "owned"):
+        log_raise_400("type must be either 'collaborative' or 'owned'.")
 
     if not query or len(query) < 3:
         log_raise_400("Query string must be at least 3 characters long.")
 
     viewer_id = user["id"] if user else None
     playlists, playlist_count = db_playlist.search_playlists_for_user(
-        db_conn, ts_conn, playlist_user["id"], query, count, offset, 
-        viewer_id=viewer_id, include_global=include_global
+        db_conn, ts_conn, playlist_user["id"], query, count, offset,
+        viewer_id=viewer_id, include_global=include_global, playlist_type=playlist_type
     )
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
