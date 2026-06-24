@@ -9,6 +9,8 @@ import click
 from mapping.canonical_musicbrainz_data import create_canonical_musicbrainz_data, update_canonical_release_data
 from mapping.mb_artist_metadata_cache import create_mb_artist_metadata_cache, \
     incremental_update_mb_artist_metadata_cache
+from mapping.mb_event_metadata_cache import create_mb_event_metadata_cache, \
+    incremental_update_mb_event_metadata_cache
 from mapping.soundcloud_metadata_index import create_soundcloud_metadata_index
 from mapping.typesense_index import build_all as action_build_index
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
@@ -159,6 +161,24 @@ def update_mb_artist_metadata_cache(use_lb_conn):
         Update the MB metadata cache that LB uses incrementally.
     """
     incremental_update_mb_artist_metadata_cache(use_lb_conn)
+
+
+@cli.command()
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def build_mb_event_cache(use_lb_conn):
+    """
+        Build the MB event metadata cache that LB uses
+    """
+    create_mb_event_metadata_cache(use_lb_conn)
+
+
+@cli.command()
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def update_mb_event_cache(use_lb_conn):
+    """
+        Update the MB event metadata cache that LB uses incrementally.
+    """
+    incremental_update_mb_event_metadata_cache(use_lb_conn)
 
 
 @cli.command()
