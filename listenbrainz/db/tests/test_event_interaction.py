@@ -185,7 +185,7 @@ class EventInteractionTestCase(DatabaseTestCase):
         )
         self.assertListEqual(watchers, [])
 
-        # firsat user watching
+        # first user watching
         db_event_interaction.watch_event(
             self.db_conn,
             self.main_user["id"],
