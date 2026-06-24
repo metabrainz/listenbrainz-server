@@ -76,9 +76,12 @@ def is_following_artist(db_conn, user_id: int, artist_mbid: str) -> bool:
     return result.fetchone().cnt > 0
 
 
-def get_followed_artist_mbids(db_conn, user_id: int) -> List[dict]:
+def get_followed_artist_mbids(
+    db_conn, user_id: int, limit: int = 50, offset: int = 0
+) -> List[dict]:
     """
-    Returns a list of dicts containing the artist_mbid for artists the user follows.
+    Returns a paginated list of dicts containing the artist_mbid for artists
+    the user follows, ordered by most recently followed first.
     """
 
     result = db_conn.execute(
@@ -87,9 +90,13 @@ def get_followed_artist_mbids(db_conn, user_id: int) -> List[dict]:
         FROM user_artist_relationship
         WHERE user_id = :user_id
           AND relationship_type = 'follow'
+        ORDER BY created DESC
+        LIMIT :limit OFFSET :offset
     """),
         {
             "user_id": user_id,
+            "limit": limit,
+            "offset": offset,
         },
     )
     return result.mappings().all()
