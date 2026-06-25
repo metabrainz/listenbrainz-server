@@ -201,8 +201,15 @@ export default class UserPlaylists extends React.Component<
     return searchQuery.length >= MIN_SEARCH_LENGTH;
   };
 
+  getLoaderText = (): string => {
+    if (this.isSearchActive()) {
+      return "Loading search results...";
+    }
+    return "Loading playlists...";
+  };
+
   getEmptyMessage = (): string | undefined => {
-    const { playlistCount, searchQuery, isLoading } = this.props;
+    const { playlistCount, isLoading, searchQuery } = this.props;
     const { playlists } = this.state;
 
     if (isLoading || playlists.length > 0) {
@@ -219,11 +226,12 @@ export default class UserPlaylists extends React.Component<
   };
 
   handleSearchTermChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { onSearchSubmit } = this.props;
     const searchTerm = e.target.value;
     this.setState({ searchTerm });
 
     if (!searchTerm.trim() && this.isSearchActive()) {
-      this.props.onSearchSubmit("");
+      onSearchSubmit("");
     }
   };
 
@@ -408,6 +416,7 @@ export default class UserPlaylists extends React.Component<
       pageCount,
       page,
       playlistType,
+      isLoading,
       handleClickPrevious,
       handleClickNext,
       setPersistentView,
@@ -478,6 +487,7 @@ export default class UserPlaylists extends React.Component<
                 }
                 className="form-select"
                 style={{ width: "200px" }}
+                disabled={isLoading}
               >
                 {this.renderSortOptions()}
               </select>
@@ -495,7 +505,7 @@ export default class UserPlaylists extends React.Component<
                 />
                 <button
                   type="submit"
-                  disabled={this.props.isLoading}
+                  disabled={isLoading}
                   aria-label="Search playlists"
                 >
                   <FontAwesomeIcon icon={faMagnifyingGlass as IconProp} />
@@ -627,7 +637,8 @@ export default class UserPlaylists extends React.Component<
           onPlaylistDeleted={this.onPlaylistDeleted}
           view={view}
           page={page}
-          isLoading={this.props.isLoading}
+          isLoading={isLoading}
+          loaderText={this.getLoaderText()}
           emptyMessage={this.getEmptyMessage()}
           handleClickPrevious={handleClickPrevious}
           handleClickNext={handleClickNext}
@@ -667,10 +678,16 @@ const parseUrlSort = (sortParam: string | null): SortOption => {
   return SortOption.RELEVANCE;
 };
 
+export function isPlaylistsNavigationLoading(
+  navigation: ReturnType<typeof useNavigation>
+): boolean {
+  return navigation.state === "loading";
+}
+
 export function UserPlaylistsWrapper() {
   const data = useLoaderData() as UserPlaylistsLoaderData;
   const navigation = useNavigation();
-  const isLoading = navigation.state === "loading";
+  const isLoading = isPlaylistsNavigationLoading(navigation);
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParamsObj = getObjectForURLSearchParams(searchParams);
   const skipTypeRestoreRef = React.useRef(false);

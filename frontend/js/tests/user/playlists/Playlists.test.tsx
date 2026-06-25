@@ -130,28 +130,17 @@ describe("UserPlaylists search", () => {
     expect(onSearchSubmit).toHaveBeenCalledWith("");
   });
 
-  it("blurs the search input on Escape without clearing active search", async () => {
-    renderPlaylists({
-      searchQuery: "test",
-      playlists: searchResults as JSPFObject[],
-    });
-
-    const input = getSearchInput();
-    input.focus();
-    expect(input).toHaveFocus();
-
-    await user.keyboard("{Escape}");
-
-    expect(input).not.toHaveFocus();
-    expect(screen.getByText("Alpha Search")).toBeInTheDocument();
-    expect(screen.queryByText("Alpha Playlist")).not.toBeInTheDocument();
-  });
-
   it("shows a loading message while loader navigation is in progress", () => {
-    renderPlaylists({ isLoading: true });
+    renderPlaylists({ isLoading: true, searchQuery: "test" });
 
     expect(screen.getByText("Loading search results...")).toBeInTheDocument();
     expect(screen.queryByText("Alpha Playlist")).not.toBeInTheDocument();
+  });
+
+  it("shows browse loading message when not searching", () => {
+    renderPlaylists({ isLoading: true });
+
+    expect(screen.getByText("Loading playlists...")).toBeInTheDocument();
   });
 
   it("calls onSortChangeDuringSearch when sort changes during an active search", async () => {

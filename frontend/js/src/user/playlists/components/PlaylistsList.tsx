@@ -13,6 +13,7 @@ export type PlaylistsListProps = {
   activeSection: PlaylistType;
   view: PlaylistView;
   isLoading?: boolean;
+  loaderText?: string;
   emptyMessage?: string;
   onCopiedPlaylist?: (playlist: JSPFPlaylist) => void;
   onPlaylistEdited: (playlist: JSPFPlaylist) => void;
@@ -38,6 +39,7 @@ export default function PlaylistsList(
     page,
     pageCount,
     isLoading = false,
+    loaderText = "Loading playlists...",
     emptyMessage,
     onCopiedPlaylist,
     onPlaylistEdited,
@@ -50,15 +52,15 @@ export default function PlaylistsList(
   const showContent = !isLoading;
 
   return (
-    <div>
+    <div aria-busy={isLoading}>
       {isLoading && (
-        <Loader
-          isLoading
-          loaderText="Loading search results..."
-          style={{ height: "300px" }}
-        />
+        <Loader isLoading loaderText={loaderText} style={{ height: "300px" }} />
       )}
-      {showEmptyMessage && <p>{emptyMessage}</p>}
+      {showEmptyMessage && (
+        <p className="playlists-empty-message" role="status">
+          {emptyMessage}
+        </p>
+      )}
       {showContent && (
         <div
           id="playlists-container"
