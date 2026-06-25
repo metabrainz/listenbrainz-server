@@ -321,4 +321,22 @@ def import_feedback():
 
     counts = service.import_feedback(user["id"], data["user_name"])
 
+    if data["service"] == "navidrome":
+        from listenbrainz.domain.navidrome import NavidromeService, import_starred_tracks
+        
+        navidrome_service = NavidromeService()
+        nav_user = navidrome_service.get_user(user["id"], include_token=True)
+        if not nav_user:
+            raise APIBadRequest("Navidrome account not connected")
+        
+        counts = import_starred_tracks(
+            user["id"], 
+            nav_user["instance_url"], 
+            nav_user["md5_auth_token"], 
+            nav_user["salt"], 
+            nav_user["username"]
+        )
+        return jsonify(counts)
+
+    return APIBadRequest(f"Service {data['service']} is not supported for feedback import.")
     return jsonify(counts)
