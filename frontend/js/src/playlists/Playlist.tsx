@@ -147,7 +147,12 @@ export default function PlaylistPage() {
 
       switch (option) {
         case "shuffle": {
-          setDisplayedTracks([...base].sort(() => Math.random() - 0.5));
+          const arr = [...base];
+          for (let i = arr.length - 1; i > 0; i -= 1) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+          }
+          setDisplayedTracks(arr);
           return;
         }
         case "default": {
@@ -654,6 +659,7 @@ export default function PlaylistPage() {
                   id="playlistTrackSort"
                   className="form-select"
                   style={{ width: "auto" }}
+                  aria-label="Sort playlist tracks by"
                   value={sortKey}
                   onChange={(e) =>
                     setTrackSortOption(e.target.value as TrackSortKey)
