@@ -81,7 +81,7 @@ describe("UserPlaylists search", () => {
     const onSearchSubmit = jest.fn();
     renderPlaylists({ onSearchSubmit });
 
-    await user.type(getSearchInput(), "test");
+    await user.type(getSearchInput(), "  test  ");
     await submitSearch();
 
     expect(onSearchSubmit).toHaveBeenCalledWith("test");
