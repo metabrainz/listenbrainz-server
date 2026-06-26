@@ -17,12 +17,16 @@ from mapping.utils import insert_rows, log
 
 MB_EVENT_METADATA_CACHE_TIMESTAMP_KEY = "mb_event_metadata_cache_last_update_timestamp"
 
-ARTIST_EVENT_LINK_GIDS = (
-    "936c7c95-3156-3889-a062-8a0cd57f8946",  # main performer
-    "492a850e-97eb-306a-a85e-4b6d98527796",  # support act
-    "292df906-98a6-307e-86e8-df01a579a321",  # guest performer
+ARTIST_EVENT_LINK_BLOCKLIST = (
+    "a66ea135-5dd0-4dc2-8ecb-59e3026d1ecc",  # artwork
+    "c49495bf-71d0-4d5f-9121-c775cc33e940",  # design
+    "d3e1717b-6ab9-4fdb-bd77-0dba3f082a74",  # graphic design
+    "f10e1176-4644-4689-910f-16356946ff32",  # illustration
+    "5193f001-643f-44a1-9fad-0f6816e84a3d",  # jury member
 )
-ARTIST_EVENT_LINK_GIDS_SQL = ", ".join([f"'{x}'" for x in ARTIST_EVENT_LINK_GIDS])
+ARTIST_EVENT_LINK_BLOCKLIST_SQL = ", ".join(
+    [f"'{x}'" for x in ARTIST_EVENT_LINK_BLOCKLIST]
+)
 
 EVENT_URL_LINK_GIDS = (
     "c26808b0-4e67-31a7-a587-913720dfb3f3",  # official homepage
@@ -42,8 +46,8 @@ AREA_EVENT_LINK_GID = "542f8484-8bc7-3ce5-a022-747850b2b928"
 
 class MusicBrainzEventArtistCache(BulkInsertTable):
     """
-        This class creates the artist-event edge cache, driven by the
-        primary MusicBrainzEventMetadataCache table.
+    This class creates the artist-event edge cache, driven by the
+    primary MusicBrainzEventMetadataCache table.
     """
 
     def __init__(self, select_conn, insert_conn=None, batch_size=None, unlogged=False):
@@ -101,8 +105,8 @@ class MusicBrainzEventArtistCache(BulkInsertTable):
 
 class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
     """
-        This class creates the MB event metadata cache and its associated
-        artist-event edge table.
+    This class creates the MB event metadata cache and its associated
+    artist-event edge table.
     """
 
     def __init__(self, select_conn, insert_conn=None, batch_size=None, unlogged=False):
@@ -183,8 +187,9 @@ class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
         }
 
     def _assemble_event_time(self, row):
-        """ Combine event.time with begin_date into a full timestamp.
-            Returns None if either part is missing. Assuming UTC.
+        """
+        Combine event.time with begin_date into a full timestamp.
+        Returns None if either part is missing. Assuming UTC.
         """
         event_time_raw = row["event_time_raw"]
         if event_time_raw is None:
@@ -413,7 +418,7 @@ class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
                               JOIN musicbrainz.artist a
                                 ON lae.entity0 = a.id
                               {values_join}
-                             WHERE lt.gid IN ({ARTIST_EVENT_LINK_GIDS_SQL})
+                             WHERE lt.gid NOT IN ({ARTIST_EVENT_LINK_BLOCKLIST_SQL})
                           GROUP BY e.gid
                    )
                             SELECT e.gid::TEXT AS event_mbid
@@ -524,7 +529,7 @@ class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
                 ON lae.link = l.id
               JOIN musicbrainz.link_type lt
                 ON l.link_type = lt.id
-             WHERE lt.gid IN ({ARTIST_EVENT_LINK_GIDS_SQL})
+             WHERE lt.gid NOT IN ({ARTIST_EVENT_LINK_BLOCKLIST_SQL})
                AND (
                     lae.last_updated > %(timestamp)s
                  OR  lt.last_updated > %(timestamp)s
@@ -700,10 +705,10 @@ class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
 
 def create_mb_event_metadata_cache(use_lb_conn: bool):
     """
-        Main function for creating the MB event metadata cache and its related tables.
+    Main function for creating the MB event metadata cache and its related tables.
 
-        Arguments:
-            use_lb_conn: whether to use LB conn or not
+    Arguments:
+        use_lb_conn: whether to use LB conn or not
     """
     create_metadata_cache(
         MusicBrainzEventMetadataCache,
