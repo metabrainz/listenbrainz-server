@@ -37,6 +37,8 @@ EVENT_URL_LINK_BLOCKLIST_SQL = ", ".join([f"'{x}'" for x in EVENT_URL_LINK_BLOCK
 
 EVENT_PLACE_LINK_GID = "e2c6f697-07dc-38b1-be0b-83d740165532"
 
+EVENT_PARTS_LINK_GID = "65742183-b25c-469e-b094-ff6739e6699c"
+
 # falls back to area if no place
 AREA_EVENT_LINK_GID = "542f8484-8bc7-3ce5-a022-747850b2b928"
 
@@ -154,6 +156,7 @@ class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
                         "a777f05b-a934-4648-9a5c-60284b588c0e",
                         "4996ec02-a2c6-405d-99b7-c545e3ad040a",
                         "ab234290-d27d-45b6-9778-d21945906996",
+                        "4ff6bf2a-ff96-405c-ae4d-b79c2373c775",
                     )
                 ]
             ]
@@ -237,6 +240,13 @@ class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
                 filtered[name] = url
             if filtered:
                 event_data["rels"] = filtered
+
+        if row["event_parts"]:
+            parts = []
+            for part_mbid, part_name in row["event_parts"]:
+                parts.append({"mbid": part_mbid, "name": part_name})
+            if parts:
+                event_data["parts"] = parts
 
         event_tags = []
         for tag, count, genre_mbid in row["event_tags"] or []:
@@ -327,6 +337,22 @@ class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
                                 ON l.link_type = lt.id
                               {values_join}
                              WHERE lt.gid NOT IN ({EVENT_URL_LINK_BLOCKLIST_SQL})
+                               AND NOT l.ended
+                          GROUP BY e.gid
+                   ), event_parts AS (
+                            SELECT e.gid AS event_mbid
+                                 , array_agg(jsonb_build_array(e2.gid, e2.name)) AS event_parts
+                              FROM musicbrainz.event e
+                              JOIN musicbrainz.l_event_event lee
+                                ON lee.entity0 = e.id
+                              JOIN musicbrainz.link l
+                                ON lee.link = l.id
+                              JOIN musicbrainz.link_type lt
+                                ON l.link_type = lt.id
+                              JOIN musicbrainz.event e2
+                                ON lee.entity1 = e2.id
+                              {values_join}
+                             WHERE lt.gid = '{EVENT_PARTS_LINK_GID}'
                                AND NOT l.ended
                           GROUP BY e.gid
                    ), event_tags AS (
@@ -440,6 +466,7 @@ class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
                                  , e.comment AS disambiguation
                                  , e.setlist
                                  , eurl.event_links
+                                 , eparts.event_parts
                                  , etags.event_tags
                                  , ea.event_art_id
                                  , em.rating
@@ -452,6 +479,8 @@ class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
                                 ON em.id = e.id
                          LEFT JOIN event_url_rels eurl
                                 ON eurl.event_mbid = e.gid
+                         LEFT JOIN event_parts eparts
+                                ON eparts.event_mbid = e.gid
                          LEFT JOIN event_tags etags
                                 ON etags.event_mbid = e.gid
                          LEFT JOIN event_place ep
@@ -511,6 +540,28 @@ class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
                     leu.last_updated > %(timestamp)s
                  OR   u.last_updated > %(timestamp)s
                  OR  lt.last_updated > %(timestamp)s
+               )
+        """
+
+        # Event-event parts
+        # |  CTE / table       |  purpose                    | last_updated considered
+        # |  event_parts       |  multi part events          | l_event_event, link_type, event
+        event_parts_query = f"""
+            SELECT e.gid
+              FROM musicbrainz.event e
+              JOIN musicbrainz.l_event_event lee
+                ON lee.entity0 = e.id
+              JOIN musicbrainz.link l
+                ON lee.link = l.id
+              JOIN musicbrainz.link_type lt
+                ON l.link_type = lt.id
+              JOIN musicbrainz.event e2
+                ON lee.entity1 = e2.id
+             WHERE lt.gid = '{EVENT_PARTS_LINK_GID}'
+               AND (
+                    lee.last_updated > %(timestamp)s
+                 OR  lt.last_updated > %(timestamp)s
+                 OR  e2.last_updated > %(timestamp)s
                )
         """
 
@@ -593,6 +644,11 @@ class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
 
                 log("mb event metadata cache: querying event url rel changes")
                 curs.execute(event_url_rels_query, {"timestamp": timestamp})
+                for row in curs.fetchall():
+                    event_mbids.add(row[0])
+
+                log("mb event metadata cache: querying event parts changes")
+                curs.execute(event_parts_query, {"timestamp": timestamp})
                 for row in curs.fetchall():
                     event_mbids.add(row[0])
 
