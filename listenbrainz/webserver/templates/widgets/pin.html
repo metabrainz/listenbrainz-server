@@ -26,7 +26,7 @@
     <!--  OpenGraph image meta tags -->
     <meta
       property="og:image"
-      content="{{ url_for('static', filename='img/share-header.png', _external=True) }}"
+      content="{{ static_url('img/share-header.png', external=True) }}"
     />
     <meta property="og:image:width" content="1280" />
     <meta property="og:image:height" content="640" />
@@ -41,25 +41,25 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:image"
-      content="{{ url_for('static', filename='img/share-header.png', _external=True) }}"
+      content="{{ static_url('img/share-header.png', external=True) }}"
     />
 
     <link
       rel="icon"
       sizes="16x16"
-      href="{{ url_for('static', filename='img/favicon-16.png') }}"
+      href="{{ static_url('img/favicon-16.png') }}"
       type="image/png"
     />
     <link
       rel="icon"
       sizes="256x256"
-      href="{{ url_for('static', filename='img/favicon-256.png') }}"
+      href="{{ static_url('img/favicon-256.png') }}"
       type="image/png"
     />
     <link
       rel="icon"
       sizes="32x32"
-      href="{{ url_for('static', filename='img/favicon-32.png') }}"
+      href="{{ static_url('img/favicon-32.png') }}"
       type="image/png"
     />
     <!-- Google Fonts -->
@@ -71,7 +71,7 @@
     />
 
     <link
-      href="{{ url_for('static', filename='css/static/widgets.css') }}"
+      href="{{ static_url('css/static/widgets.css') }}"
       rel="stylesheet"
       media="screen"
     />

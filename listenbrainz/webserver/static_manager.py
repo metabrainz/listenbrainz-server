@@ -2,6 +2,7 @@ import os.path
 import json
 import time
 from flask import current_app
+from flask import url_for
 
 MANIFEST_PATH = os.path.join("/", "static", "dist", "manifest.json")
 
@@ -16,6 +17,33 @@ def read_manifest():
             manifest_content = json.load(manifest_file)
 
 
+def _get_static_resources_url():
+    return current_app.config.get("STATIC_RESOURCES_URL", "").rstrip("/")
+
+
+def _prefix_static_path(path):
+    static_resources_url = _get_static_resources_url()
+    if not static_resources_url:
+        return path
+
+    if path.startswith(("http://", "https://", "//")):
+        return path
+
+    if path.startswith("/static/"):
+        path = path[len("/static"):]
+    elif not path.startswith("/"):
+        path = "/" + path
+
+    return static_resources_url + path
+
+
+def get_static_url(filename, external=False):
+    static_resources_url = _get_static_resources_url()
+    if static_resources_url:
+        return _prefix_static_path(filename)
+    return url_for("static", filename=filename, _external=external)
+
+
 def get_static_path(resource_name):
     global last_reload_time
     current_time = time.time()
@@ -28,5 +56,5 @@ def get_static_path(resource_name):
             last_reload_time = current_time
 
     if resource_name not in manifest_content:
-        return "/static/%s" % resource_name
-    return manifest_content[resource_name]
+        return _prefix_static_path("/static/%s" % resource_name)
+    return _prefix_static_path(manifest_content[resource_name])

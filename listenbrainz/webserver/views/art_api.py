@@ -15,6 +15,7 @@ from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound
+from listenbrainz.webserver.static_manager import get_static_url
 from listenbrainz.webserver.views.api_tools import is_valid_uuid, _parse_bool_arg, validate_auth_header
 from listenbrainz.webserver.views.playlist_api import PLAYLIST_TRACK_EXTENSION_URI, fetch_playlist_recording_metadata
 from listenbrainz.webserver.views.playlist import get_cover_art_options
@@ -417,7 +418,7 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
         except ValueError as error:
             raise APIBadRequest(str(error))
 
-        cover_art_on_floor_url = f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/cover-art-on-floor.png'
+        cover_art_on_floor_url = get_static_url("img/art/cover-art-on-floor.png", external=True)
         return render_template(f"art/svg-templates/{custom_name}.svg",
                                cover_art_on_floor_url=cover_art_on_floor_url,
                                images=images,

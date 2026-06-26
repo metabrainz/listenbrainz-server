@@ -243,3 +243,11 @@ RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbra
 ARG GIT_COMMIT_SHA
 LABEL org.label-schema.vcs-ref=$GIT_COMMIT_SHA
 ENV GIT_SHA ${GIT_COMMIT_SHA}
+
+
+#############################################
+# NOTE: Static asset export image starts here.
+#############################################
+FROM listenbrainz-prod AS listenbrainz-static-assets
+
+COPY --from=listenbrainz-prod /static /

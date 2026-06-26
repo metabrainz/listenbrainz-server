@@ -12,6 +12,8 @@ jobs:
 
     steps:
 
+    - uses: actions/checkout@v4
+
     - name: Docker Setup Buildx
       uses: docker/setup-buildx-action@v2
       
@@ -31,3 +33,26 @@ jobs:
         push: true
         tags: metabrainz/listenbrainz:${{ github.ref_name }}
         target: listenbrainz-prod
+
+    - name: Export static assets
+      uses: docker/build-push-action@v4
+      with:
+        build-args: GIT_COMMIT_SHA=${{ github.ref_name }}
+        cache-from: metabrainz/listenbrainz:cache
+        outputs: type=local,dest=/tmp/listenbrainz-static
+        target: listenbrainz-static-assets
+
+    - name: Write StaticBrainz SSH key
+      run: |
+        install -m 700 -d ~/.ssh
+        printf '%s\n' '${{ secrets.STATICBRAINZ_SSH_PRIVATE_KEY }}' > ~/.ssh/rsync-listenbrainz-staticbrainz
+        chmod 600 ~/.ssh/rsync-listenbrainz-staticbrainz
+
+    - name: Upload static assets to StaticBrainz
+      env:
+        STATICBRAINZ_SERVERS: ${{ secrets.STATICBRAINZ_SERVERS }}
+        RSYNC_STATICBRAINZ_KEY: ~/.ssh/rsync-listenbrainz-staticbrainz
+        STATICBRAINZ_SOURCE_DIR: /tmp/listenbrainz-static
+        STATICBRAINZ_DESTINATION_DIR: ./
+        STATICBRAINZ_PRECOMPRESS: "1"
+      run: ./admin/rsync-staticbrainz-files.sh
