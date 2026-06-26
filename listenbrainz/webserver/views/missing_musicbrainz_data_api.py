@@ -103,7 +103,7 @@ def get_missing_musicbrainz_data(user_name):
         err_msg = 'Missing MusicBrainz data for {} not calculated or none exists.'.format(user_name)
         raise APINoContent(err_msg)
 
-    missing_musicbrainz_data_list_filtered = data[offset:count]
+    missing_musicbrainz_data_list_filtered = data[offset:offset + count]
 
     payload = {
         'payload': {

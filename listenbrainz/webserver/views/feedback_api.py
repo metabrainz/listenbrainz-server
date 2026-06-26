@@ -40,7 +40,9 @@ def recording_feedback():
     """
     user = validate_auth_header()
 
-    data = request.json
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
 
     if ('recording_msid' not in data and 'recording_mbid' not in data) or 'score' not in data:
         log_raise_400("JSON document must contain either recording_msid or recording_mbid, and "
@@ -112,9 +114,8 @@ def get_feedback_for_user(user_name):
         if score not in [-1, 1]:
             log_raise_400("Score can have a value of 1 or -1.", request.args)
 
-    feedback = db_feedback.get_feedback_for_user(db_conn, ts_conn, user_id=user["id"], limit=count,
-                                                 offset=offset, score=score, metadata=metadata)
-    total_count = db_feedback.get_feedback_count_for_user(db_conn, user["id"], score)
+    feedback, total_count = db_feedback.get_feedback_for_user_with_count(db_conn, ts_conn, user_id=user["id"], limit=count,
+                                                                         offset=offset, score=score, metadata=metadata)
 
     feedback = [fb.to_api() for fb in feedback]
 
@@ -186,9 +187,8 @@ def _get_feedback_for_recording(recording_type, recording):
         if score not in [-1, 1]:
             log_raise_400("Score can have a value of 1 or -1.", request.args)
 
-    feedback = db_feedback.get_feedback_for_recording(db_conn, recording_type, recording, limit=count,
-                                                      offset=offset, score=score)
-    total_count = db_feedback.get_feedback_count_for_recording(db_conn, recording_type, recording)
+    feedback, total_count = db_feedback.get_feedback_for_recording_with_count(db_conn, recording_type, recording, limit=count,
+                                                                              offset=offset, score=score)
 
     feedback = [fb.to_api() for fb in feedback]
 
@@ -252,8 +252,12 @@ def get_feedback_for_recordings_for_user_post(user_name):
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     """
-    recording_msids = request.json.get("recording_msids", [])
-    recording_mbids = request.json.get("recording_mbids", [])
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
+
+    recording_msids = data.get("recording_msids", [])
+    recording_mbids = data.get("recording_mbids", [])
     return _get_feedback_for_recordings_for_user_helper(user_name, recording_msids, recording_mbids)
 
 
@@ -305,7 +309,9 @@ def get_feedback_for_recordings_for_user_get(user_name):
 def import_feedback():
     """ Import feedback from external service. """
     user = validate_auth_header()
-    data = request.json
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
 
     if "service" not in data:
         raise APIBadRequest("missing service")

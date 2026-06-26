@@ -567,7 +567,9 @@ def delete_listen():
     """
     user = validate_auth_header()
 
-    data = request.json
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
 
     if "listened_at" not in data:
         log_raise_400("Listen timestamp missing.")
