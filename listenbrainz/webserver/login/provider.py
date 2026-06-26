@@ -1,6 +1,4 @@
-from flask import request, session, current_app
-from brainzutils.musicbrainz_db import engine as mb_engine
-from brainzutils.musicbrainz_db import editor as mb_editor
+from flask import request, session
 
 from listenbrainz.domain.musicbrainz import MusicBrainzService, MUSICBRAINZ_SCOPES
 from listenbrainz.webserver import db_conn
@@ -9,15 +7,11 @@ from listenbrainz.webserver.timescale_connection import _ts as ts
 import listenbrainz.db.user as db_user
 
 _session_key = "musicbrainz"
+LOGIN_HINTS = {"login", "register"}
 
 
 class MusicBrainzAuthSessionError(Exception):
     """Raised when there is an error parsing the oauth response from MusicBrainz"""
-    pass
-
-
-class MusicBrainzAuthNoEmailError(Exception):
-    """Raised when a user has no email address on MusicBrainz"""
     pass
 
 
@@ -34,25 +28,12 @@ def get_user():
         # get_auth_session raises a KeyError if it was unable to get the required data from `code`
         raise MusicBrainzAuthSessionError()
 
-    user = db_user.get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id)
-    user_email = None
-    if mb_engine:
-        user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)["email"]
+    user = db_user.get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id, fetch_email=True)
 
-    if user is None:  # a new user is trying to sign up
-        if current_app.config["REJECT_NEW_USERS_WITHOUT_EMAIL"] and user_email is None:
-            # if flag is set to True and the user does not have an email do not allow to sign up
-            raise MusicBrainzAuthNoEmailError()
-        db_user.create(db_conn, musicbrainz_row_id, musicbrainz_id, email=user_email)
+    if user is None:
+        db_user.create(db_conn, musicbrainz_row_id, musicbrainz_id)
         user = db_user.get_by_mb_id(db_conn, musicbrainz_id, fetch_email=True)
         ts.set_empty_values_for_user(user["id"])
-    else:  # an existing user is trying to log in
-        # Other option is to change the return type of get_by_mb_row_id to a dict
-        # but its used so widely that we would modify huge number of tests
-        user = dict(user)
-        user["email"] = user_email
-        # every time a user logs in, update the email in LB.
-        db_user.update_user_details(db_conn, user["id"], musicbrainz_id, user_email)
 
     # save user's MB OAuth token, this check cannot be merged with the previous signup/login check because
     # we have a different service user row for each LB deployment but a common user row for all three
@@ -64,11 +45,17 @@ def get_user():
     return user
 
 
-def get_authentication_uri():
+def get_authentication_uri(login_hint=None):
     """Prepare and return URL to authentication service login form."""
     csrf = generate_string(20)
     _persist_data(csrf=csrf)
-    return MusicBrainzService().get_authorize_url(MUSICBRAINZ_SCOPES, state=csrf, access_type="offline")
+    kwargs = {
+        "state": csrf,
+        "access_type": "offline",
+    }
+    if login_hint in LOGIN_HINTS:
+        kwargs["login_hint"] = login_hint
+    return MusicBrainzService().get_authorize_url(MUSICBRAINZ_SCOPES, **kwargs)
 
 
 def validate_post_login():

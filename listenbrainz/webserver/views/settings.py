@@ -30,6 +30,7 @@ from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError, \
     APIBadRequest, APIUnauthorized
 from listenbrainz.webserver.login import api_login_required
+from listenbrainz.webserver.utils import CONNECT_SERVICES_WITHOUT_EMAIL_ERROR
 from listenbrainz.domain.funkwhale import FunkwhaleService
 from listenbrainz.domain.navidrome import NavidromeService
 from listenbrainz.db import funkwhale as db_funkwhale
@@ -66,6 +67,22 @@ def validate_funkwhale_url(url: str) -> str:
 
 
 settings_bp = Blueprint("settings", __name__)
+
+
+def _user_has_verified_email(user: dict[str, Any] | None) -> bool:
+    if not current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]:
+        return True
+    return bool(user and user["email"])
+
+
+def _current_user_has_verified_email() -> bool:
+    user = db_user.get(db_conn, current_user.id, fetch_email=True)
+    return _user_has_verified_email(user)
+
+
+def _require_current_user_verified_email() -> None:
+    if not _current_user_has_verified_email():
+        raise APIUnauthorized(CONNECT_SERVICES_WITHOUT_EMAIL_ERROR)
 
 
 @settings_bp.post("/resettoken/")
@@ -105,12 +122,7 @@ def set_troi_prefs():
 @api_login_required
 def import_data():
     """ Displays the import page to user, giving various options """
-    user = db_user.get(db_conn, current_user.id, fetch_email=True)
-    # if the flag is turned off (local development) then do not perform email check
-    if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]:
-        user_has_email = user["email"] is not None
-    else:
-        user_has_email = True
+    user_has_email = _current_user_has_verified_email()
 
     pg_timezones = db_usersetting.get_pg_timezone(db_conn)
     user_settings = db_usersetting.get(db_conn, current_user.id)
@@ -244,6 +256,7 @@ def music_services_details():
     current_navidrome_permissions = "listen" if navidrome_connection else "disable"
 
     data: dict[str, Any] = {
+        "user_has_email": _current_user_has_verified_email(),
         "current_spotify_permissions": current_spotify_permissions,
         "current_critiquebrainz_permissions": current_critiquebrainz_permissions,
         "current_soundcloud_permissions": current_soundcloud_permissions,
@@ -277,6 +290,8 @@ def music_services_details():
 @login_required
 def music_services_callback(service_name: str):
     service = _get_service_or_raise_404(service_name, exclude_apple=True, exclude_navidrome=True)
+    if not _current_user_has_verified_email():
+        return redirect(url_for("settings.index", path="music-services/details", email_required="1"))
 
     # Check for error parameter first
     error = request.args.get("error")
@@ -425,6 +440,8 @@ def refresh_service_token(service_name: str):
 @api_login_required
 def music_services_connect(service_name: str):
     """ Connect last.fm/libre.fm/funkwhale account to ListenBrainz user. """
+    _require_current_user_verified_email()
+
     if service_name.lower() == "funkwhale":
         data = request.get_json() or {}
         host_url = data.get("host_url")
@@ -563,6 +580,14 @@ def music_services_disconnect(service_name: str):
             current_app.logger.error("Error in disconnect_navidrome: %s", str(e), exc_info=True)
             raise APIInternalServerError("An error occurred while disconnecting from Navidrome")
 
+    try:
+        action = json.loads(request.data).get('action', None)
+    except json.JSONDecodeError:
+        raise BadRequest('Invalid JSON')
+
+    if action and action != 'disable':
+        _require_current_user_verified_email()
+
     # Handle other services
     service = _get_service_or_raise_404(service_name)
     user = service.get_user(current_user.id)
@@ -571,11 +596,6 @@ def music_services_disconnect(service_name: str):
     # we should try to delete the current permissions only if the user has connected previously
     if user:
         service.remove_user(current_user.id)
-
-    try:
-        action = json.loads(request.data).get('action', None)
-    except json.JSONDecodeError:
-        raise BadRequest('Invalid JSON')
 
     if not action or action == 'disable':
         return jsonify({"success": True})
@@ -616,6 +636,8 @@ def music_services_disconnect(service_name: str):
 def music_services_set_token(service_name: str):
     if service_name != 'apple':
         raise APIInternalServerError("The set-token method not implemented for this service")
+
+    _require_current_user_verified_email()
 
     music_user_token = request.data.decode('UTF-8')
 

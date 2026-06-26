@@ -33,7 +33,7 @@ import NumberCounter from "./NumberCounter";
 import Blob from "./Blob";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { RouteQuery } from "../utils/Loader";
-import { getRegistrationUrl } from "../utils/utils";
+import buildAuthUrl from "../utils/auth";
 
 type HomePageProps = {
   listenCount: number;
@@ -42,7 +42,6 @@ type HomePageProps = {
 
 function HomePage() {
   const location = useLocation();
-  const { registrationUrl } = React.useContext(GlobalAppContext);
   const { data } = useQuery<HomePageProps>(
     RouteQuery(["home"], location.pathname)
   );
@@ -69,17 +68,14 @@ function HomePage() {
   }, []);
 
   const createAccountButton = (
-    <a
-      className="create-account-button"
-      href={getRegistrationUrl(registrationUrl)}
-    >
+    <a className="create-account-button" href={buildAuthUrl("register")}>
       Create Account
     </a>
   );
   const loginButton = (
-    <Link className="login-button" to="/login/">
+    <a className="login-button" href={buildAuthUrl("login")}>
       Login
-    </Link>
+    </a>
   );
   // Calculate available screen real estate
   // This allows us to ensure that each page takes full height taking mobile browser toolbars into account

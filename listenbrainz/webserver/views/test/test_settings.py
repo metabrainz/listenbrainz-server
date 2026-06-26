@@ -11,6 +11,7 @@ import time
 from data.model.external_service import ExternalServiceType
 from listenbrainz.domain.external_service import ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService, OAUTH_TOKEN_URL
+from listenbrainz.webserver.utils import CONNECT_SERVICES_WITHOUT_EMAIL_ERROR
 from listenbrainz.tests.integration import IntegrationTestCase
 from unittest.mock import patch
 from listenbrainz.db import external_service_oauth as db_oauth, listens_importer
@@ -76,7 +77,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         """Tests user info view when not logged in"""
         profile_info_url = self.custom_url_for('settings.index', path='')
         response = self.client.get(profile_info_url)
-        self.assertRedirects(response, self.custom_url_for('login.index', next=profile_info_url))
+        self.assertRedirects(response, self.custom_url_for('login.musicbrainz', next=profile_info_url))
 
     def test_delete_listens(self):
         """Tests delete listens end point"""
@@ -92,7 +93,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         """Tests delete listens view when not logged in"""
         delete_listens_url = self.custom_url_for('settings.index', path='delete-listens')
         response = self.client.get(delete_listens_url)
-        self.assertRedirects(response, self.custom_url_for('login.index', next=delete_listens_url))
+        self.assertRedirects(response, self.custom_url_for('login.musicbrainz', next=delete_listens_url))
 
         response = self.client.post(delete_listens_url)
         self.assert401(response)
@@ -109,7 +110,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         select_timezone_url = self.custom_url_for('settings.index', path='select_timezone')
         response = self.client.get(select_timezone_url)
         self.assertStatus(response, 302)
-        self.assertRedirects(response, self.custom_url_for('login.index', next=select_timezone_url))
+        self.assertRedirects(response, self.custom_url_for('login.musicbrainz', next=select_timezone_url))
 
     def test_music_services_details(self):
         self.temporary_login(self.user['login_id'])
@@ -121,6 +122,72 @@ class SettingsViewsTestCase(IntegrationTestCase):
 
         with self.app.app_context():
             self.assertIsNone(self.service.get_user(self.user['id']))
+
+    def test_music_services_details_reports_email_verification_state(self):
+        self.temporary_login(self.user['login_id'])
+        old_reject_setting = self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]
+        try:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = True
+
+            response = self.client.post(self.custom_url_for("settings.music_services_details"))
+            self.assert200(response)
+            self.assertFalse(response.json["user_has_email"])
+
+            db_user.update_user_details(
+                self.db_conn,
+                self.user["id"],
+                self.user["musicbrainz_id"],
+                "verified@example.com"
+            )
+            response = self.client.post(self.custom_url_for("settings.music_services_details"))
+            self.assert200(response)
+            self.assertTrue(response.json["user_has_email"])
+        finally:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = old_reject_setting
+
+    def test_music_services_connect_requires_verified_email(self):
+        self.temporary_login(self.user['login_id'])
+        old_reject_setting = self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]
+        try:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = True
+
+            response = self.client.post(
+                self.custom_url_for('settings.music_services_connect', service_name='lastfm'),
+                json={"external_user_id": "lucifer"}
+            )
+            self.assert401(response)
+            self.assertEqual(response.json["error"], CONNECT_SERVICES_WITHOUT_EMAIL_ERROR)
+
+            response = self.client.post(
+                self.custom_url_for('settings.music_services_disconnect', service_name='spotify'),
+                json={"action": "listen"}
+            )
+            self.assert401(response)
+            self.assertEqual(response.json["error"], CONNECT_SERVICES_WITHOUT_EMAIL_ERROR)
+
+            response = self.client.post(
+                self.custom_url_for('settings.music_services_disconnect', service_name='spotify'),
+                json={"action": "disable"}
+            )
+            self.assert200(response)
+        finally:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = old_reject_setting
+
+    @patch('listenbrainz.domain.spotify.SpotifyService.fetch_access_token')
+    def test_music_services_callback_requires_verified_email(self, mock_fetch_access_token):
+        self.temporary_login(self.user['login_id'])
+        old_reject_setting = self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]
+        try:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = True
+
+            response = self.client.get(
+                self.custom_url_for('settings.music_services_callback', service_name='spotify', code='code')
+            )
+            self.assertStatus(response, 302)
+            self.assertIn("email_required=1", response.location)
+            mock_fetch_access_token.assert_not_called()
+        finally:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = old_reject_setting
 
     @patch('listenbrainz.domain.spotify.SpotifyService.fetch_access_token')
     @patch.object(spotipy.Spotify, 'current_user')

@@ -4,10 +4,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Username from "../common/Username";
-import { getRegistrationUrl } from "../utils/utils";
+import buildAuthUrl from "../utils/auth";
 
 function Navbar() {
-  const { currentUser, registrationUrl } = React.useContext(GlobalAppContext);
+  const { currentUser } = React.useContext(GlobalAppContext);
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = React.useState("");
@@ -138,10 +138,10 @@ function Navbar() {
               </>
             ) : (
               <>
-                <Link to="/login/" onClick={toggleSidebar}>
+                <a href={buildAuthUrl("login")} onClick={toggleSidebar}>
                   Sign in
-                </Link>
-                <a href={getRegistrationUrl(registrationUrl)}>
+                </a>
+                <a href={buildAuthUrl("register")} onClick={toggleSidebar}>
                   Create Account
                 </a>
               </>
