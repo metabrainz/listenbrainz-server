@@ -28,15 +28,12 @@ ARTIST_EVENT_LINK_BLOCKLIST_SQL = ", ".join(
     [f"'{x}'" for x in ARTIST_EVENT_LINK_BLOCKLIST]
 )
 
-EVENT_URL_LINK_GIDS = (
-    "c26808b0-4e67-31a7-a587-913720dfb3f3",  # official homepage
-    "68f5fcaa-b58c-3bfe-9b7c-75c2b56e839a",  # social network
-    "125afc57-4d33-3b63-ab41-848a3a18d3a6",  # songkick
-    "b022d060-e6a8-340f-8c73-6b21b1d090b9",  # wikidata
-    "08a982f7-d754-39b2-8315-d7cae474c641",  # wikipedia
-    "fea46163-dc45-3af9-917e-1798f325d21a",  # youtube
+EVENT_URL_LINK_BLOCKLIST = (
+    # nil UUID till we need to add stuff
+    # prevents NOT IN from being empty
+    "00000000-0000-0000-0000-000000000000",
 )
-EVENT_URL_LINK_GIDS_SQL = ", ".join([f"'{x}'" for x in EVENT_URL_LINK_GIDS])
+EVENT_URL_LINK_BLOCKLIST_SQL = ", ".join([f"'{x}'" for x in EVENT_URL_LINK_BLOCKLIST])
 
 EVENT_PLACE_LINK_GID = "e2c6f697-07dc-38b1-be0b-83d740165532"
 
@@ -329,7 +326,7 @@ class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
                               JOIN musicbrainz.link_type lt
                                 ON l.link_type = lt.id
                               {values_join}
-                             WHERE lt.gid IN ({EVENT_URL_LINK_GIDS_SQL})
+                             WHERE lt.gid NOT IN ({EVENT_URL_LINK_BLOCKLIST_SQL})
                                AND NOT l.ended
                           GROUP BY e.gid
                    ), event_tags AS (
@@ -509,7 +506,7 @@ class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
                 ON leu.link = l.id
               JOIN musicbrainz.link_type lt
                 ON l.link_type = lt.id
-             WHERE lt.gid IN ({EVENT_URL_LINK_GIDS_SQL})
+             WHERE lt.gid NOT IN ({EVENT_URL_LINK_BLOCKLIST_SQL})
                AND (
                     leu.last_updated > %(timestamp)s
                  OR   u.last_updated > %(timestamp)s
