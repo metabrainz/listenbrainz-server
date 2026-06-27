@@ -1,3 +1,4 @@
+@use "sass:map";
 $color-selector-size: 24px;
 
 #stats-art-creator {
@@ -302,11 +303,21 @@ $color-selector-size: 24px;
     .share-buttons {
       flex: 1;
       flex-basis: 300px;
-      justify-content: left;
+      justify-content: center;
 
       > .btn-link > span {
         margin-right: 0.2em;
         font-size: 14px;
+      }
+    }
+    .share-buttons {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      @media (max-width: map.get($grid-breakpoints, "sm")) {
+        flex-wrap: wrap;
+        row-gap: 0.5em;
       }
     }
 
@@ -319,6 +330,12 @@ $color-selector-size: 24px;
       height: 3em;
       margin-left: 0.6em;
       margin-right: auto;
+
+      @media (max-width: map.get($grid-breakpoints, "sm")) {
+        min-width: 0;
+        flex: 1 1 auto;
+        max-width: 100%;
+      }
 
       > input {
         text-overflow: ellipsis;
