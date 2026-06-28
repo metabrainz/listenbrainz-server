@@ -68,6 +68,40 @@ type TrackSortKey =
   | "artist"
   | "shuffle";
 
+function shuffleTracks(tracks: JSPFTrack[]): JSPFTrack[] {
+  const arr = [...tracks];
+  for (let i = arr.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function getTrackId(track: JSPFTrack): string {
+  return track.id ?? getRecordingMBIDFromJSPFTrack(track);
+}
+
+// After add/remove: keep shuffle order, drop missing tracks, append new ones.
+function syncShuffledTracksWithPlaylist(
+  shuffledOrder: JSPFTrack[],
+  playlistTracks: JSPFTrack[]
+): JSPFTrack[] {
+  const playlistById = new Map(
+    playlistTracks.map((track) => [getTrackId(track), track])
+  );
+
+  const keptInShuffleOrder = shuffledOrder
+    .map((track) => playlistById.get(getTrackId(track)))
+    .filter((track) => track !== undefined); // remove wherever undefined
+
+  const keptIds = new Set(keptInShuffleOrder.map(getTrackId));
+  const newlyAdded = playlistTracks.filter(
+    (track) => !keptIds.has(getTrackId(track))
+  );
+
+  return [...keptInShuffleOrder, ...newlyAdded];
+}
+
 const makeJSPFTrack = (trackMetadata: TrackMetadata): JSPFTrack => {
   return {
     identifier: [
@@ -126,98 +160,86 @@ export default function PlaylistPage() {
   const { track: tracks } = playlist;
   const [dontAskAgain, setDontAskAgain] = React.useState(false);
   const [sortKey, setSortKey] = React.useState<TrackSortKey>("default");
-  const [displayedTracks, setDisplayedTracks] = React.useState<JSPFTrack[]>(
-    playlistProps?.playlist?.track ?? []
-  );
+  const [shuffledTracks, setShuffledTracks] = React.useState<
+    JSPFTrack[] | null
+  >(null);
 
   React.useEffect(() => {
     setPlaylist(playlistProps?.playlist || {});
   }, [playlistProps?.playlist]);
 
   const getTieBreaker = React.useCallback((a: JSPFTrack, b: JSPFTrack) => {
-    const aId = a.id ?? getRecordingMBIDFromJSPFTrack(a);
-    const bId = b.id ?? getRecordingMBIDFromJSPFTrack(b);
-    return aId.localeCompare(bId);
+    return getTrackId(a).localeCompare(getTrackId(b));
   }, []);
+
+  const sortedTracks = React.useMemo(() => {
+    const base = tracks ?? [];
+
+    switch (sortKey) {
+      case "title":
+        return [...base].sort((a, b) => {
+          const titleA = a.title ?? "";
+          const titleB = b.title ?? "";
+          const cmp = titleA.toLowerCase().localeCompare(titleB.toLowerCase());
+          return cmp !== 0 ? cmp : getTieBreaker(a, b);
+        });
+      case "artist":
+        return [...base].sort((a, b) => {
+          const artistA = a.creator ?? "";
+          const artistB = b.creator ?? "";
+          const cmp = artistA
+            .toLowerCase()
+            .localeCompare(artistB.toLowerCase());
+          return cmp !== 0 ? cmp : getTieBreaker(a, b);
+        });
+      case "recently_added":
+        return [...base].sort((a, b) => {
+          const aTs = Date.parse(getTrackExtension(a)?.added_at || "");
+          const bTs = Date.parse(getTrackExtension(b)?.added_at || "");
+
+          const aValid = !Number.isNaN(aTs);
+          const bValid = !Number.isNaN(bTs);
+
+          if (aValid && bValid) {
+            return aTs !== bTs ? bTs - aTs : getTieBreaker(a, b);
+          }
+
+          if (aValid) return -1;
+          if (bValid) return 1;
+
+          return getTieBreaker(a, b);
+        });
+      case "shuffle":
+      case "default":
+      default:
+        return base;
+    }
+  }, [sortKey, tracks]);
+
+  const displayedTracks =
+    sortKey === "shuffle" && shuffledTracks ? shuffledTracks : sortedTracks;
 
   const setTrackSortOption = React.useCallback(
     (option: TrackSortKey) => {
-      const base = tracks ?? [];
       setSortKey(option);
 
-      switch (option) {
-        case "shuffle": {
-          const arr = [...base];
-          for (let i = arr.length - 1; i > 0; i -= 1) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [arr[i], arr[j]] = [arr[j], arr[i]];
-          }
-          setDisplayedTracks(arr);
-          return;
-        }
-        case "default": {
-          setDisplayedTracks(base);
-          return;
-        }
-        case "title": {
-          setDisplayedTracks(
-            [...base].sort((a, b) => {
-              const titleA = a.title ?? "";
-              const titleB = b.title ?? "";
-              const cmp = titleA
-                .toLowerCase()
-                .localeCompare(titleB.toLowerCase());
-              return cmp !== 0 ? cmp : getTieBreaker(a, b);
-            })
-          );
-          return;
-        }
-        case "artist": {
-          setDisplayedTracks(
-            [...base].sort((a, b) => {
-              const artistA = a.creator ?? "";
-              const artistB = b.creator ?? "";
-              const cmp = artistA
-                .toLowerCase()
-                .localeCompare(artistB.toLowerCase());
-              return cmp !== 0 ? cmp : getTieBreaker(a, b);
-            })
-          );
-          return;
-        }
-        case "recently_added": {
-          setDisplayedTracks(
-            [...base].sort((a, b) => {
-              const aTs = Date.parse(getTrackExtension(a)?.added_at || "");
-              const bTs = Date.parse(getTrackExtension(b)?.added_at || "");
-
-              const aValid = !Number.isNaN(aTs);
-              const bValid = !Number.isNaN(bTs);
-
-              // Newest first
-              if (aValid && bValid) {
-                return aTs !== bTs ? bTs - aTs : getTieBreaker(a, b);
-              }
-
-              if (aValid) return -1;
-              if (bValid) return 1;
-
-              return getTieBreaker(a, b);
-            })
-          );
-          return;
-        }
-        default: {
-          setDisplayedTracks(base);
-        }
+      if (option === "shuffle") {
+        setShuffledTracks(shuffleTracks(tracks ?? []));
+      } else {
+        setShuffledTracks(null);
       }
     },
-    [getTieBreaker, tracks]
+    [tracks]
   );
 
-  // Re-apply whatever sort option is currently selected when the tracks change.
   React.useEffect(() => {
-    setTrackSortOption(sortKey);
+    if (sortKey !== "shuffle") {
+      return;
+    }
+
+    setShuffledTracks((prev) =>
+      prev === null ? null : syncShuffledTracksWithPlaylist(prev, tracks ?? [])
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tracks]);
 
@@ -681,7 +703,7 @@ export default function PlaylistPage() {
                     window.postMessage(
                       {
                         brainzplayer_event: "play-ambient-queue",
-                        payload: tracks,
+                        payload: displayedTracks,
                       },
                       window.location.origin
                     );
