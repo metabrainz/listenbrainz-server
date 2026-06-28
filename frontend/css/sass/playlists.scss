@@ -217,6 +217,12 @@ $long-description-lines: 8;
   min-width: 3em;
 }
 
+.playlist-item-card .main-content .drag-handle.disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
 /* Pure CSS multiline ellipsis by Sagi Shrieber:
     http://hackingui.com/a-pure-css-solution-for-multiline-text-truncation/
 */
@@ -258,8 +264,23 @@ $long-description-lines: 8;
   align-items: center;
   gap: 1rem;
 }
+
 .playlist-card-list-view .text-summary,
 .playlist .text-summary {
   mask-image: none;
   -webkit-mask-image: none;
+}
+
+#playlist .header .playlist-tracks-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+#playlist .header .playlist-tracks-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
 }
