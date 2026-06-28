@@ -1062,7 +1062,6 @@ class PlaylistAPITestCase(IntegrationTestCase):
 
     def test_playlist_tags_sidebar_endpoint_and_filtering(self):
         """Tags list endpoint returns tags; tag filter works for get playlists and search."""
-        # Create two playlists, tag only one
         response = self.client.post(
             self.custom_url_for("playlist_api_v1.create_playlist"),
             json=get_test_data(),
@@ -1129,7 +1128,6 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["playlist_count"], 1)
 
-        # Tag + search compose (query must be >=3 chars)
         response = self.client.get(
             self.custom_url_for("api_v1.search_user_playlist", playlist_user_name=self.user["musicbrainz_id"], query="198", tag="rock"),
             headers={"Authorization": "Token {}".format(self.user["auth_token"])},

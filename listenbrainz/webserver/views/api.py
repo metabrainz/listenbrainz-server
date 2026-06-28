@@ -810,6 +810,19 @@ def search_user_playlist(playlist_user_name):
 @crossdomain
 @ratelimit()
 def get_playlist_tags_for_user(playlist_user_name):
+    """
+    Fetch tag names and playlist counts for a user's playlists.
+
+    Used by the playlist tags sidebar. Tags are listed with the number of playlists
+    that use each tag.
+
+    :param playlist_user_name: the MusicBrainz ID of the user whose playlist tags are requested.
+    :queryparam collaborator: if true, return tags from playlists the user collaborates on
+        rather than playlists they created. Default: false.
+    :statuscode 200: success
+    :statuscode 404: user not found
+    :resheader Content-Type: *application/json*
+    """
     user = validate_auth_header(optional=True)
     playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
     if playlist_user is None:
