@@ -338,16 +338,7 @@ def _tag_filter_with_combined_ctes(tag_cte_body: str, rest_after_with: str) -> s
 
 
 def add_tags_to_playlist(ts_conn, playlist_id: int, tags: List[str]) -> int:
-    if not tags:
-        return 0
-
-    normalized = []
-    for tag in tags:
-        n = _normalize_playlist_tag(tag)
-        if n:
-            normalized.append(n)
-    # Uniquify in-process to avoid pointless VALUES rows.
-    normalized = list(dict.fromkeys(normalized))
+    normalized = _normalize_playlist_tags(tags)
     if not normalized:
         return 0
 
@@ -363,10 +354,7 @@ def add_tags_to_playlist(ts_conn, playlist_id: int, tags: List[str]) -> int:
 
 
 def remove_tag_from_playlist(ts_conn, playlist_id: int, tag: str) -> int:
-    """Remove a tag from a playlist.
-
-    Returns number of rows deleted.
-    """
+    
     tag = _normalize_playlist_tag(tag)
     if not tag:
         return 0
@@ -616,6 +604,7 @@ def search_playlists_for_user(
             - ``"collaborative"``: search only playlists the user collaborates on.
         sort: How to order search results. One of ``relevance``, ``dateCreated``,
             ``dateUpdated``, ``title``, or ``creator``. Default: ``relevance``.
+        tags: If set, only return playlists that have all of the given tags .
 
     Returns:
         a tuple (playlists, total_playlists)
