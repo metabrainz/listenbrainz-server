@@ -41,19 +41,18 @@ class ReportedUserAdminView(AdminModelView):
         confirmation="Pause selected users?",
     )
     def pause_users(self, ids):
-        for user_id in ids:
-            # making sure user_id is valid
-            user = ReportedUsers.query.get(user_id)
-            if user:
+        for report_id in ids:
+            report = ReportedUsers.query.get(report_id)
+            if report:
                 try:
-                    db_user.pause(db_conn, user.id)
+                    db_user.pause(db_conn, report.reported_user_id)
                     db_conn.commit()
-                    flash(f"{user.musicbrainz_id} paused", "success")
+                    flash(f"{report.reported.musicbrainz_id} paused", "success")
                 except Exception as e:
                     flash(
-                        f"Failed for {user.musicbrainz_id}: {str(e)}", "error")
+                        f"Failed for {report.reported.musicbrainz_id}: {str(e)}", "error")
             else:
-                flash(f"{user_id} not found!", "error")
+                flash(f"{report_id} not found!", "error")
         return redirect('/admin/reported_users_model/')
 
     # With select action to unpause users.
@@ -63,17 +62,16 @@ class ReportedUserAdminView(AdminModelView):
         confirmation="Unpause selected users?",
     )
     def unpause_users(self, ids):
-        for user_id in ids:
-            # making sure user_id is valid
-            user = ReportedUsers.query.get(user_id)
-            if user:
+        for report_id in ids:
+            report = ReportedUsers.query.get(report_id)
+            if report:
                 try:
-                    db_user.unpause(db_conn, user.id)
+                    db_user.unpause(db_conn, report.reported_user_id)
                     db_conn.commit()
-                    flash(f"{user.musicbrainz_id} unpaused", "success")
+                    flash(f"{report.reported.musicbrainz_id} unpaused", "success")
                 except Exception as e:
                     flash(
-                        f"Failed for {user.musicbrainz_id}: {str(e)}", "error")
+                        f"Failed for {report.reported.musicbrainz_id}: {str(e)}", "error")
             else:
-                flash(f"{user_id} not found!", "error")
+                flash(f"{report_id} not found!", "error")
         return redirect('/admin/reported_users_model/')
