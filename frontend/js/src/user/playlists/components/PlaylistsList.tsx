@@ -49,7 +49,6 @@ export default function PlaylistsList(
   } = props;
 
   const showEmptyMessage = !isLoading && !playlists.length && emptyMessage;
-  const showContent = !isLoading;
 
   return (
     <div aria-busy={isLoading}>
@@ -61,7 +60,7 @@ export default function PlaylistsList(
           {emptyMessage}
         </p>
       )}
-      {showContent && (
+      {!isLoading && (
         <div
           id="playlists-container"
           className={view === PlaylistView.LIST ? "list-view" : ""}

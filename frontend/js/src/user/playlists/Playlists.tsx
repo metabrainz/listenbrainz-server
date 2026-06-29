@@ -678,16 +678,12 @@ const parseUrlSort = (sortParam: string | null): SortOption => {
   return SortOption.RELEVANCE;
 };
 
-export function isPlaylistsNavigationLoading(
-  navigation: ReturnType<typeof useNavigation>
-): boolean {
-  return navigation.state === "loading";
-}
-
 export function UserPlaylistsWrapper() {
   const data = useLoaderData() as UserPlaylistsLoaderData;
   const navigation = useNavigation();
-  const isLoading = isPlaylistsNavigationLoading(navigation);
+  const isLoading =
+    navigation.state === "loading" &&
+    navigation.location?.pathname === window.location.pathname;
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParamsObj = getObjectForURLSearchParams(searchParams);
   const skipTypeRestoreRef = React.useRef(false);
