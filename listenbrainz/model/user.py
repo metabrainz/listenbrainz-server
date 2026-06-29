@@ -4,10 +4,9 @@ from flask import current_app,flash,redirect
 from flask_admin.model import action
 from psycopg2 import OperationalError, DatabaseError
 from listenbrainz.model import db
-from listenbrainz.model.utils import generate_username_link
+from listenbrainz.model.utils import generate_username_link, set_users_paused
 from listenbrainz.webserver.admin import AdminModelView
 from listenbrainz.background.background_tasks import add_task
-from listenbrainz.db import user as db_user
 from listenbrainz.webserver import create_app, db_conn, ts_conn
 
 
@@ -80,18 +79,11 @@ class UserAdminView(AdminModelView):
         confirmation="Pause selected users?",
     )
     def pause_users(self, ids):
-        for user_id in ids:
-            # making sure user_id is valid
-            user = User.query.get(user_id)
-            if user:
-                try:
-                    db_user.pause(db_conn,user.id)
-                    db_conn.commit()
-                    flash(f"{user.musicbrainz_id} paused", "success")
-                except Exception as e:
-                    flash(f"Failed for {user.musicbrainz_id}: {str(e)}", "error")
-            else:
-                flash(f"{user_id} not found!", "error")
+        try:
+            users = set_users_paused(db_conn, ids, True)
+            flash(f"Paused {len(users)} users", "success")
+        except Exception as e:
+            flash(f"Failed to pause users: {str(e)}", "error")
         return redirect('/admin/user_model/')
 
 
@@ -102,16 +94,9 @@ class UserAdminView(AdminModelView):
         confirmation="Unpause selected users?",
     )
     def unpause_users(self, ids):
-        for user_id in ids:
-            # making sure user_id is valid
-            user = User.query.get(user_id)
-            if user:
-                try:
-                    db_user.unpause(db_conn,user.id)
-                    db_conn.commit()
-                    flash(f"{user.musicbrainz_id} unpaused", "success")
-                except Exception as e:
-                    flash(f"Failed for {user.musicbrainz_id}: {str(e)}", "error")
-            else:
-                flash(f"{user_id} not found!", "error")
+        try:
+            users = set_users_paused(db_conn, ids, False)
+            flash(f"Unpaused {len(users)} users", "success")
+        except Exception as e:
+            flash(f"Failed to unpause users: {str(e)}", "error")
         return redirect('/admin/user_model/')
