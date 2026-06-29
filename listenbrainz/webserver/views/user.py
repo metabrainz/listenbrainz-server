@@ -170,7 +170,9 @@ def playlists(user_name: str):
 
     if search_query and len(search_query) >= 3:
         if sort not in SEARCH_PLAYLIST_SORTS:
-            sort = "relevance"
+            raise APIBadRequest(
+                "Invalid sort value. Must be one of: %s" % ", ".join(SEARCH_PLAYLIST_SORTS)
+            )
 
         if include_private:
             viewer_id = user.id

@@ -2293,8 +2293,7 @@ export default class APIService {
     searchQuery: string,
     musicbrainzID: string,
     count: number = 25,
-    offset: number = 0,
-    type?: "owned" | "collaborative"
+    offset: number = 0
   ): Promise<PlaylistTypeSearchResult> => {
     const url = new URL(
       `${this.APIBaseURI}/user/${encodeURIComponent(
@@ -2304,9 +2303,6 @@ export default class APIService {
     url.searchParams.set("query", searchQuery);
     url.searchParams.set("count", count.toString());
     url.searchParams.set("offset", offset.toString());
-    if (type) {
-      url.searchParams.set("type", type);
-    }
     const response = await fetch(url.toString());
     await this.checkStatus(response);
     return response.json();
