@@ -17,7 +17,6 @@ class ReportedUsers(db.Model):
     reason = db.Column(db.String)
     reporter = db.relationship('User', foreign_keys=[reporter_user_id])
     reported = db.relationship('User', foreign_keys=[reported_user_id])
-    is_paused = db.Column(db.Boolean, nullable=False)
 
 
 class ReportedUserAdminView(AdminModelView):
@@ -27,7 +26,7 @@ class ReportedUserAdminView(AdminModelView):
         'reported.musicbrainz_id',
         'reason',
         'reported_at',
-        'is_paused',
+        'reported.is_paused',
     ]
 
     column_formatters = {
