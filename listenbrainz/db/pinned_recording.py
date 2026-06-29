@@ -274,7 +274,7 @@ def update_comment(db_conn, row_id: int, blurb_content: str) -> bool:
 
         Args:
             db_conn: Database connection
-            user_id: The user for which the comment of pinned record has to be updated
+            row_id: The row ID of the pinned recording whose comment is to be updated
             blurb_content: The new comment of the user
         Returns:
             True if the update was successful, False otherwise
