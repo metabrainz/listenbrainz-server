@@ -997,6 +997,244 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["count"], 1)
         self.assertEqual(response.json["offset"], 1)
 
+    def test_playlist_tags_owner_only(self):
+        """Only playlist owner can add/remove tags; collaborators can view."""
+        playlist = get_test_data()
+        # Private with a collaborator
+        playlist["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"] = False
+        playlist["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["collaborators"] = [self.user2["musicbrainz_id"]]
+
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        playlist_mbid = response.json["playlist_mbid"]
+
+        # Collaborator cannot add tags
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_tags", playlist_mbid=playlist_mbid),
+            json={"tags": ["gym", "Hip-Hop"]},
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])}
+        )
+        self.assert403(response)
+
+        # Owner can add tags
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_tags", playlist_mbid=playlist_mbid),
+            json={"tags": ["gym", "Hip-Hop", "  gym  "]},
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["added"], 2)
+
+        # Empty or whitespace-only tags are rejected
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_tags", playlist_mbid=playlist_mbid),
+            json={"tags": ["   "]},
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+
+        # Too many tags in one request is rejected
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_tags", playlist_mbid=playlist_mbid),
+            json={"tags": ["tag-%d" % i for i in range(26)]},
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+
+        # Collaborator can view tags on playlist fetch
+        response = self.client.get(
+            self.custom_url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid, fetch_metadata="false"),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])}
+        )
+        self.assert200(response)
+        md = response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI].get("additional_metadata", {})
+        self.assertIn("tags", md)
+        self.assertListEqual(sorted(md["tags"]), ["gym", "hip-hop"])
+
+        # Collaborator cannot remove tags
+        response = self.client.delete(
+            self.custom_url_for("playlist_api_v1.delete_playlist_tag", playlist_mbid=playlist_mbid, tag="gym"),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])}
+        )
+        self.assert403(response)
+
+        # Owner can remove tags
+        response = self.client.delete(
+            self.custom_url_for("playlist_api_v1.delete_playlist_tag", playlist_mbid=playlist_mbid, tag="gym"),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+
+        response = self.client.get(
+            self.custom_url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid, fetch_metadata="false"),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])}
+        )
+        self.assert200(response)
+        md = response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI].get("additional_metadata", {})
+        self.assertListEqual(md.get("tags", []), ["hip-hop"])
+
+    def test_playlist_tags_sidebar_endpoint_and_filtering(self):
+        """Tags list endpoint returns tags; tag filter works for get playlists and search."""
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=get_test_data(),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        p1 = response.json["playlist_mbid"]
+
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=get_test_data(),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        p2 = response.json["playlist_mbid"]
+
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_tags", playlist_mbid=p1),
+            json={"tags": ["rock"]},
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+
+        # Sidebar endpoint
+        response = self.client.get(
+            self.custom_url_for("api_v1.get_playlist_tags_for_user", playlist_user_name=self.user["musicbrainz_id"]),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["tags"][0]["tag"], "rock")
+        self.assertEqual(response.json["tags"][0]["count"], 1)
+
+        # Tag filtering for list endpoint
+        response = self.client.get(
+            self.custom_url_for("api_v1.get_playlists_for_user", playlist_user_name=self.user["musicbrainz_id"], tag="rock"),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["playlist_count"], 1)
+        self.assertEqual(response.json["playlists"][0]["playlist"]["identifier"], PLAYLIST_URI_PREFIX + p1)
+
+        # Add a second tag to p1 and verify AND semantics
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_tags", playlist_mbid=p1),
+            json={"tags": ["gym"]},
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+
+        # p1 has both rock and gym; p2 has none
+        response = self.client.get(
+            self.custom_url_for("api_v1.get_playlists_for_user", playlist_user_name=self.user["musicbrainz_id"], tag="rock,gym"),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["playlist_count"], 1)
+        self.assertEqual(response.json["playlists"][0]["playlist"]["identifier"], PLAYLIST_URI_PREFIX + p1)
+
+        # If we filter by gym alone, we should still only get p1
+        response = self.client.get(
+            self.custom_url_for("api_v1.get_playlists_for_user", playlist_user_name=self.user["musicbrainz_id"], tag="gym"),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["playlist_count"], 1)
+
+        response = self.client.get(
+            self.custom_url_for("api_v1.search_user_playlist", playlist_user_name=self.user["musicbrainz_id"], query="198", tag="rock"),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["playlist_count"], 1)
+        self.assertEqual(response.json["playlists"][0]["playlist"]["identifier"], PLAYLIST_URI_PREFIX + p1)
+
+    def test_playlist_tags_sidebar_by_section(self):
+        """Tags sidebar lists tags from owned playlists or collaborated playlists only."""
+        owned = get_test_data()
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=owned,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        owned_mbid = response.json["playlist_mbid"]
+
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_tags", playlist_mbid=owned_mbid),
+            json={"tags": ["owned-tag"]},
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+
+        collab = get_test_data()
+        collab["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["collaborators"] = [
+            self.user2["musicbrainz_id"]
+        ]
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=collab,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        collab_mbid = response.json["playlist_mbid"]
+
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_tags", playlist_mbid=collab_mbid),
+            json={"tags": ["collab-tag"]},
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+
+        response = self.client.get(
+            self.custom_url_for(
+                "api_v1.get_playlist_tags_for_user",
+                playlist_user_name=self.user2["musicbrainz_id"],
+            ),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])},
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["tags"], [])
+
+        response = self.client.get(
+            self.custom_url_for(
+                "api_v1.get_playlist_tags_for_user",
+                playlist_user_name=self.user2["musicbrainz_id"],
+                collaborator=True,
+            ),
+            headers={"Authorization": "Token {}".format(self.user2["auth_token"])},
+        )
+        self.assert200(response)
+        self.assertEqual(len(response.json["tags"]), 1)
+        self.assertEqual(response.json["tags"][0]["tag"], "collab-tag")
+        self.assertEqual(response.json["tags"][0]["count"], 1)
+
+        response = self.client.get(
+            self.custom_url_for(
+                "api_v1.get_playlist_tags_for_user",
+                playlist_user_name=self.user["musicbrainz_id"],
+            ),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+        )
+        self.assert200(response)
+        owned_tags = {t["tag"] for t in response.json["tags"]}
+        self.assertEqual(owned_tags, {"owned-tag", "collab-tag"})
+
+        response = self.client.get(
+            self.custom_url_for(
+                "api_v1.get_playlist_tags_for_user",
+                playlist_user_name=self.user["musicbrainz_id"],
+                collaborator=True,
+            ),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["tags"], [])
+
     def test_playlist_unauthorized_access(self):
         """ Test for checking that unauthorized access return 401 """
 
