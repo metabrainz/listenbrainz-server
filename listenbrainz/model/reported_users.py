@@ -1,5 +1,6 @@
 from listenbrainz.model import db
-from listenbrainz.model.utils import generate_username_link, set_reported_users_paused
+from listenbrainz.db import user as db_user
+from listenbrainz.model.utils import generate_username_link
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.admin import AdminModelView
 from flask_admin.model import action
@@ -40,11 +41,18 @@ class ReportedUserAdminView(AdminModelView):
         confirmation="Pause selected users?",
     )
     def pause_users(self, ids):
-        try:
-            users = set_reported_users_paused(db_conn, ids, True)
-            flash(f"Paused {len(users)} users", "success")
-        except Exception as e:
-            flash(f"Failed to pause users: {str(e)}", "error")
+        for report_id in ids:
+            report = ReportedUsers.query.get(report_id)
+            if report:
+                try:
+                    db_user.pause(db_conn, report.reported_user_id)
+                    db_conn.commit()
+                    flash(f"{report.reported.musicbrainz_id} paused", "success")
+                except Exception as e:
+                    flash(
+                        f"Failed for {report.reported.musicbrainz_id}: {str(e)}", "error")
+            else:
+                flash(f"{report_id} not found!", "error")
         return redirect('/admin/reported_users_model/')
 
     # With select action to unpause users.
@@ -54,9 +62,16 @@ class ReportedUserAdminView(AdminModelView):
         confirmation="Unpause selected users?",
     )
     def unpause_users(self, ids):
-        try:
-            users = set_reported_users_paused(db_conn, ids, False)
-            flash(f"Unpaused {len(users)} users", "success")
-        except Exception as e:
-            flash(f"Failed to unpause users: {str(e)}", "error")
+        for report_id in ids:
+            report = ReportedUsers.query.get(report_id)
+            if report:
+                try:
+                    db_user.unpause(db_conn, report.reported_user_id)
+                    db_conn.commit()
+                    flash(f"{report.reported.musicbrainz_id} unpaused", "success")
+                except Exception as e:
+                    flash(
+                        f"Failed for {report.reported.musicbrainz_id}: {str(e)}", "error")
+            else:
+                flash(f"{report_id} not found!", "error")
         return redirect('/admin/reported_users_model/')
