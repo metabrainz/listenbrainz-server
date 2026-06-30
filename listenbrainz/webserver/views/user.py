@@ -193,18 +193,19 @@ def playlists(user_name: str):
             playlist_type=playlist_type,
             sort=sort,
             tags=tags,
+            include_tags=True,
         )
     elif type == "collaborative":
         user_playlists, playlist_count = get_playlists_collaborated_on(
             db_conn, ts_conn, user.id, include_private=include_private,
             load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=offset,
-            tags=tags
+            tags=tags, include_tags=True,
         )
     else:
         user_playlists, playlist_count = get_playlists_for_user(
             db_conn, ts_conn, user.id, include_private=include_private,
             load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=offset,
-            tags=tags
+            tags=tags, include_tags=True,
         )
 
     playlists = []

@@ -33,6 +33,7 @@ playlist_api_bp = Blueprint('playlist_api_v1', __name__)
 
 MAX_RECORDINGS_PER_ADD = 100
 DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
+MAX_TAGS_PER_PLAYLIST_REQUEST = 25
 
 
 def _validate_tags_payload(data):
@@ -43,10 +44,29 @@ def _validate_tags_payload(data):
         log_raise_400("Missing 'tags' in request body.")
     if type(tags) not in (list, tuple):
         log_raise_400("'tags' must be a list.")
+    if len(tags) > MAX_TAGS_PER_PLAYLIST_REQUEST:
+        log_raise_400(
+            "Cannot add more than %d tags in a single request." % MAX_TAGS_PER_PLAYLIST_REQUEST
+        )
+    normalized = []
     for tag in tags:
         if type(tag) != str:
             log_raise_400("Tag values must be strings.")
-    return tags
+        n = db_playlist._normalize_playlist_tag(tag)
+        if n is None:
+            collapsed = " ".join(tag.strip().split())
+            if not collapsed:
+                log_raise_400("Tag values cannot be empty.")
+            log_raise_400(
+                "Please keep tag length to %d characters or less."
+                % db_playlist.MAX_PLAYLIST_TAG_LENGTH
+            )
+        normalized.append(n)
+
+    normalized = list(dict.fromkeys(normalized))
+    if not normalized:
+        log_raise_400("No valid tags submitted.")
+    return normalized
 
 supported_services = {
     "spotify": SpotifyService,
@@ -895,12 +915,12 @@ def add_playlist_tags(playlist_mbid):
 
     tags = _validate_tags_payload(request.json)
     try:
-        db_playlist.add_tags_to_playlist(ts_conn, playlist.id, tags)
+        added = db_playlist.add_tags_to_playlist(ts_conn, playlist.id, tags)
     except Exception:
         current_app.logger.error("Error while adding tags to playlist: ", exc_info=True)
         raise APIInternalServerError("Failed to add tags to the playlist. Please try again.")
 
-    return jsonify({"status": "ok"})
+    return jsonify({"status": "ok", "added": added})
 
 
 @playlist_api_bp.delete("/<playlist_mbid>/tags/<path:tag>")

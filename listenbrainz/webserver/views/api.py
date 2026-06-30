@@ -647,7 +647,7 @@ def get_playlists_for_user(playlist_user_name):
     playlists, playlist_count = db_playlist.get_playlists_for_user(db_conn, ts_conn, playlist_user["id"],
                                                                    include_private=include_private,
                                                                    load_recordings=False, count=count, offset=offset,
-                                                                   tags=tags)
+                                                                   tags=tags, include_tags=True)
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
@@ -679,7 +679,8 @@ def get_playlists_created_for_user(playlist_user_name):
 
     playlists, playlist_count = db_playlist.get_playlists_created_for_user(
         db_conn, ts_conn, playlist_user["id"], load_recordings=False, count=count, offset=offset,
-        tags=request.args.get("tag").split(",") if request.args.get("tag") else None
+        tags=request.args.get("tag").split(",") if request.args.get("tag") else None,
+        include_tags=True,
     )
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
@@ -720,7 +721,8 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
                                                                           load_recordings=False,
                                                                           count=count,
                                                                           offset=offset,
-                                                                          tags=request.args.get("tag").split(",") if request.args.get("tag") else None)
+                                                                          tags=request.args.get("tag").split(",") if request.args.get("tag") else None,
+                                                                          include_tags=True)
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
@@ -801,6 +803,7 @@ def search_user_playlist(playlist_user_name):
         db_conn, ts_conn, playlist_user["id"], query, count, offset,
         viewer_id=viewer_id, include_global=include_global,
         playlist_type=playlist_type, tags=tags,
+        include_tags=True,
     )
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))

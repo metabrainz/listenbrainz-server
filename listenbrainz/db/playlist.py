@@ -116,7 +116,7 @@ def get_by_mbid(db_conn, ts_conn, playlist_id: str, load_recordings: bool = True
 
 def get_playlists_for_user(db_conn, ts_conn, user_id: int, include_private: bool = False,
                            load_recordings: bool = False, count: int = 0, offset: int = 0,
-                           tags: Optional[List[str]] = None):
+                           tags: Optional[List[str]] = None, include_tags: bool = False):
     """Get all playlists that a user created
 
     Arguments:
@@ -146,7 +146,7 @@ def get_playlists_for_user(db_conn, ts_conn, user_id: int, include_private: bool
         params["public"] = True
     tag_cte_body, tag_join = _build_tag_filter(tags, params)
     query = text(f"""
-        {_tag_filter_with_prefix(tag_cte_body)}
+        {_assemble_with_clause(tag_cte_body)}
         SELECT pl.id
              , pl.mbid
              , pl.creator_id
@@ -170,7 +170,9 @@ def get_playlists_for_user(db_conn, ts_conn, user_id: int, include_private: bool
         OFFSET :offset""")
 
     result = ts_conn.execute(query, params)
-    playlists = _playlist_resultset_to_model(db_conn, ts_conn, result, load_recordings)
+    playlists = _playlist_resultset_to_model(
+        db_conn, ts_conn, result, load_recordings, include_tags=include_tags
+    )
 
     # Now fetch the count of playlists
     params = {"creator_id": user_id}
@@ -180,7 +182,7 @@ def get_playlists_for_user(db_conn, ts_conn, user_id: int, include_private: bool
         params["public"] = True
     tag_cte_body, tag_join = _build_tag_filter(tags, params)
     query = text(f"""
-        {_tag_filter_with_prefix(tag_cte_body)}
+        {_assemble_with_clause(tag_cte_body)}
         SELECT COUNT(*)
           FROM playlist.playlist pl
                {tag_join}
@@ -231,7 +233,7 @@ def get_recommendation_playlists_for_user(db_conn, ts_conn, user_id: int):
     return playlists
 
 
-def _playlist_resultset_to_model(db_conn, ts_conn, result, load_recordings):
+def _playlist_resultset_to_model(db_conn, ts_conn, result, load_recordings, include_tags: bool = False):
     """Parse the result of an sql query to get playlists
 
     Fill in related data (username, created_for username) and collaborators
@@ -272,13 +274,14 @@ def _playlist_resultset_to_model(db_conn, ts_conn, result, load_recordings):
         for p in playlists:
             p.collaborator_ids = playlist_collaborator_ids.get(p.id, [])
             p.collaborators = get_collaborators_names_from_ids(db_conn, p.collaborator_ids)
-        playlist_tags = get_tags_for_playlists(ts_conn, playlist_ids)
-        for p in playlists:
-            tags = playlist_tags.get(p.id, [])
-            if tags:
-                if p.additional_metadata is None:
-                    p.additional_metadata = {}
-                p.additional_metadata["tags"] = tags
+        if include_tags:
+            playlist_tags = get_tags_for_playlists(ts_conn, playlist_ids)
+            for p in playlists:
+                tags = playlist_tags.get(p.id, [])
+                if tags:
+                    if p.additional_metadata is None:
+                        p.additional_metadata = {}
+                    p.additional_metadata["tags"] = tags
 
     return playlists
 
@@ -325,16 +328,11 @@ def _build_tag_filter(tags: Optional[List[str]], params: dict):
     return cte_body, join
 
 
-def _tag_filter_with_prefix(tag_cte_body: str) -> str:
-    if not tag_cte_body:
+def _assemble_with_clause(tag_cte_body: str = "", rest: Optional[str] = None) -> str:
+    parts = [p for p in (tag_cte_body, rest) if p]
+    if not parts:
         return ""
-    return f"WITH {tag_cte_body}\n"
-
-
-def _tag_filter_with_combined_ctes(tag_cte_body: str, rest_after_with: str) -> str:
-    if tag_cte_body:
-        return f"WITH {tag_cte_body},\n{rest_after_with}"
-    return f"WITH {rest_after_with}"
+    return f"WITH {',\n'.join(parts)}\n"
 
 
 def add_tags_to_playlist(ts_conn, playlist_id: int, tags: List[str]) -> int:
@@ -344,11 +342,11 @@ def add_tags_to_playlist(ts_conn, playlist_id: int, tags: List[str]) -> int:
 
     query = text("""
         INSERT INTO playlist.playlist_tag (playlist_id, tag)
-             VALUES (:playlist_id, :tag)
+        SELECT :playlist_id, t.tag
+          FROM unnest(:tags) AS t(tag)
         ON CONFLICT DO NOTHING
     """)
-    params = [{"playlist_id": playlist_id, "tag": t} for t in normalized]
-    result = ts_conn.execute(query, params)
+    result = ts_conn.execute(query, {"playlist_id": playlist_id, "tags": normalized})
     ts_conn.commit()
     return result.rowcount or 0
 
@@ -427,7 +425,8 @@ def get_tags_for_user(ts_conn, user_id: int, include_private: bool = False,
 
 
 def get_playlists_created_for_user(db_conn, ts_conn, user_id: int, load_recordings: bool = False,
-                                   count: int = 0, offset: int = 0, tags: Optional[List[str]] = None):
+                                   count: int = 0, offset: int = 0, tags: Optional[List[str]] = None,
+                                   include_tags: bool = False):
     """Get all playlists that were created for a user by bots
 
     Arguments:
@@ -450,7 +449,7 @@ def get_playlists_created_for_user(db_conn, ts_conn, user_id: int, load_recordin
     params = {"created_for_id": user_id, "count": count, "offset": offset}
     tag_cte_body, tag_join = _build_tag_filter(tags, params)
     query = text(f"""
-        {_tag_filter_with_prefix(tag_cte_body)}
+        {_assemble_with_clause(tag_cte_body)}
         SELECT pl.id
              , pl.mbid
              , pl.creator_id
@@ -473,13 +472,15 @@ def get_playlists_created_for_user(db_conn, ts_conn, user_id: int, load_recordin
         OFFSET :offset""")
 
     result = ts_conn.execute(query, params)
-    playlists = _playlist_resultset_to_model(db_conn, ts_conn, result, load_recordings)
+    playlists = _playlist_resultset_to_model(
+        db_conn, ts_conn, result, load_recordings, include_tags=include_tags
+    )
 
     # Fetch the total count of playlists
     params = {"created_for_id": user_id}
     tag_cte_body, tag_join = _build_tag_filter(tags, params)
     query = text(f"""
-        {_tag_filter_with_prefix(tag_cte_body)}
+        {_assemble_with_clause(tag_cte_body)}
         SELECT COUNT(*)
           FROM playlist.playlist pl
                {tag_join}
@@ -492,7 +493,7 @@ def get_playlists_created_for_user(db_conn, ts_conn, user_id: int, load_recordin
 
 def get_playlists_collaborated_on(db_conn, ts_conn, user_id: int, include_private: bool = False,
                                   load_recordings: bool = False, count: int = 0, offset: int = 0,
-                                  tags: Optional[List[str]] = None):
+                                  tags: Optional[List[str]] = None, include_tags: bool = False):
     """Get playlists that this user doesn't own, but is a collaborator on.
     Playlists are ordered by creation date.
 
@@ -519,7 +520,7 @@ def get_playlists_collaborated_on(db_conn, ts_conn, user_id: int, include_privat
         params["public"] = True
     tag_cte_body, tag_join = _build_tag_filter(tags, params)
     query = text(f"""
-        {_tag_filter_with_prefix(tag_cte_body)}
+        {_assemble_with_clause(tag_cte_body)}
         SELECT pl.id
              , pl.mbid
              , pl.creator_id
@@ -545,7 +546,9 @@ def get_playlists_collaborated_on(db_conn, ts_conn, user_id: int, include_privat
         OFFSET :offset""")
 
     result = ts_conn.execute(query, params)
-    playlists = _playlist_resultset_to_model(db_conn, ts_conn, result, load_recordings)
+    playlists = _playlist_resultset_to_model(
+        db_conn, ts_conn, result, load_recordings, include_tags=include_tags
+    )
 
     # Fetch the total count of playlists
     params = {"collaborator_id": user_id}
@@ -555,7 +558,7 @@ def get_playlists_collaborated_on(db_conn, ts_conn, user_id: int, include_privat
         params["public"] = True
     tag_cte_body, tag_join = _build_tag_filter(tags, params)
     query = sqlalchemy.text(f"""
-        {_tag_filter_with_prefix(tag_cte_body)}
+        {_assemble_with_clause(tag_cte_body)}
         SELECT COUNT(*)
           FROM playlist.playlist
           {tag_join.replace('pl.id', 'playlist.playlist.id')}
@@ -581,6 +584,7 @@ def search_playlists_for_user(
     playlist_type: Optional[str] = None,
     sort: str = "relevance",
     tags: Optional[List[str]] = None,
+    include_tags: bool = False,
 ):
     """
     Search for playlists associated with a user by name or description.
@@ -691,7 +695,7 @@ def search_playlists_for_user(
     )"""
 
     query = text(f"""
-    {_tag_filter_with_combined_ctes(tag_cte_body, candidate_ctes)}
+    {_assemble_with_clause(tag_cte_body, candidate_ctes)}
     SELECT pl.id
          , pl.mbid
          , pl.creator_id
@@ -717,7 +721,9 @@ def search_playlists_for_user(
     """)
 
     result = ts_conn.execute(query, params)
-    playlists = _playlist_resultset_to_model(db_conn, ts_conn, result, False)
+    playlists = _playlist_resultset_to_model(
+        db_conn, ts_conn, result, False, include_tags=include_tags
+    )
 
     # Fetch the total count of playlists
     # Reuse the same visibility condition logic
@@ -736,7 +742,7 @@ def search_playlists_for_user(
      WHERE name_similarity > 0.1
         OR description_similarity > 0.1
     """
-    query = text(_tag_filter_with_combined_ctes(tag_cte_body, candidate_count_cte))
+    query = text(_assemble_with_clause(tag_cte_body, candidate_count_cte))
     result = ts_conn.execute(query, params)
     row = result.fetchone()
     if row:

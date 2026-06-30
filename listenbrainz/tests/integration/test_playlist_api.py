@@ -1027,6 +1027,23 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
         self.assert200(response)
+        self.assertEqual(response.json["added"], 2)
+
+        # Empty or whitespace-only tags are rejected
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_tags", playlist_mbid=playlist_mbid),
+            json={"tags": ["   "]},
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+
+        # Too many tags in one request is rejected
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_tags", playlist_mbid=playlist_mbid),
+            json={"tags": ["tag-%d" % i for i in range(26)]},
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
 
         # Collaborator can view tags on playlist fetch
         response = self.client.get(
