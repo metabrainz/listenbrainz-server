@@ -1,4 +1,5 @@
 import json
+from unittest import mock
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.external_service_oauth as db_oauth
@@ -113,6 +114,23 @@ class UserTestCase(DatabaseTestCase):
         db_user.pause(self.db_conn, user_id)
         user = db_user.get(self.db_conn, user_id)
         self.assertEqual(user['is_paused'], True)
+
+    def test_pause_multiple_users(self):
+        """ Tests that pauses multiple users and notifies each updated user """
+
+        user_id_1 = db_user.create(self.db_conn, 40, 'anne')
+        user_id_2 = db_user.create(self.db_conn, 41, 'rob')
+
+        with mock.patch("listenbrainz.db.user._notify_user_paused") as notify_user_paused:
+            users = db_user.pause(self.db_conn, [user_id_1, user_id_2])
+
+        self.assertCountEqual(users, ['anne', 'rob'])
+        self.assertEqual(db_user.get(self.db_conn, user_id_1)['is_paused'], True)
+        self.assertEqual(db_user.get(self.db_conn, user_id_2)['is_paused'], True)
+        notify_user_paused.assert_has_calls([
+            mock.call(self.db_conn, user_id_1, True),
+            mock.call(self.db_conn, user_id_2, True),
+        ], any_order=True)
         
     def test_unpause(self):
         """ Tests that pauses the given user """
