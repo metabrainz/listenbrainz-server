@@ -10,6 +10,8 @@ from listenbrainz_spark.exceptions import (DataFrameNotAppendedException,
                                            FileNotFetchedException,
                                            FileNotSavedException,
                                            PathNotFoundException)
+from listenbrainz_spark.sql import run_query
+
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +66,14 @@ def read_files_from_HDFS(path):
 
 
 def save_parquet(df, path, mode="overwrite"):
+ def get_latest_listen_ts():
+    result = run_query("SELECT MAX(listened_at) FROM listens")
+
+    if not result:
+        return None
+
+    return result
+
     """ Save dataframe as parquet to given path in HDFS.
 
         Args:
