@@ -44,6 +44,8 @@ def top_recordings_for_artist(artist_mbid):
     :statuscode 200: you have data!
     :statuscode 400: invalid artist_mbid
     """
+    raise APIInternalServerError(
+        "Popularity API currently disabled due to high load on the server. Please try again later.")
     # Ensure that the user is passing an auth header
     try:
         _ = validate_auth_header()
@@ -111,6 +113,8 @@ def top_release_groups_for_artist(artist_mbid):
     :statuscode 200: you have data!
     :statuscode 400: invalid artist_mbid
     """
+    raise APIInternalServerError(
+        "Popularity API currently disabled due to high load on the server. Please try again later.")
     # Ensure that the user is passing an auth header
     try:
         _ = validate_auth_header()

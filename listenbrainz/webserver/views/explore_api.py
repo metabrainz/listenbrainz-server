@@ -169,14 +169,14 @@ def lb_radio():
     :statuscode 500: Troi encountered an error
     :resheader Content-Type: *application/json*
     """
-
+    raise APIInternalServerError("LB Radio currently disabled due to high load on the server. Please try again later.")
     # Ensure that the user is passing an auth header
     try:
         _ = validate_auth_header()
     except APIUnauthorized:
         # Improve the error message until we can redirect to the login page.
-        return jsonify({ "error" : "Due to AI scraper's causing undue traffic on our sites, " + \
-                       "provide an Auth token. Sorry for this mess."""}), 401
+        return jsonify({ "error" : "Due to AI scrapers causing undue traffic on our sites, " + \
+                       "please provide an Auth token. Sorry for this mess."""}), 401
 
     prompt = request.args.get("prompt", None)
     if prompt is None:
