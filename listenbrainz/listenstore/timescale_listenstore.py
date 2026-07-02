@@ -37,6 +37,7 @@ DEFAULT_FETCH_WINDOW = timedelta(days=30)  # 30 days
 
 # When expanding the search, how fast should the bounds be moved out
 WINDOW_SIZE_MULTIPLIER = 3
+MAX_FETCH_PASSES = 3  # maximum number of times to expand the search window when fetching listens
 
 LISTEN_COUNT_BUCKET_WIDTH = 2592000
 
@@ -201,7 +202,15 @@ class TimescaleListenStore:
 
         return inserted_rows
 
-    def fetch_listens(self, user: Dict, from_ts: datetime = None, to_ts: datetime = None, limit: int = DEFAULT_LISTENS_PER_FETCH):
+    def fetch_listens(
+        self,
+        user: Dict,
+        from_ts: datetime = None,
+        to_ts: datetime = None,
+        limit: int = DEFAULT_LISTENS_PER_FETCH,
+        max_passes: int = 1,
+        return_search_status: bool = False,
+    ):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
             the value they are converted to the local server's timezone. So to compare
             datetime object we need to create a object in the same timezone as the server.
@@ -213,7 +222,16 @@ class TimescaleListenStore:
                 listens will be returned in descending order
             to_ts: seconds since epoch, in float
             limit: the maximum number of items to return
+            max_passes: the maximum number of time windows to search
+            return_search_status: if True, return metadata describing a partial search
         """
+        if max_passes < 1:
+            raise ValueError("max_passes should be at least 1")
+        if max_passes > MAX_FETCH_PASSES:
+            raise ValueError("max_passes should be at most %d" % MAX_FETCH_PASSES)
+
+        search_status = {"partial": False}
+
         if from_ts and to_ts and from_ts >= to_ts:
             raise ValueError("from_ts should be less than to_ts")
         if from_ts:
@@ -224,6 +242,8 @@ class TimescaleListenStore:
         min_user_ts, max_user_ts = self.get_timestamps_for_user(user["id"])
 
         if min_user_ts == EPOCH and max_user_ts == EPOCH:
+            if return_search_status:
+                return [], min_user_ts, max_user_ts, search_status
             return [], min_user_ts, max_user_ts
 
         if to_ts is None and from_ts is None:
@@ -305,13 +325,9 @@ class TimescaleListenStore:
         t0 = time.monotonic()
 
         passes = 0
+        stopped_early = False
         while True:
             passes += 1
-
-            # Oh shit valve. I'm keeping it here for the time being. :)
-            if passes == 10:
-                done = True
-                break
 
             curs = ts_conn.execute(
                 sqlalchemy.text(query),
@@ -329,6 +345,11 @@ class TimescaleListenStore:
                         break
 
                     if to_ts > datetime.now(tz=timezone.utc) + MAX_FUTURE_SECONDS:
+                        done = True
+                        break
+
+                    if passes >= max_passes:
+                        stopped_early = True
                         done = True
                         break
 
@@ -374,8 +395,24 @@ class TimescaleListenStore:
         if order == ORDER_ASC:
             listens.reverse()
 
-        self.log.info("fetch listens %s %.2fs (%d passes)" % (user["musicbrainz_id"], fetch_listens_time, passes))
+        if stopped_early:
+            search_status["partial"] = True
+            if from_dynamic:
+                search_status["continue_max_ts"] = int(from_ts.timestamp())
+            elif to_dynamic:
+                search_status["continue_min_ts"] = int(to_ts.timestamp())
 
+        self.log.info(
+            "fetch listens %s %.2fs (%d passes%s)" % (
+                user["musicbrainz_id"],
+                fetch_listens_time,
+                passes,
+                ", partial" if search_status["partial"] else "",
+            )
+        )
+
+        if return_search_status:
+            return listens, min_user_ts, max_user_ts, search_status
         return listens, min_user_ts, max_user_ts
 
     def fetch_recent_listens_for_users(self, users, min_ts: datetime = None, max_ts: datetime = None, per_user_limit=2, limit=10):
@@ -657,7 +694,8 @@ class TimescaleListenStore:
 
     def fetch_listens_with_cache(
         self, user: dict, from_ts: datetime = None,
-        to_ts: datetime = None, limit: int = DEFAULT_LISTENS_PER_FETCH
+        to_ts: datetime = None, limit: int = DEFAULT_LISTENS_PER_FETCH,
+        max_passes: int = 1
     ):
         """ Fetch listens for a user, using a cache to avoid unnecessary queries. If a database query is necessary,
             the result is cached.
@@ -666,13 +704,21 @@ class TimescaleListenStore:
             "user_id": user["id"],
             "min_ts": int(from_ts.timestamp()) if from_ts else None,
             "max_ts": int(to_ts.timestamp()) if to_ts else None,
-            "count": limit
+            "count": limit,
+            "max_passes": max_passes,
         }
         cached_data = get_listens_from_cache(**key_parts)
         if cached_data is not None:
             return cached_data
 
-        listens, min_ts_per_user, max_ts_per_user = self.fetch_listens(user, from_ts, to_ts, limit)
+        listens, min_ts_per_user, max_ts_per_user, search_status = self.fetch_listens(
+            user,
+            from_ts,
+            to_ts,
+            limit,
+            max_passes=max_passes,
+            return_search_status=True,
+        )
         listen_data = []
         for listen in listens:
             listen_data.append(listen.to_api())
@@ -681,6 +727,7 @@ class TimescaleListenStore:
             "listens": listen_data,
             "latest_listen_ts": int(max_ts_per_user.timestamp()),
             "oldest_listen_ts": int(min_ts_per_user.timestamp()),
+            "search_status": search_status,
         }
 
         set_listens_in_cache(data, **key_parts)
