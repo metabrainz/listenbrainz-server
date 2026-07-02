@@ -10,7 +10,8 @@ def _get_listens_cache_key(
     min_ts: Optional[int] = None,
     max_ts: Optional[int] = None,
     count: Optional[int] = None,
-    max_passes: Optional[int] = None
+    max_passes: Optional[int] = None,
+    soft_time_limit_ms: Optional[int] = None
 ) -> str:
     """Generate a cache key for the get_listens endpoint.
     
@@ -32,6 +33,8 @@ def _get_listens_cache_key(
         key_parts.append(f"count_{count}")
     if max_passes is not None:
         key_parts.append(f"passes_{max_passes}")
+    if soft_time_limit_ms is not None:
+        key_parts.append(f"soft_ms_{soft_time_limit_ms}")
     return ":".join(key_parts)
 
 
@@ -40,7 +43,8 @@ def get_listens_from_cache(
     min_ts: Optional[float] = None,
     max_ts: Optional[float] = None,
     count: Optional[int] = None,
-    max_passes: Optional[int] = None
+    max_passes: Optional[int] = None,
+    soft_time_limit_ms: Optional[int] = None
 ) -> Optional[dict[str, Any]]:
     """Get listens from cache if available.
     
@@ -53,7 +57,7 @@ def get_listens_from_cache(
     Returns:
         Cached data if found, None otherwise
     """
-    cache_key = _get_listens_cache_key(user_id, min_ts, max_ts, count, max_passes)
+    cache_key = _get_listens_cache_key(user_id, min_ts, max_ts, count, max_passes, soft_time_limit_ms)
     cached = cache.get(cache_key)
     if cached:
         return json.loads(cached)
@@ -67,6 +71,7 @@ def set_listens_in_cache(
     max_ts: Optional[float] = None, 
     count: Optional[int] = None,
     max_passes: Optional[int] = None,
+    soft_time_limit_ms: Optional[int] = None,
     expire_time: int = 3600
 ) -> None:
     """Store listens data in cache.
@@ -79,7 +84,7 @@ def set_listens_in_cache(
         count: Optional number of items
         expire_time: Time in seconds until the cache expires.
     """
-    cache_key = _get_listens_cache_key(user_id, min_ts, max_ts, count, max_passes)
+    cache_key = _get_listens_cache_key(user_id, min_ts, max_ts, count, max_passes, soft_time_limit_ms)
     cache.sadd(f"user_listens_cache:{user_id}", cache_key, expire_time * 2)
     cache.set(cache_key, json.dumps(data), expire_time)
 

@@ -1,5 +1,6 @@
 import logging
 import random
+from unittest import mock
 from datetime import datetime, timedelta, timezone
 from time import time
 
@@ -12,7 +13,7 @@ from listenbrainz.db import timescale as ts, timescale
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, \
-    TimescaleListenStore, REDIS_TOTAL_LISTEN_COUNT
+    TimescaleListenStore, REDIS_TOTAL_LISTEN_COUNT, MAX_FETCH_PASSES
 from listenbrainz.listenstore.timescale_utils import delete_listens_and_update_user_listen_data,\
     recalculate_all_user_data, add_missing_to_listen_users_metadata, update_user_listen_data
 from listenbrainz.webserver import create_app
@@ -175,6 +176,27 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(listens[1].ts_since_epoch, 1420000000)
         self.assertEqual(listens[2].ts_since_epoch, 1400000050)
         self.assertEqual(listens[3].ts_since_epoch, 1400000000)
+
+    def test_fetch_listens_soft_time_limit(self):
+        self._create_test_data(self.testuser_name, self.testuser_id,
+                               test_data_file_name='timescale_listenstore_test_listens_over_greater_time_range.json')
+
+        from_ts = datetime.fromtimestamp(1399999999, timezone.utc)
+        with mock.patch(
+            "listenbrainz.listenstore.timescale_listenstore.time.monotonic",
+            side_effect=[0, 2, 2, 2],
+        ):
+            listens, min_ts, max_ts, search_status = self.logstore.fetch_listens(
+                user=self.testuser,
+                from_ts=from_ts,
+                max_passes=MAX_FETCH_PASSES,
+                soft_time_limit_ms=1,
+                return_search_status=True,
+            )
+
+        self.assertEqual(len(listens), 2)
+        self.assertTrue(search_status["partial"])
+        self.assertIn("continue_min_ts", search_status)
 
     def test_fetch_listens_with_mapping(self):
         """ Test that the recording mbid submitted by the user is preferred over the mapping created by LB """

@@ -9,6 +9,7 @@ import psycopg2
 import psycopg2.sql
 import sqlalchemy
 from brainzutils import cache
+from flask import current_app, has_app_context
 from psycopg2.errors import UntranslatableCharacter
 from psycopg2.extras import execute_values
 from sqlalchemy import text
@@ -208,7 +209,8 @@ class TimescaleListenStore:
         from_ts: datetime = None,
         to_ts: datetime = None,
         limit: int = DEFAULT_LISTENS_PER_FETCH,
-        max_passes: int = 1,
+        max_passes: int = MAX_FETCH_PASSES,
+        soft_time_limit_ms: int = None,
         return_search_status: bool = False,
     ):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
@@ -223,12 +225,18 @@ class TimescaleListenStore:
             to_ts: seconds since epoch, in float
             limit: the maximum number of items to return
             max_passes: the maximum number of time windows to search
+            soft_time_limit_ms: elapsed time after which no more search windows will be attempted. None disables it.
             return_search_status: if True, return metadata describing a partial search
         """
+        max_passes = int(max_passes)
         if max_passes < 1:
             raise ValueError("max_passes should be at least 1")
         if max_passes > MAX_FETCH_PASSES:
             raise ValueError("max_passes should be at most %d" % MAX_FETCH_PASSES)
+        if soft_time_limit_ms is not None:
+            soft_time_limit_ms = int(soft_time_limit_ms)
+        if soft_time_limit_ms is not None and soft_time_limit_ms < 0:
+            raise ValueError("soft_time_limit_ms should be at least 0, or None to disable")
 
         search_status = {"partial": False}
 
@@ -348,7 +356,12 @@ class TimescaleListenStore:
                         done = True
                         break
 
-                    if passes >= max_passes:
+                    # If we've reached the maximum number of passes or the query is running long,
+                    # #stop searching and return what we have.
+                    elapsed_ms = (time.monotonic() - t0) * 1000
+                    if passes >= max_passes or (
+                        soft_time_limit_ms is not None and elapsed_ms >= soft_time_limit_ms
+                    ):
                         stopped_early = True
                         done = True
                         break
@@ -695,17 +708,26 @@ class TimescaleListenStore:
     def fetch_listens_with_cache(
         self, user: dict, from_ts: datetime = None,
         to_ts: datetime = None, limit: int = DEFAULT_LISTENS_PER_FETCH,
-        max_passes: int = 1
+        max_passes: int = None,
+        soft_time_limit_ms: int = None
     ):
         """ Fetch listens for a user, using a cache to avoid unnecessary queries. If a database query is necessary,
             the result is cached.
         """
+        max_passes = int(
+            max_passes if max_passes is not None else MAX_FETCH_PASSES
+        )
+        if soft_time_limit_ms is None and has_app_context():
+            soft_time_limit_ms = current_app.config.get("FETCH_LISTENS_SOFT_TIME_LIMIT_MS")
+        if soft_time_limit_ms is not None:
+            soft_time_limit_ms = int(soft_time_limit_ms)
         key_parts = {
             "user_id": user["id"],
             "min_ts": int(from_ts.timestamp()) if from_ts else None,
             "max_ts": int(to_ts.timestamp()) if to_ts else None,
             "count": limit,
             "max_passes": max_passes,
+            "soft_time_limit_ms": soft_time_limit_ms,
         }
         cached_data = get_listens_from_cache(**key_parts)
         if cached_data is not None:
@@ -717,6 +739,7 @@ class TimescaleListenStore:
             to_ts,
             limit,
             max_passes=max_passes,
+            soft_time_limit_ms=soft_time_limit_ms,
             return_search_status=True,
         )
         listen_data = []

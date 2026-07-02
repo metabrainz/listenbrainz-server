@@ -178,7 +178,7 @@ class UserViewsTestCase(IntegrationTestCase):
         timescale.return_value = ([], EPOCH, EPOCH, {"partial": False})
 
         self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'))
-        req_call = mock.call(user, None, None, 25, max_passes=1, return_search_status=True)
+        req_call = mock.call(user, None, None, 25, max_passes=3, soft_time_limit_ms=None, return_search_status=True)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
@@ -190,7 +190,8 @@ class UserViewsTestCase(IntegrationTestCase):
             None,
             datetime.fromtimestamp(1520946000, timezone.utc),
             25,
-            max_passes=1,
+            max_passes=3,
+            soft_time_limit_ms=None,
             return_search_status=True,
         )
         timescale.assert_has_calls([req_call])
@@ -204,7 +205,8 @@ class UserViewsTestCase(IntegrationTestCase):
             datetime.fromtimestamp(1520941000, timezone.utc),
             None,
             25,
-            max_passes=1,
+            max_passes=3,
+            soft_time_limit_ms=None,
             return_search_status=True,
         )
         timescale.assert_has_calls([req_call])
@@ -220,7 +222,8 @@ class UserViewsTestCase(IntegrationTestCase):
             None,
             datetime.fromtimestamp(1520946000, timezone.utc),
             25,
-            max_passes=1,
+            max_passes=3,
+            soft_time_limit_ms=None,
             return_search_status=True,
         )
         timescale.assert_has_calls([req_call])

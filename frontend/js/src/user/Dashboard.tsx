@@ -709,7 +709,9 @@ export default function Listen() {
                 {listens.map(getListenCard)}
               </div>
               {(searchStatus.partial ||
-                (listens.length < expectedListensPerPage && isOnFirstPage)) && (
+                (listens.length < expectedListensPerPage &&
+                  isOnFirstPage &&
+                  !isOnLastPage)) && (
                 <div className="text-center">
                   <h4>
                     No {listens.length > 0 ? "more" : ""} listens for that
@@ -726,7 +728,7 @@ export default function Listen() {
                 </div>
               )}
               {!searchStatus.partial &&
-                !isOnFirstPage &&
+                isOnLastPage &&
                 listens.length < expectedListensPerPage && (
                   <div className="text-center mt-5">
                     <hr />
