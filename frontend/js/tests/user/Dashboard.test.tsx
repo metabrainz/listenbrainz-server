@@ -529,6 +529,86 @@ describe("Dashboard page", () => {
     });
 
     describe("handleClickOlder", () => {
+      it("shows a continue search link when the older search is partial", async () => {
+        server.use(
+          http.post("/", async (path) => {
+            return HttpResponse.json({
+              ...props,
+              listens: listens.slice(0, 3),
+              searchStatus: {
+                partial: true,
+                continueMaxTs: 1520941000,
+              },
+            });
+          })
+        );
+
+        renderWithProviders(
+          <Listens />,
+          {
+            currentUser,
+          },
+          {
+            wrapper: reactQueryWrapper,
+          }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        const continueSearchLink = await screen.findByRole("link", {
+          name: "Continue searching older listens",
+        });
+        expect(continueSearchLink).toHaveAttribute(
+          "href",
+          "/?max_ts=1520941000"
+        );
+        expect(screen.queryByText("No more listens to show")).toBeNull();
+      });
+
+      it("shows a continue search link for an empty partial range", async () => {
+        server.use(
+          http.post("/", async (path) => {
+            return HttpResponse.json({
+              ...props,
+              listens: [],
+              searchStatus: {
+                partial: true,
+                continueMaxTs: 1520941000,
+              },
+            });
+          })
+        );
+
+        renderWithProviders(
+          <Listens />,
+          {
+            currentUser,
+          },
+          {
+            wrapper: reactQueryWrapper,
+          }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        expect(
+          screen.getByText("No listens found in this range.")
+        ).toBeInTheDocument();
+        const continueSearchLink = await screen.findByRole("link", {
+          name: "Continue searching older listens",
+        });
+        expect(continueSearchLink).toHaveAttribute(
+          "href",
+          "/?max_ts=1520941000"
+        );
+      });
+
       it("older button should be disabled if there is no older listens timestamp", async () => {
         server.use(
           http.post("/", async (path) => {
