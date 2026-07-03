@@ -178,9 +178,20 @@ def get_listens(user_name):
 
     :param max_ts: If you specify a ``max_ts`` timestamp, listens with listened_at less than (but not including) this value will be returned.
     :param min_ts: If you specify a ``min_ts`` timestamp, listens with listened_at greater than (but not including) this value will be returned.
-    :param count: Optional, number of listens to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
-    :returns search_status: Indicates whether the search ended before all matching time windows were scanned and
-        includes a continuation timestamp when another request can continue the search.
+    :param count: Optional, number of listens to return. This does not guarantee all requested listens will be returned. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :returns search_status: Indicates whether the database search ended before all requested listens were returned.
+        This object has the following shape:
+
+        .. code-block:: text
+
+            {
+                "partial": <boolean>,
+                "continue_max_ts": <unix timestamp, optional>,
+                "continue_min_ts": <unix timestamp, optional>
+            }
+
+        ``partial`` is always present. ``continue_max_ts`` and ``continue_min_ts`` are optional
+        continuation timestamps included only when partial is true. At most one continuation timestamp is returned.
     :statuscode 200: Yay, you have data!
     :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
