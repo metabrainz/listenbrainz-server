@@ -712,7 +712,8 @@ export default function Listen() {
                 (listens.length < expectedListensPerPage &&
                   isOnFirstPage &&
                   !isOnLastPage)) && (
-                <div className="text-center">
+                <div className="text-center mt-5">
+                  <hr />
                   <h4>
                     No {listens.length > 0 ? "more" : ""} listens for that
                     month.
