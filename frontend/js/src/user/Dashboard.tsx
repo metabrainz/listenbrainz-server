@@ -483,9 +483,7 @@ export default function Listen() {
   const isNewerButtonDisabled =
     !previousListenTs || previousListenTs >= latestListenTs;
   const isOlderButtonDisabled = !nextListenTs || nextListenTs <= oldestListenTs;
-  const isOnLastPage =
-    listens.length > 0 &&
-    listens[listens.length - 1]?.listened_at <= oldestListenTs;
+  const isOnLastPage = listens.length > 0 && nextListenTs <= oldestListenTs;
   const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
   const isCurrentUsersPage = currentUser?.name === user?.name;
   const isNavigatingListens =
@@ -708,35 +706,32 @@ export default function Listen() {
               >
                 {listens.map(getListenCard)}
               </div>
-              {(searchStatus.partial ||
-                (listens.length < expectedListensPerPage &&
-                  isOnFirstPage &&
-                  !isOnLastPage)) && (
-                <div className="text-center mt-5">
-                  <hr />
-                  <h4>
-                    No {listens.length > 0 ? "more" : ""} listens for that
-                    month.
-                  </h4>
-                  {continuationSearchUrl && (
-                    <Link
-                      to={continuationSearchUrl}
-                      className="btn btn-outline-info"
-                    >
-                      {continuationSearchLabel}
-                    </Link>
-                  )}
-                </div>
-              )}
-              {!searchStatus.partial &&
-                isOnLastPage &&
-                listens.length < expectedListensPerPage && (
+              {!isOnLastPage &&
+                (Boolean(searchStatus.partial) ||
+                  listens.length < expectedListensPerPage) && (
                   <div className="text-center mt-5">
                     <hr />
-                    <h4>End of the line!</h4>
-                    <h5>No more listens to show</h5>
+                    <h4>
+                      No {listens.length > 0 ? "more" : ""} listens for that
+                      month.
+                    </h4>
+                    {continuationSearchUrl && (
+                      <Link
+                        to={continuationSearchUrl}
+                        className="btn btn-outline-info"
+                      >
+                        {continuationSearchLabel}
+                      </Link>
+                    )}
                   </div>
                 )}
+              {isOnLastPage && (
+                <div className="text-center mt-5">
+                  <hr />
+                  <h4>End of the line!</h4>
+                  <h5>No more listens to show</h5>
+                </div>
+              )}
               <ul className="pagination" id="navigation">
                 <li className={`page-item ${isOnFirstPage ? "disabled" : ""}`}>
                   <Link
