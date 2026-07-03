@@ -52,7 +52,7 @@ def _validate_tags_payload(data):
     for tag in tags:
         if type(tag) != str:
             log_raise_400("Tag values must be strings.")
-        n = db_playlist._normalize_playlist_tag(tag)
+        n = db_playlist.normalize_playlist_tag(tag)
         if n is None:
             collapsed = " ".join(tag.strip().split())
             if not collapsed:
@@ -916,6 +916,8 @@ def add_playlist_tags(playlist_mbid):
     tags = _validate_tags_payload(request.json)
     try:
         added = db_playlist.add_tags_to_playlist(ts_conn, playlist.id, tags)
+    except ValueError as e:
+        log_raise_400(str(e))
     except Exception:
         current_app.logger.error("Error while adding tags to playlist: ", exc_info=True)
         raise APIInternalServerError("Failed to add tags to the playlist. Please try again.")

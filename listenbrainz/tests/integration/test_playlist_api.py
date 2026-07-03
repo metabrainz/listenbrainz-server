@@ -1077,6 +1077,39 @@ class PlaylistAPITestCase(IntegrationTestCase):
         md = response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI].get("additional_metadata", {})
         self.assertListEqual(md.get("tags", []), ["hip-hop"])
 
+    def test_playlist_tags_per_playlist_limit(self):
+        """A playlist cannot have more than MAX_TAGS_PER_PLAYLIST tags in total."""
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=get_test_data(),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        playlist_mbid = response.json["playlist_mbid"]
+
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_tags", playlist_mbid=playlist_mbid),
+            json={"tags": ["tag-%d" % i for i in range(25)]},
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["added"], 25)
+
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_tags", playlist_mbid=playlist_mbid),
+            json={"tags": ["tag-%d" % i for i in range(25, 50)]},
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["added"], 25)
+
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_tags", playlist_mbid=playlist_mbid),
+            json={"tags": ["tag-50"]},
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+
     def test_playlist_tags_sidebar_endpoint_and_filtering(self):
         """Tags list endpoint returns tags; tag filter works for get playlists and search."""
         response = self.client.post(

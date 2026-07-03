@@ -27,6 +27,7 @@ SEARCH_PLAYLIST_SORTS = {
     "creator": "pl.creator_id ASC",
 }
 MAX_PLAYLIST_TAG_LENGTH = 40
+MAX_TAGS_PER_PLAYLIST = 50
 
 # These are the recommendation troi patches that we showcase on the recommendations page for each user
 RECOMMENDATION_PATCHES = (
@@ -286,7 +287,7 @@ def _playlist_resultset_to_model(db_conn, ts_conn, result, load_recordings, incl
     return playlists
 
 
-def _normalize_playlist_tag(tag: str) -> Optional[str]:
+def normalize_playlist_tag(tag: str) -> Optional[str]:
     if tag is None:
         return None
     tag = " ".join(tag.strip().split()).lower()
@@ -302,7 +303,7 @@ def _normalize_playlist_tags(tags: Optional[List[str]]) -> List[str]:
         return []
     normalized = []
     for tag in tags:
-        n = _normalize_playlist_tag(tag)
+        n = normalize_playlist_tag(tag)
         if n:
             normalized.append(n)
     # preserve order but remove duplicates
@@ -340,20 +341,37 @@ def add_tags_to_playlist(ts_conn, playlist_id: int, tags: List[str]) -> int:
     if not normalized:
         return 0
 
+    existing_query = text("""
+        SELECT tag
+          FROM playlist.playlist_tag
+         WHERE playlist_id = :playlist_id
+    """)
+    existing_tags = {
+        row.tag for row in ts_conn.execute(existing_query, {"playlist_id": playlist_id})
+    }
+    new_tags = [tag for tag in normalized if tag not in existing_tags]
+    if not new_tags:
+        return 0
+
+    if len(existing_tags) + len(new_tags) > MAX_TAGS_PER_PLAYLIST:
+        raise ValueError(
+            "Cannot add more than %d tags to a playlist." % MAX_TAGS_PER_PLAYLIST
+        )
+
     query = text("""
         INSERT INTO playlist.playlist_tag (playlist_id, tag)
         SELECT :playlist_id, t.tag
           FROM unnest(:tags) AS t(tag)
         ON CONFLICT DO NOTHING
     """)
-    result = ts_conn.execute(query, {"playlist_id": playlist_id, "tags": normalized})
+    result = ts_conn.execute(query, {"playlist_id": playlist_id, "tags": new_tags})
     ts_conn.commit()
     return result.rowcount or 0
 
 
 def remove_tag_from_playlist(ts_conn, playlist_id: int, tag: str) -> int:
     
-    tag = _normalize_playlist_tag(tag)
+    tag = normalize_playlist_tag(tag)
     if not tag:
         return 0
 
