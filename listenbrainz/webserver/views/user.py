@@ -155,6 +155,8 @@ def playlists(user_name: str):
     type = request.args.get("type", "")
     search_query = (request.args.get("search") or "").strip()
     sort = request.args.get("sort", "relevance")
+    tag_param = request.args.get("tag")
+    tags = tag_param.split(",") if tag_param else None
 
     user = _get_user(user_name)
     if not user:
@@ -190,16 +192,20 @@ def playlists(user_name: str):
             viewer_id=viewer_id,
             playlist_type=playlist_type,
             sort=sort,
+            tags=tags,
+            include_tags=True,
         )
     elif type == "collaborative":
         user_playlists, playlist_count = get_playlists_collaborated_on(
             db_conn, ts_conn, user.id, include_private=include_private,
-            load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=offset
+            load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=offset,
+            tags=tags, include_tags=True,
         )
     else:
         user_playlists, playlist_count = get_playlists_for_user(
             db_conn, ts_conn, user.id, include_private=include_private,
-            load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=offset
+            load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=offset,
+            tags=tags, include_tags=True,
         )
 
     playlists = []

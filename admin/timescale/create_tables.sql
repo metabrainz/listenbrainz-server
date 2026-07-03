@@ -65,6 +65,17 @@ CREATE TABLE playlist.playlist_collaborator (
     collaborator_id int not null  -- link to user.id in main database
 );
 
+CREATE TABLE playlist.playlist_tag (
+    id serial,
+    playlist_id int not null,  -- FK playlist.playlist.id
+    tag text not null,
+    created timestamp with time zone default now() not null,
+    UNIQUE (playlist_id, tag)
+);
+
+CREATE INDEX playlist_tag_playlist_id_idx ON playlist.playlist_tag (playlist_id);
+CREATE INDEX playlist_tag_tag_idx ON playlist.playlist_tag (tag);
+
 -- MBID Mapping
 
 CREATE TABLE mbid_manual_mapping(
