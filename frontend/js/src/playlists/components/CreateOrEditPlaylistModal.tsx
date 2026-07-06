@@ -141,18 +141,6 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
         currentUser?.auth_token,
         newPlaylist
       );
-      toast.success(
-        <ToastMsg
-          title="Created playlist"
-          message={
-            <>
-              Created new {isPublic ? "public" : "private"} playlist{" "}
-              <Link to={`/playlist/${newPlaylistId}/`}>{name}</Link>
-            </>
-          }
-        />,
-        { toastId: "create-playlist-success" }
-      );
       try {
         // Fetch the newly created playlist and return it
         const response = await APIService.getPlaylist(
@@ -244,14 +232,6 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
         playlist: omit(editedPlaylist, "track") as JSPFPlaylist,
       });
 
-      toast.success(
-        <ToastMsg
-          title="Saved playlist"
-          message={`Saved playlist ${playlist.title}`}
-        />,
-        { toastId: "saved-playlist" }
-      );
-
       return editedPlaylist;
     } catch (error) {
       toast.error(
@@ -341,6 +321,33 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
               },
             } as JSPFPlaylist;
           }
+        }
+      }
+      if (playlistToResolve) {
+        if (isEdit) {
+          toast.success(
+            <ToastMsg
+              title="Saved playlist"
+              message={`Saved playlist ${playlistToResolve.title}`}
+            />,
+            { toastId: "saved-playlist" }
+          );
+        } else {
+          const newPlaylistId = getPlaylistId(playlistToResolve);
+          toast.success(
+            <ToastMsg
+              title="Created playlist"
+              message={
+                <>
+                  Created new {isPublic ? "public" : "private"} playlist{" "}
+                  <Link to={`/playlist/${newPlaylistId}/`}>
+                    {playlistToResolve.title}
+                  </Link>
+                </>
+              }
+            />,
+            { toastId: "create-playlist-success" }
+          );
         }
       }
       modal.resolve(playlistToResolve);
@@ -516,7 +523,6 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
               }
               setPlaylistTags(tags);
             }}
-            // Keep it consistent with existing form look
             classNamePrefix="lb-tags"
           />
         </div>
