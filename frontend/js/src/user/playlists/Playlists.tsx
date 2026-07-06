@@ -724,7 +724,10 @@ export default class UserPlaylists extends React.Component<
                   }}
                 >
                   <div>
-                    <FontAwesomeIcon icon={faPlusCircle as IconProp} size="2x" />
+                    <FontAwesomeIcon
+                      icon={faPlusCircle as IconProp}
+                      size="2x"
+                    />
                     <span>Create new playlist</span>
                   </div>
                 </Card>,
