@@ -41,6 +41,8 @@ const createProps = (
   setPersistentView: mockFn(),
   initialSort: SortOption.DATE_CREATED,
   setPersistentSort: mockFn(),
+  activeTags: [],
+  setActiveTags: mockFn(),
   ...overrides,
 });
 
