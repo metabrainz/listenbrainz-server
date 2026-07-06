@@ -1097,8 +1097,7 @@ export default class APIService {
     offset: number = 0,
     count: number = 25,
     createdFor: boolean = false,
-    collaborator: boolean = false,
-    tag?: string
+    collaborator: boolean = false
   ): Promise<{
     playlists: JSPFObject[];
     playlist_count: number;
@@ -1115,15 +1114,11 @@ export default class APIService {
       };
     }
 
-    const queryParams: Array<string> = [`offset=${offset}`, `count=${count}`];
-    if (tag) {
-      queryParams.push(`tag=${encodeURIComponent(tag)}`);
-    }
     const url = `${this.APIBaseURI}/user/${encodeURIComponent(
       userName
     )}/playlists${createdFor ? "/createdfor" : ""}${
       collaborator ? "/collaborator" : ""
-    }?${queryParams.join("&")}`;
+    }?offset=${offset}&count=${count}`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -2365,13 +2360,12 @@ export default class APIService {
     return response.json();
   };
 
+  // User playlists page search uses the route loader (?search=), not this method.
   searchPlaylistsForUser = async (
     searchQuery: string,
     musicbrainzID: string,
     count: number = 25,
-    offset: number = 0,
-    type?: "owned" | "collaborative",
-    tag?: string
+    offset: number = 0
   ): Promise<PlaylistTypeSearchResult> => {
     const url = new URL(
       `${this.APIBaseURI}/user/${encodeURIComponent(
@@ -2381,12 +2375,6 @@ export default class APIService {
     url.searchParams.set("query", searchQuery);
     url.searchParams.set("count", count.toString());
     url.searchParams.set("offset", offset.toString());
-    if (type) {
-      url.searchParams.set("type", type);
-    }
-    if (tag) {
-      url.searchParams.set("tag", tag);
-    }
     const response = await fetch(url.toString());
     await this.checkStatus(response);
     return response.json();

@@ -1,5 +1,3 @@
-/* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
-
 import { findIndex } from "lodash";
 import * as React from "react";
 
@@ -31,6 +29,7 @@ import PlaylistMenu from "./components/PlaylistMenu";
 import {
   getPlaylistExtension,
   getPlaylistId,
+  getPlaylistTags,
   getRecordingMBIDFromJSPFTrack,
   isPlaylistOwner,
   LISTENBRAINZ_URI_PREFIX,
@@ -483,9 +482,7 @@ export default function PlaylistPage() {
 
   const userHasRightToEdit = hasRightToEdit();
   const customFields = getPlaylistExtension(playlist);
-  const playlistTags: string[] =
-    (customFields?.additional_metadata as JSPFPlaylistMetadata | undefined)
-      ?.tags ?? [];
+  const playlistTags = getPlaylistTags(playlist);
 
   React.useEffect(() => {
     setAmbientQueue(tracks);

@@ -35,6 +35,11 @@ export function getPlaylistExtension(
   return playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION] ?? null;
 }
 
+export function getPlaylistTags(playlist?: JSPFPlaylist): string[] {
+  const metadata = getPlaylistExtension(playlist)?.additional_metadata;
+  return (metadata as JSPFPlaylistMetadata | undefined)?.tags ?? [];
+}
+
 export function getTrackExtension(
   track?: JSPFTrack
 ): JSPFTrackExtension | null {
