@@ -19,7 +19,11 @@ import Card from "../../../components/Card";
 import { ToastMsg } from "../../../notifications/Notifications";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import PlaylistMenu from "../../../playlists/components/PlaylistMenu";
-import { getPlaylistExtension, getPlaylistId } from "../../../playlists/utils";
+import {
+  getPlaylistExtension,
+  getPlaylistId,
+  getPlaylistTags,
+} from "../../../playlists/utils";
 import PlaylistView from "../playlistView.d";
 
 export type PlaylistCardProps = {
@@ -48,9 +52,7 @@ export default function PlaylistCard({
 
   const playlistId = getPlaylistId(playlist);
   const customFields = getPlaylistExtension(playlist);
-  const playlistTags: string[] =
-    (customFields?.additional_metadata as JSPFPlaylistMetadata | undefined)
-      ?.tags ?? [];
+  const playlistTags = getPlaylistTags(playlist);
   const visibleTags = playlistTags.slice(0, 3);
   const remainingTagsCount =
     playlistTags.length > visibleTags.length

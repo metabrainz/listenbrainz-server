@@ -457,6 +457,7 @@ export default class UserPlaylists extends React.Component<
       );
       this.setState({ tags: response?.tags ?? [] });
     } catch (error) {
+      console.error(error);
       this.setState({ tags: [] });
     }
   };

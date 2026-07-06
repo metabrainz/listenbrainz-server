@@ -9,6 +9,7 @@ import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
   getPlaylistExtension,
   getPlaylistId,
+  getPlaylistTags,
   isPlaylistOwner,
   MAX_PLAYLIST_TAG_LENGTH,
 } from "../utils";
@@ -49,12 +50,9 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
   const [collaborators, setCollaborators] = React.useState<string[]>(
     customFields?.collaborators ?? []
   );
-  const originalTags = React.useMemo(() => {
-    const md = customFields?.additional_metadata as
-      | JSPFPlaylistMetadata
-      | undefined;
-    return md?.tags ?? [];
-  }, [customFields]);
+  const originalTags = React.useMemo(() => getPlaylistTags(playlist), [
+    playlist,
+  ]);
   const [playlistTags, setPlaylistTags] = React.useState<string[]>(
     originalTags
   );
@@ -89,7 +87,8 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
             label: tag,
           }))
         );
-      } catch {
+      } catch (error) {
+        console.error(error);
         if (!cancelled) {
           setOwnerPlaylistTagOptions([]);
         }
