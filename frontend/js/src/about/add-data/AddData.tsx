@@ -36,9 +36,7 @@ export default function AddData() {
         </li>
         <li>
           <em>
-            <a href="https://bocan.app/">
-              Bòcan
-            </a>
+            <a href="https://bocan.app/">Bòcan</a>
           </em>
           , a native macOS music player for people who own their music
         </li>

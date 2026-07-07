@@ -4,9 +4,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Username from "../common/Username";
+import { getRegistrationUrl } from "../utils/utils";
 
 function Navbar() {
-  const { currentUser } = React.useContext(GlobalAppContext);
+  const { currentUser, registrationUrl } = React.useContext(GlobalAppContext);
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = React.useState("");
@@ -140,11 +141,7 @@ function Navbar() {
                 <Link to="/login/" onClick={toggleSidebar}>
                   Sign in
                 </Link>
-                <a
-                  href={`https://musicbrainz.org/register?returnto=${window.document.location.href}`}
-                >
-                  Create Account
-                </a>
+                <a href={getRegistrationUrl(registrationUrl)}>Create Account</a>
               </>
             )}
             <NavLink to="/about/" onClick={toggleSidebar}>

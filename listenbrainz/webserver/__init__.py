@@ -228,7 +228,8 @@ def create_app(
         app.config['COUCHDB_USER'],
         app.config['COUCHDB_ADMIN_KEY'],
         app.config['COUCHDB_HOST'],
-        app.config['COUCHDB_PORT']
+        app.config['COUCHDB_PORT'],
+        app.config['COUCHDB_DATABASE_PREFIX']
     )
     # RabbitMQ connection
     from listenbrainz.webserver.rabbitmq_connection import init_rabbitmq_connection
