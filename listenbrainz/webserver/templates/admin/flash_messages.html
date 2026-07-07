@@ -36,16 +36,27 @@
           <th>Level</th>
           <th>Message</th>
           <th>Created</th>
-          <th></th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         {% for message in messages %}
           <tr>
-            <td>{{ message.level }}</td>
-            <td>{{ message.message }}</td>
+            <td>
+              <form method="post" action="{{ get_url('.edit', message_id=message.id) }}" id="edit-{{ message.id }}">
+                <select class="form-control" name="level">
+                  {% for level in levels %}
+                    <option value="{{ level }}"{% if level == message.level %} selected{% endif %}>{{ level }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+            </td>
+            <td>
+              <textarea class="form-control" name="message" rows="2" required form="edit-{{ message.id }}">{{ message.message }}</textarea>
+            </td>
             <td>{{ message.created }}</td>
-            <td class="text-right">
+            <td>
+              <button type="submit" class="btn btn-primary btn-sm" form="edit-{{ message.id }}">Save</button>
               <form method="post" action="{{ get_url('.delete', message_id=message.id) }}">
                 <button type="submit" class="btn btn-danger btn-sm">Delete</button>
               </form>

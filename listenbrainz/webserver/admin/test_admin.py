@@ -70,3 +70,22 @@ class AdminTestCase(IntegrationTestCase):
 
         messages = redis_connection._redis.get_admin_flash_messages()
         self.assertEqual([], messages)
+
+    def test_admin_flash_messages_can_be_modified(self):
+        self.app.config['ADMINS'] = [self.authorized_user['musicbrainz_id']]
+        self.temporary_login(self.authorized_user['login_id'])
+        message = redis_connection._redis.add_admin_flash_message('info', 'Old alert text.')
+
+        r = self.client.post(
+            f'/admin/flash_messages/edit/{message["id"]}',
+            data={'level': 'error', 'message': 'New alert text.'},
+            follow_redirects=True,
+        )
+        self.assert200(r)
+
+        messages = redis_connection._redis.get_admin_flash_messages()
+        self.assertEqual(1, len(messages))
+        self.assertEqual(message['id'], messages[0]['id'])
+        self.assertEqual('error', messages[0]['level'])
+        self.assertEqual('New alert text.', messages[0]['message'])
+        self.assertIn('updated', messages[0])

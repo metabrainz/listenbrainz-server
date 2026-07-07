@@ -140,6 +140,31 @@ class RedisListenStore:
         cache._r.rpush(cache._prep_key(self.ADMIN_FLASH_MESSAGES_KEY), orjson.dumps(flash_message))
         return flash_message
 
+    def update_admin_flash_message(self, message_id: str, level: str, message: str) -> bool:
+        """Update a site-wide admin flash message by ID."""
+        if level not in self.ADMIN_FLASH_MESSAGE_LEVELS:
+            raise ValueError("Invalid flash message level")
+
+        messages = self.get_admin_flash_messages()
+        updated = False
+        for flash_message in messages:
+            if flash_message.get("id") == message_id:
+                flash_message["level"] = level
+                flash_message["message"] = message
+                flash_message["updated"] = datetime.now(UTC).isoformat()
+                updated = True
+                break
+
+        if not updated:
+            return False
+
+        key = cache._prep_key(self.ADMIN_FLASH_MESSAGES_KEY)
+        pipeline = cache._r.pipeline()
+        pipeline.delete(key)
+        pipeline.rpush(key, *[orjson.dumps(message) for message in messages])
+        pipeline.execute()
+        return True
+
     def delete_admin_flash_message(self, message_id: str) -> bool:
         """Delete a site-wide admin flash message by ID."""
         messages = self.get_admin_flash_messages()

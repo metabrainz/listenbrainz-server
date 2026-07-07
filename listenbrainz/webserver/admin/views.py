@@ -39,6 +39,22 @@ class AdminFlashMessagesView(AdminBaseView):
 
         return redirect(self.get_url('.index'))
 
+    @expose('/edit/<message_id>', methods=['POST'])
+    def edit(self, message_id):
+        level = request.form.get('level', '').strip()
+        message = request.form.get('message', '').strip()
+
+        if level not in RedisListenStore.ADMIN_FLASH_MESSAGE_LEVELS:
+            flash.error('Invalid flash message level.')
+        elif not message:
+            flash.error('Flash message cannot be empty.')
+        elif redis_connection._redis.update_admin_flash_message(message_id, level, message):
+            flash.success('Flash message updated.')
+        else:
+            flash.error('Flash message not found.')
+
+        return redirect(self.get_url('.index'))
+
     @expose('/delete/<message_id>', methods=['POST'])
     def delete(self, message_id):
         if redis_connection._redis.delete_admin_flash_message(message_id):
