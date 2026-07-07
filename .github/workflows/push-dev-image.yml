@@ -65,6 +65,6 @@ jobs:
           STATICBRAINZ_SERVERS: ${{ vars.STATICBRAINZ_SERVERS }}
           RSYNC_STATICBRAINZ_KEY: ~/.ssh/rsync-listenbrainz-staticbrainz
           STATICBRAINZ_SOURCE_DIR: /tmp/listenbrainz-static
-          STATICBRAINZ_DESTINATION_DIR: ./
+          STATICBRAINZ_DESTINATION_DIR: ./${{ github.event.inputs.tag }}/ 
           STATICBRAINZ_PRECOMPRESS: "1"
         run: ./admin/rsync-staticbrainz-files.sh
