@@ -62,7 +62,7 @@ jobs:
 
       - name: Upload static assets to StaticBrainz
         env:
-          STATICBRAINZ_SERVERS: ${{ secrets.STATICBRAINZ_SERVERS }}
+          STATICBRAINZ_SERVERS: ${{ vars.STATICBRAINZ_SERVERS }}
           RSYNC_STATICBRAINZ_KEY: ~/.ssh/rsync-listenbrainz-staticbrainz
           STATICBRAINZ_SOURCE_DIR: /tmp/listenbrainz-static
           STATICBRAINZ_DESTINATION_DIR: ./
