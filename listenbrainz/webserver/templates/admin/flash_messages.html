@@ -1,0 +1,60 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+  <h2>Flash messages</h2>
+
+  <form method="post" action="{{ get_url('.add') }}" class="form-horizontal">
+    <div class="form-group">
+      <label for="level" class="col-sm-2 control-label">Level</label>
+      <div class="col-sm-4">
+        <select class="form-control" id="level" name="level">
+          {% for level in levels %}
+            <option value="{{ level }}">{{ level }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="message" class="col-sm-2 control-label">Message</label>
+      <div class="col-sm-8">
+        <textarea class="form-control" id="message" name="message" rows="3" required></textarea>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-8">
+        <button type="submit" class="btn btn-primary">Add message</button>
+      </div>
+    </div>
+  </form>
+
+  <hr>
+
+  {% if messages %}
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Level</th>
+          <th>Message</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for message in messages %}
+          <tr>
+            <td>{{ message.level }}</td>
+            <td>{{ message.message }}</td>
+            <td>{{ message.created }}</td>
+            <td class="text-right">
+              <form method="post" action="{{ get_url('.delete', message_id=message.id) }}">
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No flash messages configured.</p>
+  {% endif %}
+{% endblock %}
