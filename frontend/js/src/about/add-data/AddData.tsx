@@ -385,7 +385,7 @@ export default function AddData() {
         </li>
         <li>
           <em>
-            <a href="https://boomingmusic.vercel.app/">Booming Music</a>
+            <a href="https://boomingmusic.org/">Booming Music</a>
           </em>
           , a clean and fast, and Material You music player for Android
         </li>
