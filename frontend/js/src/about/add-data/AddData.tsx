@@ -60,6 +60,12 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://github.com/digimezzo/dopamine">Dopamine</a>
+          </em>
+          , an audio player which tries to make organizing and listening to music as simple and pretty as possible
+        </li>
+        <li>
+          <em>
             <a href="https://www.foobar2000.org/">Foobar2000</a>
           </em>
           , full-fledged music player for Windows:{" "}
