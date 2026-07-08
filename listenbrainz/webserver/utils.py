@@ -116,6 +116,27 @@ def get_global_props():
     return orjson.dumps(props).decode("utf-8")
 
 
+def get_initial_alerts():
+    """Generate initial alerts for the React frontend."""
+    alerts = []
+
+    from listenbrainz.webserver import redis_connection
+    try:
+        messages = redis_connection._redis.get_admin_flash_messages()
+    except Exception:
+        current_app.logger.error("Could not load admin flash messages from Redis", exc_info=True)
+        messages = []
+
+    for message in messages:
+        alerts.append({
+            "id": message["id"],
+            "level": message["level"],
+            "message": message["message"],
+        })
+
+    return orjson.dumps(alerts).decode("utf-8")
+
+
 def parse_boolean_arg(name, default=None):
     from listenbrainz.webserver.errors import APIBadRequest
     value = request.args.get(name)
