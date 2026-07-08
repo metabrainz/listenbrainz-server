@@ -9,9 +9,11 @@ from psycopg2.extras import execute_values
 import requests_mock
 from sqlalchemy import text
 
+from listenbrainz import config
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 from data.model.external_service import ExternalServiceType
+from listenbrainz.listenstore.timescale_listenstore import MAX_FETCH_PASSES
 from listenbrainz.listenstore.timescale_utils import delete_listens
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver import timescale_connection
@@ -1479,11 +1481,22 @@ class ListenAPICachingTestCase(ListenAPIIntegrationTestCase):
         self.mock_fetch_listens.assert_called_once()
 
         user_cache_key = f"user_listens_cache:{self.user['id']}"
-        listens_key = _get_listens_cache_key(self.user["id"], count=DEFAULT_ITEMS_PER_GET)
+        listens_key = _get_listens_cache_key(
+            self.user["id"],
+            count=DEFAULT_ITEMS_PER_GET,
+            max_passes=MAX_FETCH_PASSES,
+            soft_time_limit_ms=config.FETCH_LISTENS_SOFT_TIME_LIMIT_MS,
+        )
         self.assertEqual(cache.smembers(user_cache_key), {listens_key})
         self.assertEqual(
             json.loads(cache.get(listens_key)),
-            {"count": 0, "listens": [], "latest_listen_ts": 0, "oldest_listen_ts": 0}
+            {
+                "count": 0,
+                "listens": [],
+                "latest_listen_ts": 0,
+                "oldest_listen_ts": 0,
+                "search_status": {"partial": False},
+            }
         )
 
         self.mock_fetch_listens.reset_mock()
@@ -1553,7 +1566,12 @@ class ListenAPICachingTestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
 
         user_cache_key = f"user_listens_cache:{self.user['id']}"
-        listens_key = _get_listens_cache_key(self.user["id"], count=DEFAULT_ITEMS_PER_GET)
+        listens_key = _get_listens_cache_key(
+            self.user["id"],
+            count=DEFAULT_ITEMS_PER_GET,
+            max_passes=MAX_FETCH_PASSES,
+            soft_time_limit_ms=config.FETCH_LISTENS_SOFT_TIME_LIMIT_MS,
+        )
         self.assertEqual(cache.smembers(user_cache_key), {listens_key})
 
         listen = response.json['payload']['listens'][0]
@@ -1590,7 +1608,12 @@ class ListenAPICachingTestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
 
         user_cache_key = f"user_listens_cache:{self.user['id']}"
-        listens_key = _get_listens_cache_key(self.user["id"], count=DEFAULT_ITEMS_PER_GET)
+        listens_key = _get_listens_cache_key(
+            self.user["id"],
+            count=DEFAULT_ITEMS_PER_GET,
+            max_passes=MAX_FETCH_PASSES,
+            soft_time_limit_ms=config.FETCH_LISTENS_SOFT_TIME_LIMIT_MS,
+        )
         self.assertEqual(cache.smembers(user_cache_key), {listens_key})
 
         recording_mbid = str(uuid.uuid4())
