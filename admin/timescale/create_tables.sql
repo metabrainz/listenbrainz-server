@@ -175,6 +175,7 @@ CREATE TABLE mapping.mb_event_artist_cache (
     artist_mbid          UUID NOT NULL,
     artist_id            INTEGER NOT NULL,
     link_id              INTEGER NOT NULL,
+    link_order           INTEGER NOT NULL DEFAULT 0,
     link_type_gid        UUID NOT NULL,  
     link_type_name       TEXT NOT NULL,
     relationship_data    JSONB NOT NULL,

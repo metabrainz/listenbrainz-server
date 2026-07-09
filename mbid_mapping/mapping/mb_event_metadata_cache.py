@@ -69,6 +69,7 @@ class MusicBrainzEventArtistCache(BulkInsertTable):
             ("artist_mbid ", "UUID NOT NULL"),
             ("artist_id ", "INTEGER NOT NULL"),
             ("link_id ", "INTEGER NOT NULL"),
+            ("link_order ", "INTEGER NOT NULL DEFAULT 0"),
             ("link_type_gid ", "UUID NOT NULL"),
             ("link_type_name ", "TEXT NOT NULL"),
             ("relationship_data ", "JSONB NOT NULL"),
@@ -94,7 +95,11 @@ class MusicBrainzEventArtistCache(BulkInsertTable):
             ("mb_event_artist_cache_idx_artist_mbid", "artist_mbid", False),
             ("mb_event_artist_cache_idx_event_id", "event_id", False),
             ("mb_event_artist_cache_idx_link_type_gid", "link_type_gid", False),
-            ("mb_event_artist_cache_pkey", "event_id, artist_id, link_id", True),
+            (
+                "mb_event_artist_cache_pkey",
+                "event_id, artist_id, link_id, link_order",
+                True,
+            ),
         ]
 
     def process_row(self, row):
@@ -313,6 +318,7 @@ class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
             link_type_gid = edge[3]
             link_type_name = edge[4]
             entity0_credit = edge[5]
+            link_order = edge[6]
 
             relationship_data = {}
             if entity0_credit:
@@ -325,6 +331,7 @@ class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
                     artist_mbid,
                     artist_id,
                     link_id,
+                    link_order,
                     link_type_gid,
                     link_type_name,
                     ujson.dumps(relationship_data),
@@ -472,15 +479,16 @@ class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
                    ), artist_edges AS (
                             SELECT e.gid AS event_mbid
                                  , array_agg(
-                                        jsonb_build_array(
-                                            a.gid
-                                          , a.id
-                                          , l.id
-                                          , lt.gid
-                                          , lt.name
-                                          , lae.entity0_credit
-                                        )
-                                   ) AS edges
+                                         jsonb_build_array(
+                                             a.gid
+                                           , a.id
+                                           , l.id
+                                           , lt.gid
+                                           , lt.name
+                                           , lae.entity0_credit
+                                           , lae.link_order
+                                         )
+                                    ) AS edges
                               FROM musicbrainz.event e
                               JOIN musicbrainz.l_artist_event lae
                                 ON lae.entity1 = e.id

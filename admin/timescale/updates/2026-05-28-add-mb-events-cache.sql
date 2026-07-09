@@ -45,6 +45,7 @@ CREATE TABLE mapping.mb_event_artist_cache (
     artist_id            INTEGER NOT NULL,
 
     link_id              INTEGER NOT NULL,
+    link_order           INTEGER NOT NULL DEFAULT 0,
     link_type_gid        UUID NOT NULL,  
     link_type_name       TEXT NOT NULL,
 
@@ -54,7 +55,7 @@ CREATE TABLE mapping.mb_event_artist_cache (
 
 ALTER TABLE mapping.mb_event_artist_cache
     ADD CONSTRAINT mb_event_artist_cache_pkey
-    PRIMARY KEY (event_id, artist_id, link_id);
+    PRIMARY KEY (event_id, artist_id, link_id, link_order);
 
 CREATE INDEX mb_event_artist_cache_idx_artist_id_event_id ON mapping.mb_event_artist_cache (artist_id, event_id);
 CREATE INDEX mb_event_artist_cache_idx_artist_mbid ON mapping.mb_event_artist_cache (artist_mbid);
