@@ -127,7 +127,10 @@ The JSON documents returned from our API look like the following:
         "user_id": "-- the MusicBrainz ID of the user --",
         "listens": [
           "-- listen data here ---"
-        ]
+        ],
+        "search_status": {
+          "partial": false
+        }
       }
     }
 
@@ -135,6 +138,10 @@ The number of listens in the document are returned by the top-level ``count``
 element. The ``user_id`` element contains the MusicBrainz ID of the user whose listens are
 being returned. The other element is the ``listens`` element. This is a list which contains
 the listen JSON elements (described above).
+
+When there is a large time gap between listens, we may return fewer than the requested ``count``.
+The ``search_status`` element contains a ``partial`` boolean which will indicate a partial result set. 
+If ``partial`` is true, a ``continue_max_ts`` or ``continue_min_ts`` timestamp can be used to continue the search.
 
 The JSON document returned by the API endpoint for getting tracks being played right now
 is the same as above, except that it also contains the ``payload/playing_now`` element as a
