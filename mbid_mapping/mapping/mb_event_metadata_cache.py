@@ -239,7 +239,9 @@ class MusicBrainzEventMetadataCache(MusicBrainzEntityMetadataCache):
             for name, url in row["event_links"]:
                 if name is None or url is None:
                     continue
-                filtered[name] = url
+                if name not in filtered:
+                    filtered[name] = []
+                filtered[name].append(url)
             if filtered:
                 event_data["rels"] = filtered
 
