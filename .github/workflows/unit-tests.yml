@@ -37,8 +37,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Create configuration file
-      run: cp listenbrainz/config.py.sample listenbrainz/config.py
+    - name: Create configuration files
+      run: |
+        cp listenbrainz/config.py.sample listenbrainz/config.py
+        cp mbid_mapping/config.py.sample mbid_mapping/config.py
 
     - name: Login to Docker Hub
       run: echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
