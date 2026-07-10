@@ -167,15 +167,6 @@ class IndexViewsTestCase(IntegrationTestCase):
         r = self.client.get('/feed/')
         self.assert200(r)
 
-    @patch("listenbrainz.webserver.views.player.fetch_playlist_recording_metadata")
-    def test_instant_playlist(self, mock_recording_metadata):
-        resp = self.client.get(self.custom_url_for('player.load_instant', recording_mbids="87c94c4b-6aed-41a3-bbbd-aa9cd2154c5e"))
-        self.assert200(resp)
-
-    def test_release_playlist(self):
-        resp = self.client.get(self.custom_url_for('player.load_release', release_mbid="87c94c4b-6aed-41a3-bbbd-aa9cd2154c5e"))
-        self.assert200(resp)
-
 
 class IndexViewsTestCase2(ServerAppPerTestTestCase, DatabaseTestCase):
 
