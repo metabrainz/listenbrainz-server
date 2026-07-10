@@ -9,7 +9,6 @@ import {
   faArrowRight,
   faQuestionCircle,
 } from "@fortawesome/free-solid-svg-icons";
-import ReactTooltip from "react-tooltip";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { FlairEnum, Flair } from "../../utils/constants";
 import type { FlairName } from "../../utils/constants";
@@ -17,6 +16,7 @@ import Username from "../../common/Username";
 import queryClient from "../../utils/QueryClient";
 import useUserFlairs from "../../utils/FlairLoader";
 import useAutoSave from "../../hooks/useAutoSave";
+import Tooltip from "../../components/Tooltip";
 
 function CustomOption(
   props: OptionProps<{ value: Flair; label: FlairName; username: string }>
@@ -100,29 +100,30 @@ export default function FlairsSettings() {
     delay: 3000,
     onSave: submitFlairPreferences,
   });
+  const flairTooltip = (
+    <>
+      Every $5 donation unlocks flairs for 1 month,
+      <br />
+      with larger donations extending the duration.
+      <br />
+      Donations stack up, adding more months
+      <br />
+      of unlocked flairs with each contribution.
+    </>
+  );
 
   return (
     <div className="mb-4 donation-flairs-settings">
       <div className="mb-4">
-        <ReactTooltip id="flair-tooltip" place="bottom" multiline>
-          Every $5 donation unlocks flairs for 1 month,
-          <br />
-          with larger donations extending the duration.
-          <br />
-          Donations stack up, adding more months
-          <br />
-          of unlocked flairs with each contribution.
-        </ReactTooltip>
         <h3>Flair Settings</h3>
         <p>
           Unlock for a month or more by <Link to="/donate/">donating</Link>
           &nbsp;
-          <FontAwesomeIcon
-            icon={faQuestionCircle}
-            data-tip
-            data-for="flair-tooltip"
-            size="sm"
-          />
+          <Tooltip id="flair-tooltip" placement="bottom" tooltip={flairTooltip}>
+            <span>
+              <FontAwesomeIcon icon={faQuestionCircle} size="sm" />
+            </span>
+          </Tooltip>
           .<br />
           Some flairs are only visible on hover.
         </p>
@@ -135,12 +136,15 @@ export default function FlairsSettings() {
           <div className="alert alert-warning">
             Flairs are currently locked; you can choose a flair below but it
             will not be shown on the website until your next donation.{" "}
-            <FontAwesomeIcon
-              icon={faQuestionCircle}
-              data-tip
-              data-for="flair-tooltip"
-              size="sm"
-            />
+            <Tooltip
+              id="flair-tooltip"
+              placement="bottom"
+              tooltip={flairTooltip}
+            >
+              <span>
+                <FontAwesomeIcon icon={faQuestionCircle} size="sm" />
+              </span>
+            </Tooltip>
           </div>
         )}
         <p className="border-start bg-light border-info border-3 px-3 py-2 mb-3 fs-4">

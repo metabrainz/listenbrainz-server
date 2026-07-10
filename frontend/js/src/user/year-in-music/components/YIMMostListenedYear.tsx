@@ -1,11 +1,11 @@
 import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
-import Tooltip from "react-tooltip";
 import { ResponsiveBar } from "@nivo/bar";
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { type AxisLegendPosition } from "@nivo/axes";
 import { isEmpty, range, uniq } from "lodash";
+import Tooltip from "../../../components/Tooltip";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { useMediaQuery } from "../../../explore/fresh-releases/utils";
 
@@ -63,15 +63,18 @@ export default function YIMMostListenedYear(props: YIMMostListenedYearProps) {
     <div className="" id="most-listened-year">
       <h3 className="text-center">
         What year are {yourOrUsersName} favorite songs from?{" "}
-        <FontAwesomeIcon
-          icon={faQuestionCircle}
-          data-tip
-          data-for="most-listened-year-helptext"
-          size="xs"
-        />
-        <Tooltip id="most-listened-year-helptext">
-          How much {isCurrentUser ? "were you" : `was ${userName}`} on the
-          lookout for new music this year? Not that we&apos;re judging
+        <Tooltip
+          id="most-listened-year-helptext"
+          tooltip={
+            <>
+              How much {isCurrentUser ? "were you" : `was ${userName}`} on the
+              lookout for new music this year? Not that we&apos;re judging
+            </>
+          }
+        >
+          <span>
+            <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+          </span>
         </Tooltip>
       </h3>
       <div className="graph-container card-bg">
