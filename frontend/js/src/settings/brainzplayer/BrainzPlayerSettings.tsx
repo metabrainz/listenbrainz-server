@@ -10,16 +10,14 @@ import { Helmet } from "react-helmet";
 import { Link } from "react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
-import ReactTooltip from "react-tooltip";
 import { ReactSortable } from "react-sortablejs";
 import { faGripLines } from "@fortawesome/free-solid-svg-icons";
-import { IconDefinition, IconProp } from "@fortawesome/fontawesome-svg-core";
 import Switch from "../../components/Switch";
+import Tooltip from "../../components/Tooltip";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import SpotifyPlayer from "../../common/brainzplayer/SpotifyPlayer";
 import SoundcloudPlayer from "../../common/brainzplayer/SoundcloudPlayer";
 import FunkwhalePlayer from "../../common/brainzplayer/FunkwhalePlayer";
-import { ToastMsg } from "../../notifications/Notifications";
 import AppleMusicPlayer from "../../common/brainzplayer/AppleMusicPlayer";
 import Card from "../../components/Card";
 import faInternetArchive from "../../common/icons/faInternetArchive";
@@ -77,6 +75,10 @@ export const defaultDataSourcesPriority = [
   "youtube",
   "internetArchive",
 ] as DataSourceKey[];
+
+const getLoginFirstTooltipTrigger = (
+  disableTooltip: boolean
+): ("hover" | "focus")[] => (disableTooltip ? [] : ["hover", "focus"]);
 
 function BrainzPlayerSettings() {
   const {
@@ -180,6 +182,12 @@ function BrainzPlayerSettings() {
     },
     [triggerAutoSave]
   );
+  const loginFirstTooltip = (
+    <>
+      You must login to this service in the &quot;Connect services&quot; section
+      before using it.
+    </>
+  );
 
   return (
     <>
@@ -223,252 +231,271 @@ function BrainzPlayerSettings() {
           YouTube is enabled by default. For a better listening experience we
           recommend enabling another service.
         </p>
-        <div
-          className="mb-4"
-          data-tip
-          data-tip-disable={
+        <Tooltip
+          id="login-first"
+          delay={{ show: 0, hide: 500 }}
+          trigger={getLoginFirstTooltipTrigger(
             spotifyEnabled || SpotifyPlayer.hasPermissions(spotifyAuth)
-          }
-          data-for="login-first"
+          )}
+          tooltip={loginFirstTooltip}
         >
-          <Switch
-            id="enable-spotify"
-            disabled={
-              !spotifyEnabled && !SpotifyPlayer.hasPermissions(spotifyAuth)
-            }
-            value="spotify"
-            checked={spotifyEnabled}
-            onChange={() =>
-              updateSettings((prev) => ({
-                ...prev,
-                spotifyEnabled: !prev.spotifyEnabled,
-              }))
-            }
-            switchLabel={
-              <span
-                className={`text-brand ${!spotifyEnabled ? "text-muted" : ""}`}
-              >
-                <span>
-                  <FontAwesomeIcon
-                    icon={faSpotify}
-                    color={spotifyEnabled ? dataSourcesInfo.spotify.color : ""}
-                  />
+          <div className="mb-4">
+            <Switch
+              id="enable-spotify"
+              disabled={
+                !spotifyEnabled && !SpotifyPlayer.hasPermissions(spotifyAuth)
+              }
+              value="spotify"
+              checked={spotifyEnabled}
+              onChange={() =>
+                updateSettings((prev) => ({
+                  ...prev,
+                  spotifyEnabled: !prev.spotifyEnabled,
+                }))
+              }
+              switchLabel={
+                <span
+                  className={`text-brand ${
+                    !spotifyEnabled ? "text-muted" : ""
+                  }`}
+                >
+                  <span>
+                    <FontAwesomeIcon
+                      icon={faSpotify}
+                      color={
+                        spotifyEnabled ? dataSourcesInfo.spotify.color : ""
+                      }
+                    />
+                  </span>
+                  <span>&nbsp;Spotify</span>
                 </span>
-                <span>&nbsp;Spotify</span>
-              </span>
-            }
-          />
-          <br />
-          <small>
-            Spotify requires a premium account.
+              }
+            />
             <br />
-            Sign in on the{" "}
-            <Link to="/settings/music-services/details/">
-              &quot;connect services&quot; page
-            </Link>
-            .
-          </small>
-        </div>
-        <div
-          className="mb-4"
-          data-tip
-          data-tip-disable={
+            <small>
+              Spotify requires a premium account.
+              <br />
+              Sign in on the{" "}
+              <Link to="/settings/music-services/details/">
+                &quot;connect services&quot; page
+              </Link>
+              .
+            </small>
+          </div>
+        </Tooltip>
+        <Tooltip
+          id="login-first"
+          delay={{ show: 0, hide: 500 }}
+          trigger={getLoginFirstTooltipTrigger(
             appleMusicEnabled || AppleMusicPlayer.hasPermissions(appleAuth)
-          }
-          data-for="login-first"
+          )}
+          tooltip={loginFirstTooltip}
         >
-          <Switch
-            id="enable-apple-music"
-            value="apple-music"
-            disabled={
-              !appleMusicEnabled && !AppleMusicPlayer.hasPermissions(appleAuth)
-            }
-            checked={appleMusicEnabled}
-            onChange={() =>
-              updateSettings((prev) => ({
-                ...prev,
-                appleMusicEnabled: !prev.appleMusicEnabled,
-              }))
-            }
-            switchLabel={
-              <span
-                className={`text-brand ${
-                  !appleMusicEnabled ? "text-muted" : ""
-                }`}
-              >
-                <span>
-                  <FontAwesomeIcon
-                    icon={faApple}
-                    color={
-                      appleMusicEnabled ? dataSourcesInfo.appleMusic.color : ""
-                    }
-                  />
+          <div className="mb-4">
+            <Switch
+              id="enable-apple-music"
+              value="apple-music"
+              disabled={
+                !appleMusicEnabled &&
+                !AppleMusicPlayer.hasPermissions(appleAuth)
+              }
+              checked={appleMusicEnabled}
+              onChange={() =>
+                updateSettings((prev) => ({
+                  ...prev,
+                  appleMusicEnabled: !prev.appleMusicEnabled,
+                }))
+              }
+              switchLabel={
+                <span
+                  className={`text-brand ${
+                    !appleMusicEnabled ? "text-muted" : ""
+                  }`}
+                >
+                  <span>
+                    <FontAwesomeIcon
+                      icon={faApple}
+                      color={
+                        appleMusicEnabled
+                          ? dataSourcesInfo.appleMusic.color
+                          : ""
+                      }
+                    />
+                  </span>
+                  <span>&nbsp;Apple Music</span>
                 </span>
-                <span>&nbsp;Apple Music</span>
-              </span>
-            }
-          />
-          <br />
-          <small>
-            Apple Music requires a premium account.
+              }
+            />
             <br />
-            Sign in on the{" "}
-            <Link to="/settings/music-services/details/">
-              &quot;connect services&quot; page
-            </Link>
-            . You will need to sign in every 6 months, as the authorization
-            expires.
-          </small>
-        </div>
-        <div
-          className="mb-4"
-          data-tip
-          data-tip-disable={
+            <small>
+              Apple Music requires a premium account.
+              <br />
+              Sign in on the{" "}
+              <Link to="/settings/music-services/details/">
+                &quot;connect services&quot; page
+              </Link>
+              . You will need to sign in every 6 months, as the authorization
+              expires.
+            </small>
+          </div>
+        </Tooltip>
+        <Tooltip
+          id="login-first"
+          delay={{ show: 0, hide: 500 }}
+          trigger={getLoginFirstTooltipTrigger(
             soundcloudEnabled || SoundcloudPlayer.hasPermissions(soundcloudAuth)
-          }
-          data-for="login-first"
+          )}
+          tooltip={loginFirstTooltip}
         >
-          <Switch
-            id="enable-soundcloud"
-            value="soundcloud"
-            disabled={
-              !soundcloudEnabled &&
-              !SoundcloudPlayer.hasPermissions(soundcloudAuth)
-            }
-            checked={soundcloudEnabled}
-            onChange={() =>
-              updateSettings((prev) => ({
-                ...prev,
-                soundcloudEnabled: !prev.soundcloudEnabled,
-              }))
-            }
-            switchLabel={
-              <span
-                className={`text-brand ${
-                  !soundcloudEnabled ? "text-muted" : ""
-                }`}
-              >
-                <span className={soundcloudEnabled ? "text-success" : ""}>
-                  <FontAwesomeIcon
-                    icon={faSoundcloud}
-                    color={
-                      soundcloudEnabled ? dataSourcesInfo.soundcloud.color : ""
-                    }
-                  />
+          <div className="mb-4">
+            <Switch
+              id="enable-soundcloud"
+              value="soundcloud"
+              disabled={
+                !soundcloudEnabled &&
+                !SoundcloudPlayer.hasPermissions(soundcloudAuth)
+              }
+              checked={soundcloudEnabled}
+              onChange={() =>
+                updateSettings((prev) => ({
+                  ...prev,
+                  soundcloudEnabled: !prev.soundcloudEnabled,
+                }))
+              }
+              switchLabel={
+                <span
+                  className={`text-brand ${
+                    !soundcloudEnabled ? "text-muted" : ""
+                  }`}
+                >
+                  <span className={soundcloudEnabled ? "text-success" : ""}>
+                    <FontAwesomeIcon
+                      icon={faSoundcloud}
+                      color={
+                        soundcloudEnabled
+                          ? dataSourcesInfo.soundcloud.color
+                          : ""
+                      }
+                    />
+                  </span>
+                  <span>&nbsp;SoundCloud</span>
                 </span>
-                <span>&nbsp;SoundCloud</span>
-              </span>
-            }
-          />
-          <br />
-          <small>
-            SoundCloud requires a free account.
+              }
+            />
             <br />
-            Sign in on the{" "}
-            <Link to="/settings/music-services/details/">
-              &quot;connect services&quot; page
-            </Link>
-          </small>
-        </div>
-        <div
-          className="mb-4"
-          data-tip
-          data-tip-disable={
+            <small>
+              SoundCloud requires a free account.
+              <br />
+              Sign in on the{" "}
+              <Link to="/settings/music-services/details/">
+                &quot;connect services&quot; page
+              </Link>
+            </small>
+          </div>
+        </Tooltip>
+        <Tooltip
+          id="login-first"
+          delay={{ show: 0, hide: 500 }}
+          trigger={getLoginFirstTooltipTrigger(
             funkwhaleEnabled || FunkwhalePlayer.hasPermissions(funkwhaleAuth)
-          }
-          data-for="login-first"
+          )}
+          tooltip={loginFirstTooltip}
         >
-          <Switch
-            id="enable-funkwhale"
-            value="funkwhale"
-            disabled={
-              !funkwhaleEnabled &&
-              !FunkwhalePlayer.hasPermissions(funkwhaleAuth)
-            }
-            checked={funkwhaleEnabled}
-            onChange={() =>
-              updateSettings((prev) => ({
-                ...prev,
-                funkwhaleEnabled: !prev.funkwhaleEnabled,
-              }))
-            }
-            switchLabel={
-              <span
-                className={`text-brand ${
-                  !funkwhaleEnabled ? "text-muted" : ""
-                }`}
-              >
-                <span>
-                  <FontAwesomeIcon
-                    icon={faFunkwhale as IconProp}
-                    color={
-                      funkwhaleEnabled ? dataSourcesInfo.funkwhale.color : ""
-                    }
-                  />
+          <div className="mb-4">
+            <Switch
+              id="enable-funkwhale"
+              value="funkwhale"
+              disabled={
+                !funkwhaleEnabled &&
+                !FunkwhalePlayer.hasPermissions(funkwhaleAuth)
+              }
+              checked={funkwhaleEnabled}
+              onChange={() =>
+                updateSettings((prev) => ({
+                  ...prev,
+                  funkwhaleEnabled: !prev.funkwhaleEnabled,
+                }))
+              }
+              switchLabel={
+                <span
+                  className={`text-brand ${
+                    !funkwhaleEnabled ? "text-muted" : ""
+                  }`}
+                >
+                  <span>
+                    <FontAwesomeIcon
+                      icon={faFunkwhale}
+                      color={
+                        funkwhaleEnabled ? dataSourcesInfo.funkwhale.color : ""
+                      }
+                    />
+                  </span>
+                  <span>&nbsp;Funkwhale</span>
                 </span>
-                <span>&nbsp;Funkwhale</span>
-              </span>
-            }
-          />
-          <br />
-          <small>
-            Funkwhale is a federated audio platform. You will need to connect a
-            Funkwhale instance.
+              }
+            />
             <br />
-            Sign in on the{" "}
-            <Link to="/settings/music-services/details/">
-              &quot;connect services&quot; page
-            </Link>
-          </small>
-        </div>
-        <div
-          className="mb-4"
-          data-tip
-          data-tip-disable={
+            <small>
+              Funkwhale is a federated audio platform. You will need to connect
+              a Funkwhale instance.
+              <br />
+              Sign in on the{" "}
+              <Link to="/settings/music-services/details/">
+                &quot;connect services&quot; page
+              </Link>
+            </small>
+          </div>
+        </Tooltip>
+        <Tooltip
+          id="login-first"
+          delay={{ show: 0, hide: 500 }}
+          trigger={getLoginFirstTooltipTrigger(
             navidromeEnabled || Boolean(navidromeAuth?.instance_url)
-          }
-          data-for="login-first"
+          )}
+          tooltip={loginFirstTooltip}
         >
-          <Switch
-            id="enable-navidrome"
-            value="navidrome"
-            disabled={!navidromeEnabled && !navidromeAuth?.instance_url}
-            checked={navidromeEnabled}
-            onChange={() =>
-              updateSettings((prev) => ({
-                ...prev,
-                navidromeEnabled: !prev.navidromeEnabled,
-              }))
-            }
-            switchLabel={
-              <span
-                className={`text-brand ${
-                  !navidromeEnabled ? "text-muted" : ""
-                }`}
-              >
-                <span>
-                  <FontAwesomeIcon
-                    icon={faNavidrome as IconProp}
-                    color={
-                      navidromeEnabled ? dataSourcesInfo.navidrome.color : ""
-                    }
-                  />
+          <div className="mb-4">
+            <Switch
+              id="enable-navidrome"
+              value="navidrome"
+              disabled={!navidromeEnabled && !navidromeAuth?.instance_url}
+              checked={navidromeEnabled}
+              onChange={() =>
+                updateSettings((prev) => ({
+                  ...prev,
+                  navidromeEnabled: !prev.navidromeEnabled,
+                }))
+              }
+              switchLabel={
+                <span
+                  className={`text-brand ${
+                    !navidromeEnabled ? "text-muted" : ""
+                  }`}
+                >
+                  <span>
+                    <FontAwesomeIcon
+                      icon={faNavidrome}
+                      color={
+                        navidromeEnabled ? dataSourcesInfo.navidrome.color : ""
+                      }
+                    />
+                  </span>
+                  <span>&nbsp;Navidrome</span>
                 </span>
-                <span>&nbsp;Navidrome</span>
-              </span>
-            }
-          />
-          <br />
-          <small>
-            Navidrome is a self-hosted music streaming server. You will need to
-            connect a Navidrome instance.
+              }
+            />
             <br />
-            Sign in on the{" "}
-            <Link to="/settings/music-services/details/">
-              &quot;connect services&quot; page
-            </Link>
-          </small>
-        </div>
+            <small>
+              Navidrome is a self-hosted music streaming server. You will need
+              to connect a Navidrome instance.
+              <br />
+              Sign in on the{" "}
+              <Link to="/settings/music-services/details/">
+                &quot;connect services&quot; page
+              </Link>
+            </small>
+          </div>
+        </Tooltip>
         <div className="mb-4">
           <Switch
             id="enable-youtube"
@@ -585,7 +612,7 @@ function BrainzPlayerSettings() {
             >
               <div className="main-content text-brand">
                 <span className="drag-handle text-muted">
-                  <FontAwesomeIcon icon={faGripLines as IconProp} />
+                  <FontAwesomeIcon icon={faGripLines} />
                 </span>
                 <span>
                   <FontAwesomeIcon
@@ -599,10 +626,6 @@ function BrainzPlayerSettings() {
           ))}
         </ReactSortable>
       </details>
-      <ReactTooltip id="login-first" aria-haspopup="true" delayHide={500}>
-        You must login to this service in the &quot;Connect services&quot;
-        section before using it.
-      </ReactTooltip>
     </>
   );
 }
