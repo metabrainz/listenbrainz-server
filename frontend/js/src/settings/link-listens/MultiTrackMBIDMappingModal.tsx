@@ -9,10 +9,10 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { toast } from "react-toastify";
-import Tooltip from "react-tooltip";
 import Fuse from "fuse.js";
 import { omit, size, uniq } from "lodash";
 import { isValid } from "date-fns";
+import Tooltip from "../../components/Tooltip";
 import ListenCard from "../../common/listens/ListenCard";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -317,15 +317,6 @@ export default NiceModal.create(
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Tooltip id="musicbrainz-helptext" type="info" multiline>
-            Search for an album matching the listens above.
-            <br />
-            Alternatively, you can search for a release or release-group using
-            the MusicBrainz search (musicbrainz.org/search).
-            <br />
-            When you have found the one that matches your listens, copy its URL
-            (link) into the search box above.
-          </Tooltip>
           <div>
             <p className="small form-text text-start">
               Search by album/artist name or paste a{" "}
@@ -333,12 +324,24 @@ export default NiceModal.create(
                 MusicBrainz URL or MBID
               </a>
               .
-              <FontAwesomeIcon
-                icon={faQuestionCircle}
-                data-tip
-                data-for="musicbrainz-helptext"
-                size="sm"
-              />
+              <Tooltip
+                id="musicbrainz-helptext"
+                tooltip={
+                  <>
+                    Search for an album matching the listens above.
+                    <br />
+                    Alternatively, you can search for a release or release-group
+                    using the MusicBrainz search (musicbrainz.org/search).
+                    <br />
+                    When you have found the one that matches your listens, copy
+                    its URL (link) into the search box above.
+                  </>
+                }
+              >
+                <span>
+                  <FontAwesomeIcon icon={faQuestionCircle} size="sm" />
+                </span>
+              </Tooltip>
             </p>
             <div className="card listen-card">
               <SearchAlbumOrMBID
@@ -362,19 +365,22 @@ export default NiceModal.create(
                 className="form-check-label"
               >
                 Include artist name when searching{" "}
-                <FontAwesomeIcon
-                  icon={faQuestionCircle}
-                  data-tip
-                  data-for="includeArtistNameHelp"
-                  size="sm"
-                />{" "}
+                <Tooltip
+                  id="includeArtistNameHelp"
+                  tooltip={
+                    <>
+                      Depending on the data we have available, including the
+                      artist name can result in worse matching. Tick this
+                      checkbox if you have a poor matching rate.
+                    </>
+                  }
+                >
+                  <span>
+                    <FontAwesomeIcon icon={faQuestionCircle} size="sm" />
+                  </span>
+                </Tooltip>{" "}
               </label>
             </div>
-            <Tooltip id="includeArtistNameHelp" type="info" multiline>
-              Depending on the data we have available, including the artist name
-              can result in worse matching. Tick this checkbox if you have a
-              poor matching rate.
-            </Tooltip>
             <div className="form-check">
               <input
                 className="form-check-input"
@@ -390,28 +396,32 @@ export default NiceModal.create(
                 style={{ fontWeight: "initial" }}
               >
                 Preserve special characters{" "}
-                <FontAwesomeIcon
-                  icon={faQuestionCircle}
-                  data-tip
-                  data-for="escapeSpecialCharactersHepl"
-                  size="sm"
-                />{" "}
+                <Tooltip
+                  id="escapeSpecialCharactersHepl"
+                  tooltip={
+                    <>
+                      Escape special characters such as{" "}
+                      <span className="code-block strong">
+                        ( ) [ ] ! * ~ ^ &quot; ~ ? \ / || &&
+                      </span>
+                      &nbsp;to preserve them in the search term.
+                      <br />
+                      Otherwise those characters may be ignored.
+                      <br />
+                      For example, to search for an album by the band
+                      &quot;!!!&quot;,
+                      <br />
+                      you will need to escape the characters like so:{" "}
+                      <pre>artist:(\!\!\!)</pre>
+                    </>
+                  }
+                >
+                  <span>
+                    <FontAwesomeIcon icon={faQuestionCircle} size="sm" />
+                  </span>
+                </Tooltip>{" "}
               </label>
             </div>
-            <Tooltip id="escapeSpecialCharactersHepl" type="info">
-              Escape special characters such as{" "}
-              <span className="code-block strong">
-                ( ) [ ] ! * ~ ^ &quot; ~ ? \ / || &&
-              </span>
-              &nbsp;to preserve them in the search term.
-              <br />
-              Otherwise those characters may be ignored.
-              <br />
-              For example, to search for an album by the band &quot;!!!&quot;,
-              <br />
-              you will need to escape the characters like so:{" "}
-              <pre>artist:(\!\!\!)</pre>
-            </Tooltip>
           </div>
           <hr />
           {selectedAlbum && (
@@ -529,18 +539,21 @@ export default NiceModal.create(
               style={{ fontWeight: "initial" }}
             >
               Include artist name when matching{" "}
-              <FontAwesomeIcon
-                icon={faQuestionCircle}
-                data-tip
-                data-for="includeArtistNameMatchHelp"
-                size="sm"
-              />{" "}
+              <Tooltip
+                id="includeArtistNameMatchHelp"
+                tooltip={
+                  <>
+                    Depending on the data we have available, including the
+                    artist name can result in worse matching. Tick this checkbox
+                    if you have a poor matching rate.
+                  </>
+                }
+              >
+                <span>
+                  <FontAwesomeIcon icon={faQuestionCircle} size="sm" />
+                </span>
+              </Tooltip>{" "}
             </label>
-            <Tooltip id="includeArtistNameMatchHelp" type="info" multiline>
-              Depending on the data we have available, including the artist name
-              can result in worse matching. Tick this checkbox if you have a
-              poor matching rate.
-            </Tooltip>
           </div>
         </Modal.Body>
         <Modal.Footer>
