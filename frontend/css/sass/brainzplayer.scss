@@ -406,6 +406,7 @@ $youtube-expanded-width: 1280px;
   cursor: pointer;
   z-index: 5;
   transition: height, 0.2s;
+  touch-action: none;
 
   .progress-bar {
     height: 100%;
@@ -420,6 +421,11 @@ $youtube-expanded-width: 1280px;
   & > ::after {
     border-color: transparent;
   }
+}
+
+#brainz-player.progress-expanded .progress {
+  height: $progress-bar-hover-height;
+  top: -$progress-bar-hover-height;
 }
 
 .progress-tooltip .tooltip-inner {

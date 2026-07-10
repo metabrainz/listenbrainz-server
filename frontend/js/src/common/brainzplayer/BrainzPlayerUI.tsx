@@ -227,10 +227,12 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
 
   const [showQueue, setShowQueue] = React.useState(false);
   const [showMusicPlayer, setShowMusicPlayer] = React.useState(false);
+  const [progressBarExpanded, setProgressBarExpanded] = React.useState(false);
 
   const [musicPlayerColorPalette, setMusicPlayerColorPalette] = React.useState<
     Palette
   >();
+  const brainzPlayerRef = React.useRef<HTMLDivElement>(null);
 
   const toggleQueue = React.useCallback(() => {
     setShowQueue((prevShowQueue) => !prevShowQueue);
@@ -239,6 +241,35 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const toggleMusicPlayer = React.useCallback(() => {
     setShowMusicPlayer((prevShow) => !prevShow);
   }, []);
+
+  const expandProgressBar = React.useCallback(() => {
+    if (isMobile && isPlayingATrack) {
+      setProgressBarExpanded(true);
+    }
+  }, [isMobile, isPlayingATrack]);
+
+  React.useEffect(() => {
+    if (!isMobile || showMusicPlayer) {
+      setProgressBarExpanded(false);
+    }
+  }, [isMobile, showMusicPlayer]);
+
+  React.useEffect(() => {
+    if (!progressBarExpanded) {
+      return noop;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!brainzPlayerRef.current?.contains(event.target as Node)) {
+        setProgressBarExpanded(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [progressBarExpanded]);
 
   const musicPlayerCoverArtRef = React.useRef<HTMLImageElement>(null);
 
@@ -344,9 +375,13 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       </div>
       <div
         id="brainz-player"
-        className={isPlayingATrack ? "playing" : ""}
+        ref={brainzPlayerRef}
+        className={`${isPlayingATrack ? "playing" : ""} ${
+          progressBarExpanded ? "progress-expanded" : ""
+        }`}
         aria-label="Playback control"
         data-testid="brainzplayer-ui"
+        onPointerDown={expandProgressBar}
       >
         {!showMusicPlayer && (
           <ProgressBar seekToPositionMs={seekToPositionMs} />

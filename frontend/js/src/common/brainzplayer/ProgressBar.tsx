@@ -70,29 +70,59 @@ function ProgressBar(props: ProgressBarProps) {
   const [tooltipXPosition, setTooltipXPosition] = React.useState(0);
   const progressBarRef = React.useRef<HTMLDivElement>(null);
   const tooltipTargetRef = React.useRef<HTMLSpanElement>(null);
+  const isScrubbingRef = React.useRef(false);
+  const ignoreNextClickRef = React.useRef(false);
   const progressPercentage = Number(
     ((progressMs * 100) / durationMs).toFixed()
   );
   const throttledSetTipContent = useThrottle((positionTime: string): void => {
     setTipContent(positionTime);
   }, MOUSE_THROTTLE_DELAY);
+  const throttledSeekToPositionMs = useThrottle((positionMs: number): void => {
+    seekToPositionMs(positionMs);
+  }, MOUSE_THROTTLE_DELAY);
 
-  const getPositionFromMouseEvent = (
-    event: React.MouseEvent<HTMLDivElement>
-  ) => {
-    const progressBarBoundingRect = event.currentTarget.getBoundingClientRect();
+  const getPositionFromClientX = (clientX: number) => {
+    const progressBarBoundingRect = progressBarRef.current?.getBoundingClientRect();
+    if (!progressBarBoundingRect) {
+      return null;
+    }
     const progressBarWidth = progressBarBoundingRect.width;
+    if (!progressBarWidth) {
+      return null;
+    }
     const musicPlayerXOffset = progressBarBoundingRect.x;
-    const absoluteClickXPos = event.clientX;
-    const relativeClickXPos = absoluteClickXPos - musicPlayerXOffset;
-    const percentPos = relativeClickXPos / progressBarWidth;
+    const relativeClickXPos = clientX - musicPlayerXOffset;
+    const percentPos = Math.max(
+      0,
+      Math.min(1, relativeClickXPos / progressBarWidth)
+    );
     const positionMs = Math.round(durationMs * percentPos);
 
     return {
       positionMs,
       positionTime: millisecondsToStr(positionMs),
-      tooltipXPosition: absoluteClickXPos,
+      tooltipXPosition: clientX,
     };
+  };
+
+  const updateTooltipFromClientX = (
+    clientX: number,
+    updateContentImmediately = false
+  ) => {
+    const mousePosition = getPositionFromClientX(clientX);
+    if (!mousePosition) {
+      return null;
+    }
+
+    if (updateContentImmediately) {
+      setTipContent(mousePosition.positionTime);
+    } else {
+      throttledSetTipContent(mousePosition.positionTime);
+    }
+    setTooltipXPosition(mousePosition.tooltipXPosition);
+    setShowTooltip(true);
+    return mousePosition.positionMs;
   };
 
   const onMouseMoveHandler = (
@@ -103,17 +133,71 @@ function ProgressBar(props: ProgressBarProps) {
       return;
     }
 
-    const mousePosition = getPositionFromMouseEvent(event);
-    throttledSetTipContent(mousePosition.positionTime);
-    setTooltipXPosition(mousePosition.tooltipXPosition);
-    setShowTooltip(true);
+    updateTooltipFromClientX(event.clientX);
   };
 
   const onClickHandler = (event: React.MouseEvent<HTMLDivElement>): void => {
-    const mousePosition = getPositionFromMouseEvent(event);
-    setTipContent(mousePosition.positionTime);
+    if (ignoreNextClickRef.current) {
+      ignoreNextClickRef.current = false;
+      return;
+    }
+
+    const positionMs = updateTooltipFromClientX(event.clientX, true);
+    if (positionMs === null) {
+      return;
+    }
     setShowTooltip(false);
-    seekToPositionMs(mousePosition.positionMs);
+    seekToPositionMs(positionMs);
+  };
+
+  const onPointerDownHandler = (
+    event: React.PointerEvent<HTMLDivElement>
+  ): void => {
+    if (event.pointerType === "mouse") {
+      return;
+    }
+
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    isScrubbingRef.current = true;
+    ignoreNextClickRef.current = true;
+
+    const positionMs = updateTooltipFromClientX(event.clientX, true);
+    if (positionMs !== null) {
+      seekToPositionMs(positionMs);
+    }
+  };
+
+  const onPointerMoveHandler = (
+    event: React.PointerEvent<HTMLDivElement>
+  ): void => {
+    if (event.pointerType === "mouse" || !isScrubbingRef.current) {
+      return;
+    }
+
+    event.preventDefault();
+    const positionMs = updateTooltipFromClientX(event.clientX);
+    if (positionMs !== null) {
+      throttledSeekToPositionMs(positionMs);
+    }
+  };
+
+  const stopScrubbing = (event: React.PointerEvent<HTMLDivElement>): void => {
+    if (event.pointerType === "mouse" || !isScrubbingRef.current) {
+      return;
+    }
+
+    event.preventDefault();
+    const positionMs = updateTooltipFromClientX(event.clientX, true);
+    if (positionMs !== null) {
+      seekToPositionMs(positionMs);
+    }
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    isScrubbingRef.current = false;
+    setShowTooltip(false);
   };
 
   const onKeyPressHandler = (
@@ -161,6 +245,10 @@ function ProgressBar(props: ProgressBarProps) {
         onClick={onClickHandler}
         onMouseMove={onMouseMoveHandler}
         onMouseLeave={() => setShowTooltip(false)}
+        onPointerDown={onPointerDownHandler}
+        onPointerMove={onPointerMoveHandler}
+        onPointerUp={stopScrubbing}
+        onPointerCancel={stopScrubbing}
         onKeyDown={onKeyPressHandler}
         aria-label="Audio progress control"
         role="progressbar"
