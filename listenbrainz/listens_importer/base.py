@@ -117,7 +117,10 @@ class ListensImporter(abc.ABC):
         pass
 
     def process_all_users(self):
-        """ Get a batch of users to be processed and import their listens.
+        """ Claim a batch of users and import their listens.
+
+        Uses claim-based work distribution so multiple workers can run
+        safely in parallel without processing the same users.
 
         Returns:
             (success, failure) where
@@ -125,7 +128,7 @@ class ListensImporter(abc.ABC):
                 failure: the number of users for whom we faced errors while importing.
         """
         try:
-            users = self.service.get_active_users_to_process(self.exclude_error)
+            users = self.service.claim_users_to_process(exclude_error=self.exclude_error)
         except DatabaseException as e:
             listenbrainz.webserver.db_conn.rollback()
             current_app.logger.error('Cannot get list of users due to error %s', str(e), exc_info=True)
@@ -139,9 +142,6 @@ class ListensImporter(abc.ABC):
         failure = 0
         for user in users:
             try:
-                if user["is_paused"]:
-                    continue
-
                 self._listens_imported_since_last_update += self.process_one_user(user)
                 success += 1
             except ListensImporterUserError:
@@ -160,6 +160,8 @@ class ListensImporter(abc.ABC):
                 current_app.logger.error(f'{self.name} could not import listens for user %s:',
                                          user['musicbrainz_id'], exc_info=True)
                 failure += 1
+            finally:
+                self.service.release_user_claim(user['user_id'])
 
             if time.monotonic() > self._metric_submission_time:
                 self._metric_submission_time += METRIC_UPDATE_INTERVAL

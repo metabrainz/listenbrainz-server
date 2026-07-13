@@ -136,7 +136,8 @@ CREATE TABLE listens_importer (
     last_updated                TIMESTAMP WITH TIME ZONE,
     latest_listened_at          TIMESTAMP WITH TIME ZONE,
     status                      JSONB,
-    error                       JSONB    -- {message: text, retry: boolean}
+    error                       JSONB,   -- {message: text, retry: boolean}
+    claimed_at                  TIMESTAMP WITH TIME ZONE
 );
 
 CREATE TABLE recommendation_feedback (
