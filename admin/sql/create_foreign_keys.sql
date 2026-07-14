@@ -175,4 +175,10 @@ ALTER TABLE navidrome_tokens
     REFERENCES navidrome_servers (id)
     ON DELETE CASCADE;
 
+ALTER TABLE user_onboarding_state
+    ADD CONSTRAINT user_onboarding_state_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 COMMIT;

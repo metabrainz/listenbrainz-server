@@ -73,4 +73,6 @@ CREATE INDEX user_id_ndx_navidrome_tokens ON navidrome_tokens (user_id);
 CREATE INDEX server_id_ndx_navidrome_tokens ON navidrome_tokens (navidrome_server_id);
 CREATE UNIQUE INDEX unique_user_server_navidrome_tokens ON navidrome_tokens (user_id, navidrome_server_id);
 
+CREATE INDEX user_onboarding_state_user_id_ndx ON user_onboarding_state (user_id);
+
 COMMIT;

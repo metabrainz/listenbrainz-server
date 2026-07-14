@@ -43,4 +43,6 @@ ALTER TABLE navidrome_servers ADD CONSTRAINT navidrome_servers_id_pkey PRIMARY K
 
 ALTER TABLE navidrome_tokens ADD CONSTRAINT navidrome_tokens_id_pkey PRIMARY KEY (id);
 
+ALTER TABLE user_onboarding_state ADD CONSTRAINT user_onboarding_state_pkey PRIMARY KEY (user_id, tour_id);
+
 COMMIT;
