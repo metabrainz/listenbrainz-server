@@ -2,6 +2,7 @@ from typing import Dict
 
 import sqlalchemy
 from listenbrainz import db
+from listenbrainz.db import couchdb
 from listenbrainz.webserver import ts_conn
 
 TOURS = ("setup", "listens", "stats", "social")
@@ -26,7 +27,7 @@ def _check_unlock_conditions(db_conn, ts_db_conn, user_id: int, tour_id: str) ->
             return False
 
     if tour_id == "stats":
-        # Unlock when all 6 required stat types exist for the user (week range)
+        # Unlock when weekly stat type exists for the user.
         REQUIRED_STATS = (
             "listening_activity",
             "artists",
@@ -35,20 +36,15 @@ def _check_unlock_conditions(db_conn, ts_db_conn, user_id: int, tour_id: str) ->
             "daily_activity",
             "artist_map",
         )
-        result = db_conn.execute(
-            sqlalchemy.text(
-                """
-                SELECT COUNT(DISTINCT stat_type)
-                  FROM user_data
-                 WHERE user_id = :user_id
-                   AND stat_type = ANY(:stat_types)
-                   AND stats_range = 'week'
-                """
-            ),
-            {"user_id": user_id, "stat_types": list(REQUIRED_STATS)},
-        )
-        row = result.fetchone()
-        return row is not None and row[0] >= len(REQUIRED_STATS)
+        try:
+            for stat_type in REQUIRED_STATS:
+                prefix = f"{stat_type}_week"
+                data = couchdb.fetch_data(prefix, user_id)
+                if data is not None:
+                    return True
+            return False
+        except Exception:
+            return False
 
     if tour_id == "social":
         # Unlock when user follows at least one user AND has similar_users data

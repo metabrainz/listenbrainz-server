@@ -20,4 +20,10 @@ ALTER TABLE user_onboarding_state
 
 CREATE INDEX IF NOT EXISTS user_onboarding_state_user_id_ndx ON user_onboarding_state (user_id);
 
+-- Pre seed existing users with setup tour marked as skipped so they don't see the auto start popup
+INSERT INTO user_onboarding_state (user_id, tour_id, status, current_step, unlock_ready)
+SELECT id, 'setup', 'skipped', 0, TRUE
+FROM "user"
+ON CONFLICT (user_id, tour_id) DO NOTHING;
+
 COMMIT;
