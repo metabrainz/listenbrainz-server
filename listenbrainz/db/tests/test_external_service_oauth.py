@@ -83,7 +83,7 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
 
     def test_update_token_preserves_refresh_token_expiry_without_new_refresh_token(self):
         refresh_token_expires = datetime.now(timezone.utc) + timedelta(days=10)
-        refresh_token_expiry_notified = datetime.now(timezone.utc)
+        refresh_token_expiry_last_notified = datetime.now(timezone.utc)
         db_oauth.save_token(
             self.db_conn,
             user_id=self.user['id'],
@@ -94,7 +94,7 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
             record_listens=True,
             scopes=['user-read-recently-played'],
             refresh_token_expires=refresh_token_expires,
-            refresh_token_expiry_notified=refresh_token_expiry_notified,
+            refresh_token_expiry_last_notified=refresh_token_expiry_last_notified,
         )
 
         db_oauth.update_token(
@@ -109,11 +109,11 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
         spotify_user = db_oauth.get_token(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY)
         self.assertEqual('refresh_token', spotify_user['refresh_token'])
         self.assertEqual(refresh_token_expires, spotify_user['refresh_token_expires'])
-        self.assertEqual(refresh_token_expiry_notified, spotify_user['refresh_token_expiry_notified'])
+        self.assertEqual(refresh_token_expiry_last_notified, spotify_user['refresh_token_expiry_last_notified'])
 
     def test_update_token_resets_refresh_token_expiry_with_new_refresh_token(self):
         refresh_token_expires = datetime.now(timezone.utc) + timedelta(days=10)
-        refresh_token_expiry_notified = datetime.now(timezone.utc)
+        refresh_token_expiry_last_notified = datetime.now(timezone.utc)
         db_oauth.save_token(
             self.db_conn,
             user_id=self.user['id'],
@@ -124,7 +124,7 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
             record_listens=True,
             scopes=['user-read-recently-played'],
             refresh_token_expires=refresh_token_expires,
-            refresh_token_expiry_notified=refresh_token_expiry_notified,
+            refresh_token_expiry_last_notified=refresh_token_expiry_last_notified,
         )
         new_refresh_token_expires = datetime.now(timezone.utc) + timedelta(days=100)
 
@@ -141,7 +141,7 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
         spotify_user = db_oauth.get_token(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY)
         self.assertEqual('new-refresh-token', spotify_user['refresh_token'])
         self.assertEqual(new_refresh_token_expires, spotify_user['refresh_token_expires'])
-        self.assertIsNone(spotify_user['refresh_token_expiry_notified'])
+        self.assertIsNone(spotify_user['refresh_token_expiry_last_notified'])
 
     def test_get_users_with_expiring_refresh_tokens(self):
         users = [
@@ -155,6 +155,12 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
                         fetch_email=True),
             db_user.get(self.db_conn, db_user.create(self.db_conn, 6, 'lastfm', 'lastfm@example.com'),
                         fetch_email=True),
+            db_user.get(self.db_conn, db_user.create(self.db_conn, 7, 'expiring_week', 'week@example.com'),
+                        fetch_email=True),
+            db_user.get(self.db_conn, db_user.create(self.db_conn, 8, 'week_notified', 'week-notified@example.com'),
+                        fetch_email=True),
+            db_user.get(self.db_conn, db_user.create(self.db_conn, 9, 'expiring_week_second', 'week-second@example.com'),
+                        fetch_email=True),
         ]
         now = datetime.now(timezone.utc)
         test_cases = [
@@ -163,8 +169,11 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
             (users[2], ExternalServiceType.SPOTIFY, now - timedelta(days=1), None),
             (users[3], ExternalServiceType.SPOTIFY, now + timedelta(days=15), now),
             (users[4], ExternalServiceType.LASTFM, now + timedelta(days=15), None),
+            (users[5], ExternalServiceType.SPOTIFY, now + timedelta(days=6), None),
+            (users[6], ExternalServiceType.SPOTIFY, now + timedelta(days=6), now),
+            (users[7], ExternalServiceType.SPOTIFY, now + timedelta(days=6), now - timedelta(days=10)),
         ]
-        for user, service, refresh_token_expires, refresh_token_expiry_notified in test_cases:
+        for user, service, refresh_token_expires, refresh_token_expiry_last_notified in test_cases:
             db_oauth.save_token(
                 self.db_conn,
                 user_id=user['id'],
@@ -175,14 +184,15 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
                 record_listens=False,
                 scopes=[],
                 refresh_token_expires=refresh_token_expires,
-                refresh_token_expiry_notified=refresh_token_expiry_notified,
+                refresh_token_expiry_last_notified=refresh_token_expiry_last_notified,
             )
 
         expiring_users = db_oauth.get_users_with_expiring_refresh_tokens(self.db_conn, ExternalServiceType.SPOTIFY)
 
-        self.assertEqual(1, len(expiring_users))
-        self.assertEqual(users[0]['id'], expiring_users[0]['user_id'])
-        self.assertEqual('expiring@example.com', expiring_users[0]['email'])
+        self.assertCountEqual([users[5]['id'], users[7]['id'], users[0]['id']],
+                              [user['user_id'] for user in expiring_users])
+        self.assertCountEqual(['week@example.com', 'week-second@example.com', 'expiring@example.com'],
+                              [user['email'] for user in expiring_users])
 
         expiring_lastfm_users = db_oauth.get_users_with_expiring_refresh_tokens(self.db_conn, ExternalServiceType.LASTFM)
         self.assertEqual(1, len(expiring_lastfm_users))
@@ -197,7 +207,7 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(user['refresh_token'], 'refresh_token')
         self.assertIn('token_expires', user)
         self.assertIn('refresh_token_expires', user)
-        self.assertIn('refresh_token_expiry_notified', user)
+        self.assertIn('refresh_token_expiry_last_notified', user)
 
     def test_delete_token_unlink(self):
         db_oauth.delete_token(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY, remove_import_log=True)
