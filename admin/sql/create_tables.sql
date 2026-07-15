@@ -125,7 +125,7 @@ CREATE TABLE external_service_oauth (
     refresh_token           TEXT,
     token_expires           TIMESTAMP WITH TIME ZONE,
     refresh_token_expires   TIMESTAMP WITH TIME ZONE,
-    refresh_token_expiry_notified TIMESTAMP WITH TIME ZONE,
+    refresh_token_expiry_last_notified TIMESTAMP WITH TIME ZONE,
     last_updated            TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     scopes                  TEXT[]
 );

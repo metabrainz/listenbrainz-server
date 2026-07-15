@@ -43,7 +43,7 @@ def get_user(db_conn, user_id: int) -> Optional[dict]:
              , external_service_oauth.last_updated
              , token_expires
              , refresh_token_expires
-             , refresh_token_expiry_notified
+             , refresh_token_expiry_last_notified
              , scopes
              , latest_listened_at
              , status

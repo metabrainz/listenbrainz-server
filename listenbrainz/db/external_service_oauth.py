@@ -10,7 +10,7 @@ import sqlalchemy
 def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token: Optional[str], refresh_token: Optional[str],
                token_expires_ts: Optional[int], record_listens: bool, scopes: Optional[List[str]], external_user_id: Optional[str] = None,
                latest_listened_at: Optional[datetime] = None, refresh_token_expires: Optional[datetime] = None,
-               refresh_token_expiry_notified: Optional[datetime] = None):
+               refresh_token_expiry_last_notified: Optional[datetime] = None):
     """ Add a row to the external_service_oauth table for specified user with corresponding tokens and information.
 
     Args:
@@ -25,7 +25,7 @@ def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token
         external_user_id: the user's id in the external linked service
         latest_listened_at: last listen import time
         refresh_token_expires: timestamp at which the refresh token expires
-        refresh_token_expiry_notified: timestamp at which the refresh token expiry notification was sent
+        refresh_token_expiry_last_notified: timestamp at which the last refresh token expiry notification was sent
     """
     # regardless of whether a row is inserted or updated, the end result of the query
     # should remain the same. if not so, weird things can happen as it is likely we
@@ -38,10 +38,10 @@ def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token
     result = db_conn.execute(sqlalchemy.text("""
         INSERT INTO external_service_oauth AS eso
         (user_id, external_user_id, service, access_token, refresh_token, token_expires, refresh_token_expires,
-         refresh_token_expiry_notified, scopes)
+         refresh_token_expiry_last_notified, scopes)
         VALUES
         (:user_id, :external_user_id, :service, :access_token, :refresh_token, :token_expires,
-         :refresh_token_expires, :refresh_token_expiry_notified, :scopes)
+         :refresh_token_expires, :refresh_token_expiry_last_notified, :scopes)
         ON CONFLICT (user_id, service)
         DO UPDATE SET
             external_user_id = EXCLUDED.external_user_id,
@@ -49,7 +49,7 @@ def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token
             refresh_token = EXCLUDED.refresh_token,
             token_expires = EXCLUDED.token_expires,
             refresh_token_expires = EXCLUDED.refresh_token_expires,
-            refresh_token_expiry_notified = EXCLUDED.refresh_token_expiry_notified,
+            refresh_token_expiry_last_notified = EXCLUDED.refresh_token_expiry_last_notified,
             scopes = EXCLUDED.scopes,
             last_updated = NOW()
         RETURNING id
@@ -61,7 +61,7 @@ def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token
         "refresh_token": refresh_token,
         "token_expires": token_expires,
         "refresh_token_expires": refresh_token_expires,
-        "refresh_token_expiry_notified": refresh_token_expiry_notified,
+        "refresh_token_expiry_last_notified": refresh_token_expiry_last_notified,
         "scopes": scopes,
     })
 
@@ -144,8 +144,8 @@ def update_token(db_conn, user_id: int, service: ExternalServiceType, access_tok
                  , refresh_token = :refresh_token
                  , token_expires = :token_expires
                  , refresh_token_expires = COALESCE(:refresh_token_expires, refresh_token_expires)
-                 , refresh_token_expiry_notified = CASE
-                       WHEN :refresh_token_expires IS NULL THEN refresh_token_expiry_notified
+                 , refresh_token_expiry_last_notified = CASE
+                       WHEN :refresh_token_expires IS NULL THEN refresh_token_expiry_last_notified
                        ELSE NULL
                    END
                  , last_updated = now()
@@ -185,7 +185,7 @@ def get_token(db_conn, user_id: int, service: ExternalServiceType) -> Union[dict
              , eso.last_updated
              , token_expires
              , refresh_token_expires
-             , refresh_token_expiry_notified
+             , refresh_token_expiry_last_notified
              , scopes
              , external_user_id
              , li.latest_listened_at
@@ -204,7 +204,9 @@ def get_token(db_conn, user_id: int, service: ExternalServiceType) -> Union[dict
 
 
 def get_users_with_expiring_refresh_tokens(db_conn, service: ExternalServiceType):
-    """Get users whose tracked refresh token for the specified service expires within one month and have not been notified."""
+    """Get users whose tracked refresh token for the specified service is due for an expiry notification."""
+    #  The refresh_token_expiry_last_notified conditional calculates if the user has been notified in the last month.
+    # If they have, wait until a week is left before expiry and send another email.
     result = db_conn.execute(sqlalchemy.text("""
         SELECT eso.id AS external_service_oauth_id
              , eso.user_id
@@ -219,7 +221,13 @@ def get_users_with_expiring_refresh_tokens(db_conn, service: ExternalServiceType
            AND eso.refresh_token != ''
            AND eso.refresh_token_expires > NOW()
            AND eso.refresh_token_expires <= NOW() + INTERVAL '1 month'
-           AND eso.refresh_token_expiry_notified IS NULL
+           AND (
+                    eso.refresh_token_expiry_last_notified IS NULL
+                 OR (
+                        eso.refresh_token_expires <= NOW() + INTERVAL '1 week'
+                    AND eso.refresh_token_expiry_last_notified < eso.refresh_token_expires - INTERVAL '1 week'
+                 )
+           )
       ORDER BY eso.refresh_token_expires ASC
     """), {
         "service": service.value,
@@ -231,7 +239,7 @@ def mark_refresh_token_expiry_notified(db_conn, external_service_oauth_id: int):
     """Mark a refresh-token expiry notification as sent for the specified OAuth row."""
     db_conn.execute(sqlalchemy.text("""
         UPDATE external_service_oauth
-           SET refresh_token_expiry_notified = NOW()
+           SET refresh_token_expiry_last_notified = NOW()
          WHERE id = :external_service_oauth_id
     """), {
         "external_service_oauth_id": external_service_oauth_id,

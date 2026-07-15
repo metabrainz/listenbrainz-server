@@ -59,9 +59,9 @@ def get_refresh_token_expires():
 
 
 def notify_refresh_token_expiry(db_conn):
-    """Send one pre-expiry notification for Spotify refresh tokens expiring within one month."""
-    users = external_service_oauth.get_users_with_expiring_refresh_tokens(db_conn, ExternalServiceType.SPOTIFY)
+    """Send pre-expiry notifications for Spotify refresh tokens expiring within one month and one week."""
     link = current_app.config['SERVER_ROOT_URL'] + '/settings/music-services/details/'
+    users = external_service_oauth.get_users_with_expiring_refresh_tokens(db_conn, ExternalServiceType.SPOTIFY)
     stats = {
         "sent": 0,
         "skipped": 0,
