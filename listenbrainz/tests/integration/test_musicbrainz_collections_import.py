@@ -1,14 +1,15 @@
 from unittest import mock
 
+import psycopg2
 import listenbrainz.db.user as db_user
 from listenbrainz.tests.integration import IntegrationTestCase
 
+_REAL_PSYCOPG2_CONNECT = psycopg2.connect
 
 class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
     def setUp(self):
         super().setUp()
 
-        # Test users
         self.alice = db_user.get_or_create(self.db_conn, 1, "alice")
         self.bob = db_user.get_or_create(self.db_conn, 2, "bob")
 
@@ -21,10 +22,10 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
 
         self.assert401(response)
 
+    @mock.patch("listenbrainz.webserver.views.playlist_api.DictCursor", new=mock.MagicMock)
     @mock.patch("listenbrainz.webserver.views.playlist_api.psycopg2.connect")
     def test_list_collections_returns_expected_response(self, mock_connect):
         fake_cursor = mock.MagicMock()
-
         fake_cursor.fetchall.return_value = [
             {
                 "mbid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
@@ -40,12 +41,19 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
             },
         ]
 
-        fake_connection = mock.MagicMock()
+        fake_mb_conn = mock.MagicMock()
+        fake_mb_conn.__enter__.return_value.cursor.return_value.__enter__.return_value = (
+            fake_cursor
+        )
 
-        mock_connect.return_value.__enter__.return_value = fake_connection
+        mb_dsn = self.app.config["MB_DATABASE_URI"]
 
+        def connect_side_effect(*args, **kwargs):
+            if args and args[0] == mb_dsn:
+                return fake_mb_conn
+            return _REAL_PSYCOPG2_CONNECT(*args, **kwargs)
 
-        fake_connection.cursor.return_value.__enter__.return_value = fake_cursor
+        mock_connect.side_effect = connect_side_effect
 
         response = self.client.get(
             self.custom_url_for("playlist_api_v1.import_musicbrainz_collections"),
@@ -72,35 +80,29 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
             ],
         )
 
-    @mock.patch("listenbrainz.webserver.views.collection.psycopg2.connect")
-    def test_public_collection_can_be_viewed_without_login(self, mock_connect):
-        fake_cursor = mock.MagicMock()
-
-    
-        fake_cursor.fetchone.side_effect = [
+    @mock.patch("listenbrainz.webserver.views.playlist_api.fetch_collection_payload")
+    def test_public_collection_can_be_viewed_without_login(self, mock_fetch):
+        mock_fetch.return_value = (
             {
-                "collection_id": 123,
-                "collection_mbid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-                "name": "Road Trip Songs",
-                "public": True,
-                "owner_editor_id": 1,
+                "collection": {
+                    "mbid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+                    "name": "Road Trip Songs",
+                    "public": True,
+                },
+                "track_count": 1,
+                "count": 100,
+                "offset": 0,
+                "tracks": [
+                    {
+                        "recording_mbid": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+                        "title": "Night Drive",
+                        "artist_credit_name": "The Midnight",
+                        "length": 123000,
+                    }
+                ],
             },
-            {"track_count": 1},
-        ]
-
-        fake_cursor.fetchall.return_value = [
-            {
-                "recording_mbid": "cccccccc-cccc-cccc-cccc-cccccccccccc",
-                "title": "Night Drive",
-                "artist_credit_name": "The Midnight",
-                "length": 123000,
-            }
-        ]
-
-        fake_connection = mock.MagicMock()
-
-        mock_connect.return_value.__enter__.return_value = fake_connection
-        fake_connection.cursor.return_value.__enter__.return_value = fake_cursor
+            None,
+        )
 
         response = self.client.get(
             self.custom_url_for(
@@ -110,35 +112,23 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
         )
 
         self.assert200(response)
-
         self.assertEqual(
             response.json["collection"]["mbid"],
             "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
         )
-        self.assertEqual(
-            response.json["collection"]["name"],
-            "Road Trip Songs",
-        )
+        self.assertEqual(response.json["collection"]["name"], "Road Trip Songs")
         self.assertEqual(response.json["collection"]["public"], True)
         self.assertEqual(response.json["track_count"], 1)
         self.assertEqual(len(response.json["tracks"]), 1)
+        mock_fetch.assert_called_once()
+        self.assertIsNone(mock_fetch.call_args.kwargs["viewer_editor_id"])
 
-    @mock.patch("listenbrainz.webserver.views.collection.psycopg2.connect")
-    def test_private_collection_requires_login(self, mock_connect):
-        fake_cursor = mock.MagicMock()
-
-        fake_cursor.fetchone.return_value = {
-            "collection_id": 123,
-            "collection_mbid": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-            "name": "Private Favorites",
-            "public": False,
-            "owner_editor_id": 1,
-        }
-
-        fake_connection = mock.MagicMock()
-
-        mock_connect.return_value.__enter__.return_value = fake_connection
-        fake_connection.cursor.return_value.__enter__.return_value = fake_cursor
+    @mock.patch("listenbrainz.webserver.views.playlist_api.fetch_collection_payload")
+    def test_private_collection_requires_login(self, mock_fetch):
+        mock_fetch.return_value = (
+            None,
+            ({"error": "You must be logged in to access this collection"}, 401),
+        )
 
         response = self.client.get(
             self.custom_url_for(
@@ -149,22 +139,12 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
 
         self.assert401(response)
 
-    @mock.patch("listenbrainz.webserver.views.collection.psycopg2.connect")
-    def test_private_collection_blocks_other_users(self, mock_connect):
-        fake_cursor = mock.MagicMock()
-
-        fake_cursor.fetchone.return_value = {
-            "collection_id": 123,
-            "collection_mbid": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-            "name": "Private Favorites",
-            "public": False,
-            "owner_editor_id": 1,
-        }
-
-        fake_connection = mock.MagicMock()
-
-        mock_connect.return_value.__enter__.return_value = fake_connection
-        fake_connection.cursor.return_value.__enter__.return_value = fake_cursor
+    @mock.patch("listenbrainz.webserver.views.playlist_api.fetch_collection_payload")
+    def test_private_collection_blocks_other_users(self, mock_fetch):
+        mock_fetch.return_value = (
+            None,
+            ({"error": "You are not allowed to access this collection"}, 403),
+        )
 
         response = self.client.get(
             self.custom_url_for(
@@ -175,3 +155,8 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
         )
 
         self.assert403(response)
+        mock_fetch.assert_called_once()
+        self.assertEqual(
+            mock_fetch.call_args.kwargs["viewer_editor_id"],
+            self.bob["musicbrainz_row_id"],
+        )
