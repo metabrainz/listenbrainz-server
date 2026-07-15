@@ -3,17 +3,17 @@ import json
 import time
 
 import listenbrainz.webserver
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import listenbrainz.db.user as db_user
 from data.model.external_service import ExternalServiceType
-from listenbrainz.domain.external_service import ExternalServiceAPIError, \
+from listenbrainz.domain.external_service import ExternalServiceAPIError, ExternalServiceError, \
     ExternalServiceInvalidGrantError
-from listenbrainz.domain.spotify import SpotifyService
+from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_INVALID_GRANT_ERROR_MESSAGE
 from listenbrainz.listens_importer.spotify import SpotifyImporter
 from unittest.mock import patch
 from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.db import external_service_oauth as db_oauth
+from listenbrainz.db import external_service_oauth as db_oauth, listens_importer as db_import
 
 
 class ConvertListensTestCase(DatabaseTestCase):
@@ -123,6 +123,35 @@ class ConvertListensTestCase(DatabaseTestCase):
             importer.process_all_users()
             mock_notify_error.assert_called_once_with(self.user['musicbrainz_id'], 'api borked')
             mock_update.assert_called_once()
+
+    @patch('listenbrainz.domain.spotify.SpotifyService.refresh_access_token')
+    @patch.object(SpotifyImporter, 'notify_error')
+    def test_notification_on_invalid_grant(self, mock_notify_error, mock_refresh_access_token):
+        mock_refresh_access_token.side_effect = ExternalServiceInvalidGrantError
+        expired_token_spotify_user = dict(
+            user_id=self.user['id'],
+            musicbrainz_id=self.user['musicbrainz_id'],
+            musicbrainz_row_id=self.user['musicbrainz_row_id'],
+            access_token='old-token',
+            token_expires=datetime.now(timezone.utc) - timedelta(minutes=1),
+            refresh_token='old-refresh-token',
+            last_updated=None,
+            latest_listened_at=None,
+            scopes=['user-read-recently-played'],
+            status={"count": 0},
+            error=None,
+        )
+        app = listenbrainz.webserver.create_app()
+        app.config['TESTING'] = False
+        with app.app_context(), self.assertRaises(ExternalServiceError):
+            importer = SpotifyImporter()
+            importer.process_one_user(expired_token_spotify_user)
+
+        mock_notify_error.assert_called_once_with(self.user['musicbrainz_id'], SPOTIFY_INVALID_GRANT_ERROR_MESSAGE)
+        status = db_import.get_import_status(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY)
+        self.assertEqual(SPOTIFY_INVALID_GRANT_ERROR_MESSAGE, status["error"]["message"])
+        self.assertEqual("invalid_grant", status["error"]["reason"])
+        self.assertFalse(status["error"]["retry"])
 
     @patch('spotipy.Spotify')
     def test_spotipy_methods_are_called_with_correct_params(self, mock_spotipy):

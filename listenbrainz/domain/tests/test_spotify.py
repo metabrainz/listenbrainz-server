@@ -125,6 +125,9 @@ class SpotifyServiceTestCase(NonAPIIntegrationTestCase):
         })
         with self.assertRaises(ExternalServiceInvalidGrantError):
             self.service.refresh_access_token(self.user_id, self.spotify_user['refresh_token'])
+        self.assertEqual(1, len(mock_requests.request_history))
+        self.assertIsNone(self.service.get_user(self.user_id))
+        self.assertIsNotNone(self.service.get_user_connection_details(self.user_id))
 
     def test_remove_user(self):
         self.service.remove_user(self.user_id)
