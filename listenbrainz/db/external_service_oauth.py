@@ -227,6 +227,18 @@ def get_users_with_expiring_refresh_tokens(db_conn, service: ExternalServiceType
     return result.mappings().all()
 
 
+def mark_refresh_token_expiry_notified(db_conn, external_service_oauth_id: int):
+    """Mark a refresh-token expiry notification as sent for the specified OAuth row."""
+    db_conn.execute(sqlalchemy.text("""
+        UPDATE external_service_oauth
+           SET refresh_token_expiry_notified = NOW()
+         WHERE id = :external_service_oauth_id
+    """), {
+        "external_service_oauth_id": external_service_oauth_id,
+    })
+    db_conn.commit()
+
+
 def get_services(db_conn, user_id: int) -> list[str]:
     """ Get the list of connected services for a given user
 

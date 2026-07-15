@@ -50,6 +50,7 @@ SPOTIFY_INVALID_GRANT_ERROR_MESSAGE = (
     "Please reconnect Spotify to resume imports."
 )
 SPOTIFY_REFRESH_TOKEN_TTL = relativedelta(months=6)
+SPOTIFY_REFRESH_TOKEN_EXPIRY_EMAIL_SUBJECT = "[Action required] Reconnect Spotify to keep importing your history"
 
 
 def get_refresh_token_expires():
@@ -57,6 +58,45 @@ def get_refresh_token_expires():
     return datetime.fromtimestamp(int(time.time()), timezone.utc) + SPOTIFY_REFRESH_TOKEN_TTL
 
 
+def notify_refresh_token_expiry(db_conn):
+    """Send one pre-expiry notification for Spotify refresh tokens expiring within one month."""
+    users = external_service_oauth.get_users_with_expiring_refresh_tokens(db_conn, ExternalServiceType.SPOTIFY)
+    link = current_app.config['SERVER_ROOT_URL'] + '/settings/music-services/details/'
+    stats = {
+        "sent": 0,
+        "skipped": 0,
+        "failed": 0,
+    }
+
+    for user in users:
+        if not user["email"]:
+            stats["skipped"] += 1
+            current_app.logger.info("Skipping Spotify refresh-token expiry email for %s: no email address",
+                                    user["musicbrainz_id"])
+            continue
+
+        text = render_template(
+            "emails/spotify_refresh_token_expiry.txt",
+            username=user["musicbrainz_id"],
+            link=link,
+            refresh_token_expires=user["refresh_token_expires"],
+        )
+        try:
+            send_mail(
+                subject=SPOTIFY_REFRESH_TOKEN_EXPIRY_EMAIL_SUBJECT,
+                text=text,
+                recipients=[user["email"]],
+                from_name='ListenBrainz',
+                from_addr='noreply@' + current_app.config['MAIL_FROM_DOMAIN'],
+            )
+            external_service_oauth.mark_refresh_token_expiry_notified(db_conn, user["external_service_oauth_id"])
+            stats["sent"] += 1
+        except Exception:
+            stats["failed"] += 1
+            current_app.logger.error("Could not send Spotify refresh-token expiry email to %s",
+                                     user["musicbrainz_id"], exc_info=True)
+
+    return stats
 
 
 def _get_spotify_token(grant_type: str, token: str) -> requests.Response:
