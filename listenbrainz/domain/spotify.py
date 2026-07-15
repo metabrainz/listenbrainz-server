@@ -1,11 +1,14 @@
 import time
 import base64
+from datetime import datetime, timezone
 from typing import Sequence, Optional
 
 import requests
 import spotipy
 
-from flask import current_app
+from brainzutils.mail import send_mail
+from dateutil.relativedelta import relativedelta
+from flask import current_app, render_template
 from spotipy import SpotifyOAuth
 
 from data.model.external_service import ExternalServiceType
@@ -46,6 +49,14 @@ SPOTIFY_INVALID_GRANT_ERROR_MESSAGE = (
     "Your Spotify connection has expired or been revoked. "
     "Please reconnect Spotify to resume imports."
 )
+SPOTIFY_REFRESH_TOKEN_TTL = relativedelta(months=6)
+
+
+def get_refresh_token_expires():
+    """Return the expiry timestamp for a newly issued Spotify refresh token."""
+    return datetime.fromtimestamp(int(time.time()), timezone.utc) + SPOTIFY_REFRESH_TOKEN_TTL
+
+
 
 
 def _get_spotify_token(grant_type: str, token: str) -> requests.Response:
@@ -109,7 +120,8 @@ class SpotifyService(ImporterService):
 
         external_service_oauth.save_token(db_conn, user_id=user_id, service=self.service, access_token=access_token,
                                           refresh_token=refresh_token, token_expires_ts=expires_at,
-                                          record_listens=active, scopes=scopes, external_user_id=external_user_id)
+                                          record_listens=active, scopes=scopes, external_user_id=external_user_id,
+                                          refresh_token_expires=get_refresh_token_expires())
         return True
 
     def get_authorize_url(self, permissions: Sequence[str]):
@@ -177,12 +189,13 @@ class SpotifyService(ImporterService):
 
         response = response.json()
         access_token = response['access_token']
-        if "refresh_token" in response:
-            refresh_token = response['refresh_token']
+        new_refresh_token = response.get("refresh_token")
         expires_at = int(time.time()) + response['expires_in']
         external_service_oauth.update_token(db_conn, user_id=user_id, service=self.service,
-                                            access_token=access_token, refresh_token=refresh_token,
-                                            expires_at=expires_at)
+                                            access_token=access_token, refresh_token=new_refresh_token,
+                                            expires_at=expires_at,
+                                            refresh_token_expires=get_refresh_token_expires()
+                                            if new_refresh_token else None)
         return self.get_user(user_id)
 
     def revoke_user(self, user_id: int):

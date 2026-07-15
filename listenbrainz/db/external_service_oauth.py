@@ -9,7 +9,8 @@ import sqlalchemy
 
 def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token: Optional[str], refresh_token: Optional[str],
                token_expires_ts: Optional[int], record_listens: bool, scopes: Optional[List[str]], external_user_id: Optional[str] = None,
-               latest_listened_at: Optional[datetime] = None):
+               latest_listened_at: Optional[datetime] = None, refresh_token_expires: Optional[datetime] = None,
+               refresh_token_expiry_notified: Optional[datetime] = None):
     """ Add a row to the external_service_oauth table for specified user with corresponding tokens and information.
 
     Args:
@@ -23,6 +24,8 @@ def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token
         scopes: the oauth scopes
         external_user_id: the user's id in the external linked service
         latest_listened_at: last listen import time
+        refresh_token_expires: timestamp at which the refresh token expires
+        refresh_token_expiry_notified: timestamp at which the refresh token expiry notification was sent
     """
     # regardless of whether a row is inserted or updated, the end result of the query
     # should remain the same. if not so, weird things can happen as it is likely we
@@ -34,15 +37,19 @@ def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token
     token_expires = datetime.fromtimestamp(token_expires_ts, timezone.utc) if token_expires_ts else None
     result = db_conn.execute(sqlalchemy.text("""
         INSERT INTO external_service_oauth AS eso
-        (user_id, external_user_id, service, access_token, refresh_token, token_expires, scopes)
+        (user_id, external_user_id, service, access_token, refresh_token, token_expires, refresh_token_expires,
+         refresh_token_expiry_notified, scopes)
         VALUES
-        (:user_id, :external_user_id, :service, :access_token, :refresh_token, :token_expires, :scopes)
+        (:user_id, :external_user_id, :service, :access_token, :refresh_token, :token_expires,
+         :refresh_token_expires, :refresh_token_expiry_notified, :scopes)
         ON CONFLICT (user_id, service)
         DO UPDATE SET
             external_user_id = EXCLUDED.external_user_id,
             access_token = EXCLUDED.access_token,
             refresh_token = EXCLUDED.refresh_token,
             token_expires = EXCLUDED.token_expires,
+            refresh_token_expires = EXCLUDED.refresh_token_expires,
+            refresh_token_expiry_notified = EXCLUDED.refresh_token_expiry_notified,
             scopes = EXCLUDED.scopes,
             last_updated = NOW()
         RETURNING id
@@ -53,6 +60,8 @@ def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token
         "access_token": access_token,
         "refresh_token": refresh_token,
         "token_expires": token_expires,
+        "refresh_token_expires": refresh_token_expires,
+        "refresh_token_expiry_notified": refresh_token_expiry_notified,
         "scopes": scopes,
     })
 
@@ -109,7 +118,7 @@ def delete_token(db_conn, user_id: int, service: ExternalServiceType, remove_imp
 
 
 def update_token(db_conn, user_id: int, service: ExternalServiceType, access_token: str,
-                 refresh_token: str | None, expires_at: int):
+                 refresh_token: str | None, expires_at: int, refresh_token_expires: datetime | None = None):
     """ Update the token for user with specified LB user ID and external service.
 
     Args:
@@ -119,6 +128,7 @@ def update_token(db_conn, user_id: int, service: ExternalServiceType, access_tok
         access_token: the new access token
         refresh_token: the new token used to refresh access tokens, if omitted the old token in the database remains unchanged
         expires_at: the unix timestamp at which the access token expires
+        refresh_token_expires: timestamp at which the new refresh token expires, if the refresh token was rotated
     """
     token_expires = datetime.fromtimestamp(expires_at, timezone.utc)
     params = {
@@ -133,11 +143,17 @@ def update_token(db_conn, user_id: int, service: ExternalServiceType, access_tok
                SET access_token = :access_token
                  , refresh_token = :refresh_token
                  , token_expires = :token_expires
+                 , refresh_token_expires = COALESCE(:refresh_token_expires, refresh_token_expires)
+                 , refresh_token_expiry_notified = CASE
+                       WHEN :refresh_token_expires IS NULL THEN refresh_token_expiry_notified
+                       ELSE NULL
+                   END
                  , last_updated = now()
              WHERE user_id = :user_id
                AND service = :service
         """
         params["refresh_token"] = refresh_token
+        params["refresh_token_expires"] = refresh_token_expires
     else:
         query = """
             UPDATE external_service_oauth
@@ -168,6 +184,8 @@ def get_token(db_conn, user_id: int, service: ExternalServiceType) -> Union[dict
              , refresh_token
              , eso.last_updated
              , token_expires
+             , refresh_token_expires
+             , refresh_token_expiry_notified
              , scopes
              , external_user_id
              , li.latest_listened_at
@@ -183,6 +201,30 @@ def get_token(db_conn, user_id: int, service: ExternalServiceType) -> Union[dict
             'service': service.value
         })
     return result.mappings().first()
+
+
+def get_users_with_expiring_refresh_tokens(db_conn, service: ExternalServiceType):
+    """Get users whose tracked refresh token for the specified service expires within one month and have not been notified."""
+    result = db_conn.execute(sqlalchemy.text("""
+        SELECT eso.id AS external_service_oauth_id
+             , eso.user_id
+             , "user".musicbrainz_id
+             , "user".email
+             , eso.refresh_token_expires
+          FROM external_service_oauth eso
+          JOIN "user"
+            ON "user".id = eso.user_id
+         WHERE eso.service = :service
+           AND eso.refresh_token IS NOT NULL
+           AND eso.refresh_token != ''
+           AND eso.refresh_token_expires > NOW()
+           AND eso.refresh_token_expires <= NOW() + INTERVAL '1 month'
+           AND eso.refresh_token_expiry_notified IS NULL
+      ORDER BY eso.refresh_token_expires ASC
+    """), {
+        "service": service.value,
+    })
+    return result.mappings().all()
 
 
 def get_services(db_conn, user_id: int) -> list[str]:
