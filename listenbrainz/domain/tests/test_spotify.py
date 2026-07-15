@@ -1,13 +1,17 @@
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest import mock
 import spotipy
 
+from click.testing import CliRunner
 import requests_mock
 
 import listenbrainz.db.user as db_user
+from data.model.external_service import ExternalServiceType
+from listenbrainz.db import external_service_oauth as db_oauth
 from listenbrainz.domain.external_service import ExternalServiceAPIError, ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService, OAUTH_TOKEN_URL
+from listenbrainz.manage import cli
 
 from listenbrainz.tests.integration import NonAPIIntegrationTestCase
 
@@ -91,6 +95,8 @@ class SpotifyServiceTestCase(NonAPIIntegrationTestCase):
         self.assertEqual('tokentoken', user['access_token'])
         self.assertEqual('refreshtokentoken', user['refresh_token'])
         self.assertEqual(datetime.fromtimestamp(3600, tz=timezone.utc), user['token_expires'])
+        self.assertEqual(datetime(1970, 7, 1, tzinfo=timezone.utc), user['refresh_token_expires'])
+        self.assertIsNone(user['refresh_token_expiry_notified'])
 
     @requests_mock.Mocker()
     @mock.patch('time.time')
@@ -106,6 +112,7 @@ class SpotifyServiceTestCase(NonAPIIntegrationTestCase):
         self.assertEqual('tokentoken', user['access_token'])
         self.assertEqual('old-refresh-token', user['refresh_token'])
         self.assertEqual(datetime.fromtimestamp(3600, tz=timezone.utc), user['token_expires'])
+        self.assertEqual(self.spotify_user['refresh_token_expires'], user['refresh_token_expires'])
 
     @requests_mock.Mocker()
     def test_refresh_user_token_bad(self, mock_requests):
@@ -158,3 +165,44 @@ class SpotifyServiceTestCase(NonAPIIntegrationTestCase):
         self.assertEqual('access-token', user['access_token'])
         self.assertEqual('refresh-token', user['refresh_token'])
         self.assertEqual("test_user_id", user["external_user_id"])
+        self.assertEqual(datetime(1970, 7, 1, tzinfo=timezone.utc), user['refresh_token_expires'])
+        self.assertIsNone(user['refresh_token_expiry_notified'])
+
+    @mock.patch("listenbrainz.domain.spotify.send_mail")
+    @mock.patch("listenbrainz.manage.webserver.create_app")
+    def test_notify_spotify_refresh_token_expiry_command(self, mock_create_app, mock_send_mail):
+        mock_create_app.return_value = self.app
+        user_with_email_id = db_user.create(self.db_conn, 444, 'expiring_spotify_user', 'user@example.com')
+        user_without_email_id = db_user.create(self.db_conn, 555, 'expiring_spotify_user_without_email')
+        refresh_token_expires = datetime.now(timezone.utc) + timedelta(days=15)
+
+        for user_id in (user_with_email_id, user_without_email_id):
+            db_oauth.save_token(
+                self.db_conn,
+                user_id=user_id,
+                service=ExternalServiceType.SPOTIFY,
+                access_token='access-token',
+                refresh_token='refresh-token',
+                token_expires_ts=int(time.time()),
+                record_listens=True,
+                scopes=['user-read-currently-playing', 'user-read-recently-played'],
+                refresh_token_expires=refresh_token_expires,
+            )
+
+        result = CliRunner().invoke(cli, ["notify_spotify_refresh_token_expiry"])
+
+        self.assertEqual(0, result.exit_code)
+        self.assertIn("1 sent, 1 skipped, 0 failed", result.output)
+        mock_send_mail.assert_called_once()
+        self.assertEqual("[Action required] Reconnect Spotify to keep importing your history", mock_send_mail.call_args.kwargs["subject"])
+        self.assertEqual(["user@example.com"], mock_send_mail.call_args.kwargs["recipients"])
+        self.assertIn("/settings/music-services/details/", mock_send_mail.call_args.kwargs["text"])
+
+        user = db_oauth.get_token(self.db_conn, user_with_email_id, ExternalServiceType.SPOTIFY)
+        self.assertIsNotNone(user["refresh_token_expiry_notified"])
+
+        result = CliRunner().invoke(cli, ["notify_spotify_refresh_token_expiry"])
+
+        self.assertEqual(0, result.exit_code)
+        self.assertIn("0 sent, 1 skipped, 0 failed", result.output)
+        mock_send_mail.assert_called_once()
