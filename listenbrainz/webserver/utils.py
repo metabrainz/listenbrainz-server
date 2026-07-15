@@ -11,6 +11,7 @@ from listenbrainz.webserver.views.views_utils import get_current_spotify_user, g
     get_current_funkwhale_user, get_current_navidrome_user
 import listenbrainz.db.user_setting as db_usersetting
 import listenbrainz.db.donation as db_donation
+import listenbrainz.db.spotify as db_spotify
 
 REJECT_LISTENS_WITHOUT_EMAIL_ERROR = \
     'The listens were rejected because the user does not has not provided an email. ' \
@@ -133,6 +134,23 @@ def get_initial_alerts():
             "level": message["level"],
             "message": message["message"],
         })
+
+    if current_user.is_authenticated:
+        try:
+            spotify_details = db_spotify.get_user_import_details(db_conn, current_user.id)
+        except Exception:
+            current_app.logger.error("Could not load Spotify import status for initial alerts", exc_info=True)
+        else:
+            error = spotify_details.get("error") if spotify_details else None
+            if error and error.get("reason") == "invalid_grant":
+                alerts.append({
+                    "id": "spotify-reconnect-required",
+                    "level": "error",
+                    "message": (
+                        'Your Spotify connection has expired or been revoked, so imports have stopped. '
+                        '<a href="/settings/music-services/details/">Reconnect Spotify</a> to resume imports.'
+                    ),
+                })
 
     return orjson.dumps(alerts).decode("utf-8")
 
