@@ -9,6 +9,7 @@ import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Username from "../common/Username";
 import FlairsSettings from "./flairs/FlairsSettings";
+import Switch from "../components/Switch";
 
 export default function Settings() {
   const globalContext = React.useContext(GlobalAppContext);
@@ -18,6 +19,11 @@ export default function Settings() {
 
   const [showToken, setShowToken] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
+  const isBetaState = window.location.hostname.includes("beta");
+  const handleBetaToggle = () => {
+    const returnTo = encodeURIComponent(window.location.pathname);
+    window.location.href = `/settings/set-beta-preference/?returnto=${returnTo}`;
+  };
 
   const copyToken = () => {
     if (!navigator.clipboard) {
@@ -130,6 +136,21 @@ export default function Settings() {
             </Link>
           </span>
         </p>
+        <h3>Beta Preference</h3>
+
+        <Switch
+          id="enable-beta-site"
+          value="beta-site"
+          checked={isBetaState}
+          onChange={handleBetaToggle}
+          switchLabel={
+            <span className={`text-brand ${!isBetaState ? "text-muted" : ""}`}>
+              <span>
+                {isBetaState ? "Stop using Beta Site" : "Use Beta Site"}
+              </span>
+            </span>
+          }
+        />
       </div>
     </>
   );

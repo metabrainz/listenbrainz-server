@@ -67,6 +67,17 @@ def validate_funkwhale_url(url: str) -> str:
 
 settings_bp = Blueprint("settings", __name__)
 
+@settings_bp.get("/set-beta-preference/")
+@login_required
+def set_beta_preference():
+    use_beta = request.cookies.get("use_beta", "false")
+    nv = "false" if use_beta == "true" else "true"
+    return_to = request.args.get("returnto", "/")
+    response = redirect(return_to)
+    response.set_cookie("use_beta", nv)
+
+    return response
+
 
 @settings_bp.post("/resettoken/")
 @api_login_required
