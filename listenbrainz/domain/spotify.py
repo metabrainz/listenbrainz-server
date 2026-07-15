@@ -42,6 +42,10 @@ SPOTIFY_PLAYLIST_PERMISSIONS = {
 }
 
 SPOTIFY_API_RETRIES = 5
+SPOTIFY_INVALID_GRANT_ERROR_MESSAGE = (
+    "Your Spotify connection has expired or been revoked. "
+    "Please reconnect Spotify to resume imports."
+)
 
 
 def _get_spotify_token(grant_type: str, token: str) -> requests.Response:
@@ -162,6 +166,7 @@ class SpotifyService(ImporterService):
             elif response.status_code == 400:
                 error_body = response.json()
                 if "error" in error_body and error_body["error"] == "invalid_grant":
+                    self.revoke_user(user_id)
                     raise ExternalServiceInvalidGrantError(error_body)
 
             response = None  # some other error occurred
