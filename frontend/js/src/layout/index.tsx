@@ -12,6 +12,14 @@ const BrainzPlayer = React.lazy(() =>
   import("../common/brainzplayer/BrainzPlayer")
 );
 
+const mappingLevelToBootstrapClass = {
+  default: "secondary",
+  info: "info",
+  success: "success",
+  warning: "warning",
+  error: "danger",
+};
+
 export default function Layout({
   children,
   initialAlerts = [],
@@ -26,13 +34,14 @@ export default function Layout({
   React.useEffect(() => {
     initialAlerts.forEach((alert) => {
       const levelOrDefault = alert.level ?? "default";
+      const bsClass = mappingLevelToBootstrapClass[levelOrDefault];
       const options: ToastOptions = {
         autoClose: false,
         closeOnClick: false,
         containerId: "initial-alerts",
         toastId: alert.id,
         type: levelOrDefault,
-        className: `alert alert-${levelOrDefault}`,
+        className: `alert alert-${bsClass}`,
       };
       const messageWithHTML = (
         // eslint-disable-next-line react/no-danger -- we control the content of the initial alerts, so this is safe
