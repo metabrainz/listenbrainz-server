@@ -280,6 +280,16 @@ CREATE TABLE navidrome_tokens (
     created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+CREATE TABLE user_onboarding_state (
+    user_id      INTEGER     NOT NULL,
+    tour_id      VARCHAR(50) NOT NULL,
+    status       VARCHAR(20) NOT NULL DEFAULT 'not_started',
+    current_step INTEGER     NOT NULL DEFAULT 0,
+    unlock_ready BOOLEAN     NOT NULL DEFAULT FALSE,
+    unlocked_at  TIMESTAMP WITH TIME ZONE,
+    updated_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 -- The following line is now executed by the init-db action from manage.py. If you create a DB without the init-db function
 -- you will need to execute the following GRANT in order to complete your DB setup.
 --GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
