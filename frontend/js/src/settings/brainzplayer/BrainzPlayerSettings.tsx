@@ -5,6 +5,7 @@ import {
   faApple,
   faSoundcloud,
   faYoutube,
+  faBandcamp,
 } from "@fortawesome/free-brands-svg-icons";
 import { Helmet } from "react-helmet";
 import { Link } from "react-router";
@@ -43,6 +44,11 @@ export const dataSourcesInfo = {
     icon: faSoundcloud,
     color: "#FF8800",
   },
+  bandcamp: {
+    name: "Bandcamp",
+    icon: faBandcamp,
+    color: "#629aa9",
+  },
   appleMusic: {
     name: "Apple Music",
     icon: faApple,
@@ -68,9 +74,13 @@ export const dataSourcesInfo = {
 export type DataSourceKey = keyof typeof dataSourcesInfo;
 type DataSourceInfo = typeof dataSourcesInfo[keyof typeof dataSourcesInfo];
 
+const hasBandcampPermissions = (bandcampUser?: BandcampUser) =>
+  Boolean(bandcampUser?.md5_auth_token && bandcampUser?.instance_url);
+
 export const defaultDataSourcesPriority = [
   "spotify",
   "appleMusic",
+  "bandcamp",
   "soundcloud",
   "funkwhale",
   "navidrome",
@@ -85,6 +95,7 @@ function BrainzPlayerSettings() {
     appleAuth,
     funkwhaleAuth,
     navidromeAuth,
+    bandcampAuth,
     APIService,
     currentUser,
     userPreferences,
@@ -98,6 +109,9 @@ function BrainzPlayerSettings() {
     soundcloudEnabled:
       userPreferences?.brainzplayer?.soundcloudEnabled ??
       SoundcloudPlayer.hasPermissions(soundcloudAuth),
+    bandcampEnabled:
+      userPreferences?.brainzplayer?.bandcampEnabled ??
+      hasBandcampPermissions(bandcampAuth),
     appleMusicEnabled:
       userPreferences?.brainzplayer?.appleMusicEnabled ??
       AppleMusicPlayer.hasPermissions(appleAuth),
@@ -120,6 +134,7 @@ function BrainzPlayerSettings() {
     youtubeEnabled,
     spotifyEnabled,
     soundcloudEnabled,
+    bandcampEnabled,
     appleMusicEnabled,
     internetArchiveEnabled,
     funkwhaleEnabled,
@@ -318,6 +333,51 @@ function BrainzPlayerSettings() {
             </Link>
             . You will need to sign in every 6 months, as the authorization
             expires.
+          </small>
+        </div>
+        <div
+          className="mb-4"
+          data-tip
+          data-tip-disable={
+            bandcampEnabled || hasBandcampPermissions(bandcampAuth)
+          }
+          data-for="login-first"
+        >
+          <Switch
+            id="enable-bandcamp"
+            value="bandcamp"
+            disabled={!bandcampEnabled && !hasBandcampPermissions(bandcampAuth)}
+            checked={bandcampEnabled}
+            onChange={() =>
+              updateSettings((prev) => ({
+                ...prev,
+                bandcampEnabled: !prev.bandcampEnabled,
+              }))
+            }
+            switchLabel={
+              <span
+                className={`text-brand ${!bandcampEnabled ? "text-muted" : ""}`}
+              >
+                <span>
+                  <FontAwesomeIcon
+                    icon={faBandcamp}
+                    color={
+                      bandcampEnabled ? dataSourcesInfo.bandcamp.color : ""
+                    }
+                  />
+                </span>
+                <span>&nbsp;Bandcamp</span>
+              </span>
+            }
+          />
+          <br />
+          <small>
+            Bandcamp uses a Subsonic-compatible server connection.
+            <br />
+            Sign in on the{" "}
+            <Link to="/settings/music-services/details/">
+              &quot;connect services&quot; page
+            </Link>
           </small>
         </div>
         <div

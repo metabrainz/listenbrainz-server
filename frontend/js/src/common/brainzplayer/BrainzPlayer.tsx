@@ -34,6 +34,7 @@ import AppleMusicPlayer from "./AppleMusicPlayer";
 import InternetArchivePlayer from "./InternetArchivePlayer";
 import FunkwhalePlayer from "./FunkwhalePlayer";
 import NavidromePlayer from "./NavidromePlayer";
+import BandcampPlayer from "./BandcampPlayer";
 import {
   DataSourceKey,
   defaultDataSourcesPriority,
@@ -93,7 +94,8 @@ export type DataSourceTypes =
   | AppleMusicPlayer
   | InternetArchivePlayer
   | FunkwhalePlayer
-  | NavidromePlayer;
+  | NavidromePlayer
+  | BandcampPlayer;
 
 export type DataSourceProps = {
   volume?: number;
@@ -150,6 +152,9 @@ function isListenFromDatasource(
   if (datasource instanceof NavidromePlayer) {
     return NavidromePlayer.isListenFromThisService(listen);
   }
+  if (datasource instanceof BandcampPlayer) {
+    return BandcampPlayer.isListenFromThisService(listen);
+  }
   if (datasource instanceof InternetArchivePlayer) {
     return InternetArchivePlayer.isListenFromThisService(listen);
   }
@@ -168,6 +173,7 @@ export default function BrainzPlayer() {
     appleAuth,
     funkwhaleAuth,
     navidromeAuth,
+    bandcampAuth,
     userPreferences,
   } = globalAppContext;
 
@@ -301,6 +307,7 @@ export default function BrainzPlayer() {
     appleMusicEnabled = true,
     funkwhaleEnabled = true,
     navidromeEnabled = true,
+    bandcampEnabled = true,
     soundcloudEnabled = true,
     youtubeEnabled = true,
     internetArchiveEnabled = true,
@@ -316,6 +323,7 @@ export default function BrainzPlayer() {
       internetArchiveEnabled === false &&
       funkwhaleEnabled === false &&
       navidromeEnabled === false &&
+      bandcampEnabled === false &&
       appleMusicEnabled === false);
 
   const enabledDataSources = [
@@ -329,6 +337,9 @@ export default function BrainzPlayer() {
     navidromeEnabled &&
       NavidromePlayer.hasPermissions(navidromeAuth) &&
       "navidrome",
+    bandcampEnabled &&
+      BandcampPlayer.hasPermissions(bandcampAuth) &&
+      "bandcamp",
     soundcloudEnabled &&
       SoundcloudPlayer.hasPermissions(soundcloudAuth) &&
       "soundcloud",
@@ -352,6 +363,7 @@ export default function BrainzPlayer() {
   const internetArchivePlayerRef = React.useRef<InternetArchivePlayer>(null);
   const funkwhalePlayerRef = React.useRef<FunkwhalePlayer>(null);
   const navidromePlayerRef = React.useRef<NavidromePlayer>(null);
+  const bandcampPlayerRef = React.useRef<BandcampPlayer>(null);
   const dataSourceRefs: Array<React.RefObject<
     DataSourceTypes
   >> = React.useMemo(() => {
@@ -378,6 +390,9 @@ export default function BrainzPlayer() {
           break;
         case "navidrome":
           dataSources.push(navidromePlayerRef);
+          break;
+        case "bandcamp":
+          dataSources.push(bandcampPlayerRef);
           break;
         default:
         // do nothing
@@ -1085,6 +1100,12 @@ export default function BrainzPlayer() {
       invalidateDataSource(navidromePlayerRef.current);
     }
     if (
+      !BandcampPlayer.hasPermissions(bandcampAuth) &&
+      bandcampPlayerRef?.current
+    ) {
+      invalidateDataSource(bandcampPlayerRef.current);
+    }
+    if (
       !AppleMusicPlayer.hasPermissions(appleAuth) &&
       appleMusicPlayerRef?.current
     ) {
@@ -1102,7 +1123,14 @@ export default function BrainzPlayer() {
       stopPlayerStateTimer();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spotifyAuth, soundcloudAuth, navidromeAuth, appleAuth, funkwhaleAuth]);
+  }, [
+    spotifyAuth,
+    soundcloudAuth,
+    navidromeAuth,
+    bandcampAuth,
+    appleAuth,
+    funkwhaleAuth,
+  ]);
 
   const { pathname } = useLocation();
 
@@ -1241,6 +1269,23 @@ export default function BrainzPlayer() {
                 volume={volume}
                 onInvalidateDataSource={invalidateDataSource}
                 ref={navidromePlayerRef}
+                playerPaused={playerPaused}
+                onPlayerPausedChange={playerPauseChange}
+                onProgressChange={progressChange}
+                onDurationChange={durationChange}
+                onTrackInfoChange={throttledTrackInfoChange}
+                onTrackEnd={playNextTrack}
+                onTrackNotFound={failedToPlayTrack}
+                handleError={handleError}
+                handleWarning={handleWarning}
+                handleSuccess={handleSuccess}
+              />
+            )}
+            {bandcampEnabled !== false && (
+              <BandcampPlayer
+                volume={volume}
+                onInvalidateDataSource={invalidateDataSource}
+                ref={bandcampPlayerRef}
                 playerPaused={playerPaused}
                 onPlayerPausedChange={playerPauseChange}
                 onProgressChange={progressChange}
