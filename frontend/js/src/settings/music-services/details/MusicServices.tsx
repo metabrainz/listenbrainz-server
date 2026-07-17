@@ -25,6 +25,7 @@ type MusicServicesLoaderData = {
   current_lastfm_permissions: string;
   current_funkwhale_permission: string;
   current_navidrome_permissions: string;
+  current_bandcamp_permissions: string;
   current_lastfm_settings?: {
     external_user_id?: string;
     latest_listened_at?: string;
@@ -38,6 +39,10 @@ type MusicServicesLoaderData = {
     instance_url?: string;
     username?: string;
   };
+  current_bandcamp_settings?: {
+    instance_url?: string;
+    username?: string;
+  };
 };
 
 export default function MusicServices() {
@@ -48,6 +53,7 @@ export default function MusicServices() {
     currentUser,
     funkwhaleAuth,
     navidromeAuth,
+    bandcampAuth,
   } = React.useContext(GlobalAppContext);
 
   const loaderData = useLoaderData() as MusicServicesLoaderData;
@@ -62,6 +68,7 @@ export default function MusicServices() {
     lastfm: loaderData.current_lastfm_permissions,
     funkwhale: loaderData.current_funkwhale_permission,
     navidrome: loaderData.current_navidrome_permissions,
+    bandcamp: loaderData.current_bandcamp_permissions,
     librefm: loaderData.current_librefm_permissions,
   });
 
@@ -79,7 +86,10 @@ export default function MusicServices() {
       if (serviceName === "funkwhale" && newValue === "disable") {
         fetchBody = undefined;
         fetchHeaders.Authorization = `Token ${currentUser?.auth_token}`;
-      } else if (serviceName === "navidrome" && newValue === "disable") {
+      } else if (
+        ["navidrome", "bandcamp"].includes(serviceName) &&
+        newValue === "disable"
+      ) {
         fetchBody = undefined;
         fetchHeaders.Authorization = `Token ${currentUser?.auth_token}`;
       } else {
@@ -129,6 +139,12 @@ export default function MusicServices() {
             if (navidromeAuth) {
               navidromeAuth.md5_auth_token = undefined;
               navidromeAuth.salt = undefined;
+            }
+            break;
+          case "bandcamp":
+            if (bandcampAuth) {
+              bandcampAuth.md5_auth_token = undefined;
+              bandcampAuth.salt = undefined;
             }
             break;
           default:
@@ -285,6 +301,13 @@ export default function MusicServices() {
         if (navidromeAuth) {
           navidromeAuth.instance_url = auth.instance_url || "";
           navidromeAuth.username = auth.username;
+        }
+        break;
+      case "bandcamp":
+        if (bandcampAuth) {
+          bandcampAuth.instance_url =
+            auth.instance_url || "https://bandcamp.com/api/subsonic";
+          bandcampAuth.username = auth.username;
         }
         break;
       default:
@@ -513,6 +536,31 @@ export default function MusicServices() {
             loaderData.current_librefm_settings?.latest_listened_at
           }
           canImportFeedback
+        />
+
+        <SubsonicServiceCard
+          service="bandcamp"
+          displayName="Bandcamp"
+          permission={permissions.bandcamp}
+          auth={bandcampAuth}
+          authToken={currentUser?.auth_token}
+          fixedHostUrl="https://bandcamp.com/api/subsonic"
+          description={
+            <>
+              Connect to your Bandcamp account to play music on ListenBrainz
+              through Bandcamp&apos;s Subsonic-compatible API.
+            </>
+          }
+          warning={
+            <>
+              <strong>Important:</strong> Make sure you have the correct
+              Bandcamp credentials.
+            </>
+          }
+          connectDetails="Connect to your Bandcamp server to play music on ListenBrainz."
+          disableDetails="You will not be able to listen to music on ListenBrainz using Bandcamp."
+          handlePermissionChange={handlePermissionChange}
+          onConnected={handleSubsonicConnected}
         />
 
         <div className="card">
