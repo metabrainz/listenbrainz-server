@@ -245,10 +245,11 @@ SERVICE_MONITOR_TELEGRAM_CHAT_ID = ""
 # Funkwhale configuration
 FUNKWHALE_CALLBACK_URL = f'{SERVER_ROOT_URL}/settings/music-services/funkwhale/callback/'
 
-# Navidrome configuration
+# Subsonic servers configuration
 # Set to a base64 encoded key for encryption/decryption of passwords. For example, a key can
 # be generated as follows:
 # from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())
 NAVIDROME_ENCRYPTION_KEY = ""
+BANDCAMP_ENCRYPTION_KEY = ""
 
 BACKGROUND_TASKS_SLEEP_TIME = 1

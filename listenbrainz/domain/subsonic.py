@@ -18,6 +18,7 @@ class SubsonicService:
     db = None
     proxy_methods = SUBSONIC_PROXY_METHODS
     encryption_config_key = "NAVIDROME_ENCRYPTION_KEY"
+    default_instance_url: Optional[str] = None
 
     def __init__(self, encryption_config_key: Optional[str] = None):
         config_key = encryption_config_key or self.encryption_config_key
@@ -91,9 +92,14 @@ class SubsonicService:
         except Exception as e:
             raise ExternalServiceError(f"Authentication error: {str(e)}")
 
-    def connect_user(self, user_id: int, host_url: str, username: str, password: str) -> int:
+    def connect_user(self, user_id: int, host_url: Optional[str], username: str, password: str) -> int:
         """Connect a user to the configured Subsonic server."""
         try:
+            if not host_url:
+                host_url = self.default_instance_url
+            if not host_url:
+                raise ExternalServiceError(f"No {self.service_name} server URL configured")
+
             normalized_host_url = host_url.rstrip("/")
             encrypted_password = self.authenticate(normalized_host_url, username, password)
             token_id = self.db.save_user_token(
@@ -123,7 +129,9 @@ class SubsonicService:
             else:
                 token, salt = None, None
 
-            instance_url = connection["host_url"].rstrip("/")
+            instance_url = connection.get("host_url") or self.default_instance_url
+            if instance_url:
+                instance_url = instance_url.rstrip("/")
 
             return {
                 "md5_auth_token": token,
