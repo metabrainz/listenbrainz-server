@@ -43,4 +43,6 @@ ALTER TABLE navidrome_servers ADD CONSTRAINT navidrome_servers_id_pkey PRIMARY K
 
 ALTER TABLE navidrome_tokens ADD CONSTRAINT navidrome_tokens_id_pkey PRIMARY KEY (id);
 
+ALTER TABLE bandcamp_tokens ADD CONSTRAINT bandcamp_tokens_id_pkey PRIMARY KEY (id);
+
 COMMIT;

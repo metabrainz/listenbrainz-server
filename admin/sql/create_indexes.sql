@@ -73,4 +73,6 @@ CREATE INDEX user_id_ndx_navidrome_tokens ON navidrome_tokens (user_id);
 CREATE INDEX server_id_ndx_navidrome_tokens ON navidrome_tokens (navidrome_server_id);
 CREATE UNIQUE INDEX unique_user_server_navidrome_tokens ON navidrome_tokens (user_id, navidrome_server_id);
 
+CREATE UNIQUE INDEX user_id_ndx_bandcamp_tokens ON bandcamp_tokens (user_id);
+
 COMMIT;

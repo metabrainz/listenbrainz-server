@@ -175,4 +175,10 @@ ALTER TABLE navidrome_tokens
     REFERENCES navidrome_servers (id)
     ON DELETE CASCADE;
 
+ALTER TABLE bandcamp_tokens
+    ADD CONSTRAINT bandcamp_tokens_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 COMMIT;
