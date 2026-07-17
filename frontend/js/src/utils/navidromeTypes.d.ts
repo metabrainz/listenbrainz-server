@@ -11,6 +11,7 @@ declare type NavidromeTrack = {
   artist: string;
   album: string;
   albumId: string;
+  coverArt?: string;
   duration: number;
 };
 

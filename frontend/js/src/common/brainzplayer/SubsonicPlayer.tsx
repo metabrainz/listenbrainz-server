@@ -263,11 +263,12 @@ export default abstract class SubsonicPlayer
   };
 
   getTrackArtworkUrl = (track?: NavidromeTrack): string | null => {
-    if (!track?.albumId) return null;
+    const coverArtId = track?.coverArt || track?.albumId;
+    if (!coverArtId) return null;
 
     if (this.shouldUseProxy()) {
       return `${this.getProxyUrl("cover-art")}?id=${encodeURIComponent(
-        track.albumId
+        coverArtId
       )}`;
     }
 
@@ -277,7 +278,7 @@ export default abstract class SubsonicPlayer
     if (!authParams) return null;
 
     return `${instanceURL}/rest/getCoverArt?id=${encodeURIComponent(
-      track.albumId
+      coverArtId
     )}&${authParams}`;
   };
 
