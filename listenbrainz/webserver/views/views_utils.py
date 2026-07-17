@@ -10,6 +10,7 @@ from listenbrainz.domain.funkwhale import FunkwhaleService
 from listenbrainz.db import funkwhale as db_funkwhale
 from listenbrainz.domain.navidrome import NavidromeService
 import listenbrainz.db.navidrome as db_navidrome
+from listenbrainz.domain.bandcamp import BandcampService
 from listenbrainz.webserver import db_conn
 
 
@@ -137,4 +138,16 @@ def get_current_navidrome_user():
 
     navidrome_service = NavidromeService()
     details = navidrome_service.get_user(current_user.id)
+    return details or {}
+
+
+def get_current_bandcamp_user():
+    """Returns the Bandcamp Subsonic access token and instance URL for the current user.
+       If the user has not linked a Bandcamp account, returns empty dict.
+    """
+    if not current_user.is_authenticated:
+        return {}
+
+    bandcamp_service = BandcampService()
+    details = bandcamp_service.get_user(current_user.id)
     return details or {}

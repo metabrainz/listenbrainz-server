@@ -32,6 +32,7 @@ from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, AP
 from listenbrainz.webserver.login import api_login_required
 from listenbrainz.domain.funkwhale import FunkwhaleService
 from listenbrainz.domain.navidrome import NavidromeService
+from listenbrainz.domain.bandcamp import BandcampService
 from listenbrainz.db import funkwhale as db_funkwhale
 
 
@@ -243,6 +244,10 @@ def music_services_details():
     navidrome_connection = navidrome_service.get_user(current_user.id, include_token=False)
     current_navidrome_permissions = "listen" if navidrome_connection else "disable"
 
+    bandcamp_service = BandcampService()
+    bandcamp_connection = bandcamp_service.get_user(current_user.id, include_token=False)
+    current_bandcamp_permissions = "listen" if bandcamp_connection else "disable"
+
     data: dict[str, Any] = {
         "current_spotify_permissions": current_spotify_permissions,
         "current_critiquebrainz_permissions": current_critiquebrainz_permissions,
@@ -252,6 +257,7 @@ def music_services_details():
         "current_funkwhale_permission": current_funkwhale_permission,
         "funkwhale_host_urls": funkwhale_host_urls,
         "current_navidrome_permissions": current_navidrome_permissions,
+        "current_bandcamp_permissions": current_bandcamp_permissions,
         "current_librefm_permissions": current_librefm_permissions,
     }
     if lastfm_user:
@@ -268,6 +274,11 @@ def music_services_details():
         data["current_navidrome_settings"] = {
             "instance_url": navidrome_connection["instance_url"],
             "username": navidrome_connection["username"],
+        }
+    if bandcamp_connection:
+        data["current_bandcamp_settings"] = {
+            "instance_url": bandcamp_connection["instance_url"],
+            "username": bandcamp_connection["username"],
         }
 
     return jsonify(data)
@@ -423,6 +434,7 @@ def refresh_service_token(service_name: str):
 
 SUBSONIC_PROXY_SERVICES = {
     "navidrome": NavidromeService,
+    "bandcamp": BandcampService,
 }
 
 
@@ -640,6 +652,25 @@ def music_services_connect(service_name: str):
         except Exception as e:
             current_app.logger.error("Unexpected error during Navidrome connection for user %s: %s", current_user.id, str(e), exc_info=True)
             raise APIBadRequest("An unexpected error occurred while connecting to Navidrome")
+
+    if service_name.lower() == "bandcamp":
+        data = request.get_json() or {}
+        host_url = BandcampService.default_instance_url
+        username = data.get("username")
+        password = data.get("password")
+
+        if not all([username, password]):
+            raise APIBadRequest("Missing 'username' or 'password' for Bandcamp connect.")
+
+        try:
+            service = BandcampService()
+            service.connect_user(current_user.id, host_url, username, password)
+            return jsonify({})
+        except (ExternalServiceError, ExternalServiceAPIError) as e:
+            raise APIBadRequest(str(e))
+        except Exception as e:
+            current_app.logger.error("Unexpected error during Bandcamp connection for user %s: %s", current_user.id, str(e), exc_info=True)
+            raise APIBadRequest("An unexpected error occurred while connecting to Bandcamp")
     
     if service_name.lower() not in {"lastfm", "librefm"}:
         raise APINotFound("Service %s is invalid." % (service_name,))
@@ -731,6 +762,18 @@ def music_services_disconnect(service_name: str):
         except Exception as e:
             current_app.logger.error("Error in disconnect_navidrome: %s", str(e), exc_info=True)
             raise APIInternalServerError("An error occurred while disconnecting from Navidrome")
+
+    if service_name.lower() == 'bandcamp':
+        try:
+            service = BandcampService()
+            service.remove_user(current_user.id)
+            return jsonify({
+                'status': 'ok',
+                'message': 'Successfully disconnected from Bandcamp'
+            })
+        except Exception as e:
+            current_app.logger.error("Error in disconnect_bandcamp: %s", str(e), exc_info=True)
+            raise APIInternalServerError("An error occurred while disconnecting from Bandcamp")
 
     # Handle other services
     service = _get_service_or_raise_404(service_name)

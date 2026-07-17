@@ -6,6 +6,7 @@ import spotipy
 import listenbrainz.db.user as db_user
 import listenbrainz.db.funkwhale as db_funkwhale
 import listenbrainz.db.navidrome as db_navidrome
+import listenbrainz.db.bandcamp as db_bandcamp
 import time
 
 from data.model.external_service import ExternalServiceType
@@ -374,3 +375,141 @@ class SettingsViewsTestCase(IntegrationTestCase):
             response.json["error"],
             "Invalid host_url 'demo.navidrome.org' for Navidrome connect."
         )
+
+    @requests_mock.Mocker()
+    def test_bandcamp_connect_and_disconnect(self, mock_requests):
+        self.app.config["BANDCAMP_ENCRYPTION_KEY"] = "nB9WKue4CGLZjEjV_w75RqRUImbpht2HjMj5spVwiKw="
+        mock_requests.get(
+            "https://bandcamp.com/api/subsonic/rest/ping",
+            status_code=200,
+            json={
+                "subsonic-response": {
+                    "status": "ok",
+                    "version": "1.16.1",
+                    "type": "bandcamp",
+                }
+            }
+        )
+        self.temporary_login(self.user["login_id"])
+        response = self.client.post(
+            self.custom_url_for("settings.music_services_connect", service_name="bandcamp"),
+            json={
+                "username": "test_user",
+                "password": "test_password"
+            }
+        )
+        self.assert200(response)
+        result = db_bandcamp.get_user_token(self.db_conn, self.user["id"])
+        self.assertEqual(result["username"], "test_user")
+        self.assertIsNotNone(result["encrypted_password"])
+
+        response = self.client.post(
+            self.custom_url_for("settings.music_services_disconnect", service_name="bandcamp"),
+            json={"action": "disable"}
+        )
+        self.assert200(response)
+        data = response.json
+        self.assertIn("Successfully disconnected", data["message"])
+
+        self.assertIsNone(db_bandcamp.get_user_token(self.db_conn, self.user["id"]))
+
+    def test_bandcamp_connect_missing_params(self):
+        self.temporary_login(self.user["login_id"])
+        response = self.client.post(
+            self.custom_url_for("settings.music_services_connect", service_name="bandcamp"),
+            json={"username": "test_user"}
+        )
+        self.assert400(response)
+        self.assertEqual(
+            response.json["error"],
+            "Missing 'username' or 'password' for Bandcamp connect."
+        )
+
+    @requests_mock.Mocker()
+    def test_bandcamp_search_proxy(self, mock_requests):
+        self.app.config["BANDCAMP_ENCRYPTION_KEY"] = "nB9WKue4CGLZjEjV_w75RqRUImbpht2HjMj5spVwiKw="
+        mock_requests.get(
+            "https://bandcamp.com/api/subsonic/rest/ping",
+            status_code=200,
+            json={"subsonic-response": {"status": "ok", "version": "1.16.1"}},
+        )
+        mock_requests.get(
+            "https://bandcamp.com/api/subsonic/rest/search3",
+            status_code=200,
+            json={
+                "subsonic-response": {
+                    "status": "ok",
+                    "searchResult3": {
+                        "song": [{"id": "song-1", "title": "Song"}],
+                    },
+                },
+            },
+        )
+
+        self.temporary_login(self.user["login_id"])
+        self.client.post(
+            self.custom_url_for("settings.music_services_connect", service_name="bandcamp"),
+            json={
+                "username": "test_user",
+                "password": "test_password",
+            },
+        )
+        response = self.client.get(
+            self.custom_url_for(
+                "settings.subsonic_proxy_search",
+                service_name="bandcamp",
+                query="Song Artist",
+            )
+        )
+
+        self.assert200(response)
+        self.assertEqual(response.json["subsonic-response"]["searchResult3"]["song"][0]["id"], "song-1")
+        proxied_request = mock_requests.request_history[-1]
+        self.assertEqual(proxied_request.qs["query"], ["song artist"])
+        self.assertEqual(proxied_request.qs["u"], ["test_user"])
+        self.assertIn("t", proxied_request.qs)
+        self.assertIn("s", proxied_request.qs)
+
+    @requests_mock.Mocker()
+    def test_bandcamp_stream_proxy(self, mock_requests):
+        self.app.config["BANDCAMP_ENCRYPTION_KEY"] = "nB9WKue4CGLZjEjV_w75RqRUImbpht2HjMj5spVwiKw="
+        mock_requests.get(
+            "https://bandcamp.com/api/subsonic/rest/ping",
+            status_code=200,
+            json={"subsonic-response": {"status": "ok", "version": "1.16.1"}},
+        )
+        mock_requests.get(
+            "https://bandcamp.com/api/subsonic/rest/stream",
+            status_code=206,
+            content=b"audio-bytes",
+            headers={
+                "Content-Type": "audio/mpeg",
+                "Content-Range": "bytes 0-10/100",
+                "Accept-Ranges": "bytes",
+            },
+        )
+
+        self.temporary_login(self.user["login_id"])
+        self.client.post(
+            self.custom_url_for("settings.music_services_connect", service_name="bandcamp"),
+            json={
+                "username": "test_user",
+                "password": "test_password",
+            },
+        )
+        response = self.client.get(
+            self.custom_url_for(
+                "settings.subsonic_proxy_stream",
+                service_name="bandcamp",
+                id="song-1",
+            ),
+            headers={"Range": "bytes=0-10"},
+        )
+
+        self.assertEqual(response.status_code, 206)
+        self.assertEqual(response.data, b"audio-bytes")
+        self.assertEqual(response.headers["Content-Type"], "audio/mpeg")
+        self.assertEqual(response.headers["Content-Range"], "bytes 0-10/100")
+        proxied_request = mock_requests.request_history[-1]
+        self.assertEqual(proxied_request.headers["Range"], "bytes=0-10")
+        self.assertEqual(proxied_request.qs["id"], ["song-1"])
