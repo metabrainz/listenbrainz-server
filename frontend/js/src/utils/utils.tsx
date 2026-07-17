@@ -355,11 +355,23 @@ const performSubsonicSearch = async (
   instanceURL: string,
   authParams: string,
   query: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  proxySearchURL?: string
 ): Promise<NavidromeTrack | null> => {
-  const searchUrl = `${instanceURL}/rest/search3?query=${encodeURIComponent(
-    query
-  )}&songCount=1&${authParams}`;
+  let searchUrl = "";
+  if (proxySearchURL) {
+    searchUrl = `${proxySearchURL}?query=${encodeURIComponent(query)}`;
+  } else if (instanceURL && authParams) {
+    searchUrl = `${instanceURL}/rest/search3?query=${encodeURIComponent(
+      query
+    )}&songCount=1&${authParams}`;
+  }
+
+  if (!searchUrl) {
+    throw new Error(
+      "Missing Subsonic instance URL, authentication parameters, or proxy URL"
+    );
+  }
 
   const response = await fetch(searchUrl, { signal });
 
@@ -395,7 +407,8 @@ const searchForSubsonicTrack = async (
   authParams: string,
   trackName?: string,
   artistName?: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  proxySearchURL?: string
 ): Promise<NavidromeTrack | null> => {
   if (!instanceURL) {
     throw new Error("Missing Subsonic instance URL");
@@ -412,7 +425,8 @@ const searchForSubsonicTrack = async (
       instanceURL,
       authParams,
       fullQuery,
-      signal
+      signal,
+      proxySearchURL
     );
     if (result) {
       return result;
@@ -425,7 +439,8 @@ const searchForSubsonicTrack = async (
       instanceURL,
       authParams,
       cleanedQuery,
-      signal
+      signal,
+      proxySearchURL
     );
     if (fallbackResult) {
       return fallbackResult;
@@ -440,7 +455,7 @@ const searchForSubsonicTrack = async (
 
     if (
       error.message ===
-        "Missing Navidrome instance URL or authentication parameters" ||
+        "Missing Subsonic instance URL, authentication parameters, or proxy URL" ||
       error.message === "No search terms provided"
     ) {
       throw error;

@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Any
 
 from flask import Blueprint, render_template, request, url_for, \
-    redirect, current_app, jsonify, session
+    redirect, current_app, jsonify, session, Response, stream_with_context
 from flask_login import current_user, login_required
 from werkzeug.exceptions import NotFound, BadRequest
 import requests
@@ -419,6 +419,175 @@ def refresh_service_token(service_name: str):
                 raise APIServiceUnavailable("Cannot refresh %s token right now" % service_name.capitalize())
 
     return jsonify({"access_token": user["access_token"]})
+
+
+SUBSONIC_PROXY_SERVICES = {
+    "navidrome": NavidromeService,
+}
+
+
+def _get_subsonic_proxy_service(service_name: str):
+    service_class = SUBSONIC_PROXY_SERVICES.get(service_name.lower())
+    if not service_class:
+        raise APINotFound("Service %s is invalid." % service_name)
+    service = service_class()
+    return service, service.service_name
+
+
+def _handle_subsonic_proxy_request_exception(
+    service_display_name: str,
+    error: requests.exceptions.RequestException,
+    message: str,
+):
+    status_code = error.response.status_code if error.response is not None else None
+    if status_code == 401:
+        raise APIUnauthorized(f"{service_display_name} authentication failed")
+    if status_code == 403:
+        raise APIForbidden(f"{service_display_name} access was forbidden")
+
+    current_app.logger.error(
+        "Error proxying %s request for user %s: %s",
+        service_display_name,
+        current_user.id,
+        str(error),
+        exc_info=True,
+    )
+    raise APIServiceUnavailable(message)
+
+
+def _handle_subsonic_failed_response(service_display_name: str, action: str, data: dict[str, Any]):
+    subsonic_response = data.get("subsonic-response", {})
+    if subsonic_response.get("status") != "failed":
+        return
+
+    error = subsonic_response.get("error", {})
+    error_code = error.get("code", "unknown")
+    message = error.get("message") or (
+        f"{service_display_name} {action} failed with Subsonic error code {error_code}"
+    )
+    current_app.logger.warning(
+        "%s %s failed for user %s. Upstream response: %s",
+        service_display_name,
+        action,
+        current_user.id,
+        data,
+    )
+    if str(error_code) == "40":
+        raise APIUnauthorized(message)
+    raise APIBadRequest(message)
+
+
+@settings_bp.get('/music-services/<service_name>/search/')
+@api_login_required
+def subsonic_proxy_search(service_name: str):
+    service, service_display_name = _get_subsonic_proxy_service(service_name)
+    query = request.args.get("query")
+    if not query:
+        raise APIBadRequest(f"Missing 'query' parameter for {service_display_name} search.")
+
+    try:
+        response = service.proxy_request(
+            current_user.id,
+            "search3",
+            {
+                "query": query,
+                "songCount": request.args.get("songCount", "1"),
+            },
+        )
+        data = response.json()
+    except requests.exceptions.RequestException as e:
+        _handle_subsonic_proxy_request_exception(
+            service_display_name,
+            e,
+            f"Cannot search {service_display_name} right now",
+        )
+    except ValueError:
+        raise APIServiceUnavailable(f"{service_display_name} returned a non-JSON search response")
+    except ExternalServiceError as e:
+        raise APINotFound(str(e))
+
+    _handle_subsonic_failed_response(service_display_name, "search", data)
+
+    return jsonify(data)
+
+
+@settings_bp.get('/music-services/<service_name>/stream/')
+@api_login_required
+def subsonic_proxy_stream(service_name: str):
+    service, service_display_name = _get_subsonic_proxy_service(service_name)
+    track_id = request.args.get("id")
+    if not track_id:
+        raise APIBadRequest(f"Missing 'id' parameter for {service_display_name} stream.")
+
+    headers = {}
+    if request.headers.get("Range"):
+        headers["Range"] = request.headers["Range"]
+
+    try:
+        upstream = service.proxy_request(
+            current_user.id,
+            "stream",
+            {"id": track_id},
+            headers=headers,
+            stream=True,
+        )
+    except requests.exceptions.RequestException as e:
+        _handle_subsonic_proxy_request_exception(
+            service_display_name,
+            e,
+            f"Cannot stream {service_display_name} track right now",
+        )
+    except ExternalServiceError as e:
+        raise APINotFound(str(e))
+
+    response_headers = {}
+    for header in ("Content-Type", "Content-Length", "Content-Range", "Accept-Ranges"):
+        if header in upstream.headers:
+            response_headers[header] = upstream.headers[header]
+
+    return Response(
+        stream_with_context(upstream.iter_content(chunk_size=8192)),
+        status=upstream.status_code,
+        headers=response_headers,
+        direct_passthrough=True,
+    )
+
+
+@settings_bp.get('/music-services/<service_name>/cover-art/')
+@api_login_required
+def subsonic_proxy_cover_art(service_name: str):
+    service, service_display_name = _get_subsonic_proxy_service(service_name)
+    cover_art_id = request.args.get("id")
+    if not cover_art_id:
+        raise APIBadRequest(f"Missing 'id' parameter for {service_display_name} cover art.")
+
+    try:
+        upstream = service.proxy_request(
+            current_user.id,
+            "getCoverArt",
+            {"id": cover_art_id},
+            stream=True,
+        )
+    except requests.exceptions.RequestException as e:
+        _handle_subsonic_proxy_request_exception(
+            service_display_name,
+            e,
+            f"Cannot fetch {service_display_name} cover art right now",
+        )
+    except ExternalServiceError as e:
+        raise APINotFound(str(e))
+
+    response_headers = {}
+    for header in ("Content-Type", "Content-Length"):
+        if header in upstream.headers:
+            response_headers[header] = upstream.headers[header]
+
+    return Response(
+        stream_with_context(upstream.iter_content(chunk_size=8192)),
+        status=upstream.status_code,
+        headers=response_headers,
+        direct_passthrough=True,
+    )
 
 
 @settings_bp.post('/music-services/<service_name>/connect/')

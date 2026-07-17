@@ -12,12 +12,19 @@ from listenbrainz.webserver import db_conn
 from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError
 
 NAVIDROME_API_RETRIES = 3
+NAVIDROME_PROXY_METHODS = {"search3", "stream", "getCoverArt"}
 
 
 class NavidromeService:
+    service_name = "Navidrome"
+    db = db_navidrome
+    proxy_methods = NAVIDROME_PROXY_METHODS
 
-    def __init__(self):
-        _encryption_key = current_app.config.get("NAVIDROME_ENCRYPTION_KEY")
+    def __init__(self, encryption_config_key: str = "NAVIDROME_ENCRYPTION_KEY"):
+        _encryption_key = (
+            current_app.config.get(encryption_config_key)
+            or current_app.config.get("NAVIDROME_ENCRYPTION_KEY")
+        )
         self.encryption_key = _encryption_key.encode("utf-8") if _encryption_key else None
 
     def _encrypt_password(self, password: str) -> str:
@@ -45,7 +52,7 @@ class NavidromeService:
         return token, salt
 
     def authenticate(self, host_url: str, username: str, password: str) -> str:
-        """Test provided credentials with Navidrome using Subsonic API and return
+        """Test provided credentials with Subsonic API and return
            the encrypted password if valid."""
         try:
             token, salt = self.generate_token(password)
@@ -69,11 +76,15 @@ class NavidromeService:
             try:
                 data = response.json()
             except (ValueError, requests.exceptions.JSONDecodeError) as e:
-                current_app.logger.error(f"Failed to parse Navidrome JSON response. Response text: {response.text[:1000]}")
+                current_app.logger.error(
+                    f"Failed to parse {self.service_name} JSON response. Response text: {response.text[:1000]}"
+                )
                 raise ExternalServiceError(f"Could not parse server response as JSON: {str(e)}")
 
             if "subsonic-response" not in data:
-                raise ExternalServiceError("Invalid response from Navidrome server: %s" % json.dumps(data))
+                raise ExternalServiceError(
+                    "Invalid response from %s server: %s" % (self.service_name, json.dumps(data))
+                )
 
             subsonic_response = data["subsonic-response"]
             if subsonic_response.get("status") != "ok":
@@ -90,11 +101,11 @@ class NavidromeService:
             raise ExternalServiceError(f"Authentication error: {str(e)}")
 
     def connect_user(self, user_id: int, host_url: str, username: str, password: str) -> int:
-        """Connect a user to Navidrome (one connection per user)"""
+        """Connect a user to the configured Subsonic server."""
         try:
             normalized_host_url = host_url.rstrip('/')
             encrypted_password = self.authenticate(normalized_host_url, username, password)
-            token_id = db_navidrome.save_user_token(
+            token_id = self.db.save_user_token(
                 db_conn,
                 user_id=user_id,
                 host_url=normalized_host_url,
@@ -108,11 +119,11 @@ class NavidromeService:
             raise ExternalServiceError(f"Connection failed: {str(e)}")
 
     def get_user(self, user_id: int, include_token: bool = True) -> Optional[dict[str, str]]:
-        """Retrieve navidrome connection details and generate fresh authentication parameters,
+        """Retrieve connection details and generate fresh authentication parameters,
            if include_token is True, to make API requests.
         """
         try:
-            connection = db_navidrome.get_user_token(db_conn, user_id)
+            connection = self.db.get_user_token(db_conn, user_id)
             if not connection:
                 return None
 
@@ -132,13 +143,69 @@ class NavidromeService:
                 "username": connection["username"],
             }
         except Exception as e:
-            current_app.logger.error(f"Failed to generate auth params for user {user_id}: {str(e)}")
+            current_app.logger.error(
+                f"Failed to generate {self.service_name} auth params for user {user_id}: {str(e)}"
+            )
             return None
 
+    def get_auth_params(self, user_id: int) -> Optional[dict[str, str]]:
+        """Generate Subsonic-compatible auth params for a connected user."""
+        user = self.get_user(user_id)
+        if not user:
+            return None
+        return {
+            "u": user["username"],
+            "t": user["md5_auth_token"],
+            "s": user["salt"],
+            "v": "1.16.1",
+            "c": "listenbrainz",
+            "f": "json",
+        }
+
+    def get_instance_url(self, user_id: int) -> Optional[str]:
+        """Return the connected Subsonic server URL for a user."""
+        user = self.get_user(user_id, include_token=False)
+        return user["instance_url"] if user else None
+
+    def proxy_request(
+        self,
+        user_id: int,
+        method: str,
+        params: dict[str, str],
+        headers: Optional[dict[str, str]] = None,
+        stream: bool = False,
+    ) -> requests.Response:
+        """Make an authenticated request to an allowlisted Subsonic REST method."""
+        if method not in self.proxy_methods:
+            raise ExternalServiceError(f"Unsupported {self.service_name} proxy method")
+
+        instance_url = self.get_instance_url(user_id)
+        auth_params = self.get_auth_params(user_id)
+        if not instance_url or not auth_params:
+            raise ExternalServiceError(
+                f"User has not connected a {self.service_name} server"
+            )
+
+        request_params = {
+            **params,
+            **auth_params,
+        }
+        response = requests.get(
+            f"{instance_url.rstrip('/')}/rest/{method}",
+            params=request_params,
+            headers=headers,
+            timeout=10,
+            stream=stream,
+        )
+        response.raise_for_status()
+        return response
+
     def remove_user(self, user_id: int):
-        """Remove user's Navidrome connection (same as Funkwhale)"""
+        """Remove user's Subsonic server connection."""
         try:
-            db_navidrome.delete_user_token(db_conn, user_id)
+            self.db.delete_user_token(db_conn, user_id)
         except Exception as e:
-            current_app.logger.error(f"Failed to remove Navidrome token for user {user_id}: {str(e)}")
+            current_app.logger.error(
+                f"Failed to remove {self.service_name} token for user {user_id}: {str(e)}"
+            )
             raise
