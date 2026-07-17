@@ -584,10 +584,10 @@ describe("NavidromePlayer", () => {
       const playerRef = React.createRef<NavidromePlayer>();
       const utils = require("../../../src/utils/utils");
 
-      // Mock searchForNavidromeTrack to throw 401 error
+      // Mock searchForSubsonicTrack to throw 401 error
       const mockError = { status: 401, message: "Unauthorized", name: "Error" };
       const searchSpy = jest
-        .spyOn(utils, "searchForNavidromeTrack")
+        .spyOn(utils, "searchForSubsonicTrack")
         .mockRejectedValue(mockError);
 
       render(

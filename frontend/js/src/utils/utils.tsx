@@ -351,7 +351,7 @@ const removeFeaturingArtists = (artistName: string): string => {
   return cleaned.trim();
 };
 
-const performNavidromeSearch = async (
+const performSubsonicSearch = async (
   instanceURL: string,
   authParams: string,
   query: string,
@@ -390,17 +390,15 @@ const performNavidromeSearch = async (
   return null;
 };
 
-const searchForNavidromeTrack = async (
+const searchForSubsonicTrack = async (
   instanceURL: string,
   authParams: string,
   trackName?: string,
   artistName?: string,
   signal?: AbortSignal
 ): Promise<NavidromeTrack | null> => {
-  if (!instanceURL || !authParams) {
-    throw new Error(
-      "Missing Navidrome instance URL or authentication parameters"
-    );
+  if (!instanceURL) {
+    throw new Error("Missing Subsonic instance URL");
   }
 
   if (!trackName || !artistName) {
@@ -410,7 +408,7 @@ const searchForNavidromeTrack = async (
   try {
     // Try with full artist name first to avoid unnecessary regex processing
     const fullQuery = `${trackName} ${artistName}`.trim();
-    const result = await performNavidromeSearch(
+    const result = await performSubsonicSearch(
       instanceURL,
       authParams,
       fullQuery,
@@ -423,7 +421,7 @@ const searchForNavidromeTrack = async (
     // Fall back to cleaned artist name (without featuring artists)
     const cleanedArtistName = removeFeaturingArtists(artistName);
     const cleanedQuery = `${trackName} ${cleanedArtistName}`.trim();
-    const fallbackResult = await performNavidromeSearch(
+    const fallbackResult = await performSubsonicSearch(
       instanceURL,
       authParams,
       cleanedQuery,
@@ -447,11 +445,13 @@ const searchForNavidromeTrack = async (
     ) {
       throw error;
     }
-    const newError = new Error(`Navidrome search failed: ${error.message}`);
+    const newError = new Error(`Subsonic search failed: ${error.message}`);
     (newError as any).status = error.status || 500;
     throw newError;
   }
 };
+
+const searchForNavidromeTrack = searchForSubsonicTrack;
 
 const getAdditionalContent = (metadata: EventMetadata): string =>
   _.get(metadata, "blurb_content") ?? _.get(metadata, "text") ?? "";
@@ -1488,6 +1488,7 @@ export {
   searchForSpotifyTrack,
   searchForSoundcloudTrack,
   searchForFunkwhaleTrack,
+  searchForSubsonicTrack,
   searchForNavidromeTrack,
   getMBIDMappingArtistLink,
   getStatsArtistLink,
