@@ -4,6 +4,7 @@ import { faBandcamp } from "@fortawesome/free-brands-svg-icons";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 import SubsonicPlayer, { SubsonicPlayerProps } from "./SubsonicPlayer";
+import { getTrackName, searchForSubsonicTrack } from "../../utils/utils";
 
 export type BandcampPlayerProps = SubsonicPlayerProps;
 
@@ -46,5 +47,70 @@ export default class BandcampPlayer extends SubsonicPlayer {
 
   hasPermissions = (): boolean => {
     return BandcampPlayer.hasPermissions(this.getSubsonicUser());
+  };
+
+  searchAndPlayTrack = async (
+    listen: Listen | JSPFTrack,
+    signal: AbortSignal,
+    searchController: AbortController
+  ): Promise<void> => {
+    const trackName = getTrackName(listen);
+    const { handleError, handleWarning, onTrackNotFound } = this.props;
+
+    if (!trackName) {
+      handleWarning(
+        "We are missing a track title to search on Bandcamp",
+        "Not enough info to search on Bandcamp"
+      );
+      onTrackNotFound();
+      return;
+    }
+
+    try {
+      const track = await searchForSubsonicTrack(
+        "",
+        "",
+        trackName,
+        "",
+        signal,
+        this.getProxyUrl("search")
+      );
+
+      if (searchController !== this.abortController) {
+        return;
+      }
+
+      if (track) {
+        this.setState({ currentTrack: track });
+        const audioElement = this.audioRef.current;
+        if (audioElement) {
+          const streamUrl = this.getSubsonicStreamUrl(track.id);
+          this.setAudioSrc(audioElement, streamUrl);
+          await audioElement.play();
+          return;
+        }
+      }
+
+      if (signal.aborted) {
+        return;
+      }
+
+      onTrackNotFound();
+    } catch (errorObject) {
+      if (errorObject.name === "AbortError") {
+        return;
+      }
+
+      if (errorObject.status === 401) {
+        this.handleAuthenticationError();
+        return;
+      }
+
+      handleError(
+        errorObject.message ?? errorObject,
+        "Error searching on Bandcamp"
+      );
+      onTrackNotFound();
+    }
   };
 }

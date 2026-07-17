@@ -1,5 +1,5 @@
 import * as React from "react";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import BandcampPlayer from "../../../src/common/brainzplayer/BandcampPlayer";
 import APIService from "../../../src/utils/APIService";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
@@ -92,5 +92,47 @@ describe("BandcampPlayer", () => {
     expect(playerRef.current?.getSubsonicStreamUrl("track-1")).toBe(
       "/settings/music-services/bandcamp/stream/?id=track-1"
     );
+  });
+
+  it("searches Bandcamp by track name only", async () => {
+    const playerRef = React.createRef<BandcampPlayer>();
+    const utils = require("../../../src/utils/utils");
+    const searchSpy = jest
+      .spyOn(utils, "searchForSubsonicTrack")
+      .mockResolvedValue(null);
+
+    render(
+      <GlobalAppContext.Provider value={defaultContext}>
+        <BandcampPlayer {...defaultProps} ref={playerRef} />
+      </GlobalAppContext.Provider>
+    );
+
+    const listen: Listen = {
+      listened_at: 42,
+      track_metadata: {
+        artist_name: "Ignored Artist",
+        track_name: "Track Only",
+      },
+    };
+    const abortController = new AbortController();
+
+    await act(async () => {
+      await playerRef.current?.searchAndPlayTrack(
+        listen,
+        abortController.signal,
+        abortController
+      );
+    });
+
+    expect(searchSpy).toHaveBeenCalledWith(
+      "",
+      "",
+      "Track Only",
+      "",
+      abortController.signal,
+      "/settings/music-services/bandcamp/search/"
+    );
+
+    searchSpy.mockRestore();
   });
 });

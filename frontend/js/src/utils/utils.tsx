@@ -332,8 +332,8 @@ const searchForFunkwhaleTrack = async (
  * Based on MusicBrainz's battle-tested regex pattern:
  * https://github.com/metabrainz/musicbrainz-server/blob/master/root/static/scripts/edit/utility/guessFeat.js
  */
-const removeFeaturingArtists = (artistName: string): string => {
-  if (!artistName) return artistName;
+const removeFeaturingArtists = (artistName?: string): string => {
+  if (!artistName) return "";
 
   // MusicBrainz-based regex for featuring artists
   // Matches: feat./ft./featuring with optional punctuation and fullwidth variants
@@ -410,17 +410,13 @@ const searchForSubsonicTrack = async (
   signal?: AbortSignal,
   proxySearchURL?: string
 ): Promise<NavidromeTrack | null> => {
-  if (!instanceURL) {
-    throw new Error("Missing Subsonic instance URL");
-  }
-
-  if (!trackName || !artistName) {
-    throw new Error("Both track name and artist name are required for search");
+  if (!trackName && !artistName) {
+    throw new Error("At least one search term is required for search");
   }
 
   try {
     // Try with full artist name first to avoid unnecessary regex processing
-    const fullQuery = `${trackName} ${artistName}`.trim();
+    const fullQuery = [trackName, artistName].filter(Boolean).join(" ").trim();
     const result = await performSubsonicSearch(
       instanceURL,
       authParams,
@@ -434,7 +430,14 @@ const searchForSubsonicTrack = async (
 
     // Fall back to cleaned artist name (without featuring artists)
     const cleanedArtistName = removeFeaturingArtists(artistName);
-    const cleanedQuery = `${trackName} ${cleanedArtistName}`.trim();
+    const cleanedQuery = [trackName, cleanedArtistName]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    if (cleanedQuery === fullQuery) {
+      return null;
+    }
+
     const fallbackResult = await performSubsonicSearch(
       instanceURL,
       authParams,
