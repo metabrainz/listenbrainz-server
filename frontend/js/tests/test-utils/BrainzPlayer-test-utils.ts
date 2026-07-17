@@ -9,6 +9,7 @@ export const createBrainzPlayerSettings = (
   appleMusicEnabled: false,
   internetArchiveEnabled: false,
   navidromeEnabled: false,
+  bandcampEnabled: false,
   funkwhaleEnabled: false,
   dataSourcesPriority: [],
   ...overrides,
