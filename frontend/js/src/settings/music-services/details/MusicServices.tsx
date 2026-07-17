@@ -7,6 +7,9 @@ import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../../notifications/Notifications";
 import ServicePermissionButton from "./components/ExternalServiceButton";
 import LFMMusicServicePermissions from "./components/LFMMusicServicePermissions";
+import SubsonicServiceCard, {
+  SubsonicService,
+} from "./components/SubsonicServiceCard";
 import {
   authorizeWithAppleMusic,
   loadAppleMusicKit,
@@ -62,16 +65,6 @@ export default function MusicServices() {
     librefm: loaderData.current_librefm_permissions,
   });
 
-  const [navidromeIsEditing, setNavidromeIsEditing] = React.useState(false);
-  const [navidromeEditValues, setNavidromeEditValues] = React.useState({
-    hostUrl: navidromeAuth?.instance_url || "",
-    username: navidromeAuth?.username || "",
-  });
-
-  const navidromeEditButtonClass =
-    permissions.navidrome !== "listen"
-      ? "btn-default"
-      : (navidromeIsEditing && "btn-success") || "btn-warning";
   const handlePermissionChange = async (
     serviceName: string,
     newValue: string
@@ -283,125 +276,21 @@ export default function MusicServices() {
     }
   };
 
-  const handleNavidromeConnect = async (
-    evt: React.FormEvent<HTMLFormElement>
+  const handleSubsonicConnected = (
+    service: SubsonicService,
+    auth: { instance_url?: string; username: string }
   ) => {
-    evt.preventDefault();
-    try {
-      const formData = new FormData(evt.currentTarget);
-      let hostUrl = formData.get("navidromeHostUrl") as string;
-      const username = formData.get("navidromeUsername") as string;
-      const password = formData.get("navidromePassword") as string;
-
-      if (!hostUrl || !username || !password) {
-        throw Error(
-          "Navidrome server URL, username, and password are required"
-        );
-      }
-
-      if (!hostUrl.startsWith("http://") && !hostUrl.startsWith("https://")) {
-        throw Error("Navidrome server URL must start with http:// or https://");
-      }
-
-      // Normalize URL by removing trailing slash to prevent double slash issues
-      if (hostUrl.endsWith("/")) {
-        hostUrl = hostUrl.slice(0, -1);
-      }
-
-      // If already connected, disconnect first to avoid duplicates
-      if (permissions.navidrome === "listen") {
-        try {
-          const disconnectResponse = await fetch(
-            `/settings/music-services/navidrome/disconnect/`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Token ${currentUser?.auth_token}`,
-              },
-            }
-          );
-        } catch (disconnectError) {
-          // eslint-disable-next-line no-console
-          console.warn(
-            "Failed to disconnect before reconnecting:",
-            disconnectError
-          );
-        }
-      }
-
-      const response = await fetch(
-        `/settings/music-services/navidrome/connect/`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            host_url: hostUrl,
-            username,
-            password,
-          }),
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Token ${currentUser?.auth_token}`,
-          },
-        }
-      );
-
-      let data;
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        data = await response.json();
-      } else {
-        throw Error("Server returned non-JSON response");
-      }
-
-      if (response.ok) {
+    switch (service) {
+      case "navidrome":
         if (navidromeAuth) {
-          navidromeAuth.instance_url = hostUrl;
-          navidromeAuth.username = username;
+          navidromeAuth.instance_url = auth.instance_url || "";
+          navidromeAuth.username = auth.username;
         }
-
-        // Update edit values state
-        setNavidromeEditValues({
-          hostUrl,
-          username,
-        });
-
-        // Exit edit mode if we were editing
-        setNavidromeIsEditing(false);
-
-        toast.success(
-          <ToastMsg
-            title="Success"
-            message="Successfully connected to Navidrome!"
-          />
-        );
-        setPermissions((prev) => ({ ...prev, navidrome: "listen" }));
-      } else if (data?.error) {
-        throw Error(data.error);
-      } else {
-        throw Error(`Server error: ${response.status} ${response.statusText}`);
-      }
-    } catch (error) {
-      toast.error(
-        <ToastMsg
-          title="Failed to connect to Navidrome"
-          message={error.toString()}
-        />
-      );
+        break;
+      default:
+        break;
     }
-  };
-
-  const handleNavidromeEditToggle = () => {
-    if (navidromeIsEditing) {
-      // If we're saving, submit the form
-      const form = document.getElementById("navidrome-form") as HTMLFormElement;
-      if (form) {
-        form.requestSubmit();
-      }
-    } else {
-      // Start editing
-      setNavidromeIsEditing(true);
-    }
+    setPermissions((prev) => ({ ...prev, [service]: "listen" }));
   };
 
   React.useEffect(() => {
@@ -783,157 +672,28 @@ export default function MusicServices() {
           </div>
         </div>
 
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title">Navidrome</h3>
-          </div>
-          <div className="card-body">
-            <p>
-              Connect to your Navidrome server to play music on ListenBrainz.
-            </p>
-            {permissions.navidrome !== "listen" && (
-              <div
-                className="alert alert-warning alert-dismissible fade show"
-                role="alert"
-              >
-                <strong>Important:</strong> Make sure your Navidrome server is
-                accessible and you have the correct credentials.
-                <button
-                  type="button"
-                  className="btn-close"
-                  data-bs-dismiss="alert"
-                  aria-label="Close"
-                />
-              </div>
-            )}
-            <form id="navidrome-form" onSubmit={handleNavidromeConnect}>
-              <div className="flex flex-wrap" style={{ gap: "1em" }}>
-                <div>
-                  <label className="form-label" htmlFor="navidromeHostUrl">
-                    Your Navidrome server URL:
-                  </label>
-                  <input
-                    type="url"
-                    className="form-control"
-                    id="navidromeHostUrl"
-                    name="navidromeHostUrl"
-                    placeholder={
-                      permissions.navidrome === "listen"
-                        ? navidromeAuth?.instance_url ||
-                          "Connected Navidrome server"
-                        : "https://navidrome.example.com/"
-                    }
-                    value={navidromeEditValues.hostUrl}
-                    onChange={(e) =>
-                      setNavidromeEditValues((prev) => ({
-                        ...prev,
-                        hostUrl: e.target.value,
-                      }))
-                    }
-                    readOnly={
-                      !navidromeIsEditing && permissions.navidrome === "listen"
-                    }
-                    required={
-                      navidromeIsEditing || permissions.navidrome !== "listen"
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="form-label" htmlFor="navidromeUsername">
-                    Username:
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="navidromeUsername"
-                    name="navidromeUsername"
-                    placeholder={
-                      permissions.navidrome === "listen"
-                        ? navidromeAuth?.username || "Connected user"
-                        : "Navidrome username"
-                    }
-                    value={navidromeEditValues.username}
-                    onChange={(e) =>
-                      setNavidromeEditValues((prev) => ({
-                        ...prev,
-                        username: e.target.value,
-                      }))
-                    }
-                    readOnly={
-                      !navidromeIsEditing && permissions.navidrome === "listen"
-                    }
-                    required={
-                      navidromeIsEditing || permissions.navidrome !== "listen"
-                    }
-                  />
-                </div>
-                {(navidromeIsEditing || permissions.navidrome !== "listen") && (
-                  <div>
-                    <label className="form-label" htmlFor="navidromePassword">
-                      Password:
-                    </label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      id="navidromePassword"
-                      name="navidromePassword"
-                      placeholder="Navidrome password"
-                      required
-                    />
-                  </div>
-                )}
-                <div style={{ flex: 0, alignSelf: "end" }}>
-                  <button
-                    disabled={permissions.navidrome !== "listen"}
-                    type="button"
-                    className={`btn ${navidromeEditButtonClass}`}
-                    onClick={handleNavidromeEditToggle}
-                  >
-                    {navidromeIsEditing ? "Save" : "Edit"}
-                  </button>
-                </div>
-              </div>
-              <br />
-              <div className="music-service-selection">
-                <button
-                  type="submit"
-                  className="music-service-option"
-                  style={{ width: "100%" }}
-                  disabled={permissions.navidrome === "listen"}
-                >
-                  <input
-                    readOnly
-                    type="radio"
-                    id="navidrome_listen"
-                    name="navidrome"
-                    value="listen"
-                    checked={permissions.navidrome === "listen"}
-                  />
-                  <label htmlFor="navidrome_listen">
-                    <div className="title">
-                      {permissions.navidrome === "listen"
-                        ? "Connected to"
-                        : "Connect to"}{" "}
-                      Navidrome
-                    </div>
-                    <div className="details">
-                      Connect to your Navidrome server to play music on
-                      ListenBrainz.
-                    </div>
-                  </label>
-                </button>
-                <ServicePermissionButton
-                  service="navidrome"
-                  current={permissions.navidrome}
-                  value="disable"
-                  title="Disable"
-                  details="You will not be able to listen to music on ListenBrainz using Navidrome."
-                  handlePermissionChange={handlePermissionChange}
-                />
-              </div>
-            </form>
-          </div>
-        </div>
+        <SubsonicServiceCard
+          service="navidrome"
+          displayName="Navidrome"
+          permission={permissions.navidrome}
+          auth={navidromeAuth}
+          authToken={currentUser?.auth_token}
+          requiresHostUrl
+          hostPlaceholder="https://navidrome.example.com/"
+          description={
+            <>Connect to your Navidrome server to play music on ListenBrainz.</>
+          }
+          warning={
+            <>
+              <strong>Important:</strong> Make sure your Navidrome server is
+              accessible and you have the correct credentials.
+            </>
+          }
+          connectDetails="Connect to your Navidrome server to play music on ListenBrainz."
+          disableDetails="You will not be able to listen to music on ListenBrainz using Navidrome."
+          handlePermissionChange={handlePermissionChange}
+          onConnected={handleSubsonicConnected}
+        />
 
         <div className="card">
           <div className="card-header">
