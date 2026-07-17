@@ -466,6 +466,12 @@ class SettingsViewsTestCase(IntegrationTestCase):
         self.assertEqual(response.json["subsonic-response"]["searchResult3"]["song"][0]["id"], "song-1")
         proxied_request = mock_requests.request_history[-1]
         self.assertEqual(proxied_request.qs["query"], ["song artist"])
+        self.assertEqual(proxied_request.qs["artistcount"], ["0"])
+        self.assertEqual(proxied_request.qs["albumcount"], ["0"])
+        self.assertEqual(proxied_request.qs["songcount"], ["1"])
+        self.assertEqual(proxied_request.qs["artistoffset"], ["0"])
+        self.assertEqual(proxied_request.qs["albumoffset"], ["0"])
+        self.assertEqual(proxied_request.qs["songoffset"], ["0"])
         self.assertEqual(proxied_request.qs["u"], ["test_user"])
         self.assertIn("t", proxied_request.qs)
         self.assertIn("s", proxied_request.qs)

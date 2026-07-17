@@ -489,6 +489,19 @@ def _handle_subsonic_failed_response(service_display_name: str, action: str, dat
     raise APIBadRequest(message)
 
 
+def _get_subsonic_search_params() -> dict[str, str]:
+    # Bandcamp subsonic endpoint requires all these fields to be set, returns BAD REQUEST otherwise
+    return {
+        "query": request.args["query"],
+        "artistCount": request.args.get("artistCount", "0"),
+        "albumCount": request.args.get("albumCount", "0"),
+        "songCount": request.args.get("songCount", "1"),
+        "artistOffset": request.args.get("artistOffset", "0"),
+        "albumOffset": request.args.get("albumOffset", "0"),
+        "songOffset": request.args.get("songOffset", "0"),
+    }
+
+
 @settings_bp.get('/music-services/<service_name>/search/')
 @api_login_required
 def subsonic_proxy_search(service_name: str):
@@ -497,14 +510,12 @@ def subsonic_proxy_search(service_name: str):
     if not query:
         raise APIBadRequest(f"Missing 'query' parameter for {service_display_name} search.")
 
+    search_params = _get_subsonic_search_params()
     try:
         response = service.proxy_request(
             current_user.id,
             "search3",
-            {
-                "query": query,
-                "songCount": request.args.get("songCount", "1"),
-            },
+            search_params,
         )
         data = response.json()
     except requests.exceptions.RequestException as e:
@@ -518,6 +529,13 @@ def subsonic_proxy_search(service_name: str):
     except ExternalServiceError as e:
         raise APINotFound(str(e))
 
+    if data.get("subsonic-response", {}).get("status") == "failed":
+        current_app.logger.debug(
+            "%s search failed for user %s with params %s",
+            service_display_name,
+            current_user.id,
+            search_params,
+        )
     _handle_subsonic_failed_response(service_display_name, "search", data)
 
     return jsonify(data)
