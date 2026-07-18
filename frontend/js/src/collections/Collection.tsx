@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { Helmet } from "react-helmet";
-import { useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import { toast } from "react-toastify";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import type { VirtualItem } from "@tanstack/react-virtual";
@@ -10,7 +10,10 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import { ToastMsg } from "../notifications/Notifications";
 import Loader from "../components/Loader";
 import PlaylistItemCard from "../playlists/components/PlaylistItemCard";
-import { PLAYLIST_TRACK_URI_PREFIX } from "../playlists/utils";
+import {
+  MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
+  PLAYLIST_TRACK_URI_PREFIX,
+} from "../playlists/utils";
 
 import type {
   MusicBrainzCollectionDetailResponse,
@@ -20,6 +23,7 @@ import type {
 const DEFAULT_PAGE_SIZE = 100;
 const DEFAULT_ESTIMATED_ROW_HEIGHT_PX = 110;
 const LOAD_MORE_THRESHOLD_ROWS = 20;
+const MAX_COLLECTION_TRACKS_PER_CALL = 500;
 
 function asJSPFTrack(track: MusicBrainzCollectionTrack): JSPFTrack {
   const recordingMBID = track.recording_mbid;
@@ -35,6 +39,7 @@ function asJSPFTrack(track: MusicBrainzCollectionTrack): JSPFTrack {
 export default function CollectionPage() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
   const { collectionMBID } = useParams();
+  const navigate = useNavigate();
 
   const [collection, setCollection] = React.useState<
     MusicBrainzCollectionDetailResponse["collection"] | null
@@ -44,6 +49,7 @@ export default function CollectionPage() {
   const [isLoadingInitial, setIsLoadingInitial] = React.useState(false);
   const [isLoadingMore, setIsLoadingMore] = React.useState(false);
   const [hasMore, setHasMore] = React.useState(true);
+  const [isSaving, setIsSaving] = React.useState(false);
 
   const totalRows = tracks.length + (hasMore ? 1 : 0); // +1 row for loader
   const rowVirtualizer = useWindowVirtualizer({
@@ -178,6 +184,119 @@ export default function CollectionPage() {
     ? `https://musicbrainz.org/collection/${collectionMBID}`
     : undefined;
 
+  const saveAsPlaylist = React.useCallback(async () => {
+    if (!collectionMBID) {
+      return;
+    }
+    if (!currentUser?.auth_token) {
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message="You must be logged in for this operation"
+        />,
+        { toastId: "auth-error" }
+      );
+      return;
+    }
+    if (!collection) {
+      toast.error(
+        <ToastMsg title="Error" message="Collection is not loaded yet" />,
+        { toastId: "collection-not-loaded" }
+      );
+      return;
+    }
+    if (isSaving) {
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const allTracks: JSPFTrack[] = [];
+      const pageSize = MAX_COLLECTION_TRACKS_PER_CALL;
+      let offset = 0;
+      let total = trackCount;
+
+      while (true) {
+        const page = await APIService.getMusicBrainzCollectionDetail(
+          collectionMBID,
+          currentUser.auth_token,
+          pageSize,
+          offset
+        );
+        total = page.track_count;
+        const pageTracks = (page.tracks ?? []).map(asJSPFTrack);
+        allTracks.push(...pageTracks);
+
+        offset += pageTracks.length;
+        if (offset >= total || pageTracks.length === 0) {
+          break;
+        }
+      }
+
+      const publicFlag = Boolean(collection.public);
+      const playlistTitle = collection.name;
+
+      const playlistObject: JSPFObject = {
+        playlist: {
+          // Required fields for TS types; backend only uses title + identifiers.
+          creator: currentUser.name,
+          identifier: "",
+          date: "",
+          track: allTracks,
+          title: playlistTitle,
+          annotation: mbUrl
+            ? `Imported from MusicBrainz collection: ${mbUrl}`
+            : "Imported from MusicBrainz collection",
+          extension: {
+            [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
+              public: publicFlag,
+              collaborators: [],
+            },
+          },
+        },
+      };
+
+      const newPlaylistId = await APIService.createPlaylist(
+        currentUser.auth_token,
+        playlistObject
+      );
+
+      toast.success(
+        <ToastMsg
+          title="Created playlist"
+          message={
+            <>
+              Created new {publicFlag ? "public" : "private"} playlist{" "}
+              <Link to={`/playlist/${newPlaylistId}/`}>{playlistTitle}</Link>
+            </>
+          }
+        />,
+        { toastId: "mb-collection-import-success" }
+      );
+      navigate(`/playlist/${newPlaylistId}/`);
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Could not create playlist"
+          message={error?.message ?? error}
+        />,
+        { toastId: "mb-collection-import-error" }
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }, [
+    APIService,
+    collection,
+    collectionMBID,
+    currentUser?.auth_token,
+    currentUser?.name,
+    isSaving,
+    mbUrl,
+    navigate,
+    trackCount,
+  ]);
+
   return (
     <div role="main">
       <Helmet>
@@ -222,6 +341,16 @@ export default function CollectionPage() {
             </div>
           </div>
         </div>
+        <div className="right-side">
+          <button
+            type="button"
+            className="btn btn-info"
+            disabled={isLoadingInitial || isSaving || tracks.length === 0}
+            onClick={saveAsPlaylist}
+          >
+            {isSaving ? "Saving..." : "Save as playlist"}
+          </button>
+        </div>
       </div>
 
       <div className="col-md-8 offset-md-2">
@@ -260,17 +389,7 @@ export default function CollectionPage() {
                   }}
                 >
                   {isLoaderRow ? (
-                    <>
-                      {hasMore && <Loader isLoading />}
-                      {!hasMore && tracks.length > 0 && (
-                        <div
-                          className="text-center text-muted"
-                          style={{ padding: "1em" }}
-                        >
-                          End of collection
-                        </div>
-                      )}
-                    </>
+                    <Loader isLoading />
                   ) : (
                     <PlaylistItemCard
                       key={`${track.id}-${virtualRow.index.toString()}`}

@@ -29,7 +29,7 @@ export type PlaylistsListState = {
 };
 
 export default function PlaylistsList(
-  props: PlaylistsListProps & { children: React.ReactNode }
+  props: PlaylistsListProps & { children?: React.ReactNode }
 ) {
   const {
     playlists,
