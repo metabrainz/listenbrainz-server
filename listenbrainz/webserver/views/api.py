@@ -7,19 +7,22 @@ from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, request, jsonify, current_app
 
 import listenbrainz.db.playlist as db_playlist
+import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.db.external_service_oauth as db_external_service_oauth
 import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.db.lb_radio_artist import lb_radio_artist
+from data.model.common_stat import StatisticsRange
 from data.model.external_service import ExternalServiceType
+from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz.db import listens_importer, tags
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
 from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
-    APIUnauthorized, ListenValidationError, APIForbidden
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINoContent, APINotFound, \
+    APIServiceUnavailable, APIUnauthorized, ListenValidationError, APIForbidden
 from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR, parse_boolean_arg
@@ -27,6 +30,7 @@ from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400
     is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, \
     LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
     get_non_negative_param, _parse_int_arg, _validate_get_listens_endpoint_params
+from listenbrainz.webserver.views.stats_utils import current_period_listen_count
 from listenbrainz.messybrainz import submit_recording
 
 api_bp = Blueprint('api_v1', __name__)
@@ -209,7 +213,34 @@ def get_listen_count(user_name):
         The returned listen count has an element 'payload' with only key: 'count'
         which unsurprisingly contains the listen count for the user.
 
+        By default the overall (all-time) listen count is returned. To get the
+        listen count for a single statistics period, pass the optional ``range``
+        query parameter. When a range other than ``all_time`` is requested, the
+        count is derived from the user's precomputed listening activity
+        statistics (matching the per-period total shown on the ListenBrainz
+        website) and the response additionally contains the ``range`` it applies
+        to along with its ``from_ts``, ``to_ts`` and ``last_updated`` timestamps:
+
+        .. code-block:: json
+
+            {
+                "payload": {
+                    "count": 137,
+                    "range": "week",
+                    "from_ts": 1588550400,
+                    "to_ts": 1589155199,
+                    "last_updated": 1592807084
+                }
+            }
+
+    :param range: Optional, time interval for which the listen count should be
+        returned, possible values are :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`,
+        defaults to ``all_time``.
+    :type range: ``str``
     :statuscode 200: Yay, you have listen counts!
+    :statuscode 204: Statistics for the user haven't been calculated for the
+        requested ``range``, empty response will be returned.
+    :statuscode 400: Bad request, the requested ``range`` is invalid.
     :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
@@ -217,14 +248,34 @@ def get_listen_count(user_name):
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
-    try:
-        listen_count = timescale_connection._ts.get_listen_count_for_user(user["id"])
-    except psycopg2.OperationalError as err:
-        current_app.logger.error("cannot fetch user listen count: ", str(err))
-        raise APIServiceUnavailable("Cannot fetch user listen count right now.")
+    stats_range = request.args.get("range", default="all_time")
+
+    if stats_range == "all_time":
+        try:
+            listen_count = timescale_connection._ts.get_listen_count_for_user(user["id"])
+        except psycopg2.OperationalError as err:
+            current_app.logger.error("cannot fetch user listen count: ", str(err))
+            raise APIServiceUnavailable("Cannot fetch user listen count right now.")
+
+        return jsonify({'payload': {
+            'count': listen_count
+        }})
+
+    if stats_range not in StatisticsRange.__members__:
+        raise APIBadRequest(f"Invalid range: {stats_range}")
+
+    stats = db_stats.get(user["id"], "listening_activity", stats_range, ListeningActivityRecord)
+    if stats is None:
+        raise APINoContent('')
+
+    count, from_ts = current_period_listen_count(stats_range, stats.data.__root__)
 
     return jsonify({'payload': {
-        'count': listen_count
+        'count': count,
+        'range': stats_range,
+        'from_ts': from_ts,
+        'to_ts': stats.to_ts,
+        'last_updated': stats.last_updated,
     }})
 
 
