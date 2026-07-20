@@ -1,3 +1,4 @@
+import signal
 import time
 
 from flask import current_app
@@ -61,6 +62,9 @@ def remove_task(task):
 
 class BackgroundTasks:
 
+    def __init__(self):
+        self._current_task = None
+
     def process_task(self, task):
         """ Perform the task """
         current_app.logger.info(f"Processing task: {task.id}")
@@ -75,27 +79,40 @@ class BackgroundTasks:
         else:
             current_app.logger.error(f"Unknown task type: {task}")
 
+    def _release_on_shutdown(self, signum, frame):
+        """ Best-effort release of the current task on SIGTERM (docker stop, deploys). """
+        if self._current_task:
+            try:
+                release_task(self._current_task)
+                current_app.logger.info("Released task %s on shutdown.", self._current_task.id)
+            except Exception:
+                current_app.logger.error("Failed to release task on shutdown:", exc_info=True)
+        raise SystemExit(0)
+
     def start(self):
         current_app.logger.info("Background tasks processor started.")
+        signal.signal(signal.SIGTERM, self._release_on_shutdown)
         while True:
             try:
                 task = claim_task()
                 if task is None:
                     time.sleep(current_app.config.get("BACKGROUND_TASKS_SLEEP_TIME", 5))
                     continue
+                self._current_task = task
                 try:
                     self.process_task(task)
                     remove_task(task)
                 except Exception:
                     current_app.logger.error("Error processing task:", exc_info=True)
                     release_task(task)
+                finally:
+                    self._current_task = None
             except KeyboardInterrupt:
                 current_app.logger.error("Keyboard interrupt!")
                 break
             except Exception:
                 current_app.logger.error("Error in background tasks processor:", exc_info=True)
                 time.sleep(2)
-                # Exit the container, restart
                 current_app.logger.info("Exiting process, letting container restart.")
                 break
             finally:
