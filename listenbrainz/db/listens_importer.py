@@ -105,7 +105,7 @@ def get_active_users_to_process(db_conn, service, exclude_error=False) -> list[d
     return users
 
 
-CLAIM_TIMEOUT_HOURS = 24
+CLAIM_TIMEOUT_HOURS = 12
 
 def claim_users_to_process(db_conn, service, batch_size=50, exclude_error=False) -> list[dict]:
     """ Claim a batch of users for import processing using SKIP LOCKED.
