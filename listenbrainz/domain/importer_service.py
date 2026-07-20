@@ -24,7 +24,15 @@ class ImporterService(ExternalService, ABC):
         """ Release a claimed user after processing. """
         listens_importer.release_user_claim(db_conn, user_id, self.service)
 
-    def update_status(self, user_id: int, state: str, listens_count: int, error_message: str = None, retry: bool = True):
+    def update_status(
+        self,
+        user_id: int,
+        state: str,
+        listens_count: int,
+        error_message: str = None,
+        retry: bool = True,
+        error_reason: str = None,
+    ):
         """ Update import status for the user.
 
         Args:
@@ -33,10 +41,19 @@ class ImporterService(ExternalService, ABC):
             listens_count: number of listens imported so far
             error_message: user-friendly error message; if set, stored alongside the status
             retry: whether to retry the import on next run (only relevant when error is set)
+            error_reason: stable machine-readable reason for the error
         """
+        error = None
+        if error_message is not None or error_reason is not None:
+            error = {"retry": retry}
+            if error_message is not None:
+                error["message"] = error_message
+            if error_reason is not None:
+                error["reason"] = error_reason
+
         listens_importer.update_status(
             db_conn, user_id, self.service, state, listens_count,
-            error={"message": error_message, "retry": retry} if error_message else None
+            error=error
         )
 
     def update_latest_listen_ts(self, user_id: int, timestamp: Union[int, float]):
