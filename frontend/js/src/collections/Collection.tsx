@@ -1,5 +1,8 @@
 import * as React from "react";
 
+import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import DOMPurify from "dompurify";
 import { Helmet } from "react-helmet";
 import { Link, useNavigate, useParams } from "react-router";
 import { toast } from "react-toastify";
@@ -78,7 +81,7 @@ export default function CollectionPage() {
   const [isLoadingMore, setIsLoadingMore] = React.useState(false);
   const [hasMore, setHasMore] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
-
+  const [isPlayingAll, setIsPlayingAll] = React.useState(false);
   const totalRows = tracks.length + (hasMore ? 1 : 0); // +1 row for loader
   const rowVirtualizer = useWindowVirtualizer({
     count: totalRows,
@@ -211,6 +214,78 @@ export default function CollectionPage() {
   const mbUrl = collectionMBID
     ? `https://musicbrainz.org/collection/${collectionMBID}`
     : undefined;
+
+  const playAllTracks = React.useCallback(async () => {
+    if (!collectionMBID || isPlayingAll || isLoadingInitial) {
+      return;
+    }
+
+    setIsPlayingAll(true);
+    try {
+      let allTracks = tracks;
+
+      // First load full collection then send to Brainzplayer
+      if (hasMore || tracks.length < trackCount) {
+        const fetchedTracks: JSPFTrack[] = [];
+        const pageSize = MAX_COLLECTION_TRACKS_PER_CALL;
+        let offset = 0;
+        let total = trackCount;
+
+        while (offset < total || (offset === 0 && total === 0)) {
+          // eslint-disable-next-line no-await-in-loop
+          const page = await APIService.getMusicBrainzCollectionDetail(
+            collectionMBID,
+            currentUser?.auth_token,
+            pageSize,
+            offset
+          );
+          total = page.track_count;
+          const pageTracks = (page.tracks ?? []).map(asJSPFTrack);
+          fetchedTracks.push(...pageTracks);
+          offset += pageTracks.length;
+          if (pageTracks.length === 0) {
+            break;
+          }
+        }
+
+        allTracks = fetchedTracks;
+        setTracks(fetchedTracks);
+        setTrackCount(total);
+        setHasMore(false);
+      }
+
+      if (!allTracks.length) {
+        return;
+      }
+
+      window.postMessage(
+        {
+          brainzplayer_event: "play-ambient-queue",
+          payload: allTracks,
+        },
+        window.location.origin
+      );
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Could not play collection"
+          message={error?.message ?? error}
+        />,
+        { toastId: "mb-collection-play-error" }
+      );
+    } finally {
+      setIsPlayingAll(false);
+    }
+  }, [
+    APIService,
+    collectionMBID,
+    currentUser?.auth_token,
+    hasMore,
+    isLoadingInitial,
+    isPlayingAll,
+    trackCount,
+    tracks,
+  ]);
 
   const saveAsPlaylist = React.useCallback(async () => {
     if (!collectionMBID) {
@@ -366,7 +441,21 @@ export default function CollectionPage() {
 
       <div className="col-md-8 offset-md-2">
         <div className="header">
-          <h3 className="header-with-line">Tracks</h3>
+          <h3 className="header-with-line">
+            Tracks
+            {Boolean(trackCount) && (
+              <button
+                type="button"
+                className="btn btn-info btn-rounded play-tracks-button"
+                title="Play all tracks"
+                disabled={isLoadingInitial || isPlayingAll}
+                onClick={playAllTracks}
+              >
+                <FontAwesomeIcon icon={faPlayCircle} fixedWidth />{" "}
+                {isPlayingAll ? "Loading..." : "Play all"}
+              </button>
+            )}
+          </h3>
         </div>
 
         <Loader isLoading={isLoadingInitial} />
