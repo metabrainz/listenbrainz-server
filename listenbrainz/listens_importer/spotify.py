@@ -9,7 +9,7 @@ from spotipy import SpotifyException
 
 from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError, \
     ExternalServiceInvalidGrantError
-from listenbrainz.domain.spotify import SpotifyService
+from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_INVALID_GRANT_ERROR_MESSAGE
 
 from listenbrainz.listens_importer.base import ListensImporter
 from listenbrainz.webserver import create_app
@@ -265,20 +265,21 @@ class SpotifyImporter(ListensImporter):
             return len(listens)
 
         except ExternalServiceInvalidGrantError:
-            error_message = "It seems like you've revoked permission for us to read your spotify account"
+            error_message = SPOTIFY_INVALID_GRANT_ERROR_MESSAGE
             listens_count = user["status"]["count"] if user["status"] else 0
-            self.service.update_status(user['user_id'], "Error", listens_count, error_message=error_message)
+            self.service.update_status(
+                user['user_id'],
+                "Error",
+                listens_count,
+                error_message=error_message,
+                retry=False,
+                error_reason="invalid_grant",
+            )
             if not current_app.config['TESTING']:
                 self.notify_error(user['musicbrainz_id'], error_message)
-            # user has revoked authorization through spotify ui or deleted their spotify account etc.
-            #
-            # we used to remove spotify access tokens from our database whenever we detected token revocation
-            # at one point. but one day spotify had a downtime while resulted in false revocation errors, and
-            # we ended up deleting most of our users' spotify access tokens. now we don't remove the token from
-            # database. this is actually more resilient and without downsides. if a user actually revoked their
-            # token, then its useless anyway so doesn't matter if we remove it. and if it is a false revocation
-            # error, we are saved! :) in any case, we do set an error message for the user in the database
-            # so that we can skip in future runs and notify them to reconnect if they want.
+            # Since July 20th 2026, Spotify expires refresh tokens after 6 months
+            # and returns invalid_grant when it has expired or been revoked.
+            # See https://developer.spotify.com/blog/2026-06-18-refresh-token-expiration
             raise ExternalServiceError("User has revoked spotify authorization")
 
         except ExternalServiceAPIError as e:
