@@ -564,7 +564,8 @@ export default function ArtistPage(): JSX.Element {
       <h3 className="header-with-line">Similar Artists</h3>
       {!hasSimilarArtists && (
         <p>
-          Similar artists will appear here once enough people have listened to this artist on ListenBrainz.
+          Similar artists will appear here once enough people have listened to
+          this artist on ListenBrainz.
         </p>
       )}
       {hasSimilarArtists && (

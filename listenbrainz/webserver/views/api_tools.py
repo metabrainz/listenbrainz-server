@@ -56,7 +56,7 @@ MAX_DURATION_LIMIT = 24 * 24 * 60 * 60
 #: The max permitted value of duration_ms field - 24 days
 MAX_DURATION_MS_LIMIT = MAX_DURATION_LIMIT * 1000
 
-MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
+MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 100
 
 MAX_LISTENS_PER_RMQ_MESSAGE = 100  # internal limit on number of listens per RMQ message to avoid timeouts in TS writer
 
