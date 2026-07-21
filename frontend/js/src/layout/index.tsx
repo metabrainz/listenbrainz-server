@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Outlet, ScrollRestoration } from "react-router";
 import { toast, ToastContainer, ToastOptions } from "react-toastify";
+import localforage from "localforage";
 
 import { Provider as NiceModalProvider } from "@ebay/nice-modal-react";
 import Footer from "../components/Footer";
@@ -20,6 +21,57 @@ const mappingLevelToBootstrapClass = {
   error: "danger",
 };
 
+const dismissedInitialAlertsStore = localforage.createInstance({
+  name: "listenbrainz",
+  driver: [localforage.INDEXEDDB, localforage.LOCALSTORAGE],
+  storeName: "dismissed-initial-alerts",
+});
+
+async function showInitialAlerts(initialAlerts: ServerAlert[]) {
+  let dismissedInitialAlertIds = new Set<string>();
+  try {
+    dismissedInitialAlertIds = new Set(
+      await dismissedInitialAlertsStore.keys()
+    );
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(
+      "LocalStorage error, initial alert dismissals may not be remembered",
+      error
+    );
+  }
+
+  initialAlerts
+    .filter((alert) => !dismissedInitialAlertIds.has(alert.id))
+    .forEach((alert) => {
+      const levelOrDefault = alert.level ?? "default";
+      const bsClass = mappingLevelToBootstrapClass[levelOrDefault];
+      const options: ToastOptions = {
+        autoClose: false,
+        closeOnClick: false,
+        draggable: false,
+        containerId: "initial-alerts",
+        toastId: alert.id,
+        type: levelOrDefault,
+        className: `alert alert-${bsClass}`,
+        onClose: () => {
+          dismissedInitialAlertsStore.setItem(alert.id, true).catch((error) => {
+            // eslint-disable-next-line no-console
+            console.error(
+              "LocalStorage error, initial alert dismissal may not be remembered",
+              error
+            );
+          });
+        },
+      };
+      const messageWithHTML = (
+        // eslint-disable-next-line react/no-danger -- we control the content of the initial alerts, so this is safe
+        <span dangerouslySetInnerHTML={{ __html: alert.message }} />
+      );
+      toast(messageWithHTML, options);
+    });
+}
+
 export default function Layout({
   children,
   initialAlerts = [],
@@ -32,23 +84,7 @@ export default function Layout({
   withBrainzPlayer?: boolean;
 }) {
   React.useEffect(() => {
-    initialAlerts.forEach((alert) => {
-      const levelOrDefault = alert.level ?? "default";
-      const bsClass = mappingLevelToBootstrapClass[levelOrDefault];
-      const options: ToastOptions = {
-        autoClose: false,
-        closeOnClick: false,
-        containerId: "initial-alerts",
-        toastId: alert.id,
-        type: levelOrDefault,
-        className: `alert alert-${bsClass}`,
-      };
-      const messageWithHTML = (
-        // eslint-disable-next-line react/no-danger -- we control the content of the initial alerts, so this is safe
-        <span dangerouslySetInnerHTML={{ __html: alert.message }} />
-      );
-      toast(messageWithHTML, options);
-    });
+    showInitialAlerts(initialAlerts);
   }, [initialAlerts]);
 
   return (
