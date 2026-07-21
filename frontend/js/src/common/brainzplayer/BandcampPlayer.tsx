@@ -3,8 +3,11 @@ import type * as React from "react";
 import { faBandcamp } from "@fortawesome/free-brands-svg-icons";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
-import SubsonicPlayer, { SubsonicPlayerProps } from "./SubsonicPlayer";
-import { getTrackName, searchForSubsonicTrack } from "../../utils/utils";
+import SubsonicPlayer, {
+  searchForSubsonicTrack,
+  SubsonicPlayerProps,
+} from "./SubsonicPlayer";
+import { getTrackName } from "../../utils/utils";
 
 export type BandcampPlayerProps = SubsonicPlayerProps;
 
