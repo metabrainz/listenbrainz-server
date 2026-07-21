@@ -582,13 +582,15 @@ describe("NavidromePlayer", () => {
     it("should call handleAuthenticationError on 401 error during search", async () => {
       const onInvalidateDataSource = jest.fn();
       const playerRef = React.createRef<NavidromePlayer>();
-      const utils = require("../../../src/utils/utils");
-
-      // Mock searchForSubsonicTrack to throw 401 error
-      const mockError = { status: 401, message: "Unauthorized", name: "Error" };
-      const searchSpy = jest
-        .spyOn(utils, "searchForSubsonicTrack")
-        .mockRejectedValue(mockError);
+      window.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        statusText: "Unauthorized",
+        headers: {
+          get: () => "application/json",
+        },
+        json: () => Promise.resolve({ detail: "Unauthorized" }),
+      });
 
       render(
         <GlobalAppContext.Provider value={defaultContext}>
@@ -619,8 +621,6 @@ describe("NavidromePlayer", () => {
       });
 
       expect(onInvalidateDataSource).toHaveBeenCalled();
-
-      searchSpy.mockRestore();
     });
   });
 });

@@ -96,10 +96,22 @@ describe("BandcampPlayer", () => {
 
   it("searches Bandcamp by track name only", async () => {
     const playerRef = React.createRef<BandcampPlayer>();
-    const utils = require("../../../src/utils/utils");
-    const searchSpy = jest
-      .spyOn(utils, "searchForSubsonicTrack")
-      .mockResolvedValue(null);
+    window.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: {
+        get: () => "application/json",
+      },
+      json: () =>
+        Promise.resolve({
+          "subsonic-response": {
+            status: "ok",
+            searchResult3: {
+              song: [],
+            },
+          },
+        }),
+    });
 
     render(
       <GlobalAppContext.Provider value={defaultContext}>
@@ -124,15 +136,12 @@ describe("BandcampPlayer", () => {
       );
     });
 
-    expect(searchSpy).toHaveBeenCalledWith(
-      "",
-      "",
-      "Track Only",
-      "",
-      abortController.signal,
-      "/settings/music-services/bandcamp/search/"
+    const searchUrl = new URL(
+      (window.fetch as jest.Mock).mock.calls[0][0],
+      "https://listenbrainz.test"
     );
-
-    searchSpy.mockRestore();
+    expect(searchUrl.pathname).toBe("/settings/music-services/bandcamp/search/");
+    expect(searchUrl.searchParams.get("query")).toBe("Track Only");
+    expect(searchUrl.searchParams.get("songCount")).toBe("20");
   });
 });
