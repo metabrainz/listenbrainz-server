@@ -75,6 +75,8 @@ export default class BandcampPlayer extends SubsonicPlayer {
         "",
         trackName,
         "",
+        // bandcamp does not return MBIDs in the response, skip that matching behavior
+        undefined,
         signal,
         this.getProxyUrl("search")
       );

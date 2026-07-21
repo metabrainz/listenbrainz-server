@@ -2,6 +2,7 @@ import * as React from "react";
 import { throttle as _throttle } from "lodash";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { Link } from "react-router";
+import Fuse from "fuse.js";
 import {
   DataSourceProps,
   DataSourceType,
@@ -9,11 +10,14 @@ import {
 } from "./BrainzPlayer";
 import {
   getArtistName,
+  getRecordingMBID,
   getTrackName,
 } from "../../utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { currentDataSourceNameAtom, store } from "./BrainzPlayerAtoms";
 
+const SUBSONIC_SONG_SEARCH_COUNT = 20;
+const SUBSONIC_FUZZY_MATCH_SCORE = 0.3;
 
 /**
  * Remove featuring artists from artist name to improve search matching.
@@ -39,20 +43,86 @@ const removeFeaturingArtists = (artistName?: string): string => {
   return cleaned.trim();
 };
 
+const normalizeSubsonicSearchText = (text?: string): string =>
+  text?.trim().toLocaleLowerCase() ?? "";
+
+const selectBestSubsonicMatch = (
+  songs: NavidromeTrack[],
+  trackName?: string,
+  artistName?: string,
+  recordingMBID?: string
+): NavidromeTrack | null => {
+  if (!songs.length) {
+    return null;
+  }
+
+  if (recordingMBID) {
+    const mbidMatch = songs.find(
+      (song) => song.musicBrainzId === recordingMBID
+    );
+    if (mbidMatch) {
+      return mbidMatch;
+    }
+  }
+
+  const normalizedTrackName = normalizeSubsonicSearchText(trackName);
+  if (normalizedTrackName) {
+    const titleMatch = songs.find(
+      (song) => normalizeSubsonicSearchText(song.title) === normalizedTrackName
+    );
+    if (titleMatch) {
+      return titleMatch;
+    }
+  }
+
+  const fuzzyQuery = [trackName, artistName].filter(Boolean).join(" ").trim();
+  if (fuzzyQuery) {
+    const searchableSongs = songs.map((song) => ({
+      song,
+      searchText: [song.title, song.artist].filter(Boolean).join(" "),
+    }));
+    const fuzzySearch = new Fuse(searchableSongs, {
+      keys: ["searchText"],
+      threshold: SUBSONIC_FUZZY_MATCH_SCORE,
+      ignoreLocation: true,
+      includeScore: true,
+    });
+    const [fuzzyMatch] = fuzzySearch.search(fuzzyQuery);
+    if (
+      fuzzyMatch?.item &&
+      (fuzzyMatch.score ?? 1) <= SUBSONIC_FUZZY_MATCH_SCORE
+    ) {
+      return fuzzyMatch.item.song;
+    }
+  }
+
+  return songs[0];
+};
+
 const performSubsonicSearch = async (
   instanceURL: string,
   authParams: string,
   query: string,
+  trackName?: string,
+  artistName?: string,
+  recordingMBID?: string,
   signal?: AbortSignal,
   proxySearchURL?: string
 ): Promise<NavidromeTrack | null> => {
   let searchUrl = "";
+  const searchParams = new URLSearchParams({
+    query,
+    artistCount: "0",
+    albumCount: "0",
+    songCount: String(SUBSONIC_SONG_SEARCH_COUNT),
+    artistOffset: "0",
+    albumOffset: "0",
+    songOffset: "0",
+  });
   if (proxySearchURL) {
-    searchUrl = `${proxySearchURL}?query=${encodeURIComponent(query)}`;
+    searchUrl = `${proxySearchURL}?${searchParams.toString()}`;
   } else if (instanceURL && authParams) {
-    searchUrl = `${instanceURL}/rest/search3?query=${encodeURIComponent(
-      query
-    )}&songCount=1&${authParams}`;
+    searchUrl = `${instanceURL}/rest/search3?${searchParams.toString()}&${authParams}`;
   }
 
   if (!searchUrl) {
@@ -84,17 +154,23 @@ const performSubsonicSearch = async (
 
   const searchResult = data["subsonic-response"]?.searchResult3;
   if (searchResult?.song && searchResult.song.length > 0) {
-    return searchResult.song[0];
+    return selectBestSubsonicMatch(
+      searchResult.song,
+      trackName,
+      artistName,
+      recordingMBID
+    );
   }
 
   return null;
 };
 
-const searchForSubsonicTrack = async (
+export const searchForSubsonicTrack = async (
   instanceURL: string,
   authParams: string,
   trackName?: string,
   artistName?: string,
+  recordingMBID?: string,
   signal?: AbortSignal,
   proxySearchURL?: string
 ): Promise<NavidromeTrack | null> => {
@@ -109,6 +185,9 @@ const searchForSubsonicTrack = async (
       instanceURL,
       authParams,
       fullQuery,
+      trackName,
+      artistName,
+      recordingMBID,
       signal,
       proxySearchURL
     );
@@ -130,6 +209,9 @@ const searchForSubsonicTrack = async (
       instanceURL,
       authParams,
       cleanedQuery,
+      trackName,
+      cleanedArtistName,
+      recordingMBID,
       signal,
       proxySearchURL
     );
@@ -500,6 +582,8 @@ export default abstract class SubsonicPlayer
   ): Promise<void> => {
     const trackName = getTrackName(listen);
     const artistName = getArtistName(listen);
+    const recordingMBID =
+      "track_metadata" in listen ? getRecordingMBID(listen) : undefined;
     const { handleError, handleWarning, onTrackNotFound } = this.props;
 
     if (!trackName && !artistName) {
@@ -528,6 +612,7 @@ export default abstract class SubsonicPlayer
         this.shouldUseProxy() ? "" : authParams,
         trackName,
         artistName,
+        recordingMBID,
         signal,
         this.shouldUseProxy() ? this.getProxyUrl("search") : undefined
       );

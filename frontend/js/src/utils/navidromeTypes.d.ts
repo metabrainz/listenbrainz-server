@@ -13,6 +13,7 @@ declare type NavidromeTrack = {
   albumId: string;
   coverArt?: string;
   duration: number;
+  musicBrainzId?: string;
 };
 
 declare type NavidromeAlbum = {
