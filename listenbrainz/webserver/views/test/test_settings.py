@@ -468,7 +468,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         self.assertEqual(proxied_request.qs["query"], ["song artist"])
         self.assertEqual(proxied_request.qs["artistcount"], ["0"])
         self.assertEqual(proxied_request.qs["albumcount"], ["0"])
-        self.assertEqual(proxied_request.qs["songcount"], ["1"])
+        self.assertEqual(proxied_request.qs["songcount"], ["20"])
         self.assertEqual(proxied_request.qs["artistoffset"], ["0"])
         self.assertEqual(proxied_request.qs["albumoffset"], ["0"])
         self.assertEqual(proxied_request.qs["songoffset"], ["0"])

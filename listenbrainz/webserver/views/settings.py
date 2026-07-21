@@ -495,7 +495,7 @@ def _get_subsonic_search_params() -> dict[str, str]:
         "query": request.args["query"],
         "artistCount": request.args.get("artistCount", "0"),
         "albumCount": request.args.get("albumCount", "0"),
-        "songCount": request.args.get("songCount", "1"),
+        "songCount": request.args.get("songCount", "20"),
         "artistOffset": request.args.get("artistOffset", "0"),
         "albumOffset": request.args.get("albumOffset", "0"),
         "songOffset": request.args.get("songOffset", "0"),
