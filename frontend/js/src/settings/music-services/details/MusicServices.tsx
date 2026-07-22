@@ -439,13 +439,7 @@ export default function MusicServices() {
         toast.error(
           <ToastMsg
             title="Import Failed"
-            message={
-              <div>
-                We were unable to import your starred tracks from Navidrome.
-                <br />
-                <pre>{error.toString()}</pre>
-              </div>
-            }
+            message={error.message || error.toString()}
           />
         );
       }
@@ -990,8 +984,12 @@ export default function MusicServices() {
                     <div className="title">Import starred tracks</div>
                     <div className="details">
                       Can only be run manually to import your starred tracks
-                      from Navidrome. You can run it again without creating
-                      duplicates.
+                      from Navidrome.{" "}
+                      <b>
+                        Your Navidrome server must be accessible over the public
+                        internet.
+                      </b>{" "}
+                      You can run it again without creating duplicates.
                     </div>
                   </label>
                 </button>

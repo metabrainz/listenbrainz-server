@@ -178,6 +178,10 @@ def import_starred_tracks(user_id, navidrome_url, auth_token, salt, username):
     try:
         response = requests.get(api_url, params=params, timeout=30)
         response.raise_for_status()
+    except requests.exceptions.ConnectionError:
+        raise ExternalServiceError(f"Failed to connect to the Navidrome server at {navidrome_url}. Please ensure it is running and accessible over the internet.")
+    except requests.exceptions.Timeout:
+        raise ExternalServiceError(f"Connection to Navidrome server timed out.")
     except requests.RequestException as e:
         raise ExternalServiceError(f"Failed to fetch starred songs from Navidrome: {str(e)}")
         

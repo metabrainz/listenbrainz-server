@@ -328,7 +328,7 @@ def import_feedback():
                 nav_user["username"]
             )
         except (ExternalServiceError, ExternalServiceAPIError) as e:
-            raise APIBadRequest(f"Failed to import starred tracks from Navidrome: {e}")
+            raise APIBadRequest(str(e))
         return jsonify(counts)
 
     if "user_name" not in data:
