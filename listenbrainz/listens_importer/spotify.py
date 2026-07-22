@@ -290,12 +290,10 @@ class SpotifyImporter(ListensImporter):
             )
             if not current_app.config['TESTING']:
                 self.notify_error(user['musicbrainz_id'], error_message)
-            if "error" in e and e["error"] == "invalid_grant":
-                # Since July 20th 2026, Spotify expires refresh tokens after 6 months
-                # and returns invalid_grant when it has expired or been revoked.
-                # See https://developer.spotify.com/blog/2026-06-18-refresh-token-expiration
-                raise ExternalServiceError("Spotify has expired the user's authorization. Please disconnect and reconnect your account")
-            raise ExternalServiceError("User has revoked spotify authorization")
+            # Since July 20th 2026, Spotify expires refresh tokens after 6 months
+            # and returns invalid_grant when it has expired or been revoked.
+            # See https://developer.spotify.com/blog/2026-06-18-refresh-token-expiration
+            raise ExternalServiceError("Spotify has expired authorization, or the user has revoked authorization. Please disconnect and reconnect your account")
 
         except ExternalServiceAPIError as e:
             # if it is an error from the Spotify API, show the error message to the user
