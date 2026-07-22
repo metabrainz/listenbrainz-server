@@ -156,6 +156,18 @@ class SpotifyImporter(ListensImporter):
                     if retries == 0:
                         raise ExternalServiceError('Encountered a rate limit.')
 
+                elif e.http_status == 403 and "insufficient client scope" in str(e).lower():
+                    # Spotify sometimes returns this type of erro despite having sufficient scopes
+                    # Retry the call, then  raise and invalid grant error to prompt the user to reconnect
+                    current_app.logger.warning(
+                        'Spotify token for user %s has insufficient scopes: %s, or Spotify API is having a moment',
+                        user['musicbrainz_id'],
+                        str(e),
+                        exc_info=True
+                    )
+                    if retries == 0:
+                        raise ExternalServiceAPIError(
+                            'Error connecting to the Spotify API, you may need to disconnect and reconnect your account. %s. ', str(e))
                 elif e.http_status in (400, 403):
                     current_app.logger.critical('Error from the Spotify API for user %s: %s', user['musicbrainz_id'],
                                                 str(e), exc_info=True)
@@ -178,7 +190,7 @@ class SpotifyImporter(ListensImporter):
 
                     else:
                         raise ExternalServiceAPIError(
-                            'Could not authenticate with Spotify, please unlink and link your account again.')
+                            'Could not authenticate with Spotify, please disconnect and reconnect your account.')
                 elif e.http_status == 404:
                     current_app.logger.error("404 while trying to get listens for user %s", str(user), exc_info=True)
                     if retries == 0:
@@ -265,7 +277,7 @@ class SpotifyImporter(ListensImporter):
             current_app.logger.info('imported %d listens for %s' % (len(listens), str(user['musicbrainz_id'])))
             return len(listens)
 
-        except ExternalServiceInvalidGrantError:
+        except ExternalServiceInvalidGrantError as e:
             error_message = SPOTIFY_INVALID_GRANT_ERROR_MESSAGE
             listens_count = user["status"]["count"] if user["status"] else 0
             self.service.update_status(
@@ -278,9 +290,11 @@ class SpotifyImporter(ListensImporter):
             )
             if not current_app.config['TESTING']:
                 self.notify_error(user['musicbrainz_id'], error_message)
-            # Since July 20th 2026, Spotify expires refresh tokens after 6 months
-            # and returns invalid_grant when it has expired or been revoked.
-            # See https://developer.spotify.com/blog/2026-06-18-refresh-token-expiration
+            if "error" in e and e["error"] == "invalid_grant":
+                # Since July 20th 2026, Spotify expires refresh tokens after 6 months
+                # and returns invalid_grant when it has expired or been revoked.
+                # See https://developer.spotify.com/blog/2026-06-18-refresh-token-expiration
+                raise ExternalServiceError("Spotify has expired the user's authorization. Please disconnect and reconnect your account")
             raise ExternalServiceError("User has revoked spotify authorization")
 
         except ExternalServiceAPIError as e:
