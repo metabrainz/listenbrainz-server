@@ -96,14 +96,17 @@ COUCHDB_HOST = "couchdb"
 COUCHDB_PORT = 5984
 COUCHDB_USER = "listenbrainz"
 COUCHDB_ADMIN_KEY = "listenbrainz"
+# Prefix is used verbatim; include the trailing separator, e.g. "test_".
+COUCHDB_DATABASE_PREFIX = ""
 
 # MusicBrainz OAuth
-MUSICBRAINZ_BASE_URL = "https://musicbrainz.org"
+OAUTH_BASE_URL = "https://musicbrainz.org"
+REGISTRATION_URL = f"{OAUTH_BASE_URL}/register"
 OAUTH_CLIENT_ID = "CLIENT_ID"
 OAUTH_CLIENT_SECRET = "CLIENT_SECRET"
-OAUTH_AUTHORIZE_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/authorize"
-OAUTH_TOKEN_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/token"
-OAUTH_INTROSPECTION_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/introspect"
+OAUTH_AUTHORIZE_URL = f"{OAUTH_BASE_URL}/new-oauth2/authorize"
+OAUTH_TOKEN_URL = f"{OAUTH_BASE_URL}/new-oauth2/token"
+OAUTH_INTROSPECTION_URL = f"{OAUTH_BASE_URL}/new-oauth2/introspect"
 
 # Lastfm API
 LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/"

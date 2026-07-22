@@ -1,11 +1,14 @@
 import time
 import base64
+from datetime import datetime, timezone
 from typing import Sequence, Optional
 
 import requests
 import spotipy
 
-from flask import current_app
+from brainzutils.mail import send_mail
+from dateutil.relativedelta import relativedelta
+from flask import current_app, render_template
 from spotipy import SpotifyOAuth
 
 from data.model.external_service import ExternalServiceType
@@ -42,6 +45,58 @@ SPOTIFY_PLAYLIST_PERMISSIONS = {
 }
 
 SPOTIFY_API_RETRIES = 5
+SPOTIFY_INVALID_GRANT_ERROR_MESSAGE = (
+    "Your Spotify connection has expired or been revoked. "
+    "Please reconnect Spotify to resume imports."
+)
+SPOTIFY_REFRESH_TOKEN_TTL = relativedelta(months=6)
+SPOTIFY_REFRESH_TOKEN_EXPIRY_EMAIL_SUBJECT = "[Action required] Reconnect Spotify to keep importing your history"
+
+
+def get_refresh_token_expires():
+    """Return the expiry timestamp for a newly issued Spotify refresh token."""
+    return datetime.fromtimestamp(int(time.time()), timezone.utc) + SPOTIFY_REFRESH_TOKEN_TTL
+
+
+def notify_refresh_token_expiry(db_conn):
+    """Send pre-expiry notifications for Spotify refresh tokens expiring within one month and one week."""
+    link = current_app.config['SERVER_ROOT_URL'] + '/settings/music-services/details/'
+    users = external_service_oauth.get_users_with_expiring_refresh_tokens(db_conn, ExternalServiceType.SPOTIFY)
+    stats = {
+        "sent": 0,
+        "skipped": 0,
+        "failed": 0,
+    }
+
+    for user in users:
+        if not user["email"]:
+            stats["skipped"] += 1
+            current_app.logger.info("Skipping Spotify refresh-token expiry email for %s: no email address",
+                                    user["musicbrainz_id"])
+            continue
+
+        text = render_template(
+            "emails/spotify_refresh_token_expiry.txt",
+            username=user["musicbrainz_id"],
+            link=link,
+            refresh_token_expires=user["refresh_token_expires"],
+        )
+        try:
+            send_mail(
+                subject=SPOTIFY_REFRESH_TOKEN_EXPIRY_EMAIL_SUBJECT,
+                text=text,
+                recipients=[user["email"]],
+                from_name='ListenBrainz',
+                from_addr='noreply@' + current_app.config['MAIL_FROM_DOMAIN'],
+            )
+            external_service_oauth.mark_refresh_token_expiry_notified(db_conn, user["external_service_oauth_id"])
+            stats["sent"] += 1
+        except Exception:
+            stats["failed"] += 1
+            current_app.logger.error("Could not send Spotify refresh-token expiry email to %s",
+                                     user["musicbrainz_id"], exc_info=True)
+
+    return stats
 
 
 def _get_spotify_token(grant_type: str, token: str) -> requests.Response:
@@ -105,7 +160,8 @@ class SpotifyService(ImporterService):
 
         external_service_oauth.save_token(db_conn, user_id=user_id, service=self.service, access_token=access_token,
                                           refresh_token=refresh_token, token_expires_ts=expires_at,
-                                          record_listens=active, scopes=scopes, external_user_id=external_user_id)
+                                          record_listens=active, scopes=scopes, external_user_id=external_user_id,
+                                          refresh_token_expires=get_refresh_token_expires())
         return True
 
     def get_authorize_url(self, permissions: Sequence[str]):
@@ -162,6 +218,7 @@ class SpotifyService(ImporterService):
             elif response.status_code == 400:
                 error_body = response.json()
                 if "error" in error_body and error_body["error"] == "invalid_grant":
+                    self.revoke_user(user_id)
                     raise ExternalServiceInvalidGrantError(error_body)
 
             response = None  # some other error occurred
@@ -172,12 +229,13 @@ class SpotifyService(ImporterService):
 
         response = response.json()
         access_token = response['access_token']
-        if "refresh_token" in response:
-            refresh_token = response['refresh_token']
+        new_refresh_token = response.get("refresh_token")
         expires_at = int(time.time()) + response['expires_in']
         external_service_oauth.update_token(db_conn, user_id=user_id, service=self.service,
-                                            access_token=access_token, refresh_token=refresh_token,
-                                            expires_at=expires_at)
+                                            access_token=access_token, refresh_token=new_refresh_token,
+                                            expires_at=expires_at,
+                                            refresh_token_expires=get_refresh_token_expires()
+                                            if new_refresh_token else None)
         return self.get_user(user_id)
 
     def revoke_user(self, user_id: int):

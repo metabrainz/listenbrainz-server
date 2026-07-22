@@ -9,8 +9,7 @@ import listenbrainz.db.navidrome as db_navidrome
 import time
 
 from data.model.external_service import ExternalServiceType
-from listenbrainz.domain.external_service import ExternalServiceInvalidGrantError
-from listenbrainz.domain.spotify import SpotifyService, OAUTH_TOKEN_URL
+from listenbrainz.domain.spotify import SpotifyService, OAUTH_TOKEN_URL, SPOTIFY_INVALID_GRANT_ERROR_MESSAGE
 from listenbrainz.tests.integration import IntegrationTestCase
 from unittest.mock import patch
 from listenbrainz.db import external_service_oauth as db_oauth, listens_importer
@@ -122,6 +121,28 @@ class SettingsViewsTestCase(IntegrationTestCase):
         with self.app.app_context():
             self.assertIsNone(self.service.get_user(self.user['id']))
 
+    def test_spotify_invalid_grant_initial_alert(self):
+        self.temporary_login(self.user['login_id'])
+        db_oauth.save_token(self.db_conn, user_id=self.user['id'], service=ExternalServiceType.SPOTIFY,
+                            access_token='old-token', refresh_token='old-refresh-token',
+                            token_expires_ts=int(time.time()) - 1000, record_listens=True,
+                            scopes=['user-read-recently-played'])
+        listens_importer.update_status(
+            self.db_conn,
+            self.user['id'],
+            ExternalServiceType.SPOTIFY,
+            "Error",
+            0,
+            error={"message": "Spotify needs to be reconnected.", "retry": False, "reason": "invalid_grant"},
+        )
+        db_oauth.delete_token(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY, remove_import_log=False)
+
+        r = self.client.get(self.custom_url_for('settings.index', path='music-services/details'))
+
+        self.assert200(r)
+        self.assertIn(b"spotify-reconnect-required", r.data)
+        self.assertIn(b"Reconnect Spotify", r.data)
+
     @patch('listenbrainz.domain.spotify.SpotifyService.fetch_access_token')
     @patch.object(spotipy.Spotify, 'current_user')
     def test_spotify_callback(self, mock_current_user, mock_fetch_access_token):
@@ -192,15 +213,21 @@ class SettingsViewsTestCase(IntegrationTestCase):
         self.assert200(r)
         self.assertDictEqual(r.json, {'access_token': 'new-token'})
 
-    @patch('listenbrainz.domain.spotify.SpotifyService.refresh_access_token')
-    def test_spotify_refresh_token_which_has_been_revoked(self, mock_refresh_user_token):
+    @requests_mock.Mocker()
+    def test_spotify_refresh_token_which_has_been_revoked(self, mock_requests):
         self.temporary_login(self.user['login_id'])
         self._create_spotify_user(expired=True)
-        mock_refresh_user_token.side_effect = ExternalServiceInvalidGrantError
+        mock_requests.post(OAUTH_TOKEN_URL, status_code=400, json={
+            'error': 'invalid_grant',
+            'error_description': 'Refresh token expired',
+        })
 
         response = self.client.post(self.custom_url_for('settings.refresh_service_token', service_name='spotify'))
 
         self.assertEqual(response.json, {'code': 403, 'error': 'User has revoked authorization to Spotify'})
+        self.assertIsNone(db_oauth.get_token(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY))
+        details = self.client.post(self.custom_url_for('settings.music_services_details'))
+        self.assertEqual("disable", details.json["current_spotify_permissions"])
 
     def _create_funkwhale_user(self):
         """Helper to create a Funkwhale user with token"""

@@ -228,7 +228,8 @@ def create_app(
         app.config['COUCHDB_USER'],
         app.config['COUCHDB_ADMIN_KEY'],
         app.config['COUCHDB_HOST'],
-        app.config['COUCHDB_PORT']
+        app.config['COUCHDB_PORT'],
+        app.config['COUCHDB_DATABASE_PREFIX']
     )
     # RabbitMQ connection
     from listenbrainz.webserver.rabbitmq_connection import init_rabbitmq_connection
@@ -290,7 +291,7 @@ def init_admin(app):
     model.db.init_app(app)
 
     from flask_admin import Admin
-    from listenbrainz.webserver.admin.views import HomeView
+    from listenbrainz.webserver.admin.views import AdminFlashMessagesView, HomeView
     admin = Admin(app, index_view=HomeView(name='Home'), template_mode='bootstrap3')
     from listenbrainz.model import ExternalService as ExternalServiceModel
     from listenbrainz.model import User as UserModel
@@ -308,6 +309,7 @@ def init_admin(app):
     admin.add_view(ExternalServiceAdminView(ExternalServiceModel, model.db.session, endpoint='external_service_model'))
     admin.add_view(ListensImporterAdminView(ListensImporterModel, model.db.session, endpoint='listens_importer_model'))
     admin.add_view(ReportedUserAdminView(ReportedUsersModel, model.db.session, endpoint='reported_users_model'))
+    admin.add_view(AdminFlashMessagesView(name='Flash messages', endpoint='flash_messages'))
 
     # can be empty incase timescale listenstore is down
     if app.config['SQLALCHEMY_TIMESCALE_PGBOUNCER_URI']:
@@ -326,10 +328,11 @@ def create_web_app(debug=None):
     static_manager.read_manifest()
     app.static_folder = '/static'
 
-    from listenbrainz.webserver.utils import get_global_props
+    from listenbrainz.webserver.utils import get_global_props, get_initial_alerts
     app.context_processor(lambda: dict(
         get_static_path=static_manager.get_static_path,
-        global_props=get_global_props()
+        global_props=get_global_props(),
+        initial_alerts=get_initial_alerts(),
     ))
 
     _register_blueprints(app)
