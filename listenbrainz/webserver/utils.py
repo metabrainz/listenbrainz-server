@@ -151,6 +151,15 @@ def get_initial_alerts():
                         '<a href="/settings/music-services/details/">Reconnect Spotify</a> to resume imports.'
                     ),
                 })
+            elif error:
+                alerts.append({
+                    "id": "spotify-import-error",
+                    "level": "error",
+                    "message": (
+                        'There was an error importing your Spotify listens: %s. '
+                        '<a href="/settings/music-services/details/">Reconnect Spotify</a> to resume imports.'
+                    ) % error.get("message", "Unknown error"),
+                })
 
     return orjson.dumps(alerts).decode("utf-8")
 
