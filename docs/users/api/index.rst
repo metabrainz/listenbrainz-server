@@ -72,6 +72,7 @@ Reference
 
    core
    playlist
+   player
    recordings
    statistics
    popularity
