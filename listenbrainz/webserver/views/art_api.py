@@ -856,6 +856,14 @@ def playlist_og_image(playlist_mbid):
     if playlist is None or not playlist.is_visible_by(None):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
+    # Compute ETag from recording MBIDs before the expensive metadata fetch.
+    # This lets crawlers revalidating with If-None-Match skip the DB-heavy
+    # fetch_playlist_recording_metadata call entirely.
+    recording_mbids = [str(r.mbid) for r in playlist.recordings if r.mbid]
+    etag = hashlib.md5("|".join(sorted(recording_mbids)).encode()).hexdigest()
+    if request.headers.get("If-None-Match") == etag:
+        return "", 304
+
     # Fetch the metadata for the playlist recordings
     try:
         fetch_playlist_recording_metadata(playlist)
@@ -868,26 +876,22 @@ def playlist_og_image(playlist_mbid):
     if not images:
         return redirect(fallback_url)
 
-    # Resolve cover art URLs — collect extras so the grid can still be
-    # composed even if some archive.org downloads fail intermittently
+    # Resolve cover art URLs using the shared utility
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"], 3, 500,
+        server_root_url=current_app.config["SERVER_ROOT_URL"])
     cover_art_urls = []
     for img in images:
         caa_id = img.get("caa_id")
         caa_release_mbid = img.get("caa_release_mbid")
         if caa_id and caa_release_mbid:
-            url = f"https://archive.org/download/mbid-{caa_release_mbid}/mbid-{caa_release_mbid}-{caa_id}_thumb500.jpg"
+            url = cac.resolve_cover_art(caa_id, caa_release_mbid, 500)
             cover_art_urls.append(url)
-        if len(cover_art_urls) >= 8:
+        if len(cover_art_urls) >= 4:
             break
 
     if not cover_art_urls:
         return redirect(fallback_url)
-
-    # ETag based on the set of cover art URLs. If the playlist's tracks
-    # haven't changed, clients can skip re-downloading the composed image
-    etag = hashlib.md5("|".join(sorted(cover_art_urls)).encode()).hexdigest()
-    if request.headers.get("If-None-Match") == etag:
-        return "", 304
 
     # Generate the composed OG image
     result = generate_playlist_og_image(cover_art_urls)

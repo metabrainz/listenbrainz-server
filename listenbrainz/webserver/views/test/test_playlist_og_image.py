@@ -217,21 +217,20 @@ class TestGeneratePlaylistOgImage:
     @patch("listenbrainz.art.og_image._compose_single", wraps=_compose_single)
     @patch("listenbrainz.art.og_image._compose_grid_2x2", wraps=_compose_grid_2x2)
     @patch("listenbrainz.art.og_image._download_image")
-    def test_extra_candidates_allow_grid_despite_failures(self, mock_download, mock_grid, mock_single, tmp_path):
-        """With extra candidate URLs, the grid should still work even if some downloads fail."""
+    def test_four_urls_all_succeed_creates_grid(self, mock_download, mock_grid, mock_single, tmp_path):
+        """With exactly 4 URLs all succeeding, the 2x2 grid should be composed."""
         overlay_path = self._create_overlay_file(tmp_path)
         good_img = Image.new("RGBA", (500, 500), (255, 0, 0, 255))
-        # 6 candidates: 4 succeed, 2 fail — grid should still be composed
-        mock_download.side_effect = [good_img, None, good_img, good_img, None, good_img]
+        mock_download.return_value = good_img
 
-        urls = [f"https://example.com/art{i}.jpg" for i in range(6)]
+        urls = [f"https://example.com/art{i}.jpg" for i in range(4)]
         result = generate_playlist_og_image(urls, overlay_path=overlay_path)
         assert result is not None
 
         result_img = Image.open(result)
         assert result_img.size == (OPENGRAPH_IMAGE_WIDTH, OPENGRAPH_IMAGE_HEIGHT)
 
-        assert mock_download.call_count == 6
+        assert mock_download.call_count == 4
         assert mock_grid.call_count == 1
         assert mock_single.call_count == 0
 
@@ -258,15 +257,15 @@ class TestGeneratePlaylistOgImage:
 
     @patch("listenbrainz.art.og_image._download_image")
     def test_all_downloads_fail_returns_none(self, mock_download, tmp_path):
+        """When all download attempts fail, returns None — tries every URL."""
         overlay_path = self._create_overlay_file(tmp_path)
         mock_download.return_value = None
 
-        result = generate_playlist_og_image(
-            ["https://example.com/art1.jpg"],
-            overlay_path=overlay_path,
-        )
+        urls = [f"https://example.com/art{i}.jpg" for i in range(3)]
+        result = generate_playlist_og_image(urls, overlay_path=overlay_path)
         assert result is None
-        assert mock_download.call_count == 1
+        # all 3 URLs should be attempted before giving up
+        assert mock_download.call_count == 3
 
     @patch("listenbrainz.art.og_image._download_image")
     def test_missing_overlay_returns_none(self, mock_download):
@@ -294,16 +293,27 @@ class TestGeneratePlaylistOgImage:
 
 class PlaylistOgImageEndpointTestCase(IntegrationTestCase):
 
+    @patch("listenbrainz.webserver.views.art_api.CoverArtGenerator")
     @patch("listenbrainz.webserver.views.art_api.generate_playlist_og_image")
     @patch("listenbrainz.webserver.views.art_api.get_cover_art_options")
     @patch("listenbrainz.webserver.views.art_api.fetch_playlist_recording_metadata")
     @patch("listenbrainz.webserver.views.art_api.db_playlist.get_by_mbid")
     def test_og_image_success(self, mock_get_playlist, mock_fetch_metadata,
-                              mock_get_cover_options, mock_generate_og):
+                              mock_get_cover_options, mock_generate_og, mock_cac_class):
         mock_playlist = MagicMock()
         mock_playlist.is_visible_by.return_value = True
-        mock_playlist.recordings = [MagicMock() for _ in range(4)]
+        mock_recordings = []
+        for i in range(4):
+            rec = MagicMock()
+            rec.mbid = f"e757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d{i}"
+            mock_recordings.append(rec)
+        mock_playlist.recordings = mock_recordings
         mock_get_playlist.return_value = mock_playlist
+
+        mock_cac = MagicMock()
+        mock_cac.resolve_cover_art.side_effect = lambda caa_id, caa_release_mbid, size: \
+            f"https://archive.org/download/mbid-{caa_release_mbid}/mbid-{caa_release_mbid}-{caa_id}_thumb{size}.jpg"
+        mock_cac_class.return_value = mock_cac
 
         mock_get_cover_options.return_value = [
             {
@@ -357,6 +367,9 @@ class PlaylistOgImageEndpointTestCase(IntegrationTestCase):
                                                         mock_get_cover_options):
         mock_playlist = MagicMock()
         mock_playlist.is_visible_by.return_value = True
+        rec = MagicMock()
+        rec.mbid = "e757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d0"
+        mock_playlist.recordings = [rec]
         mock_get_playlist.return_value = mock_playlist
 
         mock_get_cover_options.return_value = []
@@ -367,15 +380,24 @@ class PlaylistOgImageEndpointTestCase(IntegrationTestCase):
         self.assertStatus(resp, 302)
         self.assertIn("share-header.png", resp.headers.get("Location", ""))
 
+    @patch("listenbrainz.webserver.views.art_api.CoverArtGenerator")
     @patch("listenbrainz.webserver.views.art_api.generate_playlist_og_image")
     @patch("listenbrainz.webserver.views.art_api.get_cover_art_options")
     @patch("listenbrainz.webserver.views.art_api.fetch_playlist_recording_metadata")
     @patch("listenbrainz.webserver.views.art_api.db_playlist.get_by_mbid")
     def test_og_image_generation_failure_redirects_to_default(self, mock_get_playlist, mock_fetch_metadata,
-                                                              mock_get_cover_options, mock_generate_og):
+                                                              mock_get_cover_options, mock_generate_og,
+                                                              mock_cac_class):
         mock_playlist = MagicMock()
         mock_playlist.is_visible_by.return_value = True
+        rec = MagicMock()
+        rec.mbid = "e757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d0"
+        mock_playlist.recordings = [rec]
         mock_get_playlist.return_value = mock_playlist
+
+        mock_cac = MagicMock()
+        mock_cac.resolve_cover_art.return_value = "https://archive.org/download/mbid-test/thumb500.jpg"
+        mock_cac_class.return_value = mock_cac
 
         mock_get_cover_options.return_value = [
             {
@@ -395,16 +417,27 @@ class PlaylistOgImageEndpointTestCase(IntegrationTestCase):
         self.assertStatus(resp, 302)
         self.assertIn("share-header.png", resp.headers.get("Location", ""))
 
+    @patch("listenbrainz.webserver.views.art_api.CoverArtGenerator")
     @patch("listenbrainz.webserver.views.art_api.generate_playlist_og_image")
     @patch("listenbrainz.webserver.views.art_api.get_cover_art_options")
     @patch("listenbrainz.webserver.views.art_api.fetch_playlist_recording_metadata")
     @patch("listenbrainz.webserver.views.art_api.db_playlist.get_by_mbid")
     def test_og_image_etag_returns_304(self, mock_get_playlist, mock_fetch_metadata,
-                                       mock_get_cover_options, mock_generate_og):
+                                       mock_get_cover_options, mock_generate_og, mock_cac_class):
         mock_playlist = MagicMock()
         mock_playlist.is_visible_by.return_value = True
-        mock_playlist.recordings = [MagicMock() for _ in range(4)]
+        mock_recordings = []
+        for i in range(4):
+            rec = MagicMock()
+            rec.mbid = f"e757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d{i}"
+            mock_recordings.append(rec)
+        mock_playlist.recordings = mock_recordings
         mock_get_playlist.return_value = mock_playlist
+
+        mock_cac = MagicMock()
+        mock_cac.resolve_cover_art.side_effect = lambda caa_id, caa_release_mbid, size: \
+            f"https://archive.org/download/mbid-{caa_release_mbid}/mbid-{caa_release_mbid}-{caa_id}_thumb{size}.jpg"
+        mock_cac_class.return_value = mock_cac
 
         mock_get_cover_options.return_value = [
             {
@@ -429,8 +462,11 @@ class PlaylistOgImageEndpointTestCase(IntegrationTestCase):
         self.assertIsNotNone(etag)
 
         # Second request with If-None-Match should return 304
+        # and skip the expensive fetch_playlist_recording_metadata call
+        mock_fetch_metadata.reset_mock()
         resp = self.client.get(
             self.custom_url_for('art_api_v1.playlist_og_image',
                                 playlist_mbid="b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6"),
             headers={"If-None-Match": etag})
         self.assertStatus(resp, 304)
+        mock_fetch_metadata.assert_not_called()
