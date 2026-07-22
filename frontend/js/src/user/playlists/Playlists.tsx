@@ -4,6 +4,7 @@ import {
   faUsers,
   faFileImport,
   faMagnifyingGlass,
+  faMusic,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faSpotify,
@@ -29,6 +30,7 @@ import ImportPlaylistModal from "./components/ImportJSPFPlaylistModal";
 import ImportSpotifyPlaylistModal from "./components/ImportSpotifyPlaylistModal";
 import ImportAppleMusicPlaylistModal from "./components/ImportAppleMusicPlaylistModal";
 import ImportSoundCloudPlaylistModal from "./components/ImportSoundCloudPlaylistModal";
+import ImportMusicBrainzCollectionModal from "./components/ImportMusicBrainzCollectionModal";
 import PlaylistsList from "./components/PlaylistsList";
 import {
   getPlaylistExtension,
@@ -621,6 +623,16 @@ export default class UserPlaylists extends React.Component<
                     >
                       <FontAwesomeIcon icon={faFileImport} />
                       &nbsp;Upload JSPF file
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        NiceModal.show(ImportMusicBrainzCollectionModal);
+                      }}
+                      className="dropdown-item"
+                    >
+                      <FontAwesomeIcon icon={faMusic} />
+                      &nbsp;MusicBrainz
                     </button>
                   </ul>
                 </div>
