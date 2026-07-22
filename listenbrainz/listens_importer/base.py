@@ -48,8 +48,9 @@ class ListensImporter(abc.ABC):
         link = current_app.config['SERVER_ROOT_URL'] + '/settings/music-services/details/'
         text = render_template('emails/listens_importer_error.txt', error=error, link=link)
         send_mail(
-            subject=f'ListenBrainz {self.user_friendly_name} Importer Error',
+            subject=f'[Action required] ListenBrainz {self.user_friendly_name} Importer Error',
             text=text,
+            service=self.service,
             recipients=[user_email],
             from_name='ListenBrainz',
             from_addr='noreply@' + current_app.config['MAIL_FROM_DOMAIN'],
