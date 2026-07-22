@@ -157,14 +157,14 @@ def generate_playlist_og_image(cover_urls: list[str], overlay_path: str | Path |
         return None
 
     if len(cover_urls) >= 4:
-        # download all candidates concurrently using the shared executor;
-        # we only need 4 to succeed for the grid, but archive.org can be
-        # flaky so extra candidates give us a better chance of filling it
+        # download cover art concurrently using the shared executor
         futures = [_OG_EXECUTOR.submit(_download_image, url) for url in cover_urls]
         downloaded = []
         for future in futures:
             try:
-                img = future.result(timeout=DOWNLOAD_TIMEOUT * 2)
+                # timeout accounts for _download_image's full retry window:
+                # DOWNLOAD_TIMEOUT per attempt × 2 attempts + 1s backoff + 1s margin
+                img = future.result(timeout=DOWNLOAD_TIMEOUT * 2 + 2)
             except Exception:
                 img = None
             if img is not None:
@@ -178,8 +178,12 @@ def generate_playlist_og_image(cover_urls: list[str], overlay_path: str | Path |
         else:
             return None
     else:
-        # < 4 urls, just use the first
-        img = _download_image(cover_urls[0])
+        # < 4 urls — try each URL until one download succeeds
+        img = None
+        for url in cover_urls:
+            img = _download_image(url)
+            if img is not None:
+                break
         if img is None:
             return None
         canvas = _compose_single(img)
