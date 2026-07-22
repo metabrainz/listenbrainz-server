@@ -13,6 +13,7 @@ import {
   setupAppleMusicKit,
 } from "../../../common/brainzplayer/AppleMusicPlayer";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
+import ImportStatus from "./components/ImportStatus";
 
 type MusicServicesLoaderData = {
   current_spotify_permissions: string;
@@ -500,6 +501,9 @@ export default function MusicServices() {
               </small>
             </p>
             <br />
+            {["both", "import"].includes(permissions.spotify) && (
+              <ImportStatus serviceName="spotify" />
+            )}
             <div className="music-service-selection">
               <form onSubmit={(e) => e.preventDefault}>
                 <ServicePermissionButton
