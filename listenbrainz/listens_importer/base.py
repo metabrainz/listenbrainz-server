@@ -25,14 +25,14 @@ METRIC_UPDATE_INTERVAL = 60  # seconds
 
 class ListensImporter(abc.ABC):
 
-    def __init__(self, name, user_friendly_name, service):
+    def __init__(self, name, user_friendly_name, service, exclude_error=True):
         self.name = name
         self.user_friendly_name = user_friendly_name
         self.service = service
+        self.exclude_error = exclude_error
         # number of listens imported since last metric update was submitted
         self._listens_imported_since_last_update = 0
         self._metric_submission_time = time.monotonic() + METRIC_UPDATE_INTERVAL
-        self.exclude_error = True
 
     def notify_error(self, musicbrainz_id: str, error: str):
         """ Notifies specified user via email about error during Spotify import.
