@@ -15,7 +15,7 @@ export default class BandcampPlayer extends SubsonicPlayer {
   static contextType = GlobalAppContext;
 
   static hasPermissions = (bandcampUser?: BandcampUser) => {
-    return Boolean(bandcampUser?.md5_auth_token && bandcampUser?.instance_url);
+    return Boolean(bandcampUser?.instance_url && bandcampUser?.username);
   };
 
   static isListenFromThisService(listen: Listen | JSPFTrack): boolean {
