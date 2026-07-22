@@ -1104,9 +1104,12 @@ def import_musicbrainz_collections():
                        , ec.public AS public
                        , COUNT(ecr.recording) AS item_count
                     FROM musicbrainz.editor_collection ec
+                    JOIN musicbrainz.editor_collection_type ect
+                      ON ect.id = ec.type
                LEFT JOIN musicbrainz.editor_collection_recording ecr
                       ON ecr.collection = ec.id
                    WHERE ec.editor = %s
+                     AND ect.entity_type = 'recording'
                 GROUP BY ec.id
                 ORDER BY LOWER(ec.name)
                 """,
@@ -1147,15 +1150,7 @@ def import_musicbrainz_collection_detail(collection_mbid):
     )
     if error:
         body, code = error
-        if code == 503:
-            raise APIInternalServerError(body.get("error"))
-        if code == 404:
-            raise APINotFound(body.get("error"))
-        if code == 401:
-            raise APIUnauthorized(body.get("error"))
-        if code == 403:
-            raise APIForbidden(body.get("error"))
-        raise APIInternalServerError(body.get("error"))
+        raise APIError(body.get("error"), code)
 
     return jsonify(payload)
 

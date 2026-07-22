@@ -2,7 +2,6 @@ import React from "react";
 import NiceModal, { bootstrapDialog, useModal } from "@ebay/nice-modal-react";
 import { Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router";
 
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { ToastMsg } from "../../../notifications/Notifications";
@@ -11,7 +10,6 @@ import type { MusicBrainzCollectionSummary } from "../../../utils/APIService";
 
 export default NiceModal.create(() => {
   const modal = useModal();
-  const navigate = useNavigate();
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
 
   const [collections, setCollections] = React.useState<
@@ -58,11 +56,6 @@ export default NiceModal.create(() => {
     modal.hide();
   };
 
-  const openCollection = (collectionMbid: string) => {
-    close();
-    navigate(`/collection/${collectionMbid}`);
-  };
-
   return (
     <Modal
       {...bootstrapDialog(modal)}
@@ -80,20 +73,20 @@ export default NiceModal.create(() => {
           className="list-group"
           style={{ maxHeight: "50vh", overflow: "auto" }}
         >
-          {collections.map((collection) => (
-            <button
-              type="button"
-              key={collection.mbid}
-              className="list-group-item list-group-item-action"
-              disabled={isLoading}
-              onClick={() => openCollection(collection.mbid)}
-            >
-              <div style={{ fontWeight: 600 }}>{collection.name}</div>
-              <div className="text-muted">
-                {collection.item_count} recordings
+          {!isLoading && collections.length === 0 ? (
+            <p className="text-center text-muted mb-0">
+              No recording collections found
+            </p>
+          ) : (
+            collections.map((collection) => (
+              <div key={collection.mbid} className="list-group-item">
+                <div style={{ fontWeight: 600 }}>{collection.name}</div>
+                <div className="text-muted">
+                  {collection.item_count} recordings
+                </div>
               </div>
-            </button>
-          ))}
+            ))
+          )}
         </div>
         <Loader isLoading={isLoading} />
       </Modal.Body>

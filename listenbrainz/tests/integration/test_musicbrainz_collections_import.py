@@ -160,3 +160,50 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
             mock_fetch.call_args.kwargs["viewer_editor_id"],
             self.bob["musicbrainz_row_id"],
         )
+
+    def test_collection_detail_invalid_mbid_returns_400(self):
+        response = self.client.get(
+            self.custom_url_for(
+                "playlist_api_v1.import_musicbrainz_collection_detail",
+                collection_mbid="not-a-valid-mbid",
+            )
+        )
+
+        self.assert400(response)
+        self.assertIn("invalid", response.json["error"].lower())
+
+    def test_collection_detail_count_above_max_returns_400(self):
+        response = self.client.get(
+            self.custom_url_for(
+                "playlist_api_v1.import_musicbrainz_collection_detail",
+                collection_mbid="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+            )
+            + "?count=501"
+        )
+
+        self.assert400(response)
+        self.assertIn("count", response.json["error"].lower())
+
+    def test_collection_detail_count_zero_returns_400(self):
+        response = self.client.get(
+            self.custom_url_for(
+                "playlist_api_v1.import_musicbrainz_collection_detail",
+                collection_mbid="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+            )
+            + "?count=0"
+        )
+
+        self.assert400(response)
+        self.assertIn("count", response.json["error"].lower())
+
+    def test_collection_detail_negative_offset_returns_400(self):
+        response = self.client.get(
+            self.custom_url_for(
+                "playlist_api_v1.import_musicbrainz_collection_detail",
+                collection_mbid="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+            )
+            + "?offset=-1"
+        )
+
+        self.assert400(response)
+        self.assertIn("offset", response.json["error"].lower())
