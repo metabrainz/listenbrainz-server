@@ -207,8 +207,8 @@ class WebhookReceiverTestCase(IntegrationTestCase):
 
         update_payload = {
             "user_id": 456,
-            "old": {"username": "oldusername"},
-            "new": {"username": "newusername"}
+            "old": {"name": "oldusername"},
+            "new": {"name": "newusername"}
         }
         response, _ = self._send_webhook("user.updated", update_payload)
         self.assert200(response)
@@ -230,8 +230,8 @@ class WebhookReceiverTestCase(IntegrationTestCase):
 
         update_payload = {
             "user_id": 456,
-            "old": {"username": "newusername", "email": "new@example.com"},
-            "new": {"username": "user-456", "email": "user-456@example.com"},
+            "old": {"name": "newusername", "email": "new@example.com"},
+            "new": {"name": "user-456", "email": "user-456@example.com"},
             "updated_at": "2026-06-19T09:30:00+00:00",
         }
         response, _ = self._send_webhook("user.updated", update_payload)
@@ -243,8 +243,8 @@ class WebhookReceiverTestCase(IntegrationTestCase):
 
         update_payload = {
             "user_id": 99999,
-            "old": {"username": "nonexistent"},
-            "new": {"username": "newname"}
+            "old": {"name": "nonexistent"},
+            "new": {"name": "newname"}
         }
         response, _ = self._send_webhook("user.updated", update_payload)
         self.assert200(response)
