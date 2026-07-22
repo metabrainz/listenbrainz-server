@@ -36,7 +36,7 @@ async function showInitialAlerts(initialAlerts: ServerAlert[]) {
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error(
-      "LocalStorage error, initial alert dismissals may not be remembered",
+      "Browser storage error, initial alert dismissals may not be remembered",
       error
     );
   }
