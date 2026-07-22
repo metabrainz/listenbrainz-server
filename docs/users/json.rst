@@ -141,6 +141,176 @@ is the same as above, except that it also contains the ``payload/playing_now`` e
 boolean set to True.
 
 
+MBID Mapping
+------------
+
+When you fetch listens from the API, each listen's ``track_metadata`` may include an
+``mbid_mapping`` element. This element contains MusicBrainz Identifiers (MBIDs) that
+ListenBrainz has resolved for the listen by matching the submitted metadata against the
+MusicBrainz database.
+
+.. note::
+
+   The ``mbid_mapping`` element is **read-only** and only appears in listen data returned
+   by the API (e.g. from ``GET /1/user/{user_name}/listens``). It is not part of the
+   submission format and should not be included when submitting listens.
+
+   If ListenBrainz was unable to find a match for a listen, the ``mbid_mapping`` element
+   will be absent from that listen's ``track_metadata``.
+
+How ``mbid_mapping`` differs from ``additional_info``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Both ``additional_info`` and ``mbid_mapping`` can contain MBIDs, but they serve different purposes:
+
+- **additional_info**: Contains MBIDs that the *user's scrobbling client* submitted along with
+  the listen. These are unvalidated and may be incorrect (for example, a client might submit a
+  MusicBrainz Track ID as the ``recording_mbid``).
+
+- **mbid_mapping**: Contains MBIDs that the *ListenBrainz server* has resolved by matching the
+  listen's metadata against the MusicBrainz database. These are our best guess of the canonical recording
+  and release name, with additional cover art and streaming links metadata.
+
+MBID resolution precedence
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+ListenBrainz resolves the recording MBID for a listen using the following precedence
+order (highest priority first):
+
+1. **User-submitted MBID**: The ``recording_mbid`` from ``additional_info``, if the user's
+   scrobbling client included one.
+2. **User's manual mapping**: If the user has manually linked this listen to a MusicBrainz
+   recording through the ListenBrainz interface.
+3. **Automatic MBID Mapper**: The result of ListenBrainz's automatic fuzzy matching of the
+   listen's artist name and track name against MusicBrainz data.
+4. **Other users' mappings**: Manual mappings submitted by other ListenBrainz users for the
+   same recording.
+
+Once a recording MBID is resolved, the server enriches it with additional metadata (release,
+artist credits, cover art, streaming links) from its metadata cache.
+
+``mbid_mapping`` fields
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following fields may be present in the ``mbid_mapping`` element:
+
+.. list-table:: MBID Mapping Fields
+   :widths: 25 15 60
+   :header-rows: 1
+
+   * - element
+     - data type
+     - description
+   * - ``recording_mbid``
+     - string
+     - A MusicBrainz Recording ID that this listen has been matched to. This is always present
+       when ``mbid_mapping`` exists.
+   * - ``recording_name``
+     - string
+     - The name of the recording in MusicBrainz. This may differ from the submitted
+       ``track_name`` (e.g. due to spelling corrections or canonical naming).
+   * - ``release_mbid``
+     - string
+     - A MusicBrainz Release ID of the canonical release for this recording.
+   * - ``artist_mbids``
+     - array of strings
+     - A list of MusicBrainz Artist IDs from the artist credit of the matched recording.
+   * - ``artists``
+     - array of objects
+     - Detailed artist credit information. Each object contains:
+
+       - ``artist_mbid`` (string): The MusicBrainz Artist ID.
+       - ``artist_credit_name`` (string): The name of the artist as credited on the recording.
+       - ``join_phrase`` (string): The phrase used to join multiple artists (e.g. " feat. ", " & ").
+   * - ``caa_id``
+     - integer
+     - The Cover Art Archive image ID for the release's cover art. Can be used to construct
+       a cover art URL: ``https://coverartarchive.org/release/{caa_release_mbid}/{caa_id}-250.jpg``
+   * - ``caa_release_mbid``
+     - string
+     - The MusicBrainz Release ID that the cover art belongs to. This may differ from
+       ``release_mbid`` if the cover art comes from a different release in the same release group.
+   * - ``url_rels``
+     - array of objects
+     - Streaming and download links from MusicBrainz URL relationships for the recording.
+       Each object contains:
+
+       - ``type`` (string): The type of link (e.g. "free streaming", "streaming", "purchase for download").
+       - ``url`` (string): The URL to the resource (e.g. a Spotify, Deezer, or Bandcamp link).
+
+Example listen with ``mbid_mapping``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following is an example of a listen as returned by the API, showing both the
+user-submitted data in ``additional_info`` and the server-resolved data in ``mbid_mapping``:
+
+.. code-block:: json
+
+    {
+      "inserted_at": 1771414107,
+      "listened_at": 1771414109,
+      "recording_msid": "fd0cad33-ea33-453b-8155-1292379277db",
+      "user_name": "rob",
+      "track_metadata": {
+        "artist_name": "Röyksopp",
+        "track_name": "Some Resolve",
+        "release_name": "Profound Mysteries II",
+        "additional_info": {
+          "artist_mbids": [
+            "1c70a3fc-fa3c-4be1-8b55-c3192db8a884"
+          ],
+          "duration_ms": 402390,
+          "recording_mbid": "30d08f4c-d825-4ae1-b79c-44242cddd7c0",
+          "recording_msid": "fd0cad33-ea33-453b-8155-1292379277db",
+          "release_group_mbid": "1d98b0bc-5832-49d2-a93e-463032631a2f",
+          "release_mbid": "f1418001-7f1e-46af-bfdb-95faeded8841",
+          "submission_client": "navidrome",
+          "submission_client_version": "0.58.0 (9dbe0c18)",
+          "tracknumber": 10
+        },
+        "mbid_mapping": {
+          "recording_mbid": "30d08f4c-d825-4ae1-b79c-44242cddd7c0",
+          "recording_name": "Some Resolve",
+          "release_mbid": "e96c2e7b-94fd-4fbe-9c44-1a27d8664825",
+          "artist_mbids": [
+            "1c70a3fc-fa3c-4be1-8b55-c3192db8a884"
+          ],
+          "artists": [
+            {
+              "artist_mbid": "1c70a3fc-fa3c-4be1-8b55-c3192db8a884",
+              "artist_credit_name": "Röyksopp",
+              "join_phrase": ""
+            }
+          ],
+          "caa_id": 32916450708,
+          "caa_release_mbid": "f1418001-7f1e-46af-bfdb-95faeded8841",
+          "url_rels": [
+            {
+              "type": "free streaming",
+              "url": "https://open.spotify.com/track/7H7RaiZoTNPwjNLygV4fXQ"
+            },
+            {
+              "type": "free streaming",
+              "url": "https://www.deezer.com/track/1787299817"
+            },
+            {
+              "type": "streaming",
+              "url": "https://tidal.com/track/243062918"
+            }
+          ]
+        }
+      }
+    }
+
+.. note::
+
+   In this example, notice that the ``release_mbid`` in ``additional_info``
+   (``f1418001-...``, the user-submitted value) differs from the ``release_mbid`` in
+   ``mbid_mapping`` (``e96c2e7b-...``, the server-resolved canonical release). This
+   illustrates how the server may resolve a different (canonical) release than the one
+   originally submitted by the client.
+
+
 Payload JSON details
 --------------------
 
