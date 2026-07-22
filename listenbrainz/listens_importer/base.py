@@ -167,7 +167,8 @@ class ListensImporter(abc.ABC):
                 self._listens_imported_since_last_update = 0
 
         current_app.logger.info('Processed %d users successfully!', success)
-        current_app.logger.info('Encountered errors while processing %d users.', failure)
+        if failure > 0:
+            current_app.logger.info('Encountered errors while processing %d users.', failure)
         return success, failure
 
     def main(self):
