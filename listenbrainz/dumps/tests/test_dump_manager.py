@@ -44,6 +44,28 @@ from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app, timescale_connection
 
 
+def test_cleanup_full_dump_retention_uses_constant(tmp_path):
+    for dump_id in range(1, 5):
+        (tmp_path / f'listenbrainz-dump-{dump_id}-20180312-00000{dump_id}-full').mkdir()
+
+    _cleanup_dumps(str(tmp_path))
+
+    remaining = {path.name for path in tmp_path.iterdir()}
+    assert 'listenbrainz-dump-1-20180312-000001-full' not in remaining
+    assert 'listenbrainz-dump-2-20180312-000002-full' not in remaining
+    assert 'listenbrainz-dump-3-20180312-000003-full' in remaining
+    assert 'listenbrainz-dump-4-20180312-000004-full' in remaining
+
+
+def test_cleanup_legacy_full_dump_backups(tmp_path):
+    for dump_id in range(1, 3):
+        (tmp_path / f'listenbrainz-dump-{dump_id}-20180312-00000{dump_id}-full').mkdir()
+
+    _cleanup_dumps(str(tmp_path), remove_all_full_dumps=True)
+
+    assert not list(tmp_path.iterdir())
+
+
 class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
 
     def setUp(self):

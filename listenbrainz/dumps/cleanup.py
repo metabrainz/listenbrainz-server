@@ -8,11 +8,22 @@ NUMBER_OF_FEEDBACK_DUMPS_TO_KEEP = 2
 NUMBER_OF_CANONICAL_DUMPS_TO_KEEP = 2
 
 
-def _cleanup_dumps(location):
-    """ Delete old dumps while keeping the latest two dumps in the specified directory
+def _cleanup_full_dumps(location, dumps_to_keep):
+    full_dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-full')
+    dump_files = [x for x in os.listdir(location) if full_dump_re.match(x)]
+    full_dumps = [x for x in sorted(dump_files, key=get_dump_id, reverse=True)]
+    if not full_dumps:
+        print('No full dumps present in specified directory!')
+    else:
+        remove_dumps(location, full_dumps, dumps_to_keep)
+
+
+def _cleanup_dumps(location, remove_all_full_dumps=False):
+    """Delete old dumps according to each dump type's retention constant.
 
     Args:
         location (str): the dir which needs to be cleaned up
+        remove_all_full_dumps (bool): remove all full dumps instead of applying normal retention
 
     Returns:
         (int, int): the number of dumps remaining, the number of dumps deleted
@@ -22,13 +33,8 @@ def _cleanup_dumps(location):
         return
 
     # Clean up full dumps
-    full_dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-full')
-    dump_files = [x for x in os.listdir(location) if full_dump_re.match(x)]
-    full_dumps = [x for x in sorted(dump_files, key=get_dump_id, reverse=True)]
-    if not full_dumps:
-        print('No full dumps present in specified directory!')
-    else:
-        remove_dumps(location, full_dumps, NUMBER_OF_FULL_DUMPS_TO_KEEP)
+    full_dumps_to_keep = 0 if remove_all_full_dumps else NUMBER_OF_FULL_DUMPS_TO_KEEP
+    _cleanup_full_dumps(location, full_dumps_to_keep)
 
     # Clean up incremental dumps
     incremental_dump_re = re.compile(

@@ -182,18 +182,23 @@ echo "Dump created with timestamp $DUMP_TIMESTAMP"
 DUMP_DIR=$(dirname "$DUMP_ID_FILE")
 DUMP_NAME=$(basename "$DUMP_DIR")
 
-# Backup dumps to the backup volume
-echo "Creating Backup directories..."
-mkdir -m "$BACKUP_DIR_MODE" -p \
-    "$BACKUP_DIR/$SUB_DIR" \
-    "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME"
-echo "Backup directories created!"
+# Full dumps are already published to the remote FTP server and are too large
+# to keep a second public copy on the backup volume. Other dump types retain
+# their existing local backup.
+if [ "$DUMP_TYPE" != "full" ]; then
+    echo "Creating Backup directories..."
+    mkdir -m "$BACKUP_DIR_MODE" -p \
+        "$BACKUP_DIR/$SUB_DIR" \
+        "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME"
+    echo "Backup directories created!"
 
-# Copy the files into the backup directory
-echo "Begin copying dumps to backup directory..."
-retry rsync -a "$DUMP_DIR/" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME/"
-chmod "$BACKUP_FILE_MODE" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME/"*
-echo "Dumps copied to backup directory!"
+    echo "Begin copying dumps to backup directory..."
+    retry rsync -a "$DUMP_DIR/" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME/"
+    chmod "$BACKUP_FILE_MODE" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME/"*
+    echo "Dumps copied to backup directory!"
+else
+    echo "Skipping the redundant public full dump backup."
+fi
 
 HAS_EMPTY_PRIVATE_DIRS_OR_FILES=$(find "$PRIVATE_DUMP_INTERMEDIATE_DIR" -empty)
 if [ -z "$HAS_EMPTY_PRIVATE_DIRS_OR_FILES" ]; then
@@ -234,17 +239,23 @@ mkdir  -m "$FTP_DIR_MODE" -p \
     "$FTP_DIR/$SUB_DIR" \
     "$FTP_CURRENT_DUMP_DIR"
 
-# make sure all dump files are owned by the correct user
-# and set appropriate mode for files to be uploaded to
-# the FTP server
-retry rsync -a "$DUMP_DIR/" "$FTP_CURRENT_DUMP_DIR/"
+# Make sure all dump files are owned by the correct user and set appropriate
+# mode for files to be uploaded to the FTP server. Move full-dump files into
+# staging instead of retaining another complete copy in the working directory.
+if [ "$DUMP_TYPE" == "full" ]; then
+    retry rsync -a --remove-source-files "$DUMP_DIR/" "$FTP_CURRENT_DUMP_DIR/"
+    rm -rf -- "$DUMP_DIR"
+else
+    retry rsync -a "$DUMP_DIR/" "$FTP_CURRENT_DUMP_DIR/"
+fi
 echo "Fixing FTP permissions"
 chmod "$FTP_DIR_MODE" "$FTP_CURRENT_DUMP_DIR"
 chmod "$FTP_FILE_MODE" "$FTP_CURRENT_DUMP_DIR/"*
 
-# create an explicit rsync filter for the new private dump in the
-# ftp folder
-touch "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
+# Create a fresh rsync filter for this dump. A directory reused after a retry
+# may contain a retention-marker filter, which must not hide the new payload.
+rm -f -- "$FTP_CURRENT_DUMP_DIR/.ftp-retention-marker"
+: > "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
@@ -276,11 +287,20 @@ echo "$EXCLUDE_RULE" >> "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 cat "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
 
-/usr/local/bin/python manage.py dump delete_old_dumps "$FTP_DIR/$SUB_DIR"
-/usr/local/bin/python manage.py dump delete_old_dumps "$BACKUP_DIR/$SUB_DIR"
+if [ "$DUMP_TYPE" == "full" ]; then
+    # Full FTP retention is applied by rsync-dump-files.sh only after every
+    # pending payload has uploaded successfully. Remove public full dumps left
+    # on the legacy backup volume now that it is no longer used for them.
+    /usr/local/bin/python manage.py dump delete_old_dumps \
+        --remove-all-full-dumps \
+        "$BACKUP_DIR/$SUB_DIR"
+else
+    /usr/local/bin/python manage.py dump delete_old_dumps "$FTP_DIR/$SUB_DIR"
+    /usr/local/bin/python manage.py dump delete_old_dumps "$BACKUP_DIR/$SUB_DIR"
+fi
 /usr/local/bin/python manage.py dump delete_old_dumps "$PRIVATE_BACKUP_DIR/$SUB_DIR"
 
 # rsync to ftp folder taking care of the rules
-./admin/rsync-dump-files.sh "$DUMP_TYPE"
+./admin/rsync-dump-files.sh "$DUMP_TYPE" "$DUMP_NAME"
 
-echo "Dumps created, backed up and uploaded to the FTP server!"
+echo "Dumps created and uploaded to the FTP server; applicable backups completed!"

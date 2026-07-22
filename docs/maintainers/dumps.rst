@@ -23,6 +23,15 @@ cron container by running :code:`docker exec -it listenbrainz-cron-prod bash`.
 This file is large, so use :command:`tail` instead of :command:`cat` to view the logs. For example:
 :code:`tail -n 500 /logs/full_dumps.log` will list the last 500 lines of the full dumps log file.
 
+Full dump retention
+^^^^^^^^^^^^^^^^^^^
+Public full dump payloads are removed from local FTP staging after a successful rsync. Small marker directories remain
+so that later rsync runs preserve the newest full dumps on the FTP server and remove only versions beyond the retention
+limit. :data:`listenbrainz.dumps.cleanup.NUMBER_OF_FULL_DUMPS_TO_KEEP` controls that limit and is currently ``2``.
+Private full database dumps are kept on the private backup volume and are never uploaded to FTP. Retention cleanup runs
+only after every pending public payload uploads successfully, so failed uploads remain locally available for retry.
+Public full dumps left on the legacy backup volume are removed during the next full-dump run.
+
 From the log file, you should probably be able to see whether the error occurred in python part of the code or bash
 script. If you see a python stack trace, it is likely that sentry recorded the error too. The `sentry view <https://sentry.metabrainz.org/organizations/metabrainz/issues/?project=15>`_
 sometimes offers more details so searching sentry for this error can be helpful.
