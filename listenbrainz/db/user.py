@@ -116,7 +116,7 @@ def get_by_login_id(db_conn, login_id):
 
     Args:
         db_conn: database connection
-        id (UUID): login ID of a user.
+        login_id (UUID): login ID of a user.
 
     Returns:
         Dictionary with the following structure:

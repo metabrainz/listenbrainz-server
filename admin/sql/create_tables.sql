@@ -50,6 +50,11 @@ CREATE TABLE data_dump (
   dump_type   data_dump_type_type
 );
 
+CREATE TABLE statistics_generation (
+  stats_type    TEXT PRIMARY KEY,
+  last_updated  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE missing_musicbrainz_data (
     id              SERIAL, -- PK
     user_id         INTEGER NOT NULL, --FK to "user".id
@@ -119,6 +124,8 @@ CREATE TABLE external_service_oauth (
     access_token            TEXT,
     refresh_token           TEXT,
     token_expires           TIMESTAMP WITH TIME ZONE,
+    refresh_token_expires   TIMESTAMP WITH TIME ZONE,
+    refresh_token_expiry_last_notified TIMESTAMP WITH TIME ZONE,
     last_updated            TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     scopes                  TEXT[]
 );

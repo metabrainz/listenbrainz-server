@@ -213,6 +213,18 @@ function renderImport(
             import
           </b>
         </p>
+        <p>
+          Your listen counts update right away, but imported listens can take up
+          to two weeks to appear in your{" "}
+          <a
+            href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            statistics
+          </a>
+          .
+        </p>
         {extraInfo}
       </div>
     );
