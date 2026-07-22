@@ -23,6 +23,7 @@ class SpotifyImporter(ListensImporter):
             name='spotify_reader',
             user_friendly_name="Spotify",
             service=SpotifyService(),
+            exclude_error=False
         )
 
     @staticmethod
