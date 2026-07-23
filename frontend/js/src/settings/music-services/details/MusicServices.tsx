@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { capitalize } from "lodash";
-import { useLoaderData } from "react-router";
+import { useLoaderData, Link } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../../notifications/Notifications";
@@ -45,6 +45,7 @@ export default function MusicServices() {
     currentUser,
     funkwhaleAuth,
     navidromeAuth,
+    APIService,
   } = React.useContext(GlobalAppContext);
 
   const loaderData = useLoaderData() as MusicServicesLoaderData;
@@ -403,6 +404,48 @@ export default function MusicServices() {
       setNavidromeIsEditing(true);
     }
   };
+
+  const handleImportNavidromeStarred = React.useCallback(
+    async (evt: React.MouseEvent<HTMLButtonElement>) => {
+      evt.preventDefault();
+      try {
+        if (!currentUser?.auth_token || !navidromeAuth?.username) {
+          throw Error("Navidrome username or ListenBrainz auth token missing");
+        }
+        const { importFeedback } = APIService;
+        const response = await importFeedback(
+          currentUser.auth_token,
+          navidromeAuth.username,
+          "navidrome" as any
+        );
+        const { imported, total } = response as any;
+        toast.success(
+          <ToastMsg
+            title="Import Successful"
+            message={
+              <div>
+                Succesfully imported{" "}
+                {Math.max(imported || 0, response.inserted || 0)} out of {total}{" "}
+                starred tracks from Navidrome
+                <br />
+                <Link to="/my/taste">
+                  Click here to see your newly loved tracks
+                </Link>
+              </div>
+            }
+          />
+        );
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="Import Failed"
+            message={error.message || error.toString()}
+          />
+        );
+      }
+    },
+    [currentUser?.auth_token, navidromeAuth?.username, APIService]
+  );
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -922,6 +965,35 @@ export default function MusicServices() {
                     </div>
                   </label>
                 </button>
+                <button
+                  type="button"
+                  className="music-service-option"
+                  onClick={handleImportNavidromeStarred}
+                  disabled={permissions.navidrome !== "listen"}
+                >
+                  <input
+                    readOnly
+                    type="radio"
+                    id="navidrome_import_starred_tracks"
+                    name="navidrome"
+                    value="starred_tracks"
+                    checked={false}
+                    disabled={permissions.navidrome !== "listen"}
+                  />
+                  <label htmlFor="navidrome_import_starred_tracks">
+                    <div className="title">Import starred tracks</div>
+                    <div className="details">
+                      Can only be run manually to import your starred tracks
+                      from Navidrome.{" "}
+                      <b>
+                        Your Navidrome server must be accessible over the public
+                        internet.
+                      </b>{" "}
+                      You can run it again without creating duplicates.
+                    </div>
+                  </label>
+                </button>
+
                 <ServicePermissionButton
                   service="navidrome"
                   current={permissions.navidrome}
