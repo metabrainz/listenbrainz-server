@@ -455,6 +455,17 @@ export default class APIService {
     }
   };
 
+  searchGenres = async (
+    searchQuery: string
+  ): Promise<{ genres: Array<{ gid: string; name: string }> }> => {
+    const url = new URL(`${this.APIBaseURI}/search/genres/`);
+    url.searchParams.append("search_term", searchQuery);
+    const response = await fetch(url.toString(), { method: "GET" });
+    await this.checkStatus(response);
+    const parsed = await response.json();
+    return { genres: parsed.genres ?? [] };
+  };
+
   getFollowersOfUser = async (
     userName: string
   ): Promise<{ followers: Array<string> }> => {
