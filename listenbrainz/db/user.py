@@ -593,55 +593,80 @@ def get_all_usernames():
     return user_id_map
 
 
-def pause(db_conn,id):
-    """ Sets the user's is_paused flag to true
-    with specified row ID from the database.
-    
+def pause(db_conn, user_ids):
+    """ Sets the user's is_paused flag to true with specified row ID(s) from the database.
+
     Args:
         db_conn: database connection
-        id (int): the row ID of the listenbrainz user
+        user_ids (int or list): row ID(s) of the listenbrainz user(s)
     """
+    return set_users_paused(db_conn, _normalize_user_ids(user_ids), True)
+
+
+def unpause(db_conn, user_ids):
+    """ Sets the user's is_paused flag to false with specified row ID(s) from the database.
+
+    Args:
+        db_conn: database connection
+        user_ids (int or list): row ID(s) of the listenbrainz user(s)
+    """
+    return set_users_paused(db_conn, _normalize_user_ids(user_ids), False)
+
+
+def _normalize_user_ids(user_ids):
+    if isinstance(user_ids, (str, int)):
+        return [user_ids]
+    return user_ids
+
+
+def set_users_paused(db_conn, user_ids, is_paused):
+    user_ids = [int(user_id) for user_id in user_ids]
+    return _set_users_paused(db_conn, ":user_ids", {"user_ids": tuple(user_ids)}, is_paused)
+
+
+def set_reported_users_paused(db_conn, report_ids, is_paused):
+    report_ids = [int(report_id) for report_id in report_ids]
+    return _set_users_paused(
+        db_conn,
+        """
+            (SELECT DISTINCT reported_user_id
+               FROM reported_users
+              WHERE id IN :report_ids)
+        """,
+        {"report_ids": tuple(report_ids)},
+        is_paused,
+    )
+
+
+def _set_users_paused(db_conn, user_ids_expression, params, is_paused):
+    if not any(params.values()):
+        return []
+
     try:
-        db_conn.execute(sqlalchemy.text("""
+        result = db_conn.execute(sqlalchemy.text(f"""
             UPDATE "user"
-               SET is_paused = true
-             WHERE id = :id
-            """), {
-            'id': id,
+               SET is_paused = :is_paused
+             WHERE "user".id IN {user_ids_expression}
+         RETURNING "user".id, "user".musicbrainz_id
+        """), {
+            **params,
+            "is_paused": is_paused,
         })
+        users = result.mappings().all()
         db_conn.commit()
-        _notify_user_paused(db_conn,id,True)
+
+        for user in users:
+            _notify_user_paused(db_conn, user["id"], is_paused)
+
+        return [user["musicbrainz_id"] for user in users]
 
     except sqlalchemy.exc.ProgrammingError as err:
         logger.error(err)
-        raise DatabaseException("Couldn't pause user: %s" % str(err))
+        action = "pause" if is_paused else "unpause"
+        raise DatabaseException("Couldn't %s user: %s" % (action, str(err)))
 
 
-def unpause(db_conn,id):
-    """ Sets the user's is_paused flag to false
-    with specified row ID from the database.
-    
-    Args:
-        db_conn: database connection
-        id (int): the row ID of the listenbrainz user
-    """
-    try:
-        db_conn.execute(sqlalchemy.text("""
-            UPDATE "user"
-               SET is_paused = false
-             WHERE id = :id
-            """), {
-            'id': id,
-        })
-        db_conn.commit()
-        _notify_user_paused(db_conn,id,False)
-
-    except sqlalchemy.exc.ProgrammingError as err:
-        logger.error(err)
-        raise DatabaseException("Couldn't unpause user: %s" % str(err))
-
-
-def _notify_user_paused(db_conn, user_id,paused):
+def _notify_user_paused(db_conn, user_id, paused):
     user = get(db_conn, user_id, fetch_email=True)
     if user["email"] is None:
         logger.error("%s's email not found" % user["musicbrainz_id"])
