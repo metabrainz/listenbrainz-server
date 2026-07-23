@@ -2,12 +2,97 @@ $checkbox-size: 40px;
 
 #user-profile {
   .card {
-    margin-bottom: 2rem;
+    margin-bottom: 4rem;
+
     .card-header {
+      display: flex;
       padding: 1rem 1.5rem;
+      flex-direction: row;
+      align-items: center;
+      gap: 1rem;
+
       .card-title {
         font-size: 16px;
         margin: 0;
+      }
+    }
+  }
+}
+
+.services-grid {
+  .card {
+    margin-bottom: 4rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+
+    &:hover {
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      display: flex;
+      padding: 1.5rem 1.5rem;
+      flex-direction: row;
+      align-items: center;
+      gap: 1rem;
+      transition: background-color 0.3s ease;
+      min-height: 100px;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+        cursor: pointer;
+      }
+
+      .service-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        transition: transform 0.3s ease;
+      }
+
+      &:hover .service-logo {
+        transform: scale(1.1);
+      }
+
+      .service-icon {
+        font-size: 3rem;
+      }
+
+      .card-title {
+        font-size: 20px;
+        margin: 0;
+        flex: 1;
+      }
+
+      .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-left: auto;
+        font-size: 14px;
+        font-weight: 500;
+
+        .status-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          transition: transform 0.3s ease;
+
+          &.connected {
+            background-color: #28a745;
+          }
+
+          &.disconnected {
+            background-color: #dc3545;
+          }
+        }
+      }
+
+      &:hover .status-dot {
+        transform: scale(1.2);
       }
     }
   }
@@ -20,18 +105,22 @@ $checkbox-size: 40px;
     padding: 0;
     width: 100%;
   }
+
   .music-service-option {
     input[type="radio"] {
       display: none;
-      &:not(:disabled) ~ label {
+
+      &:not(:disabled)~label {
         cursor: pointer;
       }
-      &:disabled ~ label {
+
+      &:disabled~label {
         color: $gray-400;
         border-color: $gray-400;
         cursor: not-allowed;
       }
     }
+
     label {
       display: flex;
       flex-wrap: wrap;
@@ -47,7 +136,7 @@ $checkbox-size: 40px;
       font-weight: normal;
       position: relative;
 
-      > .title {
+      >.title {
         flex: 1;
         flex-basis: 120px;
         padding: 0 0.4em;
@@ -57,20 +146,22 @@ $checkbox-size: 40px;
         font-weight: $headings-font-weight;
         line-height: $headings-line-height;
       }
-      > .details {
+
+      >.details {
         flex: 2;
         text-align: justify;
         flex-basis: 200px;
       }
     }
 
-    input[type="radio"]:checked + label {
+    input[type="radio"]:checked+label {
       background: $green;
       color: $white;
 
-      > .details {
+      >.details {
         font-weight: bold;
       }
+
       &::after {
         position: absolute;
         left: 0;
@@ -97,7 +188,8 @@ $checkbox-size: 40px;
       label {
         border-color: $border-color;
       }
-      input[type="radio"]:checked + label {
+
+      input[type="radio"]:checked+label {
         background: $gray-500;
       }
     }
