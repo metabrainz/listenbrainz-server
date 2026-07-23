@@ -4,8 +4,8 @@ import { includes as _includes } from "lodash";
 import { faCircleInfo, faSquarePlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from "react-router";
-import ReactTooltip from "react-tooltip";
 import Card from "../../../components/Card";
+import Tooltip from "../../../components/Tooltip";
 import SimilarityScore from "./SimilarityScore";
 
 export type CompatibilityCardProps = {
@@ -53,27 +53,32 @@ function CompatibilityCard(props: CompatibilityCardProps) {
           );
         })}
         {hasMoreThanFive && (
-          <>
-            <span data-tip data-for="more-artists-tooltip">
+          <Tooltip
+            id="more-artists-tooltip"
+            placement="top"
+            tooltip={
+              <>
+                {otherArtists.map((artist, index) => {
+                  return (
+                    <span>
+                      {index > 0 && ", "}
+                      {index > 0 && index === similarArtists.length - 1
+                        ? "and "
+                        : ""}
+                      {index > 0 && index % 5 === 0 && <br />}
+                      {`${artist.artist_name}`}
+                    </span>
+                  );
+                })}
+                {hasEvenMoreArtists && <span> and even more.</span>}
+              </>
+            }
+          >
+            <span>
               , and more.{" "}
               <FontAwesomeIcon icon={faSquarePlus} size="sm" color="gray" />
             </span>
-            <ReactTooltip id="more-artists-tooltip" place="top">
-              {otherArtists.map((artist, index) => {
-                return (
-                  <span>
-                    {index > 0 && ", "}
-                    {index > 0 && index === similarArtists.length - 1
-                      ? "and "
-                      : ""}
-                    {index > 0 && index % 5 === 0 && <br />}
-                    {`${artist.artist_name}`}
-                  </span>
-                );
-              })}
-              {hasEvenMoreArtists && <span> and even more.</span>}
-            </ReactTooltip>
-          </>
+          </Tooltip>
         )}
       </div>
     );
@@ -83,15 +88,27 @@ function CompatibilityCard(props: CompatibilityCardProps) {
 
   return (
     <Card id="compatibility-card" data-testid="compatibility-card">
-      <div className="info-icon" data-tip data-for="info-tooltip">
-        <Link
-          to={`/user/${encodeURIComponent(user.name)}/stats/?range=all_time`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <FontAwesomeIcon icon={faCircleInfo} />
-        </Link>
-      </div>
+      <Tooltip
+        id="info-tooltip"
+        placement="top"
+        tooltip={
+          <>
+            Artists displayed are the top matches, comparing the top 100 most
+            listened artists of all
+            <br /> time for both users. Click here for their statistics.
+          </>
+        }
+      >
+        <div className="info-icon">
+          <Link
+            to={`/user/${encodeURIComponent(user.name)}/stats/?range=all_time`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <FontAwesomeIcon icon={faCircleInfo} />
+          </Link>
+        </div>
+      </Tooltip>
       <span>Your compatibility with {user.name}:</span>
       <SimilarityScore
         similarityScore={similarityScore}
@@ -100,11 +117,6 @@ function CompatibilityCard(props: CompatibilityCardProps) {
       />
       <hr />
       {content}
-      <ReactTooltip id="info-tooltip" place="top">
-        Artists displayed are the top matches, comparing the top 100 most
-        listened artists of all
-        <br /> time for both users. Click here for their statistics.
-      </ReactTooltip>
     </Card>
   );
 }

@@ -2,8 +2,8 @@ import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ResponsiveTreeMap } from "@nivo/treemap";
 import * as React from "react";
-import Tooltip from "react-tooltip";
 import tinycolor from "tinycolor2";
+import Tooltip from "../../../components/Tooltip";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 type Node = {
@@ -42,14 +42,13 @@ export default function YIMGenreGraph(props: YIMGenreGraphProps) {
     <div className="" id="genre-graph">
       <h3 className="text-center">
         What genres {hasOrHave} {youOrUsername} explored?{" "}
-        <FontAwesomeIcon
-          icon={faQuestionCircle}
-          data-tip
-          data-for="genre-graph-helptext"
-          size="xs"
-        />
-        <Tooltip id="genre-graph-helptext">
-          The top genres {youOrUsername} listened to this year
+        <Tooltip
+          id="genre-graph-helptext"
+          tooltip={<>The top genres {youOrUsername} listened to this year</>}
+        >
+          <span>
+            <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+          </span>
         </Tooltip>
       </h3>
       <div className="graph-container card-bg">

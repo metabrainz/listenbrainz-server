@@ -1,12 +1,10 @@
 import * as React from "react";
 
-import ReactTooltip from "react-tooltip";
 import { toast } from "react-toastify";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
-import { Modal } from "react-bootstrap";
+import { Modal, OverlayTrigger, Popover } from "react-bootstrap";
 import { Link, useNavigate } from "react-router";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
@@ -346,36 +344,44 @@ export default NiceModal.create((props: CBReviewModalProps) => {
       APIService,
       listen,
       modal,
+      onReviewSubmitted,
       refreshCritiquebrainzToken,
       handleError,
     ]
   );
   const CBInfoButton = React.useMemo(() => {
     return (
-      <span>
-        <span
+      <OverlayTrigger
+        placement="bottom"
+        trigger={["click", "focus"]}
+        rootClose
+        overlay={
+          <Popover id="critiquebrainz-info-popover">
+            <Popover.Body>
+              CritiqueBrainz is a{" "}
+              <a href={`${MBBaseUrl}/projects`}>MetaBrainz project</a> aimed at
+              providing an open platform for music critics and hosting Creative
+              Commons licensed music reviews.
+              <br />
+              <br />
+              Your reviews will be independently visible on CritiqueBrainz and
+              appear publicly on your CritiqueBrainz profile. To view or delete
+              your reviews, visit your <a href={CBBaseUrl}>
+                CritiqueBrainz
+              </a>{" "}
+              profile.
+            </Popover.Body>
+          </Popover>
+        }
+      >
+        <button
           className="CBInfoButton"
-          data-tip={`CritiqueBrainz is a <a href='${MBBaseUrl}/projects'>
-          MetaBrainz project</a> aimed at providing an open platform </br>for music critics
-          and hosting Creative Commons licensed music reviews. </br></br>
-          Your reviews will be independently visible on CritiqueBrainz and appear publicly</br>
-          on your CritiqueBrainz profile. To view or delete your reviews, visit your
-          <a href='${CBBaseUrl}'>CritiqueBrainz</a>  profile.`}
-          data-event="click focus"
+          type="button"
+          style={{ background: "none", border: 0, padding: 0 }}
         >
-          <FontAwesomeIcon
-            icon={faInfoCircle as IconProp}
-            style={{ color: "black" }}
-          />
-        </span>
-        <ReactTooltip
-          place="bottom"
-          globalEventOff="click"
-          clickable
-          html
-          type="light"
-        />
-      </span>
+          <FontAwesomeIcon icon={faInfoCircle} style={{ color: "black" }} />
+        </button>
+      </OverlayTrigger>
     );
   }, []);
 

@@ -2,20 +2,33 @@ import { faCheck, faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { Link } from "react-router";
-import ReactTooltip from "react-tooltip";
 import { COLOR_LB_GREEN } from "../../utils/constants";
 import Blob from "../../home/Blob";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import Tooltip from "../../components/Tooltip";
 
 export default function Donate() {
   const { currentUser } = React.useContext(GlobalAppContext);
   const flairQuestionMarkIcon = (
-    <FontAwesomeIcon
-      icon={faQuestionCircle}
-      data-tip
-      data-for="flair-tooltip"
-      size="sm"
-    />
+    <Tooltip
+      id="flair-tooltip"
+      placement="bottom"
+      tooltip={
+        <>
+          Every $5 donation unlocks flairs for 1 month,
+          <br />
+          with larger donations extending the duration.
+          <br />
+          Donations stack up, adding more months
+          <br />
+          of unlocked flairs with each contribution.
+        </>
+      }
+    >
+      <span>
+        <FontAwesomeIcon icon={faQuestionCircle} size="sm" />
+      </span>
+    </Tooltip>
   );
   return (
     <div id="donations-page">
@@ -45,15 +58,6 @@ export default function Donate() {
               </b>
             </div>
           </div>
-          <ReactTooltip id="flair-tooltip" place="bottom" multiline>
-            Every $5 donation unlocks flairs for 1 month,
-            <br />
-            with larger donations extending the duration.
-            <br />
-            Donations stack up, adding more months
-            <br />
-            of unlocked flairs with each contribution.
-          </ReactTooltip>
           <div className="tier card">
             <div className="tier-heading">
               <h2>

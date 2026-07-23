@@ -17,9 +17,9 @@ import NiceModal from "@ebay/nice-modal-react";
 import { groupBy, isNil, isNull, isString, pick, size, sortBy } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery } from "@tanstack/react-query";
-import ReactTooltip from "react-tooltip";
 import Fuse from "fuse.js";
 import Loader from "../../components/Loader";
+import Tooltip from "../../components/Tooltip";
 import ListenCard from "../../common/listens/ListenCard";
 import ListenControl from "../../common/listens/ListenControl";
 import MBIDMappingModal from "../../common/listens/MBIDMappingModal";
@@ -321,27 +321,28 @@ export default function LinkListensPage() {
         <title>Link with MusicBrainz</title>
       </Helmet>
       <h2 className="page-title">Link with MusicBrainz</h2>
-      <ReactTooltip id="matching-tooltip" multiline>
-        We automatically match listens with MusicBrainz recordings when
-        possible,
-        <br />
-        which provides rich data like tags, album, artists, cover art, and more.
-        <br />
-        When a track can&apos;t be auto-matched you can manually link them on
-        this page.
-        <br />
-        Recordings may not exist in MusicBrainz, and need to be added there
-        first.
-      </ReactTooltip>
       <p>
         Your top 1,000 listens (grouped by album) that have&nbsp;
-        <u
-          className="link-listens-tooltip"
-          data-tip
-          data-for="matching-tooltip"
+        <Tooltip
+          id="matching-tooltip"
+          tooltip={
+            <>
+              We automatically match listens with MusicBrainz recordings when
+              possible,
+              <br />
+              which provides rich data like tags, album, artists, cover art, and
+              more.
+              <br />
+              When a track can&apos;t be auto-matched you can manually link them
+              on this page.
+              <br />
+              Recordings may not exist in MusicBrainz, and need to be added
+              there first.
+            </>
+          }
         >
-          not been automatically linked
-        </u>
+          <u className="link-listens-tooltip">not been automatically linked</u>
+        </Tooltip>
         &nbsp;to a MusicBrainz recording.
       </p>
       <p className="small">
