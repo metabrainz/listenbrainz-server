@@ -228,6 +228,12 @@
   // width: 100%;
   // height: 100%;
   max-height: calc(100vh - 8em);
+  // On the horizontal (mobile) slider, mark text is rotated 45deg by CSS !important,
+  // so we counter-rotate the calendar icon's inner span back to upright
+  .slider-horizontal .calendar-icon-mark {
+    display: inline-block;
+    transform: rotateZ(-45deg);
+  }
 
   @media (max-width: map.get($grid-breakpoints, "lg")) {
     height: unset;
