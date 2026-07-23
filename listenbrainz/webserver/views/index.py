@@ -37,7 +37,19 @@ NUMBER_OF_RECENT_LISTENS = 50
 
 SEARCH_USER_LIMIT = 100  # max number of users to return in search username results
 
-ROBOTS_TXT_CONTENT = """User-agent: *
+ROBOTS_TXT_CONTENT = """
+User-agent: facebookexternalhit
+User-agent: meta-externalagent
+User-agent: meta-externalfetcher
+Allow: /track/
+Allow: /artist/
+Allow: /album/
+Allow: /release/
+Allow: /release-group/
+Allow: /recording/
+Allow: /playlist/
+
+User-agent: *
 Disallow: /admin/
 Disallow: /login/
 Disallow: /player/
