@@ -8,6 +8,7 @@ from flask import Blueprint, request, jsonify, current_app
 
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
+import listenbrainz.db.user_setting as db_usersetting
 import listenbrainz.db.external_service_oauth as db_external_service_oauth
 import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.db.lb_radio_artist import lb_radio_artist
@@ -28,6 +29,7 @@ from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400
     LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
     get_non_negative_param, _parse_int_arg, _validate_get_listens_endpoint_params
 from listenbrainz.messybrainz import submit_recording
+from listenbrainz.webserver.submission_filter import apply_submission_filters
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -134,7 +136,19 @@ def submit_listen():
         validated_payload = [validate_listen(listen, listen_type) for listen in payload]
     except ListenValidationError as err:
         raise APIBadRequest(err.message, err.payload)
-    
+
+    # Apply user-configured submission filters
+    user_filters_row = db_usersetting.get_submission_filters(db_conn, user['id'])
+    if user_filters_row and user_filters_row.get("submission_filters"):
+        filters = user_filters_row["submission_filters"].get("filters", [])
+        if filters:
+            validated_payload = [
+                listen for listen in validated_payload
+                if not apply_submission_filters(listen, filters)
+            ]
+            if not validated_payload:
+                return jsonify({'status': 'ok', 'message': 'all listens were filtered'})
+
     msid = None
     if listen_type == LISTEN_TYPE_PLAYING_NOW and request.args.get('return_msid', False):
         listen = validated_payload[0]

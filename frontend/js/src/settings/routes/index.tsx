@@ -110,6 +110,14 @@ const getSettingsRoutes = (): RouteObject[] => {
           },
         },
         {
+          path: "submission-filters/",
+          lazy: {
+            Component: async () => {
+              return (await import("../submission-filters/SubmissionFilters")).default;
+            },
+          },
+        },
+        {
           path: "delete/",
           lazy: {
             Component: async () => {

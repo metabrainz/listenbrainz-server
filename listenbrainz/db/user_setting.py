@@ -176,3 +176,27 @@ def get_all_flairs(db_conn):
     """
     result = db_conn.execute(sqlalchemy.text(query))
     return result.all()
+
+
+def update_submission_filters(db_conn, user_id: int, filters: str):
+    """ Update submission filters for the given user """
+    db_conn.execute(sqlalchemy.text("""
+        INSERT INTO user_setting (user_id, submission_filters)
+             VALUES (:user_id, :filters)
+        ON CONFLICT (user_id)
+          DO UPDATE
+                SET submission_filters = EXCLUDED.submission_filters
+    """), {"filters": filters, "user_id": user_id})
+    db_conn.commit()
+
+
+def get_submission_filters(db_conn, user_id: int):
+    """ Retrieve submission filters for the given user """
+    result = db_conn.execute(sqlalchemy.text("""
+        SELECT submission_filters
+          FROM user_setting
+         WHERE user_id = :user_id
+    """), {"user_id": user_id})
+    row = result.mappings().first()
+    return dict(row) if row else None
+
