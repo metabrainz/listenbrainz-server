@@ -12,11 +12,17 @@ import {
   faRss,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { cloneDeep, get, isEmpty, isEqual, isNil } from "lodash";
+import { cloneDeep, get, isEmpty, isEqual, isNil, isNumber } from "lodash";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { toast } from "react-toastify";
 import { io } from "socket.io-client";
-import { Link, useLocation, useParams, useSearchParams } from "react-router";
+import {
+  Link,
+  useLocation,
+  useNavigation,
+  useParams,
+  useSearchParams,
+} from "react-router";
 import { Helmet } from "react-helmet";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
@@ -29,6 +35,7 @@ import ListenControl from "../common/listens/ListenControl";
 import ListenCountCard from "../common/listens/ListenCountCard";
 import { ToastMsg } from "../notifications/Notifications";
 import PinnedRecordingCard from "./components/PinnedRecordingCard";
+import Loader from "../components/Loader";
 import {
   formatWSMessageToListen,
   getBaseUrl,
@@ -47,6 +54,11 @@ export type ListensProps = {
   latestListenTs: number;
   listens?: Array<Listen>;
   oldestListenTs: number;
+  searchStatus?: {
+    partial: boolean;
+    continueMaxTs?: number;
+    continueMinTs?: number;
+  };
   user: ListenBrainzUser;
   userPinnedRecording?: PinnedRecording;
   playingNow?: Listen;
@@ -57,6 +69,7 @@ type ListenLoaderData = ListensProps;
 
 export default function Listen() {
   const location = useLocation();
+  const navigation = useNavigation();
   const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParamsObject = getObjectForURLSearchParams(searchParams);
@@ -68,7 +81,7 @@ export default function Listen() {
     location.pathname
   );
 
-  const { data, refetch } = useQuery<ListenLoaderData>({
+  const { data, refetch, isFetching } = useQuery<ListenLoaderData>({
     queryKey,
     queryFn,
     staleTime: isTimeNavigation ? 1000 * 60 * 5 : 0,
@@ -81,11 +94,26 @@ export default function Listen() {
     playingNow = undefined,
     latestListenTs = 0,
     oldestListenTs = 0,
+    searchStatus = { partial: false },
     already_reported_user = false,
   } = data || {};
 
-  const previousListenTs = listens[0]?.listened_at;
-  const nextListenTs = listens[listens.length - 1]?.listened_at;
+  let previousListenTs = listens[0]?.listened_at;
+  let nextListenTs = listens[listens.length - 1]?.listened_at;
+  let continuationSearchUrl: string | undefined;
+  let continuationSearchLabel: string | undefined;
+  if (searchStatus.partial) {
+    if (searchStatus.continueMinTs) {
+      previousListenTs = searchStatus.continueMinTs;
+      continuationSearchUrl = `?min_ts=${searchStatus.continueMinTs}`;
+      continuationSearchLabel = "Continue searching newer listens";
+    }
+    if (searchStatus.continueMaxTs) {
+      nextListenTs = searchStatus.continueMaxTs;
+      continuationSearchUrl = `?max_ts=${searchStatus.continueMaxTs}`;
+      continuationSearchLabel = "Continue searching older listens";
+    }
+  }
 
   const { currentUser, websocketsUrl, APIService } = React.useContext(
     GlobalAppContext
@@ -451,15 +479,17 @@ export default function Listen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allListenables]);
 
-  const isNewestButtonDisabled = listens[0]?.listened_at >= latestListenTs;
+  const isOnFirstPage = listens[0]?.listened_at >= latestListenTs;
   const isNewerButtonDisabled =
     !previousListenTs || previousListenTs >= latestListenTs;
   const isOlderButtonDisabled = !nextListenTs || nextListenTs <= oldestListenTs;
-  const isOldestButtonDisabled =
-    listens.length > 0 &&
-    listens[listens.length - 1]?.listened_at <= oldestListenTs;
+  const isOnLastPage = listens.length > 0 && nextListenTs <= oldestListenTs;
   const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
   const isCurrentUsersPage = currentUser?.name === user?.name;
+  const isNavigatingListens =
+    navigation.state === "loading" &&
+    navigation.location?.pathname === location.pathname;
+  const isLoadingListens = isFetching || isNavigatingListens;
 
   return (
     <div role="main" id="dashboard">
@@ -512,7 +542,7 @@ export default function Listen() {
           {user && <UserSocialNetwork user={user} />}
         </div>
         <div className="col-lg-8 order-lg-1">
-          {!listens.length && (
+          {!listens.length && isNumber(listenCount) && listenCount === 0 && (
             <div className="empty-listens">
               <FontAwesomeIcon icon={faCompactDisc as IconProp} size="10x" />
               {isCurrentUsersPage ? (
@@ -522,12 +552,11 @@ export default function Listen() {
                   {user?.name} hasn&apos;t listened to any songs yet.
                 </div>
               )}
-
               {isCurrentUsersPage && (
                 <div className="empty-action">
                   Import{" "}
                   <Link to="/settings/import/">your listening history</Link>{" "}
-                  from last.fm/libre.fm and track your listens by{" "}
+                  from Spotify or last.fm/libre.fm and track your listens by{" "}
                   <Link to="/settings/music-services/details/">
                     connecting to a music streaming service
                   </Link>
@@ -559,7 +588,7 @@ export default function Listen() {
             </div>
           )}
           <div className="listen-header">
-            {listens.length === 0 ? (
+            {listens.length === 0 && !searchStatus.partial ? (
               <div id="spacer" />
             ) : (
               <h3 className="header-with-line">Recent listens</h3>
@@ -666,8 +695,8 @@ export default function Listen() {
               <FontAwesomeIcon icon={faRss} size="sm" />
             </button>
           </div>
-
-          {listens.length > 0 && (
+          <Loader isLoading={isLoadingListens} />
+          {(listens.length > 0 || searchStatus.partial) && (
             <div>
               <div
                 id="listens"
@@ -677,20 +706,39 @@ export default function Listen() {
               >
                 {listens.map(getListenCard)}
               </div>
-              {listens.length < expectedListensPerPage && (
-                <h5 className="text-center">No more listens to show</h5>
+              {!isOnLastPage &&
+                (Boolean(searchStatus.partial) ||
+                  listens.length < expectedListensPerPage) && (
+                  <div className="text-center mt-5">
+                    <hr />
+                    <h4>
+                      No {listens.length > 0 ? "more" : ""} listens for that
+                      month.
+                    </h4>
+                    {continuationSearchUrl && (
+                      <Link
+                        to={continuationSearchUrl}
+                        className="btn btn-outline-info"
+                      >
+                        {continuationSearchLabel}
+                      </Link>
+                    )}
+                  </div>
+                )}
+              {isOnLastPage && (
+                <div className="text-center mt-5">
+                  <hr />
+                  <h4>End of the line!</h4>
+                  <h5>No more listens to show</h5>
+                </div>
               )}
               <ul className="pagination" id="navigation">
-                <li
-                  className={`page-item ${
-                    isNewestButtonDisabled ? "disabled" : ""
-                  }`}
-                >
+                <li className={`page-item ${isOnFirstPage ? "disabled" : ""}`}>
                   <Link
                     role="button"
                     aria-label="Navigate to most recent listens"
                     tabIndex={0}
-                    aria-disabled={isNewestButtonDisabled}
+                    aria-disabled={isOnFirstPage}
                     to={location.pathname}
                     className="page-link"
                   >
@@ -749,15 +797,13 @@ export default function Listen() {
                   </Link>
                 </li>
                 <li
-                  className={`page-item next ${
-                    isOldestButtonDisabled ? "disabled" : ""
-                  }`}
+                  className={`page-item next ${isOnLastPage ? "disabled" : ""}`}
                 >
                   <Link
                     aria-label="Navigate to oldest listens"
                     role="button"
                     tabIndex={0}
-                    aria-disabled={isOldestButtonDisabled}
+                    aria-disabled={isOnLastPage}
                     to={`?min_ts=${oldestListenTs - 1}`}
                     className="page-link"
                   >

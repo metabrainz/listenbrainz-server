@@ -68,6 +68,10 @@ const currentUser = { id: 1, name: "iliekcomputers", auth_token: "fnord" };
 let mockSearchParam = {};
 jest.mock("react-router", () => ({
   ...jest.requireActual("react-router"),
+  useNavigation: () => ({
+    state: "idle",
+    location: undefined,
+  }),
   useSearchParams: () => {
     const [params, setParams] = React.useState(
       new URLSearchParams(mockSearchParam)
@@ -82,12 +86,19 @@ jest.mock("react-router", () => ({
   },
 }));
 
-jest.mock("react-datetime-picker/dist/entry.nostyle", () => (props: any) => (
-  <input
-    data-testid="mock-date-picker"
-    onChange={(e) => props.onChange(new Date(e.target.value))}
-  />
-));
+jest.mock(
+  "react-datetime-picker/dist/entry.nostyle",
+  () =>
+    function (datePickerProps: any) {
+      const { onChange } = datePickerProps;
+      return (
+        <input
+          data-testid="mock-date-picker"
+          onChange={(e) => onChange(new Date(e.target.value))}
+        />
+      );
+    }
+);
 
 describe("Dashboard page", () => {
   jest.setTimeout(10000);
@@ -102,7 +113,7 @@ describe("Dashboard page", () => {
         HttpResponse.json({ followers: [] })
       ),
       http.get("/1/user/*/similar-users", async (path) => {
-        HttpResponse.json({ payload: [] });
+        return HttpResponse.json({ payload: [] });
       }),
       http.get("/1/user/*/listen-count", async (path) =>
         HttpResponse.json({ payload: { count: 42 } })
@@ -162,7 +173,7 @@ describe("Dashboard page", () => {
       const state = queryClient.getQueryState(queryKey);
       expect(state?.status === "success").toBeTruthy();
     });
-    
+
     // Ensure we show a listen count card component, but don't test the contents
     // Tests for it are in ListenCountCard.test.tsx
     screen.getByTestId("listen-count-card");
@@ -529,6 +540,88 @@ describe("Dashboard page", () => {
     });
 
     describe("handleClickOlder", () => {
+      it("shows a continue search link when the older search is partial", async () => {
+        const continueMaxTs = oldestListenTs + 1;
+        server.use(
+          http.post("/", async (path) => {
+            return HttpResponse.json({
+              ...props,
+              listens: listens.slice(0, 3),
+              searchStatus: {
+                partial: true,
+                continueMaxTs: oldestListenTs + 1,
+              },
+            });
+          })
+        );
+
+        renderWithProviders(
+          <Listens />,
+          {
+            currentUser,
+          },
+          {
+            wrapper: reactQueryWrapper,
+          }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        const continueSearchLink = await screen.findByRole("link", {
+          name: "Continue searching older listens",
+        });
+        expect(continueSearchLink).toHaveAttribute(
+          "href",
+          `/?max_ts=${continueMaxTs}`
+        );
+        expect(screen.queryByText("No more listens to show")).toBeNull();
+      });
+
+      it("shows a continue search link for an empty partial range", async () => {
+        const continueMaxTs = oldestListenTs + 1;
+        server.use(
+          http.post("/", async (path) => {
+            return HttpResponse.json({
+              ...props,
+              listens: [],
+              searchStatus: {
+                partial: true,
+                continueMaxTs,
+              },
+            });
+          })
+        );
+
+        renderWithProviders(
+          <Listens />,
+          {
+            currentUser,
+          },
+          {
+            wrapper: reactQueryWrapper,
+          }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        expect(
+          screen.getByText("No listens for that month.")
+        ).toBeInTheDocument();
+        const continueSearchLink = await screen.findByRole("link", {
+          name: "Continue searching older listens",
+        });
+        expect(continueSearchLink).toHaveAttribute(
+          "href",
+          `/?max_ts=${continueMaxTs}`
+        );
+      });
+
       it("older button should be disabled if there is no older listens timestamp", async () => {
         server.use(
           http.post("/", async (path) => {

@@ -175,24 +175,40 @@ class UserViewsTestCase(IntegrationTestCase):
     def test_ts_filters(self, timescale):
         """Check that max_ts and min_ts are passed to timescale """
         user = self.user.to_dict()
-        timescale.return_value = ([], EPOCH, EPOCH)
+        timescale.return_value = ([], EPOCH, EPOCH, {"partial": False})
 
         self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'))
-        req_call = mock.call(user, None, None, 25)
+        req_call = mock.call(user, None, None, 25, max_passes=3, soft_time_limit_ms=None, return_search_status=True)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # max_ts query param -> to_ts timescale param
         self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'),
                         query_string={'max_ts': 1520946000})
-        req_call = mock.call(user, None, datetime.fromtimestamp(1520946000, timezone.utc), 25)
+        req_call = mock.call(
+            user,
+            None,
+            datetime.fromtimestamp(1520946000, timezone.utc),
+            25,
+            max_passes=3,
+            soft_time_limit_ms=None,
+            return_search_status=True,
+        )
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # min_ts query param -> from_ts timescale param
         self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'),
                         query_string={'min_ts': 1520941000})
-        req_call = mock.call(user, datetime.fromtimestamp(1520941000, timezone.utc), None, 25)
+        req_call = mock.call(
+            user,
+            datetime.fromtimestamp(1520941000, timezone.utc),
+            None,
+            25,
+            max_passes=3,
+            soft_time_limit_ms=None,
+            return_search_status=True,
+        )
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
@@ -201,8 +217,35 @@ class UserViewsTestCase(IntegrationTestCase):
         # If max_ts and min_ts set, only max_ts is used
         self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'),
                         query_string={'min_ts': 1520941000, 'max_ts': 1520946000})
-        req_call = mock.call(user, None, datetime.fromtimestamp(1520946000, timezone.utc), 25)
+        req_call = mock.call(
+            user,
+            None,
+            datetime.fromtimestamp(1520946000, timezone.utc),
+            25,
+            max_passes=3,
+            soft_time_limit_ms=None,
+            return_search_status=True,
+        )
         timescale.assert_has_calls([req_call])
+
+    @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
+    def test_partial_listen_search_status(self, timescale):
+        """Check that partial listen search metadata is exposed to the frontend."""
+        cache._r.flushdb()
+        timescale.return_value = (
+            [],
+            EPOCH,
+            EPOCH,
+            {"partial": True, "continue_max_ts": 1520941000},
+        )
+
+        response = self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'))
+        self.assert200(response)
+        parsed_response = orjson.loads(response.data)
+        self.assertDictEqual(parsed_response["searchStatus"], {
+            "partial": True,
+            "continueMaxTs": 1520941000,
+        })
 
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
     def test_ts_filters_errors(self, timescale):

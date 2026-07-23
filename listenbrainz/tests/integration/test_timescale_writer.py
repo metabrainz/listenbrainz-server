@@ -18,6 +18,7 @@ from listenbrainz.webserver import redis_connection, timescale_connection
 
 
 class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
+    FIXTURE_TO_TS = datetime.fromtimestamp(1486466947, timezone.utc)
 
     def setUp(self):
         super(TimescaleWriterTestCase, self).setUp()
@@ -46,8 +47,7 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
 
-        to_ts = datetime.now(timezone.utc)
-        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(user, to_ts=self.FIXTURE_TO_TS)
         self.assertEqual(len(listens), 1)
 
         recent = self.rs.get_recent_listens(4)
@@ -79,8 +79,7 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         self.assert200(r)
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
-        to_ts = datetime.now(timezone.utc)
-        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(user, to_ts=self.FIXTURE_TO_TS)
         self.assertEqual(len(listens), 1)
 
     def test_dedup_same_batch(self):
@@ -89,8 +88,7 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         r = self.send_listen(user, 'same_batch_duplicates.json')
         self.assert200(r)
 
-        to_ts = datetime.now(timezone.utc)
-        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(user, to_ts=self.FIXTURE_TO_TS)
         self.assertEqual(len(listens), 1)
 
     def test_dedup_different_users(self):
@@ -107,11 +105,10 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         r = self.send_listen(user2, 'valid_single.json')
         self.assert200(r)
 
-        to_ts = datetime.now(timezone.utc)
-        listens, _, _ = self.ls.fetch_listens(user1, to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(user1, to_ts=self.FIXTURE_TO_TS)
         self.assertEqual(len(listens), 1)
 
-        listens, _, _ = self.ls.fetch_listens(user2, to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(user2, to_ts=self.FIXTURE_TO_TS)
         self.assertEqual(len(listens), 1)
 
     def test_dedup_same_timestamp_different_tracks(self):
@@ -134,8 +131,7 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         r = self.send_listen(user, 'same_timestamp_diff_track_valid_single_3.json')
         self.assert200(r)
 
-        to_ts = datetime.now(timezone.utc)
-        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
+        listens, _, _ = self.ls.fetch_listens(user, to_ts=self.FIXTURE_TO_TS)
         self.assertEqual(len(listens), 4)
 
     def test_rejection_queue_on_error(self):
@@ -191,5 +187,5 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
             # test timescale writer is still working and processing listens
             r = self.send_listen(user, "valid_single.json")
             self.assert200(r)
-            listens, _, _ = self.ls.fetch_listens(user, to_ts=datetime.now(timezone.utc))
+            listens, _, _ = self.ls.fetch_listens(user, to_ts=self.FIXTURE_TO_TS)
             self.assertEqual(len(listens), 1)

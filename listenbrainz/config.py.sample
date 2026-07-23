@@ -125,6 +125,9 @@ STATS_CALCULATION_INTERVAL = 7 # stats are calculated every 7 days
 # Max time in seconds after which the playing_now stream will expire.
 PLAYING_NOW_MAX_DURATION = 10 * 60
 
+# None to disable (i.e. for local dev)
+FETCH_LISTENS_SOFT_TIME_LIMIT_MS = None
+
 # LOGGING
 
 # Uncomment any of the following logging stubs if you want to enable logging
