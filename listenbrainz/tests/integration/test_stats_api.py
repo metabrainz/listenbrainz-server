@@ -404,6 +404,45 @@ class StatsAPITestCase(IntegrationTestCase):
                                            query_string={'range': range_})
                 self.assertListeningActivityEqual(payload, response)
 
+    def test_listen_count_with_range(self):
+        """ The core listen-count endpoint returns the current-period listen
+        total, derived from the listening_activity stat, when a range is given. """
+        endpoint = "api_v1.get_listen_count"
+
+        # The week fixture (user 1) has 14 daily segments; the current week is
+        # the last 7 days, which sum to 137 (matches the website's total).
+        with open(self.path_to_data_file('user_listening_activity_db_data_for_api_test_week.json')) as f:
+            payload = json.load(f)
+            payload[0]["user_id"] = self.user["id"]
+        db_stats.insert("listening_activity_week_20220718", 0, 5, payload)
+
+        response = self.client.get(
+            self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
+            query_string={'range': 'week'}
+        )
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        self.assertEqual(data['count'], 137)
+        self.assertEqual(data['range'], 'week')
+        self.assertEqual(data['from_ts'], 1588550400)  # Monday of the current week
+        self.assertEqual(data['to_ts'], 5)  # stat's to_ts, passed through (test fixtures use 0/5)
+        self.assertIn('last_updated', data)
+
+    def test_listen_count_with_invalid_range(self):
+        response = self.client.get(
+            self.custom_url_for("api_v1.get_listen_count", user_name=self.user['musicbrainz_id']),
+            query_string={'range': 'foobar'}
+        )
+        self.assert400(response)
+
+    def test_listen_count_range_without_stats(self):
+        """ 204 when the requested range has no computed stats for the user. """
+        response = self.client.get(
+            self.custom_url_for("api_v1.get_listen_count", user_name=self.no_stat_user['musicbrainz_id']),
+            query_string={'range': 'week'}
+        )
+        self.assertStatus(response, 204)
+
     def test_artist_evolution_activity_stat(self):
         endpoint = self.non_entity_endpoints["artist_evolution_activity"]["endpoint"]
         with self.subTest(f"test valid response is received for artist_evolution_activity stats"):
