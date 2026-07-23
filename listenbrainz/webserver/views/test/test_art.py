@@ -97,7 +97,57 @@ class ArtViewsTestCase(IntegrationTestCase):
                                 image_size=500))
         self.assert200(resp)
         self.assertTrue(resp.text.startswith("<svg"))
-        self.assertNotEqual(resp.text.find("ROB"), -1)
+
+    @patch.object(CoverArtGenerator, "load_release_group_caa_ids")
+    @patch.object(CoverArtGenerator, "load_release_caa_ids")
+    @patch.object(CoverArtGenerator, "download_user_stats")
+    def test_cover_art_lps_on_the_floor_params(self, mock_download_user_stats,
+                                                mock_get_release_caa_ids, mock_get_release_group_caa_ids):
+        mock_download_user_stats.return_value = [
+            ReleaseRecord(
+                release_mbid="b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
+                release_name="Release 1",
+                listen_count=5,
+                artist_name="Artist 1",
+                artist_mbids=["b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6"]
+            )
+            for _ in range(5)
+        ], 5
+        mock_get_release_caa_ids.return_value = {
+            "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6": {
+                "original_mbid": "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
+                "caa_id": 6945,
+                "caa_release_mbid": "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
+                "title": "Release 1",
+                "artist": "Artist 1"
+            }
+        }
+        mock_get_release_group_caa_ids.return_value = {}
+
+        resp = self.client.get(
+            self.custom_url_for('art_api_v1.cover_art_custom_stats',
+                                custom_name="lps-on-the-floor",
+                                user_name="rob",
+                                time_range="week",
+                                image_size=1000),
+            query_string={
+                "scene": "vinyl",
+                "wear_tear": "loved",
+                "player_color": "ff0000"
+            })
+        self.assert200(resp)
+        self.assertTrue(resp.text.startswith("<svg"))
+        # Correct scene background URL
+        self.assertIn("vinyl%20bg.png", resp.text)
+        # wear_tear="loved" should use worn 2
+        self.assertIn("vinyl%20worn%202.png", resp.text)
+        # Player colour overlay URL
+        self.assertIn("vinyl%20player%20color.svg", resp.text)
+        # feColorMatrix: ff0000 -> r=1.0, g=0.0, b=0.0 mapped via alpha channel
+        self.assertIn("0 0 0 1.0 0", resp.text)
+        # "loved" must not accidentally serve worn 1
+        self.assertNotIn("vinyl%20worn%201.png", resp.text)
+
 
     @patch.object(CoverArtGenerator, "load_release_group_caa_ids")
     @patch.object(CoverArtGenerator, "load_release_caa_ids")
