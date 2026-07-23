@@ -30,7 +30,11 @@ export function getPlaylistExtension(
   if (!playlist) {
     return null;
   }
-  return playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION] ?? null;
+  const ext = playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION];
+  if (Array.isArray(ext)) {
+    return ext[0] ?? null;
+  }
+  return ext ?? null;
 }
 
 export function getTrackExtension(
@@ -39,7 +43,11 @@ export function getTrackExtension(
   if (!track) {
     return null;
   }
-  return track.extension?.[MUSICBRAINZ_JSPF_TRACK_EXTENSION] ?? null;
+  const ext = track.extension?.[MUSICBRAINZ_JSPF_TRACK_EXTENSION];
+  if (Array.isArray(ext)) {
+    return ext[0] ?? null;
+  }
+  return ext ?? null;
 }
 
 export function getPlaylistId(playlist?: JSPFPlaylist): string {
@@ -131,7 +139,7 @@ export function listenToJSPFTrack(listen: Listen): JSPFTrack {
   const trackName = getTrackName(listen);
   const artistName = getArtistName(listen);
   return {
-    identifier: PLAYLIST_TRACK_URI_PREFIX + recordingMBID,
+    identifier: [PLAYLIST_TRACK_URI_PREFIX + recordingMBID],
     id: recordingMBID || undefined,
     title: trackName,
     creator: artistName,

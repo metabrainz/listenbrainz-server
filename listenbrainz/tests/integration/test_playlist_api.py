@@ -104,9 +104,9 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["annotation"], "your lame <i>80s</i> music")
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][0]["identifier"])
-        self.assertNotIn("additional_metadata", response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI])
+        self.assertNotIn("additional_metadata", response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI][0])
         try:
-            dateutil.parser.isoparse(response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["last_modified_at"])
+            dateutil.parser.isoparse(response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI][0]["last_modified_at"])
         except ValueError:
             assert False
 
@@ -131,9 +131,9 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert200(response)
         self.assertEqual(response.json["playlist"]["extension"]
-                         [PLAYLIST_EXTENSION_URI]["created_for"], self.user["musicbrainz_id"])
+                         [PLAYLIST_EXTENSION_URI][0]["created_for"], self.user["musicbrainz_id"])
         self.assertEqual(response.json["playlist"]["extension"]
-                         [PLAYLIST_EXTENSION_URI]["additional_metadata"],
+                         [PLAYLIST_EXTENSION_URI][0]["additional_metadata"],
                          playlist["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["additional_metadata"])
 
         # Try to submit a playlist on a different users's behalf without the right perms
@@ -394,7 +394,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert200(response)
         self.assertEqual(response.json["playlist"]["extension"]
-                         [PLAYLIST_EXTENSION_URI]["collaborators"], [self.user2["musicbrainz_id"]])
+                         [PLAYLIST_EXTENSION_URI][0]["collaborators"], [self.user2["musicbrainz_id"]])
 
         # Check that this playlist shows up on the collaborators endpoint
         response = self.client.get(
@@ -404,7 +404,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["playlist_count"], 1)
         self.assertEqual(response.json["playlists"][0]["playlist"]["extension"]
-                         [PLAYLIST_EXTENSION_URI]["collaborators"], [self.user2["musicbrainz_id"]])
+                         [PLAYLIST_EXTENSION_URI][0]["collaborators"], [self.user2["musicbrainz_id"]])
 
         # Check private too
 
@@ -447,9 +447,9 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["title"], "new title")
         self.assertEqual(response.json["playlist"]["annotation"], "new <b>desc</b> noscript")
         self.assertEqual(response.json["playlist"]["extension"]
-                         [PLAYLIST_EXTENSION_URI]["public"], False)
+                         [PLAYLIST_EXTENSION_URI][0]["public"], False)
         self.assertEqual(response.json["playlist"]["extension"]
-                         [PLAYLIST_EXTENSION_URI]["collaborators"], [self.user2["musicbrainz_id"],
+                         [PLAYLIST_EXTENSION_URI][0]["collaborators"], [self.user2["musicbrainz_id"],
                                                                      self.user3["musicbrainz_id"]])
 
         # Edit again to remove description and collaborators
@@ -469,8 +469,8 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["title"], "new title")
         self.assertNotIn("annotation", response.json["playlist"])
         self.assertEqual(response.json["playlist"]["extension"]
-                         [PLAYLIST_EXTENSION_URI]["public"], False)
-        self.assertNotIn("collaborators", response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI])
+                         [PLAYLIST_EXTENSION_URI][0]["public"], False)
+        self.assertNotIn("collaborators", response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI][0])
 
     def test_playlist_recording_add(self):
         """ Test adding a recording to a playlist works """
@@ -701,15 +701,15 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + new_playlist_mbid)
         self.assertEqual(response.json["playlist"]["extension"]
-                         [PLAYLIST_EXTENSION_URI]["copied_from_mbid"],
+                         [PLAYLIST_EXTENSION_URI][0]["copied_from_mbid"],
                          PLAYLIST_URI_PREFIX + playlist_mbid)
         self.assertEqual(response.json["playlist"]["extension"]
-                         [PLAYLIST_EXTENSION_URI]["public"], True)
+                         [PLAYLIST_EXTENSION_URI][0]["public"], True)
         self.assertEqual(response.json["playlist"]["title"], "Copy of my stupid playlist")
         self.assertEqual(response.json["playlist"]["creator"], "anothertestuserpleaseignore")
         # Ensure original playlist's collaborators have been scrubbed
         # The serialized JSPF playlist leaves out the "collaborators" key if there are none
-        self.assertNotIn("collaborators", response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI])
+        self.assertNotIn("collaborators", response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI][0])
 
         # Now delete the original playlist so that we can test copied from deleted playlist
         response = self.client.post(
@@ -724,7 +724,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
         self.assert200(response)
-        self.assertEqual(response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["copied_from_deleted"], True)
+        self.assertEqual(response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI][0]["copied_from_deleted"], True)
 
     def test_playlist_copy_private_playlist(self):
 
@@ -761,7 +761,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
         self.assert200(response)
-        self.assertEqual(response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"], False)
+        self.assertEqual(response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI][0]["public"], False)
         self.assertEqual(response.json["playlist"]["title"], "Copy of my stupid playlist")
         self.assertEqual(response.json["playlist"]["creator"], "testuserpleaseignore")
 
@@ -954,23 +954,23 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["count"], DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
         self.assertEqual(response.json["offset"], 0)
         self.assertEqual(response.json["playlists"][0]["playlist"]["extension"]
-                         [PLAYLIST_EXTENSION_URI]["creator"], self.user4["musicbrainz_id"])
+                         [PLAYLIST_EXTENSION_URI][0]["creator"], self.user4["musicbrainz_id"])
         self.assertEqual(response.json["playlists"][0]["playlist"]["identifier"], PLAYLIST_URI_PREFIX + public_playlist_mbid)
         self.assertEqual(response.json["playlists"][0]["playlist"]["title"], "1980s flashback jams")
         self.assertEqual(response.json["playlists"][0]["playlist"]["annotation"], "your lame <i>80s</i> music")
         self.assertEqual(response.json["playlists"][0]["playlist"]["extension"]
-                         [PLAYLIST_EXTENSION_URI]["public"], True)
+                         [PLAYLIST_EXTENSION_URI][0]["public"], True)
         try:
             dateutil.parser.isoparse(response.json["playlists"][0]["playlist"]["date"])
         except ValueError:
             assert False
         self.assertEqual(response.json["playlists"][1]["playlist"]["extension"]
-                         [PLAYLIST_EXTENSION_URI]["creator"], self.user4["musicbrainz_id"])
+                         [PLAYLIST_EXTENSION_URI][0]["creator"], self.user4["musicbrainz_id"])
         self.assertEqual(response.json["playlists"][1]["playlist"]["identifier"], PLAYLIST_URI_PREFIX + private_playlist_mbid)
         self.assertEqual(response.json["playlists"][1]["playlist"]["title"], "1980s flashback jams")
         self.assertEqual(response.json["playlists"][1]["playlist"]["annotation"], "your lame <i>80s</i> music")
         self.assertEqual(response.json["playlists"][1]["playlist"]["extension"]
-                         [PLAYLIST_EXTENSION_URI]["public"], False)
+                         [PLAYLIST_EXTENSION_URI][0]["public"], False)
         try:
             dateutil.parser.isoparse(response.json["playlists"][1]["playlist"]["date"])
         except ValueError:
