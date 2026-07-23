@@ -23,6 +23,7 @@ from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
+from listenbrainz.webserver.static_manager import get_static_url
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from listenbrainz.webserver.utils import number_readable
 from listenbrainz.webserver.views.api_tools import get_non_negative_param, _parse_datetime_arg
@@ -373,7 +374,7 @@ def year_in_music_get(user_name, year: int):
         url = f'{current_app.config["SERVER_ROOT_URL"]}/user/{user_name}/year-in-music/{year}/'
         title = f"ListenBrainz {year} Year in Music for {user_name}"
         description = f'Check out the music review for {year} that @ListenBrainz created from my listening history!'
-        image = f"{current_app.config['SERVER_ROOT_URL']}/static/img/explore/year-in-music.png"
+        image = get_static_url("img/explore/year-in-music.png", external=True)
 
         og_meta_tags = {
             "title": title,

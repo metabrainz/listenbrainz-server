@@ -19,6 +19,7 @@ from data.model.common_stat import StatisticsRange
 from listenbrainz.webserver.views.playlist_api import fetch_playlist_recording_metadata
 from listenbrainz.webserver.views.stats_api import _is_valid_range
 from listenbrainz.webserver.views.art_api import cover_art_custom_stats, cover_art_grid_stats
+from listenbrainz.webserver.static_manager import get_static_url
 import listenbrainz.db.stats as db_stats
 from data.model.user_entity import EntityRecord
 from listenbrainz.webserver.views.api_tools import (
@@ -159,7 +160,7 @@ def _init_feed(id, title, alternate_url, self_url):
     fg.link(href=self_url, rel="self")
     # Alternate link should be the page this info is on
     fg.link(href=alternate_url, rel="alternate")
-    fg.logo(_external_url_for("static", filename="img/listenbrainz_logo_icon.svg"))
+    fg.logo(get_static_url("img/listenbrainz_logo_icon.svg", external=True))
     fg.language("en")
     return fg
 

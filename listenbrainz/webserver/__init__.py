@@ -331,6 +331,7 @@ def create_web_app(debug=None):
     from listenbrainz.webserver.utils import get_global_props, get_initial_alerts
     app.context_processor(lambda: dict(
         get_static_path=static_manager.get_static_path,
+        static_url=static_manager.get_static_url,
         global_props=get_global_props(),
         initial_alerts=get_initial_alerts(),
     ))
@@ -396,6 +397,7 @@ def create_api_compat_app(debug=None):
     from listenbrainz.webserver.utils import get_global_props
     app.context_processor(lambda: dict(
         get_static_path=static_manager.get_static_path,
+        static_url=static_manager.get_static_url,
         global_props=get_global_props()
     ))
 
