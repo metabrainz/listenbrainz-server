@@ -105,6 +105,92 @@ def get_active_users_to_process(db_conn, service, exclude_error=False) -> list[d
     return users
 
 
+CLAIM_TIMEOUT_HOURS = 12
+
+def claim_users_to_process(db_conn, service, batch_size=50, exclude_error=False) -> list[dict]:
+    """ Claim a batch of users for import processing using SKIP LOCKED.
+
+    Uses FOR UPDATE SKIP LOCKED so multiple workers safely distribute users.
+    A claim expires after CLAIM_TIMEOUT_HOURS so crashed workers' users get
+    auto-reclaimed.
+    """
+    filters = [
+        "external_service_oauth.service = :service",
+        "NOT is_paused",
+        f"(listens_importer.claimed_at IS NULL OR listens_importer.claimed_at < now() - interval '{CLAIM_TIMEOUT_HOURS} hours')"
+    ]
+    if exclude_error:
+        filters.append("error IS NULL")
+    else:
+        filters.append("(error IS NULL OR (error->>'retry')::boolean)")
+    filter_str = " AND ".join(filters)
+
+    # Phase 1: claim — lock rows briefly, mark claimed_at, commit
+    result = db_conn.execute(text(f"""
+        WITH claimable AS (
+            SELECT listens_importer.id
+              FROM external_service_oauth
+              JOIN "user"
+                ON "user".id = external_service_oauth.user_id
+              JOIN listens_importer
+                ON listens_importer.external_service_oauth_id = external_service_oauth.id
+             WHERE {filter_str}
+          ORDER BY listens_importer.latest_listened_at ASC NULLS FIRST
+             LIMIT :batch_size
+               FOR UPDATE OF listens_importer SKIP LOCKED
+        )
+        UPDATE listens_importer
+           SET claimed_at = now()
+         WHERE id IN (SELECT id FROM claimable)
+     RETURNING id
+    """), {
+        "service": service.value,
+        "batch_size": batch_size,
+    })
+    claimed_ids = [row.id for row in result]
+    db_conn.commit()
+
+    if not claimed_ids:
+        return []
+
+    # Phase 2: fetch full user data for claimed rows
+    result = db_conn.execute(text("""
+        SELECT external_service_oauth.user_id
+             , "user".musicbrainz_id
+             , "user".musicbrainz_row_id
+             , access_token
+             , refresh_token
+             , listens_importer.last_updated
+             , token_expires
+             , scopes
+             , latest_listened_at
+             , status
+             , external_service_oauth.external_user_id
+             , error
+          FROM external_service_oauth
+          JOIN "user"
+            ON "user".id = external_service_oauth.user_id
+          JOIN listens_importer
+            ON listens_importer.external_service_oauth_id = external_service_oauth.id
+         WHERE listens_importer.id = ANY(:claimed_ids)
+    """), {"claimed_ids": claimed_ids})
+    users = [dict(row) for row in result.mappings()]
+    db_conn.rollback()
+    return users
+
+
+def release_user_claim(db_conn, user_id: int, service):
+    """ Release a claimed user after processing (success or failure). """
+    db_conn.execute(text("""
+        UPDATE listens_importer
+           SET claimed_at = NULL
+             , last_updated = now()
+         WHERE user_id = :user_id
+           AND service = :service
+    """), {"user_id": user_id, "service": service.value})
+    db_conn.commit()
+
+
 def update_status(
     db_conn,
     user_id: int,

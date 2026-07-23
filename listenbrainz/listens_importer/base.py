@@ -1,4 +1,5 @@
 import abc
+import signal
 import time
 from abc import abstractmethod
 
@@ -33,6 +34,7 @@ class ListensImporter(abc.ABC):
         self._listens_imported_since_last_update = 0
         self._metric_submission_time = time.monotonic() + METRIC_UPDATE_INTERVAL
         self.exclude_error = True
+        self._current_user = None
 
     def notify_error(self, musicbrainz_id: str, error: str):
         """ Notifies specified user via email about error during Spotify import.
@@ -117,7 +119,10 @@ class ListensImporter(abc.ABC):
         pass
 
     def process_all_users(self):
-        """ Get a batch of users to be processed and import their listens.
+        """ Claim a batch of users and import their listens.
+
+        Uses claim-based work distribution so multiple workers can run
+        safely in parallel without processing the same users.
 
         Returns:
             (success, failure) where
@@ -125,7 +130,7 @@ class ListensImporter(abc.ABC):
                 failure: the number of users for whom we faced errors while importing.
         """
         try:
-            users = self.service.get_active_users_to_process(self.exclude_error)
+            users = self.service.claim_users_to_process(exclude_error=self.exclude_error)
         except DatabaseException as e:
             listenbrainz.webserver.db_conn.rollback()
             current_app.logger.error('Cannot get list of users due to error %s', str(e), exc_info=True)
@@ -138,10 +143,8 @@ class ListensImporter(abc.ABC):
         success = 0
         failure = 0
         for user in users:
+            self._current_user = user
             try:
-                if user["is_paused"]:
-                    continue
-
                 self._listens_imported_since_last_update += self.process_one_user(user)
                 success += 1
             except ListensImporterUserError:
@@ -160,6 +163,9 @@ class ListensImporter(abc.ABC):
                 current_app.logger.error(f'{self.name} could not import listens for user %s:',
                                          user['musicbrainz_id'], exc_info=True)
                 failure += 1
+            finally:
+                self.service.release_user_claim(user['user_id'])
+                self._current_user = None
 
             if time.monotonic() > self._metric_submission_time:
                 self._metric_submission_time += METRIC_UPDATE_INTERVAL
@@ -170,8 +176,19 @@ class ListensImporter(abc.ABC):
         current_app.logger.info('Encountered errors while processing %d users.', failure)
         return success, failure
 
+    def _release_on_shutdown(self, signum, frame):
+        """ Best-effort release of the current user's claim on SIGTERM. """
+        if self._current_user:
+            try:
+                self.service.release_user_claim(self._current_user['user_id'])
+                current_app.logger.info('Released claim for user %s on shutdown.', self._current_user['musicbrainz_id'])
+            except Exception:
+                current_app.logger.error('Failed to release claim on shutdown:', exc_info=True)
+        raise SystemExit(0)
+
     def main(self):
         current_app.logger.info(f'{self.name} started...')
+        signal.signal(signal.SIGTERM, self._release_on_shutdown)
         while True:
             t = time.monotonic()
             success, failure = self.process_all_users()
