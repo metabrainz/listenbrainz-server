@@ -1561,7 +1561,7 @@ class ListenAPICachingTestCase(ListenAPIIntegrationTestCase):
             self.custom_url_for('api_v1.delete_listen'),
             data=json.dumps({
                 'listened_at': listen['listened_at'],
-                'recording_msid': listen['track_metadata']['additional_info']['recording_msid']
+                'recording_msid': listen['recording_msid']
             }),
             headers={"Authorization": f"Token {self.user['auth_token']}"},
             content_type='application/json'
@@ -1598,7 +1598,7 @@ class ListenAPICachingTestCase(ListenAPIIntegrationTestCase):
             self.custom_url_for("metadata.submit_manual_mapping"),
             headers={"Authorization": f"Token {self.user['auth_token']}"},
             json={
-                "recording_msid": response.json["payload"]["listens"][0]["track_metadata"]["additional_info"]["recording_msid"],
+                "recording_msid": response.json["payload"]["listens"][0]["recording_msid"],
                 "recording_mbid": recording_mbid,
             },
         )
