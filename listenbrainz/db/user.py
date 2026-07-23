@@ -469,15 +469,17 @@ def is_user_reported(db_conn, reporter_id: int, reported_id: int):
     """ Check whether the user identified by reporter_id has reported the
     user identified by reported_id"""
     result = db_conn.execute(sqlalchemy.text("""
-        SELECT *
-          FROM reported_users
-         WHERE reporter_user_id = :reporter_id
-           AND reported_user_id = :reported_id
+        SELECT EXISTS (
+            SELECT 1
+              FROM reported_users
+             WHERE reporter_user_id = :reporter_id
+               AND reported_user_id = :reported_id
+        )
     """), {
         "reporter_id": reporter_id,
-        "reported_id": reported_id
+        "reported_id": reported_id,
     })
-    return True if result.fetchone() else False
+    return result.scalar_one()
 
 
 def report_user(db_conn, reporter_id: int, reported_id: int, reason: str = None):
