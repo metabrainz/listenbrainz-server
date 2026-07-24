@@ -45,7 +45,7 @@ MAILTO=""
 0 6 * * * root /usr/local/bin/python /code/listenbrainz/manage.py update-msid-tables >> /logs/msid-updater.log 2>&1
 
 # run daily cron job to refresh top msid-mbid mappings
-0 7 * * * root /usr/local/bin/python /code/listenbrainz/manage.py refresh-top-manual-mappings >> /logs/top_manual_mappings.log 2>&1
+# 0 7 * * * root /usr/local/bin/python /code/listenbrainz/manage.py refresh-top-manual-mappings >> /logs/top_manual_mappings.log 2>&1
 
 ## Trigger a canonical dump on 3rd and 17th of every month do not block to wait for lock.
 # The canonical tables are re-generated every day at 4am, so do this later in order to get today's data

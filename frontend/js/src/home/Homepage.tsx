@@ -33,6 +33,7 @@ import NumberCounter from "./NumberCounter";
 import Blob from "./Blob";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { RouteQuery } from "../utils/Loader";
+import { getRegistrationUrl } from "../utils/utils";
 
 type HomePageProps = {
   listenCount: number;
@@ -41,6 +42,7 @@ type HomePageProps = {
 
 function HomePage() {
   const location = useLocation();
+  const { registrationUrl } = React.useContext(GlobalAppContext);
   const { data } = useQuery<HomePageProps>(
     RouteQuery(["home"], location.pathname)
   );
@@ -69,7 +71,7 @@ function HomePage() {
   const createAccountButton = (
     <a
       className="create-account-button"
-      href={`https://musicbrainz.org/register?returnto=${window.document.location.href}`}
+      href={getRegistrationUrl(registrationUrl)}
     >
       Create Account
     </a>

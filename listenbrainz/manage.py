@@ -326,6 +326,18 @@ def notify_yim_users(year: int):
         year_in_music.notify_yim_users(webserver.db_conn, webserver.ts_conn, year)
 
 
+@cli.command(name="notify_spotify_refresh_token_expiry")
+def notify_spotify_refresh_token_expiry():
+    application = webserver.create_app()
+    with application.app_context():
+        from listenbrainz.domain.spotify import notify_refresh_token_expiry
+        stats = notify_refresh_token_expiry(webserver.db_conn)
+        click.echo(
+            "Spotify refresh-token expiry notifications: "
+            f"{stats['sent']} sent, {stats['skipped']} skipped, {stats['failed']} failed"
+        )
+
+
 @cli.command()
 @click.option("--create-all",
               is_flag=True,

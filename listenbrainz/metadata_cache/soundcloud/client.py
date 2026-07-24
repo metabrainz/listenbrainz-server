@@ -31,7 +31,7 @@ class SoundCloud:
     def get(self, url, params=None):
         with self._get_requests_session() as http:
             for _ in range(self.retries):
-                response = http.get(url, params=params, headers={"Authorization": f"Bearer {self.developer_token}"})
+                response = http.get(url, params=params, headers={"Authorization": f"OAuth {self.developer_token}"})
                 if response.status_code == 200:
                     return response.json()
 

@@ -3,7 +3,7 @@ import * as _ from "lodash";
 import { isFinite, isUndefined, deburr, escapeRegExp } from "lodash";
 import * as timeago from "time-ago";
 import { Rating } from "react-simple-star-rating";
-import { toast } from "react-toastify";
+import { toast, TypeOptions } from "react-toastify";
 import { Link } from "react-router";
 import ReactMarkdown from "react-markdown";
 import { formatDuration, intervalToDuration } from "date-fns";
@@ -834,6 +834,7 @@ type SentryProps = {
 type GlobalAppProps = {
   api_url: string;
   websockets_url: string;
+  registration_url?: string;
   current_user: ListenBrainzUser;
   spotify?: SpotifyUser;
   youtube?: YoutubeUser;
@@ -847,20 +848,28 @@ type GlobalAppProps = {
   flair?: Flair;
 };
 type GlobalProps = GlobalAppProps & SentryProps;
+export type ServerAlert = {
+  id: string;
+  level: TypeOptions;
+  message: string;
+};
 
 const getPageProps = async (): Promise<{
   domContainer: HTMLElement;
   reactProps: Record<string, any>;
   sentryProps: SentryProps;
   globalAppContext: GlobalAppContextT;
+  initialAlerts: ServerAlert[];
 }> => {
   let domContainer = document.getElementById("react-container");
   const propsElement = document.getElementById("page-react-props");
   const globalPropsElement = document.getElementById("global-react-props");
+  const initialAlertsElement = document.getElementById("initial-alerts-props");
   let reactProps = {};
   let globalReactProps = {} as GlobalProps;
   let sentryProps = {} as SentryProps;
   let globalAppContext = {} as GlobalAppContextT;
+  let initialAlerts: ServerAlert[] = [];
   if (!domContainer) {
     // Ensure there is a container for React rendering
     // We should always have on on the page already, but displaying errors to the user relies on there being one
@@ -880,11 +889,15 @@ const getPageProps = async (): Promise<{
     if (propsElement?.innerHTML) {
       reactProps = JSON.parse(propsElement!.innerHTML);
     }
+    if (initialAlertsElement?.innerHTML) {
+      initialAlerts = JSON.parse(initialAlertsElement.innerHTML);
+    }
 
     const {
       current_user,
       api_url,
       websockets_url,
+      registration_url,
       spotify,
       youtube,
       soundcloud,
@@ -918,6 +931,7 @@ const getPageProps = async (): Promise<{
     globalAppContext = {
       APIService: apiService,
       websocketsUrl: websockets_url,
+      registrationUrl: registration_url,
       currentUser: current_user,
       spotifyAuth: spotify,
       youtubeAuth: youtube,
@@ -972,6 +986,7 @@ const getPageProps = async (): Promise<{
     reactProps,
     sentryProps,
     globalAppContext,
+    initialAlerts,
   };
 };
 
@@ -1458,6 +1473,15 @@ export function getObjectForURLSearchParams(
 
 export function getBaseUrl(): string {
   return window.location.origin;
+}
+
+export function getRegistrationUrl(registrationUrl?: string): string {
+  if (!registrationUrl) {
+    return "";
+  }
+  const url = new URL(registrationUrl);
+  url.searchParams.set("returnto", window.document.location.href);
+  return url.toString();
 }
 
 export {
