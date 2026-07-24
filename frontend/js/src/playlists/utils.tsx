@@ -19,6 +19,11 @@ export enum PlaylistType {
 
 export const MAX_PLAYLIST_TAG_LENGTH = 40;
 
+export type PlaylistTag = {
+  tag: string;
+  count: number;
+};
+
 export function isPlaylistOwner(
   playlist: JSPFPlaylist,
   user: ListenBrainzUser

@@ -4,32 +4,31 @@ $playlist-background-color: $body-tertiary-bg;
 $description-lines: 2;
 $long-description-lines: 8;
 
-#playlists-page .playlist-view-options {
+.playlist-list-header {
   display: flex;
-  align-items: end;
-  margin-top: 0.8rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  line-height: 1.5em;
   gap: 1rem;
-  flex-wrap: wrap;
 
-  @media (max-width: map.get($grid-breakpoints, "md")) {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .playlist-view-controls,
-  .playlist-sort-controls {
+  .playlist-view-options {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
     flex-wrap: wrap;
   }
 
-  @media (max-width: map.get($grid-breakpoints, "sm")) {
-    .playlist-sort-controls {
-      flex-direction: column;
-      align-items: stretch;
+  .playlist-view-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: nowrap;
+  }
 
-      .form-select {
-        width: 100% !important;
-      }
-    }
+  .create-playlist-btn {
+    margin-left: auto;
+    white-space: nowrap;
   }
 }
 
@@ -38,6 +37,10 @@ $long-description-lines: 8;
   gap: 1.5rem;
   align-items: flex-start;
 
+  @media (min-width: map.get($grid-breakpoints, "lg")) {
+    margin-right: -15px;
+  }
+
   @media (max-width: map.get($grid-breakpoints, "lg")) {
     flex-direction: column;
     gap: 1rem;
@@ -45,9 +48,27 @@ $long-description-lines: 8;
     .playlists-page-main {
       order: 2;
     }
+  }
 
-    .playlist-tags-sidebar {
-      order: 1;
+  .sidebar-playlists {
+    max-height: 85vh;
+    overflow-x: hidden;
+    min-width: 0;
+
+    > * {
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .sidenav-content-grid {
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    @media (max-width: map.get($grid-breakpoints, "lg")) {
+      max-height: calc(100vh - $brainzplayer-height);
     }
   }
 }
@@ -58,154 +79,124 @@ $long-description-lines: 8;
   width: 100%;
 }
 
-.playlist-tags-sidebar {
-  width: 360px;
+
+.playlist-sidebar-search {
+  display: flex;
+  gap: 0.35rem;
+  align-items: stretch;
+
+  .form-control {
+    min-width: 0;
+  }
+
+  button {
+    border: 1px solid $border-color;
+    border-radius: 0.375rem;
+    background: $body-bg;
+    padding: 0 0.75rem;
+  }
+}
+
+.playlist-sidebar-section-toggle {
+  cursor: pointer;
+
+  h4 {
+    margin: 0;
+  }
+}
+
+.playlist-sidebar-tags-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.playlist-sidebar-clear-tags {
+  padding: 0;
   flex-shrink: 0;
-  border: 1px solid $border-color;
-  border-radius: 12px;
-  padding: 1rem;
-  background: $body-bg;
-  position: sticky;
-  top: 1rem;
-  margin-top: 1.5em;
-  align-self: flex-start;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.playlist-sidebar-multiselect {
   display: flex;
   flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.playlist-sidebar-multiselect-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 32px;
+  margin: 0;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.375rem;
+  background: $body-bg;
+  border: 1px solid $border-color;
+  cursor: pointer;
   overflow: hidden;
 
-  @media (max-width: map.get($grid-breakpoints, "xl")) {
-    width: min(320px, 30vw);
-  }
-
-  @media (max-width: map.get($grid-breakpoints, "lg")) {
-    width: 100%;
-    position: static;
-    top: auto;
-  }
-
-  @media (max-width: map.get($grid-breakpoints, "sm")) {
-    padding: 0.75rem;
-    border-radius: 8px;
-  }
-
-  .playlist-tags-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.75rem;
-    flex-shrink: 0;
-  }
-
-  .playlist-tags-title {
-    font-weight: 600;
-  }
-
-  .playlist-tags-clear {
-    padding: 0;
-    text-decoration: none;
-  }
-
-  .playlist-tags-selected {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-    flex-shrink: 0;
-    max-height: 6rem;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-
-  .playlist-tags-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    max-height: 52rem;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
-    padding-right: 0.25rem;
-
-    @media (max-width: map.get($grid-breakpoints, "xl")) {
-      max-height: 40rem;
-    }
-
-    @media (max-width: map.get($grid-breakpoints, "lg")) {
-      max-height: 20rem;
-    }
-
-    @media (max-width: map.get($grid-breakpoints, "sm")) {
-      max-height: 16rem;
-    }
-  }
-
-  .playlist-tag-chip {
-    border: 1px solid $border-color;
-    background: rgba($blue, 0.08);
-    color: $gray-800;
-    border-radius: 999px;
-    padding: 0.35rem 0.75rem;
-    font-size: 1.2rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-  }
-
-  .playlist-tag-chip-x {
-    font-size: 1.5rem;
-    line-height: 1;
-    color: $gray-600;
-  }
-
-  .playlist-tag-row {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    width: 100%;
-    min-width: 0;
-    padding: 0.65rem 0.75rem;
-    border-radius: 999px;
-    border: 1px solid $border-color;
-    background: $body-tertiary-bg;
-    text-align: left;
-
-    @media (max-width: map.get($grid-breakpoints, "sm")) {
-      gap: 0.5rem;
-      padding: 0.5rem 0.65rem;
-    }
-
-    &:hover {
-      border-color: $blue;
-    }
-
-    &.active {
-      border-color: $blue;
-      background: rgba($blue, 0.08);
-    }
-  }
-
-  .playlist-tag-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #353070;
-    flex-shrink: 0;
-  }
-
-  .playlist-tag-name {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .playlist-tag-count {
+  &:hover {
     background: $gray-200;
-    color: $gray-700;
-    border-radius: 999px;
-    padding: 0.1rem 0.5rem;
-    font-size: 0.85rem;
   }
+
+  input[type="checkbox"] {
+    flex: 0 0 auto;
+    margin: 0;
+    cursor: pointer;
+    accent-color: $blue;
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 0.2rem rgba($blue, 0.25);
+    }
+  }
+}
+
+.playlist-sidebar-tag-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playlist-sidebar-tag-count {
+  flex: 0 0 auto;
+  color: $gray-600;
+  font-size: 1rem;
+}
+
+.playlist-sidebar-tag-filter {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.playlist-sidebar-tags-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.playlist-sidebar-multiselect-option.is-selected {
+  border-color: $blue;
+  background: rgba($blue, 0.08);
 }
 
 .playlist-tags-row {
