@@ -13,11 +13,22 @@ import listenbrainz.db.user_setting as db_usersetting
 import listenbrainz.db.donation as db_donation
 import listenbrainz.db.spotify as db_spotify
 
+METABRAINZ_PROFILE_URL = "https://metabrainz.org/profile"
+EMAIL_REQUIRED_BLOG_URL = "https://blog.metabrainz.org/?p=8915"
+
+EMAIL_VERIFICATION_REQUIRED_MESSAGE = \
+    'Please check your inbox for a verification email, or go to your MetaBrainz profile page ' \
+    'to verify your email: ' \
+    f'{METABRAINZ_PROFILE_URL}. ' \
+    f'Read the blog post at {EMAIL_REQUIRED_BLOG_URL} to understand why we need your email.'
+
 REJECT_LISTENS_WITHOUT_EMAIL_ERROR = \
-    'The listens were rejected because the user does not has not provided an email. ' \
-    'Please visit https://musicbrainz.org/account/edit to add an email address. ' \
-    'Read the blog post at https://blog.metabrainz.org/?p=8915 to understand why ' \
-    'we need your email.'
+    'The listens were rejected because your MetaBrainz account does not have a verified email address. ' \
+    f'{EMAIL_VERIFICATION_REQUIRED_MESSAGE}'
+
+CONNECT_SERVICES_WITHOUT_EMAIL_ERROR = \
+    'You need to verify an email address before connecting a service. ' \
+    f'{EMAIL_VERIFICATION_REQUIRED_MESSAGE}'
 
 REJECT_LISTENS_FROM_PAUSED_USER_ERROR = \
     'User account is paused and is currently not accepting listens. ' \
@@ -86,7 +97,6 @@ def get_global_props():
     props = {
         "api_url": current_app.config["API_URL"],
         "websockets_url": current_app.config["WEBSOCKETS_SERVER_URL"],
-        "registration_url": current_app.config["REGISTRATION_URL"],
         "sentry_dsn": sentry_config.get("dsn"),
         "current_user": current_user_data,
         "spotify": get_current_spotify_user(),

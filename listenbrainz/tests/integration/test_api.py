@@ -16,6 +16,7 @@ from listenbrainz.listenstore.timescale_utils import delete_listens
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.listens_cache import _get_listens_cache_key
+from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 from listenbrainz.webserver.views.api_tools import is_valid_uuid, DEFAULT_ITEMS_PER_GET
 import listenbrainz.db.external_service_oauth as db_oauth
 from listenbrainz.webserver.views.playlist_api import PLAYLIST_EXTENSION_URI, PlaylistAPIXMLError
@@ -295,6 +296,19 @@ class APITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert401(response)
         self.assertEqual(response.json['code'], 401)
+
+    def test_reject_listens_without_verified_email(self):
+        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
+            payload = json.load(f)
+
+        old_reject_setting = self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]
+        try:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = True
+            response = self.send_data(payload)
+            self.assert401(response)
+            self.assertEqual(response.json["error"], REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
+        finally:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = old_reject_setting
 
     def test_valid_single(self):
         """ Test for valid submissioon of listen_type listen """
@@ -968,7 +982,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         with open(self.path_to_data_file('valid_single.json'), 'r') as f:
             payload = json.load(f)
 
-        mock_requests.post("https://musicbrainz.org/new-oauth2/introspect", json={"active": False})
+        mock_requests.post(self.app.config["OAUTH_INTROSPECTION_URL"], json={"active": False})
         response = self.client.post(
             self.custom_url_for('api_v1.submit_listen'),
             data=json.dumps(payload),
@@ -978,7 +992,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert401(response)
         self.assertEqual(response.json["error"], "Invalid access token.")
 
-        mock_requests.post("https://musicbrainz.org/new-oauth2/introspect", json={
+        mock_requests.post(self.app.config["OAUTH_INTROSPECTION_URL"], json={
             "active": True,
             "client_id": "abc",
             "token_type": "Bearer",
@@ -998,7 +1012,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert401(response)
         self.assertEqual(response.json["error"], "Invalid access token.")
 
-        mock_requests.post("https://musicbrainz.org/new-oauth2/introspect", json={
+        mock_requests.post(self.app.config["OAUTH_INTROSPECTION_URL"], json={
             "active": True,
             "client_id": "abc",
             "token_type": "Bearer",
