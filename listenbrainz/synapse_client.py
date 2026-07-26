@@ -34,7 +34,9 @@ def init_synapse_client(app) -> None:
 
     username = app.config.get("RABBITMQ_USERNAME", "")
     password = app.config.get("RABBITMQ_PASSWORD", "")
-    urls = [f"amqp://{username}:{password}@{host}:{port}//synapse" for host, port in hosts]
+    vhost = app.config.get("SYNAPSE_RABBITMQ_VHOST") or "/synapse"
+    encoded_vhost = "/" + vhost.lstrip("/")
+    urls = [f"amqp://{username}:{password}@{host}:{port}{encoded_vhost}" for host, port in hosts]
     connection = Connection(
         hostname=urls,
         transport_options={
@@ -192,5 +194,10 @@ def _build_recording(track_metadata: dict) -> dict | None:
     if mbid:
         recording["mbid"] = mbid
         recording["url"] = f"{_lb_base_url}/music/recording/{mbid}"
+
+    caa_id = mbid_mapping.get("caa_id")
+    caa_release_mbid = mbid_mapping.get("caa_release_mbid")
+    if caa_id and caa_release_mbid:
+        recording["album_art_url"] = f"https://archive.org/download/mbid-{caa_release_mbid}/mbid-{caa_release_mbid}-{caa_id}_thumb250.jpg"
 
     return recording
