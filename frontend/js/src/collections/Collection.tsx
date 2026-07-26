@@ -15,6 +15,8 @@ import Loader from "../components/Loader";
 import PlaylistItemCard from "../playlists/components/PlaylistItemCard";
 import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
+  MUSICBRAINZ_JSPF_TRACK_EXTENSION,
+  PLAYLIST_ARTIST_URI_PREFIX,
   PLAYLIST_TRACK_URI_PREFIX,
 } from "../playlists/utils";
 
@@ -31,13 +33,45 @@ const MAX_COLLECTION_TRACKS_PER_CALL = 500;
 
 function asJSPFTrack(track: MusicBrainzCollectionTrack): JSPFTrack {
   const recordingMBID = track.recording_mbid;
-  return {
+  const extension: Partial<JSPFTrackExtension> = {};
+
+  if (track.artist_mbids?.length) {
+    extension.artist_identifiers = track.artist_mbids.map(
+      (mbid) => `${PLAYLIST_ARTIST_URI_PREFIX}${mbid}`
+    );
+  }
+
+  const additional_metadata: NonNullable<
+    JSPFTrackExtension["additional_metadata"]
+  > = {};
+  if (track.caa_id != null && track.caa_release_mbid) {
+    additional_metadata.caa_id = track.caa_id;
+    additional_metadata.caa_release_mbid = track.caa_release_mbid;
+  }
+  if (track.artists?.length) {
+    additional_metadata.artists = track.artists;
+  }
+  if (Object.keys(additional_metadata).length > 0) {
+    extension.additional_metadata = additional_metadata;
+  }
+
+  const jspfTrack: JSPFTrack = {
     identifier: `${PLAYLIST_TRACK_URI_PREFIX}${recordingMBID}`,
     id: recordingMBID,
     title: track.title ?? "",
     creator: track.artist_credit_name ?? "",
     duration: track.length ?? undefined,
   };
+
+  if (track.release_name) {
+    jspfTrack.album = track.release_name;
+  }
+  if (Object.keys(extension).length > 0) {
+    jspfTrack.extension = {
+      [MUSICBRAINZ_JSPF_TRACK_EXTENSION]: (extension as unknown) as JSPFTrackExtension,
+    };
+  }
+  return jspfTrack;
 }
 
 async function fetchAllCollectionTracks(
@@ -82,6 +116,8 @@ export default function CollectionPage() {
   const [hasMore, setHasMore] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
   const [isPlayingAll, setIsPlayingAll] = React.useState(false);
+  const [coverArt, setCoverArt] = React.useState<string | null>(null);
+
   const totalRows = tracks.length + (hasMore ? 1 : 0); // +1 row for loader
   const rowVirtualizer = useWindowVirtualizer({
     count: totalRows,
@@ -127,6 +163,7 @@ export default function CollectionPage() {
         }
         setCollection(result.collection);
         setTrackCount(result.track_count);
+        setCoverArt(result.cover_art ?? null);
         const nextTracks = (result.tracks ?? []).map(asJSPFTrack);
         setTracks(nextTracks);
         setHasMore(nextTracks.length < result.track_count);
@@ -146,6 +183,7 @@ export default function CollectionPage() {
     setCollection(null);
     setTracks([]);
     setTrackCount(0);
+    setCoverArt(null);
     setHasMore(true);
     loadInitial();
   }, [collectionMBID, loadPage]);
@@ -392,12 +430,17 @@ export default function CollectionPage() {
       </Helmet>
 
       <div className="entity-page-header flex">
-        <div className="cover-art" title={title}>
-          <img
-            src="/static/img/cover-art-placeholder.jpg"
-            alt="Collection cover"
-          />
-        </div>
+        <div
+          className="cover-art"
+          title={title}
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(
+              coverArt ??
+                "<img src='/static/img/cover-art-placeholder.jpg' alt='Collection cover' />"
+            ),
+          }}
+        />
         <div className="playlist-info">
           <h1>{title}</h1>
           <div className="details h4">
