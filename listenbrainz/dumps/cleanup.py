@@ -3,6 +3,7 @@ import re
 import shutil
 
 NUMBER_OF_FULL_DUMPS_TO_KEEP = 2
+NUMBER_OF_DB_DUMPS_TO_KEEP = 2
 NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP = 30
 NUMBER_OF_FEEDBACK_DUMPS_TO_KEEP = 2
 NUMBER_OF_CANONICAL_DUMPS_TO_KEEP = 2
@@ -35,6 +36,15 @@ def _cleanup_dumps(location, remove_all_full_dumps=False):
     # Clean up full dumps
     full_dumps_to_keep = 0 if remove_all_full_dumps else NUMBER_OF_FULL_DUMPS_TO_KEEP
     _cleanup_full_dumps(location, full_dumps_to_keep)
+
+    # Clean up database dumps
+    db_dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-db')
+    dump_files = [x for x in os.listdir(location) if db_dump_re.match(x)]
+    db_dumps = [x for x in sorted(dump_files, key=get_dump_id, reverse=True)]
+    if not db_dumps:
+        print('No database dumps present in specified directory!')
+    else:
+        remove_dumps(location, db_dumps, NUMBER_OF_DB_DUMPS_TO_KEEP)
 
     # Clean up incremental dumps
     incremental_dump_re = re.compile(

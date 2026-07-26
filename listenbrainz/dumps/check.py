@@ -14,10 +14,11 @@ INCREMENTAL_MAX_AGE = 26  # hours
 FEEDBACK_MAX_AGE = 8  # days
 
 
-def _fetch_latest_file_info_from_ftp_dir(directory: str, has_id: bool):
+def _fetch_latest_file_info_from_ftp_dir(directory: str, has_id: bool, suffix: str | None = None):
     """
         Given a base FTP dir and whether the dump name contains an id, browses the MB FTP server to fetch
-        the latest dump directory name and return it
+        the latest dump directory name and return it. The fullexport dir contains both listens dumps and
+        database dumps, so a suffix can be specified to only consider dumps of one type.
     """
 
     latest_dump_id: Optional[int] = None
@@ -25,7 +26,7 @@ def _fetch_latest_file_info_from_ftp_dir(directory: str, has_id: bool):
 
     def process_line(file):
         nonlocal latest_dump_id, latest_dt
-        if file:
+        if file and (suffix is None or file.endswith(suffix)):
             if has_id:
                 dump_id, dt = _parse_ftp_name_with_id(file)
             else:
@@ -81,37 +82,48 @@ def check_ftp_dump_ages():
 
     msg = ""
     try:
-        dump_id, dt = _fetch_latest_file_info_from_ftp_dir('/pub/musicbrainz/listenbrainz/fullexport', True)
+        dump_id, dt = _fetch_latest_file_info_from_ftp_dir('/pub/musicbrainz/listenbrainz/fullexport', True, '-full')
         age = datetime.now() - dt
         if age > timedelta(days=FULLEXPORT_MAX_AGE):
-            msg = "Full dump %d is more than %d days old: %s\n" % (dump_id, FULLEXPORT_MAX_AGE, str(age))
+            msg += "Full dump %d is more than %d days old: %s\n" % (dump_id, FULLEXPORT_MAX_AGE, str(age))
             print(msg, end="")
         else:
             print("Full dump %s is %s old, good!" % (dump_id, str(age)))
     except Exception as err:
-        msg = "Cannot fetch full dump age: %s\n\n%s" % (str(err), traceback.format_exc())
+        msg += "Cannot fetch full dump age: %s\n\n%s" % (str(err), traceback.format_exc())
+
+    try:
+        dump_id, dt = _fetch_latest_file_info_from_ftp_dir('/pub/musicbrainz/listenbrainz/fullexport', True, '-db')
+        age = datetime.now() - dt
+        if age > timedelta(days=FULLEXPORT_MAX_AGE):
+            msg += "Database dump %d is more than %d days old: %s\n" % (dump_id, FULLEXPORT_MAX_AGE, str(age))
+            print(msg, end="")
+        else:
+            print("Database dump %s is %s old, good!" % (dump_id, str(age)))
+    except Exception as err:
+        msg += "Cannot fetch database dump age: %s\n\n%s" % (str(err), traceback.format_exc())
 
     try:
         dump_id, dt = _fetch_latest_file_info_from_ftp_dir('/pub/musicbrainz/listenbrainz/incremental', True)
         age = datetime.now() - dt
         if age > timedelta(hours=INCREMENTAL_MAX_AGE):
-            msg = "Incremental dump %s is more than %s hours old: %s\n" % (dump_id, INCREMENTAL_MAX_AGE, str(age))
+            msg += "Incremental dump %s is more than %s hours old: %s\n" % (dump_id, INCREMENTAL_MAX_AGE, str(age))
             print(msg, end="")
         else:
             print("Incremental dump %s is %s old, good!" % (dump_id, str(age)))
     except Exception as err:
-        msg = "Cannot fetch incremental dump age: %s\n\n%s" % (str(err), traceback.format_exc())
+        msg += "Cannot fetch incremental dump age: %s\n\n%s" % (str(err), traceback.format_exc())
 
     try:
         dump_id, dt = _fetch_latest_file_info_from_ftp_dir('/pub/musicbrainz/listenbrainz/spark', False)
         age = datetime.now() - dt
         if age > timedelta(days=FEEDBACK_MAX_AGE):
-            msg = "Feedback dump %s is more than %s days old: %s\n" % (dump_id, FEEDBACK_MAX_AGE, str(age))
+            msg += "Feedback dump %s is more than %s days old: %s\n" % (dump_id, FEEDBACK_MAX_AGE, str(age))
             print(msg, end="")
         else:
             print("Feedback dump %s is %s old, good!" % (dump_id, str(age)))
     except Exception as err:
-        msg = "Cannot fetch feedback dump age: %s\n\n%s" % (str(err), traceback.format_exc())
+        msg += "Cannot fetch feedback dump age: %s\n\n%s" % (str(err), traceback.format_exc())
 
     app = create_app()
     with app.app_context():

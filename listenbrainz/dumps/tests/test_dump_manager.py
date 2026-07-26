@@ -57,13 +57,28 @@ def test_cleanup_full_dump_retention_uses_constant(tmp_path):
     assert 'listenbrainz-dump-4-20180312-000004-full' in remaining
 
 
+def test_cleanup_db_dump_retention_uses_constant(tmp_path):
+    for dump_id in range(1, 5):
+        (tmp_path / f'listenbrainz-dump-{dump_id}-20180312-00000{dump_id}-db').mkdir()
+
+    _cleanup_dumps(str(tmp_path))
+
+    remaining = {path.name for path in tmp_path.iterdir()}
+    assert 'listenbrainz-dump-1-20180312-000001-db' not in remaining
+    assert 'listenbrainz-dump-2-20180312-000002-db' not in remaining
+    assert 'listenbrainz-dump-3-20180312-000003-db' in remaining
+    assert 'listenbrainz-dump-4-20180312-000004-db' in remaining
+
+
 def test_cleanup_legacy_full_dump_backups(tmp_path):
     for dump_id in range(1, 3):
         (tmp_path / f'listenbrainz-dump-{dump_id}-20180312-00000{dump_id}-full').mkdir()
+    (tmp_path / 'listenbrainz-dump-3-20180312-000003-db').mkdir()
 
     _cleanup_dumps(str(tmp_path), remove_all_full_dumps=True)
 
-    assert not list(tmp_path.iterdir())
+    # only the full dumps are removed, db dumps are still backed up on this volume
+    assert [path.name for path in tmp_path.iterdir()] == ['listenbrainz-dump-3-20180312-000003-db']
 
 
 class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
@@ -152,13 +167,31 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
 
         self.assertIn('not-a-dump', newdirs)
 
-    def test_create_full_db(self):
+    def test_create_full(self):
 
         listens = generate_data(1, self.user_name, 1500000000, 5)
         self.listenstore.insert(listens)
 
         # create a full dump
-        self.runner.invoke(dump_manager.create_full, [
+        self.runner.invoke(dump_manager.create_full, ['--location', self.tempdir])
+        self.assertEqual(len(os.listdir(self.tempdir)), 1)
+        dump_name = os.listdir(self.tempdir)[0]
+        self.assertTrue(dump_name.endswith("-full"))
+
+        # make sure that the dump contains a listens dump, a spark dump and a statistics dump
+        archive_count = 0
+        for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
+                archive_count += 1
+        self.assertEqual(archive_count, 3)
+
+        # the database dumps are created by a separate command
+        self.assertEqual(len(os.listdir(self.tempdir_private)), 0)
+
+    def test_create_db_dump(self):
+
+        # create a db dump
+        self.runner.invoke(dump_manager.create_db_dump, [
             '--location',
             self.tempdir,
             '--location-private',
@@ -166,16 +199,17 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         ])
         self.assertEqual(len(os.listdir(self.tempdir)), 1)
         dump_name = os.listdir(self.tempdir)[0]
+        self.assertTrue(dump_name.endswith("-db"))
 
-        # make sure that the dump contains a full listens dump, a public and private dump (postgres),
-        # a public and private dump (timescale) and a spark dump.
-        # dumps should contain the 7 archives
+        # make sure that the dump contains a public dump (postgres) and a public dump (timescale)
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
             if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 archive_count += 1
-        self.assertEqual(archive_count, 5)
+        self.assertEqual(archive_count, 2)
 
+        # and a private dump (postgres) and a private dump (timescale)
+        self.assertEqual(os.listdir(self.tempdir_private), [dump_name])
         private_archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir_private, dump_name)):
             if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
@@ -190,8 +224,6 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         result = self.runner.invoke(dump_manager.create_full, [
             '--location',
             self.tempdir,
-            '--location-private',
-            self.tempdir_private,
             '--dump-id',
             1000
         ])
@@ -204,6 +236,53 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         result = self.runner.invoke(dump_manager.create_full, [
             '--location',
             self.tempdir,
+            '--dump-id',
+            dump_id
+        ])
+        self.assertEqual(len(os.listdir(self.tempdir)), 1)
+        dump_name = os.listdir(self.tempdir)[0]
+        created_dump_id = int(dump_name.split('-')[2])
+        self.assertEqual(dump_id, created_dump_id)
+
+        # dump should contain the listens, spark and statistics archives
+        archive_count = 0
+        for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
+                archive_count += 1
+        self.assertEqual(archive_count, 3)
+
+    def test_create_db_dump_with_id(self):
+        # if the dump ID does not exist, it should exit with a -1
+        result = self.runner.invoke(dump_manager.create_db_dump, [
+            '--location',
+            self.tempdir,
+            '--location-private',
+            self.tempdir_private,
+            '--dump-id',
+            1000
+        ])
+        self.assertEqual(result.exit_code, -1)
+        # make sure no directory was created either
+        self.assertEqual(len(os.listdir(self.tempdir)), 0)
+
+        # a full dump with the same id should not be usable for a db dump either
+        dump_id = add_dump_entry(datetime.now(tz=timezone.utc), "full")
+        result = self.runner.invoke(dump_manager.create_db_dump, [
+            '--location',
+            self.tempdir,
+            '--location-private',
+            self.tempdir_private,
+            '--dump-id',
+            dump_id
+        ])
+        self.assertEqual(result.exit_code, -1)
+        self.assertEqual(len(os.listdir(self.tempdir)), 0)
+
+        # now, add a dump entry to the database and create a dump with that specific dump id
+        dump_id = add_dump_entry(datetime.now(tz=timezone.utc), "db")
+        result = self.runner.invoke(dump_manager.create_db_dump, [
+            '--location',
+            self.tempdir,
             '--location-private',
             self.tempdir_private,
             '--dump-id',
@@ -214,25 +293,25 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         created_dump_id = int(dump_name.split('-')[2])
         self.assertEqual(dump_id, created_dump_id)
 
-        dump_name = os.listdir(self.tempdir_private)[0]
-        created_private_dump_id = int(dump_name.split('-')[2])
+        private_dump_name = os.listdir(self.tempdir_private)[0]
+        created_private_dump_id = int(private_dump_name.split('-')[2])
         self.assertEqual(dump_id, created_private_dump_id)
 
-        # dumps should contain the 7 archives
+        # dumps should contain the public and private postgres and timescale archives
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
             if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 archive_count += 1
-        self.assertEqual(archive_count, 5)
+        self.assertEqual(archive_count, 2)
 
         private_archive_count = 0
-        for file_name in os.listdir(os.path.join(self.tempdir_private, dump_name)):
+        for file_name in os.listdir(os.path.join(self.tempdir_private, private_dump_name)):
             if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 private_archive_count += 1
         self.assertEqual(private_archive_count, 2)
 
-    def test_full_dump_exits_private_location(self):
-        result = self.runner.invoke(dump_manager.create_full, [
+    def test_db_dump_exits_private_location(self):
+        result = self.runner.invoke(dump_manager.create_db_dump, [
             '--location',
             self.tempdir
         ])
@@ -240,7 +319,7 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         self.assertIn("No location specified for creating private database and timescale dumps", self._caplog.text)
 
         self._caplog.clear()
-        result = self.runner.invoke(dump_manager.create_full, [
+        result = self.runner.invoke(dump_manager.create_db_dump, [
             '--location',
             self.tempdir,
             '--location-private',
@@ -250,7 +329,7 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         self.assertIn("Location specified for public and private dumps cannot be same", self._caplog.text)
 
         self._caplog.clear()
-        result = self.runner.invoke(dump_manager.create_full, [
+        result = self.runner.invoke(dump_manager.create_db_dump, [
             '--location',
             self.tempdir,
             '--location-private',
@@ -258,16 +337,6 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         ])
         self.assertEqual(result.exit_code, -1)
         self.assertIn("Private dumps location cannot be a subdirectory of public dumps location", self._caplog.text)
-
-        self._caplog.clear()
-        # no location for private dupms is required if no private dumps are being made
-        result = self.runner.invoke(dump_manager.create_full, [
-            '--location',
-            self.tempdir,
-            '--no-db',
-            '--no-timescale'
-        ], catch_exceptions=False)
-        self.assertEqual(result.exit_code, 0)
 
     def test_create_incremental(self):
         # create a incremental dump, this won't work because the incremental dump does
@@ -325,8 +394,7 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
 
         # passing a created value for start timestamp makes it work fine
         self.runner.invoke(dump_manager.create_full, [
-            "--location", self.tempdir,
-            "--no-db", "--no-timescale", "--no-stats"
+            "--location", self.tempdir, "--no-stats"
         ], catch_exceptions=False)
 
         self.assertEqual(len(os.listdir(self.tempdir)), 1)

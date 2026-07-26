@@ -35,13 +35,16 @@ RSYNC_DELETE_OPTIONS=(--delete)
 function build_rsync_filter_options {
     RSYNC_FILTER_OPTIONS=(-FF)
 
-    if [ "$DUMP_TYPE" != "full" ]; then
+    # Only the fullexport dir contains full listen dump marker directories.
+    if [ "$DUMP_TYPE" != "full" ] && [ "$DUMP_TYPE" != "db" ]; then
         return
     fi
 
     # Command-line protect rules are passed to the receiving rsync process.
     # They preserve payloads for retained marker directories while
-    # --delete-after removes remote directories whose local markers expired.
+    # --delete/--delete-after removes remote directories whose local markers
+    # expired. The db dump sync uses the same rules so that it never deletes
+    # the full listen dump payloads it has no local copy of.
     shopt -s nullglob
     for RETAINED_DUMP_DIR in "$SOURCE_DIR"/listenbrainz-dump-*-full; do
         RETAINED_DUMP_NAME=$(basename "$RETAINED_DUMP_DIR")
@@ -82,6 +85,12 @@ if [ "$DUMP_TYPE" == "full" ]; then
         echo "Full dump source directory '$SOURCE_DIR/$DUMP_NAME' does not exist, exiting!"
         exit 1
     fi
+elif [ "$DUMP_TYPE" == "db" ]; then
+    # Database dumps are published alongside the full listen dumps and use the
+    # same rsync credentials, but their payloads are small enough to be retained
+    # locally, like incremental dumps.
+    SOURCE_DIR=$RSYNC_FULLEXPORT_DIR
+    SSH_KEY=$RSYNC_FULLEXPORT_KEY
 elif [ "$DUMP_TYPE" == "incremental" ]; then
     SOURCE_DIR=$RSYNC_INCREMENTAL_DIR
     SSH_KEY=$RSYNC_INCREMENTAL_KEY
@@ -95,7 +104,7 @@ elif [ "$DUMP_TYPE" == "sample" ]; then
     SOURCE_DIR=$RSYNC_SAMPLE_DIR
     SSH_KEY=$RSYNC_SAMPLE_KEY
 else
-    echo "Could not determine which directory (full, incremental, feedback, mbcanonical, sample) to copy over, exiting!"
+    echo "Could not determine which directory (full, db, incremental, feedback, mbcanonical, sample) to copy over, exiting!"
     exit 1
 fi
 

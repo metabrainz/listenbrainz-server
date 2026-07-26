@@ -20,7 +20,7 @@
 
 # usage
 # the first argument to this script is the dump type, it can be either
-# full, incremental or feedback. the remaining arguments are forwarded
+# full, db, incremental or feedback. the remaining arguments are forwarded
 # the python dump_manager script. this can be useful in scenarios where
 # we want to pass in the --dump-id manually for recreating a failed dump.
 
@@ -32,9 +32,10 @@ cd "$LB_SERVER_ROOT" || exit 1
 source "admin/config.sh"
 source "admin/functions.sh"
 
-# This variable contains the name of a directory that is deleted when the script
-# exits, so we sanitise it here in case it was included in the environment.
+# These variables contain the names of directories that are deleted when the script
+# exits, so we sanitise them here in case they were included in the environment.
 DUMP_INTERMEDIATE_DIR=""
+PRIVATE_DUMP_INTERMEDIATE_DIR=""
 
 if [ "$DEPLOY_ENV" == "prod" ] && \
    { [ "$CONTAINER_NAME" == "listenbrainz-cron-prod" ] || [ "$CONTAINER_NAME" == "listenbrainz-full-dumps-cron-prod" ]; }
@@ -100,6 +101,9 @@ shift
 
 if [ "$DUMP_TYPE" == "full" ]; then
     SUB_DIR="fullexport"
+elif [ "$DUMP_TYPE" == "db" ]; then
+    # database dumps are published alongside the full listen dumps
+    SUB_DIR="fullexport"
 elif [ "$DUMP_TYPE" == "incremental" ]; then
     SUB_DIR="incremental"
 elif [ "$DUMP_TYPE" == "feedback" ]; then
@@ -109,7 +113,7 @@ elif [ "$DUMP_TYPE" == "mbcanonical" ]; then
 elif [ "$DUMP_TYPE" == "sample" ]; then
     SUB_DIR="sample"
 else
-    echo "ERROR: Dump Type $DUMP_TYPE is invalid. Dump type must be one of 'full', 'incremental', 'feedback', 'mbcanonical' or 'sample'"
+    echo "ERROR: Dump Type $DUMP_TYPE is invalid. Dump type must be one of 'full', 'db', 'incremental', 'feedback', 'mbcanonical' or 'sample'"
     exit
 fi
 
@@ -126,16 +130,24 @@ mkdir -p "$DUMP_INTERMEDIATE_DIR"
 
 DUMP_TEMP_DIR="$DUMP_BASE_DIR"
 
-PRIVATE_DUMP_INTERMEDIATE_DIR="$PRIVATE_DUMP_BASE_DIR/$SUB_DIR.$$"
-echo "PRIVATE_DUMP_BASE_DIR is $PRIVATE_DUMP_BASE_DIR"
-echo "creating PRIVATE_DUMP_INTERMEDIATE_DIR $PRIVATE_DUMP_INTERMEDIATE_DIR"
-mkdir -p "$PRIVATE_DUMP_INTERMEDIATE_DIR"
+# only the db dumps create private dumps
+if [ "$DUMP_TYPE" == "db" ]; then
+    PRIVATE_DUMP_INTERMEDIATE_DIR="$PRIVATE_DUMP_BASE_DIR/$SUB_DIR.$$"
+    echo "PRIVATE_DUMP_BASE_DIR is $PRIVATE_DUMP_BASE_DIR"
+    echo "creating PRIVATE_DUMP_INTERMEDIATE_DIR $PRIVATE_DUMP_INTERMEDIATE_DIR"
+    mkdir -p "$PRIVATE_DUMP_INTERMEDIATE_DIR"
 
-PRIVATE_DUMP_TEMP_DIR="$PRIVATE_DUMP_BASE_DIR"
+    PRIVATE_DUMP_TEMP_DIR="$PRIVATE_DUMP_BASE_DIR"
+fi
 
 if [ "$DUMP_TYPE" == "full" ]; then
-    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_INTERMEDIATE_DIR" -lp "$PRIVATE_DUMP_INTERMEDIATE_DIR" -lt "$DUMP_TEMP_DIR" -lpt "$PRIVATE_DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
+    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_INTERMEDIATE_DIR" -lt "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
         echo "Full dump failed, exiting!"
+        exit 1
+    fi
+elif [ "$DUMP_TYPE" == "db" ]; then
+    if ! /usr/local/bin/python manage.py dump create_db_dump -l "$DUMP_INTERMEDIATE_DIR" -lp "$PRIVATE_DUMP_INTERMEDIATE_DIR" -lt "$DUMP_TEMP_DIR" -lpt "$PRIVATE_DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
+        echo "Database dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "incremental" ]; then
@@ -182,9 +194,9 @@ echo "Dump created with timestamp $DUMP_TIMESTAMP"
 DUMP_DIR=$(dirname "$DUMP_ID_FILE")
 DUMP_NAME=$(basename "$DUMP_DIR")
 
-# Full dumps are already published to the remote FTP server and are too large
-# to keep a second public copy on the backup volume. Other dump types retain
-# their existing local backup.
+# Full listen dumps are already published to the remote FTP server and are too
+# large to keep a second public copy on the backup volume. Other dump types,
+# including the db dumps, retain their existing local backup.
 if [ "$DUMP_TYPE" != "full" ]; then
     echo "Creating Backup directories..."
     mkdir -m "$BACKUP_DIR_MODE" -p \
@@ -200,9 +212,13 @@ else
     echo "Skipping the redundant public full dump backup."
 fi
 
-HAS_EMPTY_PRIVATE_DIRS_OR_FILES=$(find "$PRIVATE_DUMP_INTERMEDIATE_DIR" -empty)
-if [ -z "$HAS_EMPTY_PRIVATE_DIRS_OR_FILES" ]; then
-    # private dumps directory is not empty
+if [ -n "$PRIVATE_DUMP_INTERMEDIATE_DIR" ]; then
+    HAS_EMPTY_PRIVATE_DIRS_OR_FILES=$(find "$PRIVATE_DUMP_INTERMEDIATE_DIR" -empty)
+    if [ -n "$HAS_EMPTY_PRIVATE_DIRS_OR_FILES" ]; then
+        echo "Empty private files or dirs found, exiting."
+        echo "$HAS_EMPTY_PRIVATE_DIRS_OR_FILES"
+        exit 1
+    fi
 
     PRIVATE_DUMP_ID_FILE=$(find "$PRIVATE_DUMP_INTERMEDIATE_DIR" -type f -name 'DUMP_ID.txt')
     if [ -z "$PRIVATE_DUMP_ID_FILE" ]; then
@@ -288,9 +304,9 @@ cat "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
 
 if [ "$DUMP_TYPE" == "full" ]; then
-    # Full FTP retention is applied by rsync-dump-files.sh only after every
-    # pending payload has uploaded successfully. Remove public full dumps left
-    # on the legacy backup volume now that it is no longer used for them.
+    # Full listen dump FTP retention is applied by rsync-dump-files.sh only after
+    # every pending payload has uploaded successfully. Remove public full dumps
+    # left on the legacy backup volume now that it is no longer used for them.
     /usr/local/bin/python manage.py dump delete_old_dumps \
         --remove-all-full-dumps \
         "$BACKUP_DIR/$SUB_DIR"
