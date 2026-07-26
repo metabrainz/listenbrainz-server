@@ -693,7 +693,6 @@ class TimescaleListenStore:
         Note: this method tries to delete the user 5 times before giving up.
 
         Args:
-            musicbrainz_id: the MusicBrainz ID of the user
             user_id: the listenbrainz row id of the user
             created: delete listens created before this timestamp
 

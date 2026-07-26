@@ -534,8 +534,6 @@ def search_playlist(db_conn, ts_conn, query: str, count: int = 0, offset: int = 
         db_conn: database connection
         ts_conn: timescale database connection
         query: The search query
-        include_private: If True, include all playlists by a user, including private ones. The count of
-                 playlists returned will include private playlists if True
         count: Return this many playlists. If 0, return all playlists
         offset: if set, get playlists from this offset
 

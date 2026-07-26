@@ -141,9 +141,7 @@ function Navbar() {
                 <Link to="/login/" onClick={toggleSidebar}>
                   Sign in
                 </Link>
-                <a href={getRegistrationUrl(registrationUrl)}>
-                  Create Account
-                </a>
+                <a href={getRegistrationUrl(registrationUrl)}>Create Account</a>
               </>
             )}
             <NavLink to="/about/" onClick={toggleSidebar}>
