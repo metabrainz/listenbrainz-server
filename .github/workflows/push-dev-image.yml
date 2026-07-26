@@ -1,6 +1,7 @@
 # This workflow can be used to push an image off a branch to Docker Hub.
 # This is useful to deploy changes to LB beta or test for testing.
 name: Push development image
+permissions: {}
 
 on:
   workflow_dispatch:

@@ -1,4 +1,5 @@
 name: ListenBrainz Server Tests
+permissions: {}
 
 on:
   push:

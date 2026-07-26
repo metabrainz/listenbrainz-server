@@ -1,4 +1,5 @@
 name: Release Drafter
+permissions: {}
 
 on:
   push:
@@ -9,6 +10,10 @@ on:
 jobs:
   update_release_draft:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed for drafting releases per [1]
+      pull-requests: read # Needed for drafting releases per [1]
+      # [1] https://github.com/release-drafter/release-drafter/tree/master#usage
     steps:
       # Drafts your next Release notes as Pull Requests are merged into "master"
       - uses: release-drafter/release-drafter@eada3c96a64734dd381cfbda23511034e328ddb0 # v7.6.0

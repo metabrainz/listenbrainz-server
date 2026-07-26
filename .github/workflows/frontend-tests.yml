@@ -1,4 +1,5 @@
 name: ListenBrainz Frontend Tests
+permissions: {}
 
 on:
   push:

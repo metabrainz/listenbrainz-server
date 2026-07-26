@@ -1,5 +1,5 @@
 name: ListenBrainz Spark Tests
-
+permissions: {}
 on:
   push:
     branches: [ master ]
