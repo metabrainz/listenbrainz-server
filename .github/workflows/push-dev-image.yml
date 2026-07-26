@@ -41,8 +41,12 @@ jobs:
         run: |
           docker build \
             --target listenbrainz-prod \
-            --tag metabrainz/listenbrainz:"${{ github.event.inputs.tag }}" \
+            --tag metabrainz/listenbrainz:"${GITHUB_EVENT_INPUTS_TAG}" \
             --build-arg GIT_COMMIT_SHA="${{ github.sha }}" .
+        env:
+          GITHUB_EVENT_INPUTS_TAG: ${{ github.event.inputs.tag }}
 
       - name: Push development image
-        run: docker push metabrainz/listenbrainz:"${{ github.event.inputs.tag }}"
+        run: docker push metabrainz/listenbrainz:"${GITHUB_EVENT_INPUTS_TAG}"
+        env:
+          GITHUB_EVENT_INPUTS_TAG: ${{ github.event.inputs.tag }}
