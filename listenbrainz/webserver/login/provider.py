@@ -1,4 +1,4 @@
-from flask import request, session
+from flask import current_app, request, session
 
 from listenbrainz.domain.musicbrainz import MusicBrainzService, MUSICBRAINZ_SCOPES
 from listenbrainz.webserver import db_conn
@@ -22,10 +22,11 @@ def get_user():
         code = _fetch_data("code")
         token = service.fetch_access_token(code)
         info = service.get_user_info(token["access_token"])
-        musicbrainz_id = info["sub"]
-        musicbrainz_row_id = info["metabrainz_user_id"]
-    except KeyError:
+        musicbrainz_id = info["username"]
+        musicbrainz_row_id = info["sub"]
+    except KeyError as e:
         # get_auth_session raises a KeyError if it was unable to get the required data from `code`
+        current_app.logger.error("Error occurred while validating MetaBrainz user introspection: %s", str(e))
         raise MusicBrainzAuthSessionError()
 
     user = db_user.get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id, fetch_email=True)
