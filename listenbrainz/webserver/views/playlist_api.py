@@ -24,7 +24,7 @@ from listenbrainz.webserver.decorators import crossdomain, api_listenstore_neede
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden, APIError, PlaylistAPIXMLError, APIUnauthorized
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
-    _filter_description_html, get_non_negative_param
+    _filter_description_html, get_non_negative_param, get_positive_param
 from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritablePlaylistRecording, \
     PLAYLIST_EXTENSION_URI, PLAYLIST_TRACK_URI_PREFIX, PLAYLIST_URI_PREFIX, PLAYLIST_TRACK_EXTENSION_URI, \
     PLAYLIST_ARTIST_URI_PREFIX, PLAYLIST_RELEASE_URI_PREFIX
@@ -1092,7 +1092,9 @@ def import_musicbrainz_collections():
         raise APIInternalServerError("MusicBrainz database is not configured on this server.")
 
     if not user.get("musicbrainz_row_id"):
-        raise APIInternalServerError("Cannot determine MusicBrainz editor id for this user.")
+        raise APIBadRequest(
+            "Your ListenBrainz account is not linked to a MusicBrainz account."
+        )
 
     try:
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
@@ -1140,7 +1142,7 @@ def import_musicbrainz_collection_detail(collection_mbid):
     user = validate_auth_header(optional=True)
     viewer_editor_id = user.get("musicbrainz_row_id") if user else None
 
-    count = get_non_negative_param("count", 100)
+    count = get_positive_param("count", 100)
     offset = get_non_negative_param("offset", 0)
     payload, error = fetch_collection_payload(
         collection_mbid,

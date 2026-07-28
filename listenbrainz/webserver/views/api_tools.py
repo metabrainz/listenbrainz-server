@@ -408,6 +408,25 @@ def get_non_negative_param(param, default=None):
     return value
 
 
+def get_positive_param(param, default=None):
+    """ Gets the value of a request parameter, validating that it is a positive integer (> 0).
+
+    Args:
+        param (str): the parameter to get
+        default: the value to return if the parameter doesn't exist in the request
+    """
+    value = request.args.get(param, default)
+    if value is not None:
+        try:
+            value = int(value)
+        except ValueError:
+            raise APIBadRequest("'{}' should be a positive integer".format(param))
+
+        if value <= 0:
+            raise APIBadRequest("'{}' should be a positive integer".format(param))
+    return value
+
+
 def parse_param_list(params: str) -> list:
     """ Splits a string of comma separated values into a list """
     param_list = []
