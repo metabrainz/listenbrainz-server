@@ -58,8 +58,8 @@ option to `register`_ your application. Fill out the form with the following dat
 After entering this information, you'll have an OAuth client ID and OAuth client
 secret. You'll use these for configuring ListenBrainz.
 
-.. _MusicBrainz applications page: https://musicbrainz.org/new-oauth2/client/list
-.. _register: https://musicbrainz.org/new-oauth2/client/create
+.. _MusicBrainz applications page: https://musicbrainz.org/oauth2/client/list
+.. _register: https://musicbrainz.org/oauth2/client/create
 Update config.py
 ^^^^^^^^^^^^^^^^
 
