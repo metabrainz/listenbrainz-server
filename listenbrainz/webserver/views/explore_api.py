@@ -7,7 +7,7 @@ import listenbrainz.db.fresh_releases
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized
-from listenbrainz.webserver.views.api_tools import _parse_int_arg, _parse_bool_arg, validate_auth_header
+from listenbrainz.webserver.views.api_tools import _parse_int_arg, _parse_bool_arg, ensure_user_token_for_expensive_endpoint
 from listenbrainz.db.color import get_releases_for_color
 from troi.patches.lb_radio import LBRadioPatch
 from troi.patch import Patch
@@ -170,13 +170,7 @@ def lb_radio():
     :resheader Content-Type: *application/json*
     """
 
-    # Ensure that the user is passing an auth header
-    try:
-        _ = validate_auth_header()
-    except APIUnauthorized:
-        # Improve the error message until we can redirect to the login page.
-        return jsonify({ "error" : "Due to AI scraper's causing undue traffic on our sites, " + \
-                       "provide an Auth token. Sorry for this mess."""}), 401
+    ensure_user_token_for_expensive_endpoint()
 
     prompt = request.args.get("prompt", None)
     if prompt is None:
