@@ -45,8 +45,8 @@ export function EmailVerificationRequiredAlert({
     <div className="alert alert-danger">
       You need to verify an email address before {action}. Please check your
       inbox for a verification email, or go to your <MetaBrainzProfileLink /> to
-      verify your email. Read this{" "}
-      <EmailRequiredBlogLink /> to understand why we need your email.
+      verify your email. Read this <EmailRequiredBlogLink /> to understand why
+      we need your email.
     </div>
   );
 }

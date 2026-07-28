@@ -938,7 +938,9 @@ export default function MusicServices() {
                 )}
                 <div style={{ flex: 0, alignSelf: "end" }}>
                   <button
-                    disabled={!userHasEmail || permissions.navidrome !== "listen"}
+                    disabled={
+                      !userHasEmail || permissions.navidrome !== "listen"
+                    }
                     type="button"
                     className={`btn ${navidromeEditButtonClass}`}
                     onClick={handleNavidromeEditToggle}
