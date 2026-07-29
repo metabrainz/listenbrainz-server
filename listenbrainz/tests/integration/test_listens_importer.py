@@ -117,7 +117,8 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         )
         self.assert401(response)
 
-        with mock.patch("listenbrainz.webserver.views.import_listens.mb_engine"):
+        old_reject_setting = self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]
+        try:
             self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = True
             response = self.client.post(
                 self.custom_url_for("import_listens_api_v1.create_import_task"),
@@ -129,6 +130,8 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
                 content_type="multipart/form-data"
             )
             self.assert401(response)
+        finally:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = old_reject_setting
 
         db_user.pause(self.db_conn, self.user["id"])
         response = self.client.post(

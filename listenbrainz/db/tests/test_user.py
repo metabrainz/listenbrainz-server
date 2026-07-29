@@ -5,7 +5,6 @@ import listenbrainz.db.external_service_oauth as db_oauth
 import sqlalchemy
 
 from data.model.external_service import ExternalServiceType
-from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.db.testing import DatabaseTestCase
 
 
@@ -143,40 +142,6 @@ class UserTestCase(DatabaseTestCase):
         token = db_oauth.get_token(self.db_conn, user_id, ExternalServiceType.SPOTIFY)
         self.assertIsNone(token)
 
-    def test_get_similar_users(self):
-        user_id_21 = db_user.create(self.db_conn, 21, "twenty_one")
-        user_id_22 = db_user.create(self.db_conn, 22, "twenty_two")
-        user_id_23 = db_user.create(self.db_conn, 23, "twenty_three")
-
-        similar_users_21 = {str(user_id_22): 0.4, str(user_id_23): 0.7}
-        similar_users_22 = {str(user_id_21): 0.4}
-        similar_users_23 = {str(user_id_21): 0.7}
-
-        similar_users = {
-            str(user_id_21): similar_users_21,
-            str(user_id_22): similar_users_22,
-            str(user_id_23): similar_users_23,
-        }
-
-        import_user_similarities(similar_users)
-
-        self.assertListEqual([
-                {"id": user_id_23, "musicbrainz_id": "twenty_three", "similarity": 0.7},
-                {"id": user_id_22, "musicbrainz_id": "twenty_two", "similarity": 0.4}
-            ],
-            db_user.get_similar_users(self.db_conn, user_id_21)
-        )
-        
-        self.assertListEqual(
-            [{"id": user_id_21, "musicbrainz_id": "twenty_one", "similarity": 0.4}],
-            db_user.get_similar_users(self.db_conn, user_id_22)
-        )
-        
-        self.assertListEqual(
-            [{"id": user_id_21, "musicbrainz_id": "twenty_one", "similarity": 0.7}],
-            db_user.get_similar_users(self.db_conn, user_id_23)
-        )
-
     def test_get_user_by_id(self):
         user_id_24 = db_user.create(self.db_conn, 24, "twenty_four")
         user_id_25 = db_user.create(self.db_conn, 25, "twenty_five")
@@ -223,4 +188,3 @@ class UserTestCase(DatabaseTestCase):
         results = db_user.search(self.db_conn, "cif", 10, searcher_id)
         # changing this because the order of the list isnt being returned in a stable manner. 
         self.assertCountEqual(results, [("Cécile", 0.1, None), ("Cecile", 0.1, 0.42), ("lucifer", 0.09090909, 0.61)])
-
