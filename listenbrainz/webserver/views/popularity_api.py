@@ -5,7 +5,7 @@ from listenbrainz.db import popularity
 from listenbrainz.webserver import ts_conn, db_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized
-from listenbrainz.webserver.views.api_tools import is_valid_uuid, MAX_ITEMS_PER_GET, validate_auth_header
+from listenbrainz.webserver.views.api_tools import is_valid_uuid, MAX_ITEMS_PER_GET, ensure_user_token_for_expensive_endpoint
 
 popularity_api_bp = Blueprint('popularity_api_v1', __name__)
 
@@ -46,13 +46,8 @@ def top_recordings_for_artist(artist_mbid):
     """
     raise APIInternalServerError(
         "Popularity API currently disabled due to high load on the server. Please try again later.")
-    # Ensure that the user is passing an auth header
-    try:
-        _ = validate_auth_header()
-    except APIUnauthorized:
-        # Improve the error message until we can redirect to the login page.
-        return jsonify({"error": "Due to AI scrapers causing undue traffic on our sites, " +
-                       "please provide an Auth token. Sorry for this mess."""}), 401
+
+    ensure_user_token_for_expensive_endpoint()
 
     if not is_valid_uuid(artist_mbid):
         raise APIBadRequest(f"artist_mbid: '{artist_mbid}' is not a valid uuid")
@@ -115,13 +110,8 @@ def top_release_groups_for_artist(artist_mbid):
     """
     raise APIInternalServerError(
         "Popularity API currently disabled due to high load on the server. Please try again later.")
-    # Ensure that the user is passing an auth header
-    try:
-        _ = validate_auth_header()
-    except APIUnauthorized:
-        # Improve the error message until we can redirect to the login page.
-        return jsonify({"error": "Due to AI scrapers causing undue traffic on our sites, " +
-                       "please provide an Auth token. Sorry for this mess."""}), 401
+
+    ensure_user_token_for_expensive_endpoint()
 
     if not is_valid_uuid(artist_mbid):
         raise APIBadRequest(f"artist_mbid: '{artist_mbid}' is not a valid uuid")
@@ -195,13 +185,7 @@ def popularity_recording():
     :statuscode 200: you have data!
     :statuscode 400: invalid recording_mbid(s)
     """
-    # Ensure that the user is passing an auth header
-    try:
-        _ = validate_auth_header()
-    except APIUnauthorized:
-        # Improve the error message until we can redirect to the login page.
-        return jsonify({"error": "Due to AI scrapers causing undue traffic on our sites, " +
-                       "please provide an Auth token. Sorry for this mess."""}), 401
+    ensure_user_token_for_expensive_endpoint()
 
     return fetch_entity_popularity_counts("recording")
 
@@ -245,13 +229,7 @@ def popularity_artist():
     :statuscode 200: you have data!
     :statuscode 400: invalid artist_mbid(s)
     """
-    # Ensure that the user is passing an auth header
-    try:
-        _ = validate_auth_header()
-    except APIUnauthorized:
-        # Improve the error message until we can redirect to the login page.
-        return jsonify({"error": "Due to AI scrapers causing undue traffic on our sites, " +
-                       "please provide an Auth token. Sorry for this mess."""}), 401
+    ensure_user_token_for_expensive_endpoint()
 
     return fetch_entity_popularity_counts("artist")
 
@@ -295,13 +273,7 @@ def popularity_release():
     :statuscode 200: you have data!
     :statuscode 400: invalid release_mbid(s)
     """
-    # Ensure that the user is passing an auth header
-    try:
-        _ = validate_auth_header()
-    except APIUnauthorized:
-        # Improve the error message until we can redirect to the login page.
-        return jsonify({"error": "Due to AI scrapers causing undue traffic on our sites, " +
-                       "please provide an Auth token. Sorry for this mess."""}), 401
+    ensure_user_token_for_expensive_endpoint()
 
     return fetch_entity_popularity_counts("release")
 
@@ -345,12 +317,6 @@ def popularity_release_group():
     :statuscode 200: you have data!
     :statuscode 400: invalid release_group_mbid(s)
     """
-    # Ensure that the user is passing an auth header
-    try:
-        _ = validate_auth_header()
-    except APIUnauthorized:
-        # Improve the error message until we can redirect to the login page.
-        return jsonify({"error": "Due to AI scrapers causing undue traffic on our sites, " +
-                       "please provide an Auth token. Sorry for this mess."""}), 401
+    ensure_user_token_for_expensive_endpoint()
 
     return fetch_entity_popularity_counts("release_group")

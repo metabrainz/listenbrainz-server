@@ -4,6 +4,8 @@ import json
 import uuid
 from unittest import mock
 
+from sqlalchemy import text
+
 from listenbrainz.background.background_tasks import get_task
 from listenbrainz.db import user as db_user
 
@@ -63,6 +65,10 @@ class WebhookReceiverTestCase(IntegrationTestCase):
         }
 
         response, delivery_id = self._send_webhook("user.created", payload)
+        self.assert200(response)
+        self.assertEqual(response.json["status"], "success")
+
+        response, _ = self._send_webhook("user.created", payload, delivery_id=delivery_id)
         self.assert200(response)
         self.assertEqual(response.json["status"], "success")
 
@@ -210,7 +216,10 @@ class WebhookReceiverTestCase(IntegrationTestCase):
             "old": {"name": "oldusername"},
             "new": {"name": "newusername"}
         }
-        response, _ = self._send_webhook("user.updated", update_payload)
+        response, delivery_id = self._send_webhook("user.updated", update_payload)
+        self.assert200(response)
+
+        response, _ = self._send_webhook("user.updated", update_payload, delivery_id=delivery_id)
         self.assert200(response)
 
         user = db_user.get_by_mb_row_id(self.db_conn, 456, fetch_email=True)
@@ -275,7 +284,10 @@ class WebhookReceiverTestCase(IntegrationTestCase):
         user_id = user["id"]
 
         delete_payload = {"user_id": 789}
-        response, _ = self._send_webhook("user.deleted", delete_payload)
+        response, delivery_id = self._send_webhook("user.deleted", delete_payload)
+        self.assert200(response)
+
+        response, _ = self._send_webhook("user.deleted", delete_payload, delivery_id=delivery_id)
         self.assert200(response)
 
         with self.app.app_context():
@@ -283,3 +295,9 @@ class WebhookReceiverTestCase(IntegrationTestCase):
         self.assertIsNotNone(task)
         self.assertEqual(task.user_id, user_id)
         self.assertEqual(task.task, "delete_user")
+
+        result = self.db_conn.execute(
+            text("SELECT count(*) FROM background_tasks WHERE user_id = :user_id AND task = 'delete_user'"),
+            {"user_id": user_id},
+        )
+        self.assertEqual(result.scalar_one(), 1)

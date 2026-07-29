@@ -311,6 +311,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         uid = random.randint(2000, 1 << 31)
         testuser = db_user.get_or_create(self.db_conn, uid, "user_%d" % uid)
         self.logstore.set_empty_values_for_user(testuser["id"])
+        self.logstore.set_empty_values_for_user(testuser["id"])
         data = self._get_count_and_timestamps(testuser["id"])
         self.assertEqual(data["count"], 0)
         self.assertEqual(data["min_listened_at"], None)
