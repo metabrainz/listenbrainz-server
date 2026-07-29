@@ -19,7 +19,8 @@ on the FTP server:
 * the **full** dump job creates the listens, spark and statistics dumps into a
   :file:`listenbrainz-dump-<id>-<timestamp>-full` directory.
 
-The db dump runs an hour before the full dump so that the two jobs do not read from the databases at the same time.
+The full dump runs on the 1st and 15th of each month, and the db dump runs on the 2nd and 16th. The jobs run on separate
+hosts, so scheduling them on different days prevents them from reading heavily from the databases at the same time.
 Both dump types get their own id in the :code:`data_dump` table, so their ids and timestamps do not match each other.
 
 Logs

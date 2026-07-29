@@ -26,6 +26,7 @@ def _fetch_latest_file_info_from_ftp_dir(directory: str, has_id: bool, suffix: s
 
     def process_line(file):
         nonlocal latest_dump_id, latest_dt
+        file = file.rstrip("/")
         if file and (suffix is None or file.endswith(suffix)):
             if has_id:
                 dump_id, dt = _parse_ftp_name_with_id(file)

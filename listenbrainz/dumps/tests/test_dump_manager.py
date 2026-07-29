@@ -70,6 +70,26 @@ def test_cleanup_db_dump_retention_uses_constant(tmp_path):
     assert 'listenbrainz-dump-4-20180312-000004-db' in remaining
 
 
+def test_cleanup_only_db_dumps_preserves_pending_full_dumps(tmp_path):
+    for dump_id in range(1, 5):
+        (tmp_path / f'listenbrainz-dump-{dump_id}-20180312-00000{dump_id}-full').mkdir()
+        (tmp_path / f'listenbrainz-dump-{dump_id}-20180312-00000{dump_id}-db').mkdir()
+
+    result = CliRunner().invoke(
+        dump_manager.cli,
+        ["delete_old_dumps", "--only-db-dumps", str(tmp_path)],
+    )
+
+    assert result.exit_code == 0
+    remaining = {path.name for path in tmp_path.iterdir()}
+    for dump_id in range(1, 5):
+        assert f'listenbrainz-dump-{dump_id}-20180312-00000{dump_id}-full' in remaining
+    assert 'listenbrainz-dump-1-20180312-000001-db' not in remaining
+    assert 'listenbrainz-dump-2-20180312-000002-db' not in remaining
+    assert 'listenbrainz-dump-3-20180312-000003-db' in remaining
+    assert 'listenbrainz-dump-4-20180312-000004-db' in remaining
+
+
 def test_cleanup_legacy_full_dump_backups(tmp_path):
     for dump_id in range(1, 3):
         (tmp_path / f'listenbrainz-dump-{dump_id}-20180312-00000{dump_id}-full').mkdir()

@@ -468,8 +468,13 @@ def import_dump(private_archive, private_timescale_archive,
 @cli.command(name="delete_old_dumps")
 @click.argument('location', type=str)
 @click.option('--remove-all-full-dumps', is_flag=True, default=False)
-def delete_old_dumps(location, remove_all_full_dumps):
-    _cleanup_dumps(location, remove_all_full_dumps=remove_all_full_dumps)
+@click.option('--only-db-dumps', is_flag=True, default=False)
+def delete_old_dumps(location, remove_all_full_dumps, only_db_dumps):
+    _cleanup_dumps(
+        location,
+        remove_all_full_dumps=remove_all_full_dumps,
+        only_db_dumps=only_db_dumps,
+    )
 
 
 @cli.command(name="check_dump_ages")

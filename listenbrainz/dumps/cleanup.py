@@ -19,12 +19,23 @@ def _cleanup_full_dumps(location, dumps_to_keep):
         remove_dumps(location, full_dumps, dumps_to_keep)
 
 
-def _cleanup_dumps(location, remove_all_full_dumps=False):
+def _cleanup_db_dumps(location):
+    db_dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-db')
+    dump_files = [x for x in os.listdir(location) if db_dump_re.match(x)]
+    db_dumps = [x for x in sorted(dump_files, key=get_dump_id, reverse=True)]
+    if not db_dumps:
+        print('No database dumps present in specified directory!')
+    else:
+        remove_dumps(location, db_dumps, NUMBER_OF_DB_DUMPS_TO_KEEP)
+
+
+def _cleanup_dumps(location, remove_all_full_dumps=False, only_db_dumps=False):
     """Delete old dumps according to each dump type's retention constant.
 
     Args:
         location (str): the dir which needs to be cleaned up
         remove_all_full_dumps (bool): remove all full dumps instead of applying normal retention
+        only_db_dumps (bool): apply database dump retention without touching other dump types
 
     Returns:
         (int, int): the number of dumps remaining, the number of dumps deleted
@@ -33,18 +44,16 @@ def _cleanup_dumps(location, remove_all_full_dumps=False):
         print(f'Location {location} does not exist!')
         return
 
+    if only_db_dumps:
+        _cleanup_db_dumps(location)
+        return
+
     # Clean up full dumps
     full_dumps_to_keep = 0 if remove_all_full_dumps else NUMBER_OF_FULL_DUMPS_TO_KEEP
     _cleanup_full_dumps(location, full_dumps_to_keep)
 
     # Clean up database dumps
-    db_dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-db')
-    dump_files = [x for x in os.listdir(location) if db_dump_re.match(x)]
-    db_dumps = [x for x in sorted(dump_files, key=get_dump_id, reverse=True)]
-    if not db_dumps:
-        print('No database dumps present in specified directory!')
-    else:
-        remove_dumps(location, db_dumps, NUMBER_OF_DB_DUMPS_TO_KEEP)
+    _cleanup_db_dumps(location)
 
     # Clean up incremental dumps
     incremental_dump_re = re.compile(

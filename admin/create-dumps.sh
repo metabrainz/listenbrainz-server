@@ -310,11 +310,26 @@ if [ "$DUMP_TYPE" == "full" ]; then
     /usr/local/bin/python manage.py dump delete_old_dumps \
         --remove-all-full-dumps \
         "$BACKUP_DIR/$SUB_DIR"
+elif [ "$DUMP_TYPE" == "db" ]; then
+    # The FTP and backup fullexport directories also contain full dumps. A db
+    # run must not expire full payloads which may still be pending upload.
+    /usr/local/bin/python manage.py dump delete_old_dumps \
+        --only-db-dumps \
+        "$FTP_DIR/$SUB_DIR"
+    /usr/local/bin/python manage.py dump delete_old_dumps \
+        --only-db-dumps \
+        "$BACKUP_DIR/$SUB_DIR"
 else
     /usr/local/bin/python manage.py dump delete_old_dumps "$FTP_DIR/$SUB_DIR"
     /usr/local/bin/python manage.py dump delete_old_dumps "$BACKUP_DIR/$SUB_DIR"
 fi
-/usr/local/bin/python manage.py dump delete_old_dumps "$PRIVATE_BACKUP_DIR/$SUB_DIR"
+if [ "$DUMP_TYPE" == "db" ]; then
+    /usr/local/bin/python manage.py dump delete_old_dumps \
+        --only-db-dumps \
+        "$PRIVATE_BACKUP_DIR/$SUB_DIR"
+else
+    /usr/local/bin/python manage.py dump delete_old_dumps "$PRIVATE_BACKUP_DIR/$SUB_DIR"
+fi
 
 # rsync to ftp folder taking care of the rules
 ./admin/rsync-dump-files.sh "$DUMP_TYPE" "$DUMP_NAME"
