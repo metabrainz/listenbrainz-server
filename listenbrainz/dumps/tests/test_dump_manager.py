@@ -19,9 +19,11 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA"
 
+import io
 import os
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 import time
@@ -38,7 +40,7 @@ from listenbrainz.db.dump_entry import add_dump_entry, get_dump_entries, get_dum
 from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.db.model.recommendation_feedback import RecommendationFeedbackSubmit
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
-from listenbrainz.dumps.cleanup import _cleanup_dumps
+from listenbrainz.dumps.cleanup import _cleanup_dumps, select_expired_dumps
 from listenbrainz.listenstore.tests.util import generate_data
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app, timescale_connection
@@ -70,24 +72,17 @@ def test_cleanup_db_dump_retention_uses_constant(tmp_path):
     assert 'listenbrainz-dump-4-20180312-000004-db' in remaining
 
 
-def test_cleanup_only_db_dumps_preserves_pending_full_dumps(tmp_path):
-    for dump_id in range(1, 5):
-        (tmp_path / f'listenbrainz-dump-{dump_id}-20180312-00000{dump_id}-full').mkdir()
-        (tmp_path / f'listenbrainz-dump-{dump_id}-20180312-00000{dump_id}-db').mkdir()
+def test_cleanup_sample_dump_retention_uses_constant(tmp_path):
+    for minute in range(1, 5):
+        (tmp_path / f'listenbrainz-sample-20180312-00000{minute}-full').mkdir()
 
-    result = CliRunner().invoke(
-        dump_manager.cli,
-        ["delete_old_dumps", "--only-db-dumps", str(tmp_path)],
-    )
+    _cleanup_dumps(str(tmp_path))
 
-    assert result.exit_code == 0
     remaining = {path.name for path in tmp_path.iterdir()}
-    for dump_id in range(1, 5):
-        assert f'listenbrainz-dump-{dump_id}-20180312-00000{dump_id}-full' in remaining
-    assert 'listenbrainz-dump-1-20180312-000001-db' not in remaining
-    assert 'listenbrainz-dump-2-20180312-000002-db' not in remaining
-    assert 'listenbrainz-dump-3-20180312-000003-db' in remaining
-    assert 'listenbrainz-dump-4-20180312-000004-db' in remaining
+    assert 'listenbrainz-sample-20180312-000001-full' not in remaining
+    assert 'listenbrainz-sample-20180312-000002-full' not in remaining
+    assert 'listenbrainz-sample-20180312-000003-full' in remaining
+    assert 'listenbrainz-sample-20180312-000004-full' in remaining
 
 
 def test_cleanup_legacy_full_dump_backups(tmp_path):
@@ -95,10 +90,66 @@ def test_cleanup_legacy_full_dump_backups(tmp_path):
         (tmp_path / f'listenbrainz-dump-{dump_id}-20180312-00000{dump_id}-full').mkdir()
     (tmp_path / 'listenbrainz-dump-3-20180312-000003-db').mkdir()
 
-    _cleanup_dumps(str(tmp_path), remove_all_full_dumps=True)
+    result = CliRunner().invoke(
+        dump_manager.cli,
+        ["delete_old_dumps", "--keep", "full=0", str(tmp_path)],
+    )
 
+    assert result.exit_code == 0
     # only the full dumps are removed, db dumps are still backed up on this volume
     assert [path.name for path in tmp_path.iterdir()] == ['listenbrainz-dump-3-20180312-000003-db']
+
+
+def test_cleanup_rejects_unknown_keep_override(tmp_path):
+    (tmp_path / 'listenbrainz-dump-1-20180312-000001-full').mkdir()
+
+    result = CliRunner().invoke(
+        dump_manager.cli,
+        ["delete_old_dumps", "--keep", "listens=0", str(tmp_path)],
+    )
+
+    assert result.exit_code != 0
+    assert [path.name for path in tmp_path.iterdir()] == ['listenbrainz-dump-1-20180312-000001-full']
+
+
+def test_select_expired_dumps_ignores_unrecognised_names():
+    dump_names = [
+        'listenbrainz-dump-1-20180312-000001-full',
+        'listenbrainz-dump-2-20180312-000002-full',
+        'listenbrainz-dump-3-20180312-000003-full',
+        # neither a dump nor a prefix of one that may be deleted
+        'not-a-dump',
+        'listenbrainz-dump-4-20180312-000004-full.tmp',
+        'listenbrainz-dump-5-2018031-000005-full',
+    ]
+
+    assert select_expired_dumps(dump_names) == ['listenbrainz-dump-1-20180312-000001-full']
+
+
+def test_select_expired_dumps_sorts_full_dumps_by_id_not_name():
+    dump_names = [
+        'listenbrainz-dump-9-20180312-000009-full',
+        'listenbrainz-dump-10-20180313-000010-full',
+        'listenbrainz-dump-11-20180314-000011-full',
+    ]
+
+    assert select_expired_dumps(dump_names) == ['listenbrainz-dump-9-20180312-000009-full']
+
+
+def test_list_expired_dumps_prints_expired_names_only(monkeypatch, capsys):
+    dump_names = [
+        'listenbrainz-dump-1-20180312-000001-db',
+        'listenbrainz-dump-2-20180312-000002-db',
+        'listenbrainz-dump-3-20180312-000003-db',
+        'not-a-dump',
+    ]
+    monkeypatch.setattr(sys, 'stdin', io.StringIO("\n".join(dump_names) + "\n"))
+
+    dump_manager.list_expired_dumps.callback(keep_overrides=())
+
+    # the shell scripts parse stdout, so only expired names may appear there
+    stdout, _ = capsys.readouterr()
+    assert stdout.split() == ['listenbrainz-dump-1-20180312-000001-db']
 
 
 class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):

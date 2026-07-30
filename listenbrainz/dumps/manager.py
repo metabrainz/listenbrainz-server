@@ -32,7 +32,7 @@ from listenbrainz.db.dump_entry import get_latest_incremental_dump, add_dump_ent
     get_previous_incremental_dump
 from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.dumps.check import check_ftp_dump_ages
-from listenbrainz.dumps.cleanup import _cleanup_dumps
+from listenbrainz.dumps.cleanup import _cleanup_dumps, parse_keep_overrides, select_expired_dumps
 from listenbrainz.dumps.exporter import create_statistics_dump, dump_feedback_for_spark, dump_database, \
     create_sample_dump
 from listenbrainz.dumps.importer import import_postgres_dump
@@ -465,16 +465,40 @@ def import_dump(private_archive, private_timescale_archive,
             import_sample_data(sample_archive, threads)
 
 
+def _parse_keep_overrides(overrides):
+    try:
+        return parse_keep_overrides(overrides)
+    except ValueError as err:
+        raise click.BadParameter(str(err), param_hint='--keep')
+
+
+keep_option = click.option(
+    '--keep', 'keep_overrides', multiple=True, metavar='KIND=COUNT',
+    help='Keep COUNT dumps of kind KIND instead of the default, e.g. --keep full=0. May be repeated.'
+)
+
+
 @cli.command(name="delete_old_dumps")
 @click.argument('location', type=str)
-@click.option('--remove-all-full-dumps', is_flag=True, default=False)
-@click.option('--only-db-dumps', is_flag=True, default=False)
-def delete_old_dumps(location, remove_all_full_dumps, only_db_dumps):
-    _cleanup_dumps(
-        location,
-        remove_all_full_dumps=remove_all_full_dumps,
-        only_db_dumps=only_db_dumps,
-    )
+@keep_option
+def delete_old_dumps(location, keep_overrides):
+    """ Delete the dumps in LOCATION which have fallen outside their kind's retention window. """
+    _cleanup_dumps(location, _parse_keep_overrides(keep_overrides))
+
+
+@cli.command(name="list_expired_dumps")
+@keep_option
+def list_expired_dumps(keep_overrides):
+    """ Read dump directory names on stdin and print the expired ones to stdout.
+
+    The retention policy lives here so that the shell scripts which own the rsync
+    credentials do not need to know it: they list the remote host, pipe the listing
+    through this command and delete whatever it names. Diagnostics are written to
+    stderr so that stdout stays machine readable.
+    """
+    dump_names = [line.strip() for line in sys.stdin if line.strip()]
+    for name in select_expired_dumps(dump_names, _parse_keep_overrides(keep_overrides)):
+        click.echo(name)
 
 
 @cli.command(name="check_dump_ages")
