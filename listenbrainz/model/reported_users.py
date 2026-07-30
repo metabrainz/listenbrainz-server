@@ -4,7 +4,7 @@ from listenbrainz.db import user as db_user
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.admin import AdminModelView
 from flask_admin.model import action
-from flask import  flash, redirect
+from flask import flash, redirect
 
 
 class ReportedUsers(db.Model):
