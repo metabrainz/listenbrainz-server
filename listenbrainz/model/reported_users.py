@@ -42,8 +42,17 @@ class ReportedUserAdminView(AdminModelView):
     )
     def pause_users(self, ids):
         try:
-            users = db_user.set_reported_users_paused(db_conn, ids, True)
+            users, notification_failed_users = db_user.set_reported_users_paused(db_conn, ids, True)
             flash(f"Paused {len(users)} users", "success")
+            if notification_failed_users:
+                flash(
+                    "Sent %d notifications. Failed to notify %d users: %s" % (
+                        len(users) - len(notification_failed_users),
+                        len(notification_failed_users),
+                        ", ".join(notification_failed_users),
+                    ),
+                    "warning",
+                )
         except Exception as e:
             flash(f"Failed to pause users: {str(e)}", "error")
         return redirect('/admin/reported_users_model/')
@@ -56,8 +65,17 @@ class ReportedUserAdminView(AdminModelView):
     )
     def unpause_users(self, ids):
         try:
-            users = db_user.set_reported_users_paused(db_conn, ids, False)
+            users, notification_failed_users = db_user.set_reported_users_paused(db_conn, ids, False)
             flash(f"Unpaused {len(users)} users", "success")
+            if notification_failed_users:
+                flash(
+                    "Sent %d notifications. Failed to notify %d users: %s" % (
+                        len(users) - len(notification_failed_users),
+                        len(notification_failed_users),
+                        ", ".join(notification_failed_users),
+                    ),
+                    "warning",
+                )
         except Exception as e:
             flash(f"Failed to unpause users: {str(e)}", "error")
         return redirect('/admin/reported_users_model/')

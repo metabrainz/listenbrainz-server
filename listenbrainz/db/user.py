@@ -640,7 +640,7 @@ def set_reported_users_paused(db_conn, report_ids, is_paused):
 
 def _set_users_paused(db_conn, user_ids_expression, params, is_paused):
     if not any(params.values()):
-        return []
+        return [], []
 
     try:
         result = db_conn.execute(sqlalchemy.text(f"""
@@ -660,10 +660,14 @@ def _set_users_paused(db_conn, user_ids_expression, params, is_paused):
         action = "pause" if is_paused else "unpause"
         raise DatabaseException("Couldn't %s user: %s" % (action, str(err)))
 
+    musicbrainz_ids = [user["musicbrainz_id"] for user in users]
+    notification_failed_musicbrainz_ids = []
+
     for user in users:
         try:
             _notify_user_paused(db_conn, user["id"], is_paused)
         except Exception as err:
+            notification_failed_musicbrainz_ids.append(user["musicbrainz_id"])
             logger.error(
                 "Failed to notify user %s after setting is_paused=%s: %s",
                 user["musicbrainz_id"],
@@ -672,7 +676,7 @@ def _set_users_paused(db_conn, user_ids_expression, params, is_paused):
                 exc_info=True,
             )
 
-    return [user["musicbrainz_id"] for user in users]
+    return musicbrainz_ids, notification_failed_musicbrainz_ids
 
 
 def _notify_user_paused(db_conn, user_id, paused):

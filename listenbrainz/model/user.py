@@ -81,8 +81,17 @@ class UserAdminView(AdminModelView):
     )
     def pause_users(self, ids):
         try:
-            users = db_user.pause(db_conn, ids)
+            users, notification_failed_users = db_user.pause(db_conn, ids)
             flash(f"Paused {len(users)} users", "success")
+            if notification_failed_users:
+                flash(
+                    "Sent %d notifications. Failed to notify %d users: %s" % (
+                        len(users) - len(notification_failed_users),
+                        len(notification_failed_users),
+                        ", ".join(notification_failed_users),
+                    ),
+                    "warning",
+                )
         except Exception as e:
             flash(f"Failed to pause users: {str(e)}", "error")
         return redirect('/admin/user_model/')
@@ -96,8 +105,17 @@ class UserAdminView(AdminModelView):
     )
     def unpause_users(self, ids):
         try:
-            users = db_user.unpause(db_conn, ids)
+            users, notification_failed_users = db_user.unpause(db_conn, ids)
             flash(f"Unpaused {len(users)} users", "success")
+            if notification_failed_users:
+                flash(
+                    "Sent %d notifications. Failed to notify %d users: %s" % (
+                        len(users) - len(notification_failed_users),
+                        len(notification_failed_users),
+                        ", ".join(notification_failed_users),
+                    ),
+                    "warning",
+                )
         except Exception as e:
             flash(f"Failed to unpause users: {str(e)}", "error")
         return redirect('/admin/user_model/')

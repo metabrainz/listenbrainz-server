@@ -122,9 +122,10 @@ class UserTestCase(DatabaseTestCase):
         user_id_2 = db_user.create(self.db_conn, 41, 'rob')
 
         with mock.patch("listenbrainz.db.user._notify_user_paused") as notify_user_paused:
-            users = db_user.pause(self.db_conn, [user_id_1, user_id_2])
+            users, notification_failed_users = db_user.pause(self.db_conn, [user_id_1, user_id_2])
 
         self.assertCountEqual(users, ['anne', 'rob'])
+        self.assertEqual(notification_failed_users, [])
         self.assertEqual(db_user.get(self.db_conn, user_id_1)['is_paused'], True)
         self.assertEqual(db_user.get(self.db_conn, user_id_2)['is_paused'], True)
         notify_user_paused.assert_has_calls([
@@ -145,9 +146,10 @@ class UserTestCase(DatabaseTestCase):
                 raise Exception("Failed to send email")
 
         with mock.patch("listenbrainz.db.user._notify_user_paused", side_effect=notify_user_paused):
-            users = db_user.pause(self.db_conn, [user_id_1, user_id_2])
+            users, notification_failed_users = db_user.pause(self.db_conn, [user_id_1, user_id_2])
 
         self.assertCountEqual(users, ['anne', 'rob'])
+        self.assertEqual(notification_failed_users, ['anne'])
         self.assertEqual(db_user.get(self.db_conn, user_id_1)['is_paused'], True)
         self.assertEqual(db_user.get(self.db_conn, user_id_2)['is_paused'], True)
         self.assertCountEqual(notified_user_ids, [user_id_1, user_id_2])
@@ -172,9 +174,10 @@ class UserTestCase(DatabaseTestCase):
         report_ids = [row.id for row in result.fetchall()]
 
         with mock.patch("listenbrainz.db.user._notify_user_paused") as notify_user_paused:
-            users = db_user.set_reported_users_paused(self.db_conn, report_ids, True)
+            users, notification_failed_users = db_user.set_reported_users_paused(self.db_conn, report_ids, True)
 
         self.assertCountEqual(users, ['anne', 'rob'])
+        self.assertEqual(notification_failed_users, [])
         self.assertEqual(db_user.get(self.db_conn, reporter_id)['is_paused'], False)
         self.assertEqual(db_user.get(self.db_conn, reported_user_id_1)['is_paused'], True)
         self.assertEqual(db_user.get(self.db_conn, reported_user_id_2)['is_paused'], True)
