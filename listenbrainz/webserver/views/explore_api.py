@@ -13,6 +13,7 @@ from troi.patches.lb_radio import LBRadioPatch
 from troi.patch import Patch
 from listenbrainz.radio.artist import RecordingSearchByArtistService
 from listenbrainz.radio.tags import RecordingSearchByTagService
+from listenbrainz.radio.recording_lookup import RecordingLookupService
 
 DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS = 14
 MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 90
@@ -199,6 +200,7 @@ def lb_radio():
         })
         patch.register_service(RecordingSearchByArtistService())
         patch.register_service(RecordingSearchByTagService())
+        patch.register_service(RecordingLookupService())
         playlist = patch.generate_playlist()
     except RuntimeError as err:
         raise APIBadRequest(f"LB Radio generation failed: {err}")
