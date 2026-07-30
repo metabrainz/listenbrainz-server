@@ -131,7 +131,27 @@ class UserTestCase(DatabaseTestCase):
             mock.call(self.db_conn, user_id_1, True),
             mock.call(self.db_conn, user_id_2, True),
         ], any_order=True)
-        
+
+    def test_pause_multiple_users_continues_after_notification_failure(self):
+        """ Tests that notification failures do not stop later notifications """
+
+        user_id_1 = db_user.create(self.db_conn, 42, 'anne')
+        user_id_2 = db_user.create(self.db_conn, 43, 'rob')
+        notified_user_ids = []
+
+        def notify_user_paused(db_conn, user_id, paused):
+            notified_user_ids.append(user_id)
+            if user_id == user_id_1:
+                raise Exception("Failed to send email")
+
+        with mock.patch("listenbrainz.db.user._notify_user_paused", side_effect=notify_user_paused):
+            users = db_user.pause(self.db_conn, [user_id_1, user_id_2])
+
+        self.assertCountEqual(users, ['anne', 'rob'])
+        self.assertEqual(db_user.get(self.db_conn, user_id_1)['is_paused'], True)
+        self.assertEqual(db_user.get(self.db_conn, user_id_2)['is_paused'], True)
+        self.assertCountEqual(notified_user_ids, [user_id_1, user_id_2])
+
     def test_unpause(self):
         """ Tests that pauses the given user """
 
