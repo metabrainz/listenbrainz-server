@@ -256,7 +256,7 @@ describe("<UserSocialNetwork />", () => {
   it("handles API errors gracefully with toast notifications", async () => {
     // Mock server to return error
     server.use(
-      http.get("/1/user/*/followers", () => {
+      http.get("*/1/user/*/followers", () => {
         return HttpResponse.json({ error: "Server error" }, { status: 418 });
       })
     );
@@ -282,7 +282,7 @@ describe("<UserSocialNetwork />", () => {
 
   it("handles similar users API error gracefully", async () => {
     server.use(
-      http.get("/1/user/*/similar", () => {
+      http.get("*/1/user/*/similar-users", () => {
         return HttpResponse.json({ error: "Server error" }, { status: 418 });
       })
     );
