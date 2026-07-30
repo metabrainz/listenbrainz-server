@@ -655,15 +655,24 @@ def _set_users_paused(db_conn, user_ids_expression, params, is_paused):
         users = result.mappings().all()
         db_conn.commit()
 
-        for user in users:
-            _notify_user_paused(db_conn, user["id"], is_paused)
-
-        return [user["musicbrainz_id"] for user in users]
-
     except sqlalchemy.exc.ProgrammingError as err:
         logger.error(err)
         action = "pause" if is_paused else "unpause"
         raise DatabaseException("Couldn't %s user: %s" % (action, str(err)))
+
+    for user in users:
+        try:
+            _notify_user_paused(db_conn, user["id"], is_paused)
+        except Exception as err:
+            logger.error(
+                "Failed to notify user %s after setting is_paused=%s: %s",
+                user["musicbrainz_id"],
+                is_paused,
+                err,
+                exc_info=True,
+            )
+
+    return [user["musicbrainz_id"] for user in users]
 
 
 def _notify_user_paused(db_conn, user_id, paused):
