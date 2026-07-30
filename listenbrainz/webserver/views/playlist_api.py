@@ -20,7 +20,7 @@ from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.metadata_cache.apple.client import Apple
 from listenbrainz.metadata_cache.soundcloud.client import SoundCloud
 from listenbrainz.webserver.utils import parse_boolean_arg
-from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
+from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed , api_musicbrainz_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden, APIError, PlaylistAPIXMLError, APIUnauthorized
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
@@ -1083,7 +1083,7 @@ def import_playlist_from_music_service(service):
 @playlist_api_bp.get("/import/musicbrainz/collections")
 @crossdomain
 @ratelimit()
-@api_listenstore_needed
+@api_musicbrainz_needed
 def import_musicbrainz_collections():
     """List the authenticated user's MusicBrainz recording collections."""
     user = validate_auth_header()
@@ -1136,7 +1136,7 @@ def import_musicbrainz_collections():
 @playlist_api_bp.get("/import/musicbrainz/collections/<collection_mbid>")
 @crossdomain
 @ratelimit()
-@api_listenstore_needed
+@api_musicbrainz_needed
 def import_musicbrainz_collection_detail(collection_mbid):
     """Fetch a MusicBrainz collection as a read-only track list for preview"""
     user = validate_auth_header(optional=True)

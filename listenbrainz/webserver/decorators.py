@@ -48,6 +48,23 @@ def api_listenstore_needed(func):
     return decorator
 
 
+def api_musicbrainz_needed(func):
+    """
+      This API decorator checks to see if musicbrainz db is online by checking a config variable 
+      and if not , it raises APIServiceUnavailable
+    """
+    @wraps(func)
+    def decorator(*args, **kwargs):
+        from listenbrainz.webserver.errors import APIServiceUnavailable
+        is_musicbrainz_up = current_app.config.get("IS_MUSICBRAINZ_UP", True)
+        if not is_musicbrainz_up:
+            raise APIServiceUnavailable("The MusicBrainz database is momentarily offline. " +
+                                        "Please wait a few minutes and try again.")
+        return func(*args, **kwargs)
+
+    return decorator
+  
+
 def web_listenstore_needed(func):
     """
         This web decorator checks to see if timescale is online (by having
