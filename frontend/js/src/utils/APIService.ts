@@ -19,7 +19,7 @@ export default class APIService {
 
   MAX_LISTEN_SIZE: number = 10000; // Maximum size of listens that can be sent
   private fetchWithRetry: (
-    input: RequestInfo,
+    input: RequestInfo | URL,
     init?: RequestInitWithRetry
   ) => Promise<Response>;
 
@@ -56,7 +56,13 @@ export default class APIService {
   private static readonly SPOTIFY_TOKEN_CACHE_DURATION = 5 * 60 * 1000;
 
   constructor(APIBaseURI: string) {
-    this.fetchWithRetry = fetchBuilder(window.fetch, this.retryParams);
+    const fetchRetry = fetchBuilder(
+      (input, init) =>
+        init === undefined ? window.fetch(input) : window.fetch(input, init),
+      this.retryParams
+    );
+    this.fetchWithRetry = (input, init) =>
+      fetchRetry(input as RequestInfo, init);
     let finalUri = APIBaseURI;
     if (finalUri.endsWith("/")) {
       finalUri = finalUri.substring(0, APIBaseURI.length - 1);
@@ -442,7 +448,7 @@ export default class APIService {
     try {
       const url = new URL(`${this.APIBaseURI}/search/users/`);
       url.searchParams.append("search_term", userName);
-      const response = await this.fetchWithRetry(url.toString(), {
+      const response = await this.fetchWithRetry(url, {
         method: "GET",
       });
 
@@ -536,7 +542,7 @@ export default class APIService {
       // Now submitListens focused on payload handling
 
       return this.withRetry(async () => {
-        const response = await this.fetchWithRetry(url.toString(), {
+        const response = await this.fetchWithRetry(url, {
           method: "POST",
           headers: {
             Authorization: `Token ${userToken}`,
@@ -1800,7 +1806,7 @@ export default class APIService {
       url.searchParams.append("inc", "artist tag release");
     }
 
-    const response = await this.fetchWithRetry(url.toString(), {
+    const response = await this.fetchWithRetry(url, {
       headers: {
         Authorization: `Token ${userToken}`,
       },
@@ -1824,7 +1830,7 @@ export default class APIService {
       url.searchParams.append("inc", "artist tag release");
     }
 
-    const response = await this.fetchWithRetry(url.toString());
+    const response = await this.fetchWithRetry(url);
     await this.checkStatus(response);
     return response.json();
   };
