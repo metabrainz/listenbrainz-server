@@ -1,5 +1,6 @@
 import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
 import fetchBuilder from "fetch-retry";
+import type { RequestInitWithRetry } from "fetch-retry";
 import { TagActionType } from "../tags/TagComponent";
 import type { SortOption } from "../explore/fresh-releases/FreshReleases";
 import APIError from "./APIError";
@@ -17,7 +18,11 @@ export default class APIService {
   CBBaseURI: string = "https://critiquebrainz.org/ws/1";
 
   MAX_LISTEN_SIZE: number = 10000; // Maximum size of listens that can be sent
-  private fetchWithRetry: any;
+  private fetchWithRetry: (
+    input: RequestInfo,
+    init?: RequestInitWithRetry
+  ) => Promise<Response>;
+
   private retryParams = {
     retries: 3,
     retryOn: [429, 500, 502, 503, 504],
@@ -531,7 +536,7 @@ export default class APIService {
       // Now submitListens focused on payload handling
 
       return this.withRetry(async () => {
-        const response = await this.fetchWithRetry(url, {
+        const response = await this.fetchWithRetry(url.toString(), {
           method: "POST",
           headers: {
             Authorization: `Token ${userToken}`,
