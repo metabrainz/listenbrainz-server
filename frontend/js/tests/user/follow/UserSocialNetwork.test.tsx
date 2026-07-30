@@ -257,7 +257,7 @@ describe("<UserSocialNetwork />", () => {
     // Mock server to return error
     server.use(
       http.get("/1/user/*/followers", () => {
-        return HttpResponse.json({ error: "Server error" }, { status: 500 });
+        return HttpResponse.json({ error: "Server error" }, { status: 418 });
       })
     );
 
@@ -283,7 +283,7 @@ describe("<UserSocialNetwork />", () => {
   it("handles similar users API error gracefully", async () => {
     server.use(
       http.get("/1/user/*/similar", () => {
-        return HttpResponse.json({ error: "Server error" }, { status: 500 });
+        return HttpResponse.json({ error: "Server error" }, { status: 418 });
       })
     );
 
