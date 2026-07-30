@@ -1,8 +1,8 @@
 import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
-import Tooltip from "react-tooltip";
 import { get } from "lodash";
+import Tooltip from "../../../components/Tooltip";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { JSPFTrackToListen } from "../../../playlists/utils";
 import ListenCard from "../../../common/listens/ListenCard";
@@ -48,14 +48,13 @@ export default function TopLevelPlaylist(props: {
         >
           {topLevelPlaylist.title}{" "}
         </a>
-        <FontAwesomeIcon
-          icon={faQuestionCircle}
-          data-tip
-          data-for={`playlist-${coverArtKey}-tooltip`}
-          size="xs"
-        />
-        <Tooltip id={`playlist-${coverArtKey}-tooltip`}>
-          {topLevelPlaylist.annotation}
+        <Tooltip
+          id={`playlist-${coverArtKey}-tooltip`}
+          tooltip={topLevelPlaylist.annotation}
+        >
+          <span>
+            <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+          </span>
         </Tooltip>
       </h3>
       <div className="card-bg">

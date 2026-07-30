@@ -2,7 +2,7 @@ import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toPairs } from "lodash";
 import React from "react";
-import Tooltip from "react-tooltip";
+import Tooltip from "../../../components/Tooltip";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import UserListModalEntry, {
   UserListModalEntryProps,
@@ -41,17 +41,20 @@ export default function YIMSimilarUsers({
       <div className="heading">
         <h3>
           Music buddies{" "}
-          <FontAwesomeIcon
-            icon={faQuestionCircle}
-            data-tip
-            data-for="music-buddies-helptext"
-            size="xs"
-          />
-          <Tooltip id="music-buddies-helptext">
-            Here are the users with the most similar taste to {youOrUsername} in{" "}
-            {year}.
-            <br />
-            Maybe check them out and follow them?
+          <Tooltip
+            id="music-buddies-helptext"
+            tooltip={
+              <>
+                Here are the users with the most similar taste to{" "}
+                {youOrUsername} in {year}.
+                <br />
+                Maybe check them out and follow them?
+              </>
+            }
+          >
+            <span>
+              <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+            </span>
           </Tooltip>
         </h3>
       </div>
