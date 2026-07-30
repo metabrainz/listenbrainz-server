@@ -152,6 +152,37 @@ class UserTestCase(DatabaseTestCase):
         self.assertEqual(db_user.get(self.db_conn, user_id_2)['is_paused'], True)
         self.assertCountEqual(notified_user_ids, [user_id_1, user_id_2])
 
+    def test_set_reported_users_paused(self):
+        """ Tests that pauses reported users selected by report id """
+
+        reporter_id = db_user.create(self.db_conn, 44, 'reporter')
+        reported_user_id_1 = db_user.create(self.db_conn, 45, 'anne')
+        reported_user_id_2 = db_user.create(self.db_conn, 46, 'rob')
+
+        db_user.report_user(self.db_conn, reporter_id, reported_user_id_1)
+        db_user.report_user(self.db_conn, reporter_id, reported_user_id_2)
+        result = self.db_conn.execute(sqlalchemy.text("""
+            SELECT id
+              FROM reported_users
+             WHERE reporter_user_id = :reporter_id
+          ORDER BY id
+        """), {
+            "reporter_id": reporter_id,
+        })
+        report_ids = [row.id for row in result.fetchall()]
+
+        with mock.patch("listenbrainz.db.user._notify_user_paused") as notify_user_paused:
+            users = db_user.set_reported_users_paused(self.db_conn, report_ids, True)
+
+        self.assertCountEqual(users, ['anne', 'rob'])
+        self.assertEqual(db_user.get(self.db_conn, reporter_id)['is_paused'], False)
+        self.assertEqual(db_user.get(self.db_conn, reported_user_id_1)['is_paused'], True)
+        self.assertEqual(db_user.get(self.db_conn, reported_user_id_2)['is_paused'], True)
+        notify_user_paused.assert_has_calls([
+            mock.call(self.db_conn, reported_user_id_1, True),
+            mock.call(self.db_conn, reported_user_id_2, True),
+        ], any_order=True)
+
     def test_unpause(self):
         """ Tests that pauses the given user """
 
