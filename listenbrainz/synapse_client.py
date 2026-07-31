@@ -45,15 +45,15 @@ def init_synapse_client(app) -> None:
         },
     )
     _producer_pool = pools.producers[connection]
-    app.logger.info("Synapse client enabled — exchange %s queue %s", SYNAPSE_EXCHANGE, SYNAPSE_QUEUE)
+    app.logger.info("Synapse client enabled, exchange %s queue %s", SYNAPSE_EXCHANGE, SYNAPSE_QUEUE)
 
 
 # ---------------------------------------------------------------------------
-# Public publish functions — one per event type.
+# Public publish functions, one per event type.
 #
 # recipients: list of str(musicbrainz_row_id). For social events the caller
 #   resolves followers; for direct events it is a single-element list.
-# actor:      user['musicbrainz_id'] — the username used for display.
+# actor:      user['musicbrainz_id'], the username used for display.
 # ---------------------------------------------------------------------------
 
 def publish_recording_recommendation(recipients: list[str], actor: str, track_metadata: dict) -> None:
@@ -172,7 +172,7 @@ def _build_actor(username: str) -> dict:
 def _build_recording(track_metadata: dict) -> dict | None:
     """Convert LB's track_metadata dict to the Synapse recording namespace.
 
-    Returns None if metadata is missing or malformed — caller skips publishing
+    Returns None if metadata is missing or malformed. Caller skips publishing
     rather than sending an incomplete payload that Synapse would reject.
     """
     if not track_metadata:

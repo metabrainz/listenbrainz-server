@@ -465,6 +465,21 @@ def get_users_by_id(db_conn, user_ids: List[int]):
     return row_id_username_map
 
 
+def get_users_details_by_id(db_conn, user_ids: List[int]):
+    """ Given a list of user ids, fetch full user rows.
+        Returns a list of user dicts. """
+    if not user_ids:
+        return []
+    result = db_conn.execute(sqlalchemy.text("""
+        SELECT {columns}
+          FROM "user"
+         WHERE id IN :user_ids
+    """.format(columns=','.join(USER_GET_COLUMNS))), {
+        'user_ids': tuple(user_ids)
+    })
+    return result.mappings().all()
+
+
 def is_user_reported(db_conn, reporter_id: int, reported_id: int):
     """ Check whether the user identified by reporter_id has reported the
     user identified by reported_id"""

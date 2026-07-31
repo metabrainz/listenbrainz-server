@@ -725,10 +725,9 @@ def create_personal_recommendation_event(user_name):
         raise APIInternalServerError("Something went wrong, please try again.")
 
     fetch_track_metadata_for_items(ts_conn, [event.metadata])
-    lb_id_to_username = db_user.get_users_by_id(db_conn, [int(uid) for uid in event.metadata.users if uid])
-
-    recipient_users = db_user.get_many_users_by_mb_id(db_conn, list(lb_id_to_username.values()))
-    recipient_ids = [str(u['musicbrainz_row_id']) for u in recipient_users.values()]
+    user_ids = [int(uid) for uid in event.metadata.users if uid]
+    recipients = db_user.get_users_details_by_id(db_conn, user_ids)
+    recipient_ids = [str(u['musicbrainz_row_id']) for u in recipients]
 
     synapse_client.publish_personal_recommendation(
         recipient_ids, user_name, event.metadata.track_metadata, event.metadata.blurb_content)
@@ -795,8 +794,9 @@ def create_thanks_event(user_name):
         if not result:
             raise APIBadRequest(
                 f"{event_type} event with id {row_id} not found")
-        thankee_user = db_user.get_by_mb_id(
-            db_conn, db_user.get_users_by_id(db_conn, [result.user_id])[result.user_id])
+        thankee_user = db_user.get(db_conn, result.user_id)
+        if not thankee_user:
+            raise APIBadRequest("User not found")
         thankee_username = thankee_user['musicbrainz_id']
         if db_user_relationship.is_following_user(db_conn, user['id'], result.user_id):
             db_user_timeline_event.create_thanks_event(
