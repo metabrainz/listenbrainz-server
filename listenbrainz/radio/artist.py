@@ -39,6 +39,7 @@ class RecordingSearchByArtistService(Service):
                                             artist_credit=artist_credit,
                                             musicbrainz={"total_listen_count": recording["total_listen_count"]}))
 
+            # Below is a hack, since the endpoint seems to return one track too few
             if 0 < len(recordings) < max_recordings_per_artist - 1:
                 msgs.append("Artist %s has only few top recordings in %s mode" % (recordings[0].artist_credit.name, mode))
 

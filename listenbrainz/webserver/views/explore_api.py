@@ -198,6 +198,7 @@ def lb_radio():
             "min_recordings": 1,
             "auth_token": auth_token
         })
+        # Register local patches pulling directly from the DB instead of using HTTP API calls
         patch.register_service(RecordingSearchByArtistService())
         patch.register_service(RecordingSearchByTagService())
         patch.register_service(RecordingLookupService())
