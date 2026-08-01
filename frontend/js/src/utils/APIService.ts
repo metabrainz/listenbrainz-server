@@ -13,6 +13,13 @@ export interface LBRadioResponse {
   payload: { jspf: JSPFObject; feedback: string[] };
 }
 
+export type MusicBrainzCollectionSummary = {
+  mbid: string;
+  name: string;
+  public: boolean;
+  item_count: number;
+};
+
 export default class APIService {
   APIBaseURI: string;
 
@@ -1563,6 +1570,24 @@ export default class APIService {
     playlistID: string
   ): Promise<any> => {
     const url = `${this.APIBaseURI}/playlist/soundcloud/${playlistID}/tracks`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getMusicBrainzCollections = async (
+    userToken: string
+  ): Promise<MusicBrainzCollectionSummary[]> => {
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const url = `${this.APIBaseURI}/playlist/import/musicbrainz/collections`;
     const response = await fetch(url, {
       method: "GET",
       headers: {
