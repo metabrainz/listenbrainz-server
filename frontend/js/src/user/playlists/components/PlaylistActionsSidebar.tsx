@@ -11,6 +11,8 @@ import SideBar from "../../../components/Sidebar";
 import Switch from "../../../components/Switch";
 import { PlaylistTag, PlaylistType } from "../../../playlists/utils";
 
+const INITIAL_VISIBLE_TAGS = 10;
+
 type PlaylistActionsSidebarProps = {
   playlistType: PlaylistType;
   sortBy: string;
@@ -48,6 +50,7 @@ export default function PlaylistActionsSidebar(
 
   const [tagsOpen, setTagsOpen] = React.useState(true);
   const [tagFilter, setTagFilter] = React.useState("");
+  const [tagsExpanded, setTagsExpanded] = React.useState(false);
 
   const selectedTagsSet = React.useMemo(() => new Set(activeTags), [
     activeTags,
@@ -66,6 +69,16 @@ export default function PlaylistActionsSidebar(
     });
   }, [tags, tagFilter, selectedTagsSet]);
 
+  React.useEffect(() => {
+    setTagsExpanded(false);
+  }, [tagFilter]);
+
+  const hasMoreTags = filteredSortedTags.length > INITIAL_VISIBLE_TAGS;
+  const visibleTags =
+    tagsExpanded || !hasMoreTags
+      ? filteredSortedTags
+      : filteredSortedTags.slice(0, INITIAL_VISIBLE_TAGS);
+  const hiddenTagsCount = filteredSortedTags.length - INITIAL_VISIBLE_TAGS;
   const toggleTag = (tag: string) => {
     onChangeTags(
       activeTags.includes(tag)
@@ -114,7 +127,6 @@ export default function PlaylistActionsSidebar(
           value={sortBy}
           onChange={onSortChange}
           className="form-select"
-          disabled={isLoading}
         >
           {sortOptions}
         </select>
@@ -205,7 +217,7 @@ export default function PlaylistActionsSidebar(
             role="group"
             aria-label="Filter by tags"
           >
-            {filteredSortedTags.map(({ tag, count }) => {
+            {visibleTags.map(({ tag, count }) => {
               const checked = selectedTagsSet.has(tag);
               const inputId = `playlist-tag-${tag}`;
               return (
@@ -227,6 +239,15 @@ export default function PlaylistActionsSidebar(
                 </label>
               );
             })}
+            {hasMoreTags && (
+              <button
+                type="button"
+                className="btn btn-link btn-sm playlist-sidebar-show-more-tags"
+                onClick={() => setTagsExpanded((expanded) => !expanded)}
+              >
+                {tagsExpanded ? "Show less" : `Show more (${hiddenTagsCount})`}
+              </button>
+            )}
             {!filteredSortedTags.length && (
               <div className="text-muted small">
                 {tagFilter.trim()

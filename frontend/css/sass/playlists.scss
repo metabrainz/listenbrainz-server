@@ -193,6 +193,12 @@ $long-description-lines: 8;
   max-width: 100%;
 }
 
+.playlist-sidebar-show-more-tags {
+  align-self: center;
+  padding: 0;
+  text-decoration: none;
+}
+
 .playlist-sidebar-multiselect-option.is-selected {
   border-color: $blue;
   background: rgba($blue, 0.08);
