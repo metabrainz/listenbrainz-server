@@ -4,7 +4,9 @@ from types import SimpleNamespace
 
 from dateutil.relativedelta import relativedelta
 
-from listenbrainz.webserver.views.stats_utils import current_period_listen_count
+from data.model.common_stat import StatisticsRange
+from listenbrainz.webserver.views.stats_utils import LISTENING_ACTIVITY_PERIOD_OFFSET, \
+    current_period_listen_count
 
 
 def _ts(dt: datetime) -> int:
@@ -92,6 +94,54 @@ class CurrentPeriodListenCountTestCase(unittest.TestCase):
         count, _ = current_period_listen_count("week", records)
 
         self.assertEqual(count, 137)
+
+    def test_this_week_partial_current_period(self):
+        # this_* stats end at the latest listen, so the current period is
+        # usually partial: 7 full days of last week + 3 days so far this week.
+        records = _daily(datetime(2020, 4, 27), [26, 57, 33, 40, 26, 17, 26, 32, 26, 28])
+
+        count, from_ts = current_period_listen_count("this_week", records)
+
+        self.assertEqual(count, 32 + 26 + 28)
+        self.assertEqual(from_ts, _ts(datetime(2020, 5, 4)))
+
+    def test_this_week_on_monday_spans_two_full_weeks(self):
+        # when the latest listen falls on a Monday, spark starts the range on
+        # the Monday of two weeks ago, producing 14 full daily segments; the
+        # current period is still the last 7 (same split as the frontend).
+        counts = [26, 57, 33, 40, 26, 17, 26, 32, 26, 28, 21, 26, 0, 4]
+        records = _daily(datetime(2020, 4, 27), counts)
+
+        count, from_ts = current_period_listen_count("this_week", records)
+
+        self.assertEqual(count, 137)
+        self.assertEqual(from_ts, _ts(datetime(2020, 5, 4)))
+
+    def test_this_month_partial_current_period(self):
+        # 31 days of July + only 2 days of August so far.
+        records = _daily(datetime(2021, 7, 1), [1] * 31 + [20, 30])
+
+        count, from_ts = current_period_listen_count("this_month", records)
+
+        self.assertEqual(count, 50)
+        self.assertEqual(from_ts, _ts(datetime(2021, 8, 1)))
+
+    def test_this_year_partial_current_period(self):
+        # 12 months of last year + 8 months of this year so far.
+        records = _monthly(datetime(2020, 1, 1), [1] * 12 + [5] * 8)
+
+        count, from_ts = current_period_listen_count("this_year", records)
+
+        self.assertEqual(count, 8 * 5)
+        self.assertEqual(from_ts, _ts(datetime(2021, 1, 1)))
+
+    def test_every_statistics_range_has_a_period_offset(self):
+        # every range the endpoint accepts (except all_time, which sums all
+        # segments) must have an offset, otherwise a valid request would 500
+        for name in StatisticsRange.__members__:
+            if name == "all_time":
+                continue
+            self.assertIn(name, LISTENING_ACTIVITY_PERIOD_OFFSET)
 
     def test_empty_records(self):
         self.assertEqual(current_period_listen_count("week", []), (0, None))

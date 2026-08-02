@@ -205,7 +205,6 @@ def get_listens(user_name):
 @api_bp.get("/user/<mb_username:user_name>/listen-count")
 @crossdomain
 @ratelimit()
-@api_listenstore_needed
 def get_listen_count(user_name):
     """
         Get the number of listens for a user ``user_name``.
@@ -228,10 +227,13 @@ def get_listen_count(user_name):
                     "count": 137,
                     "range": "week",
                     "from_ts": 1588550400,
-                    "to_ts": 1589155199,
+                    "to_ts": 1589155200,
                     "last_updated": 1592807084
                 }
             }
+
+        ``from_ts`` is the start of the period the count applies to and
+        ``to_ts`` is the exclusive end of the underlying statistic's window.
 
     :param range: Optional, time interval for which the listen count should be
         returned, possible values are :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`,
@@ -251,6 +253,11 @@ def get_listen_count(user_name):
     stats_range = request.args.get("range", default="all_time")
 
     if stats_range == "all_time":
+        # only the all_time count is served from the listenstore; ranged counts
+        # come from precomputed stats and stay available if timescale is down
+        if timescale_connection._ts is None:
+            raise APIServiceUnavailable("The listen database is momentarily offline. "
+                                        "Please wait a few minutes and try again.")
         try:
             listen_count = timescale_connection._ts.get_listen_count_for_user(user["id"])
         except psycopg2.OperationalError as err:
