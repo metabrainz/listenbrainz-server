@@ -4,7 +4,7 @@ from flask import current_app, url_for
 from data.model.external_service import ExternalServiceType
 from listenbrainz.domain.brainz_service import BaseBrainzService
 
-MUSICBRAINZ_SCOPES = ["tag", "rating", "profile"]
+MUSICBRAINZ_SCOPES = ["musicbrainz:tag", "musicbrainz:rating", "profile"]
 
 
 class MusicBrainzService(BaseBrainzService):

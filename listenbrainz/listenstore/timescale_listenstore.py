@@ -54,8 +54,13 @@ class TimescaleListenStore:
 
     def set_empty_values_for_user(self, user_id: int):
         """When a user is created, set the timestamp keys and insert an entry in the listen count
-         table so that we can avoid the expensive lookup for a brand new user."""
-        query = """INSERT INTO listen_user_metadata VALUES (:user_id, 0, NULL, NULL, NOW())"""
+         table so that we can avoid the expensive lookup for a brand new user. If the user already
+         has an entry, leave it unchanged."""
+        query = """
+            INSERT INTO listen_user_metadata (user_id, count, min_listened_at, max_listened_at, created)
+                 VALUES (:user_id, 0, NULL, NULL, NOW())
+            ON CONFLICT (user_id) DO NOTHING
+        """
         ts_conn.execute(sqlalchemy.text(query), {"user_id": user_id})
         ts_conn.commit()
 

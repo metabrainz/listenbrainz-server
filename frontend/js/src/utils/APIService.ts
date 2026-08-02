@@ -1323,6 +1323,22 @@ export default class APIService {
     return response.json();
   };
 
+  getSimilarArtists = async (
+    userToken: string,
+    artistMBID: string,
+    algorithm?: string
+  ): Promise<Array<ArtistNodeInfo>> => {
+    const url = `https://labs.api.listenbrainz.org/similar-artists/json?algorithm=${algorithm}&artist_mbids=${artistMBID}`;
+    const response = await fetch(encodeURI(url), {
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   reportUser = async (userName: string, optionalContext?: string) => {
     const response = await fetch(
       `/user/${encodeURIComponent(userName)}/report-user/`,
