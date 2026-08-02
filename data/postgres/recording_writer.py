@@ -16,10 +16,13 @@ def get_recording_writer_cache_query():
 
         Returns rows of (recording_mbid, writer_mbid, writer_name).
         A recording may have multiple writers, and one writer may appear
-        for multiple recordings.
+        for multiple recordings. DISTINCT collapses artists credited under
+        multiple roles on the same work (e.g. both composer and lyricist)
+        so a listen is only counted once per writer.
     """
     return f"""
-        SELECT r.gid::text AS recording_mbid
+        SELECT DISTINCT
+               r.gid::text AS recording_mbid
              , a.gid::text AS writer_mbid
              , a.name AS writer_name
           FROM musicbrainz.recording r
