@@ -19,6 +19,7 @@ import type {
   MusicBrainzCollectionDetailResponse,
   MusicBrainzCollectionTrack,
 } from "../utils/APIService";
+import type APIService from "../utils/APIService";
 
 const DEFAULT_PAGE_SIZE = 100;
 const DEFAULT_ESTIMATED_ROW_HEIGHT_PX = 110;
@@ -34,6 +35,33 @@ function asJSPFTrack(track: MusicBrainzCollectionTrack): JSPFTrack {
     creator: track.artist_credit_name ?? "",
     duration: track.length ?? undefined,
   };
+}
+
+async function fetchAllCollectionTracks(
+  api: APIService,
+  collectionMBID: string,
+  userToken: string
+): Promise<JSPFTrack[]> {
+  const allTracks: JSPFTrack[] = [];
+  const pageSize = MAX_COLLECTION_TRACKS_PER_CALL;
+
+  const fetchPage = async (offset: number): Promise<void> => {
+    const page = await api.getMusicBrainzCollectionDetail(
+      collectionMBID,
+      userToken,
+      pageSize,
+      offset
+    );
+    const pageTracks = (page.tracks ?? []).map(asJSPFTrack);
+    allTracks.push(...pageTracks);
+    const nextOffset = offset + pageTracks.length;
+    if (nextOffset < page.track_count && pageTracks.length > 0) {
+      await fetchPage(nextOffset);
+    }
+  };
+
+  await fetchPage(0);
+  return allTracks;
 }
 
 export default function CollectionPage() {
@@ -211,27 +239,11 @@ export default function CollectionPage() {
 
     setIsSaving(true);
     try {
-      const allTracks: JSPFTrack[] = [];
-      const pageSize = MAX_COLLECTION_TRACKS_PER_CALL;
-      let offset = 0;
-      let total = trackCount;
-
-      while (true) {
-        const page = await APIService.getMusicBrainzCollectionDetail(
-          collectionMBID,
-          currentUser.auth_token,
-          pageSize,
-          offset
-        );
-        total = page.track_count;
-        const pageTracks = (page.tracks ?? []).map(asJSPFTrack);
-        allTracks.push(...pageTracks);
-
-        offset += pageTracks.length;
-        if (offset >= total || pageTracks.length === 0) {
-          break;
-        }
-      }
+      const allTracks = await fetchAllCollectionTracks(
+        APIService,
+        collectionMBID,
+        currentUser.auth_token
+      );
 
       const publicFlag = Boolean(collection.public);
       const playlistTitle = collection.name;
@@ -294,7 +306,6 @@ export default function CollectionPage() {
     isSaving,
     mbUrl,
     navigate,
-    trackCount,
   ]);
 
   return (
