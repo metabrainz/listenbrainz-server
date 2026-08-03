@@ -223,9 +223,13 @@ export default function ArtCreator() {
     defaultStyleOnLoad.defaultColors[2]
   );
   const [customPresets, setCustomPresets] = useState<ColorPreset[]>([]);
-  const [scene, setScene] = useState<string>("wood");
-  const [wearTear, setWearTear] = useState<string>("used");
-  const [playerColor, setPlayerColor] = useState<string>("#ffffff");
+  const [vinylLayout, setVinylLayout] = useState<
+    "wood" | "close" | "vinyl" | "many"
+  >("wood");
+  const [vinylWearTear, setVinylWearTear] = useState<"new" | "used" | "loved">(
+    "used"
+  );
+  const [vinylPlayerColor, setVinylPlayerColor] = useState<string>("#ffffff");
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const previewSVGRef = React.useRef<SVGSVGElement>(null);
 
@@ -596,9 +600,9 @@ export default function ArtCreator() {
         gridLayoutArg: number,
         showCaptionArg: boolean,
         skipMissingArg: boolean,
-        sceneArg: string,
-        wearTearArg: string,
-        playerColorArg: string
+        vinylLayoutArg: string,
+        vinylWearTearArg: string,
+        vinylPlayerColorArg: string
       ) => {
         if (styleArg.type === "grid") {
           let newPreviewUrl = `${
@@ -625,7 +629,7 @@ export default function ArtCreator() {
           )}/${timeRangeArg}/${DEFAULT_IMAGE_SIZE}`;
 
           if (styleArg.name === TemplateNameEnum.lPsOnTheFloor) {
-            newPreviewUrl += `?scene=${sceneArg}&wear_tear=${wearTearArg}&player_color=${playerColorArg.replace(
+            newPreviewUrl += `?scene=${vinylLayoutArg}&wear_tear=${vinylWearTearArg}&player_color=${vinylPlayerColorArg.replace(
               "#",
               ""
             )}`;
@@ -651,9 +655,9 @@ export default function ArtCreator() {
       gridLayout,
       showCaption,
       skipMissing,
-      scene,
-      wearTear,
-      playerColor
+      vinylLayout,
+      vinylWearTear,
+      vinylPlayerColor
     );
   }, [
     userName,
@@ -663,9 +667,9 @@ export default function ArtCreator() {
     gridLayout,
     showCaption,
     skipMissing,
-    scene,
-    wearTear,
-    playerColor,
+    vinylLayout,
+    vinylWearTear,
+    vinylPlayerColor,
     debouncedSetPreviewUrl,
   ]);
 
@@ -825,22 +829,22 @@ export default function ArtCreator() {
                 )}
                 {style.name === TemplateNameEnum.lPsOnTheFloor && (
                   <>
-                    <small>Choose a grid layout:</small>
+                    <small>Choose a layout:</small>
                     <div className="cover-art-grid">
-                      {[
+                      {([
                         { id: "wood", icon: "1" },
                         { id: "close", icon: "2" },
                         { id: "vinyl", icon: "3" },
                         { id: "many", icon: "4" },
-                      ].map((item) => (
+                      ] as const).map((item) => (
                         <label className="cover-art-option" key={item.id}>
                           <input
                             type="radio"
                             name="scene"
                             value={item.id}
                             className="cover-art-radio"
-                            checked={scene === item.id}
-                            onChange={() => setScene(item.id)}
+                            checked={vinylLayout === item.id}
+                            onChange={() => setVinylLayout(item.id)}
                           />
                           <img
                             height={80}
@@ -859,8 +863,12 @@ export default function ArtCreator() {
                       <select
                         id="wear-tear"
                         className="form-select"
-                        value={wearTear}
-                        onChange={(e) => setWearTear(e.target.value)}
+                        value={vinylWearTear}
+                        onChange={(e) =>
+                          setVinylWearTear(
+                            e.target.value as "new" | "used" | "loved"
+                          )
+                        }
                       >
                         <option value="new">New</option>
                         <option value="used">Used</option>
@@ -876,13 +884,13 @@ export default function ArtCreator() {
                           id="player-color"
                           type="color"
                           className="form-control form-control-color"
-                          onChange={(e) => setPlayerColor(e.target.value)}
-                          value={playerColor}
+                          onChange={(e) => setVinylPlayerColor(e.target.value)}
+                          value={vinylPlayerColor}
                         />
                         <input
                           className="form-control"
                           type="text"
-                          value={playerColor}
+                          value={vinylPlayerColor}
                           readOnly
                         />
                       </div>
