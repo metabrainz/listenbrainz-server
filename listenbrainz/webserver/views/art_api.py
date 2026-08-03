@@ -409,12 +409,24 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
                                }
 
     if custom_name in ("lps-on-the-floor", "designer-top-10", "designer-top-10-alt"):
+        scene = "wood"
+        if custom_name == "lps-on-the-floor":
+            scene = request.args.get("scene", "wood")
+            if scene not in ("wood", "close", "vinyl", "many"):
+                scene = "wood"
+
         try:
             images, releases, metadata = cac.create_release_stats_cover(user_name, time_range)
             if images is None:
                 raise APIInternalServerError("Failed to release cover art SVG")
             if custom_name == "lps-on-the-floor":
-                images = _repeat_images(images, 5)
+                scene_cover_counts = {
+                    "wood": 5,
+                    "vinyl": 5,
+                    "close": 8,
+                    "many": 12,
+                }
+                images = _repeat_images(images, scene_cover_counts.get(scene, 5))
         except ValueError as error:
             raise APIBadRequest(str(error))
 
@@ -423,10 +435,6 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
         if custom_name == "lps-on-the-floor":
             valid_scenes = ("wood", "close", "vinyl", "many")
             valid_wear_tear = ("new", "used", "loved")
-
-            scene = request.args.get("scene", "wood")
-            if scene not in valid_scenes:
-                scene = "wood"
 
             wear_tear = request.args.get("wear_tear", "used")
             if wear_tear not in valid_wear_tear:
