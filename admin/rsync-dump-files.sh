@@ -18,93 +18,54 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+# usage
+#   rsync-dump-files.sh <dump type> <dump name> <source dir>
+#
+# Publishes one dump directory to the FTP host and then expires the dumps which
+# have fallen outside their retention window.
+#
+# The remote host, not this machine, is the source of truth for what has been
+# published, so nothing here mirrors a local directory. Uploading only ever adds
+# the one named dump, and expiry is driven by a listing of the remote host. That
+# is what lets full listen dumps be deleted locally right after upload without
+# any local bookkeeping to stand in for them.
+#
+# Set DUMP_DRY_RUN=1 to log the remote deletions without performing them.
+
 unset SSH_AUTH_SOCK
 
 LB_SERVER_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
-cd "$LB_SERVER_ROOT"
+cd "$LB_SERVER_ROOT" || exit 1
 
 source admin/config.sh
 source admin/functions.sh
 
 DUMP_TYPE=$1
 DUMP_NAME=$2
-DESTINATION="brainz@$RSYNC_FULLEXPORT_HOST:./"
-RSYNC_FILTER_OPTIONS=(-FF)
-RSYNC_DELETE_OPTIONS=(--delete)
+SOURCE_DIR=$3
 
-function build_rsync_filter_options {
-    RSYNC_FILTER_OPTIONS=(-FF)
+# Names are interpolated into remote paths that get deleted, so only well-formed
+# dump directory names are accepted. Must be kept in step with the DUMP_KINDS
+# table in listenbrainz/dumps/cleanup.py.
+DUMP_NAME_PATTERN='^(listenbrainz-dump-[0-9]+-[0-9]{8}-[0-9]{6}-(full|db|incremental)'
+DUMP_NAME_PATTERN+='|listenbrainz-(feedback|sample)-[0-9]{8}-[0-9]{6}-full'
+DUMP_NAME_PATTERN+='|musicbrainz-canonical-dump-[0-9]{8}-[0-9]{6})$'
 
-    # Only the fullexport dir contains full listen dump marker directories.
-    if [ "$DUMP_TYPE" != "full" ] && [ "$DUMP_TYPE" != "db" ]; then
-        return
-    fi
-
-    # Command-line protect rules are passed to the receiving rsync process.
-    # They preserve payloads for retained marker directories while
-    # --delete/--delete-after removes remote directories whose local markers
-    # expired. The db dump sync uses the same rules so that it never deletes
-    # the full listen dump payloads it has no local copy of.
-    shopt -s nullglob
-    for RETAINED_DUMP_DIR in "$SOURCE_DIR"/listenbrainz-dump-*-full; do
-        RETAINED_DUMP_NAME=$(basename "$RETAINED_DUMP_DIR")
-        if [ -f "$RETAINED_DUMP_DIR/.ftp-retention-marker" ] && \
-           [[ "$RETAINED_DUMP_NAME" =~ ^listenbrainz-dump-[0-9]+-[0-9]{8}-[0-9]{6}-full$ ]]
-        then
-            RSYNC_FILTER_OPTIONS+=(--filter="protect /$RETAINED_DUMP_NAME/***")
-        fi
-    done
-    shopt -u nullglob
-}
-
-function sync_source {
-    build_rsync_filter_options
-    retry rsync \
-        --archive \
-        "${RSYNC_DELETE_OPTIONS[@]}" \
-        "${RSYNC_FILTER_OPTIONS[@]}" \
-        --rsh "ssh -i $SSH_KEY -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $RSYNC_FULLEXPORT_PORT" \
-        --verbose \
-        "$SOURCE_DIR/" \
-        "$DESTINATION"
-}
-
-if [ "$DUMP_TYPE" == "full" ]; then
-    if [[ ! "$DUMP_NAME" =~ ^listenbrainz-dump-[0-9]+-[0-9]{8}-[0-9]{6}-full$ ]]; then
-        echo "Invalid or missing full dump name '$DUMP_NAME', exiting!"
+case "$DUMP_TYPE" in
+    # database dumps are published alongside the full listen dumps
+    full|db)     SSH_KEY=$RSYNC_FULLEXPORT_KEY ;;
+    incremental) SSH_KEY=$RSYNC_INCREMENTAL_KEY ;;
+    feedback)    SSH_KEY=$RSYNC_SPARK_KEY ;;
+    mbcanonical) SSH_KEY=$RSYNC_MBCANONICAL_KEY ;;
+    sample)      SSH_KEY=$RSYNC_SAMPLE_KEY ;;
+    *)
+        echo "Dump type '$DUMP_TYPE' must be one of full, db, incremental, feedback, mbcanonical or sample, exiting!"
         exit 1
-    fi
-    # Full dump directories without payloads are retained locally as markers.
-    # Mirroring the parent directory lets --delete enforce the FTP retention
-    # constant without retaining the large dump files locally.
-    SOURCE_DIR=$RSYNC_FULLEXPORT_DIR
-    SSH_KEY=$RSYNC_FULLEXPORT_KEY
-    # Expire old remote dumps only after the new payload transfer succeeds.
-    RSYNC_DELETE_OPTIONS=(--delete-after)
-    if [ ! -d "$SOURCE_DIR/$DUMP_NAME" ]; then
-        echo "Full dump source directory '$SOURCE_DIR/$DUMP_NAME' does not exist, exiting!"
-        exit 1
-    fi
-elif [ "$DUMP_TYPE" == "db" ]; then
-    # Database dumps are published alongside the full listen dumps and use the
-    # same rsync credentials, but their payloads are small enough to be retained
-    # locally, like incremental dumps.
-    SOURCE_DIR=$RSYNC_FULLEXPORT_DIR
-    SSH_KEY=$RSYNC_FULLEXPORT_KEY
-elif [ "$DUMP_TYPE" == "incremental" ]; then
-    SOURCE_DIR=$RSYNC_INCREMENTAL_DIR
-    SSH_KEY=$RSYNC_INCREMENTAL_KEY
-elif [ "$DUMP_TYPE" == "feedback" ]; then
-    SOURCE_DIR=$RSYNC_SPARK_DIR
-    SSH_KEY=$RSYNC_SPARK_KEY
-elif [ "$DUMP_TYPE" == "mbcanonical" ]; then
-    SOURCE_DIR=$RSYNC_MBCANONICAL_DIR
-    SSH_KEY=$RSYNC_MBCANONICAL_KEY
-elif [ "$DUMP_TYPE" == "sample" ]; then
-    SOURCE_DIR=$RSYNC_SAMPLE_DIR
-    SSH_KEY=$RSYNC_SAMPLE_KEY
-else
-    echo "Could not determine which directory (full, db, incremental, feedback, mbcanonical, sample) to copy over, exiting!"
+        ;;
+esac
+
+if [[ ! "$DUMP_NAME" =~ $DUMP_NAME_PATTERN ]]; then
+    echo "Invalid or missing dump name '$DUMP_NAME', exiting!"
     exit 1
 fi
 
@@ -113,45 +74,108 @@ if [ ! -d "$SOURCE_DIR" ]; then
     exit 1
 fi
 
-if ! sync_source; then
-    echo "Failed to upload $DUMP_TYPE dump; local files have been preserved."
+if [ ! -f "$SOURCE_DIR/.rsync-filter" ]; then
+    echo "Rsync filter '$SOURCE_DIR/.rsync-filter' does not exist, refusing to publish!"
     exit 1
 fi
 
-if [ "$DUMP_TYPE" == "full" ]; then
-    # Keep only tiny directory/filter markers after a successful transfer. The
-    # exclude rule protects retained remote payloads from deletion on the next
-    # run, while removal of older marker directories allows rsync to expire the
-    # corresponding remote dumps.
-    shopt -s nullglob
-    for LOCAL_DUMP_DIR in "$SOURCE_DIR"/listenbrainz-dump-*-full; do
-        LOCAL_DUMP_NAME=$(basename "$LOCAL_DUMP_DIR")
-        if [ ! -d "$LOCAL_DUMP_DIR" ] || [ -L "$LOCAL_DUMP_DIR" ] || \
-           [[ ! "$LOCAL_DUMP_NAME" =~ ^listenbrainz-dump-[0-9]+-[0-9]{8}-[0-9]{6}-full$ ]]
-        then
-            echo "Ignoring unexpected directory '$LOCAL_DUMP_DIR' during local cleanup."
-            continue
+DESTINATION="brainz@$RSYNC_FULLEXPORT_HOST:./"
+RSYNC_RSH="ssh -i $SSH_KEY -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $RSYNC_FULLEXPORT_PORT"
+
+EMPTY_DIR=$(mktemp -d)
+trap 'rm -rf -- "$EMPTY_DIR"' EXIT
+
+function publish_dump {
+    retry rsync \
+        --archive \
+        --verbose \
+        -FF \
+        --rsh "$RSYNC_RSH" \
+        "$SOURCE_DIR/" \
+        "$DESTINATION$DUMP_NAME/"
+}
+
+# Print the name of every directory published on the remote host.
+function list_remote_dumps {
+    rsync --list-only --rsh "$RSYNC_RSH" "$DESTINATION" | awk '/^d/ && $5 != "." { print $5 }'
+}
+
+# Delete one published dump from the remote host. The include rules name the
+# single directory to remove and everything else is excluded, which protects it
+# from --delete; the source is an empty directory, so nothing is transferred.
+function expire_remote_dump {
+    local dump_name=$1
+    local dry_run_option=()
+
+    if [ -n "$DUMP_DRY_RUN" ]; then
+        dry_run_option=(--dry-run)
+        echo "Dry run: would remove '$dump_name' from the FTP server."
+    else
+        echo "Removing '$dump_name' from the FTP server..."
+    fi
+
+    retry rsync \
+        --recursive \
+        --delete \
+        --verbose \
+        "${dry_run_option[@]}" \
+        --rsh "$RSYNC_RSH" \
+        --include "/$dump_name" \
+        --include "/$dump_name/***" \
+        --exclude '*' \
+        "$EMPTY_DIR/" \
+        "$DESTINATION"
+}
+
+# Expire the published dumps which have fallen outside their retention window.
+# The retention policy itself lives in the dump manager; this only needs to know
+# how to list and how to delete.
+function apply_remote_retention {
+    local remote_dumps expired dump_name
+
+    if ! remote_dumps=$(list_remote_dumps); then
+        echo "Could not list the dumps on the FTP server, not expiring anything!"
+        return 1
+    fi
+
+    # An empty listing means the listing failed in a way rsync did not report,
+    # since the dump just uploaded should be in it. Do not act on it.
+    if [ -z "$remote_dumps" ]; then
+        echo "The FTP server listing is empty, not expiring anything!"
+        return 1
+    fi
+
+    if ! expired=$(printf '%s\n' "$remote_dumps" | /usr/local/bin/python manage.py dump list_expired_dumps); then
+        echo "Could not work out which dumps have expired, not expiring anything!"
+        return 1
+    fi
+
+    if [ -z "$expired" ]; then
+        echo "No dumps have expired on the FTP server."
+        return 0
+    fi
+
+    while read -r dump_name; do
+        if [[ ! "$dump_name" =~ $DUMP_NAME_PATTERN ]]; then
+            echo "Refusing to remove unexpected remote directory '$dump_name'!"
+            return 1
         fi
+        if ! expire_remote_dump "$dump_name"; then
+            echo "Failed to remove '$dump_name' from the FTP server!"
+            return 1
+        fi
+    done <<< "$expired"
+}
 
-        find "$LOCAL_DUMP_DIR" -mindepth 1 -delete
-        touch "$LOCAL_DUMP_DIR/.ftp-retention-marker"
-        printf 'exclude *\n' > "$LOCAL_DUMP_DIR/.rsync-filter"
-    done
-    shopt -u nullglob
-
-    # Every payload is now safe on the remote host, so it is safe to expire
-    # markers beyond the retention constant. A second metadata-only
-    # rsync applies those expirations remotely.
-    if ! /usr/local/bin/python manage.py dump delete_old_dumps "$SOURCE_DIR"
-    then
-        echo "Full dumps uploaded, but local retention-marker cleanup failed."
-        exit 1
-    fi
-
-    if ! sync_source; then
-        echo "Full dumps uploaded, but remote retention cleanup failed."
-        exit 1
-    fi
-
-    echo "Full dumps uploaded successfully; local payloads removed and FTP retention applied."
+if ! publish_dump; then
+    echo "Failed to upload $DUMP_TYPE dump '$DUMP_NAME'; local files have been preserved."
+    exit 1
 fi
+echo "Uploaded $DUMP_TYPE dump '$DUMP_NAME' to the FTP server."
+
+if ! apply_remote_retention; then
+    echo "$DUMP_TYPE dump '$DUMP_NAME' was uploaded, but FTP retention failed."
+    exit 1
+fi
+
+echo "$DUMP_TYPE dump '$DUMP_NAME' uploaded and FTP retention applied."

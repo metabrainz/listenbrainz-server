@@ -226,8 +226,6 @@ if [ -n "$PRIVATE_DUMP_INTERMEDIATE_DIR" ]; then
         exit 1
     fi
 
-    read -r PRIVATE_DUMP_TIMESTAMP PRIVATE_DUMP_ID PRIVATE_DUMP_TYPE < "$PRIVATE_DUMP_ID_FILE"
-    echo "Dump created with timestamp $PRIVATE_DUMP_TIMESTAMP"
     PRIVATE_DUMP_DIR=$(dirname "$PRIVATE_DUMP_ID_FILE")
     PRIVATE_DUMP_NAME=$(basename "$PRIVATE_DUMP_DIR")
 
@@ -302,36 +300,27 @@ EXCLUDE_RULE="exclude *"
 echo "$EXCLUDE_RULE" >> "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 cat "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
+# Publish the dump and expire whatever has aged out on the FTP server. The
+# server's retention is applied from a listing of the server itself, so nothing
+# here has to stand in for dumps that are published but not kept locally.
+./admin/rsync-dump-files.sh "$DUMP_TYPE" "$DUMP_NAME" "$FTP_CURRENT_DUMP_DIR"
 
 if [ "$DUMP_TYPE" == "full" ]; then
-    # Full listen dump FTP retention is applied by rsync-dump-files.sh only after
-    # every pending payload has uploaded successfully. Remove public full dumps
-    # left on the legacy backup volume now that it is no longer used for them.
-    /usr/local/bin/python manage.py dump delete_old_dumps \
-        --remove-all-full-dumps \
-        "$BACKUP_DIR/$SUB_DIR"
-elif [ "$DUMP_TYPE" == "db" ]; then
-    # The FTP and backup fullexport directories also contain full dumps. A db
-    # run must not expire full payloads which may still be pending upload.
-    /usr/local/bin/python manage.py dump delete_old_dumps \
-        --only-db-dumps \
-        "$FTP_DIR/$SUB_DIR"
-    /usr/local/bin/python manage.py dump delete_old_dumps \
-        --only-db-dumps \
-        "$BACKUP_DIR/$SUB_DIR"
-else
-    /usr/local/bin/python manage.py dump delete_old_dumps "$FTP_DIR/$SUB_DIR"
-    /usr/local/bin/python manage.py dump delete_old_dumps "$BACKUP_DIR/$SUB_DIR"
-fi
-if [ "$DUMP_TYPE" == "db" ]; then
-    /usr/local/bin/python manage.py dump delete_old_dumps \
-        --only-db-dumps \
-        "$PRIVATE_BACKUP_DIR/$SUB_DIR"
-else
-    /usr/local/bin/python manage.py dump delete_old_dumps "$PRIVATE_BACKUP_DIR/$SUB_DIR"
+    # A published full listen dump is far too large to keep a local copy of too.
+    echo "Removing the local copy of the published full dump..."
+    rm -rf -- "$FTP_CURRENT_DUMP_DIR"
 fi
 
-# rsync to ftp folder taking care of the rules
-./admin/rsync-dump-files.sh "$DUMP_TYPE" "$DUMP_NAME"
+# Apply local retention now that the new dump has been published.
+/usr/local/bin/python manage.py dump delete_old_dumps "$FTP_DIR/$SUB_DIR"
+/usr/local/bin/python manage.py dump delete_old_dumps "$PRIVATE_BACKUP_DIR/$SUB_DIR"
+
+if [ "$DUMP_TYPE" == "full" ]; then
+    # Public full dumps are no longer backed up locally, so remove any that are
+    # left over on the backup volume from when they were.
+    /usr/local/bin/python manage.py dump delete_old_dumps --keep full=0 "$BACKUP_DIR/$SUB_DIR"
+else
+    /usr/local/bin/python manage.py dump delete_old_dumps "$BACKUP_DIR/$SUB_DIR"
+fi
 
 echo "Dumps created and uploaded to the FTP server; applicable backups completed!"
