@@ -4,9 +4,19 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import NiceModal from "@ebay/nice-modal-react";
 import FlairsExplanationModal from "./FlairsExplanationModal";
+import GlobalAppContext from "../../utils/GlobalAppContext";
+import { FlairDisplayPreferenceEnum } from "../../utils/constants";
 
 function FlairsExplanationButton(props: { className?: string }) {
   const { className } = props;
+  const {
+    flairDisplayPreference = FlairDisplayPreferenceEnum.All,
+  } = React.useContext(GlobalAppContext);
+
+  if (flairDisplayPreference !== FlairDisplayPreferenceEnum.All) {
+    return null;
+  }
+
   const htmlContent = "animated".split("").map((letter, i) => (
     <span
       // eslint-disable-next-line react/no-array-index-key

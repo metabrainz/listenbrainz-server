@@ -11,11 +11,52 @@ import {
 } from "react-router";
 import { Helmet } from "react-helmet";
 import ErrorBoundary from "./utils/ErrorBoundary";
-import GlobalAppContext from "./utils/GlobalAppContext";
+import GlobalAppContext, { GlobalAppContextT } from "./utils/GlobalAppContext";
 import { getPageProps } from "./utils/utils";
 import getRoutes from "./routes/routes";
 import queryClient from "./utils/QueryClient";
 import ReactQueryDevtool from "./utils/ReactQueryDevTools";
+import {
+  FlairDisplayPreference,
+  FlairDisplayPreferenceEnum,
+} from "./utils/constants";
+
+function AppRoot({
+  globalAppContext,
+  router,
+}: {
+  globalAppContext: GlobalAppContextT;
+  router: ReturnType<typeof createBrowserRouter>;
+}) {
+  const [flairDisplayPreference, setFlairDisplayPreference] = React.useState<
+    FlairDisplayPreference
+  >(
+    () =>
+      (localStorage.getItem(
+        "lb_flair_display_preference"
+      ) as FlairDisplayPreference) || FlairDisplayPreferenceEnum.All
+  );
+
+  const contextValue: GlobalAppContextT = React.useMemo(
+    () => ({
+      ...globalAppContext,
+      flairDisplayPreference,
+      setFlairDisplayPreference,
+    }),
+    [globalAppContext, flairDisplayPreference]
+  );
+
+  return (
+    <ErrorBoundary>
+      <GlobalAppContext.Provider value={contextValue}>
+        <Helmet defaultTitle="ListenBrainz" titleTemplate="%s - ListenBrainz" />
+        <ReactQueryDevtool client={queryClient}>
+          <RouterProvider router={router} />
+        </ReactQueryDevtool>
+      </GlobalAppContext.Provider>
+    </ErrorBoundary>
+  );
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
   const {
@@ -63,13 +104,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <Helmet defaultTitle="ListenBrainz" titleTemplate="%s - ListenBrainz" />
-        <ReactQueryDevtool client={queryClient}>
-          <RouterProvider router={router} />
-        </ReactQueryDevtool>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
+    <AppRoot globalAppContext={globalAppContext} router={router} />
   );
 });
