@@ -212,6 +212,7 @@ OAUTH_WEBHOOK_SECRET = '''{{template "KEY" "oauth/webhook_secret"}}'''
 OAUTH_AUTHORIZE_URL = f"{OAUTH_BASE_URL}/oauth2/authorize"
 OAUTH_TOKEN_URL = f"{OAUTH_BASE_URL}/oauth2/token"
 OAUTH_INTROSPECTION_URL = f"{OAUTH_BASE_URL}/oauth2/introspect"
+OAUTH_USERINFO_URL = f"{OAUTH_BASE_URL}/oauth2/userinfo"
 
 LASTFM_API_URL = '''{{template "KEY" "lastfm_api_url"}}'''
 LASTFM_API_KEY = '''{{template "KEY" "lastfm_api_key"}}'''
