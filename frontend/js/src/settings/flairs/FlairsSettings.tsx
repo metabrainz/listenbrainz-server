@@ -225,9 +225,7 @@ export default function FlairsSettings() {
             className="form-select"
             value={displayPref}
             onChange={(e) =>
-              handleDisplayPrefChange(
-                e.target.value as FlairDisplayPreference
-              )
+              handleDisplayPrefChange(e.target.value as FlairDisplayPreference)
             }
           >
             <option value={FlairDisplayPreferenceEnum.All}>
