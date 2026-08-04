@@ -35,8 +35,7 @@ def init_synapse_client(app) -> None:
     username = app.config.get("RABBITMQ_USERNAME", "")
     password = app.config.get("RABBITMQ_PASSWORD", "")
     vhost = app.config.get("SYNAPSE_RABBITMQ_VHOST") or "/synapse"
-    encoded_vhost = "/" + vhost.lstrip("/")
-    urls = [f"amqp://{username}:{password}@{host}:{port}{encoded_vhost}" for host, port in hosts]
+    urls = [f"amqp://{username}:{password}@{host}:{port}/{vhost}" for host, port in hosts]
     connection = Connection(
         hostname=urls,
         transport_options={
