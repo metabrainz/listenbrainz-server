@@ -1,4 +1,5 @@
 from flask import current_app, request, session
+import requests
 
 from listenbrainz.domain.musicbrainz import MusicBrainzService, MUSICBRAINZ_SCOPES
 from listenbrainz.webserver import db_conn
@@ -32,7 +33,13 @@ def get_user():
     user = db_user.get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id, fetch_email=True)
 
     if user is None:
-        db_user.create(db_conn, musicbrainz_row_id, musicbrainz_id)
+        email = _get_new_user_email(service, token["access_token"], musicbrainz_row_id)
+        db_user.create(
+            db_conn,
+            musicbrainz_row_id,
+            musicbrainz_id,
+            email=email,
+        )
         user = db_user.get_by_mb_id(db_conn, musicbrainz_id, fetch_email=True)
         ts.set_empty_values_for_user(user["id"])
 
@@ -44,6 +51,22 @@ def get_user():
         service.update_user(user["id"], token)
 
     return user
+
+
+def _get_new_user_email(service: MusicBrainzService, token: str, musicbrainz_row_id: int):
+    """Return a new user's verified email from OAuth UserInfo."""
+    try:
+        info = service.get_user_profile(token)
+    except requests.RequestException as error:
+        current_app.logger.error("Unable to fetch email from MetaBrainz OAuth UserInfo", exc_info=True)
+        raise MusicBrainzAuthSessionError() from error
+
+    has_email = "email" in info
+    has_email_verified = "email_verified" in info
+    if not has_email and not has_email_verified:
+        return None
+
+    return info["email"] if info["email_verified"] is True else None
 
 
 def get_authentication_uri(login_hint=None):
