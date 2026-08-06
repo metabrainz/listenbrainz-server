@@ -1,6 +1,7 @@
 import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
 import { TagActionType } from "../tags/TagComponent";
 import type { SortOption } from "../explore/fresh-releases/FreshReleases";
+import type { PlaylistTag } from "../playlists/utils";
 import APIError from "./APIError";
 import type { Flair } from "./constants";
 import { Modes } from "../explore/lb-radio/components/Prompt";
@@ -1140,7 +1141,7 @@ export default class APIService {
     userName: string,
     userToken?: string,
     collaborated: boolean = false
-  ): Promise<{ tags: Array<{ tag: string; count: number }> }> => {
+  ): Promise<{ tags: PlaylistTag[] }> => {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }

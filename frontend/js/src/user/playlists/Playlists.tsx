@@ -739,14 +739,16 @@ export function UserPlaylistsWrapper() {
 
   const handleSetPlaylistType = (newType: PlaylistType) => {
     skipTypeRestoreRef.current = true;
-    const newParams: Record<string, string> = { page: "1" };
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("page", "1");
     if (newType === PlaylistType.collaborations) {
-      newParams.type = "collaborative";
+      newParams.set("type", "collaborative");
       setPersistentType("collaborative");
     } else {
+      newParams.delete("type");
       setPersistentType("");
     }
-    delete newParams.tag;
+    newParams.delete("tag");
     setSearchParams(newParams);
   };
 
@@ -793,13 +795,11 @@ export function UserPlaylistsWrapper() {
       return;
     }
     if (!searchParams.get("type") && persistentType === "collaborative") {
-      const newParams: Record<string, string> = {
-        page: searchParams.get("page") || "1",
-        type: "collaborative",
-      };
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("type", "collaborative");
       setSearchParams(newParams);
     }
-  }, [searchParams, persistentType]);
+  }, [searchParams, persistentType, setSearchParams]);
 
   React.useEffect(() => {
     if (searchParams.get("type") === "collaborative") {
