@@ -1,5 +1,7 @@
 import listenbrainz.db.user as db_user
 import listenbrainz.db.pinned_recording as db_pinned_rec
+import listenbrainz.db.user_relationship as db_user_relationship
+from listenbrainz import synapse_client
 
 from flask import Blueprint, current_app, jsonify, request
 
@@ -72,6 +74,15 @@ def pin_recording_for_user():
     except Exception as e:
         current_app.logger.error("Error while inserting pinned track record: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
+
+    fetch_track_metadata_for_items(ts_conn, [recording_to_pin_with_id])
+    followers = [str(f["musicbrainz_row_id"]) for f in db_user_relationship.get_followers_of_user(db_conn, user["id"])]
+    synapse_client.publish_recording_pin(
+        followers,
+        user["musicbrainz_id"],
+        recording_to_pin_with_id.track_metadata,
+        recording_to_pin_with_id.blurb_content,
+    )
 
     return jsonify({"pinned_recording": recording_to_pin_with_id.to_api()})
 
