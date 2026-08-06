@@ -1463,4 +1463,140 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertIn(expected_msid_1, received_msids)
         self.assertIn(expected_msid_2, received_msids)
 
+    @mock.patch("listenbrainz.domain.navidrome.NavidromeService.get_user")
+    @mock.patch("listenbrainz.domain.navidrome.MBIDMapper.search")
+    @requests_mock.Mocker()
+    def test_navidrome_feedback_import(self, mock_mapper_search, mock_get_user, mock_requests):
+        """Test importing starred tracks from a Navidrome instance (local or remote)
+        via the /feedback/import endpoint.
+
+        Mocks:
+        - NavidromeService.get_user: returns fake connection credentials so no DB row needed.
+        - MBIDMapper.search: returns a canned high-quality match to avoid needing a running mapper.
+        - requests_mock: fakes the Subsonic /rest/getStarred HTTP response.
+        """
+        INSTANCE_URL = "http://localhost:4533"
+        TOKEN = "abc123"
+        SALT = "987654"
+        USERNAME = "testnavuser"
+        MBID_1 = "7ac86b1a-d183-40ca-9d41-df2d90681ffd"
+        MBID_2 = "9d0c31ef-257a-41af-9a8c-f28a5cd87467"
+
+        # Fake a stored Navidrome connection
+        mock_get_user.return_value = {
+            "instance_url": INSTANCE_URL,
+            "md5_auth_token": TOKEN,
+            "salt": SALT,
+            "username": USERNAME,
+        }
+
+        # MBIDMapper returns a high-quality match for every song
+        from listenbrainz.mbid_mapping_writer.mbid_mapper import MATCH_TYPE_HIGH_QUALITY
+        mock_mapper_search.side_effect = [
+            {"recording_mbid": MBID_1, "match_type": MATCH_TYPE_HIGH_QUALITY},
+            {"recording_mbid": MBID_2, "match_type": MATCH_TYPE_HIGH_QUALITY},
+        ]
+
+        # Fake Navidrome /rest/getStarred response with 2 starred songs
+        mock_requests.get(
+            f"{INSTANCE_URL}/rest/getStarred",
+            json={
+                "subsonic-response": {
+                    "status": "ok",
+                    "starred": {
+                        "song": [
+                            {
+                                "id": "1",
+                                "title": "Song One",
+                                "artist": "Artist One",
+                                "album": "Album One",
+                                "starred": "2024-01-15T10:00:00Z",
+                            },
+                            {
+                                "id": "2",
+                                "title": "Song Two",
+                                "artist": "Artist Two",
+                                "album": "Album Two",
+                                "starred": "2024-02-20T12:30:00Z",
+                            },
+                        ]
+                    },
+                }
+            },
+            status_code=200,
+        )
+
+        r = self.client.post(
+            self.custom_url_for("feedback_api_v1.import_feedback"),
+            data=json.dumps({"service": "navidrome"}),
+            headers={"Authorization": f'Token {self.user["auth_token"]}'},
+            content_type="application/json",
+        )
+        self.assert200(r)
+        data = r.json
+        self.assertEqual(data["total_found"], 2)
+        self.assertEqual(data["total_mapped"], 2)
+        self.assertEqual(data["total_imported"], 2)
+
+        # Verify the feedback was actually written to the DB
+        feedback_response = self.client.get(
+            self.custom_url_for(
+                "feedback_api_v1.get_feedback_for_user",
+                user_name=self.user["musicbrainz_id"],
+            )
+        )
+        self.assert200(feedback_response)
+        fb_data = feedback_response.json
+        self.assertEqual(fb_data["total_count"], 2)
+        received_mbids = {f["recording_mbid"] for f in fb_data["feedback"]}
+        self.assertIn(MBID_1, received_mbids)
+        self.assertIn(MBID_2, received_mbids)
+        # All imported as loved (score = 1)
+        for f in fb_data["feedback"]:
+            self.assertEqual(f["score"], 1)
+
+    @mock.patch("listenbrainz.domain.navidrome.NavidromeService.get_user")
+    def test_navidrome_feedback_import_not_connected(self, mock_get_user):
+        """Test that importing from Navidrome when no account is connected returns 400."""
+        mock_get_user.return_value = None
+
+        r = self.client.post(
+            self.custom_url_for("feedback_api_v1.import_feedback"),
+            data=json.dumps({"service": "navidrome"}),
+            headers={"Authorization": f'Token {self.user["auth_token"]}'},
+            content_type="application/json",
+        )
+        self.assert400(r)
+        self.assertIn("not connected", r.json["error"].lower())
+
+    @mock.patch("listenbrainz.domain.navidrome.NavidromeService.get_user")
+    @requests_mock.Mocker()
+    def test_navidrome_feedback_import_server_error(self, mock_get_user, mock_requests):
+        """Test that a Navidrome server error (network failure) is handled gracefully."""
+        INSTANCE_URL = "http://localhost:4533"
+
+        mock_get_user.return_value = {
+            "instance_url": INSTANCE_URL,
+            "md5_auth_token": "token",
+            "salt": "salt",
+            "username": "user",
+        }
+        import requests as _requests
+        # Simulate a connection error from the Navidrome server.
+        # Must be a requests.RequestException subclass so import_starred_tracks catches it.
+        mock_requests.get(
+            f"{INSTANCE_URL}/rest/getStarred",
+            exc=_requests.exceptions.ConnectionError("Connection refused"),
+        )
+
+        r = self.client.post(
+            self.custom_url_for("feedback_api_v1.import_feedback"),
+            data=json.dumps({"service": "navidrome"}),
+            headers={"Authorization": f'Token {self.user["auth_token"]}'},
+            content_type="application/json",
+        )
+        # ExternalServiceError is caught in import_feedback and returned as 400
+        self.assert400(r)
+        self.assertIn("navidrome", r.json["error"].lower())
+
 
