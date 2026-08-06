@@ -1,6 +1,7 @@
 import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
 import { TagActionType } from "../tags/TagComponent";
 import type { SortOption } from "../explore/fresh-releases/FreshReleases";
+import type { PlaylistTag } from "../playlists/utils";
 import APIError from "./APIError";
 import type { Flair } from "./constants";
 import { Modes } from "../explore/lb-radio/components/Prompt";
@@ -1053,6 +1054,51 @@ export default class APIService {
     return response.status;
   };
 
+  addPlaylistTags = async (
+    userToken: string,
+    playlistMBID: string,
+    tags: string[]
+  ): Promise<number> => {
+    if (!playlistMBID) {
+      throw new SyntaxError("Playlist MBID is missing");
+    }
+    const url = `${this.APIBaseURI}/playlist/${playlistMBID}/tags`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ tags }),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
+  removePlaylistTag = async (
+    userToken: string,
+    playlistMBID: string,
+    tag: string
+  ): Promise<number> => {
+    if (!playlistMBID) {
+      throw new SyntaxError("Playlist MBID is missing");
+    }
+    if (!tag) {
+      throw new SyntaxError("Tag is missing");
+    }
+    const url = `${
+      this.APIBaseURI
+    }/playlist/${playlistMBID}/tags/${encodeURIComponent(tag)}`;
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
   getUserPlaylists = async (
     userName: string,
     userToken?: string,
@@ -1087,6 +1133,32 @@ export default class APIService {
       headers,
     });
 
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getUserPlaylistTags = async (
+    userName: string,
+    userToken?: string,
+    collaborated: boolean = false
+  ): Promise<{ tags: PlaylistTag[] }> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    let headers;
+    if (userToken) {
+      headers = {
+        Authorization: `Token ${userToken}`,
+      };
+    }
+    const collaboratorParam = collaborated ? "?collaborator=true" : "";
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/playlists/tags${collaboratorParam}`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers,
+    });
     await this.checkStatus(response);
     return response.json();
   };
@@ -2314,6 +2386,7 @@ export default class APIService {
     return response.json();
   };
 
+  // User playlists page search uses the route loader (?search=), not this method.
   searchPlaylistsForUser = async (
     searchQuery: string,
     musicbrainzID: string,

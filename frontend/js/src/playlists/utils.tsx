@@ -17,6 +17,13 @@ export enum PlaylistType {
   "recommendations",
 }
 
+export const MAX_PLAYLIST_TAG_LENGTH = 40;
+
+export type PlaylistTag = {
+  tag: string;
+  count: number;
+};
+
 export function isPlaylistOwner(
   playlist: JSPFPlaylist,
   user: ListenBrainzUser
@@ -31,6 +38,11 @@ export function getPlaylistExtension(
     return null;
   }
   return playlist.extension?.[MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION] ?? null;
+}
+
+export function getPlaylistTags(playlist?: JSPFPlaylist): string[] {
+  const metadata = getPlaylistExtension(playlist)?.additional_metadata;
+  return (metadata as JSPFPlaylistMetadata | undefined)?.tags ?? [];
 }
 
 export function getTrackExtension(

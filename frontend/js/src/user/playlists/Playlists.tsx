@@ -1,9 +1,6 @@
 import {
-  faListAlt,
   faPlusCircle,
-  faUsers,
   faFileImport,
-  faMagnifyingGlass,
   faMusic,
 } from "@fortawesome/free-solid-svg-icons";
 import {
@@ -35,11 +32,13 @@ import PlaylistsList from "./components/PlaylistsList";
 import {
   getPlaylistExtension,
   getPlaylistId,
+  PlaylistTag,
   PlaylistType,
 } from "../../playlists/utils";
 import PlaylistView from "./playlistView.d";
 import { faGrid, faStacked } from "../../utils/icons";
 import { getObjectForURLSearchParams } from "../../utils/utils";
+import PlaylistActionsSidebar from "./components/PlaylistActionsSidebar";
 
 export type UserPlaylistsProps = {
   playlists: JSPFObject[];
@@ -53,6 +52,7 @@ export type UserPlaylistsState = {
   sortBy: SortOption;
   view: PlaylistView;
   searchTerm: string;
+  tags: PlaylistTag[];
 };
 
 export enum SortOption {
@@ -99,6 +99,8 @@ type UserPlaylistsClassProps = UserPlaylistsProps & {
   setPersistentView: (view: PlaylistView) => void;
   initialSort: SortOption;
   setPersistentSort: (sort: SortOption) => void;
+  activeTags: string[];
+  setActiveTags: (tags: string[]) => void;
 };
 
 const playlistViewAtom = atomWithStorage<PlaylistView>(
@@ -131,7 +133,12 @@ export default class UserPlaylists extends React.Component<
       sortBy: isSearchActive ? urlSort : initialSort,
       view: initialView,
       searchTerm: searchQuery,
+      tags: [],
     };
+  }
+
+  componentDidMount(): void {
+    this.loadTags();
   }
 
   componentDidUpdate(prevProps: Readonly<UserPlaylistsClassProps>): void {
@@ -155,6 +162,7 @@ export default class UserPlaylists extends React.Component<
         },
         () => {
           this.applyBrowseSort(initialSort);
+          this.loadTags();
         }
       );
       return;
@@ -185,6 +193,11 @@ export default class UserPlaylists extends React.Component<
           this.applyBrowseSort(sortBy || initialSort);
         }
       });
+    }
+
+    const { user } = this.props;
+    if (prevProps.user?.name !== user?.name) {
+      this.loadTags();
     }
 
     if (prevProps.initialView !== initialView) {
@@ -276,24 +289,39 @@ export default class UserPlaylists extends React.Component<
       (pl) => getPlaylistId(pl) === getPlaylistId(playlist)
     );
     playlistsCopy[playlistIndex] = playlist;
-    this.setState({
-      playlists: playlistsCopy,
-    });
+    this.setState(
+      {
+        playlists: playlistsCopy,
+      },
+      () => {
+        this.loadTags();
+      }
+    );
   };
 
   onPlaylistCreated = async (playlist: JSPFPlaylist): Promise<void> => {
     const { playlists } = this.state;
-    this.setState({
-      playlists: [playlist, ...playlists],
-    });
+    this.setState(
+      {
+        playlists: [playlist, ...playlists],
+      },
+      () => {
+        this.loadTags();
+      }
+    );
   };
 
   onPlaylistDeleted = (deletedPlaylist: JSPFPlaylist): void => {
-    this.setState((prevState) => ({
-      playlists: prevState.playlists?.filter(
-        (pl) => getPlaylistId(pl) !== getPlaylistId(deletedPlaylist)
-      ),
-    }));
+    this.setState(
+      (prevState) => ({
+        playlists: prevState.playlists?.filter(
+          (pl) => getPlaylistId(pl) !== getPlaylistId(deletedPlaylist)
+        ),
+      }),
+      () => {
+        this.loadTags();
+      }
+    );
   };
 
   alertMustBeLoggedIn = () => {
@@ -412,6 +440,24 @@ export default class UserPlaylists extends React.Component<
     ));
   };
 
+  loadTags = async () => {
+    const { APIService, currentUser } = this.context;
+    const { user, playlistType } = this.props;
+    try {
+      const userToken =
+        currentUser?.name === user?.name ? currentUser?.auth_token : undefined;
+      const response = await APIService.getUserPlaylistTags(
+        user.name,
+        userToken,
+        playlistType === PlaylistType.collaborations
+      );
+      this.setState({ tags: response?.tags ?? [] });
+    } catch (error) {
+      console.error(error);
+      this.setState({ tags: [] });
+    }
+  };
+
   render() {
     const {
       user,
@@ -422,8 +468,10 @@ export default class UserPlaylists extends React.Component<
       handleClickPrevious,
       handleClickNext,
       setPersistentView,
+      activeTags,
+      setActiveTags,
     } = this.props;
-    const { playlists, sortBy, view, searchTerm } = this.state;
+    const { playlists, sortBy, view, searchTerm, tags } = this.state;
     const { currentUser } = this.context;
 
     return (
@@ -433,97 +481,138 @@ export default class UserPlaylists extends React.Component<
             user?.name === currentUser?.name ? "Your" : `${user?.name}'s`
           } Playlists`}</title>
         </Helmet>
-        <div className="tertiary-nav">
-          <div className="playlist-view-options flex-wrap">
-            <div className="playlist-view-controls">
-              <Pill
-                active={playlistType === PlaylistType.playlists}
-                type="secondary"
-                onClick={() => this.setPlaylistType(PlaylistType.playlists)}
-              >
-                <FontAwesomeIcon icon={faListAlt as IconProp} /> Playlists
-              </Pill>
-              <Pill
-                active={playlistType === PlaylistType.collaborations}
-                type="secondary"
-                onClick={() =>
-                  this.setPlaylistType(PlaylistType.collaborations)
-                }
-              >
-                <FontAwesomeIcon icon={faUsers as IconProp} /> Collaborative
-              </Pill>
-            </div>
-            <div className="playlist-view-controls">
-              <Pill
-                active={view === PlaylistView.GRID}
-                type="secondary"
-                onClick={() => {
-                  this.setState({ view: PlaylistView.GRID });
-                  setPersistentView(PlaylistView.GRID);
-                }}
-                title="Grid view"
-              >
-                <FontAwesomeIcon icon={faGrid} fixedWidth />
-              </Pill>
-              <Pill
-                active={view === PlaylistView.LIST}
-                type="secondary"
-                onClick={() => {
-                  this.setState({ view: PlaylistView.LIST });
-                  setPersistentView(PlaylistView.LIST); // Atom/Storage..
-                }}
-                title="List view"
-              >
-                <FontAwesomeIcon icon={faStacked} fixedWidth />
-              </Pill>
-            </div>
-          </div>
-          <div className="playlist-view-options flex-wrap">
-            <div className="playlist-sort-controls">
-              <label htmlFor="sort-by">Sort by:</label>
-              <select
-                id="sort-by"
-                value={sortBy}
-                onChange={(e) =>
-                  this.setSortOption(e.target.value as SortOption)
-                }
-                className="form-select"
-                style={{ width: "200px" }}
-                disabled={isLoading}
-              >
-                {this.renderSortOptions()}
-              </select>
-            </div>
+        <div className="playlists-page-layout">
+          <div className="playlists-page-main">
+            <div className="playlist-list-header">
+              <div className="playlist-view-options">
+                {this.isCurrentUserPage() && (
+                  <div className="dropdown">
+                    <button
+                      className="btn btn-info dropdown-toggle"
+                      type="button"
+                      id="ImportPlaylistDropdown"
+                      data-bs-toggle="dropdown"
+                      aria-haspopup="true"
+                    >
+                      <FontAwesomeIcon icon={faPlusCircle} title="Import" />
+                      &nbsp;Import
+                    </button>
+                    <ul
+                      className="dropdown-menu"
+                      aria-labelledby="ImportPlaylistDropdown"
+                    >
+                      <button
+                        type="button"
+                        className="dropdown-item"
+                        onClick={() => {
+                          NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                            ImportSpotifyPlaylistModal
+                          ).then((playlist) => {
+                            if (Array.isArray(playlist)) {
+                              playlist.forEach(this.onPlaylistCreated);
+                            } else {
+                              this.onPlaylistCreated(playlist);
+                            }
+                          });
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faSpotify} />
+                        &nbsp;Spotify
+                      </button>
+                      <button
+                        type="button"
+                        className="dropdown-item"
+                        onClick={() => {
+                          NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                            ImportAppleMusicPlaylistModal
+                          ).then((playlist) => {
+                            if (Array.isArray(playlist)) {
+                              playlist.forEach(this.onPlaylistCreated);
+                            } else {
+                              this.onPlaylistCreated(playlist);
+                            }
+                          });
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faItunesNote} />
+                        &nbsp;Apple Music
+                      </button>
+                      <button
+                        type="button"
+                        className="dropdown-item"
+                        onClick={() => {
+                          NiceModal.show<JSPFPlaylist[], any>(
+                            ImportSoundCloudPlaylistModal
+                          ).then((newPlaylists) => {
+                            newPlaylists.forEach(this.onPlaylistCreated);
+                          });
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faSoundcloud} />
+                        &nbsp;SoundCloud
+                      </button>
+                      <button
+                        type="button"
+                        className="dropdown-item"
+                        onClick={() => {
+                          NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                            ImportPlaylistModal
+                          ).then((playlist) => {
+                            if (Array.isArray(playlist)) {
+                              playlist.forEach(this.onPlaylistCreated);
+                            } else {
+                              this.onPlaylistCreated(playlist);
+                            }
+                          });
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faFileImport} />
+                        &nbsp;Upload JSPF file
+                      </button>
+                      <button
+                        type="button"
+                        className="dropdown-item"
+                        onClick={() => {
+                          NiceModal.show(ImportMusicBrainzCollectionModal);
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faMusic} />
+                        &nbsp;MusicBrainz
+                      </button>
+                    </ul>
+                  </div>
+                )}
 
-            <div className="playlist-search-controls">
-              <form className="search-bar" onSubmit={this.handleSearchSubmit}>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Search playlists"
-                  value={searchTerm}
-                  onChange={this.handleSearchTermChange}
-                  onKeyDown={this.handleSearchKeyEsc}
-                />
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  aria-label="Search playlists"
-                >
-                  <FontAwesomeIcon icon={faMagnifyingGlass as IconProp} />
-                </button>
-              </form>
-            </div>
+                <div className="playlist-view-controls">
+                  <Pill
+                    active={view === PlaylistView.GRID}
+                    type="secondary"
+                    onClick={() => {
+                      this.setState({ view: PlaylistView.GRID });
+                      setPersistentView(PlaylistView.GRID);
+                    }}
+                    title="Grid view"
+                  >
+                    <FontAwesomeIcon icon={faGrid} fixedWidth />
+                  </Pill>
+                  <Pill
+                    active={view === PlaylistView.LIST}
+                    type="secondary"
+                    onClick={() => {
+                      this.setState({ view: PlaylistView.LIST });
+                      setPersistentView(PlaylistView.LIST);
+                    }}
+                    title="List view"
+                  >
+                    <FontAwesomeIcon icon={faStacked} fixedWidth />
+                  </Pill>
+                </div>
+              </div>
 
-            {this.isCurrentUserPage() && (
-              <div
-                className="d-flex align-items-center"
-                style={{ gap: "10px" }}
-              >
+              {this.isCurrentUserPage() && (
                 <button
-                  className="btn btn-info"
+                  className="btn btn-info create-playlist-btn"
                   type="button"
-                  style={{ borderRadius: "5px" }}
                   onClick={() => {
                     NiceModal.show<JSPFPlaylist, any>(
                       CreateOrEditPlaylistModal
@@ -532,151 +621,68 @@ export default class UserPlaylists extends React.Component<
                     });
                   }}
                 >
-                  <FontAwesomeIcon icon={faPlusCircle} />
-                  &nbsp;Create Playlist
+                  Create playlist
                 </button>
-                <div className="dropdown">
-                  <button
-                    className="btn btn-info dropdown-toggle"
-                    type="button"
-                    id="ImportPlaylistDropdown"
-                    data-bs-toggle="dropdown"
-                    aria-haspopup="true"
-                  >
-                    <FontAwesomeIcon icon={faPlusCircle} title="Import" />
-                    &nbsp;Import&nbsp;
-                  </button>
-                  <ul
-                    className="dropdown-menu dropdown-menu-right"
-                    aria-labelledby="ImportPlaylistDropdown"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
-                          ImportSpotifyPlaylistModal
-                        ).then((playlist) => {
-                          if (Array.isArray(playlist)) {
-                            playlist.forEach((p: JSPFPlaylist) => {
-                              this.onPlaylistCreated(p);
-                            });
-                          } else {
-                            this.onPlaylistCreated(playlist);
-                          }
-                        });
-                      }}
-                      className="dropdown-item"
-                    >
-                      <FontAwesomeIcon icon={faSpotify} />
-                      &nbsp;Spotify
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
-                          ImportAppleMusicPlaylistModal
-                        ).then((playlist) => {
-                          if (Array.isArray(playlist)) {
-                            playlist.forEach((p: JSPFPlaylist) => {
-                              this.onPlaylistCreated(p);
-                            });
-                          } else {
-                            this.onPlaylistCreated(playlist);
-                          }
-                        });
-                      }}
-                      className="dropdown-item"
-                    >
-                      <FontAwesomeIcon icon={faItunesNote} />
-                      &nbsp;Apple Music
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        NiceModal.show<JSPFPlaylist[], any>(
-                          ImportSoundCloudPlaylistModal
-                        ).then((newPlaylists) => {
-                          newPlaylists.forEach(this.onPlaylistCreated);
-                        });
-                      }}
-                      className="dropdown-item"
-                    >
-                      <FontAwesomeIcon icon={faSoundcloud} />
-                      &nbsp;SoundCloud
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
-                          ImportPlaylistModal
-                        ).then((playlist) => {
-                          if (Array.isArray(playlist)) {
-                            playlist.forEach((p: JSPFPlaylist) => {
-                              this.onPlaylistCreated(p);
-                            });
-                          } else {
-                            this.onPlaylistCreated(playlist);
-                          }
-                        });
-                      }}
-                      className="dropdown-item"
-                    >
-                      <FontAwesomeIcon icon={faFileImport} />
-                      &nbsp;Upload JSPF file
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        NiceModal.show(ImportMusicBrainzCollectionModal);
-                      }}
-                      className="dropdown-item"
-                    >
-                      <FontAwesomeIcon icon={faMusic} />
-                      &nbsp;MusicBrainz
-                    </button>
-                  </ul>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <PlaylistsList
-          onCopiedPlaylist={this.onCopiedPlaylist}
-          playlists={playlists}
-          activeSection={playlistType}
-          onPlaylistEdited={this.onPlaylistEdited}
-          onPlaylistDeleted={this.onPlaylistDeleted}
-          view={view}
-          page={page}
-          isLoading={isLoading}
-          loaderText={this.getLoaderText()}
-          emptyMessage={this.getEmptyMessage()}
-          handleClickPrevious={handleClickPrevious}
-          handleClickNext={handleClickNext}
-          pageCount={pageCount}
-        >
-          {this.isCurrentUserPage() && [
-            <Card
-              key="new-playlist"
-              className={`new-playlist ${
-                view === PlaylistView.LIST ? "list-view" : ""
-              }`}
-              onClick={() => {
-                NiceModal.show<JSPFPlaylist, any>(
-                  CreateOrEditPlaylistModal
-                ).then((playlist) => {
-                  this.onPlaylistCreated(playlist);
-                });
-              }}
+              )}
+            </div>
+            <PlaylistsList
+              onCopiedPlaylist={this.onCopiedPlaylist}
+              playlists={playlists}
+              activeSection={playlistType}
+              onPlaylistEdited={this.onPlaylistEdited}
+              onPlaylistDeleted={this.onPlaylistDeleted}
+              view={view}
+              page={page}
+              isLoading={isLoading}
+              loaderText={this.getLoaderText()}
+              emptyMessage={this.getEmptyMessage()}
+              handleClickPrevious={handleClickPrevious}
+              handleClickNext={handleClickNext}
+              pageCount={pageCount}
             >
-              <div>
-                <FontAwesomeIcon icon={faPlusCircle as IconProp} size="2x" />
-                <span>Create new playlist</span>
-              </div>
-            </Card>,
-          ]}
-        </PlaylistsList>
+              {this.isCurrentUserPage() && [
+                <Card
+                  key="new-playlist"
+                  className={`new-playlist ${
+                    view === PlaylistView.LIST ? "list-view" : ""
+                  }`}
+                  onClick={() => {
+                    NiceModal.show<JSPFPlaylist, any>(
+                      CreateOrEditPlaylistModal
+                    ).then((playlist) => {
+                      this.onPlaylistCreated(playlist);
+                    });
+                  }}
+                >
+                  <div>
+                    <FontAwesomeIcon
+                      icon={faPlusCircle as IconProp}
+                      size="2x"
+                    />
+                    <span>Create new playlist</span>
+                  </div>
+                </Card>,
+              ]}
+            </PlaylistsList>
+          </div>
+          <PlaylistActionsSidebar
+            playlistType={playlistType}
+            sortBy={sortBy}
+            sortOptions={this.renderSortOptions()}
+            searchTerm={searchTerm}
+            isLoading={isLoading}
+            tags={tags}
+            activeTags={activeTags}
+            onSetPlaylistType={this.setPlaylistType}
+            onSortChange={(e) =>
+              this.setSortOption(e.target.value as SortOption)
+            }
+            onSearchTermChange={this.handleSearchTermChange}
+            onSearchKeyEsc={this.handleSearchKeyEsc}
+            onSearchSubmit={this.handleSearchSubmit}
+            onChangeTags={setActiveTags}
+          />
+        </div>
       </div>
     );
   }
@@ -707,6 +713,10 @@ export function UserPlaylistsWrapper() {
   const type = searchParams.get("type") || persistentType;
   const searchQuery = searchParams.get("search") || "";
   const urlSort = parseUrlSort(searchParams.get("sort"));
+  const activeTags = (searchParams.get("tag") || "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
 
   const handleClickPrevious = () => {
     setSearchParams({
@@ -729,12 +739,28 @@ export function UserPlaylistsWrapper() {
 
   const handleSetPlaylistType = (newType: PlaylistType) => {
     skipTypeRestoreRef.current = true;
-    const newParams: Record<string, string> = { page: "1" };
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("page", "1");
     if (newType === PlaylistType.collaborations) {
-      newParams.type = "collaborative";
+      newParams.set("type", "collaborative");
       setPersistentType("collaborative");
     } else {
+      newParams.delete("type");
       setPersistentType("");
+    }
+    newParams.delete("tag");
+    setSearchParams(newParams);
+  };
+
+  const setActiveTags = (tags: string[]) => {
+    const newParams: Record<string, string> = {
+      ...searchParamsObj,
+      page: "1",
+    };
+    if (tags.length) {
+      newParams.tag = tags.join(",");
+    } else {
+      delete newParams.tag;
     }
     setSearchParams(newParams);
   };
@@ -769,13 +795,19 @@ export function UserPlaylistsWrapper() {
       return;
     }
     if (!searchParams.get("type") && persistentType === "collaborative") {
-      const newParams: Record<string, string> = {
-        page: searchParams.get("page") || "1",
-        type: "collaborative",
-      };
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("type", "collaborative");
       setSearchParams(newParams);
     }
-  }, [searchParams, persistentType]);
+  }, [searchParams, persistentType, setSearchParams]);
+
+  React.useEffect(() => {
+    if (searchParams.get("type") === "collaborative") {
+      setPersistentType("collaborative");
+    } else if (!searchParams.get("type")) {
+      setPersistentType("");
+    }
+  }, [searchParams, setPersistentType]);
 
   return (
     <UserPlaylists
@@ -794,6 +826,8 @@ export function UserPlaylistsWrapper() {
       setPersistentView={setPersistentView}
       initialSort={persistentSort}
       setPersistentSort={setPersistentSort}
+      activeTags={activeTags}
+      setActiveTags={setActiveTags}
     />
   );
 }
