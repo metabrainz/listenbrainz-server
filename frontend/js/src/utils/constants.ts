@@ -34,6 +34,13 @@ export type FlairName = keyof typeof FlairEnum;
 // A union type for the flair css strings, based on the enum values above 
 export type Flair = `${FlairEnum}`; 
 
+export enum FlairDisplayPreferenceEnum {
+  All = "all",
+  NoAnimations = "no_animations",
+  Disabled = "disabled",
+}
+export type FlairDisplayPreference = `${FlairDisplayPreferenceEnum}`;
+
 // Note: This UUID regexp has a capturing group but no start or end of string character to make it reusable
 const uuid = "([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})"
 // Note: These website URL regexps have a start of string character (^) but no end of string ($)

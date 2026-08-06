@@ -11,7 +11,12 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import ReactTooltip from "react-tooltip";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { FlairEnum, Flair } from "../../utils/constants";
+import {
+  FlairEnum,
+  Flair,
+  FlairDisplayPreference,
+  FlairDisplayPreferenceEnum,
+} from "../../utils/constants";
 import type { FlairName } from "../../utils/constants";
 import Username from "../../common/Username";
 import queryClient from "../../utils/QueryClient";
@@ -52,6 +57,26 @@ export default function FlairsSettings() {
   const [selectedFlair, setSelectedFlair] = React.useState<Flair>(
     currentFlair ?? FlairEnum.None
   );
+
+  const [displayPref, setDisplayPref] = React.useState<FlairDisplayPreference>(
+    () => {
+      return (
+        (localStorage.getItem(
+          "lb_flair_display_preference"
+        ) as FlairDisplayPreference) ||
+        globalContext.flairDisplayPreference ||
+        FlairDisplayPreferenceEnum.All
+      );
+    }
+  );
+
+  const handleDisplayPrefChange = (newPref: FlairDisplayPreference) => {
+    setDisplayPref(newPref);
+    localStorage.setItem("lb_flair_display_preference", newPref);
+    if (globalContext.setFlairDisplayPreference) {
+      globalContext.setFlairDisplayPreference(newPref);
+    }
+  };
 
   const currentUnlockedFlair = useUserFlairs(name);
   // However we also hit the metabrainz nag-check endpoint to comfirm that
@@ -187,6 +212,32 @@ export default function FlairsSettings() {
               elementType="a"
             />
           </div>
+        </div>
+
+        <div className="mt-4 pt-3 border-top">
+          <h4>Display Preferences for Other Users' Flairs</h4>
+          <p className="text-muted">
+            Customize how flair badges and username animations are displayed
+            across ListenBrainz.
+          </p>
+          <select
+            id="flair-display-preference"
+            className="form-select"
+            value={displayPref}
+            onChange={(e) =>
+              handleDisplayPrefChange(e.target.value as FlairDisplayPreference)
+            }
+          >
+            <option value={FlairDisplayPreferenceEnum.All}>
+              Show all flairs and animations
+            </option>
+            <option value={FlairDisplayPreferenceEnum.NoAnimations}>
+              Disable flair animations (display static flairs)
+            </option>
+            <option value={FlairDisplayPreferenceEnum.Disabled}>
+              Hide all flairs entirely
+            </option>
+          </select>
         </div>
       </div>
     </div>
