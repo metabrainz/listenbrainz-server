@@ -28,6 +28,11 @@ A ListenBrainz data dump consists of three archives:
 
 #. ``listenbrainz-listens-dump-spark.tar.zst``
 
+The database dumps and the listens dumps are created by separate jobs, so they are published in two directories per
+dump cycle. The ``listenbrainz-public-dump.tar.zst`` archive is in the directory whose name ends in ``-db`` and the
+listens archives are in the directory whose name ends in ``-full``. Their ids and timestamps do not match each other,
+so always pick the newest directory of each kind.
+
 
 listenbrainz-public-dump.tar.zst
 -------------------------------

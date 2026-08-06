@@ -1,4 +1,6 @@
 MAILTO=""
 
-## Trigger a full dump on 1st and 15th of every month, in the middle of the night, do not block to wait for lock.
+## Trigger a full listens and stats dump on 1st and 15th of every month, in the middle of the night, do not block to
+## wait for lock. The public and private database dumps are created by a separate cron job on the following day in the
+## regular cron container so that the jobs do not hammer the databases at the same time.
 0 4 1,15 * * root flock -x -n /var/lock/lb-full-dumps.lock /code/listenbrainz/admin/create-dumps.sh full >> /logs/full_dumps.log 2>&1
