@@ -231,6 +231,7 @@ def init_ts_db(force, create_db):
 
 @cli.command(name="update_user_emails")
 def update_user_emails():
+    """Backfill missing ListenBrainz emails from the MetaBrainz user database."""
     from listenbrainz.webserver.login import copy_files_from_mb_to_lb
     application = webserver.create_app()
     with application.app_context():

@@ -7,7 +7,7 @@ from data.model.external_service import ExternalServiceType
 from listenbrainz.db.model.review import CBReviewMetadata
 from listenbrainz.domain.brainz_service import BaseBrainzService
 
-CRITIQUEBRAINZ_SCOPES = ["critiquebrainz:review"]
+CRITIQUEBRAINZ_SCOPES = ["review"]
 
 OAUTH_AUTHORIZE_URL = "https://critiquebrainz.org/oauth/authorize"
 OAUTH_TOKEN_URL = "https://critiquebrainz.org/ws/1/oauth/token"

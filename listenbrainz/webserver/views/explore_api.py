@@ -11,6 +11,9 @@ from listenbrainz.webserver.views.api_tools import _parse_int_arg, _parse_bool_a
 from listenbrainz.db.color import get_releases_for_color
 from troi.patches.lb_radio import LBRadioPatch
 from troi.patch import Patch
+from listenbrainz.radio.artist import RecordingSearchByArtistService
+from listenbrainz.radio.tags import RecordingSearchByTagService
+from listenbrainz.radio.recording_lookup import RecordingLookupService
 
 DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS = 14
 MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 90
@@ -195,6 +198,10 @@ def lb_radio():
             "min_recordings": 1,
             "auth_token": auth_token
         })
+        # Register local patches pulling directly from the DB instead of using HTTP API calls
+        patch.register_service(RecordingSearchByArtistService())
+        patch.register_service(RecordingSearchByTagService())
+        patch.register_service(RecordingLookupService())
         playlist = patch.generate_playlist()
     except RuntimeError as err:
         raise APIBadRequest(f"LB Radio generation failed: {err}")
