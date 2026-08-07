@@ -105,7 +105,7 @@ def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: 
                           , 'listened_at'
                           ,  extract(epoch from listened_at)
                           , 'recording_msid'
-                          , recording_msid
+                          , recording_msid::text
                           , 'track_metadata'
                           , jsonb_set(
                                 data,
