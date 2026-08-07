@@ -120,7 +120,7 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
 
         self.send_listens()
         url = self.custom_url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
-        response = self.wait_for_query_to_have_items(url, 1, query_string={'count': '3'})
+        response = self.wait_for_query_to_have_items(url, 3, attempts=20, query_string={'count': '3'})
         data = json.loads(response.data)['payload']
         self.assert200(response)
         recording_msid = data["listens"][1]["recording_msid"]
@@ -237,8 +237,12 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
                 self.assertEqual(expected["listened_at"], received["listened_at"])
                 # The test data used in send_listens cannot have an inserted_at prop as that is not a valid listen format
                 self.assertNotIn("inserted_at", expected)
-                # However inserted_at should be part of the exported listen data
+                # However inserted_at should be part of the exported listen data as an integer
                 self.assertIn("inserted_at", received)
+                self.assertIsInstance(received["inserted_at"], int)
+                # recording_msid must be a top-level attribute
+                self.assertIn("recording_msid", received)
+                self.assertIsNotNone(received["recording_msid"])
                 if received["track_metadata"]["track_name"] == "Sister":
                     self.assertEqual({
                         "caa_id": self.recording["release_data"]["caa_id"],
