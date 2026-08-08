@@ -2,6 +2,8 @@ import uuid
 from unittest.mock import patch, MagicMock
 
 import pytest
+from troi import Recording
+from troi.patches.lb_radio_classes.playlist import LBRadioPlaylistRecordingElement
 
 from listenbrainz.radio.playlist import LBRadioPlaylistService
 
@@ -85,3 +87,37 @@ class TestLBRadioPlaylistService:
         mock_get.return_value = _make_playlist(recording_mbids=[])
         result = LBRadioPlaylistService().fetch(PLAYLIST_MBID, auth_token=None)
         assert result == []
+
+
+class TestPlaylistElementWithService:
+    """End-to-end: DB mock -> LBRadioPlaylistService -> Troi element -> returned Recordings."""
+
+    def _element(self, auth_token=None):
+        mock_patch = MagicMock()
+        mock_patch.local_storage = {"data_cache": {"element-descriptions": []}}
+        mock_patch.services = {"playlist": LBRadioPlaylistService()}
+        el = LBRadioPlaylistRecordingElement(PLAYLIST_MBID, auth_token=auth_token)
+        el.patch = mock_patch
+        return el
+
+    @patch("listenbrainz.radio.playlist.db_playlist.get_by_mbid")
+    def test_element_uses_service_not_http(self, mock_get):
+        mock_get.return_value = _make_playlist(public=True)
+        with patch("troi.http_request.http_get") as mock_http:
+            self._element().read([])
+            mock_http.assert_not_called()
+
+    @patch("listenbrainz.radio.playlist.db_playlist.get_by_mbid")
+    def test_element_returns_recording_objects(self, mock_get):
+        mock_get.return_value = _make_playlist(public=True)
+        result = self._element().read([])
+        assert all(isinstance(r, Recording) for r in result)
+        mbids = {r.mbid for r in result}
+        assert str(REC_MBID_1) in mbids
+        assert str(REC_MBID_2) in mbids
+
+    @patch("listenbrainz.radio.playlist.db_playlist.get_by_mbid")
+    def test_element_raises_for_private_playlist_without_token(self, mock_get):
+        mock_get.return_value = _make_playlist(public=False, creator_id=CREATOR_ID)
+        with pytest.raises(RuntimeError, match="private"):
+            self._element(auth_token=None).read([])

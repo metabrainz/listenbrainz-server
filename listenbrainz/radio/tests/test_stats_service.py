@@ -1,5 +1,8 @@
 from unittest.mock import patch, MagicMock, call
 
+from troi import Recording
+from troi.patches.lb_radio_classes.stats import LBRadioStatsRecordingElement
+
 from listenbrainz.radio.stats import LBRadioStatsService
 
 USER_ID = 42
@@ -113,6 +116,44 @@ class TestLBRadioStatsServiceCache:
         mock_cache.get.return_value = None
 
         LBRadioStatsService().fetch(USER_NAME, TIME_RANGE, 0)
+
+        key = mock_cache.set.call_args[0][0]
+        assert str(USER_ID) in key
+        assert TIME_RANGE in key
+
+
+class TestStatsElementWithService:
+    """End-to-end: DB mock -> LBRadioStatsService -> Troi element -> returned Recordings."""
+
+    def _element(self, mode="easy", time_range=TIME_RANGE):
+        mock_patch = MagicMock()
+        mock_patch.local_storage = {"data_cache": {"element-descriptions": []}}
+        mock_patch.services = {"stats": LBRadioStatsService()}
+        el = LBRadioStatsRecordingElement(USER_NAME, time_range, mode=mode)
+        el.patch = mock_patch
+        return el
+
+    @patch("listenbrainz.radio.stats.cache")
+    @patch("listenbrainz.radio.stats.db_stats.get", return_value=_fake_stats())
+    @patch("listenbrainz.radio.stats.db_user.get_by_mb_id", return_value=FAKE_USER)
+    def test_element_uses_service_not_http(self, _mock_user, _mock_stats, mock_cache):
+        mock_cache.get.return_value = None
+        with patch("liblistenbrainz.ListenBrainz.get_user_recordings") as mock_http:
+            self._element().read([])
+            mock_http.assert_not_called()
+
+    @patch("listenbrainz.radio.stats.cache")
+    @patch("listenbrainz.radio.stats.db_stats.get", return_value=_fake_stats())
+    @patch("listenbrainz.radio.stats.db_user.get_by_mb_id", return_value=FAKE_USER)
+    def test_element_returns_recording_objects_with_artist_mbids(self, _mock_user, _mock_stats, mock_cache):
+        mock_cache.get.return_value = None
+        result = self._element().read([])
+        assert all(isinstance(r, Recording) for r in result)
+        mbids = {r.mbid for r in result}
+        assert RECORDING_1["recording_mbid"] in mbids
+        assert RECORDING_2["recording_mbid"] in mbids
+        for r in result:
+            assert r.artist_credit.musicbrainz["artist_mbids"] is not None
 
         key = mock_cache.set.call_args[0][0]
         assert str(USER_ID) in key

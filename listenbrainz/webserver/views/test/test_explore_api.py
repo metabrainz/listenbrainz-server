@@ -40,6 +40,55 @@ class LBRadioAuthTest(IntegrationTestCase):
         self.assert200(resp)
 
 
+class LBRadioServiceRegistrationTest(IntegrationTestCase):
+    """Verify that all DB-direct services are registered when lb_radio() runs.
+
+    If a register_service() call is removed from explore_api.py, this test
+    catches it before it silently falls back to HTTP loopbacks in production.
+    """
+
+    def setUp(self):
+        super().setUp()
+        set_rate_limits(100000, 100000, 10)
+        self.user = db_user.get_or_create(self.db_conn, 1, 'testuser_lb_radio_reg')
+
+    @patch('listenbrainz.webserver.views.explore_api.LBRadioPatch')
+    def test_all_services_registered(self, mock_patch_cls):
+        from listenbrainz.radio.artist import RecordingSearchByArtistService
+        from listenbrainz.radio.tags import RecordingSearchByTagService
+        from listenbrainz.radio.recording_lookup import RecordingLookupService
+        from listenbrainz.radio.stats import LBRadioStatsService
+        from listenbrainz.radio.playlist import LBRadioPlaylistService
+        from listenbrainz.radio.recs import LBRadioRecsService
+
+        expected_slugs = {
+            RecordingSearchByArtistService.SLUG,
+            RecordingSearchByTagService.SLUG,
+            RecordingLookupService.SLUG,
+            LBRadioStatsService.SLUG,
+            LBRadioPlaylistService.SLUG,
+            LBRadioRecsService.SLUG,
+        }
+
+        mock_patch = MagicMock()
+        mock_patch.generate_playlist.return_value = MagicMock(
+            get_jspf=lambda: {"playlist": {"tracks": []}}
+        )
+        mock_patch.user_feedback.return_value = []
+        mock_patch_cls.return_value = mock_patch
+
+        self.client.get(
+            self.custom_url_for('explore_api_v1.lb_radio', prompt='artist:(radiohead)', mode='easy'),
+            headers={"Authorization": f"Token {self.user['auth_token']}"}
+        )
+
+        registered = {call.args[0].slug for call in mock_patch.register_service.call_args_list}
+        assert expected_slugs == registered, (
+            f"Missing services: {expected_slugs - registered}, "
+            f"unexpected: {registered - expected_slugs}"
+        )
+
+
 class LBRadioRateLimitTest(IntegrationTestCase):
     """lb-radio has a separate, stricter rate limit than the global one."""
 
