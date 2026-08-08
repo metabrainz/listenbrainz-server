@@ -19,13 +19,14 @@ export default function Footer() {
             </h3>
             <br />
             <p>
-              ListenBrainz keeps track of music you listen to and provides you
-              with insights into your listening habits.
+              ListenBrainz tracks what you listen to and turns it into insights
+              about your music habits.
               <br />
-              You can use ListenBrainz to track your listening habits, discover
-              new music with personalized recommendations, and share your
-              musical taste with others using our visualizations. User listen
-              data and text is made public under the{" "}
+              You can explore personalized recommendations, discover new
+              artists, and share your taste with others through rich
+              visualizations.
+              <br />
+              User listen data is made public under the{" "}
               <a href="https://creativecommons.org/public-domain/cc0/">
                 Creative Commons Zero (CC0)
               </a>{" "}
@@ -50,7 +51,7 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-          <div className="col-12 col-sm-6 col-lg-3">
+          <div className="col-6 col-lg-3">
             <h3 className="text-brand text-body">Useful Links</h3>
             <ul className="list-unstyled">
               <li>
@@ -114,7 +115,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Contribute Here
+                  Contribute here
                 </a>
               </li>
               <li className="d-block d-md-none">
@@ -129,7 +130,7 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-          <div className="col-12 col-sm-6 col-lg-3">
+          <div className="col-6 col-lg-3">
             <h3 className="text-brand text-body">Fellow Projects</h3>
             <ul className="list-unstyled">
               <li>
@@ -231,9 +232,9 @@ export default function Footer() {
             </ul>
           </div>
         </div>
-        <div className="row center-p">
-          <div className="col-lg-3 d-none d-md-block">
-            <p className="border-light border-top pt-5">
+        <div className="row align-items-stretch mx-2 mx-xl-5 mt-3 border-top">
+          <div className="col-lg-3 py-4 col-md-auto d-md-flex d-none flex-column gap-3 text-center ">
+            <div className="mt-auto">
               OSS Geek?{" "}
               <a
                 href="https://github.com/metabrainz/listenbrainz-server"
@@ -241,24 +242,10 @@ export default function Footer() {
                 rel="noopener noreferrer"
               >
                 {" "}
-                <span className="color-a"> Contribute Here </span>{" "}
+                <span className="color-a"> Contribute here </span>{" "}
               </a>
-            </p>
-          </div>
-          <div className="col-lg-6">
-            <p className="border-light border-top pt-5">
-              Brought to you by{" "}
-              <img
-                src="/static/img/meb-icons/MetaBrainz.svg"
-                width="30"
-                height="30"
-                alt="MetaBrainz"
-              />{" "}
-              <span className="color-a"> MetaBrainz Foundation </span>
-            </p>
-          </div>
-          <div className="col-lg-3 d-none d-md-block">
-            <p className="border-light border-top pt-5">
+            </div>
+            <div className="mb-auto">
               Found an Issue?{" "}
               <a
                 href="https://tickets.metabrainz.org/"
@@ -266,9 +253,33 @@ export default function Footer() {
                 rel="noopener noreferrer"
               >
                 {" "}
-                <span className="color-a"> Report Here </span>
+                <span className="color-a"> Report here </span>
               </a>
-            </p>
+            </div>
+          </div>
+          <div
+            className="col-lg-6 py-4 col-md text-center my-auto"
+            style={{ minHeight: 60 }}
+          >
+            <div className="d-inline-block">Brought to you by </div>
+            <div className="d-inline-block">
+              <img
+                src="/static/img/meb-icons/MetaBrainz.svg"
+                width="30"
+                height="30"
+                alt="MetaBrainz"
+              />{" "}
+              MetaBrainz Foundation
+            </div>
+          </div>
+          <div className="py-4 col-lg-3 col-md-auto d-flex d-md-block justify-content-center order-first order-md-last">
+            <a href="https://play.google.com/store/apps/details?id=org.listenbrainz.android&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1">
+              <img
+                alt="Get it on Google Play"
+                src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+                width="200"
+              />
+            </a>
           </div>
         </div>
       </div>
