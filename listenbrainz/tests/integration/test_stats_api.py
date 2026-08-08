@@ -27,7 +27,8 @@ class StatsAPITestCase(IntegrationTestCase):
             "artist_map",
             "artist_evolution_activity",
             "genre_activity",
-            "era_activity"
+            "era_activity",
+            "writers"
         ]
         ranges = ["week", "month", "year", "all_time"]
         for stat in stats:
@@ -125,6 +126,13 @@ class StatsAPITestCase(IntegrationTestCase):
         database = 'artist_map_all_time_20220718'
         db_stats.insert(database, 0, 5, self.artist_map_payload)
 
+        # Insert writer data
+        with open(self.path_to_data_file('user_top_writers_db_data_for_api_test.json')) as f:
+            self.writer_payload = json.load(f)
+            self.writer_payload[0]["user_id"] = self.user["id"]
+        database = 'writers_all_time_20220718'
+        db_stats.insert(database, 0, 5, self.writer_payload)
+
         self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
 
         self.entity_endpoints = {
@@ -147,6 +155,11 @@ class StatsAPITestCase(IntegrationTestCase):
                 "endpoint": "stats_api_v1.get_recording",
                 "total_count_key": "total_recording_count",
                 "payload": self.recording_payload
+            },
+            "writers": {
+                "endpoint": "stats_api_v1.get_writer",
+                "total_count_key": "total_writer_count",
+                "payload": self.writer_payload
             }
         }
 
