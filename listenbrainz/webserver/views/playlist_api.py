@@ -40,6 +40,29 @@ supported_services = {
     "soundcloud": SoundCloudService
 }
 
+def _get_playlist_extension(jspf):
+    """Get playlist extension data, handling both spec-compliant (array) and legacy (object) formats.
+
+    The JSPF spec requires extension values to be arrays of objects, but older versions
+    of LB used a single object. This helper unwraps the array if present, falling back
+    to the legacy single-object format.
+
+    To be robust against malformed client data (e.g. null, scalars, wrong list types),
+    this function always returns a dict.
+    """
+    ext = jspf.get("playlist", {}).get("extension", {}).get(PLAYLIST_EXTENSION_URI, {})
+    # Spec-compliant format: array of extension objects
+    if isinstance(ext, list):
+        if ext and isinstance(ext[0], dict):
+            return ext[0]
+        return {}
+    # Legacy format: single object
+    if isinstance(ext, dict):
+        return ext
+    # Any other type (None, scalar, wrong structure) is treated as empty
+    return {}
+
+
 def validate_create_playlist_required_items(jspf):
     """Given a JSPF dict, ensure that the title and public fields are present.
     These fields are required only when creating a new playlist"""
@@ -50,7 +73,7 @@ def validate_create_playlist_required_items(jspf):
     if "title" not in jspf["playlist"]:
         log_raise_400("JSPF playlist must contain a title element with the title of the playlist.")
 
-    if "public" not in jspf["playlist"].get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}):
+    if "public" not in _get_playlist_extension(jspf):
         log_raise_400("JSPF playlist.extension.https://musicbrainz.org/doc/jspf#playlist.public field must be given.")
 
 
@@ -84,14 +107,15 @@ def validate_playlist(jspf):
         if not title:
             log_raise_400("JSPF playlist must contain a title element with the title of the playlist.")
 
-    if "public" in jspf["playlist"].get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}):
-        public = jspf["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"]
+    pl_ext = _get_playlist_extension(jspf)
+    if "public" in pl_ext:
+        public = pl_ext["public"]
         if not isinstance(public, bool):
             log_raise_400("JSPF playlist public field must contain a boolean.")
 
     try:
         # Collaborators are not required, so only validate if they are set
-        for collaborator in jspf["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["collaborators"]:
+        for collaborator in pl_ext["collaborators"]:
             if not collaborator:
                 log_raise_400("The collaborators field contains an empty value.")
     except KeyError:
@@ -313,10 +337,9 @@ def create_playlist():
     validate_create_playlist_required_items(data)
     validate_playlist(data)
 
-    public = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"]
-    collaborators = data.get("playlist", {}). \
-        get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}). \
-        get("collaborators", [])
+    pl_ext = _get_playlist_extension(data)
+    public = pl_ext["public"]
+    collaborators = pl_ext.get("collaborators", [])
 
     if type(collaborators) not in (list, tuple):
         log_raise_400("Collaborators must be a list.")
@@ -333,7 +356,7 @@ def create_playlist():
         collaborators.remove(user["musicbrainz_id"])
 
     username_lookup = collaborators
-    created_for = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI].get("created_for", None)
+    created_for = pl_ext.get("created_for", None)
     if created_for:
         username_lookup.append(created_for)
     # The else: clause below can be removed as of 2025-06.
@@ -361,10 +384,7 @@ def create_playlist():
     # playlist submitter; if so, load the metadata from the JSPF playlist and add to the new playlist
     additional_metadata = None
     if user["musicbrainz_id"] in current_app.config["APPROVED_PLAYLIST_BOTS"]:
-        try:
-            additional_metadata = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["additional_metadata"]
-        except KeyError:
-            pass
+        additional_metadata = pl_ext.get("additional_metadata")
 
     playlist = WritablePlaylist(name=data['playlist']['title'],
                                 creator_id=user["id"],
@@ -374,10 +394,10 @@ def create_playlist():
                                 public=public,
                                 additional_metadata=additional_metadata)
 
-    if data["playlist"]["extension"][PLAYLIST_EXTENSION_URI].get("created_for", None):
+    if pl_ext.get("created_for", None):
         if user["musicbrainz_id"] not in current_app.config["APPROVED_PLAYLIST_BOTS"]:
             raise APIForbidden("Playlist contains a created_for field, but submitting user is not an approved playlist bot.")
-        created_for_user = users.get(data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["created_for"].lower())
+        created_for_user = users.get(pl_ext["created_for"].lower())
         if not created_for_user:
             log_raise_400("created_for user does not exist.")
         playlist.created_for_id = created_for_user["id"]
@@ -472,10 +492,9 @@ def edit_playlist(playlist_mbid):
     if playlist.creator_id != user["id"]:
         raise APIForbidden("You are not allowed to edit this playlist.")
 
-    try:
-        playlist.public = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["public"]
-    except KeyError:
-        pass
+    pl_ext = _get_playlist_extension(data)
+    if "public" in pl_ext:
+        playlist.public = pl_ext["public"]
 
     if "annotation" in data["playlist"]:
         # If the annotation key exists but the value is empty ("" or None),
@@ -490,9 +509,7 @@ def edit_playlist(playlist_mbid):
     if data["playlist"].get("title"):
         playlist.name = data["playlist"]["title"]
 
-    collaborators = data.get("playlist", {}). \
-        get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}). \
-        get("collaborators", [])
+    collaborators = pl_ext.get("collaborators", [])
     users = {}
 
     # Uniquify collaborators list
@@ -511,14 +528,10 @@ def edit_playlist(playlist_mbid):
             log_raise_400("Collaborator {} doesn't exist".format(collaborator))
         collaborator_ids.append(users[collaborator.lower()]["id"])
 
-    try:
-        if "additional_metadata" in data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]:
-            if playlist.additional_metadata is None:
-                playlist.additional_metadata = {}
-
-            playlist.additional_metadata = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["additional_metadata"]
-    except KeyError:
-        pass
+    if "additional_metadata" in pl_ext:
+        if playlist.additional_metadata is None:
+            playlist.additional_metadata = {}
+        playlist.additional_metadata = pl_ext["additional_metadata"]
 
     playlist.collaborators = collaborators
     playlist.collaborator_ids = collaborator_ids
