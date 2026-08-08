@@ -16,6 +16,7 @@ from listenbrainz.radio.tags import RecordingSearchByTagService
 from listenbrainz.radio.recording_lookup import RecordingLookupService
 from listenbrainz.radio.stats import LBRadioStatsService
 from listenbrainz.radio.playlist import LBRadioPlaylistService
+from listenbrainz.radio.recs import LBRadioRecsService
 
 LB_RADIO_PER_TOKEN_LIMIT = 10  # per rate-limit window (10s), separate from the global 100k/10s limit
 
@@ -213,6 +214,7 @@ def lb_radio():
         patch.register_service(RecordingLookupService())
         patch.register_service(LBRadioStatsService())
         patch.register_service(LBRadioPlaylistService())
+        patch.register_service(LBRadioRecsService())
         playlist = patch.generate_playlist()
     except RuntimeError as err:
         raise APIBadRequest(f"LB Radio generation failed: {err}")
