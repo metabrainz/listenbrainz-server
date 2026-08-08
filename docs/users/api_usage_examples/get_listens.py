@@ -24,9 +24,25 @@ def get_listens(username, min_ts=None, max_ts=None, count=None):
                 DO NOT USE WITH min_ts.
         count: How many listens to return. If not specified,
                uses a default from the server.
+               This does not guarantee all requested listens will be returned.
+
 
     Returns:
         A list of listen info dictionaries if there's an OK status.
+        The response will contain a count and a search_status which indicates
+        whether the database search ended before all requested listens were returned.
+        This object has the following shape:
+
+        .. code-block:: text
+
+            {
+                "partial": <boolean>,
+                "continue_max_ts": <unix timestamp, optional>,
+                "continue_min_ts": <unix timestamp, optional>
+            }
+
+        ``partial`` is always present. When true, either ``continue_max_ts`` and ``continue_min_ts``
+        will be present to continue the search.
 
     Raises:
         An HTTPError if there's a failure.

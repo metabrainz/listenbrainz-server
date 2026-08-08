@@ -1,3 +1,4 @@
+import csv
 import io
 import json
 import os.path
@@ -404,11 +405,22 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
 
     def test_import_spotify(self):
         self.insert_sample_spotify_data()
+        from_date = datetime(2015, 1, 1)
+        to_date = datetime(2024, 1, 1)
+        from_ts = from_date.replace(tzinfo=timezone.utc)
+        to_ts = to_date.replace(tzinfo=timezone.utc)
+        fixture_timestamps = []
+        for filename in ("spotify_streaming_2023.json", "spotify_streaming_endsong_0.json"):
+            with open(self.path_to_data_file(filename), "r") as f:
+                for item in json.load(f):
+                    listened_at = datetime.fromisoformat(item["ts"].replace("Z", "+00:00"))
+                    if from_ts <= listened_at < to_ts:
+                        fixture_timestamps.append(int(listened_at.timestamp()))
         data = {
             "service": "spotify",
             "file": self.create_spotify_zip(),
-            "from_date": datetime(2015, 1, 1).isoformat(),
-            "to_date": datetime(2024, 1, 1).isoformat(),
+            "from_date": from_date.isoformat(),
+            "to_date": to_date.isoformat(),
         }
         response = self.client.post(
             self.custom_url_for("import_listens_api_v1.create_import_task"),
@@ -421,7 +433,15 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
 
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
         # Some tracks will be skipped,only expecting 6 tracks 
-        response = self.wait_for_query_to_have_items(url, num_items=6, attempts=20)
+        response = self.wait_for_query_to_have_items(
+            url,
+            num_items=6,
+            attempts=20,
+            query_string={
+                "min_ts": min(fixture_timestamps) - 1,
+                "max_ts": max(fixture_timestamps) + 1,
+            },
+        )
         listens = response.json["payload"]["listens"]
         self.assertEqual(len(listens), 6)
 
@@ -580,6 +600,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(metadata["success_count"], 3)
 
     def test_import_librefm_without_album_column(self):
+        expected_timestamps = [1762874400, 1609459200]
         data = {
             "service": "librefm",
             "file": open(self.path_to_data_file("librefm_no_album_column.csv"), "rb"),
@@ -594,12 +615,20 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         import_id = response.json["import_id"]
 
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
-        response = self.wait_for_query_to_have_items(url, num_items=2, attempts=20)
+        response = self.wait_for_query_to_have_items(
+            url,
+            num_items=2,
+            attempts=20,
+            query_string={
+                "min_ts": min(expected_timestamps) - 1,
+                "max_ts": max(expected_timestamps) + 1,
+            },
+        )
         listens = response.json["payload"]["listens"]
         self.assertEqual(len(listens), 2)
 
         first_listen = listens[0]
-        self.assertEqual(first_listen["listened_at"], 1762874400)
+        self.assertEqual(first_listen["listened_at"], expected_timestamps[0])
         track_metadata = first_listen["track_metadata"]
         self.assertEqual(track_metadata["artist_name"], "Rick Astley")
         self.assertEqual(track_metadata["track_name"], "Never Gonna Give You Up")
@@ -607,7 +636,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["additional_info"]["submission_client"], "ListenBrainz Archive Importer")
 
         second_listen = listens[1]
-        self.assertEqual(second_listen["listened_at"], 1609459200)
+        self.assertEqual(second_listen["listened_at"], expected_timestamps[1])
         track_metadata = second_listen["track_metadata"]
         self.assertEqual(track_metadata["artist_name"], "Nina Simone")
         self.assertEqual(track_metadata["track_name"], "Feeling Good")
@@ -672,6 +701,8 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(metadata["success_count"], 2)
 
     def test_import_librefm_via_maloja(self):
+        with open(self.path_to_data_file("librefm_via_maloja.csv"), "r") as f:
+            fixture_timestamps = sorted((int(row["Time"]) for row in csv.DictReader(f)), reverse=True)
         data = {
             "service": "librefm",
             "file": open(self.path_to_data_file("librefm_via_maloja.csv"), "rb")
@@ -686,12 +717,20 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         import_id = response.json["import_id"]
 
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
-        response = self.wait_for_query_to_have_items(url, num_items=3, attempts=20)
+        response = self.wait_for_query_to_have_items(
+            url,
+            num_items=3,
+            attempts=20,
+            query_string={
+                "min_ts": min(fixture_timestamps) - 1,
+                "max_ts": max(fixture_timestamps) + 1,
+            },
+        )
         listens = response.json["payload"]["listens"]
         self.assertEqual(len(listens), 3)
 
         first_listen = listens[0]
-        self.assertEqual(first_listen["listened_at"], 1760532855)
+        self.assertEqual(first_listen["listened_at"], fixture_timestamps[0])
         track_metadata = first_listen["track_metadata"]
         self.assertEqual(track_metadata["artist_name"], "Vega Trails")
         self.assertEqual(track_metadata["track_name"], "Old Friend; The Sea")
@@ -700,7 +739,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
 
         second_listen = listens[1]
-        self.assertEqual(second_listen["listened_at"], 1690348225)
+        self.assertEqual(second_listen["listened_at"], fixture_timestamps[1])
         track_metadata = second_listen["track_metadata"]
         self.assertEqual(track_metadata["artist_name"], "Sweet Garden")
         self.assertEqual(track_metadata["track_name"], "Altered State")
@@ -709,7 +748,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
 
         third_listen = listens[2]
-        self.assertEqual(third_listen["listened_at"], 1690347960)
+        self.assertEqual(third_listen["listened_at"], fixture_timestamps[2])
         track_metadata = third_listen["track_metadata"]
         self.assertEqual(track_metadata["artist_name"], "The Horrors")
         self.assertEqual(track_metadata["track_name"], "New Ice Age")
@@ -756,6 +795,11 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual("Unable to locate Libre.fm header row in import file.", metadata["progress"])
 
     def test_import_librefm_with_comments(self):
+        with open(self.path_to_data_file("librefm_with_comments.csv"), "r") as f:
+            fixture_timestamps = sorted(
+                (int(row["time"]) for row in csv.DictReader(row for row in f if not row.startswith("#"))),
+                reverse=True,
+            )
         data = {
             "service": "librefm",
             "file": open(self.path_to_data_file("librefm_with_comments.csv"), "rb")
@@ -770,12 +814,20 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         import_id = response.json["import_id"]
 
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
-        response = self.wait_for_query_to_have_items(url, num_items=3, attempts=20)
+        response = self.wait_for_query_to_have_items(
+            url,
+            num_items=3,
+            attempts=20,
+            query_string={
+                "min_ts": min(fixture_timestamps) - 1,
+                "max_ts": max(fixture_timestamps) + 1,
+            },
+        )
         listens = response.json["payload"]["listens"]
         self.assertEqual(len(listens), 3)
 
         first_listen = listens[0]
-        self.assertEqual(first_listen["listened_at"], 1760532855)
+        self.assertEqual(first_listen["listened_at"], fixture_timestamps[0])
         track_metadata = first_listen["track_metadata"]
         self.assertEqual(track_metadata["artist_name"], "Vega Trails")
         self.assertEqual(track_metadata["track_name"], "Old Friend; The Sea")
@@ -784,7 +836,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
 
         second_listen = listens[1]
-        self.assertEqual(second_listen["listened_at"], 1690348225)
+        self.assertEqual(second_listen["listened_at"], fixture_timestamps[1])
         track_metadata = second_listen["track_metadata"]
         self.assertEqual(track_metadata["artist_name"], "Sweet Garden")
         self.assertEqual(track_metadata["track_name"], "Altered State")
@@ -793,7 +845,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
 
         third_listen = listens[2]
-        self.assertEqual(third_listen["listened_at"], 1690347960)
+        self.assertEqual(third_listen["listened_at"], fixture_timestamps[2])
         track_metadata = third_listen["track_metadata"]
         self.assertEqual(track_metadata["artist_name"], "The Horrors")
         self.assertEqual(track_metadata["track_name"], "New Ice Age")
