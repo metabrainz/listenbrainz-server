@@ -5,6 +5,9 @@ from flask import Blueprint, current_app,render_template
 from flask_login import current_user
 from brainzutils.ratelimit import ratelimit
 
+from listenbrainz.art.cover_art_generator import CoverArtGenerator
+from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
+from listenbrainz.webserver import ts_conn
 from listenbrainz.webserver.decorators import web_musicbrainz_needed
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 collection_bp = Blueprint("collection", __name__)
@@ -34,6 +37,8 @@ def _fetch_recording_collection_track_count(mb_curs, collection_id: int) -> int:
         """
           SELECT COUNT(*)::int AS track_count
             FROM musicbrainz.editor_collection_recording ecr
+            JOIN musicbrainz.recording r
+              ON r.id = ecr.recording
            WHERE ecr.collection = %s
         """,
         (collection_id,),
@@ -63,9 +68,129 @@ def _fetch_recording_collection_tracks(mb_curs, collection_id: int, *, count: in
     return mb_curs.fetchall()
 
 
+def _serialize_collection_track(track_row, metadata_row=None) -> dict:
+    """Build API track dict from MB collection row and optional metadata cache enrichment."""
+    track = {
+        "recording_mbid": track_row["recording_mbid"],
+        "title": track_row["title"],
+        "artist_credit_name": track_row["artist_credit_name"],
+        "length": track_row["length"],
+    }
+    if not metadata_row or not metadata_row.get("recording_mbid"):
+        return track
+
+    if metadata_row.get("recording_name"):
+        track["title"] = metadata_row["recording_name"]
+    if metadata_row.get("artist_credit_name"):
+        track["artist_credit_name"] = metadata_row["artist_credit_name"]
+    if metadata_row.get("length") is not None:
+        track["length"] = metadata_row["length"]
+    if metadata_row.get("release_mbid"):
+        track["release_mbid"] = metadata_row["release_mbid"]
+    if metadata_row.get("release_name"):
+        track["release_name"] = metadata_row["release_name"]
+    if metadata_row.get("caa_id") is not None:
+        track["caa_id"] = metadata_row["caa_id"]
+    if metadata_row.get("caa_release_mbid"):
+        track["caa_release_mbid"] = metadata_row["caa_release_mbid"]
+    if metadata_row.get("artist_credit_mbids"):
+        track["artist_mbids"] = metadata_row["artist_credit_mbids"]
+    if metadata_row.get("artists"):
+        track["artists"] = metadata_row["artists"]
+    return track
+
+
+def _enrich_recording_collection_tracks(mb_curs, tracks) -> list[dict]:
+    """Enrich collection tracks using the same metadata cache path as playlists."""
+    if not tracks:
+        return []
+
+    recording_mbids = [t["recording_mbid"] for t in tracks]
+    metadata_by_mbid = {}
+    try:
+        with ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
+            metadata_rows = load_recordings_from_mbids_with_redirects(
+                mb_curs, ts_curs, recording_mbids,
+            )
+        for row in metadata_rows:
+            metadata_by_mbid[row["original_recording_mbid"]] = row
+    except Exception:
+        current_app.logger.error(
+            "Error enriching MusicBrainz collection tracks from metadata cache:",
+            exc_info=True,
+        )
+
+    return [
+        _serialize_collection_track(t, metadata_by_mbid.get(t["recording_mbid"]))
+        for t in tracks
+    ]
+
+
+def _get_cover_art_options_from_tracks(tracks: list[dict]) -> list[dict]:
+    """Collect unique cover art images from enriched tracks"""
+    selected_image_ids = set()
+    images = []
+
+    for track in tracks:
+        caa_id = track.get("caa_id")
+        caa_release_mbid = track.get("caa_release_mbid")
+        if not (caa_id and caa_release_mbid):
+            continue
+
+        unique_key = f"{caa_id}-{caa_release_mbid}"
+        if unique_key in selected_image_ids:
+            continue
+        selected_image_ids.add(unique_key)
+        images.append({
+            "caa_id": caa_id,
+            "caa_release_mbid": caa_release_mbid,
+            "title": track.get("title"),
+            "entity_mbid": track.get("recording_mbid"),
+            "artist": track.get("artist_credit_name"),
+        })
+
+    return images
+
+
+def _generate_collection_cover_art(collection_name: str, tracks: list[dict]) -> str | None:
+    """Build playlist-style mosaic SVG for the collection header from track cover art."""
+    images = _get_cover_art_options_from_tracks(tracks)
+    if not images:
+        return None
+
+    selected_cover_art = CoverArtGenerator.select_best_layout(len(images))
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"],
+        selected_cover_art["dimension"],
+        500,
+        server_root_url=current_app.config["SERVER_ROOT_URL"],
+    )
+    if (validation_error := cac.validate_parameters()) is not None:
+        current_app.logger.warning(
+            "Invalid cover art parameters for collection %s: %s",
+            collection_name,
+            validation_error,
+        )
+        return None
+
+    cover_art_images = cac.generate_from_caa_ids(
+        images, layout=selected_cover_art["layout"], cover_art_size=500,
+    )
+    return render_template(
+        "art/svg-templates/simple-grid.svg",
+        background="transparent",
+        images=cover_art_images,
+        title=collection_name,
+        desc="",
+        entity="album",
+        width=500,
+        height=500,
+        show_caption=False,
+    )
+
+
 def fetch_collection_payload(collection_mbid: str, *, viewer_editor_id: int | None, count: int, offset: int):
-    """Fetch collection and tracks from the MusicBrainz database.
-    """
+    """Fetch collection and tracks from the MusicBrainz database."""
     if not is_valid_uuid(collection_mbid):
         return None, ({"error": f"Provided collection ID is invalid: {collection_mbid}"}, 400)
 
@@ -100,6 +225,7 @@ def fetch_collection_payload(collection_mbid: str, *, viewer_editor_id: int | No
                 count=count,
                 offset=offset,
             )
+            enriched_tracks = _enrich_recording_collection_tracks(mb_curs, tracks)
     except Exception:
         current_app.logger.error("Error fetching MusicBrainz collection:", exc_info=True)
         return None, ({"error": "Failed to fetch collection from MusicBrainz. Please try again."}, 500)
@@ -113,16 +239,23 @@ def fetch_collection_payload(collection_mbid: str, *, viewer_editor_id: int | No
         "track_count": track_count,
         "count": count,
         "offset": offset,
-        "tracks": [
-            {
-                "recording_mbid": t["recording_mbid"],
-                "title": t["title"],
-                "artist_credit_name": t["artist_credit_name"],
-                "length": t["length"],
-            }
-            for t in tracks
-        ],
+        "tracks": enriched_tracks,
     }
+
+    if offset == 0:
+        try:
+            payload["cover_art"] = _generate_collection_cover_art(
+                collection["name"], enriched_tracks,
+            )
+        except Exception:
+            current_app.logger.error(
+                "Error generating cover art for MusicBrainz collection:",
+                exc_info=True,
+            )
+            payload["cover_art"] = None
+    else:
+        payload["cover_art"] = None
+
     return payload, None
  
 @collection_bp.get("/", defaults={"collection_mbid": ""})

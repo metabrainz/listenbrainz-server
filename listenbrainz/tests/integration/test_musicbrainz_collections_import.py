@@ -98,8 +98,11 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
                         "title": "Night Drive",
                         "artist_credit_name": "The Midnight",
                         "length": 123000,
+                        "caa_id": 12345,
+                        "caa_release_mbid": "dddddddd-dddd-dddd-dddd-dddddddddddd",
                     }
                 ],
+                "cover_art": "<svg></svg>",
             },
             None,
         )
@@ -120,6 +123,12 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
         self.assertEqual(response.json["collection"]["public"], True)
         self.assertEqual(response.json["track_count"], 1)
         self.assertEqual(len(response.json["tracks"]), 1)
+        self.assertEqual(response.json["tracks"][0]["caa_id"], 12345)
+        self.assertEqual(
+            response.json["tracks"][0]["caa_release_mbid"],
+            "dddddddd-dddd-dddd-dddd-dddddddddddd",
+        )
+        self.assertEqual(response.json["cover_art"], "<svg></svg>")
         mock_fetch.assert_called_once()
         self.assertIsNone(mock_fetch.call_args.kwargs["viewer_editor_id"])
 

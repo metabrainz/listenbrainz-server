@@ -18,7 +18,6 @@ import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { useAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import Card from "../../components/Card";
 import Pill from "../../components/Pill";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -639,31 +638,7 @@ export default class UserPlaylists extends React.Component<
               handleClickPrevious={handleClickPrevious}
               handleClickNext={handleClickNext}
               pageCount={pageCount}
-            >
-              {this.isCurrentUserPage() && [
-                <Card
-                  key="new-playlist"
-                  className={`new-playlist ${
-                    view === PlaylistView.LIST ? "list-view" : ""
-                  }`}
-                  onClick={() => {
-                    NiceModal.show<JSPFPlaylist, any>(
-                      CreateOrEditPlaylistModal
-                    ).then((playlist) => {
-                      this.onPlaylistCreated(playlist);
-                    });
-                  }}
-                >
-                  <div>
-                    <FontAwesomeIcon
-                      icon={faPlusCircle as IconProp}
-                      size="2x"
-                    />
-                    <span>Create new playlist</span>
-                  </div>
-                </Card>,
-              ]}
-            </PlaylistsList>
+            />
           </div>
           <PlaylistActionsSidebar
             playlistType={playlistType}
