@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes, faPlus, faMinus } from "@fortawesome/free-solid-svg-icons";
 
 import * as React from "react";
+import { Link } from "react-router";
 import { toast } from "react-toastify";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
@@ -165,16 +166,29 @@ export default function TagComponent(props: {
     liveCount -= 1;
   }
 
-  return (
-    <span className={cssClasses}>
+  const genreMbid = (tag as EntityTag).genre_mbid;
+
+  // If the tag is a genre, link to the genre page
+  // Otherwise, link to the MusicBrainz tag page
+  const tagLink =
+    genreMbid != null ? (
+      <Link to={`/genre/${tag.tag}`} title={`${tag.tag} on ListenBrainz`}>
+        {tag.tag}
+      </Link>
+    ) : (
       <a
-        href={`https://musicbrainz.org/tag/${tag.tag}`}
+        href={`https://musicbrainz.org/tag/${encodeURIComponent(tag.tag)}`}
         target="_blank"
         title={`${tag.tag} on MusicBrainz`}
         rel="noopener noreferrer"
       >
         {tag.tag}
       </a>
+    );
+
+  return (
+    <span className={cssClasses}>
+      {tagLink}
       {isFinite(liveCount) && (
         <span className="small text-muted">{liveCount}</span>
       )}
