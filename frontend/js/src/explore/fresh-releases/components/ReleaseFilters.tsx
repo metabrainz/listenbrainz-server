@@ -150,15 +150,9 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
 
   // Reset filters when range changes
   React.useEffect(() => {
-    if (coverartOnly === true) {
-      setCoverartOnly(false);
-    }
-    if (checkedList?.length > 0) {
-      setCheckedList([]);
-    }
-    if (includeVariousArtists === true) {
-      setIncludeVariousArtists(false);
-    }
+    setCoverartOnly(false);
+    setCheckedList([]);
+    setIncludeVariousArtists(false);
   }, [releaseTags, releaseTypes]);
 
   React.useEffect(() => {

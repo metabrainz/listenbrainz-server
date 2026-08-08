@@ -13,15 +13,18 @@ type ReleaseCardReleaseProps = {
 const getKeyForOrder = (
   releaseOrder: string,
   release: FreshReleaseItem
-): string | number => {
+): string => {
   switch (releaseOrder) {
     case "release_date":
-      return formatReleaseDate(release.release_date);
+      // Use the raw date string as the key (locale-independent, always consistent)
+      return release.release_date ?? "-";
     case "artist_credit_name":
     case "release_name":
-      return release[releaseOrder].charAt(0).toUpperCase();
+      // Always uppercase first character to avoid case-split duplicates
+      return (release[releaseOrder] ?? "").charAt(0).toUpperCase();
     case "confidence":
-      return release[releaseOrder]!;
+      // Round to 1 dp — raw floats (0.50001 vs 0.5) create spurious duplicate groups
+      return String(Math.round((release[releaseOrder] ?? 0) * 10) / 10);
     default:
       return "";
   }
@@ -34,12 +37,12 @@ const getMapping = (
   return filteredList.reduce((acc, release) => {
     const key = getKeyForOrder(releaseOrder, release);
     if (acc.has(key)) {
-      acc.get(key).push(release);
+      acc.get(key)!.push(release);
     } else {
       acc.set(key, [release]);
     }
     return acc;
-  }, new Map());
+  }, new Map<string, Array<FreshReleaseItem>>());
 };
 
 export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
@@ -60,6 +63,10 @@ export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
     ) {
       return releaseKey.charAt(0).toUpperCase();
     }
+    if (release_order === "release_date") {
+      // releaseKey is an ISO date string like "2025-01-17"
+      return formatReleaseDate(releaseKey);
+    }
     return releaseKey;
   };
 
@@ -75,7 +82,12 @@ export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
     <>
       {mappedEntries.map(([releaseKey, releases]) => (
         <React.Fragment key={`${releaseKey}-container`}>
-          <div className="release-card-grid-title" key={`${releaseKey}-title`}>
+          <div
+            className="release-card-grid-title"
+            key={`${releaseKey}-title`}
+            // data-date stores the ISO date for the timeline thumb to read
+            data-date={order === "release_date" ? releaseKey : undefined}
+          >
             {getReleaseCardGridTitle(releaseKey, order)}
           </div>
           <div key={releaseKey} className="release-cards-grid">
