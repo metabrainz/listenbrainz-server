@@ -62,3 +62,6 @@ MAILTO=""
 
 # delete old and expired user data exports
 0 11 * * * root /usr/local/bin/python /code/listenbrainz/manage.py delete-old-user-data-exports >> /logs/user_data_exports.log 2>&1
+
+# [run daily] warn spotify users of expiring auth tokens
+0 12 * * * root /usr/local/bin/python /code/listenbrainz/manage.py notify-spotify-refresh-token-expiry >> /logs/spotify_token_expiry_notifications.log 2>&1
