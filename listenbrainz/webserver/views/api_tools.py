@@ -600,8 +600,7 @@ def ensure_user_token_for_expensive_endpoint():
         like /popularity, /lb-radio, etc.
     """
     try:
-        _ = validate_auth_header()
+        validate_auth_header()
     except APIUnauthorized:
-        # Improve the error message until we can redirect to the login page.
-        return jsonify({"error": "Due to bad actors and AI scrapers causing undue traffic on our sites, " +
-                        "you need to provide an Auth token fro this endpoint. Sorry for this mess."""}), 401
+        raise APIUnauthorized("Due to bad actors and AI scrapers causing undue traffic on our sites, "
+                              "you need to provide an Auth token for this endpoint. Sorry for this mess.")
