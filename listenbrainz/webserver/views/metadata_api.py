@@ -154,7 +154,9 @@ def metadata_recording_post():
     :statuscode 200: you have data!
     :statuscode 400: invalid recording_mbid arguments
     """
-    data = request.json
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
 
     incs = parse_incs(data.get("inc"))
 
@@ -417,7 +419,10 @@ def get_mbid_mapping_post():
     # Require a valid auth header for this endpoint
     _ = validate_auth_header()
 
-    data = request.json
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
+
     recordings = data.get("recordings", [])
     if not recordings:
         raise APIBadRequest("recordings is invalid or not present in body")
@@ -488,8 +493,12 @@ def submit_manual_mapping():
     """
     user = validate_auth_header()
 
-    recording_msid = request.json.get("recording_msid")
-    recording_mbid = request.json.get("recording_mbid")
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
+
+    recording_msid = data.get("recording_msid")
+    recording_mbid = data.get("recording_mbid")
     if not recording_msid or not is_valid_uuid(recording_msid):
         raise APIBadRequest("recording_msid is invalid or not present in arguments")
     if not recording_mbid or not is_valid_uuid(recording_mbid):

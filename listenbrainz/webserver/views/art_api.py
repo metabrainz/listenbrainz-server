@@ -89,7 +89,9 @@ def cover_art_grid_post():
     See the bottom of this document for constants relating to this method.
     """
 
-    r = request.json
+    r = request.get_json()
+    if not r:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
 
     if "tiles" in r:
         tiles = r["tiles"]

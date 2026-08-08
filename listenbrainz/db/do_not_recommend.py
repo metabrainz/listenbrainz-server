@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import text
 
@@ -13,7 +13,7 @@ def insert(db_conn, user_id, entity, entity_mbid, until):
         ON CONFLICT (user_id, entity, entity_mbid)
           DO UPDATE SET until = EXCLUDED.until
     """
-    until = datetime.fromtimestamp(until) if until else None
+    until = datetime.fromtimestamp(until, timezone.utc) if until else None
     db_conn.execute(text(query), {"user_id": user_id, "entity": entity, "entity_mbid": entity_mbid, "until": until})
     db_conn.commit()
 

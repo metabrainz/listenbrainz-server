@@ -61,7 +61,7 @@ def create_user_timeline_event(
         )
         db_conn.commit()
         return UserTimelineEvent(**result.mappings().first())
-    except Exception as e:
+    except sqlalchemy.exc.SQLAlchemyError as e:
         raise DatabaseException(str(e))
 
 
@@ -117,7 +117,7 @@ def delete_user_timeline_event(db_conn, id: int, user_id: int) -> bool:
             })
         db_conn.commit()
         return result.rowcount == 1
-    except Exception as e:
+    except sqlalchemy.exc.SQLAlchemyError as e:
         raise DatabaseException(str(e))
 
 

@@ -119,7 +119,7 @@ def get_current_pin_for_users(db_conn, user_ids: Iterable[int]) -> List[PinnedRe
          WHERE (user_id IN :user_ids
            AND pinned_until >= NOW())
         """.format(columns=','.join(PINNED_REC_GET_COLUMNS))), {"user_ids": tuple(user_ids)})
-    return [PinnedRecording(**row) if row else None for row in result.mappings()]
+    return [PinnedRecording(**row) for row in result.mappings()]
 
 
 def get_current_pin_for_user(db_conn, user_id: int) -> PinnedRecording:

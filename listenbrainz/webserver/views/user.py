@@ -21,7 +21,7 @@ from listenbrainz.db.genre import get_tag_hierarchy_data
 from listenbrainz.db.year_in_music import LAST_FM_FOUNDING_YEAR, MAX_YEAR_IN_MUSIC_YEAR
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
-from listenbrainz.webserver.errors import APIBadRequest
+from listenbrainz.webserver.errors import APIBadRequest, APINotFound
 from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from listenbrainz.webserver.utils import number_readable
@@ -237,6 +237,8 @@ def report_abuse(user_name):
         if not isinstance(reason, str):
             raise APIBadRequest("Reason must be a string.")
     user_to_report = db_user.get_by_mb_id(db_conn, user_name)
+    if user_to_report is None:
+        raise APINotFound("Cannot find user: %s" % user_name)
     if current_user.id != user_to_report["id"]:
         db_user.report_user(db_conn, current_user.id, user_to_report["id"], reason)
         return jsonify({"status": "%s has been reported successfully." % user_name})

@@ -52,7 +52,9 @@ def submit_recommendation_feedback():
     """
     user = validate_auth_header()
 
-    data = request.json
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
 
     if 'recording_mbid' not in data or 'rating' not in data:
         log_raise_400("JSON document must contain recording_mbid and rating", data)
@@ -99,7 +101,9 @@ def delete_recommendation_feedback():
     """
     user = validate_auth_header()
 
-    data = request.json
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
 
     if 'recording_mbid' not in data:
         log_raise_400("JSON document must contain recording_mbid", data)

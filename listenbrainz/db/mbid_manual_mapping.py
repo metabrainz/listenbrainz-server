@@ -85,7 +85,6 @@ def get_mbid_manual_mappings(ts_conn, recording_msid: uuid.UUID) -> List[MbidMan
          WHERE recording_msid = :recording_msid
     """
     result = ts_conn.execute(text(query), {"recording_msid": recording_msid})
-    ts_conn.commit()
     return [MbidManualMapping(**row) for row in result.mappings()]
 
 

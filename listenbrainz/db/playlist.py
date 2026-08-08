@@ -210,27 +210,28 @@ def _playlist_resultset_to_model(db_conn, ts_conn, result, load_recordings):
 
     Fill in related data (username, created_for username) and collaborators
     """
-    playlists = []
-    user_id_map = {}
-    for row in result.mappings():
-        row = dict(row)
+    all_rows = [dict(row) for row in result.mappings()]
 
+    # Collect all user IDs needed and fetch in one query
+    all_user_ids = set()
+    for row in all_rows:
+        if row.get("creator_id") is not None:
+            all_user_ids.add(row["creator_id"])
+        if row.get("created_for_id") is not None:
+            all_user_ids.add(row["created_for_id"])
+    user_id_map = db_user.get_users_by_id(db_conn, list(all_user_ids)) if all_user_ids else {}
+
+    playlists = []
+    for row in all_rows:
         creator_id = row.get("creator_id")
         if creator_id is None:
             continue
-        if creator_id not in user_id_map:
-            user_id_map[creator_id] = db_user.get(db_conn, creator_id)
-        if user_id_map[creator_id] is None:
-            continue
-        row["creator"] = user_id_map[creator_id]["musicbrainz_id"]
+        creator_name = user_id_map.get(creator_id, DELETED_USER_NAME)
+        row["creator"] = creator_name
 
         created_for_id = row.get("created_for_id")
-        if created_for_id and created_for_id not in user_id_map:
-            user_id_map[created_for_id] = db_user.get(db_conn, created_for_id)
-        if created_for_id and user_id_map.get(created_for_id) is None:
-            continue
-        if created_for_id:
-            row["created_for"] = user_id_map[created_for_id]["musicbrainz_id"]
+        if created_for_id is not None:
+            row["created_for"] = user_id_map.get(created_for_id, DELETED_USER_NAME)
 
         row["recordings"] = []
         playlist = model_playlist.Playlist.parse_obj(row)
@@ -635,6 +636,9 @@ def get_collaborators_for_playlists(ts_conn, playlist_ids: List[int]):
 def get_recordings_for_playlists(db_conn, ts_conn, playlist_ids: List[int]):
     """ Get all recordings for the given playlists """
 
+    if not playlist_ids:
+        return {}
+
     query = text("""
         SELECT id
              , playlist_id
@@ -647,18 +651,16 @@ def get_recordings_for_playlists(db_conn, ts_conn, playlist_ids: List[int]):
       ORDER BY playlist_id, position
     """)
     result = ts_conn.execute(query, {"playlist_ids": tuple(playlist_ids)})
-    user_id_map = {}
+    all_rows = [dict(row) for row in result.mappings()]
+
+    # Bulk fetch all added_by users in one query
+    all_added_by_ids = {row["added_by_id"] for row in all_rows}
+    user_id_map = db_user.get_users_by_id(db_conn, list(all_added_by_ids)) if all_added_by_ids else {}
+
     playlist_recordings_map = collections.defaultdict(list)
-    for row in result.mappings():
-        row = dict(row)
+    for row in all_rows:
         added_by_id = row["added_by_id"]
-        if added_by_id not in user_id_map:
-            # TODO: Do this lookup in bulk
-            user_id_map[added_by_id] = db_user.get(db_conn, added_by_id)
-        try:
-            row["added_by"] = user_id_map[added_by_id]["musicbrainz_id"]
-        except TypeError:
-            row["added_by"] = DELETED_USER_NAME
+        row["added_by"] = user_id_map.get(added_by_id, DELETED_USER_NAME)
 
         playlist_recording = model_playlist.PlaylistRecording.parse_obj(row)
         playlist_recordings_map[playlist_recording.playlist_id].append(playlist_recording)
@@ -804,12 +806,10 @@ def add_playlist_collaborators(ts_conn, playlist_id, collaborator_ids):
 
 
 def get_collaborators_names_from_ids(db_conn, collaborator_ids: List[int]):
-    collaborators = []
-    # TODO: Look this up in one query
-    for user_id in collaborator_ids:
-        user = db_user.get(db_conn, user_id)
-        if user:
-            collaborators.append(user["musicbrainz_id"])
+    if not collaborator_ids:
+        return []
+    user_map = db_user.get_users_by_id(db_conn, collaborator_ids)
+    collaborators = [user_map[uid] for uid in collaborator_ids if uid in user_map]
     collaborators.sort()
     return collaborators
 
@@ -940,7 +940,8 @@ def insert_recordings(db_conn, ts_conn, playlist_id: int, recordings: List[model
         row = result.fetchone()
         recording.id = row.id
         recording.created = row.created
-        recording.added_by = user_id_map[recording.added_by_id]["musicbrainz_id"]
+        user = user_id_map.get(recording.added_by_id)
+        recording.added_by = user["musicbrainz_id"] if user else DELETED_USER_NAME
         return_recordings.append(model_playlist.PlaylistRecording.parse_obj(recording.dict()))
     return return_recordings
 

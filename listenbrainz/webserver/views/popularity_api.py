@@ -117,9 +117,12 @@ def top_release_groups_for_artist(artist_mbid):
 def fetch_entity_popularity_counts(entity):
     """ Validate API request and retrieve popularity counts for the requested entities """
     entity_mbid_key = f"{entity}_mbids"
+    data = request.get_json()
+    if not data:
+        raise APIBadRequest("JSON document not found. Make sure the Content-Type is set to application/json.")
     try:
-        entity_mbids = request.json[entity_mbid_key]
-    except (KeyError, TypeError):
+        entity_mbids = data[entity_mbid_key]
+    except KeyError:
         raise APIBadRequest(f"{entity_mbid_key} JSON element must be present and contain a list of {entity_mbid_key}")
 
     for mbid in entity_mbids:
