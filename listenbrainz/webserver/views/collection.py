@@ -18,6 +18,7 @@ collection_bp = Blueprint("collection", __name__)
 
 DEFAULT_COLLECTION_TRACKS_PER_CALL = 100
 MAX_COLLECTION_TRACKS_PER_CALL = 500
+SUPPORTED_COLLECTION_ENTITY_TYPES = frozenset({"recording", "release"})
 
 
 def _fetch_collection_row(mb_curs, collection_mbid: str):
@@ -28,7 +29,10 @@ def _fetch_collection_row(mb_curs, collection_mbid: str):
                , ec.name AS name
                , ec.public AS public
                , ec.editor AS owner_editor_id
+               , ect.entity_type AS entity_type
             FROM musicbrainz.editor_collection ec
+            JOIN musicbrainz.editor_collection_type ect
+              ON ect.id = ec.type
            WHERE ec.gid = %s
         """,
         (collection_mbid,),
@@ -65,6 +69,45 @@ def _fetch_recording_collection_tracks(mb_curs, collection_id: int, *, count: in
               ON ac.id = r.artist_credit
            WHERE ecr.collection = %s
            ORDER BY ecr.position NULLS LAST, ecr.recording
+           LIMIT %s OFFSET %s
+        """,
+        (collection_id, count, offset),
+    )
+    return mb_curs.fetchall()
+
+
+def _fetch_release_collection_item_count(mb_curs, collection_id: int) -> int:
+    mb_curs.execute(
+        """
+          SELECT COUNT(*)::int AS item_count
+            FROM musicbrainz.editor_collection_release ecrel
+            JOIN musicbrainz.release rel
+              ON rel.id = ecrel.release
+           WHERE ecrel.collection = %s
+        """,
+        (collection_id,),
+    )
+    row = mb_curs.fetchone()
+    return int(row["item_count"] or 0)
+
+
+def _fetch_release_collection_items(mb_curs, collection_id: int, *, count: int, offset: int):
+    mb_curs.execute(
+        """
+          SELECT rel.gid::text AS release_mbid
+               , rel.name AS title
+               , ac.name AS artist_credit_name
+               -- release date columns vary across dumps/schemas; keep them nullable for preview
+               , NULL::int AS date_year
+               , NULL::int AS date_month
+               , NULL::int AS date_day
+            FROM musicbrainz.editor_collection_release ecrel
+            JOIN musicbrainz.release rel
+              ON rel.id = ecrel.release
+            JOIN musicbrainz.artist_credit ac
+              ON ac.id = rel.artist_credit
+           WHERE ecrel.collection = %s
+           ORDER BY ecrel.position NULLS LAST, rel.id
            LIMIT %s OFFSET %s
         """,
         (collection_id, count, offset),
@@ -193,8 +236,82 @@ def _generate_collection_cover_art(collection_name: str, tracks: list[dict]) -> 
     )
 
 
+def _serialize_recording_collection_payload(collection, collection_id: int, *, count: int, offset: int, mb_curs):
+    track_count = _fetch_recording_collection_track_count(mb_curs, collection_id)
+    tracks = _fetch_recording_collection_tracks(
+        mb_curs,
+        collection_id,
+        count=count,
+        offset=offset,
+    )
+    enriched_tracks = _enrich_recording_collection_tracks(mb_curs, tracks)
+    payload = {
+        "collection": {
+            "mbid": collection["collection_mbid"],
+            "name": collection["name"],
+            "public": bool(collection["public"]),
+            "entity_type": collection["entity_type"],
+        },
+        "track_count": track_count,
+        "count": count,
+        "offset": offset,
+        "tracks": enriched_tracks,
+        "items": [],
+    }
+
+    if offset == 0:
+        try:
+            payload["cover_art"] = _generate_collection_cover_art(
+                collection["name"], enriched_tracks,
+            )
+        except Exception:
+            current_app.logger.error(
+                "Error generating cover art for MusicBrainz collection:",
+                exc_info=True,
+            )
+            payload["cover_art"] = None
+    else:
+        payload["cover_art"] = None
+
+    return payload
+
+
+def _serialize_release_collection_payload(collection, collection_id: int, *, count: int, offset: int, mb_curs):
+    item_count = _fetch_release_collection_item_count(mb_curs, collection_id)
+    releases = _fetch_release_collection_items(
+        mb_curs,
+        collection_id,
+        count=count,
+        offset=offset,
+    )
+    return {
+        "collection": {
+            "mbid": collection["collection_mbid"],
+            "name": collection["name"],
+            "public": bool(collection["public"]),
+            "entity_type": collection["entity_type"],
+        },
+        "track_count": item_count,
+        "count": count,
+        "offset": offset,
+        "tracks": [],
+        "items": [
+            {
+                "release_mbid": r["release_mbid"],
+                "title": r["title"],
+                "artist_credit_name": r["artist_credit_name"],
+                "date_year": r["date_year"],
+                "date_month": r["date_month"],
+                "date_day": r["date_day"],
+            }
+            for r in releases
+        ],
+        "cover_art": None,
+    }
+
+
 def fetch_collection_payload(collection_mbid: str, *, viewer_editor_id: int | None, count: int, offset: int):
-    """Fetch collection and tracks from the MusicBrainz database."""
+    """Fetch collection and items from the MusicBrainz database."""
     if not is_valid_uuid(collection_mbid):
         return None, ({"error": f"Provided collection ID is invalid: {collection_mbid}"}, 400)
 
@@ -221,44 +338,27 @@ def fetch_collection_payload(collection_mbid: str, *, viewer_editor_id: int | No
                 if int(collection["owner_editor_id"]) != int(viewer_editor_id):
                     return None, ({"error": "You are not allowed to access this collection"}, 403)
 
+            entity_type = collection["entity_type"]
+            if entity_type not in SUPPORTED_COLLECTION_ENTITY_TYPES:
+                return None, ({
+                    "error": (
+                        f"Collection type '{entity_type}' is not supported for import. "
+                        "Only recording and release collections can be previewed."
+                    )
+                }, 400)
+
             collection_id = int(collection["collection_id"])
-            track_count = _fetch_recording_collection_track_count(mb_curs, collection_id)
-            tracks = _fetch_recording_collection_tracks(
-                mb_curs,
-                collection_id,
-                count=count,
-                offset=offset,
-            )
-            enriched_tracks = _enrich_recording_collection_tracks(mb_curs, tracks)
+            if entity_type == "recording":
+                payload = _serialize_recording_collection_payload(
+                    collection, collection_id, count=count, offset=offset, mb_curs=mb_curs,
+                )
+            else:
+                payload = _serialize_release_collection_payload(
+                    collection, collection_id, count=count, offset=offset, mb_curs=mb_curs,
+                )
     except Exception:
         current_app.logger.error("Error fetching MusicBrainz collection:", exc_info=True)
         return None, ({"error": "Failed to fetch collection from MusicBrainz. Please try again."}, 500)
-
-    payload = {
-        "collection": {
-            "mbid": collection["collection_mbid"],
-            "name": collection["name"],
-            "public": bool(collection["public"]),
-        },
-        "track_count": track_count,
-        "count": count,
-        "offset": offset,
-        "tracks": enriched_tracks,
-    }
-
-    if offset == 0:
-        try:
-            payload["cover_art"] = _generate_collection_cover_art(
-                collection["name"], enriched_tracks,
-            )
-        except Exception:
-            current_app.logger.error(
-                "Error generating cover art for MusicBrainz collection:",
-                exc_info=True,
-            )
-            payload["cover_art"] = None
-    else:
-        payload["cover_art"] = None
 
     return payload, None
 
