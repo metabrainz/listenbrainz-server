@@ -35,6 +35,8 @@ class ListensImporter(abc.ABC):
         self._metric_submission_time = time.monotonic() + METRIC_UPDATE_INTERVAL
         self.exclude_error = True
         self._current_user = None
+        self._pending_claim_user_ids = set()
+        self._shutdown_requested = False
 
     def notify_error(self, musicbrainz_id: str, error: str):
         """ Notifies specified user via email about error during Spotify import.
@@ -142,54 +144,77 @@ class ListensImporter(abc.ABC):
         current_app.logger.info('Process %d users...' % len(users))
         success = 0
         failure = 0
-        for user in users:
-            self._current_user = user
-            try:
-                self._listens_imported_since_last_update += self.process_one_user(user)
-                success += 1
-            except ListensImporterUserError:
-                current_app.logger.info(
-                    f"{self.name} could not import listens for user %s:",
-                    user['musicbrainz_id'],
-                    exc_info=True
-                )
-                failure += 1
-            except (DatabaseException, DatabaseError, SQLAlchemyError):
-                listenbrainz.webserver.db_conn.rollback()
-                current_app.logger.error(f'{self.name} could not import listens for user %s:',
-                                         user['musicbrainz_id'], exc_info=True)
-                failure += 1
-            except Exception:
-                current_app.logger.error(f'{self.name} could not import listens for user %s:',
-                                         user['musicbrainz_id'], exc_info=True)
-                failure += 1
-            finally:
-                self.service.release_user_claim(user['user_id'])
-                self._current_user = None
+        self._pending_claim_user_ids = {user['user_id'] for user in users}
+        try:
+            for user in users:
+                if self._shutdown_requested:
+                    break
 
-            if time.monotonic() > self._metric_submission_time:
-                self._metric_submission_time += METRIC_UPDATE_INTERVAL
-                metrics.set(self.name, imported_listens=self._listens_imported_since_last_update)
-                self._listens_imported_since_last_update = 0
+                self._current_user = user
+                try:
+                    self._listens_imported_since_last_update += self.process_one_user(user)
+                    success += 1
+                except ListensImporterUserError:
+                    current_app.logger.info(
+                        f"{self.name} could not import listens for user %s:",
+                        user['musicbrainz_id'],
+                        exc_info=True
+                    )
+                    failure += 1
+                except (DatabaseException, DatabaseError, SQLAlchemyError):
+                    listenbrainz.webserver.db_conn.rollback()
+                    current_app.logger.error(f'{self.name} could not import listens for user %s:',
+                                             user['musicbrainz_id'], exc_info=True)
+                    failure += 1
+                except Exception:
+                    current_app.logger.error(f'{self.name} could not import listens for user %s:',
+                                             user['musicbrainz_id'], exc_info=True)
+                    failure += 1
+                finally:
+                    self.service.release_user_claim(user['user_id'])
+                    self._pending_claim_user_ids.discard(user['user_id'])
+                    self._current_user = None
+
+                if time.monotonic() > self._metric_submission_time:
+                    self._metric_submission_time += METRIC_UPDATE_INTERVAL
+                    metrics.set(self.name, imported_listens=self._listens_imported_since_last_update)
+                    self._listens_imported_since_last_update = 0
+        finally:
+            if self._pending_claim_user_ids:
+                self.service.release_user_claims(list(self._pending_claim_user_ids))
+                self._pending_claim_user_ids = set()
 
         current_app.logger.info('Processed %d users successfully!', success)
         current_app.logger.info('Encountered errors while processing %d users.', failure)
         return success, failure
 
     def _release_on_shutdown(self, signum, frame):
-        """ Best-effort release of the current user's claim on SIGTERM. """
+        """ Best-effort release of unprocessed claims in the current batch on SIGTERM.
+
+        The currently-processing user is excluded — its claim is released by the
+        for-loop's finally block after process_one_user finishes, avoiding a window
+        where another worker could claim the same user mid-processing.
+        """
+
+        ids_to_release = self._pending_claim_user_ids.copy()
         if self._current_user:
+            ids_to_release.discard(self._current_user['user_id'])
+        if ids_to_release:
             try:
-                self.service.release_user_claim(self._current_user['user_id'])
-                current_app.logger.info('Released claim for user %s on shutdown.', self._current_user['musicbrainz_id'])
+                self.service.release_user_claims(list(ids_to_release))
+                self._pending_claim_user_ids -= ids_to_release
+                current_app.logger.info(
+                    'Released %d pending user claims on shutdown.',
+                    len(ids_to_release),
+                )
             except Exception:
-                current_app.logger.error('Failed to release claim on shutdown:', exc_info=True)
-        raise SystemExit(0)
+                current_app.logger.error('Failed to release claims on shutdown:', exc_info=True)
+        self._shutdown_requested = True
 
     def main(self):
         current_app.logger.info(f'{self.name} started...')
         signal.signal(signal.SIGTERM, self._release_on_shutdown)
-        while True:
+        while not self._shutdown_requested:
             t = time.monotonic()
             success, failure = self.process_all_users()
             total_users = success + failure

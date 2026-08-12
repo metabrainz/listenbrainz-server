@@ -135,7 +135,8 @@ def claim_users_to_process(db_conn, service, batch_size=50, exclude_error=False)
               JOIN listens_importer
                 ON listens_importer.external_service_oauth_id = external_service_oauth.id
              WHERE {filter_str}
-          ORDER BY listens_importer.latest_listened_at ASC NULLS FIRST
+          ORDER BY listens_importer.last_updated ASC NULLS FIRST
+                 , listens_importer.latest_listened_at ASC NULLS FIRST
              LIMIT :batch_size
                FOR UPDATE OF listens_importer SKIP LOCKED
         )
@@ -181,13 +182,21 @@ def claim_users_to_process(db_conn, service, batch_size=50, exclude_error=False)
 
 def release_user_claim(db_conn, user_id: int, service):
     """ Release a claimed user after processing (success or failure). """
+    release_user_claims(db_conn, [user_id], service)
+
+
+def release_user_claims(db_conn, user_ids: list[int], service):
+    """ Release claims for multiple users (e.g. on worker shutdown). """
+    if not user_ids:
+        return
+
     db_conn.execute(text("""
         UPDATE listens_importer
            SET claimed_at = NULL
              , last_updated = now()
-         WHERE user_id = :user_id
+         WHERE user_id = ANY(:user_ids)
            AND service = :service
-    """), {"user_id": user_id, "service": service.value})
+    """), {"user_ids": user_ids, "service": service.value})
     db_conn.commit()
 
 

@@ -24,6 +24,10 @@ class ImporterService(ExternalService, ABC):
         """ Release a claimed user after processing. """
         listens_importer.release_user_claim(db_conn, user_id, self.service)
 
+    def release_user_claims(self, user_ids: list[int]):
+        """ Release claims for multiple users (e.g. on worker shutdown). """
+        listens_importer.release_user_claims(db_conn, user_ids, self.service)
+
     def update_status(
         self,
         user_id: int,
