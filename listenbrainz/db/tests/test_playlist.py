@@ -131,7 +131,15 @@ class PlaylistTestCase(IntegrationTestCase):
 
         stored = db_playlist.get_by_mbid(self.db_conn, self.ts_conn, playlist.mbid)
         self.assertEqual(len(stored.recordings), 5)
-        self.assertEqual([str(r.mbid) for r in stored.recordings], RECORDING_MBIDS[:5])
+        # Inserting at position 1 shifts the recording previously at 1 to position 4.
+        expected_mbids = [
+            RECORDING_MBIDS[0],
+            RECORDING_MBIDS[2],
+            RECORDING_MBIDS[3],
+            RECORDING_MBIDS[4],
+            RECORDING_MBIDS[1],
+        ]
+        self.assertEqual([str(r.mbid) for r in stored.recordings], expected_mbids)
         self.assertEqual([r.position for r in stored.recordings], [0, 1, 2, 3, 4])
 
     def test_create(self):
