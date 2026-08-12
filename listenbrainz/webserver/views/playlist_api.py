@@ -10,7 +10,6 @@ from psycopg2.extras import DictCursor
 
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
-from listenbrainz.webserver.views.collection import fetch_collection_payload
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
 from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.soundcloud import SoundCloudService
@@ -24,7 +23,7 @@ from listenbrainz.webserver.decorators import crossdomain, api_listenstore_neede
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden, APIError, PlaylistAPIXMLError, APIUnauthorized
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
-    _filter_description_html, get_non_negative_param, get_positive_param
+    _filter_description_html, get_non_negative_param
 from listenbrainz.db.model.playlist import Playlist, WritablePlaylist, WritablePlaylistRecording, \
     PLAYLIST_EXTENSION_URI, PLAYLIST_TRACK_URI_PREFIX, PLAYLIST_URI_PREFIX, PLAYLIST_TRACK_EXTENSION_URI, \
     PLAYLIST_ARTIST_URI_PREFIX, PLAYLIST_RELEASE_URI_PREFIX
@@ -1132,30 +1131,6 @@ def import_musicbrainz_collections():
         }
         for row in collections
     ])
-
-
-@playlist_api_bp.get("/import/musicbrainz/collections/<collection_mbid>")
-@crossdomain
-@ratelimit()
-@api_musicbrainz_needed
-def import_musicbrainz_collection_detail(collection_mbid):
-    """Fetch a MusicBrainz collection as a read-only track list for preview"""
-    user = validate_auth_header(optional=True)
-    viewer_editor_id = user.get("musicbrainz_row_id") if user else None
-
-    count = get_positive_param("count", 100)
-    offset = get_non_negative_param("offset", 0)
-    payload, error = fetch_collection_payload(
-        collection_mbid,
-        viewer_editor_id=viewer_editor_id,
-        count=count,
-        offset=offset,
-    )
-    if error:
-        body, code = error
-        raise APIError(body.get("error"), code)
-
-    return jsonify(payload)
 
 
 @playlist_api_bp.get("/spotify/<playlist_id>/tracks")

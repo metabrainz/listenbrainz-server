@@ -4,7 +4,13 @@ import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import DOMPurify from "dompurify";
 import { Helmet } from "react-helmet";
-import { Link, useNavigate, useParams } from "react-router";
+import {
+  Link,
+  useLoaderData,
+  useNavigate,
+  useNavigation,
+  useParams,
+} from "react-router";
 import { toast } from "react-toastify";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import type { VirtualItem } from "@tanstack/react-virtual";
@@ -24,7 +30,6 @@ import type {
   MusicBrainzCollectionDetailResponse,
   MusicBrainzCollectionTrack,
 } from "../utils/APIService";
-import type APIService from "../utils/APIService";
 
 const DEFAULT_PAGE_SIZE = 100;
 const DEFAULT_ESTIMATED_ROW_HEIGHT_PX = 110;
@@ -74,21 +79,39 @@ function asJSPFTrack(track: MusicBrainzCollectionTrack): JSPFTrack {
   return jspfTrack;
 }
 
-async function fetchAllCollectionTracks(
-  api: APIService,
+async function fetchCollectionPage(
   collectionMBID: string,
-  userToken?: string
+  count: number,
+  offset: number
+): Promise<MusicBrainzCollectionDetailResponse> {
+  const params = new URLSearchParams({
+    count: String(count),
+    offset: String(offset),
+  });
+  const response = await fetch(
+    `/collection/${collectionMBID}/?${params.toString()}`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+      },
+    }
+  );
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data?.error ?? response.statusText);
+  }
+  return data;
+}
+
+async function fetchAllCollectionTracks(
+  collectionMBID: string
 ): Promise<JSPFTrack[]> {
   const allTracks: JSPFTrack[] = [];
   const pageSize = MAX_COLLECTION_TRACKS_PER_CALL;
 
   const fetchPage = async (offset: number): Promise<void> => {
-    const page = await api.getMusicBrainzCollectionDetail(
-      collectionMBID,
-      userToken,
-      pageSize,
-      offset
-    );
+    const page = await fetchCollectionPage(collectionMBID, pageSize, offset);
     const pageTracks = (page.tracks ?? []).map(asJSPFTrack);
     allTracks.push(...pageTracks);
     const nextOffset = offset + pageTracks.length;
@@ -109,17 +132,24 @@ export default function CollectionPage() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
   const { collectionMBID } = useParams();
   const navigate = useNavigate();
+  const navigation = useNavigation();
+  const loaderData = useLoaderData() as MusicBrainzCollectionDetailResponse;
 
-  const [collection, setCollection] = React.useState<CollectionState | null>(
-    null
+  const [collection, setCollection] = React.useState<CollectionState>({
+    ...loaderData.collection,
+    cover_art: loaderData.cover_art ?? null,
+  });
+  const [tracks, setTracks] = React.useState<JSPFTrack[]>(() =>
+    (loaderData.tracks ?? []).map(asJSPFTrack)
   );
-  const [tracks, setTracks] = React.useState<JSPFTrack[]>([]);
-  const [trackCount, setTrackCount] = React.useState<number>(0);
-  const [isLoadingInitial, setIsLoadingInitial] = React.useState(false);
+  const [trackCount, setTrackCount] = React.useState<number>(
+    loaderData.track_count
+  );
   const [isLoadingMore, setIsLoadingMore] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
   const [isPlayingAll, setIsPlayingAll] = React.useState(false);
 
+  const isLoadingInitial = navigation.state === "loading";
   const hasMore = tracks.length < trackCount;
   const totalRows = tracks.length + (hasMore ? 1 : 0); // +1 row for loader
   const rowVirtualizer = useWindowVirtualizer({
@@ -132,65 +162,17 @@ export default function CollectionPage() {
   });
   const virtualItems = rowVirtualizer.getVirtualItems();
 
-  const loadPage = React.useCallback(
-    async (offset: number) => {
-      if (!collectionMBID) {
-        return undefined;
-      }
-      const userToken = currentUser?.auth_token;
-      const result = await APIService.getMusicBrainzCollectionDetail(
-        collectionMBID,
-        userToken,
-        DEFAULT_PAGE_SIZE,
-        offset
-      );
-      return result;
-    },
-    [APIService, collectionMBID, currentUser?.auth_token]
-  );
-
   React.useEffect(() => {
-    async function loadInitial() {
-      if (!collectionMBID) {
-        toast.error(
-          <ToastMsg title="Error" message="Collection id is missing" />,
-          { toastId: "collection-id-missing" }
-        );
-        return;
-      }
-      setIsLoadingInitial(true);
-      try {
-        const result = await loadPage(0);
-        if (!result) {
-          return;
-        }
-        setCollection({
-          ...result.collection,
-          cover_art: result.cover_art ?? null,
-        });
-        setTrackCount(result.track_count);
-        setTracks((result.tracks ?? []).map(asJSPFTrack));
-      } catch (error) {
-        toast.error(
-          <ToastMsg
-            title="Error loading collection"
-            message={error?.message ?? error}
-          />,
-          { toastId: "collection-load-error" }
-        );
-      } finally {
-        setIsLoadingInitial(false);
-      }
-    }
-
-    setCollection(null);
-    setTracks([]);
-    setTrackCount(0);
-    loadInitial();
-  }, [collectionMBID, loadPage]);
+    setCollection({
+      ...loaderData.collection,
+      cover_art: loaderData.cover_art ?? null,
+    });
+    setTrackCount(loaderData.track_count);
+    setTracks((loaderData.tracks ?? []).map(asJSPFTrack));
+  }, [loaderData]);
 
   const loadMore = React.useCallback(async () => {
-    if (!hasMore || isLoadingMore || isLoadingInitial) {
+    if (!collectionMBID || !hasMore || isLoadingMore || isLoadingInitial) {
       return;
     }
     const offset = tracks.length;
@@ -199,10 +181,11 @@ export default function CollectionPage() {
     }
     setIsLoadingMore(true);
     try {
-      const result = await loadPage(offset);
-      if (!result) {
-        return;
-      }
+      const result = await fetchCollectionPage(
+        collectionMBID,
+        DEFAULT_PAGE_SIZE,
+        offset
+      );
       const nextTracks = (result.tracks ?? []).map(asJSPFTrack);
       setTracks((prev) => [...prev, ...nextTracks]);
       setTrackCount(result.track_count);
@@ -218,12 +201,12 @@ export default function CollectionPage() {
       setIsLoadingMore(false);
     }
   }, [
+    collectionMBID,
     hasMore,
     isLoadingMore,
     isLoadingInitial,
     tracks.length,
     trackCount,
-    loadPage,
   ]);
 
   React.useEffect(() => {
@@ -262,11 +245,7 @@ export default function CollectionPage() {
       let allTracks = tracks;
 
       if (tracks.length < trackCount) {
-        const fetchedTracks = await fetchAllCollectionTracks(
-          APIService,
-          collectionMBID,
-          currentUser?.auth_token
-        );
+        const fetchedTracks = await fetchAllCollectionTracks(collectionMBID);
         allTracks = fetchedTracks;
         setTracks(fetchedTracks);
         setTrackCount(fetchedTracks.length);
@@ -294,15 +273,7 @@ export default function CollectionPage() {
     } finally {
       setIsPlayingAll(false);
     }
-  }, [
-    APIService,
-    collectionMBID,
-    currentUser?.auth_token,
-    isLoadingInitial,
-    isPlayingAll,
-    trackCount,
-    tracks,
-  ]);
+  }, [collectionMBID, isLoadingInitial, isPlayingAll, trackCount, tracks]);
 
   const saveAsPlaylist = React.useCallback(async () => {
     if (!collectionMBID) {
@@ -331,11 +302,7 @@ export default function CollectionPage() {
 
     setIsSaving(true);
     try {
-      const allTracks = await fetchAllCollectionTracks(
-        APIService,
-        collectionMBID,
-        currentUser.auth_token
-      );
+      const allTracks = await fetchAllCollectionTracks(collectionMBID);
 
       const publicFlag = Boolean(collection.public);
       const playlistTitle = collection.name;

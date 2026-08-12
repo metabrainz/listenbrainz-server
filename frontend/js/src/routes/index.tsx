@@ -113,6 +113,9 @@ const getIndexRoutes = (): RouteObject[] => {
                 Component: async () => {
                   return (await import("../collections/Collection")).default;
                 },
+                loader: async () => {
+                  return RouteLoader;
+                },
               },
             },
           ],

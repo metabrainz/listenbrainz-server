@@ -1701,30 +1701,6 @@ export default class APIService {
     return response.json();
   };
 
-  getMusicBrainzCollectionDetail = async (
-    collectionMBID: string,
-    userToken?: string,
-    count: number = 100,
-    offset: number = 0
-  ): Promise<MusicBrainzCollectionDetailResponse> => {
-    if (!collectionMBID) {
-      throw new SyntaxError("Collection MBID missing");
-    }
-    const url = `${this.APIBaseURI}/playlist/import/musicbrainz/collections/${collectionMBID}?count=${count}&offset=${offset}`;
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json;charset=UTF-8",
-    };
-    if (userToken) {
-      headers.Authorization = `Token ${userToken}`;
-    }
-    const response = await fetch(url, {
-      method: "GET",
-      headers,
-    });
-    await this.checkStatus(response);
-    return response.json();
-  };
-
   lookupMBRecording = async (
     recordingMBID: string,
     inc = "artists"

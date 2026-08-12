@@ -1,15 +1,19 @@
 import psycopg2
 from psycopg2.extras import DictCursor
 
-from flask import Blueprint, current_app,render_template
+from flask import Blueprint, current_app, jsonify, render_template
 from flask_login import current_user
-from brainzutils.ratelimit import ratelimit
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.webserver import ts_conn
 from listenbrainz.webserver.decorators import web_musicbrainz_needed
-from listenbrainz.webserver.views.api_tools import is_valid_uuid
+from listenbrainz.webserver.views.api_tools import (
+    get_non_negative_param,
+    get_positive_param,
+    is_valid_uuid,
+)
+
 collection_bp = Blueprint("collection", __name__)
 
 DEFAULT_COLLECTION_TRACKS_PER_CALL = 100
@@ -257,10 +261,39 @@ def fetch_collection_payload(collection_mbid: str, *, viewer_editor_id: int | No
         payload["cover_art"] = None
 
     return payload, None
- 
+
+
 @collection_bp.get("/", defaults={"collection_mbid": ""})
 @collection_bp.get("/<collection_mbid>/")
 @web_musicbrainz_needed
 def collection_page(collection_mbid: str):
     return render_template("index.html")
+
+
+@collection_bp.route("/<collection_mbid>/", methods=["POST"])
+@web_musicbrainz_needed
+def load_collection(collection_mbid: str):
+    """Load collection page data for React RouteLoader.
+
+    Called by:
+      Collection page load-more / play-all / save-as-playlist pagination
+    """
+    viewer_editor_id = None
+    if current_user.is_authenticated:
+        viewer_editor_id = getattr(current_user, "musicbrainz_row_id", None)
+
+    count = get_positive_param("count", DEFAULT_COLLECTION_TRACKS_PER_CALL)
+    offset = get_non_negative_param("offset", 0)
+
+    payload, error = fetch_collection_payload(
+        collection_mbid,
+        viewer_editor_id=viewer_editor_id,
+        count=count,
+        offset=offset,
+    )
+    if error:
+        body, code = error
+        return jsonify(body), code
+
+    return jsonify(payload)
 
