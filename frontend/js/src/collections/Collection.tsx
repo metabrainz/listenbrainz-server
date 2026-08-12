@@ -77,7 +77,7 @@ function asJSPFTrack(track: MusicBrainzCollectionTrack): JSPFTrack {
 async function fetchAllCollectionTracks(
   api: APIService,
   collectionMBID: string,
-  userToken: string
+  userToken?: string
 ): Promise<JSPFTrack[]> {
   const allTracks: JSPFTrack[] = [];
   const pageSize = MAX_COLLECTION_TRACKS_PER_CALL;
@@ -101,23 +101,26 @@ async function fetchAllCollectionTracks(
   return allTracks;
 }
 
+type CollectionState = MusicBrainzCollectionDetailResponse["collection"] & {
+  cover_art?: string | null;
+};
+
 export default function CollectionPage() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
   const { collectionMBID } = useParams();
   const navigate = useNavigate();
 
-  const [collection, setCollection] = React.useState<
-    MusicBrainzCollectionDetailResponse["collection"] | null
-  >(null);
+  const [collection, setCollection] = React.useState<CollectionState | null>(
+    null
+  );
   const [tracks, setTracks] = React.useState<JSPFTrack[]>([]);
   const [trackCount, setTrackCount] = React.useState<number>(0);
   const [isLoadingInitial, setIsLoadingInitial] = React.useState(false);
   const [isLoadingMore, setIsLoadingMore] = React.useState(false);
-  const [hasMore, setHasMore] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
   const [isPlayingAll, setIsPlayingAll] = React.useState(false);
-  const [coverArt, setCoverArt] = React.useState<string | null>(null);
 
+  const hasMore = tracks.length < trackCount;
   const totalRows = tracks.length + (hasMore ? 1 : 0); // +1 row for loader
   const rowVirtualizer = useWindowVirtualizer({
     count: totalRows,
@@ -161,12 +164,12 @@ export default function CollectionPage() {
         if (!result) {
           return;
         }
-        setCollection(result.collection);
+        setCollection({
+          ...result.collection,
+          cover_art: result.cover_art ?? null,
+        });
         setTrackCount(result.track_count);
-        setCoverArt(result.cover_art ?? null);
-        const nextTracks = (result.tracks ?? []).map(asJSPFTrack);
-        setTracks(nextTracks);
-        setHasMore(nextTracks.length < result.track_count);
+        setTracks((result.tracks ?? []).map(asJSPFTrack));
       } catch (error) {
         toast.error(
           <ToastMsg
@@ -183,8 +186,6 @@ export default function CollectionPage() {
     setCollection(null);
     setTracks([]);
     setTrackCount(0);
-    setCoverArt(null);
-    setHasMore(true);
     loadInitial();
   }, [collectionMBID, loadPage]);
 
@@ -194,7 +195,6 @@ export default function CollectionPage() {
     }
     const offset = tracks.length;
     if (offset >= trackCount) {
-      setHasMore(false);
       return;
     }
     setIsLoadingMore(true);
@@ -205,7 +205,6 @@ export default function CollectionPage() {
       }
       const nextTracks = (result.tracks ?? []).map(asJSPFTrack);
       setTracks((prev) => [...prev, ...nextTracks]);
-      setHasMore(offset + nextTracks.length < result.track_count);
       setTrackCount(result.track_count);
     } catch (error) {
       toast.error(
@@ -262,34 +261,15 @@ export default function CollectionPage() {
     try {
       let allTracks = tracks;
 
-      // First load full collection then send to Brainzplayer
-      if (hasMore || tracks.length < trackCount) {
-        const fetchedTracks: JSPFTrack[] = [];
-        const pageSize = MAX_COLLECTION_TRACKS_PER_CALL;
-        let offset = 0;
-        let total = trackCount;
-
-        while (offset < total || (offset === 0 && total === 0)) {
-          // eslint-disable-next-line no-await-in-loop
-          const page = await APIService.getMusicBrainzCollectionDetail(
-            collectionMBID,
-            currentUser?.auth_token,
-            pageSize,
-            offset
-          );
-          total = page.track_count;
-          const pageTracks = (page.tracks ?? []).map(asJSPFTrack);
-          fetchedTracks.push(...pageTracks);
-          offset += pageTracks.length;
-          if (pageTracks.length === 0) {
-            break;
-          }
-        }
-
+      if (tracks.length < trackCount) {
+        const fetchedTracks = await fetchAllCollectionTracks(
+          APIService,
+          collectionMBID,
+          currentUser?.auth_token
+        );
         allTracks = fetchedTracks;
         setTracks(fetchedTracks);
-        setTrackCount(total);
-        setHasMore(false);
+        setTrackCount(fetchedTracks.length);
       }
 
       if (!allTracks.length) {
@@ -318,7 +298,6 @@ export default function CollectionPage() {
     APIService,
     collectionMBID,
     currentUser?.auth_token,
-    hasMore,
     isLoadingInitial,
     isPlayingAll,
     trackCount,
@@ -436,7 +415,7 @@ export default function CollectionPage() {
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
             __html: DOMPurify.sanitize(
-              coverArt ??
+              collection?.cover_art ??
                 "<img src='/static/img/cover-art-placeholder.jpg' alt='Collection cover' />"
             ),
           }}

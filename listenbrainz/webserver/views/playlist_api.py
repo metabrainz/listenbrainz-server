@@ -548,10 +548,11 @@ def edit_playlist(playlist_mbid):
 
     try:
         if "additional_metadata" in data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]:
-            if playlist.additional_metadata is None:
-                playlist.additional_metadata = {}
-
-            playlist.additional_metadata = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["additional_metadata"]
+            metadata = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["additional_metadata"]
+            # Stripping any submitted tags so they cannot bypass validation or the playlist_tag table.
+            if isinstance(metadata, dict):
+                metadata = {k: v for k, v in metadata.items() if k != "tags"}
+            playlist.additional_metadata = metadata
     except KeyError:
         pass
 
