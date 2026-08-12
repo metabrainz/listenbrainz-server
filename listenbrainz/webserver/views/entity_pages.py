@@ -191,7 +191,7 @@ def artist_entity(artist_mbid: str):
         top_release_group_color = None
 
     try:
-        top_recording_color = popularity.get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, 1)[0]["release_color"]
+        top_recording_color = popular_recordings[0]["release_color"]
     except IndexError:
         top_recording_color = None
 
@@ -383,48 +383,45 @@ def recording_entity(recording_mbid: str):
     if not is_valid_uuid(recording_mbid):
         return jsonify({"error": "Provided recording mbid is invalid: %s" % recording_mbid}), 400
 
-    with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-            psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"]) as ts_conn, \
-            mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
-            ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
-        recording_data = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, [recording_mbid])
-    if recording_data is None or len(recording_data) == 0 or recording_data[0].get("recording_mbid") is None:
-        return jsonify({"error": f"Recording {recording_mbid} not found in the metadata cache"}), 404
-
-    recording_data = recording_data[0]
-
+    mb_conn = psycopg2.connect(current_app.config["MB_DATABASE_URI"])
     try:
-        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-                mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
-                ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
+        with mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
+                ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
+            recording_data = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, [recording_mbid])
+        if recording_data is None or len(recording_data) == 0 or recording_data[0].get("recording_mbid") is None:
+            return jsonify({"error": f"Recording {recording_mbid} not found in the metadata cache"}), 404
 
-            similar_recordings = similarity.get_recordings(
-                mb_curs,
-                ts_curs,
-                [recording_mbid],
-                "session_based_days_7500_session_300_contribution_5_threshold_15_limit_50_skip_30_top_n_listeners_1000",
-                18
-            )
-            similar_recording_mbids = [recording["recording_mbid"] for recording in similar_recordings]
-            similar_recordings_data = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, similar_recording_mbids)
-    except Exception:
-        current_app.logger.error("Error loading similar recordings:", exc_info=True)
-        similar_recordings_data = []
+        recording_data = recording_data[0]
 
-    try:
-        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-                mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
-            release_groups_data = load_release_groups_for_recordings(mb_curs, [recording_mbid])
-            release_groups_data = list(release_groups_data.values())
-    except Exception:
-        current_app.logger.error("Error loading release groups for recording:", exc_info=True)
-        release_groups_data = []
+        try:
+            with mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
+                    ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
+                similar_recordings = similarity.get_recordings(
+                    mb_curs,
+                    ts_curs,
+                    [recording_mbid],
+                    "session_based_days_7500_session_300_contribution_5_threshold_15_limit_50_skip_30_top_n_listeners_1000",
+                    18
+                )
+                similar_recording_mbids = [recording["recording_mbid"] for recording in similar_recordings]
+                similar_recordings_data = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, similar_recording_mbids)
+        except Exception:
+            current_app.logger.error("Error loading similar recordings:", exc_info=True)
+            similar_recordings_data = []
+
+        try:
+            with mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
+                release_groups_data = load_release_groups_for_recordings(mb_curs, [recording_mbid])
+                release_groups_data = list(release_groups_data.values())
+        except Exception:
+            current_app.logger.error("Error loading release groups for recording:", exc_info=True)
+            release_groups_data = []
+    finally:
+        mb_conn.close()
 
     release_group_mbids = [rg["mbid"] for rg in release_groups_data]
     try:
-        with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"]) as ts_conn, \
-                ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
-            popularity_data, _ = popularity.get_counts(ts_curs, "release_group", release_group_mbids)
+        popularity_data, _ = popularity.get_counts(ts_conn, "release_group", release_group_mbids)
     except Exception:
         current_app.logger.error("Error loading popularity data for release groups:", exc_info=True)
         popularity_data = []

@@ -1,5 +1,5 @@
 from brainzutils.ratelimit import ratelimit
-from flask import Blueprint, request, current_app
+from flask import Blueprint, request, current_app, jsonify
 
 from listenbrainz.db import popularity
 from listenbrainz.webserver import ts_conn, db_conn
