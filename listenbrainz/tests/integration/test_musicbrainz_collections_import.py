@@ -187,6 +187,70 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
             "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
         )
 
+    @mock.patch("listenbrainz.webserver.views.collection.psycopg2.connect")
+    def test_release_collection_flatten_tracks_returns_recordings(self, mock_connect):
+        fake_cursor = mock.MagicMock()
+
+        fake_cursor.fetchone.side_effect = [
+            {
+                "collection_id": 456,
+                "collection_mbid": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+                "name": "My Albums",
+                "public": True,
+                "owner_editor_id": 1,
+                "entity_type": "release",
+            },
+            {"track_count": 3},
+        ]
+
+        fake_cursor.fetchall.return_value = [
+            {
+                "recording_mbid": "11111111-1111-1111-1111-111111111111",
+                "title": "Track One",
+                "artist_credit_name": "Example Artist",
+                "length": 180000,
+                "release_mbid": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+                "release_name": "Example Album",
+            },
+            {
+                "recording_mbid": "22222222-2222-2222-2222-222222222222",
+                "title": "Track Two",
+                "artist_credit_name": "Example Artist",
+                "length": 200000,
+                "release_mbid": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+                "release_name": "Example Album",
+            },
+        ]
+
+        mock_conn = mock.MagicMock()
+        mock_connect.return_value.__enter__.return_value = mock_conn
+        mock_conn.cursor.return_value.__enter__.return_value = fake_cursor
+
+        response = self.client.post(
+            self.custom_url_for(
+                "collection.load_collection",
+                collection_mbid="dddddddd-dddd-dddd-dddd-dddddddddddd",
+            )
+            + "?flatten=tracks"
+        )
+
+        self.assert200(response)
+        data = response.json
+        track = data["tracks"][0]
+        self.assertEqual(data["collection"]["entity_type"], "release")
+        self.assertEqual(data["track_count"], 3)
+        self.assertEqual(data["items"], [])
+        self.assertEqual(len(data["tracks"]), 2)
+        self.assertEqual(
+            track["recording_mbid"],
+            "11111111-1111-1111-1111-111111111111",
+        )
+        self.assertEqual(
+            track["release_mbid"],
+            "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+        )
+        self.assertEqual(track["release_name"], "Example Album")
+
     @mock.patch("listenbrainz.webserver.views.collection.fetch_collection_payload")
     def test_private_collection_requires_login(self, mock_fetch):
         mock_fetch.return_value = (

@@ -1,7 +1,7 @@
 import psycopg2
 from psycopg2.extras import DictCursor
 
-from flask import Blueprint, current_app, jsonify, render_template
+from flask import Blueprint, current_app, jsonify, render_template, request
 from flask_login import current_user
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
@@ -89,6 +89,59 @@ def _fetch_release_collection_item_count(mb_curs, collection_id: int) -> int:
     )
     row = mb_curs.fetchone()
     return int(row["item_count"] or 0)
+
+
+def _fetch_release_collection_flattened_track_count(mb_curs, collection_id: int) -> int:
+    mb_curs.execute(
+        """
+          SELECT COUNT(*)::int AS track_count
+            FROM musicbrainz.editor_collection_release ecrel
+            JOIN musicbrainz.release rel
+              ON rel.id = ecrel.release
+            JOIN musicbrainz.medium m
+              ON m.release = rel.id
+            JOIN musicbrainz.track t
+              ON t.medium = m.id
+            JOIN musicbrainz.recording r
+              ON r.id = t.recording
+           WHERE ecrel.collection = %s
+        """,
+        (collection_id,),
+    )
+    row = mb_curs.fetchone()
+    return int(row["track_count"] or 0)
+
+
+def _fetch_release_collection_flattened_tracks(mb_curs, collection_id: int, *, count: int, offset: int):
+    mb_curs.execute(
+        """
+          SELECT r.gid::text AS recording_mbid
+               , r.name AS title
+               , r.length AS length
+               , ac.name AS artist_credit_name
+               , rel.gid::text AS release_mbid
+               , rel.name AS release_name
+            FROM musicbrainz.editor_collection_release ecrel
+            JOIN musicbrainz.release rel
+              ON rel.id = ecrel.release
+            JOIN musicbrainz.medium m
+              ON m.release = rel.id
+            JOIN musicbrainz.track t
+              ON t.medium = m.id
+            JOIN musicbrainz.recording r
+              ON r.id = t.recording
+            JOIN musicbrainz.artist_credit ac
+              ON ac.id = r.artist_credit
+           WHERE ecrel.collection = %s
+           ORDER BY ecrel.position NULLS LAST
+                  , rel.id
+                  , m.position
+                  , t.position
+           LIMIT %s OFFSET %s
+        """,
+        (collection_id, count, offset),
+    )
+    return mb_curs.fetchall()
 
 
 def _fetch_release_collection_items(mb_curs, collection_id: int, *, count: int, offset: int):
@@ -310,7 +363,51 @@ def _serialize_release_collection_payload(collection, collection_id: int, *, cou
     }
 
 
-def fetch_collection_payload(collection_mbid: str, *, viewer_editor_id: int | None, count: int, offset: int):
+def _serialize_release_collection_flattened_payload(
+    collection, collection_id: int, *, count: int, offset: int, mb_curs,
+):
+    """Flatten release collection releases into recordings for playlist import."""
+    track_count = _fetch_release_collection_flattened_track_count(mb_curs, collection_id)
+    tracks = _fetch_release_collection_flattened_tracks(
+        mb_curs,
+        collection_id,
+        count=count,
+        offset=offset,
+    )
+    return {
+        "collection": {
+            "mbid": collection["collection_mbid"],
+            "name": collection["name"],
+            "public": bool(collection["public"]),
+            "entity_type": collection["entity_type"],
+        },
+        "track_count": track_count,
+        "count": count,
+        "offset": offset,
+        "tracks": [
+            {
+                "recording_mbid": t["recording_mbid"],
+                "title": t["title"],
+                "artist_credit_name": t["artist_credit_name"],
+                "length": t["length"],
+                "release_mbid": t["release_mbid"],
+                "release_name": t["release_name"],
+            }
+            for t in tracks
+        ],
+        "items": [],
+        "cover_art": None,
+    }
+
+
+def fetch_collection_payload(
+    collection_mbid: str,
+    *,
+    viewer_editor_id: int | None,
+    count: int,
+    offset: int,
+    flatten_tracks: bool = False,
+):
     """Fetch collection and items from the MusicBrainz database."""
     if not is_valid_uuid(collection_mbid):
         return None, ({"error": f"Provided collection ID is invalid: {collection_mbid}"}, 400)
@@ -352,6 +449,10 @@ def fetch_collection_payload(collection_mbid: str, *, viewer_editor_id: int | No
                 payload = _serialize_recording_collection_payload(
                     collection, collection_id, count=count, offset=offset, mb_curs=mb_curs,
                 )
+            elif flatten_tracks:
+                payload = _serialize_release_collection_flattened_payload(
+                    collection, collection_id, count=count, offset=offset, mb_curs=mb_curs,
+                )
             else:
                 payload = _serialize_release_collection_payload(
                     collection, collection_id, count=count, offset=offset, mb_curs=mb_curs,
@@ -376,7 +477,8 @@ def load_collection(collection_mbid: str):
     """Load collection page data for React RouteLoader.
 
     Called by:
-      Collection page load-more / play-all / save-as-playlist pagination
+      Collection page RouteLoader, load-more, play-all, and save-as-playlist.
+      Release collections use flatten=tracks to expand recordings.
     """
     viewer_editor_id = None
     if current_user.is_authenticated:
@@ -384,12 +486,14 @@ def load_collection(collection_mbid: str):
 
     count = get_positive_param("count", DEFAULT_COLLECTION_TRACKS_PER_CALL)
     offset = get_non_negative_param("offset", 0)
+    flatten_tracks = request.args.get("flatten") == "tracks"
 
     payload, error = fetch_collection_payload(
         collection_mbid,
         viewer_editor_id=viewer_editor_id,
         count=count,
         offset=offset,
+        flatten_tracks=flatten_tracks,
     )
     if error:
         body, code = error
