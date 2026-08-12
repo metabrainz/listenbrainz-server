@@ -535,6 +535,63 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert400(response)
 
+    def test_playlist_recording_add_multiple(self):
+        """Test adding multiple recordings in one API call"""
+        playlist = get_test_data()
+
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        playlist_mbid = response.json["playlist_mbid"]
+
+        mbids = [
+            "4a77a078-e91a-4522-a409-3b58aa7de3ae",
+            "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a",
+            "97e69767-5d34-4c97-b36a-f3b2b1ef9dae",
+        ]
+        add_recording = {
+            "playlist": {
+                "track": [
+                    {"identifier": [PLAYLIST_TRACK_URI_PREFIX + mbid]}
+                    for mbid in mbids
+                ],
+                "extension": {
+                    PLAYLIST_EXTENSION_URI: {
+                        "public": True
+                    }
+                },
+            }
+        }
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            json=add_recording
+        )
+        self.assert200(response)
+
+        response = self.client.get(
+            self.custom_url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid, fetch_metadata="false"),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        tracks = response.json["playlist"]["track"]
+        self.assertEqual(len(tracks), 4)
+        self.assertEqual(
+            tracks[1]["identifier"],
+            [PLAYLIST_TRACK_URI_PREFIX + mbids[0]],
+        )
+        self.assertEqual(
+            tracks[2]["identifier"],
+            [PLAYLIST_TRACK_URI_PREFIX + mbids[1]],
+        )
+        self.assertEqual(
+            tracks[3]["identifier"],
+            [PLAYLIST_TRACK_URI_PREFIX + mbids[2]],
+        )
+
     def test_playlist_recording_move(self):
 
         playlist = {

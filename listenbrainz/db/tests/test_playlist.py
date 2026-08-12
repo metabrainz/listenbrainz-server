@@ -9,7 +9,17 @@ from listenbrainz.db.playlist import TROI_BOT_USER_ID
 
 from listenbrainz.tests.integration import IntegrationTestCase, TIMESCALE_SQL_DIR
 from listenbrainz.db import timescale
-from listenbrainz.db.model.playlist import WritablePlaylist
+from listenbrainz.db.model.playlist import WritablePlaylist, WritablePlaylistRecording
+
+
+RECORDING_MBIDS = [
+    "e8f9b188-f819-4e43-ab0f-4bd26ce9ff56",
+    "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a",
+    "4a77a078-e91a-4522-a409-3b58aa7de3ae",
+    "97e69767-5d34-4c97-b36a-f3b2b1ef9dae",
+    "a076e8af-5791-4531-a0ef-6b0a21f8e81c",
+    "cc197bad-dc9c-440d-a5b5-d52ba2e14234",
+]
 
 
 class PlaylistTestCase(IntegrationTestCase):
@@ -24,6 +34,105 @@ class PlaylistTestCase(IntegrationTestCase):
         super(PlaylistTestCase, self).tearDown()
         self.ts_conn.close()
         timescale.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'reset_tables.sql'))
+
+    def _create_empty_playlist(self):
+        return db_playlist.create(self.db_conn, self.ts_conn, WritablePlaylist(
+            name="test playlist",
+            creator_id=self.user_1['id'],
+            description="for insert_recordings tests",
+            collaborator_ids=[],
+            collaborators=[],
+            public=False,
+            additional_metadata={},
+        ))
+
+    def _make_recordings(self, mbids, added_by_id):
+        return [
+            WritablePlaylistRecording(mbid=uuid.UUID(mbid), added_by_id=added_by_id)
+            for mbid in mbids
+        ]
+
+    def test_insert_recordings_empty_list(self):
+        """insert_recordings returns early without writing rows when given no recordings"""
+        playlist = self._create_empty_playlist()
+
+        result = db_playlist.insert_recordings(
+            self.db_conn, self.ts_conn, playlist.id, [], 0
+        )
+
+        self.assertEqual(result, [])
+        self.assertEqual(
+            db_playlist.get_recordings_count_for_playlist(self.ts_conn, playlist.id), 0
+        )
+
+    def test_insert_recordings_bulk(self):
+        """insert_recordings bulk-inserts many recordings in one query"""
+        playlist = self._create_empty_playlist()
+        mbids = RECORDING_MBIDS
+        recordings = self._make_recordings(mbids, self.user_1['id'])
+
+        inserted = db_playlist.insert_recordings(
+            self.db_conn, self.ts_conn, playlist.id, recordings, 0
+        )
+        self.ts_conn.commit()
+
+        self.assertEqual(len(inserted), len(mbids))
+        for i, recording in enumerate(inserted):
+            self.assertIsNotNone(recording.id)
+            self.assertEqual(recording.position, i)
+            self.assertEqual(recording.playlist_id, playlist.id)
+            self.assertEqual(str(recording.mbid), mbids[i])
+            self.assertEqual(recording.added_by, self.user_1['musicbrainz_id'])
+
+        stored = db_playlist.get_by_mbid(self.db_conn, self.ts_conn, playlist.mbid)
+        self.assertEqual(len(stored.recordings), len(mbids))
+        self.assertEqual(
+            [str(r.mbid) for r in stored.recordings],
+            mbids,
+        )
+        self.assertEqual(
+            db_playlist.get_recordings_count_for_playlist(self.ts_conn, playlist.id),
+            len(mbids),
+        )
+
+    def test_insert_recordings_multiple_added_by(self):
+        """insert_recordings resolves added_by for multiple users in one lookup"""
+        playlist = self._create_empty_playlist()
+        recordings = self._make_recordings(RECORDING_MBIDS[:3], self.user_1['id'])
+        recordings += self._make_recordings(RECORDING_MBIDS[3:], self.user_2['id'])
+
+        inserted = db_playlist.insert_recordings(
+            self.db_conn, self.ts_conn, playlist.id, recordings, 0
+        )
+        self.ts_conn.commit()
+
+        self.assertEqual(len(inserted), len(RECORDING_MBIDS))
+        self.assertEqual(
+            {r.added_by for r in inserted[:3]},
+            {self.user_1['musicbrainz_id']},
+        )
+        self.assertEqual(
+            {r.added_by for r in inserted[3:]},
+            {self.user_2['musicbrainz_id']},
+        )
+
+    def test_insert_recordings_at_offset(self):
+        """add_recordings_to_playlist inserts a batch at a non-zero position"""
+        playlist = self._create_empty_playlist()
+        initial = self._make_recordings(RECORDING_MBIDS[:2], self.user_1['id'])
+        db_playlist.insert_recordings(self.db_conn, self.ts_conn, playlist.id, initial, 0)
+        self.ts_conn.commit()
+
+        playlist = db_playlist.get_by_mbid(self.db_conn, self.ts_conn, playlist.mbid)
+        to_insert = self._make_recordings(RECORDING_MBIDS[2:5], self.user_1['id'])
+        db_playlist.add_recordings_to_playlist(
+            self.db_conn, self.ts_conn, playlist, to_insert, position=1
+        )
+
+        stored = db_playlist.get_by_mbid(self.db_conn, self.ts_conn, playlist.mbid)
+        self.assertEqual(len(stored.recordings), 5)
+        self.assertEqual([str(r.mbid) for r in stored.recordings], RECORDING_MBIDS[:5])
+        self.assertEqual([r.position for r in stored.recordings], [0, 1, 2, 3, 4])
 
     def test_create(self):
         playlist_1 = WritablePlaylist(
