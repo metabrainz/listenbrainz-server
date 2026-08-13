@@ -453,6 +453,9 @@ def _register_blueprints(app):
     # Retro-compatible 'profile' endpoint
     app.register_blueprint(settings_bp, url_prefix='/profile', name='profile')
 
+    from listenbrainz.webserver.views.external_connect import external_connect_bp
+    app.register_blueprint(external_connect_bp, url_prefix='/connect')
+
     from listenbrainz.webserver.views.export import export_bp
     app.register_blueprint(export_bp, url_prefix='/export')
 
