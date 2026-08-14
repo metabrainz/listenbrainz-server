@@ -124,10 +124,6 @@ async function fetchAllCollectionTracks(
   return allTracks;
 }
 
-type CollectionState = MusicBrainzCollectionDetailResponse["collection"] & {
-  cover_art?: string | null;
-};
-
 export default function CollectionPage() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
   const { collectionMBID } = useParams();
@@ -135,15 +131,14 @@ export default function CollectionPage() {
   const navigation = useNavigation();
   const loaderData = useLoaderData() as MusicBrainzCollectionDetailResponse;
 
-  const [collection, setCollection] = React.useState<CollectionState>({
-    ...loaderData.collection,
-    cover_art: loaderData.cover_art ?? null,
-  });
+  const {
+    collection,
+    track_count: trackCount,
+    cover_art: coverArt,
+  } = loaderData;
+
   const [tracks, setTracks] = React.useState<JSPFTrack[]>(() =>
     (loaderData.tracks ?? []).map(asJSPFTrack)
-  );
-  const [trackCount, setTrackCount] = React.useState<number>(
-    loaderData.track_count
   );
   const [isLoadingMore, setIsLoadingMore] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
@@ -162,14 +157,11 @@ export default function CollectionPage() {
   });
   const virtualItems = rowVirtualizer.getVirtualItems();
 
+  // Resets tracks on navigating to a different collection.
   React.useEffect(() => {
-    setCollection({
-      ...loaderData.collection,
-      cover_art: loaderData.cover_art ?? null,
-    });
-    setTrackCount(loaderData.track_count);
     setTracks((loaderData.tracks ?? []).map(asJSPFTrack));
-  }, [loaderData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collection.mbid]);
 
   const loadMore = React.useCallback(async () => {
     if (!collectionMBID || !hasMore || isLoadingMore || isLoadingInitial) {
@@ -188,7 +180,6 @@ export default function CollectionPage() {
       );
       const nextTracks = (result.tracks ?? []).map(asJSPFTrack);
       setTracks((prev) => [...prev, ...nextTracks]);
-      setTrackCount(result.track_count);
     } catch (error) {
       toast.error(
         <ToastMsg
@@ -248,7 +239,6 @@ export default function CollectionPage() {
         const fetchedTracks = await fetchAllCollectionTracks(collectionMBID);
         allTracks = fetchedTracks;
         setTracks(fetchedTracks);
-        setTrackCount(fetchedTracks.length);
       }
 
       if (!allTracks.length) {
@@ -382,7 +372,7 @@ export default function CollectionPage() {
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
             __html: DOMPurify.sanitize(
-              collection?.cover_art ??
+              coverArt ??
                 "<img src='/static/img/cover-art-placeholder.jpg' alt='Collection cover' />"
             ),
           }}
