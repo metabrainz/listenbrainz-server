@@ -212,6 +212,10 @@ The following fields may be present in the ``mbid_mapping`` element:
    * - ``release_mbid``
      - string
      - A MusicBrainz Release ID of the canonical release for this recording.
+   * - ``release_group_mbid``
+     - string
+     - The MusicBrainz Release Group ID that ``release_mbid`` belongs to. Useful for
+       grouping listens by album without additional metadata lookups.
    * - ``artist_mbids``
      - array of strings
      - A list of MusicBrainz Artist IDs from the artist credit of the matched recording.
@@ -272,6 +276,7 @@ user-submitted data in ``additional_info`` and the server-resolved data in ``mbi
           "recording_mbid": "30d08f4c-d825-4ae1-b79c-44242cddd7c0",
           "recording_name": "Some Resolve",
           "release_mbid": "e96c2e7b-94fd-4fbe-9c44-1a27d8664825",
+          "release_group_mbid": "1d98b0bc-5832-49d2-a93e-463032631a2f",
           "artist_mbids": [
             "1c70a3fc-fa3c-4be1-8b55-c3192db8a884"
           ],

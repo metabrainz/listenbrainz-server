@@ -185,6 +185,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(len(listens), 1)
         self.assertEqual(listens[0].data["mbid_mapping"]["artist_mbids"], ['678d88b2-87b0-403b-b63d-5da7465aecc3'])
         self.assertEqual(listens[0].data["mbid_mapping"]["release_mbid"], '93ac1812-d38d-4125-88e8-8440e3e89072')
+        self.assertEqual(listens[0].data["mbid_mapping"]["release_group_mbid"], '53f80f76-f8af-3558-bfd5-e7221e055c75')
         self.assertEqual(listens[0].data["mbid_mapping"]["recording_mbid"], '2cfad207-3f55-4aec-8120-86cf66e34d59')
 
     def test_get_listen_count_for_user(self):

@@ -264,6 +264,7 @@ class TimescaleListenStore:
                         , sl.recording_mbid
                         , mbc.recording_data->>'name' AS recording_name
                         , mbc.release_mbid
+                        , mbc.release_data->>'release_group_mbid' AS release_group_mbid
                         , mbc.artist_mbids::TEXT[]
                         , (mbc.release_data->>'caa_id')::bigint AS caa_id
                         , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
@@ -283,6 +284,7 @@ class TimescaleListenStore:
                         , sl.recording_mbid
                         , recording_data->>'name'
                         , release_mbid
+                        , release_data->>'release_group_mbid'
                         , artist_mbids
                         , artist_data->>'name'
                         , recording_data->>'name'
@@ -358,6 +360,7 @@ class TimescaleListenStore:
                     recording_mbid=result.recording_mbid,
                     recording_name=result.recording_name,
                     release_mbid=result.release_mbid,
+                    release_group_mbid=result.release_group_mbid,
                     artist_mbids=result.artist_mbids,
                     ac_names=result.ac_names,
                     ac_join_phrases=result.ac_join_phrases,
@@ -436,6 +439,7 @@ class TimescaleListenStore:
                          , l.recording_mbid
                          , mbc.recording_data->>'name' AS recording_name
                          , mbc.release_mbid
+                         , mbc.release_data->>'release_group_mbid' AS release_group_mbid
                          , mbc.artist_mbids::TEXT[]
                          , (mbc.release_data->>'caa_id')::bigint AS caa_id
                          , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
@@ -455,6 +459,7 @@ class TimescaleListenStore:
                          , l.recording_mbid
                          , mbc.recording_data->>'name'
                          , mbc.release_mbid
+                         , mbc.release_data->>'release_group_mbid'
                          , mbc.artist_mbids
                          , mbc.release_data->>'caa_id'
                          , mbc.release_data->>'caa_release_mbid'
@@ -480,6 +485,7 @@ class TimescaleListenStore:
                 recording_mbid=result.recording_mbid,
                 recording_name=result.recording_name,
                 release_mbid=result.release_mbid,
+                release_group_mbid=result.release_group_mbid,
                 artist_mbids=result.artist_mbids,
                 ac_names=result.ac_names,
                 ac_join_phrases=result.ac_join_phrases,
@@ -538,6 +544,7 @@ class TimescaleListenStore:
                          , l.recording_mbid
                          , mbc.recording_data->>'name' AS recording_name
                          , mbc.release_mbid
+                         , mbc.release_data->>'release_group_mbid' AS release_group_mbid
                          , mbc.artist_mbids::TEXT[]
                          , (mbc.release_data->>'caa_id')::bigint AS caa_id
                          , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
@@ -557,6 +564,7 @@ class TimescaleListenStore:
                          , l.recording_mbid
                          , mbc.recording_data->>'name'
                          , mbc.release_mbid
+                         , mbc.release_data->>'release_group_mbid'
                          , mbc.artist_mbids
                          , mbc.release_data->>'caa_id'
                          , mbc.release_data->>'caa_release_mbid'
@@ -582,6 +590,7 @@ class TimescaleListenStore:
                 recording_mbid=result.recording_mbid,
                 recording_name=result.recording_name,
                 release_mbid=result.release_mbid,
+                release_group_mbid=result.release_group_mbid,
                 artist_mbids=result.artist_mbids,
                 ac_names=result.ac_names,
                 ac_join_phrases=result.ac_join_phrases,
