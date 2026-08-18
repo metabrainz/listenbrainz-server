@@ -226,6 +226,14 @@ if [ -n "$PRIVATE_DUMP_INTERMEDIATE_DIR" ]; then
         exit 1
     fi
 
+    read -r PRIVATE_DUMP_TIMESTAMP PRIVATE_DUMP_ID PRIVATE_DUMP_TYPE < "$PRIVATE_DUMP_ID_FILE"
+    if [ "$PRIVATE_DUMP_TIMESTAMP" != "$DUMP_TIMESTAMP" ] || \
+        [ "$PRIVATE_DUMP_ID" != "$DUMP_ID" ] || \
+        [ "$PRIVATE_DUMP_TYPE" != "$DUMP_TYPE" ]; then
+        echo "Public and private dump metadata do not match, exiting."
+        exit 1
+    fi
+
     PRIVATE_DUMP_DIR=$(dirname "$PRIVATE_DUMP_ID_FILE")
     PRIVATE_DUMP_NAME=$(basename "$PRIVATE_DUMP_DIR")
 
@@ -316,8 +324,8 @@ fi
 /usr/local/bin/python manage.py dump delete_old_dumps "$PRIVATE_BACKUP_DIR/$SUB_DIR"
 
 if [ "$DUMP_TYPE" == "full" ]; then
-    # Public full dumps are no longer backed up locally, so remove any that are
-    # left over on the backup volume from when they were.
+    # Public full dumps are no longer backed up locally. Override the normal
+    # retention count (two) with zero to remove any legacy full dump backups.
     /usr/local/bin/python manage.py dump delete_old_dumps --keep full=0 "$BACKUP_DIR/$SUB_DIR"
 else
     /usr/local/bin/python manage.py dump delete_old_dumps "$BACKUP_DIR/$SUB_DIR"

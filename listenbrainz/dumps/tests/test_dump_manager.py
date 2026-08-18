@@ -123,6 +123,7 @@ def test_select_expired_dumps_ignores_unrecognised_names():
         'listenbrainz-dump-5-2018031-000005-full',
     ]
 
+    # Of the three recognised full dumps, retain the newest two and expire only the oldest.
     assert select_expired_dumps(dump_names) == ['listenbrainz-dump-1-20180312-000001-full']
 
 
@@ -133,6 +134,7 @@ def test_select_expired_dumps_sorts_full_dumps_by_id_not_name():
         'listenbrainz-dump-11-20180314-000011-full',
     ]
 
+    # Default full-dump retention is two, so only the oldest numeric ID expires.
     assert select_expired_dumps(dump_names) == ['listenbrainz-dump-9-20180312-000009-full']
 
 
@@ -272,14 +274,14 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         dump_name = os.listdir(self.tempdir)[0]
         self.assertTrue(dump_name.endswith("-db"))
 
-        # make sure that the dump contains a public dump (postgres) and a public dump (timescale)
+        # make sure that the dump contains a public postgres dump and a public timescale dump
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
             if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 2)
 
-        # and a private dump (postgres) and a private dump (timescale)
+        # and a private postgres dump and a private timescale dump
         self.assertEqual(os.listdir(self.tempdir_private), [dump_name])
         private_archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir_private, dump_name)):
@@ -368,13 +370,14 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         created_private_dump_id = int(private_dump_name.split('-')[2])
         self.assertEqual(dump_id, created_private_dump_id)
 
-        # dumps should contain the public and private postgres and timescale archives
+        # the public dump should contain the postgres and timescale archives
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
             if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 2)
 
+        # the private dump should contain the postgres and timescale archives
         private_archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir_private, private_dump_name)):
             if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):

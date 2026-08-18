@@ -63,8 +63,9 @@ Manually triggering dumps
 If you want to re-run a dump after it fails, or manually trigger a dump then you can run the dump script manually. A few
 things need to be kept in mind while doing this, the :ref:`developers/commands:create_full` and
 :ref:`developers/commands:create_db_dump` commands invoked to do the dumps accept a :option:`--dump-id` parameter to number
-the dump. If no id specified, the script will look in the database for the last id, add 1 to it and use it for the dump.
-Note that a dump id belongs to one dump type, so a db dump can only be re-run with the id of an existing db dump.
+the dump. If no id is specified, the script will look in the database for the last id, add 1 to it and use it for the dump.
+A supplied dump id must belong to an existing dump of the same type: a db dump cannot be re-run with the id of a full
+dump, or vice versa.
 
 .. code:: sql
 
