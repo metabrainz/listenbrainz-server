@@ -21,6 +21,36 @@ export type MusicBrainzCollectionSummary = {
   item_count: number;
 };
 
+export type MusicBrainzCollectionTrack = {
+  recording_mbid: string;
+  title: string | null;
+  artist_credit_name: string | null;
+  length: number | null;
+  release_mbid?: string | null;
+  release_name?: string | null;
+  caa_id?: number | null;
+  caa_release_mbid?: string | null;
+  artist_mbids?: string[] | null;
+  artists?: Array<{
+    artist_mbid: string;
+    artist_credit_name: string;
+    join_phrase?: string;
+  }> | null;
+};
+
+export type MusicBrainzCollectionDetailResponse = {
+  collection: {
+    mbid: string;
+    name: string;
+    public: boolean;
+  };
+  track_count: number;
+  count: number;
+  offset: number;
+  tracks: MusicBrainzCollectionTrack[];
+  cover_art?: string | null;
+};
+
 export default class APIService {
   APIBaseURI: string;
 

@@ -100,6 +100,27 @@ const getIndexRoutes = (): RouteObject[] => {
           ],
         },
         {
+          path: "collection/",
+          lazy: {
+            Component: async () => {
+              return (await import("../layout/LayoutWithBackButton")).default;
+            },
+          },
+          children: [
+            {
+              path: ":collectionMBID/",
+              lazy: {
+                Component: async () => {
+                  return (await import("../collections/Collection")).default;
+                },
+                loader: async () => {
+                  return RouteLoader;
+                },
+              },
+            },
+          ],
+        },
+        {
           path: "/statistics/",
           lazy: {
             Component: async () => {

@@ -6,6 +6,7 @@ from listenbrainz.tests.integration import IntegrationTestCase
 
 _REAL_PSYCOPG2_CONNECT = psycopg2.connect
 
+
 class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
     def setUp(self):
         super().setUp()
@@ -80,7 +81,7 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
             ],
         )
 
-    @mock.patch("listenbrainz.webserver.views.playlist_api.fetch_collection_payload")
+    @mock.patch("listenbrainz.webserver.views.collection.fetch_collection_payload")
     def test_public_collection_can_be_viewed_without_login(self, mock_fetch):
         mock_fetch.return_value = (
             {
@@ -98,15 +99,18 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
                         "title": "Night Drive",
                         "artist_credit_name": "The Midnight",
                         "length": 123000,
+                        "caa_id": 12345,
+                        "caa_release_mbid": "dddddddd-dddd-dddd-dddd-dddddddddddd",
                     }
                 ],
+                "cover_art": "<svg></svg>",
             },
             None,
         )
 
-        response = self.client.get(
+        response = self.client.post(
             self.custom_url_for(
-                "playlist_api_v1.import_musicbrainz_collection_detail",
+                "collection.load_collection",
                 collection_mbid="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
             )
         )
@@ -120,38 +124,44 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
         self.assertEqual(response.json["collection"]["public"], True)
         self.assertEqual(response.json["track_count"], 1)
         self.assertEqual(len(response.json["tracks"]), 1)
+        self.assertEqual(response.json["tracks"][0]["caa_id"], 12345)
+        self.assertEqual(
+            response.json["tracks"][0]["caa_release_mbid"],
+            "dddddddd-dddd-dddd-dddd-dddddddddddd",
+        )
+        self.assertEqual(response.json["cover_art"], "<svg></svg>")
         mock_fetch.assert_called_once()
         self.assertIsNone(mock_fetch.call_args.kwargs["viewer_editor_id"])
 
-    @mock.patch("listenbrainz.webserver.views.playlist_api.fetch_collection_payload")
+    @mock.patch("listenbrainz.webserver.views.collection.fetch_collection_payload")
     def test_private_collection_requires_login(self, mock_fetch):
         mock_fetch.return_value = (
             None,
             ({"error": "You must be logged in to access this collection"}, 401),
         )
 
-        response = self.client.get(
+        response = self.client.post(
             self.custom_url_for(
-                "playlist_api_v1.import_musicbrainz_collection_detail",
+                "collection.load_collection",
                 collection_mbid="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
             )
         )
 
         self.assert401(response)
 
-    @mock.patch("listenbrainz.webserver.views.playlist_api.fetch_collection_payload")
+    @mock.patch("listenbrainz.webserver.views.collection.fetch_collection_payload")
     def test_private_collection_blocks_other_users(self, mock_fetch):
         mock_fetch.return_value = (
             None,
             ({"error": "You are not allowed to access this collection"}, 403),
         )
 
-        response = self.client.get(
+        self.temporary_login(self.bob["login_id"])
+        response = self.client.post(
             self.custom_url_for(
-                "playlist_api_v1.import_musicbrainz_collection_detail",
+                "collection.load_collection",
                 collection_mbid="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-            ),
-            headers={"Authorization": f"Token {self.bob['auth_token']}"},
+            )
         )
 
         self.assert403(response)
@@ -162,9 +172,9 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
         )
 
     def test_collection_detail_invalid_mbid_returns_400(self):
-        response = self.client.get(
+        response = self.client.post(
             self.custom_url_for(
-                "playlist_api_v1.import_musicbrainz_collection_detail",
+                "collection.load_collection",
                 collection_mbid="not-a-valid-mbid",
             )
         )
@@ -173,9 +183,9 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
         self.assertIn("invalid", response.json["error"].lower())
 
     def test_collection_detail_count_above_max_returns_400(self):
-        response = self.client.get(
+        response = self.client.post(
             self.custom_url_for(
-                "playlist_api_v1.import_musicbrainz_collection_detail",
+                "collection.load_collection",
                 collection_mbid="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
             )
             + "?count=501"
@@ -185,9 +195,9 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
         self.assertIn("count", response.json["error"].lower())
 
     def test_collection_detail_count_zero_returns_400(self):
-        response = self.client.get(
+        response = self.client.post(
             self.custom_url_for(
-                "playlist_api_v1.import_musicbrainz_collection_detail",
+                "collection.load_collection",
                 collection_mbid="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
             )
             + "?count=0"
@@ -197,9 +207,9 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
         self.assertIn("count", response.json["error"].lower())
 
     def test_collection_detail_negative_offset_returns_400(self):
-        response = self.client.get(
+        response = self.client.post(
             self.custom_url_for(
-                "playlist_api_v1.import_musicbrainz_collection_detail",
+                "collection.load_collection",
                 collection_mbid="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
             )
             + "?offset=-1"
