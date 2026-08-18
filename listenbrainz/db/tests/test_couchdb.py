@@ -48,6 +48,27 @@ class CouchdbTestCase(unittest.TestCase):
         self.assertEqual(deleted, [database])
         self.assertEqual(retained, [])
 
+    def test_fetch_data_with_explicit_connection(self):
+        """ Read functions accept an explicit connection so that stats stored on another
+        couchdb instance can be queried. Simulate the second instance by pointing a
+        connection at the same server with a different database prefix. """
+        other = couchdb.CouchDBConnection(
+            config.COUCHDB_USER, config.COUCHDB_ADMIN_KEY, config.COUCHDB_HOST,
+            config.COUCHDB_PORT, f"{config.COUCHDB_DATABASE_PREFIX}other_"
+        )
+        couchdb.create_database("conn_test_db_20220730")
+        couchdb.insert_data("conn_test_db_20220730", [{"_id": "1", "data": "default"}])
+
+        requests.put(other.get_database_url("conn_test_db_20220731")).raise_for_status()
+        requests.put(f"{other.get_database_url('conn_test_db_20220731')}/1", json={"data": "other"}).raise_for_status()
+
+        self.assertEqual(couchdb.list_databases("conn_test_db"), ["conn_test_db_20220730"])
+        self.assertEqual(couchdb.list_databases("conn_test_db", connection=other), ["conn_test_db_20220731"])
+        self.assertEqual(couchdb.fetch_data("conn_test_db", 1)["data"], "default")
+        self.assertEqual(couchdb.fetch_data("conn_test_db", 1, connection=other)["data"], "other")
+        self.assertEqual(couchdb.fetch_exact_data("conn_test_db_20220731", "1", connection=other)["data"], "other")
+        self.assertIsNone(couchdb.fetch_exact_data("conn_test_db_20220731", "1"))
+
     @patch("listenbrainz.db.couchdb.unlock_database", wraps=couchdb.unlock_database)
     @patch("listenbrainz.db.couchdb.lock_database", wraps=couchdb.lock_database)
     def test_dump(self, mock_lock, mock_unlock):

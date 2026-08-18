@@ -11,6 +11,7 @@ from typing import Iterator, Optional
 
 from clickhouse import config
 from clickhouse.stats.bulk_cache_manager import BulkStatsCacheManager
+from clickhouse.stats.deleted_listens import import_deleted_listens as _import_deleted_listens
 from clickhouse.stats.cache_manager import (
     StatsCacheManager,
     ENTITY_CONFIGS,
@@ -19,6 +20,7 @@ from clickhouse.stats.cache_manager import (
 from clickhouse.stats.ftp import DumpType
 from clickhouse.stats.load_dump import load_dump, load_from_ftp
 from clickhouse.stats.refresh_metadata_cache import refresh_metadata_caches, PG_QUERIES
+from clickhouse.stats.schema import ensure_stats_schema
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +42,7 @@ def _raise_on_dump_errors(result: dict) -> None:
         raise RuntimeError(f"{len(errors)} parquet file(s) failed to load: {examples}")
 
 
-def _load_dump_from_path(dump_path: str, dump_type: str, workers: int = 4) -> list[dict]:
+def _load_dump_from_path(dump_path: str, dump_type: str, workers: int = 4, replace: bool = False) -> list[dict]:
     """
     Load a Parquet dump into ClickHouse listens table.
 
@@ -48,6 +50,7 @@ def _load_dump_from_path(dump_path: str, dump_type: str, workers: int = 4) -> li
         dump_path: Path to directory containing Parquet files
         dump_type: Dump type label to report in the result message.
         workers: Number of parallel workers for loading
+        replace: Truncate listens, daily stats and cache state before loading.
 
     Returns:
         List of result messages for the response queue
@@ -56,6 +59,7 @@ def _load_dump_from_path(dump_path: str, dump_type: str, workers: int = 4) -> li
         result = load_dump(
             directory=dump_path,
             workers=workers,
+            replace=replace,
             **_ch_kwargs(),
         )
         _raise_on_dump_errors(result)
@@ -65,6 +69,8 @@ def _load_dump_from_path(dump_path: str, dump_type: str, workers: int = 4) -> li
             'status': 'success',
             'dump_path': dump_path,
             'dump_id': None,
+            'load_id': result['load_id'],
+            'replace': replace,
             'total_inserted': result['total_inserted'],
             'files_completed': result['files_completed'],
         }]
@@ -73,9 +79,14 @@ def _load_dump_from_path(dump_path: str, dump_type: str, workers: int = 4) -> li
         return [{'type': 'clk_dump_imported', 'dump_type': dump_type, 'status': 'error', 'error': str(e)}]
 
 
-def load_full_dump(dump_path: str, workers: int = 4) -> list[dict]:
-    """Load a full Parquet dump into ClickHouse listens table."""
-    return _load_dump_from_path(dump_path, "full", workers)
+def load_full_dump(dump_path: str, workers: int = 4, replace: bool = True) -> list[dict]:
+    """Load a full Parquet dump into ClickHouse listens table.
+
+    By default replaces the existing listens / stats (full dump semantics); pass
+    replace=False to merge into the existing data instead (already present
+    listens are skipped).
+    """
+    return _load_dump_from_path(dump_path, "full", workers, replace=replace)
 
 
 def load_incremental_dump(dump_path: str, workers: int = 4) -> list[dict]:
@@ -94,13 +105,41 @@ def _ch_kwargs() -> dict:
     }
 
 
-def import_full_dump(workers: int = 4) -> list[dict]:
-    """Download latest full listens dump from FTP and load into ClickHouse."""
+def init_schema(recreate_views: bool = False) -> list[dict]:
+    """
+    Create the ClickHouse stats schema (functions, tables, materialized views).
+
+    Args:
+        recreate_views: drop and recreate the materialized views. Use after a view
+            definition changes, while no load or metadata refresh is running.
+
+    Returns:
+        List of result messages for the response queue
+    """
     try:
-        result = load_from_ftp(dump_type=DumpType.FULL, workers=workers, **_ch_kwargs())
+        import clickhouse_connect
+        ch_client = clickhouse_connect.get_client(**_ch_kwargs())
+        try:
+            ensure_stats_schema(ch_client, recreate_views=recreate_views)
+        finally:
+            ch_client.close()
+        return [{'type': 'clk_schema_initialized', 'status': 'success', 'recreate_views': recreate_views}]
+    except Exception as e:
+        logger.error("Error initializing ClickHouse schema: %s", str(e), exc_info=True)
+        return [{'type': 'clk_schema_initialized', 'status': 'error', 'error': str(e)}]
+
+
+def import_full_dump(workers: int = 4, replace: bool = True) -> list[dict]:
+    """Download latest full listens dump from FTP and load into ClickHouse.
+
+    By default replaces the existing listens / stats (full dump semantics).
+    """
+    try:
+        result = load_from_ftp(dump_type=DumpType.FULL, workers=workers, replace=replace, **_ch_kwargs())
         _raise_on_dump_errors(result)
         return [{'type': 'clk_dump_imported', 'dump_type': 'full', 'status': 'success',
-                 'dump_id': result['dump_id'], 'total_inserted': result['total_inserted'],
+                 'dump_id': result['dump_id'], 'load_id': result['load_id'], 'replace': replace,
+                 'total_inserted': result['total_inserted'],
                  'files_completed': result['files_completed']}]
     except Exception as e:
         logger.error("Error importing full dump: %s", str(e), exc_info=True)
@@ -118,14 +157,43 @@ def import_incremental_dump(workers: int = 4) -> list[dict]:
         List of result messages for the response queue
     """
     try:
-        result = load_from_ftp(dump_type=DumpType.INCREMENTAL, workers=workers, **_ch_kwargs())
+        result = load_from_ftp(dump_type=DumpType.INCREMENTAL, workers=workers, replace=False, **_ch_kwargs())
         _raise_on_dump_errors(result)
         return [{'type': 'clk_dump_imported', 'dump_type': 'incremental', 'status': 'success',
-                 'dump_id': result['dump_id'], 'total_inserted': result['total_inserted'],
+                 'dump_id': result['dump_id'], 'load_id': result['load_id'], 'replace': False,
+                 'total_inserted': result['total_inserted'],
                  'files_completed': result['files_completed']}]
     except Exception as e:
         logger.error("Error importing incremental dump: %s", str(e), exc_info=True)
         return [{'type': 'clk_dump_imported', 'dump_type': 'incremental', 'status': 'error', 'error': str(e)}]
+
+
+def import_deleted_listens(batch_size: int = 10_000) -> list[dict]:
+    """
+    Import listen deletions from the ListenBrainz timescale database and apply them
+    to ClickHouse listens and daily stats.
+
+    Args:
+        batch_size: Number of rows to fetch from timescale per batch.
+
+    Returns:
+        List of result messages for the response queue
+    """
+    try:
+        ts_dsn = config.TIMESCALE_DSN
+        if not ts_dsn:
+            raise ValueError("TIMESCALE_DSN is not configured")
+
+        import clickhouse_connect
+        ch_client = clickhouse_connect.get_client(**_ch_kwargs())
+        try:
+            summary = _import_deleted_listens(ts_dsn, ch_client, batch_size=batch_size)
+        finally:
+            ch_client.close()
+        return [{'type': 'clk_deleted_listens_imported', 'status': 'success', **summary}]
+    except Exception as e:
+        logger.error("Error importing deleted listens: %s", str(e), exc_info=True)
+        return [{'type': 'clk_deleted_listens_imported', 'status': 'error', 'error': str(e)}]
 
 
 def run_hourly_stats_job(

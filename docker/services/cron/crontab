@@ -20,6 +20,16 @@ MAILTO=""
 # Twice a month, compact listens in spark cluster
 15 1 1,16 * * root flock -x /var/lock/lb-incremental-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py spark request_compact_listens >> /logs/compact_listens.log 2>&1
 
+# ClickHouse stats pipeline. All of these are requests on a single FIFO queue consumed one at a
+# time, so enqueue order is execution order: import the incremental dump (blocking on the dump
+# lock like the spark import above), apply listen deletions, then refresh the MB metadata tables
+# and recompute stats for users with new listens.
+30 1 * * * root flock -x /var/lock/lb-incremental-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py clickhouse import_incremental_dump >> /logs/clickhouse.log 2>&1
+35 1 * * * root /usr/local/bin/python /code/listenbrainz/manage.py clickhouse import_deleted_listens >> /logs/clickhouse.log 2>&1
+30 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py clickhouse cron_request_all_stats >> /logs/clickhouse.log 2>&1
+# Weekly full recompute of the ClickHouse stats into fresh CouchDB databases
+0 5 * * 0 root /usr/local/bin/python /code/listenbrainz/manage.py clickhouse request_bulk_full_stats_refresh >> /logs/clickhouse.log 2>&1
+
 # After the daily dumping is done, make sure everything turned out ok, otherwise mail the observability list.
 0 2 * * * root flock -x /var/lock/lb-full-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py dump check_dump_ages >> /logs/check_dumps.log 2>&1
 

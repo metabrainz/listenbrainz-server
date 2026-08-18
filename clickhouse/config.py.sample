@@ -1,9 +1,9 @@
-# ClickHouse connection settings
-CLICKHOUSE_HOST = "localhost"
+# ClickHouse connection settings ("clickhouse" when using the docker compose clickhouse profile)
+CLICKHOUSE_HOST = "clickhouse"
 CLICKHOUSE_PORT = 8123
 CLICKHOUSE_DATABASE = "default"
-CLICKHOUSE_USERNAME = "default"
-CLICKHOUSE_PASSWORD = ""
+CLICKHOUSE_USERNAME = "listenbrainz"
+CLICKHOUSE_PASSWORD = "listenbrainz"
 
 # RabbitMQ connection settings
 RABBITMQ_HOSTS = [("rabbitmq", 5672)]
@@ -22,10 +22,15 @@ CLICKHOUSE_RESULT_EXCHANGE = "clickhouse_result"
 # MusicBrainz PostgreSQL DSN (for metadata cache refresh)
 MUSICBRAINZ_PG_DSN = "postgresql://musicbrainz:password@localhost:5432/musicbrainz_db"
 
+# ListenBrainz timescale DSN (for importing listen deletions)
+TIMESCALE_DSN = "postgresql://listenbrainz_ts:listenbrainz_ts@lb_db/listenbrainz_ts"
+
 # FTP settings for dump download
 FTP_SERVER_URI = "ftp.eu.metabrainz.org"
 FTP_LISTENS_DIR = "/pub/musicbrainz/listenbrainz/"
 
 # Stats settings
-STATS_COUCH_DB_PREFIX = "clk"
+# Optional prefix for the CouchDB stats databases. Empty: same names as the spark stats
+# ({entity}_{range}_{YYYYMMDD}), which is what the stats API expects on the ClickHouse CouchDB instance.
+STATS_COUCH_DB_PREFIX = ""
 STATS_TOP_N = 1000  # Number of top entities to cache per user

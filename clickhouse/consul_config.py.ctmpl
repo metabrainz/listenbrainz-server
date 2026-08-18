@@ -56,10 +56,24 @@ MUSICBRAINZ_PG_DSN = "SERVICEDOESNOTEXIST_pgbouncer-slave_pgbouncer-master"
 MUSICBRAINZ_PG_DSN = ""
 {{end}}
 
+# ListenBrainz timescale DSN for importing listen deletions.
+{{- $listenstore_up := (keyOrDefault (printf "docker-server-configs/LB/config.%s.json/listenstore_up" (env "DEPLOY_ENV")) "false") }}
+{{- if $listenstore_up | parseBool}}
+    {{if service "timescale-listenbrainz"}}
+    {{with index (service "timescale-listenbrainz") 0}}
+TIMESCALE_DSN = """postgresql://{{template "KEY" "timescale_lb_user"}}:{{template "KEY" "timescale_lb_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "timescale_db_name"}}"""
+    {{end}}
+    {{else}}
+TIMESCALE_DSN = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
+    {{end}}
+{{else}}
+TIMESCALE_DSN = ""
+{{end}}
+
 # FTP settings for dump download
 FTP_SERVER_URI = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/ftp_server_uri" (env "DEPLOY_ENV")) "ftp.eu.metabrainz.org" }}'''
 FTP_LISTENS_DIR = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/ftp_listens_dir" (env "DEPLOY_ENV")) "/pub/musicbrainz/listenbrainz/" }}'''
 
 # Stats settings
-STATS_COUCH_DB_PREFIX = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/stats_couch_db_prefix" (env "DEPLOY_ENV")) "clk" }}'''
+STATS_COUCH_DB_PREFIX = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/stats_couch_db_prefix" (env "DEPLOY_ENV")) "" }}'''
 STATS_TOP_N = {{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/stats_top_n" (env "DEPLOY_ENV")) "1000" }}

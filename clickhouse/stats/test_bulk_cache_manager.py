@@ -197,7 +197,7 @@ class BulkRunFullRefreshTestCase(unittest.TestCase):
         for start_msg in starts:
             self.assertRegex(
                 start_msg["database"],
-                r"^clk_artists_[a-z_]+_\d{8}$",
+                r"^artists_[a-z_]+_\d{8}$",
             )
         for data_msg in data:
             self.assertEqual(data_msg["entity"], "artists")

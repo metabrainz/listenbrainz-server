@@ -33,7 +33,7 @@ class StatsCacheManagerMessageTestCase(unittest.TestCase):
             },
             from_ts=1,
             to_ts=2,
-            database_prefix="clk_recordings_all_time",
+            database_prefix="recordings_all_time",
         ))
 
         self.assertEqual(len(messages), 1)
@@ -42,7 +42,7 @@ class StatsCacheManagerMessageTestCase(unittest.TestCase):
         self.assertEqual(messages[0]["stats_range"], "all_time")
         self.assertEqual(messages[0]["from_ts"], 1)
         self.assertEqual(messages[0]["to_ts"], 2)
-        self.assertEqual(messages[0]["database_prefix"], "clk_recordings_all_time")
+        self.assertEqual(messages[0]["database_prefix"], "recordings_all_time")
         self.assertNotIn("database", messages[0])
         self.assertEqual(messages[0]["data"][0]["user_id"], 42)
         self.assertEqual(messages[0]["data"][0]["count"], 1)
@@ -53,22 +53,22 @@ class StatsCacheManagerMessageTestCase(unittest.TestCase):
 
         self.assertEqual(
             manager.get_stats_database_prefix("recordings", "all_time"),
-            "clk_recordings_all_time",
+            "recordings_all_time",
         )
         self.assertRegex(
             manager.get_stats_database_name("recordings", "all_time", with_timestamp=True),
-            r"^clk_recordings_all_time_\d{8}$",
+            r"^recordings_all_time_\d{8}$",
         )
 
     def test_database_lifecycle_messages_are_clickhouse_stats_messages(self):
         manager = StatsCacheManager(CacheConfig(), RECORDING_CONFIG)
 
         self.assertEqual(
-            manager.generate_start_message("all_time", "clk_recordings_all_time_20260523")["type"],
+            manager.generate_start_message("all_time", "recordings_all_time_20260523")["type"],
             "clk_stats_database_start",
         )
         self.assertEqual(
-            manager.generate_end_message("all_time", "clk_recordings_all_time_20260523")["type"],
+            manager.generate_end_message("all_time", "recordings_all_time_20260523")["type"],
             "clk_stats_database_end",
         )
 

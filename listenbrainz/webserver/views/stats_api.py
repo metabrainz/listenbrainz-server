@@ -26,8 +26,13 @@ from listenbrainz.webserver.models import ArtistActivityArtistEntry, ArtistActiv
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
                                                     get_non_negative_param, is_valid_uuid)
+from listenbrainz.webserver.utils import parse_boolean_arg
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
+
+# Stats for these entities are also computed by the ClickHouse pipeline and can be
+# served from it by passing ``clickhouse=true`` to the corresponding endpoints.
+CLICKHOUSE_ENTITIES = {"artists", "recordings", "release_groups"}
 
 
 @stats_api_bp.get("/user/<mb_username:user_name>/artists")
@@ -84,6 +89,9 @@ def get_artist(user_name):
     :param range: Optional, time interval for which statistics should be returned, possible values are
         :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
     :type range: ``str``
+    :param clickhouse: Optional, if ``true`` serve the statistics computed by the ClickHouse stats
+        pipeline instead of the Spark ones. Defaults to ``false``.
+    :type clickhouse: ``bool``
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
     :statuscode 400: Bad request, check ``response['error']`` for more details
@@ -223,6 +231,9 @@ def get_release_group(user_name):
     :param range: Optional, time interval for which statistics should be returned, possible values are
         :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
     :type range: ``str``
+    :param clickhouse: Optional, if ``true`` serve the statistics computed by the ClickHouse stats
+        pipeline instead of the Spark ones. Defaults to ``false``.
+    :type clickhouse: ``bool``
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
     :statuscode 400: Bad request, check ``response['error']`` for more details
@@ -290,6 +301,9 @@ def get_recording(user_name):
     :param range: Optional, time interval for which statistics should be returned, possible values are
         :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
     :type range: ``str``
+    :param clickhouse: Optional, if ``true`` serve the statistics computed by the ClickHouse stats
+        pipeline instead of the Spark ones. Defaults to ``false``.
+    :type clickhouse: ``bool``
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
     :statuscode 400: Bad request, check ``response['error']`` for more details
@@ -299,13 +313,22 @@ def get_recording(user_name):
     return _get_entity_stats(user_name, "recordings", "total_recording_count")
 
 
+def _use_clickhouse_stats(entity: str) -> bool:
+    """ Whether the request asked for the ClickHouse computed stats for the given entity. """
+    clickhouse = parse_boolean_arg("clickhouse", default=False)
+    if clickhouse and entity not in CLICKHOUSE_ENTITIES:
+        raise APIBadRequest(f"ClickHouse stats are not available for {entity}")
+    return clickhouse
+
+
 def _get_entity_stats(user_name: str, entity: str, count_key: str, entire_range: bool = False):
     user, stats_range = _validate_stats_user_params(user_name)
 
     offset = get_non_negative_param("offset", default=0)
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
+    clickhouse = _use_clickhouse_stats(entity)
 
-    stats = db_stats.get(user["id"], entity, stats_range, EntityRecord)
+    stats = db_stats.get(user["id"], entity, stats_range, EntityRecord, clickhouse=clickhouse)
     if stats is None:
         raise APINoContent('')
 
@@ -325,7 +348,8 @@ def _get_entity_stats(user_name: str, entity: str, count_key: str, entire_range:
 
 def get_entity_stats_last_updated(user_name: str, entity: str, count_key: str):
     user, stats_range = _validate_stats_user_params(user_name)
-    stats = db_stats.get(user["id"], entity, stats_range, EntityRecord)
+    clickhouse = _use_clickhouse_stats(entity)
+    stats = db_stats.get(user["id"], entity, stats_range, EntityRecord, clickhouse=clickhouse)
     if stats is None:
         return None
     return stats.last_updated

@@ -44,12 +44,23 @@ def _send_stats_request(query: str, entities: tuple[str], batch_size: int):
         send_request_to_clickhouse(query, entity=entity, batch_size=batch_size)
 
 
+@cli.command(name="init_schema")
+@click.option("--recreate-views", is_flag=True, default=False,
+              help="Drop and recreate the materialized views (only after a view definition changes, "
+                   "while no load or metadata refresh is running).")
+def init_schema(recreate_views: bool):
+    """Create the ClickHouse stats schema (tables, functions, materialized views)."""
+    send_request_to_clickhouse("clickhouse.schema.init", recreate_views=recreate_views)
+
+
 @cli.command(name="load_full_dump")
 @click.option("--dump-path", required=True, help="Path to directory containing Parquet files")
 @click.option("--workers", type=int, default=4, help="Number of parallel workers for loading")
-def load_full_dump(dump_path: str, workers: int):
+@click.option("--replace/--no-replace", default=True, show_default=True,
+              help="Truncate listens, daily stats and cache state before loading.")
+def load_full_dump(dump_path: str, workers: int, replace: bool):
     """Load a full Parquet dump into ClickHouse listens table."""
-    send_request_to_clickhouse("clickhouse.load_full_dump", dump_path=dump_path, workers=workers)
+    send_request_to_clickhouse("clickhouse.load_full_dump", dump_path=dump_path, workers=workers, replace=replace)
 
 
 @cli.command(name="load_incremental_dump")
@@ -62,9 +73,18 @@ def load_incremental_dump(dump_path: str, workers: int):
 
 @cli.command(name="import_full_dump")
 @click.option("--workers", type=int, default=4, help="Number of parallel workers for loading")
-def import_full_dump(workers: int):
+@click.option("--replace/--no-replace", default=True, show_default=True,
+              help="Truncate listens, daily stats and cache state before loading.")
+def import_full_dump(workers: int, replace: bool):
     """Download latest full dump from FTP and import into ClickHouse."""
-    send_request_to_clickhouse("clickhouse.import_full_dump", workers=workers)
+    send_request_to_clickhouse("clickhouse.import_full_dump", workers=workers, replace=replace)
+
+
+@cli.command(name="import_deleted_listens")
+@click.option("--batch-size", type=int, default=10000, help="Rows to fetch from timescale per batch")
+def import_deleted_listens(batch_size: int):
+    """Import listen deletions from timescale and apply them to ClickHouse listens and stats."""
+    send_request_to_clickhouse("clickhouse.import_deleted_listens", batch_size=batch_size)
 
 
 @cli.command(name="import_incremental_dump")
