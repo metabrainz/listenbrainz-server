@@ -91,7 +91,14 @@ class BaseLastfmImporter(ListensImporter):
         response = session.get(self.api_base_url, params=params)
         match response.status_code:
             case 200:
-                return response.json()
+                data = response.json()
+                # Libre.fm returns a single dict instead of a list when there is
+                # only one track; normalize to always be a list.
+                if "recenttracks" in data:
+                    tracks = data["recenttracks"].get("track")
+                    if isinstance(tracks, dict):
+                        data["recenttracks"]["track"] = [tracks]
+                return data
             case 404:
                 raise LastfmUserNotRetryableException("Last.FM user with username %s not found" % (params["user"],))
             case 429:
