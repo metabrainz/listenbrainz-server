@@ -206,6 +206,31 @@ def handle_stats_error(message):
     )
 
 
+def handle_deleted_listens_imported(message):
+    """Handle notification that listen deletions were applied to ClickHouse."""
+    status = message.get("status", "unknown")
+    if status == "success":
+        current_app.logger.info(
+            "ClickHouse deleted listens import complete: %d deleted listens (%d removed), "
+            "%d deleted user histories (%d listens removed)",
+            message.get("deleted_listens_imported", 0), message.get("deleted_listens_removed", 0),
+            message.get("deleted_user_histories_imported", 0), message.get("deleted_user_listens_removed", 0),
+        )
+    else:
+        current_app.logger.error("ClickHouse deleted listens import failed: %s", message.get("error"))
+
+
+def handle_schema_initialized(message):
+    """Handle notification that the ClickHouse schema was initialized."""
+    status = message.get("status", "unknown")
+    if status == "success":
+        current_app.logger.info(
+            "ClickHouse schema initialized (recreate_views=%s)", message.get("recreate_views")
+        )
+    else:
+        current_app.logger.error("ClickHouse schema initialization failed: %s", message.get("error"))
+
+
 def handle_metadata_cache_refresh(message):
     """Handle notification that a metadata cache refresh completed."""
     status = message.get("status", "unknown")
@@ -226,6 +251,8 @@ RESPONSE_HANDLERS = {
     "clk_stats_complete": handle_stats_complete,
     "clk_stats_error": handle_stats_error,
     "clk_metadata_cache_refresh": handle_metadata_cache_refresh,
+    "clk_schema_initialized": handle_schema_initialized,
+    "clk_deleted_listens_imported": handle_deleted_listens_imported,
 }
 
 

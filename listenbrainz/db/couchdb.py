@@ -14,11 +14,39 @@ DATABASE_NAME_PATTERN = re.compile(r"([a-zA-Z]+)_(\w+)_(\d{8})")
 
 DATABASE_LOCK_FILE = "LOCK"
 
-_user = None
-_admin_key = None
-_host = None
-_port = None
-_database_prefix = ""
+
+class CouchDBConnection:
+    """ Connection details for one CouchDB instance.
+
+    The module level functions below operate on the default connection configured
+    via ``init``. Functions that support reading from another CouchDB instance
+    (for instance the one the ClickHouse result reader writes stats to) accept an
+    optional ``connection`` argument.
+    """
+
+    def __init__(self, user, password, host, port, database_prefix):
+        self.user = user
+        self.admin_key = password
+        self.host = host
+        self.port = port
+        self.database_prefix = database_prefix or ""
+
+    def get_base_url(self):
+        return f"http://{self.user}:{self.admin_key}@{self.host}:{self.port}"
+
+    def add_database_prefix(self, database: str):
+        return f"{self.database_prefix}{database}"
+
+    def remove_database_prefix(self, database: str):
+        if self.database_prefix and database.startswith(self.database_prefix):
+            return database[len(self.database_prefix):]
+        return database
+
+    def get_database_url(self, database: str):
+        return f"{self.get_base_url()}/{self.add_database_prefix(database)}"
+
+
+_default_connection: CouchDBConnection | None = None
 
 
 def init(user, password, host, port, database_prefix):
@@ -32,30 +60,28 @@ def init(user, password, host, port, database_prefix):
         port: couchdb service port
         database_prefix: prefix to apply to all application couchdb database names
     """
-    global _user, _admin_key, _host, _port, _database_prefix
-    _user = user
-    _admin_key = password
-    _host = host
-    _port = port
-    _database_prefix = database_prefix
+    global _default_connection
+    _default_connection = CouchDBConnection(user, password, host, port, database_prefix)
+
+
+def _get_connection(connection: CouchDBConnection | None = None) -> CouchDBConnection:
+    return connection or _default_connection
 
 
 def get_base_url():
-    return f"http://{_user}:{_admin_key}@{_host}:{_port}"
+    return _get_connection().get_base_url()
 
 
 def _add_database_prefix(database: str):
-    return f"{_database_prefix}{database}"
+    return _get_connection().add_database_prefix(database)
 
 
 def _remove_database_prefix(database: str):
-    if _database_prefix and database.startswith(_database_prefix):
-        return database[len(_database_prefix):]
-    return database
+    return _get_connection().remove_database_prefix(database)
 
 
 def _get_database_url(database: str):
-    return f"{get_base_url()}/{_add_database_prefix(database)}"
+    return _get_connection().get_database_url(database)
 
 
 def create_database(database: str):
@@ -72,7 +98,7 @@ def create_database(database: str):
     response.raise_for_status()
 
 
-def list_databases(stat_prefix: str) -> list[str]:
+def list_databases(stat_prefix: str, connection: CouchDBConnection | None = None) -> list[str]:
     """ List all couchdb database whose name starts with the given stat prefix
     sorted in the descending order of creation.
 
@@ -81,15 +107,20 @@ def list_databases(stat_prefix: str) -> list[str]:
     name and YYYYMMDD is the date. After statistics for the day have been inserted, we want to get
     rid of the older database for that stat. This method looks up all the databases whose name
     starts with the given stat prefix.
+
+    Args:
+        stat_prefix: the string to match database names with
+        connection: the couchdb instance to query, defaults to the one configured via ``init``
     """
-    databases_url = f"{get_base_url()}/_all_dbs"
+    connection = _get_connection(connection)
+    databases_url = f"{connection.get_base_url()}/_all_dbs"
     response = requests.get(databases_url)
     response.raise_for_status()
     all_databases = response.json()
 
-    database_prefixed_stat_prefix = _add_database_prefix(stat_prefix)
+    database_prefixed_stat_prefix = connection.add_database_prefix(stat_prefix)
     databases = [
-        _remove_database_prefix(database)
+        connection.remove_database_prefix(database)
         for database in all_databases
         if database.startswith(database_prefixed_stat_prefix)
     ]
@@ -127,7 +158,7 @@ def delete_database(prefix: str):
     return deleted, retained
 
 
-def fetch_data(prefix: str, user_id: int):
+def fetch_data(prefix: str, user_id: int, connection: CouchDBConnection | None = None):
     """ Retrieve data from couchdb for given stat type and user.
 
     For each stat type, a database is created daily. We do not have a way to do this atomically so the latest
@@ -137,11 +168,13 @@ def fetch_data(prefix: str, user_id: int):
     Args:
          prefix: the string to match database names with
          user_id: the user to retrieve data for
+         connection: the couchdb instance to query, defaults to the one configured via ``init``
     """
-    databases = list_databases(prefix)
+    connection = _get_connection(connection)
+    databases = list_databases(prefix, connection=connection)
 
     for database in databases:
-        document_url = f"{_get_database_url(database)}/{user_id}"
+        document_url = f"{connection.get_database_url(database)}/{user_id}"
         response = requests.get(document_url)
         if response.status_code == 404:
             continue
@@ -151,13 +184,14 @@ def fetch_data(prefix: str, user_id: int):
     return None
 
 
-def fetch_exact_data(database: str, document_id: str):
+def fetch_exact_data(database: str, document_id: str, connection: CouchDBConnection | None = None):
     """ Retrieve data from couchdb for the exact given database and document id.
     Args:
          database: the database name to retrieve data from
          document_id: the document_id to retrieve data for
+         connection: the couchdb instance to query, defaults to the one configured via ``init``
     """
-    document_url = f"{_get_database_url(database)}/{document_id}"
+    document_url = f"{_get_connection(connection).get_database_url(database)}/{document_id}"
     response = requests.get(document_url)
     if response.status_code == 404:
         return None

@@ -9,6 +9,7 @@ volumes:
   # The contents of /root, so that bash and ipython can store history
   web_home:
   couchdb:
+  clickhouse:
 
 services:
 
@@ -43,6 +44,24 @@ services:
       - rabbitmq:/var/lib/rabbitmq:z
     ports:
       - "127.0.0.1:25672:15672"
+
+  # ClickHouse stats pipeline. Optional: start with `./develop.sh --profile clickhouse up`.
+  # clickhouse/config.py.sample already points at this service.
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.3
+    profiles: [clickhouse]
+    environment:
+      CLICKHOUSE_USER: listenbrainz
+      CLICKHOUSE_PASSWORD: listenbrainz
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - clickhouse:/var/lib/clickhouse:z
+    ports:
+      - "127.0.0.1:8123:8123"
+      - "127.0.0.1:9000:9000"
 
   web:
     build:
@@ -104,6 +123,30 @@ services:
       - redis
       - lb_db
       - rabbitmq
+
+  clickhouse_request_consumer:
+    image: web
+    profiles: [clickhouse]
+    command: python3 -m "clickhouse.request_consumer"
+    volumes:
+      - ..:/code/listenbrainz:z
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
+    depends_on:
+      - clickhouse
+      - rabbitmq
+
+  clickhouse_reader:
+    image: web
+    profiles: [clickhouse]
+    command: python3 -m "listenbrainz.clickhouse.clickhouse_reader"
+    volumes:
+      - ..:/code/listenbrainz:z
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
+    depends_on:
+      - redis
+      - lb_db
+      - rabbitmq
+      - couchdb
 
   spotify_reader:
     image: web

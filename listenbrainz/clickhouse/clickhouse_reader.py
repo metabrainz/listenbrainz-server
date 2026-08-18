@@ -24,17 +24,27 @@ PREFETCH_COUNT = 100
 
 
 def init_clickhouse_reader_couchdb(app):
-    """Initialize CouchDB for the ClickHouse result reader."""
+    """Initialize CouchDB for the ClickHouse result reader.
+
+    The reader writes to the ClickHouse stats CouchDB instance (same database names as
+    the Spark stats, different instance), so it overrides the default couchdb connection
+    set up by create_app.
+    """
+    host = app.config["CLICKHOUSE_READER_COUCHDB_HOST"]
+    if not host or str(host).startswith(("KEYDOESNOTEXIST", "SERVICEDOESNOTEXIST")):
+        raise RuntimeError(
+            f"CLICKHOUSE_READER_COUCHDB_HOST is not configured ({host!r}), cannot start ClickHouse reader"
+        )
     couchdb.init(
         app.config["CLICKHOUSE_READER_COUCHDB_USER"],
         app.config["CLICKHOUSE_READER_COUCHDB_ADMIN_KEY"],
-        app.config["CLICKHOUSE_READER_COUCHDB_HOST"],
+        host,
         app.config["CLICKHOUSE_READER_COUCHDB_PORT"],
+        app.config.get("COUCHDB_DATABASE_PREFIX", ""),
     )
     app.logger.info(
         "Initialized ClickHouse reader CouchDB connection: %s:%s",
-        app.config["CLICKHOUSE_READER_COUCHDB_HOST"],
-        app.config["CLICKHOUSE_READER_COUCHDB_PORT"],
+        host, app.config["CLICKHOUSE_READER_COUCHDB_PORT"],
     )
 
 

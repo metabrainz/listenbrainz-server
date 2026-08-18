@@ -12,6 +12,34 @@ class ClickHouseRequestManageTestCase(unittest.TestCase):
         self.runner = CliRunner()
 
     @mock.patch("listenbrainz.clickhouse.request_manage.send_request_to_clickhouse")
+    def test_init_schema(self, mock_send):
+        result = self.runner.invoke(request_manage.cli, ["init_schema"])
+        self.assertEqual(result.exit_code, 0)
+        mock_send.assert_called_once_with("clickhouse.schema.init", recreate_views=False)
+
+        mock_send.reset_mock()
+        result = self.runner.invoke(request_manage.cli, ["init_schema", "--recreate-views"])
+        self.assertEqual(result.exit_code, 0)
+        mock_send.assert_called_once_with("clickhouse.schema.init", recreate_views=True)
+
+    @mock.patch("listenbrainz.clickhouse.request_manage.send_request_to_clickhouse")
+    def test_import_full_dump_replace_flag(self, mock_send):
+        result = self.runner.invoke(request_manage.cli, ["import_full_dump"])
+        self.assertEqual(result.exit_code, 0)
+        mock_send.assert_called_once_with("clickhouse.import_full_dump", workers=4, replace=True)
+
+        mock_send.reset_mock()
+        result = self.runner.invoke(request_manage.cli, ["import_full_dump", "--no-replace", "--workers", "2"])
+        self.assertEqual(result.exit_code, 0)
+        mock_send.assert_called_once_with("clickhouse.import_full_dump", workers=2, replace=False)
+
+    @mock.patch("listenbrainz.clickhouse.request_manage.send_request_to_clickhouse")
+    def test_import_deleted_listens(self, mock_send):
+        result = self.runner.invoke(request_manage.cli, ["import_deleted_listens", "--batch-size", "500"])
+        self.assertEqual(result.exit_code, 0)
+        mock_send.assert_called_once_with("clickhouse.import_deleted_listens", batch_size=500)
+
+    @mock.patch("listenbrainz.clickhouse.request_manage.send_request_to_clickhouse")
     def test_request_hourly_stats_defaults_to_all_entities(self, mock_send):
         result = self.runner.invoke(
             request_manage.cli,

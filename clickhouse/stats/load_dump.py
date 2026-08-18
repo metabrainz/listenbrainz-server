@@ -7,13 +7,21 @@ Supports three sources:
 - Local dump archive (.tar / .tar.zst): load_from_local(base_dir, ...)
 - FTP download: load_from_ftp(dump_type, ...)
 
-Parquet files are inserted into raw_listens in parallel. Once all files are
-loaded, a single INSERT...SELECT joins raw_listens against the metadata
-tables once and populates the listens table. Joining once at the end (rather
-than per batch) collapses metadata-table scans from N-per-batch to 1-per-load.
+Parquet files are inserted into raw_listens in parallel under a per-load
+``load_id`` partition. Once all files are loaded, INSERT...SELECT joins that
+partition against the metadata tables and populates the listens table, then the
+partition is dropped. Joining once at the end (rather than per batch) collapses
+metadata-table scans from N-per-batch to 1-per-load; scoping to the load's
+partition means earlier loads are never re-processed.
 
-NOTE: the end-of-load processing reads the entire raw_listens table. Truncate
-listens before a fresh load to avoid duplicating already-processed rows.
+Listens already present in ``listens`` (same user_id, listened_at,
+recording_msid), listens deleted in LB (``deleted_listens``) and listens of
+users whose history was deleted (``deleted_user_listen_history``) are skipped,
+so re-delivered listens (overlapping dumps, retries) are counted once and the
+daily stats materialized views stay correct.
+
+A full dump should be loaded with ``replace=True`` which truncates listens,
+the daily stats and the cache state first.
 
 The local and FTP paths mirror the patterns in listenbrainz_spark/dump/:
   - dump directories: listenbrainz-dump-{id}-{date}-{tod}-{full|incremental}/
@@ -46,6 +54,7 @@ LISTENS_TABLE = "listens"
 RAW_LISTENS_TABLE = "raw_listens"
 
 RAW_LISTEN_COLUMNS = [
+    "load_id",
     "listened_at",
     "created",
     "user_id",
@@ -58,7 +67,67 @@ RAW_LISTEN_COLUMNS = [
     "artist_credit_mbids",
 ]
 
-# End-of-load: join raw_listens against the deduped metadata tables once
+# Source rows for one load: the load's raw_listens partition (optionally one user_id
+# bucket of it), minus listens that already exist in `listens`, listens deleted in LB
+# and listens of users whose history was deleted, deduplicated on the listen key
+# (keeping the most recently created copy).
+#
+# The IN-sets are kept small: only users present in the load (bucket) are consulted,
+# and for `listens` only rows within the load's `created` range -- a re-delivered
+# listen has the same `created` as the copy already in `listens`, so nothing outside
+# that range can match. A deleted listen is matched on `created` too (like the Spark
+# pipeline does): a listen deleted and later re-submitted gets a new `created` and
+# must be loaded again.
+RAW_LISTENS_SOURCE = """
+    SELECT
+        r.raw_listen_id AS raw_listen_id,
+        r.listened_at AS listened_at,
+        r.created AS created,
+        r.user_id AS user_id,
+        r.recording_msid AS recording_msid,
+        r.artist_name AS artist_name,
+        r.release_name AS release_name,
+        r.release_mbid AS release_mbid,
+        r.recording_name AS recording_name,
+        r.recording_mbid AS recording_mbid,
+        r.artist_credit_mbids AS artist_credit_mbids
+    FROM raw_listens AS r
+    LEFT JOIN (
+        SELECT user_id, max(max_created) AS max_created
+        FROM deleted_user_listen_history
+        GROUP BY user_id
+    ) AS duh ON r.user_id = duh.user_id
+    WHERE r.load_id = {load_id:String} __CHUNK_FILTER_R__
+      AND r.created > duh.max_created
+      AND (r.user_id, r.listened_at, r.recording_msid) NOT IN (
+            SELECT user_id, listened_at, recording_msid
+            FROM listens
+            WHERE user_id IN (
+                SELECT DISTINCT user_id FROM raw_listens
+                WHERE load_id = {load_id:String} __CHUNK_FILTER__
+            )
+              AND created >= (
+                SELECT min(created) FROM raw_listens
+                WHERE load_id = {load_id:String} __CHUNK_FILTER__
+              )
+              AND created <= (
+                SELECT max(created) FROM raw_listens
+                WHERE load_id = {load_id:String} __CHUNK_FILTER__
+              )
+      )
+      AND (r.user_id, r.listened_at, r.recording_msid, r.created) NOT IN (
+            SELECT user_id, listened_at, recording_msid, created
+            FROM deleted_listens
+            WHERE user_id IN (
+                SELECT DISTINCT user_id FROM raw_listens
+                WHERE load_id = {load_id:String} __CHUNK_FILTER__
+            )
+      )
+    ORDER BY r.user_id, r.listened_at, r.recording_msid, r.created DESC
+    LIMIT 1 BY r.user_id, r.listened_at, r.recording_msid
+"""
+
+# End-of-load: join the load's raw listens against the deduped metadata tables once
 # (no per-batch IN-subquery scans) and populate listens. Grouping by the
 # raw_listens UUID is small (16 bytes) and uniquely identifies each source
 # row, so all other listen-level columns can be collapsed via any().
@@ -142,7 +211,7 @@ FROM (
                     recording.artist_credit_mbids
                 ) AS effective_artist_mbids,
                 if(recording.release_mbid != '', recording.release_mbid, r.release_mbid) AS effective_release_mbid
-            FROM {RAW_LISTENS_TABLE} AS r
+            FROM (__RAW_LISTENS_SOURCE__) AS r
             -- Exclude empty *_mbid rows from the dedup subqueries. The metadata
             -- tables hold a row per distinct artist/recording/release without an
             -- MBID; collapsing them via LIMIT 1 BY '' would pick ONE arbitrary row
@@ -217,6 +286,33 @@ PROCESS_RAW_LISTENS_SETTINGS = {
 # keeps each bucket's spill state under ~1 GB on full dumps; bump if you
 # still see NOT_ENOUGH_SPACE on _tmp_default.
 PROCESS_RAW_LISTENS_CHUNKS = 16
+
+# Tables holding derived listen data. A full dump load with replace=True truncates
+# them so the dump becomes the sole source of truth again. deleted_listens /
+# deleted_user_listen_history are kept: they apply to the new data as well.
+REPLACE_TRUNCATE_TABLES = [
+    LISTENS_TABLE,
+    "user_artist_stats_daily",
+    "user_recording_stats_daily",
+    "user_release_group_stats_daily",
+    "user_stats_cache_state",
+    "stats_cache_state",
+]
+
+
+def build_process_raw_listens_query(chunks: int = 1, chunk: int = 0) -> str:
+    """Return the INSERT...SELECT populating listens from one load's raw_listens.
+
+    The load is selected at execution time via the ``load_id`` query parameter.
+    With ``chunks > 1`` only the ``user_id % chunks = chunk`` bucket is processed.
+    """
+    chunk_filter = f"AND user_id % {chunks} = {chunk}" if chunks > 1 else ""
+    source = (
+        RAW_LISTENS_SOURCE
+        .replace("__CHUNK_FILTER_R__", chunk_filter.replace("user_id", "r.user_id"))
+        .replace("__CHUNK_FILTER__", chunk_filter)
+    )
+    return PROCESS_RAW_LISTENS.replace("__RAW_LISTENS_SOURCE__", source)
 
 
 # =============================================================================
@@ -316,13 +412,14 @@ def _column_or_default(table: pa.Table, name: str, default: pa.Array) -> pa.Arra
     return default
 
 
-def build_raw_listens_arrow_table(table: pa.Table) -> pa.Table:
+def build_raw_listens_arrow_table(table: pa.Table, load_id: str) -> pa.Table:
     """Normalize a Spark dump batch into the raw listens table schema."""
     n_rows = table.num_rows
     empty_strings = pa.array([""] * n_rows, type=pa.string())
     empty_lists = pa.array([[]] * n_rows, type=_STRING_LIST_TYPE)
 
     return pa.table({
+        "load_id": pa.array([load_id] * n_rows, type=pa.string()),
         "listened_at": table["listened_at"],
         "created": table["created"],
         "user_id": _to_uint32_array(table["user_id"]),
@@ -338,27 +435,43 @@ def build_raw_listens_arrow_table(table: pa.Table) -> pa.Table:
     })
 
 
-def process_raw_listens(client: Client, chunks: int = PROCESS_RAW_LISTENS_CHUNKS) -> None:
-    """Join raw_listens against the metadata tables and populate listens.
+def process_raw_listens(client: Client, load_id: str, chunks: int = PROCESS_RAW_LISTENS_CHUNKS) -> None:
+    """Join one load's raw_listens against the metadata tables and populate listens.
 
     Runs in ``chunks`` sequential buckets keyed by ``user_id % chunks`` so each
     query's GROUP BY / grace-hash spill state stays bounded. Pass ``chunks=1``
     to run the join as a single query (only safe on small inputs or with
     plenty of temp-disk headroom).
     """
+    parameters = {"load_id": load_id}
     if chunks <= 1:
-        client.command(PROCESS_RAW_LISTENS, settings=PROCESS_RAW_LISTENS_SETTINGS)
+        client.command(
+            build_process_raw_listens_query(), parameters=parameters, settings=PROCESS_RAW_LISTENS_SETTINGS
+        )
         return
 
     for i in range(chunks):
-        chunked_sql = PROCESS_RAW_LISTENS.replace(
-            f"FROM {RAW_LISTENS_TABLE} AS r",
-            f"FROM (SELECT * FROM {RAW_LISTENS_TABLE} WHERE user_id % {chunks} = {i}) AS r",
-        )
         logger.info("Processing raw_listens bucket %d/%d", i + 1, chunks)
         t0 = time.time()
-        client.command(chunked_sql, settings=PROCESS_RAW_LISTENS_SETTINGS)
+        client.command(
+            build_process_raw_listens_query(chunks, i), parameters=parameters, settings=PROCESS_RAW_LISTENS_SETTINGS
+        )
         logger.info("Bucket %d/%d done in %.1fs", i + 1, chunks, time.time() - t0)
+
+
+def drop_raw_listens_partition(client: Client, load_id: str) -> None:
+    """Drop the staging partition of a load (no-op if it does not exist)."""
+    client.command(
+        "ALTER TABLE raw_listens DROP PARTITION {load_id:String}",
+        parameters={"load_id": load_id},
+    )
+
+
+def truncate_derived_tables(client: Client) -> None:
+    """Truncate listens, daily stats and cache state ahead of a replacing full dump load."""
+    for table in REPLACE_TRUNCATE_TABLES:
+        logger.info("Truncating %s", table)
+        client.command(f"TRUNCATE TABLE IF EXISTS {table}")
 
 
 # =============================================================================
@@ -367,6 +480,7 @@ def process_raw_listens(client: Client, chunks: int = PROCESS_RAW_LISTENS_CHUNKS
 
 def _load_parquet_file(
     file_path: Path,
+    load_id: str,
     host: str, port: int, username: str, password: str, database: str,
     progress: LoadProgress = None,
     batch_size: int = 200_000,
@@ -379,7 +493,7 @@ def _load_parquet_file(
             return 0
 
         for batch in parquet_file.iter_batches(batch_size=batch_size):
-            listen_table = build_raw_listens_arrow_table(pa.Table.from_batches([batch]))
+            listen_table = build_raw_listens_arrow_table(pa.Table.from_batches([batch]), load_id)
             client.insert_arrow(
                 table=RAW_LISTENS_TABLE,
                 arrow_table=listen_table,
@@ -409,26 +523,34 @@ def load_dump(
     database: str = "default",
     workers: int = 4,
     process_chunks: int = PROCESS_RAW_LISTENS_CHUNKS,
+    replace: bool = False,
 ) -> dict:
     """
     Load Parquet dump files from a directory into ClickHouse.
 
-    Returns dict with 'total_inserted', 'files_completed', 'elapsed', 'errors'.
+    Args:
+        replace: truncate listens, the daily stats and the cache state before
+            loading (full dump semantics). Deleted-listen records are kept.
+
+    Returns dict with 'total_inserted', 'files_completed', 'elapsed', 'errors', 'load_id'.
     """
     dir_path = Path(directory)
     if not dir_path.is_dir():
         raise ValueError(f"Not a directory: {directory}")
 
     parquet_files = find_parquet_files(dir_path)
+    load_id = uuid4().hex
     if not parquet_files:
         logger.info("No parquet files found in %s", directory)
-        return {"total_inserted": 0, "files_completed": 0, "elapsed": 0, "errors": []}
+        return {"total_inserted": 0, "files_completed": 0, "elapsed": 0, "errors": [], "load_id": load_id}
 
-    logger.info("Found %d parquet files, loading with %d workers", len(parquet_files), workers)
+    logger.info("Found %d parquet files, loading with %d workers (load_id=%s)", len(parquet_files), workers, load_id)
 
     client = create_client(host, port, username, password, database)
     logger.info("Connected to ClickHouse at %s:%s", host, port)
     ensure_stats_schema(client)
+    if replace:
+        truncate_derived_tables(client)
     client.close()
 
     progress = LoadProgress()
@@ -437,7 +559,7 @@ def load_dump(
 
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = {
-            executor.submit(_load_parquet_file, f, host, port, username, password, database, progress): f
+            executor.submit(_load_parquet_file, f, load_id, host, port, username, password, database, progress): f
             for f in parquet_files
         }
         for future in as_completed(futures):
@@ -464,26 +586,32 @@ def load_dump(
         for path, error in errors[:10]:
             logger.error("  %s: %s", path, error)
 
-    if total_inserted > 0:
-        process_client = create_client(
-            host, port, username, password, database,
-            send_receive_timeout=PROCESS_SEND_RECEIVE_TIMEOUT,
-        )
-        try:
+    process_client = create_client(
+        host, port, username, password, database,
+        send_receive_timeout=PROCESS_SEND_RECEIVE_TIMEOUT,
+    )
+    try:
+        if errors:
+            # Leave the partition in place for inspection; the retry (a new load_id)
+            # skips whatever this load already got into listens. Nothing was
+            # processed into listens, so no double counting either way.
+            logger.error("Skipping processing of load %s because %d file(s) failed", load_id, len(errors))
+        elif total_inserted > 0:
             logger.info(
                 "Processing raw_listens into listens (end-of-load join, %d chunks)...",
                 process_chunks,
             )
             process_start = time.time()
-            process_raw_listens(process_client, chunks=process_chunks)
-            logger.info("Processed listens in %.1fs", time.time() - process_start)
-
-            raw_count = process_client.query("SELECT count(*) FROM raw_listens").first_row[0]
-            processed_count = process_client.query("SELECT count(*) FROM listens").first_row[0]
-            logger.info("Total rows in raw_listens: %s", f"{raw_count:,}")
-            logger.info("Total rows in listens: %s", f"{processed_count:,}")
-        finally:
-            process_client.close()
+            before = process_client.query("SELECT count(*) FROM listens").first_row[0]
+            process_raw_listens(process_client, load_id, chunks=process_chunks)
+            after = process_client.query("SELECT count(*) FROM listens").first_row[0]
+            logger.info(
+                "Processed listens in %.1fs: %s new listens (%s raw rows), %s total",
+                time.time() - process_start, f"{after - before:,}", f"{total_inserted:,}", f"{after:,}",
+            )
+            drop_raw_listens_partition(process_client, load_id)
+    finally:
+        process_client.close()
 
     elapsed = time.time() - start_time
     logger.info("Completed in %.1fs", elapsed)
@@ -493,6 +621,7 @@ def load_dump(
         "files_completed": files_completed,
         "elapsed": elapsed,
         "errors": errors,
+        "load_id": load_id,
     }
 
 
@@ -583,6 +712,7 @@ def load_from_local(
     database: str = "default",
     workers: int = 4,
     process_chunks: int = PROCESS_RAW_LISTENS_CHUNKS,
+    replace: bool = False,
 ) -> dict:
     """
     Load a Spark parquet listens dump from a local directory into ClickHouse.
@@ -607,7 +737,7 @@ def load_from_local(
 
         result = load_dump(
             str(parquet_dir), host, port, username, password, database, workers,
-            process_chunks=process_chunks,
+            process_chunks=process_chunks, replace=replace,
         )
         result["dump_id"] = found_dump_id
         return result
@@ -630,6 +760,7 @@ def load_from_ftp(
     database: str,
     workers: int = 4,
     process_chunks: int = PROCESS_RAW_LISTENS_CHUNKS,
+    replace: bool = False,
 ) -> dict:
     """
     Download the latest Spark parquet listens dump from FTP and load it into ClickHouse.
@@ -660,7 +791,7 @@ def load_from_ftp(
 
         result = load_dump(
             str(parquet_dir), host, port, username, password, database, workers,
-            process_chunks=process_chunks,
+            process_chunks=process_chunks, replace=replace,
         )
         result["dump_id"] = dump_id
         return result

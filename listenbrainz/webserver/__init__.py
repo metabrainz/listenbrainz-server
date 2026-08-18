@@ -231,6 +231,17 @@ def create_app(
         app.config['COUCHDB_PORT'],
         app.config['COUCHDB_DATABASE_PREFIX']
     )
+    # CouchDB instance holding the stats computed by the ClickHouse pipeline, served
+    # by the stats API when a request asks for them explicitly.
+    if app.config.get('CLICKHOUSE_READER_COUCHDB_HOST'):
+        from listenbrainz.db import stats as db_stats
+        db_stats.init_clickhouse_stats(
+            app.config['CLICKHOUSE_READER_COUCHDB_USER'],
+            app.config['CLICKHOUSE_READER_COUCHDB_ADMIN_KEY'],
+            app.config['CLICKHOUSE_READER_COUCHDB_HOST'],
+            app.config['CLICKHOUSE_READER_COUCHDB_PORT'],
+            app.config['COUCHDB_DATABASE_PREFIX'],
+        )
     # RabbitMQ connection
     from listenbrainz.webserver.rabbitmq_connection import init_rabbitmq_connection
     try:

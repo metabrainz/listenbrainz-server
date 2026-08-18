@@ -105,7 +105,9 @@ COUCHDB_ADMIN_KEY = "listenbrainz"
 # Prefix is used verbatim; include the trailing separator, e.g. "test_".
 COUCHDB_DATABASE_PREFIX = ""
 
-# CouchDB instance used by the ClickHouse result reader.
+# Separate CouchDB instance the ClickHouse result reader writes stats to and the stats API
+# reads them from when a request passes ``clickhouse=true``. Database names are the same as
+# for the Spark stats. Leave the host empty to disable serving ClickHouse stats.
 CLICKHOUSE_READER_COUCHDB_HOST = "couchdb-clickhouse"
 CLICKHOUSE_READER_COUCHDB_PORT = 5984
 CLICKHOUSE_READER_COUCHDB_USER = "listenbrainz"

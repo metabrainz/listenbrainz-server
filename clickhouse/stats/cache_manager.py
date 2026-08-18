@@ -87,19 +87,6 @@ TIME_RANGES = {
     },
 }
 
-# Per-user cache state table schema
-# Tracks when each user's cache was last computed for each time_range
-USER_STATS_CACHE_STATE_SCHEMA = """
-CREATE TABLE IF NOT EXISTS user_stats_cache_state (
-    user_id UInt32,
-    stat_type String,              -- 'artists', 'recordings', 'release_groups'
-    time_range String,             -- 'all_time', 'this_week', etc.
-    last_computed_created DateTime64(3),  -- max(created) from listens when cache was computed
-    updated_at DateTime64(3) DEFAULT now64(3)
-) ENGINE = ReplacingMergeTree(updated_at)
-ORDER BY (user_id, stat_type, time_range)
-"""
-
 OPEN_ENDED_TIME_RANGES = {'all_time', 'this_week', 'this_month', 'this_year'}
 
 
@@ -139,7 +126,7 @@ class CacheConfig:
     ch_username: str = 'default'
     ch_password: str = ''
     top_n: int = 1000
-    couch_db_prefix: str = 'clk'
+    couch_db_prefix: str = ''  # optional, e.g. 'clk' to keep the databases apart from spark's
 
 
 @dataclass
@@ -266,7 +253,6 @@ class StatsCacheManager:
 
         # Ensure required tables exist
         ensure_stats_schema(self.ch_client)
-        self.ch_client.command(USER_STATS_CACHE_STATE_SCHEMA)
 
     def get_stats_database_name(self, entity_type: str, time_range: str, with_timestamp: bool = False) -> str:
         """
@@ -278,7 +264,7 @@ class StatsCacheManager:
             with_timestamp: If True, append YYYYMMDD timestamp for new database creation
 
         Returns:
-            Database name like 'clk_artists_all_time' or 'clk_artists_all_time_20240115'
+            Database name like 'artists_all_time' or 'artists_all_time_20240115'
         """
         db_name = self.get_stats_database_prefix(entity_type, time_range)
 
@@ -290,7 +276,10 @@ class StatsCacheManager:
 
     def get_stats_database_prefix(self, entity_type: str, time_range: str) -> str:
         """Get ClickHouse stats database prefix for finding the current CouchDB database."""
-        return f"{self.config.couch_db_prefix}_{entity_type}_{time_range}"
+        name = f"{entity_type}_{time_range}"
+        if self.config.couch_db_prefix:
+            name = f"{self.config.couch_db_prefix}_{name}"
+        return name
 
     def get_cache_state(self) -> dict[str, dict]:
         """Get current cache state for all time ranges."""
