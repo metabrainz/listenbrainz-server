@@ -4,6 +4,7 @@ import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   InfiniteData,
+  QueryClient,
   useInfiniteQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -25,14 +26,19 @@ import {
   PLAYLIST_TRACK_URI_PREFIX,
 } from "../playlists/utils";
 import { RouteQuery } from "../utils/Loader";
+import { generateAlbumArtThumbnailLink } from "../utils/utils";
 
 import type {
   MusicBrainzCollectionDetailResponse,
+  MusicBrainzCollectionEntityType,
+  MusicBrainzCollectionReleaseItem,
   MusicBrainzCollectionTrack,
 } from "../utils/APIService";
 
 const DEFAULT_PAGE_SIZE = 100;
+const FLATTEN_TRACKS_PAGE_SIZE = 500;
 const DEFAULT_ESTIMATED_ROW_HEIGHT_PX = 110;
+const RELEASE_ROW_ESTIMATED_HEIGHT_PX = 72;
 const LOAD_MORE_THRESHOLD_ROWS = 20;
 
 function asJSPFTrack(track: MusicBrainzCollectionTrack): JSPFTrack {
@@ -78,6 +84,83 @@ function asJSPFTrack(track: MusicBrainzCollectionTrack): JSPFTrack {
   return jspfTrack;
 }
 
+function ReleaseCollectionItemRow({
+  item,
+}: {
+  item: MusicBrainzCollectionReleaseItem;
+}) {
+  const releaseUrl = `/release/${item.release_mbid}/`;
+  const coverArtSrc =
+    item.caa_id != null && item.caa_release_mbid
+      ? generateAlbumArtThumbnailLink(item.caa_id, item.caa_release_mbid)
+      : "/static/img/cover-art-placeholder.jpg";
+
+  return (
+    <div className="card listen-card">
+      <div className="card-body">
+        <div className="listen-thumbnail">
+          <img
+            src={coverArtSrc}
+            alt={item.title ?? "Release cover art"}
+            width={64}
+            height={64}
+            loading="lazy"
+            onError={(event) => {
+              // eslint-disable-next-line no-param-reassign
+              event.currentTarget.src = "/static/img/cover-art-placeholder.jpg";
+            }}
+          />
+        </div>
+        <div className="listen-content">
+          <div className="title-duration">
+            <a href={releaseUrl}>{item.title ?? "Unknown release"}</a>
+          </div>
+          <div className="text-muted">
+            {item.artist_credit_name ?? "Unknown artist"}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function getLoadedCount(
+  pages: MusicBrainzCollectionDetailResponse[] | undefined,
+  entityType: MusicBrainzCollectionEntityType | undefined
+): number {
+  if (entityType === "release") {
+    return (pages ?? []).flatMap((page) => page.items ?? []).length;
+  }
+  return (pages ?? []).flatMap((page) => page.tracks ?? []).length;
+}
+
+async function fetchAllFlattenedCollectionTracks(
+  queryClient: QueryClient,
+  collectionMBID: string
+): Promise<JSPFTrack[]> {
+  const allTracks: JSPFTrack[] = [];
+  let offset = 0;
+
+  while (true) {
+    // eslint-disable-next-line no-await-in-loop
+    const page = (await queryClient.fetchQuery(
+      RouteQuery(
+        ["collection", collectionMBID, "flatten", offset],
+        `/collection/${collectionMBID}/?count=${FLATTEN_TRACKS_PAGE_SIZE}&offset=${offset}&flatten=tracks`
+      )
+    )) as MusicBrainzCollectionDetailResponse;
+    const pageTracks = (page.tracks ?? []).map(asJSPFTrack);
+    allTracks.push(...pageTracks);
+    const nextOffset = offset + pageTracks.length;
+    if (nextOffset >= page.track_count || pageTracks.length === 0) {
+      break;
+    }
+    offset = nextOffset;
+  }
+
+  return allTracks;
+}
+
 export default function CollectionPage() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
   const { collectionMBID } = useParams();
@@ -107,7 +190,7 @@ export default function CollectionPage() {
         )
       ),
     getNextPageParam: (lastPage, pages) => {
-      const loaded = pages.flatMap((page) => page.tracks ?? []).length;
+      const loaded = getLoadedCount(pages, lastPage.collection.entity_type);
       return loaded < lastPage.track_count ? loaded : undefined;
     },
     initialPageParam: 0,
@@ -120,23 +203,37 @@ export default function CollectionPage() {
   const firstPage = data?.pages[0];
   const collection = firstPage?.collection;
   const coverArt = firstPage?.cover_art;
-  const trackCount = firstPage?.track_count ?? 0;
+  const itemCount = firstPage?.track_count ?? 0;
+  const entityType: MusicBrainzCollectionEntityType | undefined =
+    collection?.entity_type;
+  const isRecordingCollection = entityType === "recording";
+  const isReleaseCollection = entityType === "release";
+  const itemLabel = isReleaseCollection ? "release" : "track";
+  const itemsLabel = isReleaseCollection ? "releases" : "tracks";
+  const sectionTitle = isReleaseCollection ? "Releases" : "Tracks";
+
   const tracks = React.useMemo(
     () =>
       (data?.pages ?? []).flatMap((page) => page.tracks ?? []).map(asJSPFTrack),
     [data]
   );
+  const releases = React.useMemo(
+    () => (data?.pages ?? []).flatMap((page) => page.items ?? []),
+    [data]
+  );
+  const loadedRowCount = isReleaseCollection ? releases.length : tracks.length;
 
   const [isSaving, setIsSaving] = React.useState(false);
   const [isPlayingAll, setIsPlayingAll] = React.useState(false);
 
   const hasMore = Boolean(hasNextPage);
-  const totalRows = tracks.length + (hasMore ? 1 : 0); // +1 row for loader
+  const totalRows = loadedRowCount + (hasMore ? 1 : 0);
   const rowVirtualizer = useWindowVirtualizer({
     count: totalRows,
-    estimateSize: () => DEFAULT_ESTIMATED_ROW_HEIGHT_PX,
-    // PlaylistItemCard height varies depending on metadata/menu.
-    // Measure real heights to avoid visual gaps between rows since virtualization is used.
+    estimateSize: () =>
+      isReleaseCollection
+        ? RELEASE_ROW_ESTIMATED_HEIGHT_PX
+        : DEFAULT_ESTIMATED_ROW_HEIGHT_PX,
     measureElement: (el) => el.getBoundingClientRect().height,
     overscan: 6,
   });
@@ -150,11 +247,17 @@ export default function CollectionPage() {
     if (!last) {
       return;
     }
-    if (last.index >= tracks.length - LOAD_MORE_THRESHOLD_ROWS) {
+    if (last.index >= loadedRowCount - LOAD_MORE_THRESHOLD_ROWS) {
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       fetchNextPage();
     }
-  }, [fetchNextPage, hasMore, isFetchingNextPage, tracks.length, virtualItems]);
+  }, [
+    fetchNextPage,
+    hasMore,
+    isFetchingNextPage,
+    loadedRowCount,
+    virtualItems,
+  ]);
 
   const loadAllRemainingPages = React.useCallback(async () => {
     let hasMorePages = true;
@@ -169,9 +272,12 @@ export default function CollectionPage() {
   const mbUrl = collectionMBID
     ? `https://musicbrainz.org/collection/${collectionMBID}`
     : undefined;
+  const collectionTypeLabel = isReleaseCollection
+    ? "release collection"
+    : "collection";
 
   const playAllTracks = React.useCallback(async () => {
-    if (!collectionMBID || isPlayingAll) {
+    if (!isRecordingCollection || !collectionMBID || isPlayingAll) {
       return;
     }
 
@@ -214,11 +320,15 @@ export default function CollectionPage() {
     collectionMBID,
     hasNextPage,
     isPlayingAll,
+    isRecordingCollection,
     loadAllRemainingPages,
     queryClient,
   ]);
 
   const saveAsPlaylist = React.useCallback(async () => {
+    if (!isRecordingCollection && !isReleaseCollection) {
+      return;
+    }
     if (!collectionMBID) {
       return;
     }
@@ -242,26 +352,50 @@ export default function CollectionPage() {
     if (isSaving) {
       return;
     }
+    if (isRecordingCollection && tracks.length === 0) {
+      return;
+    }
+    if (isReleaseCollection && releases.length === 0) {
+      return;
+    }
 
     setIsSaving(true);
     try {
-      if (hasNextPage) {
-        await loadAllRemainingPages();
+      let allTracks: JSPFTrack[] = [];
+      if (isReleaseCollection) {
+        allTracks = await fetchAllFlattenedCollectionTracks(
+          queryClient,
+          collectionMBID
+        );
+      } else {
+        if (hasNextPage) {
+          await loadAllRemainingPages();
+        }
+        allTracks =
+          queryClient
+            .getQueryData<
+              InfiniteData<MusicBrainzCollectionDetailResponse, number>
+            >(["collection", collectionMBID])
+            ?.pages.flatMap((page) => page.tracks ?? [])
+            .map(asJSPFTrack) ?? [];
       }
-      const allTracks =
-        queryClient
-          .getQueryData<
-            InfiniteData<MusicBrainzCollectionDetailResponse, number>
-          >(["collection", collectionMBID])
-          ?.pages.flatMap((page) => page.tracks ?? [])
-          .map(asJSPFTrack) ?? [];
+
+      if (allTracks.length === 0) {
+        toast.error(
+          <ToastMsg
+            title="Could not create playlist"
+            message="No tracks found in this collection"
+          />,
+          { toastId: "mb-collection-import-empty" }
+        );
+        return;
+      }
 
       const publicFlag = Boolean(collection.public);
       const playlistTitle = collection.name;
 
       const playlistObject: JSPFObject = {
         playlist: {
-          // Required fields for TS types; backend only uses title + identifiers.
           creator: currentUser.name,
           identifier: "",
           date: "",
@@ -315,11 +449,15 @@ export default function CollectionPage() {
     currentUser?.auth_token,
     currentUser?.name,
     hasNextPage,
+    isRecordingCollection,
+    isReleaseCollection,
     isSaving,
     loadAllRemainingPages,
     mbUrl,
     navigate,
     queryClient,
+    releases.length,
+    tracks.length,
   ]);
 
   return (
@@ -348,8 +486,8 @@ export default function CollectionPage() {
             <div>
               {collection ? (
                 <>
-                  {collection.public ? "Public" : "Private"} MusicBrainz
-                  collection
+                  {collection.public ? "Public" : "Private"} MusicBrainz{" "}
+                  {collectionTypeLabel}
                 </>
               ) : (
                 <>MusicBrainz collection</>
@@ -367,27 +505,34 @@ export default function CollectionPage() {
           </div>
           <div className="details">
             <div>
-              {trackCount} {trackCount === 1 ? "track" : "tracks"}
+              {itemCount} {itemCount === 1 ? itemLabel : itemsLabel}
             </div>
           </div>
         </div>
         <div className="right-side">
-          <button
-            type="button"
-            className="btn btn-info"
-            disabled={isLoading || isSaving || tracks.length === 0}
-            onClick={saveAsPlaylist}
-          >
-            {isSaving ? "Saving..." : "Save as playlist"}
-          </button>
+          {(isRecordingCollection || isReleaseCollection) && (
+            <button
+              type="button"
+              className="btn btn-info"
+              disabled={
+                isLoading ||
+                isSaving ||
+                (isRecordingCollection && tracks.length === 0) ||
+                (isReleaseCollection && releases.length === 0)
+              }
+              onClick={saveAsPlaylist}
+            >
+              {isSaving ? "Saving..." : "Save as playlist"}
+            </button>
+          )}
         </div>
       </div>
 
       <div className="col-md-8 offset-md-2">
         <div className="header">
           <h3 className="header-with-line">
-            Tracks
-            {Boolean(trackCount) && (
+            {sectionTitle}
+            {isRecordingCollection && Boolean(itemCount) && (
               <button
                 type="button"
                 className="btn btn-info btn-rounded play-tracks-button"
@@ -404,9 +549,9 @@ export default function CollectionPage() {
 
         <Loader isLoading={isLoading} />
 
-        {!isLoading && tracks.length === 0 ? (
+        {!isLoading && loadedRowCount === 0 ? (
           <div className="lead text-center">
-            <p>No tracks found in this collection</p>
+            <p>No {itemsLabel} found in this collection</p>
           </div>
         ) : (
           <div
@@ -417,8 +562,23 @@ export default function CollectionPage() {
             }}
           >
             {virtualItems.map((virtualRow: VirtualItem) => {
-              const isLoaderRow = virtualRow.index >= tracks.length;
+              const isLoaderRow = virtualRow.index >= loadedRowCount;
               const track = tracks[virtualRow.index];
+              const release = releases[virtualRow.index];
+              let rowContent: React.ReactNode = null;
+              if (isLoaderRow) {
+                rowContent = <Loader isLoading={isFetchingNextPage} />;
+              } else if (isReleaseCollection && release) {
+                rowContent = <ReleaseCollectionItemRow item={release} />;
+              } else if (track) {
+                rowContent = (
+                  <PlaylistItemCard
+                    key={`${track.id}-${virtualRow.index.toString()}`}
+                    canEdit={false}
+                    track={track}
+                  />
+                );
+              }
               return (
                 <div
                   key={String(virtualRow.key)}
@@ -432,15 +592,7 @@ export default function CollectionPage() {
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
                 >
-                  {isLoaderRow ? (
-                    <Loader isLoading={isFetchingNextPage} />
-                  ) : (
-                    <PlaylistItemCard
-                      key={`${track.id}-${virtualRow.index.toString()}`}
-                      canEdit={false}
-                      track={track}
-                    />
-                  )}
+                  {rowContent}
                 </div>
               );
             })}

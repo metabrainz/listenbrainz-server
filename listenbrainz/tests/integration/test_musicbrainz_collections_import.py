@@ -32,13 +32,15 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
                 "mbid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
                 "name": "Road Trip Songs",
                 "public": True,
+                "entity_type": "recording",
                 "item_count": 2,
             },
             {
                 "mbid": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-                "name": "Private Favorites",
-                "public": False,
-                "item_count": 0,
+                "name": "My Albums",
+                "public": True,
+                "entity_type": "release",
+                "item_count": 3,
             },
         ]
 
@@ -70,13 +72,15 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
                     "mbid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
                     "name": "Road Trip Songs",
                     "public": True,
+                    "entity_type": "recording",
                     "item_count": 2,
                 },
                 {
                     "mbid": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-                    "name": "Private Favorites",
-                    "public": False,
-                    "item_count": 0,
+                    "name": "My Albums",
+                    "public": True,
+                    "entity_type": "release",
+                    "item_count": 3,
                 },
             ],
         )
@@ -89,6 +93,7 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
                     "mbid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
                     "name": "Road Trip Songs",
                     "public": True,
+                    "entity_type": "recording",
                 },
                 "track_count": 1,
                 "count": 100,
@@ -103,6 +108,7 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
                         "caa_release_mbid": "dddddddd-dddd-dddd-dddd-dddddddddddd",
                     }
                 ],
+                "items": [],
                 "cover_art": "<svg></svg>",
             },
             None,
@@ -122,8 +128,10 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
         )
         self.assertEqual(response.json["collection"]["name"], "Road Trip Songs")
         self.assertEqual(response.json["collection"]["public"], True)
+        self.assertEqual(response.json["collection"]["entity_type"], "recording")
         self.assertEqual(response.json["track_count"], 1)
         self.assertEqual(len(response.json["tracks"]), 1)
+        self.assertEqual(response.json["items"], [])
         self.assertEqual(response.json["tracks"][0]["caa_id"], 12345)
         self.assertEqual(
             response.json["tracks"][0]["caa_release_mbid"],
@@ -132,6 +140,132 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
         self.assertEqual(response.json["cover_art"], "<svg></svg>")
         mock_fetch.assert_called_once()
         self.assertIsNone(mock_fetch.call_args.kwargs["viewer_editor_id"])
+
+    @mock.patch("listenbrainz.webserver.views.collection.fetch_collection_payload")
+    def test_public_release_collection_returns_release_items(self, mock_fetch):
+        mock_fetch.return_value = (
+            {
+                "collection": {
+                    "mbid": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+                    "name": "My Albums",
+                    "public": True,
+                    "entity_type": "release",
+                },
+                "track_count": 2,
+                "count": 100,
+                "offset": 0,
+                "tracks": [],
+                "items": [
+                    {
+                        "release_mbid": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+                        "title": "Example Album",
+                        "artist_credit_name": "Example Artist",
+                        "caa_id": 12345,
+                        "caa_release_mbid": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+                    },
+                ],
+                "cover_art": "<svg></svg>",
+            },
+            None,
+        )
+
+        response = self.client.post(
+            self.custom_url_for(
+                "collection.load_collection",
+                collection_mbid="dddddddd-dddd-dddd-dddd-dddddddddddd",
+            )
+        )
+
+        self.assert200(response)
+        self.assertEqual(response.json["collection"]["entity_type"], "release")
+        self.assertEqual(response.json["track_count"], 2)
+        self.assertEqual(response.json["tracks"], [])
+        self.assertEqual(len(response.json["items"]), 1)
+        self.assertEqual(
+            response.json["items"][0]["release_mbid"],
+            "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+        )
+        self.assertEqual(response.json["items"][0]["caa_id"], 12345)
+        self.assertEqual(
+            response.json["items"][0]["caa_release_mbid"],
+            "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+        )
+        self.assertEqual(response.json["cover_art"], "<svg></svg>")
+
+    @mock.patch("listenbrainz.webserver.views.collection.DictCursor", new=mock.MagicMock)
+    @mock.patch("listenbrainz.webserver.views.collection.psycopg2.connect")
+    def test_release_collection_flatten_tracks_returns_recordings(self, mock_connect):
+        fake_cursor = mock.MagicMock()
+
+        fake_cursor.fetchone.side_effect = [
+            {
+                "collection_id": 456,
+                "collection_mbid": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+                "name": "My Albums",
+                "public": True,
+                "owner_editor_id": 1,
+                "entity_type": "release",
+            },
+            {"track_count": 3},
+        ]
+
+        fake_cursor.fetchall.return_value = [
+            {
+                "recording_mbid": "11111111-1111-1111-1111-111111111111",
+                "title": "Track One",
+                "artist_credit_name": "Example Artist",
+                "length": 180000,
+                "release_mbid": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+                "release_name": "Example Album",
+            },
+            {
+                "recording_mbid": "22222222-2222-2222-2222-222222222222",
+                "title": "Track Two",
+                "artist_credit_name": "Example Artist",
+                "length": 200000,
+                "release_mbid": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+                "release_name": "Example Album",
+            },
+        ]
+
+        fake_mb_conn = mock.MagicMock()
+        fake_mb_conn.__enter__.return_value.cursor.return_value.__enter__.return_value = (
+            fake_cursor
+        )
+
+        mb_dsn = self.app.config["MB_DATABASE_URI"]
+
+        def connect_side_effect(*args, **kwargs):
+            if args and args[0] == mb_dsn:
+                return fake_mb_conn
+            return _REAL_PSYCOPG2_CONNECT(*args, **kwargs)
+
+        mock_connect.side_effect = connect_side_effect
+
+        response = self.client.post(
+            self.custom_url_for(
+                "collection.load_collection",
+                collection_mbid="dddddddd-dddd-dddd-dddd-dddddddddddd",
+            )
+            + "?flatten=tracks"
+        )
+
+        self.assert200(response)
+        data = response.json
+        track = data["tracks"][0]
+        self.assertEqual(data["collection"]["entity_type"], "release")
+        self.assertEqual(data["track_count"], 3)
+        self.assertEqual(data["items"], [])
+        self.assertEqual(len(data["tracks"]), 2)
+        self.assertEqual(
+            track["recording_mbid"],
+            "11111111-1111-1111-1111-111111111111",
+        )
+        self.assertEqual(
+            track["release_mbid"],
+            "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+        )
+        self.assertEqual(track["release_name"], "Example Album")
 
     @mock.patch("listenbrainz.webserver.views.collection.fetch_collection_payload")
     def test_private_collection_requires_login(self, mock_fetch):

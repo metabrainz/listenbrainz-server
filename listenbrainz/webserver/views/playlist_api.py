@@ -1085,7 +1085,7 @@ def import_playlist_from_music_service(service):
 @ratelimit()
 @api_musicbrainz_needed
 def import_musicbrainz_collections():
-    """List the authenticated user's MusicBrainz recording collections."""
+    """List the authenticated user's MusicBrainz recording and release collections."""
     user = validate_auth_header()
 
     if not current_app.config.get("MB_DATABASE_URI"):
@@ -1104,15 +1104,29 @@ def import_musicbrainz_collections():
                   SELECT ec.gid::text AS mbid
                        , ec.name AS name
                        , ec.public AS public
-                       , COUNT(ecr.recording) AS item_count
+                       , ect.entity_type AS entity_type
+                       , CASE ect.entity_type
+                             WHEN 'recording' THEN (
+                               SELECT COUNT(*)::int
+                                 FROM musicbrainz.editor_collection_recording ecr
+                                 JOIN musicbrainz.recording r
+                                   ON r.id = ecr.recording
+                                WHERE ecr.collection = ec.id
+                             )
+                             WHEN 'release' THEN (
+                               SELECT COUNT(*)::int
+                                 FROM musicbrainz.editor_collection_release ecrel
+                                 JOIN musicbrainz.release rel
+                                   ON rel.id = ecrel.release
+                                WHERE ecrel.collection = ec.id
+                             )
+                             ELSE 0
+                         END AS item_count
                     FROM musicbrainz.editor_collection ec
                     JOIN musicbrainz.editor_collection_type ect
                       ON ect.id = ec.type
-               LEFT JOIN musicbrainz.editor_collection_recording ecr
-                      ON ecr.collection = ec.id
                    WHERE ec.editor = %s
-                     AND ect.entity_type = 'recording'
-                GROUP BY ec.id
+                     AND ect.entity_type IN ('recording', 'release')
                 ORDER BY LOWER(ec.name)
                 """,
                 (user["musicbrainz_row_id"],),
@@ -1127,6 +1141,7 @@ def import_musicbrainz_collections():
             "mbid": row["mbid"],
             "name": row["name"],
             "public": bool(row["public"]),
+            "entity_type": row["entity_type"],
             "item_count": int(row["item_count"] or 0),
         }
         for row in collections
