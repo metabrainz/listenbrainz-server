@@ -26,6 +26,7 @@ import {
   PLAYLIST_TRACK_URI_PREFIX,
 } from "../playlists/utils";
 import { RouteQuery } from "../utils/Loader";
+import { generateAlbumArtThumbnailLink } from "../utils/utils";
 
 import type {
   MusicBrainzCollectionDetailResponse,
@@ -83,42 +84,31 @@ function asJSPFTrack(track: MusicBrainzCollectionTrack): JSPFTrack {
   return jspfTrack;
 }
 
-function formatReleaseDate(
-  item: MusicBrainzCollectionReleaseItem
-): string | null {
-  const { date_year: year, date_month: month, date_day: day } = item;
-  if (year == null) {
-    return null;
-  }
-  if (month != null && day != null) {
-    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(
-      2,
-      "0"
-    )}`;
-  }
-  if (month != null) {
-    return `${year}-${String(month).padStart(2, "0")}`;
-  }
-  return String(year);
-}
-
 function ReleaseCollectionItemRow({
   item,
 }: {
   item: MusicBrainzCollectionReleaseItem;
 }) {
   const releaseUrl = `/release/${item.release_mbid}/`;
-  const dateLabel = formatReleaseDate(item);
+  const coverArtSrc =
+    item.caa_id != null && item.caa_release_mbid
+      ? generateAlbumArtThumbnailLink(item.caa_id, item.caa_release_mbid)
+      : "/static/img/cover-art-placeholder.jpg";
 
   return (
     <div className="card listen-card">
       <div className="card-body">
         <div className="listen-thumbnail">
           <img
-            src="/static/img/cover-art-placeholder.jpg"
-            alt=""
+            src={coverArtSrc}
+            alt={item.title ?? "Release cover art"}
             width={64}
             height={64}
+            loading="lazy"
+            onError={(event) => {
+              // eslint-disable-next-line no-param-reassign
+              event.currentTarget.src = "/static/img/cover-art-placeholder.jpg";
+            }}
           />
         </div>
         <div className="listen-content">
@@ -127,7 +117,6 @@ function ReleaseCollectionItemRow({
           </div>
           <div className="text-muted">
             {item.artist_credit_name ?? "Unknown artist"}
-            {dateLabel ? ` · ${dateLabel}` : ""}
           </div>
         </div>
       </div>

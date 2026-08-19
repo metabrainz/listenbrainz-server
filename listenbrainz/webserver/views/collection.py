@@ -5,6 +5,7 @@ from flask import Blueprint, current_app, jsonify, render_template, request
 from flask_login import current_user
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
+from listenbrainz.db.cover_art import get_caa_ids_for_release_mbids
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.webserver import ts_conn
 from listenbrainz.webserver.decorators import web_musicbrainz_needed
@@ -150,10 +151,6 @@ def _fetch_release_collection_items(mb_curs, collection_id: int, *, count: int, 
           SELECT rel.gid::text AS release_mbid
                , rel.name AS title
                , ac.name AS artist_credit_name
-               -- release date columns vary across dumps/schemas; keep them nullable for preview
-               , NULL::int AS date_year
-               , NULL::int AS date_month
-               , NULL::int AS date_day
             FROM musicbrainz.editor_collection_release ecrel
             JOIN musicbrainz.release rel
               ON rel.id = ecrel.release
@@ -226,14 +223,14 @@ def _enrich_recording_collection_tracks(mb_curs, tracks) -> list[dict]:
     ]
 
 
-def _get_cover_art_options_from_tracks(tracks: list[dict]) -> list[dict]:
-    """Collect unique cover art images from enriched tracks"""
+def _get_cover_art_options_from_items(items: list[dict], *, entity_mbid_key: str) -> list[dict]:
+    """Collect unique cover art images from enriched collection items/tracks."""
     selected_image_ids = set()
     images = []
 
-    for track in tracks:
-        caa_id = track.get("caa_id")
-        caa_release_mbid = track.get("caa_release_mbid")
+    for item in items:
+        caa_id = item.get("caa_id")
+        caa_release_mbid = item.get("caa_release_mbid")
         if not (caa_id and caa_release_mbid):
             continue
 
@@ -244,17 +241,22 @@ def _get_cover_art_options_from_tracks(tracks: list[dict]) -> list[dict]:
         images.append({
             "caa_id": caa_id,
             "caa_release_mbid": caa_release_mbid,
-            "title": track.get("title"),
-            "entity_mbid": track.get("recording_mbid"),
-            "artist": track.get("artist_credit_name"),
+            "title": item.get("title"),
+            "entity_mbid": item.get(entity_mbid_key),
+            "artist": item.get("artist_credit_name"),
         })
 
     return images
 
 
-def _generate_collection_cover_art(collection_name: str, tracks: list[dict]) -> str | None:
-    """Build playlist-style mosaic SVG for the collection header from track cover art."""
-    images = _get_cover_art_options_from_tracks(tracks)
+def _generate_collection_cover_art(
+    collection_name: str,
+    items: list[dict],
+    *,
+    entity_mbid_key: str = "recording_mbid",
+) -> str | None:
+    """Build playlist-style mosaic SVG for the collection header from cover art."""
+    images = _get_cover_art_options_from_items(items, entity_mbid_key=entity_mbid_key)
     if not images:
         return None
 
@@ -329,6 +331,40 @@ def _serialize_recording_collection_payload(collection, collection_id: int, *, c
     return payload
 
 
+def _serialize_release_item(release_row, cover_row=None) -> dict:
+    """Build API release dict from MB collection row and optional CAA enrichment."""
+    item = {
+        "release_mbid": release_row["release_mbid"],
+        "title": release_row["title"],
+        "artist_credit_name": release_row["artist_credit_name"],
+    }
+    if cover_row and cover_row.get("caa_id") is not None and cover_row.get("caa_release_mbid"):
+        item["caa_id"] = cover_row["caa_id"]
+        item["caa_release_mbid"] = cover_row["caa_release_mbid"]
+    return item
+
+
+def _enrich_release_collection_items(mb_curs, releases) -> list[dict]:
+    """Attach CAA ids to release collection items for thumbnails and header mosaic."""
+    if not releases:
+        return []
+
+    release_mbids = [r["release_mbid"] for r in releases]
+    covers_by_mbid = {}
+    try:
+        covers_by_mbid = get_caa_ids_for_release_mbids(mb_curs, release_mbids)
+    except Exception:
+        current_app.logger.error(
+            "Error enriching MusicBrainz release collection items with cover art:",
+            exc_info=True,
+        )
+
+    return [
+        _serialize_release_item(r, covers_by_mbid.get(r["release_mbid"]))
+        for r in releases
+    ]
+
+
 def _serialize_release_collection_payload(collection, collection_id: int, *, count: int, offset: int, mb_curs):
     item_count = _fetch_release_collection_item_count(mb_curs, collection_id)
     releases = _fetch_release_collection_items(
@@ -337,7 +373,8 @@ def _serialize_release_collection_payload(collection, collection_id: int, *, cou
         count=count,
         offset=offset,
     )
-    return {
+    enriched_items = _enrich_release_collection_items(mb_curs, releases)
+    payload = {
         "collection": {
             "mbid": collection["collection_mbid"],
             "name": collection["name"],
@@ -348,19 +385,26 @@ def _serialize_release_collection_payload(collection, collection_id: int, *, cou
         "count": count,
         "offset": offset,
         "tracks": [],
-        "items": [
-            {
-                "release_mbid": r["release_mbid"],
-                "title": r["title"],
-                "artist_credit_name": r["artist_credit_name"],
-                "date_year": r["date_year"],
-                "date_month": r["date_month"],
-                "date_day": r["date_day"],
-            }
-            for r in releases
-        ],
-        "cover_art": None,
+        "items": enriched_items,
     }
+
+    if offset == 0:
+        try:
+            payload["cover_art"] = _generate_collection_cover_art(
+                collection["name"],
+                enriched_items,
+                entity_mbid_key="release_mbid",
+            )
+        except Exception:
+            current_app.logger.error(
+                "Error generating cover art for MusicBrainz release collection:",
+                exc_info=True,
+            )
+            payload["cover_art"] = None
+    else:
+        payload["cover_art"] = None
+
+    return payload
 
 
 def _serialize_release_collection_flattened_payload(
@@ -478,7 +522,6 @@ def load_collection(collection_mbid: str):
 
     Called by:
       Collection page RouteLoader, load-more, play-all, and save-as-playlist.
-      Release collections use flatten=tracks to expand recordings.
     """
     viewer_editor_id = None
     if current_user.is_authenticated:

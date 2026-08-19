@@ -160,12 +160,11 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
                         "release_mbid": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
                         "title": "Example Album",
                         "artist_credit_name": "Example Artist",
-                        "date_year": 2020,
-                        "date_month": 5,
-                        "date_day": 1,
+                        "caa_id": 12345,
+                        "caa_release_mbid": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
                     },
                 ],
-                "cover_art": None,
+                "cover_art": "<svg></svg>",
             },
             None,
         )
@@ -186,6 +185,12 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
             response.json["items"][0]["release_mbid"],
             "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
         )
+        self.assertEqual(response.json["items"][0]["caa_id"], 12345)
+        self.assertEqual(
+            response.json["items"][0]["caa_release_mbid"],
+            "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+        )
+        self.assertEqual(response.json["cover_art"], "<svg></svg>")
 
     @mock.patch("listenbrainz.webserver.views.collection.psycopg2.connect")
     def test_release_collection_flatten_tracks_returns_recordings(self, mock_connect):

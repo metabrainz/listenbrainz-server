@@ -45,9 +45,8 @@ export type MusicBrainzCollectionReleaseItem = {
   release_mbid: string;
   title: string | null;
   artist_credit_name: string | null;
-  date_year: number | null;
-  date_month: number | null;
-  date_day: number | null;
+  caa_id?: number | null;
+  caa_release_mbid?: string | null;
 };
 
 export type MusicBrainzCollectionDetailResponse = {
