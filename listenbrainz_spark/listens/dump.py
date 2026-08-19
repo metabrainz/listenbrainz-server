@@ -125,11 +125,16 @@ def import_incremental_dump_handler(dump_id: int = None, local: bool = False):
 
         for dump_id in range(start_id, end_id, 1):
             try:
-                if (
-                    not search_dump(dump_id, DumpType.INCREMENTAL, imported_at)
-                    and loader.check_dump_type(dump_id) == DumpType.INCREMENTAL
-                ):
-                    imported_dumps.append(import_incremental_dump_to_hdfs(loader, dump_id=dump_id))
+                if search_dump(dump_id, DumpType.INCREMENTAL, imported_at):
+                    continue
+
+                dump_type = loader.check_dump_type(dump_id)
+                if dump_type != DumpType.INCREMENTAL:
+                    logger.info("Skipping dump ID %d of type %s while importing incremental dumps",
+                                dump_id, dump_type.value)
+                    continue
+
+                imported_dumps.append(import_incremental_dump_to_hdfs(loader, dump_id=dump_id))
             except Exception as e:
                 # Skip current dump if any error occurs during import
                 error_msg = f"Error while importing incremental dump with ID {dump_id}: {e}"

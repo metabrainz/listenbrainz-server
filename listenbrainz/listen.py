@@ -132,7 +132,7 @@ class Listen(object):
     def from_timescale(cls, listened_at, user_id, created, recording_msid, track_metadata,
                        recording_mbid=None, recording_name=None, release_mbid=None, artist_mbids=None,
                        ac_names=None, ac_join_phrases=None, user_name=None,
-                       caa_id=None, caa_release_mbid=None, url_rels=None):
+                       caa_id=None, caa_release_mbid=None, url_rels=None, release_group_mbid=None):
         """Factory to make Listen() objects from a timescale dict"""
         if recording_mbid is not None:
             track_metadata["mbid_mapping"] = {"recording_mbid": str(recording_mbid)}
@@ -142,6 +142,9 @@ class Listen(object):
 
             if release_mbid is not None:
                 track_metadata["mbid_mapping"]["release_mbid"] = str(release_mbid)
+
+            if release_group_mbid is not None:
+                track_metadata["mbid_mapping"]["release_group_mbid"] = str(release_group_mbid)
 
             if artist_mbids is not None and ac_names is not None and ac_join_phrases is not None:
                 artists = []
