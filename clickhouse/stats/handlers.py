@@ -26,11 +26,11 @@ logger = logging.getLogger(__name__)
 
 # Per-entity user chunk size for the memory-heavy all_time ranking in bulk
 # refreshes. The all_time window scan is ranked in user chunks to bound peak
-# memory. Recordings have far more distinct (user, entity) pairs than artists or
-# release groups, so they use a smaller chunk.
+# memory. Keep this configurable per entity because recordings have far more
+# distinct (user, entity) pairs than artists or release groups.
 ALL_TIME_USER_CHUNK_SIZES = {
     'artists': 1000,
-    'recordings': 250,
+    'recordings': 1000,
     'release_groups': 1000,
 }
 

@@ -214,7 +214,10 @@ class BulkRunFullRefreshTestCase(unittest.TestCase):
         client.stream_blocks_by_marker["count_all_time"] = [sample_block]
         manager.ch_client = client
 
-        list(manager.run_bulk_full_refresh(all_time_user_chunk_size=2))
+        with self.assertLogs(
+            "clickhouse.stats.bulk_cache_manager", level="INFO"
+        ) as logs:
+            list(manager.run_bulk_full_refresh(all_time_user_chunk_size=2))
 
         all_time_calls = [
             (sql, params)
@@ -227,6 +230,14 @@ class BulkRunFullRefreshTestCase(unittest.TestCase):
             [params["user_ids"] for _, params in all_time_calls],
             [[1, 2], [3, 4], [5]],
         )
+        completed_chunk_logs = [
+            message for message in logs.output
+            if "all_time: chunk" in message and "completed" in message
+        ]
+        self.assertEqual(len(completed_chunk_logs), 3)
+        self.assertIn("chunk 1/3", completed_chunk_logs[0])
+        self.assertIn("chunk 3/3", completed_chunk_logs[-1])
+        self.assertIn("ETA 0.0s", completed_chunk_logs[-1])
         # Other time ranges are not chunked.
         non_chunked = [sql for sql in client.stream_calls if "user_id IN" not in sql]
         self.assertEqual(len(non_chunked), len(TIME_RANGES) - 1)

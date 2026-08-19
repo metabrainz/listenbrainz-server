@@ -300,26 +300,50 @@ class BulkStatsCacheManager(StatsCacheManager):
 
                 data_messages = 0
                 stream_start = time.perf_counter()
+                chunking_start = None
 
                 if time_range == 'all_time' and all_time_user_chunk_size:
                     user_ids = self.get_intermediate_user_ids()
+                    total_chunks = (
+                        len(user_ids) + all_time_user_chunk_size - 1
+                    ) // all_time_user_chunk_size
                     logger.info(
-                        "  all_time: ranking %d users in chunks of %d",
-                        len(user_ids), all_time_user_chunk_size,
+                        "  all_time: ranking %d users in %d chunks of up to %d",
+                        len(user_ids), total_chunks, all_time_user_chunk_size,
                     )
-                    row_sources = (
-                        self.stream_top_n_for_range(
-                            time_range, self.config.top_n,
-                            user_ids=user_ids[i:i + all_time_user_chunk_size],
+                    chunking_start = time.perf_counter()
+                    row_source_specs = (
+                        (
+                            chunk_number,
+                            total_chunks,
+                            user_ids[i:i + all_time_user_chunk_size],
                         )
-                        for i in range(0, len(user_ids), all_time_user_chunk_size)
+                        for chunk_number, i in enumerate(
+                            range(0, len(user_ids), all_time_user_chunk_size),
+                            start=1,
+                        )
                     )
                 else:
-                    row_sources = [
-                        self.stream_top_n_for_range(time_range, self.config.top_n)
-                    ]
+                    row_source_specs = [(None, None, None)]
 
-                for rows in row_sources:
+                for chunk_number, total_chunks, chunk_user_ids in row_source_specs:
+                    chunk_start = time.perf_counter()
+                    if chunk_user_ids is not None:
+                        assert chunk_number is not None
+                        assert total_chunks is not None
+                        logger.info(
+                            "  all_time: chunk %d/%d started (%d users)",
+                            chunk_number, total_chunks, len(chunk_user_ids),
+                        )
+                        rows = self.stream_top_n_for_range(
+                            time_range, self.config.top_n,
+                            user_ids=chunk_user_ids,
+                        )
+                    else:
+                        rows = self.stream_top_n_for_range(
+                            time_range, self.config.top_n,
+                        )
+
                     for msg in self._accumulate_and_flush(
                         rows, time_range, from_ts, to_ts,
                         database, message_batch_size, user_flush_size, max_created,
@@ -327,6 +351,19 @@ class BulkStatsCacheManager(StatsCacheManager):
                         yield msg
                         data_messages += 1
                         total_messages += 1
+
+                    if chunk_number is not None:
+                        assert total_chunks is not None
+                        assert chunking_start is not None
+                        chunk_elapsed = time.perf_counter() - chunk_start
+                        elapsed = time.perf_counter() - chunking_start
+                        average_chunk_time = elapsed / chunk_number
+                        eta = average_chunk_time * (total_chunks - chunk_number)
+                        logger.info(
+                            "  all_time: chunk %d/%d completed in %.1fs "
+                            "(elapsed %.1fs, ETA %.1fs)",
+                            chunk_number, total_chunks, chunk_elapsed, elapsed, eta,
+                        )
 
                 logger.info(
                     "  %s: %d data messages in %.1fs",
