@@ -48,6 +48,45 @@ class StatsCacheManagerMessageTestCase(unittest.TestCase):
         self.assertEqual(messages[0]["data"][0]["count"], 1)
         self.assertEqual(messages[0]["data"][0]["data"][0]["listen_count"], 3)
 
+    def test_generate_stats_messages_splits_batches_by_payload_size(self):
+        manager = StatsCacheManager(CacheConfig(), RECORDING_CONFIG)
+        # ~1 KiB of stats per user; with a 2.5 KiB cap, at most two users fit per message.
+        stats = [{"track_name": "x" * 1000, "listen_count": 1}]
+        user_results = {uid: stats for uid in range(5)}
+
+        messages = list(manager.generate_stats_messages(
+            "all_time",
+            user_results,
+            from_ts=1,
+            to_ts=2,
+            database="recordings_all_time_20260101",
+            batch_size=100,
+            max_message_bytes=2500,
+        ))
+
+        self.assertEqual([len(m["data"]) for m in messages], [2, 2, 1])
+        self.assertEqual(
+            [u["user_id"] for m in messages for u in m["data"]],
+            [0, 1, 2, 3, 4],
+        )
+        for message in messages:
+            self.assertEqual(message["database"], "recordings_all_time_20260101")
+
+    def test_generate_stats_messages_sends_oversized_single_user_alone(self):
+        manager = StatsCacheManager(CacheConfig(), RECORDING_CONFIG)
+        big = [{"track_name": "x" * 5000, "listen_count": 1}]
+        small = [{"track_name": "y", "listen_count": 1}]
+
+        messages = list(manager.generate_stats_messages(
+            "all_time",
+            {1: small, 2: big, 3: small},
+            from_ts=1,
+            to_ts=2,
+            max_message_bytes=1000,
+        ))
+
+        self.assertEqual([[u["user_id"] for u in m["data"]] for m in messages], [[1], [2], [3]])
+
     def test_database_names_use_api_entity_prefixes(self):
         manager = StatsCacheManager(CacheConfig(), RECORDING_CONFIG)
 

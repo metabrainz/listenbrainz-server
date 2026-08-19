@@ -30,6 +30,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# RabbitMQ default max_message_size. Anything larger is rejected with a channel
+# error (406 PRECONDITION_FAILED) that tears down the channel mid-batch.
+RABBITMQ_MAX_MESSAGE_BYTES = 16 * 1024 * 1024
+
 
 def _rabbitmq_url(host, port):
     return (
@@ -124,6 +128,13 @@ class ClickHouseRequestConsumer(ConsumerMixin):
         total_size = 0
         for message in messages:
             body = json.dumps(message)
+            if len(body) > RABBITMQ_MAX_MESSAGE_BYTES:
+                logger.error(
+                    "Dropping ClickHouse result message of type %s: size %d bytes exceeds "
+                    "RabbitMQ max message size %d",
+                    message.get("type"), len(body), RABBITMQ_MAX_MESSAGE_BYTES,
+                )
+                continue
             total_size += len(body)
             self.producer.publish(
                 exchange=self.clickhouse_result_exchange,
@@ -152,8 +163,23 @@ class ClickHouseRequestConsumer(ConsumerMixin):
             if results:
                 self.push_to_result_queue(results)
             logger.info('Request done!')
+        except self._broker_errors() as e:
+            # A channel/connection error (e.g. 406 PRECONDITION_FAILED from an
+            # oversized publish) also kills the consumer registration, because
+            # the producer shares the connection's default channel with the
+            # consumer. Swallowing it here would leave the process wedged: the
+            # channel gets revived but nothing is consumed anymore. Re-raise so
+            # ConsumerMixin.run() re-establishes the consumer.
+            logger.error("Broker error while processing request, restarting consumer: %s",
+                         str(e), exc_info=True)
+            raise
         except Exception as e:
             logger.error("Error while processing request: %s", str(e), exc_info=True)
+
+    def _broker_errors(self) -> tuple:
+        if self.connection is None:
+            return ()
+        return tuple(self.connection.connection_errors) + tuple(self.connection.channel_errors)
 
     def get_consumers(self, Consumer, channel):
         return [

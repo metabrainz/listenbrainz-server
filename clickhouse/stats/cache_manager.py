@@ -25,6 +25,12 @@ from clickhouse.stats.schema import ensure_stats_schema
 
 logger = logging.getLogger(__name__)
 
+# RabbitMQ's default max_message_size is 16 MiB (128 MiB hard cap). A full
+# ``batch_size`` of users with top-1000 recording stats can easily exceed that,
+# so data messages are also capped by serialized payload size. 8 MiB leaves
+# ample headroom for the message envelope and any broker-side overhead.
+MAX_MESSAGE_BYTES = 8 * 1024 * 1024
+
 # Time range definitions
 # "this_*" = current ongoing period, "*" alone = previous complete period
 # period_end_sql: for ongoing periods use far future date, for complete periods use next boundary
@@ -609,12 +615,16 @@ class StatsCacheManager:
         database: str | None = None,
         database_prefix: str | None = None,
         batch_size: int = 100,
+        max_message_bytes: int = MAX_MESSAGE_BYTES,
     ) -> Iterator[dict]:
         """
         Generate batched RMQ messages for stats data.
 
         Stats are batched to reduce RMQ message count while keeping
-        individual message sizes manageable.
+        individual message sizes manageable. A message is flushed when it
+        reaches ``batch_size`` users *or* when adding the next user would push
+        its serialized payload past ``max_message_bytes``, so no single
+        message exceeds RabbitMQ's ``max_message_size``.
 
         Args:
             time_range: The time range for these stats
@@ -623,27 +633,17 @@ class StatsCacheManager:
             to_ts: End timestamp for this stats range
             database: The exact database name to insert into
             database_prefix: Prefix used by LB to select the latest stats database
-            batch_size: Number of users per message batch
+            batch_size: Maximum number of users per message batch
+            max_message_bytes: Approximate maximum serialized size of a message's
+                ``data`` payload. A single user larger than this is still sent
+                on its own.
 
         Yields:
             Messages to send via RMQ
         """
         entity_type = self.entity_config.entity_type
 
-        # Convert to list of (user_id, stats) for batching
-        items = list(user_results.items())
-
-        for i in range(0, len(items), batch_size):
-            batch = items[i:i + batch_size]
-            # Format batch as list of user stat dicts
-            batch_data = []
-            for user_id, stats in batch:
-                batch_data.append({
-                    'user_id': user_id,
-                    'count': len(stats),
-                    'data': stats,
-                })
-
+        def make_message(batch_data: list[dict]) -> dict:
             message = {
                 'type': 'clk_user_entity',
                 'entity': entity_type,
@@ -656,7 +656,33 @@ class StatsCacheManager:
                 message['database'] = database
             if database_prefix is not None:
                 message['database_prefix'] = database_prefix
-            yield message
+            return message
+
+        batch_data: list[dict] = []
+        batch_bytes = 0
+        for user_id, stats in user_results.items():
+            entry = {
+                'user_id': user_id,
+                'count': len(stats),
+                'data': stats,
+            }
+            # +1 for the list separator; envelope overhead is covered by the
+            # headroom between MAX_MESSAGE_BYTES and the broker limit.
+            entry_bytes = len(json.dumps(entry)) + 1
+
+            if batch_data and (
+                len(batch_data) >= batch_size
+                or batch_bytes + entry_bytes > max_message_bytes
+            ):
+                yield make_message(batch_data)
+                batch_data = []
+                batch_bytes = 0
+
+            batch_data.append(entry)
+            batch_bytes += entry_bytes
+
+        if batch_data:
+            yield make_message(batch_data)
 
     def update_cache_state(
         self,
