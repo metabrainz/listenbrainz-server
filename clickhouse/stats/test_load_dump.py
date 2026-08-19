@@ -6,7 +6,8 @@ import pyarrow as pa
 
 from clickhouse.stats.load_dump import (
     PROCESS_RAW_LISTENS,
-    PROCESS_RAW_LISTENS_CHUNKS,
+    PROCESS_RAW_LISTENS_ROWS_PER_CHUNK,
+    choose_process_chunks,
     PROCESS_RAW_LISTENS_SETTINGS,
     REPLACE_TRUNCATE_TABLES,
     build_process_raw_listens_query,
@@ -107,24 +108,33 @@ class RawListenProcessingTestCase(unittest.TestCase):
         self.assertIn("WHERE r.load_id = {load_id:String}", sql)
         self.assertNotIn("user_id %", sql)
 
-    def test_process_raw_listens_default_chunks_runs_one_query_per_bucket(self):
+    def test_process_raw_listens_multiple_chunks_runs_one_query_per_bucket(self):
         client = FakeClient()
+        chunks = 16
 
-        process_raw_listens(client, "load-1")
+        process_raw_listens(client, "load-1", chunks=chunks)
 
-        self.assertEqual(len(client.commands), PROCESS_RAW_LISTENS_CHUNKS)
+        self.assertEqual(len(client.commands), chunks)
         for i, (sql, settings) in enumerate(client.commands):
             self.assertIn(
-                f"WHERE r.load_id = {{load_id:String}} AND r.user_id % {PROCESS_RAW_LISTENS_CHUNKS} = {i}",
+                f"WHERE r.load_id = {{load_id:String}} AND r.user_id % {chunks} = {i}",
                 sql,
                 f"chunk {i} missing user_id bucket filter",
             )
             # the IN-set subqueries must be scoped to the same bucket
             self.assertEqual(
-                sql.count(f"WHERE load_id = {{load_id:String}} AND user_id % {PROCESS_RAW_LISTENS_CHUNKS} = {i}"),
+                sql.count(f"WHERE load_id = {{load_id:String}} AND user_id % {chunks} = {i}"),
                 4,
             )
             self.assertEqual(settings, PROCESS_RAW_LISTENS_SETTINGS)
+
+    def test_choose_process_chunks_scales_with_load_size(self):
+        self.assertEqual(choose_process_chunks(0), 1)
+        self.assertEqual(choose_process_chunks(PROCESS_RAW_LISTENS_ROWS_PER_CHUNK), 1)
+        self.assertEqual(choose_process_chunks(PROCESS_RAW_LISTENS_ROWS_PER_CHUNK + 1), 2)
+        self.assertEqual(choose_process_chunks(PROCESS_RAW_LISTENS_ROWS_PER_CHUNK * 2), 2)
+        self.assertEqual(choose_process_chunks(PROCESS_RAW_LISTENS_ROWS_PER_CHUNK * 2 + 1), 3)
+        self.assertEqual(choose_process_chunks(1_500_000_000), 15)
 
     def test_process_raw_listens_chunks_keep_metadata_joins_intact(self):
         client = FakeClient()
@@ -194,7 +204,7 @@ class RawListenProcessingTestCase(unittest.TestCase):
 
 class LoadDumpFlowTestCase(unittest.TestCase):
 
-    def _run_load_dump(self, tmpdir, replace=False, fail_files=False):
+    def _run_load_dump(self, tmpdir, replace=False, fail_files=False, process_chunks=2):
         from clickhouse.stats import load_dump as ld
         clients = []
 
@@ -217,7 +227,7 @@ class LoadDumpFlowTestCase(unittest.TestCase):
                 mock.patch.object(ld, "process_raw_listens") as mock_process, \
                 mock.patch.object(ld, "drop_raw_listens_partition") as mock_drop, \
                 mock.patch.object(ld, "truncate_derived_tables") as mock_truncate:
-            result = ld.load_dump(str(tmpdir), replace=replace, process_chunks=2)
+            result = ld.load_dump(str(tmpdir), replace=replace, process_chunks=process_chunks)
         return result, mock_process, mock_drop, mock_truncate
 
     def test_load_dump_processes_only_its_load_and_drops_partition(self):
@@ -232,6 +242,15 @@ class LoadDumpFlowTestCase(unittest.TestCase):
         mock_process.assert_called_once_with(mock.ANY, load_id, chunks=2)
         mock_drop.assert_called_once_with(mock.ANY, load_id)
         mock_truncate.assert_not_called()
+
+    def test_load_dump_picks_chunks_from_load_size_by_default(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            result, mock_process, _, _ = self._run_load_dump(Path(tmp), process_chunks=None)
+
+        # 3 raw rows -> well under the single-chunk threshold
+        mock_process.assert_called_once_with(mock.ANY, result["load_id"], chunks=1)
 
     def test_load_dump_replace_truncates_before_loading(self):
         import tempfile

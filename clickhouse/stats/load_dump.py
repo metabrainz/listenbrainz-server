@@ -282,10 +282,21 @@ PROCESS_RAW_LISTENS_SETTINGS = {
 
 # Split PROCESS_RAW_LISTENS into N sequential buckets by user_id % N so peak
 # memory and temp-disk per query stay bounded. raw_listens is ORDER BY
-# (user_id, ...) so each bucket reads a contiguous slice of granules. 16
-# keeps each bucket's spill state under ~1 GB on full dumps; bump if you
-# still see NOT_ENOUGH_SPACE on _tmp_default.
-PROCESS_RAW_LISTENS_CHUNKS = 16
+# (user_id, ...) so each bucket reads a contiguous slice of granules.
+#
+# Every bucket query rebuilds the (unfiltered) metadata join tables from
+# scratch, a fixed ~1 min of overhead regardless of how many raw listens are
+# in the bucket, so the chunk count is chosen from the load size: one bucket
+# per PROCESS_RAW_LISTENS_ROWS_PER_CHUNK raw rows. Incremental dumps run as a
+# single query; a ~1.5B-listen full dump lands around 16 buckets, which keeps
+# each bucket's spill state under ~1 GB. Lower the constant if you still see
+# NOT_ENOUGH_SPACE on _tmp_default.
+PROCESS_RAW_LISTENS_ROWS_PER_CHUNK = 100_000_000
+
+
+def choose_process_chunks(total_rows: int) -> int:
+    """Pick how many user_id buckets to split the end-of-load join into."""
+    return max(1, -(-total_rows // PROCESS_RAW_LISTENS_ROWS_PER_CHUNK))
 
 # Tables holding derived listen data. A full dump load with replace=True truncates
 # them so the dump becomes the sole source of truth again. deleted_listens /
@@ -435,13 +446,13 @@ def build_raw_listens_arrow_table(table: pa.Table, load_id: str) -> pa.Table:
     })
 
 
-def process_raw_listens(client: Client, load_id: str, chunks: int = PROCESS_RAW_LISTENS_CHUNKS) -> None:
+def process_raw_listens(client: Client, load_id: str, chunks: int = 1) -> None:
     """Join one load's raw_listens against the metadata tables and populate listens.
 
     Runs in ``chunks`` sequential buckets keyed by ``user_id % chunks`` so each
-    query's GROUP BY / grace-hash spill state stays bounded. Pass ``chunks=1``
-    to run the join as a single query (only safe on small inputs or with
-    plenty of temp-disk headroom).
+    query's GROUP BY / grace-hash spill state stays bounded. ``chunks=1`` runs
+    the join as a single query (only safe on small inputs or with plenty of
+    temp-disk headroom); see :func:`choose_process_chunks`.
     """
     parameters = {"load_id": load_id}
     if chunks <= 1:
@@ -522,13 +533,16 @@ def load_dump(
     password: str = "",
     database: str = "default",
     workers: int = 4,
-    process_chunks: int = PROCESS_RAW_LISTENS_CHUNKS,
+    process_chunks: int | None = None,
     replace: bool = False,
 ) -> dict:
     """
     Load Parquet dump files from a directory into ClickHouse.
 
     Args:
+        process_chunks: number of user_id buckets for the end-of-load join;
+            ``None`` picks it from the number of raw rows loaded
+            (see :func:`choose_process_chunks`).
         replace: truncate listens, the daily stats and the cache state before
             loading (full dump semantics). Deleted-listen records are kept.
 
@@ -597,13 +611,14 @@ def load_dump(
             # processed into listens, so no double counting either way.
             logger.error("Skipping processing of load %s because %d file(s) failed", load_id, len(errors))
         elif total_inserted > 0:
+            chunks = process_chunks if process_chunks is not None else choose_process_chunks(total_inserted)
             logger.info(
-                "Processing raw_listens into listens (end-of-load join, %d chunks)...",
-                process_chunks,
+                "Processing raw_listens into listens (end-of-load join, %s raw rows, %d chunks)...",
+                f"{total_inserted:,}", chunks,
             )
             process_start = time.time()
             before = process_client.query("SELECT count(*) FROM listens").first_row[0]
-            process_raw_listens(process_client, load_id, chunks=process_chunks)
+            process_raw_listens(process_client, load_id, chunks=chunks)
             after = process_client.query("SELECT count(*) FROM listens").first_row[0]
             logger.info(
                 "Processed listens in %.1fs: %s new listens (%s raw rows), %s total",
@@ -711,7 +726,7 @@ def load_from_local(
     password: str = "",
     database: str = "default",
     workers: int = 4,
-    process_chunks: int = PROCESS_RAW_LISTENS_CHUNKS,
+    process_chunks: int | None = None,
     replace: bool = False,
 ) -> dict:
     """
@@ -759,7 +774,7 @@ def load_from_ftp(
     password: str,
     database: str,
     workers: int = 4,
-    process_chunks: int = PROCESS_RAW_LISTENS_CHUNKS,
+    process_chunks: int | None = None,
     replace: bool = False,
 ) -> dict:
     """
