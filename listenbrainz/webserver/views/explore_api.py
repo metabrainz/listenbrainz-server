@@ -1,4 +1,5 @@
 import datetime
+import requests.exceptions
 from flask import Blueprint, jsonify, request, current_app
 
 from brainzutils.ratelimit import ratelimit
@@ -205,6 +206,8 @@ def lb_radio():
         playlist = patch.generate_playlist()
     except RuntimeError as err:
         raise APIBadRequest(f"LB Radio generation failed: {err}")
+    except requests.exceptions.ConnectionError:
+        raise APIInternalServerError("LB Radio generation failed due to a connection error, please try again.")
 
     jspf = playlist.get_jspf() if playlist is not None else {
         "playlist": {"tracks": []}}
