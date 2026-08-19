@@ -4,6 +4,7 @@ from datetime import datetime
 from time import monotonic
 
 import psycopg2
+import sqlalchemy.exc
 import orjson
 from brainzutils import metrics
 from flask import current_app
@@ -70,7 +71,7 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
 
             submit = [Listen.from_json(listen) for listen in msb_listens]
             self.insert_to_listenstore(submit)
-        except psycopg2.OperationalError:
+        except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError):
             current_app.logger.error("Error processing listens due to database issues:", exc_info=True)
             time.sleep(self.ERROR_RETRY_DELAY)
             raise
