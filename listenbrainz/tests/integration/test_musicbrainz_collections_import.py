@@ -192,6 +192,7 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
         )
         self.assertEqual(response.json["cover_art"], "<svg></svg>")
 
+    @mock.patch("listenbrainz.webserver.views.collection.DictCursor", new=mock.MagicMock)
     @mock.patch("listenbrainz.webserver.views.collection.psycopg2.connect")
     def test_release_collection_flatten_tracks_returns_recordings(self, mock_connect):
         fake_cursor = mock.MagicMock()
@@ -227,9 +228,19 @@ class MusicBrainzCollectionsImportTestCase(IntegrationTestCase):
             },
         ]
 
-        mock_conn = mock.MagicMock()
-        mock_connect.return_value.__enter__.return_value = mock_conn
-        mock_conn.cursor.return_value.__enter__.return_value = fake_cursor
+        fake_mb_conn = mock.MagicMock()
+        fake_mb_conn.__enter__.return_value.cursor.return_value.__enter__.return_value = (
+            fake_cursor
+        )
+
+        mb_dsn = self.app.config["MB_DATABASE_URI"]
+
+        def connect_side_effect(*args, **kwargs):
+            if args and args[0] == mb_dsn:
+                return fake_mb_conn
+            return _REAL_PSYCOPG2_CONNECT(*args, **kwargs)
+
+        mock_connect.side_effect = connect_side_effect
 
         response = self.client.post(
             self.custom_url_for(
