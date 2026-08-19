@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Link, useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import DOMPurify from "dompurify";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import { getObjectForURLSearchParams } from "../utils/utils";
@@ -139,9 +140,10 @@ export default function PlaylistSearch(props: PlayListSearchProps) {
                   </td>
                   <td
                     className="ellipsis-4-lines"
+                    // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
                     // eslint-disable-next-line react/no-danger
                     dangerouslySetInnerHTML={{
-                      __html: playlist?.annotation || "",
+                      __html: DOMPurify.sanitize(playlist?.annotation || ""),
                     }}
                   />
                   <td>
