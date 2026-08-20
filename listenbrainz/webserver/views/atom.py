@@ -183,10 +183,10 @@ def get_listens(user_name):
     if user is None:
         return NotFound("User not found")
 
-    minutes = request.args.get("minutes", DEFAULT_MINUTES_OF_LISTENS)
+    minutes = request.args.get("minutes") or DEFAULT_MINUTES_OF_LISTENS
     try:
         minutes = int(minutes)
-    except (ValueError, TypeError):
+    except ValueError:
         return BadRequest("Invalid value for minutes")
     if minutes < 1 or minutes > MAX_MINUTES_OF_LISTENS:
         return BadRequest("Value of minutes is out of range")
