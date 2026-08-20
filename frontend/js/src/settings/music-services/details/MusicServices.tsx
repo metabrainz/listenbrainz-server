@@ -462,9 +462,8 @@ export default function MusicServices() {
             title="Import Successful"
             message={
               <div>
-                Succesfully imported{" "}
-                {Math.max(imported || 0, response.inserted || 0)} out of {total}{" "}
-                starred tracks from Navidrome
+                Succesfully imported {imported || 0} out of {total} starred
+                tracks from Navidrome
                 <br />
                 <Link to="/my/taste">
                   Click here to see your newly loved tracks
