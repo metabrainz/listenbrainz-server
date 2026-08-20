@@ -2,7 +2,7 @@ import datetime
 import requests.exceptions
 from flask import Blueprint, jsonify, request, current_app
 
-from brainzutils.ratelimit import ratelimit
+from brainzutils.ratelimit import ratelimit, RateLimit, get_rate_limit_data, on_over_limit
 from brainzutils import cache
 import listenbrainz.db.fresh_releases
 from listenbrainz.webserver import db_conn, ts_conn
@@ -15,6 +15,11 @@ from troi.patch import Patch
 from listenbrainz.radio.artist import RecordingSearchByArtistService
 from listenbrainz.radio.tags import RecordingSearchByTagService
 from listenbrainz.radio.recording_lookup import RecordingLookupService
+from listenbrainz.radio.stats import LBRadioStatsService
+from listenbrainz.radio.playlist import LBRadioPlaylistService
+from listenbrainz.radio.recs import LBRadioRecsService
+
+LB_RADIO_PER_TOKEN_LIMIT = 10  # per rate-limit window (10s), separate from the global 100k/10s limit
 
 DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS = 14
 MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 90
@@ -176,6 +181,11 @@ def lb_radio():
 
     ensure_user_token_for_expensive_endpoint()
 
+    data = get_rate_limit_data(request)
+    rl = RateLimit("lb_radio:" + data["key"], LB_RADIO_PER_TOKEN_LIMIT, data["window"])
+    if rl.over_limit:
+        return on_over_limit(rl)
+
     prompt = request.args.get("prompt", None)
     if prompt is None:
         raise APIBadRequest(f"The prompt parameter cannot be empty.")
@@ -203,6 +213,9 @@ def lb_radio():
         patch.register_service(RecordingSearchByArtistService())
         patch.register_service(RecordingSearchByTagService())
         patch.register_service(RecordingLookupService())
+        patch.register_service(LBRadioStatsService())
+        patch.register_service(LBRadioPlaylistService())
+        patch.register_service(LBRadioRecsService())
         playlist = patch.generate_playlist()
     except RuntimeError as err:
         raise APIBadRequest(f"LB Radio generation failed: {err}")
