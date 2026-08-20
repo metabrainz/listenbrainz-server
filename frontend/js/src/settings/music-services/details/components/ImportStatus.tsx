@@ -111,7 +111,7 @@ export default function ImportStatus({ serviceName }: ImportStatusProps) {
           {!loading && importData && (
             <dl className="row mt-3">
               <div className="col">
-                <dt>Listens Imported:</dt>
+                <dt>Listens imported last run:</dt>
                 <dd>{importData?.status?.count ?? 0}</dd>
                 <dt>Last imported listen date:</dt>
                 <dd>
