@@ -29,9 +29,9 @@ logger = logging.getLogger(__name__)
 # memory. Keep this configurable per entity because recordings have far more
 # distinct (user, entity) pairs than artists or release groups.
 ALL_TIME_USER_CHUNK_SIZES = {
-    'artists': 1000,
-    'recordings': 1000,
-    'release_groups': 1000,
+    'artists': 5000,
+    'recordings': 5000,
+    'release_groups': 5000,
 }
 
 
