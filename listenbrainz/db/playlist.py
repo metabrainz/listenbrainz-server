@@ -759,30 +759,31 @@ def create(db_conn, ts_conn, playlist: model_playlist.WritablePlaylist) -> model
     # This code seems out of place for a create function, but in order to keep the deletion of
     # old collaborative playlists in the same transaction as creating new playlists, it needs to
     # to be here.
-    with ts_conn.begin():
-        if playlist.creator_id in (LISTENBRAINZ_USER_ID, TROI_BOT_USER_ID) and playlist.created_for_id is not None and \
-                playlist.additional_metadata is not None and "algorithm_metadata" in playlist.additional_metadata\
-                and "source_patch" in playlist.additional_metadata["algorithm_metadata"]:
-            _remove_old_collaborative_playlists(
-                ts_conn,
-                playlist.creator_id,
-                playlist.created_for_id,
-                playlist.additional_metadata["algorithm_metadata"]["source_patch"]
-            )
+    if playlist.creator_id in (LISTENBRAINZ_USER_ID, TROI_BOT_USER_ID) and playlist.created_for_id is not None and \
+            playlist.additional_metadata is not None and "algorithm_metadata" in playlist.additional_metadata\
+            and "source_patch" in playlist.additional_metadata["algorithm_metadata"]:
+        _remove_old_collaborative_playlists(
+            ts_conn,
+            playlist.creator_id,
+            playlist.created_for_id,
+            playlist.additional_metadata["algorithm_metadata"]["source_patch"]
+        )
 
-        result = ts_conn.execute(query, fields)
-        row = result.fetchone()
-        playlist.id = row.id
-        playlist.mbid = row.mbid
-        playlist.created = row.created
-        playlist.creator = creator["musicbrainz_id"]
-        playlist.recordings = insert_recordings(db_conn, ts_conn, playlist.id, playlist.recordings, 0)
+    result = ts_conn.execute(query, fields)
+    row = result.fetchone()
+    playlist.id = row.id
+    playlist.mbid = row.mbid
+    playlist.created = row.created
+    playlist.creator = creator["musicbrainz_id"]
+    playlist.recordings = insert_recordings(db_conn, ts_conn, playlist.id, playlist.recordings, 0)
 
-        if playlist.collaborator_ids:
-            add_playlist_collaborators(ts_conn, playlist.id, playlist.collaborator_ids)
-            collaborator_ids = get_collaborators_for_playlists(ts_conn, [playlist.id])
-            collaborator_ids = collaborator_ids.get(playlist.id, [])
-            playlist.collaborators = get_collaborators_names_from_ids(db_conn, collaborator_ids)
+    if playlist.collaborator_ids:
+        add_playlist_collaborators(ts_conn, playlist.id, playlist.collaborator_ids)
+        collaborator_ids = get_collaborators_for_playlists(ts_conn, [playlist.id])
+        collaborator_ids = collaborator_ids.get(playlist.id, [])
+        playlist.collaborators = get_collaborators_names_from_ids(db_conn, collaborator_ids)
+
+    ts_conn.commit()
 
     return model_playlist.Playlist.parse_obj(playlist.dict())
 
@@ -836,17 +837,17 @@ def update_playlist(db_conn, ts_conn, playlist: model_playlist.Playlist):
         'public': playlist.public,
         'additional_metadata': orjson.dumps(playlist.additional_metadata or {}).decode('utf-8')
     }
-    with ts_conn.begin():
-        ts_conn.execute(query, params)
-        # Unconditionally add collaborators, this allows us to delete all collaborators
-        # if [] is passed in.
-        # TODO: Optimise this by getting collaborators from the database and only updating
-        #  if what has passed is different to what exists
-        add_playlist_collaborators(ts_conn, playlist.id, playlist.collaborator_ids)
-        collaborator_ids = get_collaborators_for_playlists(ts_conn, [playlist.id])
-        collaborator_ids = collaborator_ids.get(playlist.id, [])
-        playlist.collaborators = get_collaborators_names_from_ids(db_conn, playlist.collaborator_ids)
-        playlist.last_updated = set_last_updated(ts_conn, playlist.id)
+    ts_conn.execute(query, params)
+    # Unconditionally add collaborators, this allows us to delete all collaborators
+    # if [] is passed in.
+    # TODO: Optimise this by getting collaborators from the database and only updating
+    #  if what has passed is different to what exists
+    add_playlist_collaborators(ts_conn, playlist.id, playlist.collaborator_ids)
+    collaborator_ids = get_collaborators_for_playlists(ts_conn, [playlist.id])
+    collaborator_ids = collaborator_ids.get(playlist.id, [])
+    playlist.collaborators = get_collaborators_names_from_ids(db_conn, playlist.collaborator_ids)
+    playlist.last_updated = set_last_updated(ts_conn, playlist.id)
+    ts_conn.commit()
     return playlist
 
 
@@ -1015,15 +1016,15 @@ def delete_recordings_from_playlist(ts_conn, playlist: model_playlist.Playlist, 
     delete_params = {"playlist_id": playlist.id,
                      "position_start": remove_from,
                      "position_end": remove_from+remove_count}
-    with ts_conn.begin():
-        ts_conn.execute(delete, delete_params)
-        if remove_from + remove_count < len(playlist.recordings):
-            reorder_params = {"playlist_id": playlist.id,
-                              "position": remove_from + remove_count,
-                              "offset": -1 * remove_count}
-            ts_conn.execute(reorder, reorder_params)
-        # TODO: In move_recordings we call delete and then add, so this is called twice
-        set_last_updated(ts_conn, playlist.id)
+    ts_conn.execute(delete, delete_params)
+    if remove_from + remove_count < len(playlist.recordings):
+        reorder_params = {"playlist_id": playlist.id,
+                          "position": remove_from + remove_count,
+                          "offset": -1 * remove_count}
+        ts_conn.execute(reorder, reorder_params)
+    # TODO: In move_recordings we call delete and then add, so this is called twice
+    set_last_updated(ts_conn, playlist.id)
+    ts_conn.commit()
 
 
 def add_recordings_to_playlist(db_conn, ts_conn, playlist: model_playlist.Playlist,
@@ -1058,23 +1059,23 @@ def add_recordings_to_playlist(db_conn, ts_conn, playlist: model_playlist.Playli
     if position is None:
         position = len(playlist.recordings)
 
-    with ts_conn.begin():
-        if position < len(playlist.recordings):
-            reorder_params = {"playlist_id": playlist.id,
-                              "offset": len(recordings),
-                              "position": position}
-            ts_conn.execute(reorder, reorder_params)
-        recordings = insert_recordings(db_conn, ts_conn, playlist.id, recordings, position)
-        playlist.recordings = playlist.recordings[0:position] + recordings + playlist.recordings[position:]
-        set_last_updated(ts_conn, playlist.id)
+    if position < len(playlist.recordings):
+        reorder_params = {"playlist_id": playlist.id,
+                          "offset": len(recordings),
+                          "position": position}
+        ts_conn.execute(reorder, reorder_params)
+    recordings = insert_recordings(db_conn, ts_conn, playlist.id, recordings, position)
+    playlist.recordings = playlist.recordings[0:position] + recordings + playlist.recordings[position:]
+    set_last_updated(ts_conn, playlist.id)
+    ts_conn.commit()
     return playlist
 
 
 def move_recordings(db_conn, ts_conn, playlist: model_playlist.Playlist, position_from: int, position_to: int, count: int):
-    with ts_conn.begin():
-        removed = playlist.recordings[position_from:position_from+count]
-        delete_recordings_from_playlist(ts_conn, playlist, position_from, count)
-        add_recordings_to_playlist(db_conn, ts_conn, playlist, removed, position_to)
+    # TODO: This must be done in a single transaction
+    removed = playlist.recordings[position_from:position_from+count]
+    delete_recordings_from_playlist(ts_conn, playlist, position_from, count)
+    add_recordings_to_playlist(db_conn, ts_conn, playlist, removed, position_to)
 
 
 def get_playlist_recordings_metadata(mb_curs, ts_curs, playlist: Playlist) -> Playlist:
@@ -1135,11 +1136,12 @@ def delete_playlists_by_user_id(ts_conn, user_id: int) -> int:
         DELETE FROM playlist.playlist_collaborator
               WHERE collaborator_id = :user_id
     """)
+    ts_conn.execute(delete_collaborators_query, {"user_id": user_id})
+
     delete_playlist_query = text("""
         DELETE FROM playlist.playlist
               WHERE creator_id = :user_id
                  OR created_for_id = :user_id
     """)
-    with ts_conn.begin():
-        ts_conn.execute(delete_collaborators_query, {"user_id": user_id})
-        ts_conn.execute(delete_playlist_query, {"user_id": user_id})
+    ts_conn.execute(delete_playlist_query, {"user_id": user_id})
+    ts_conn.commit()
