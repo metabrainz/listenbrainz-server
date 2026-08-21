@@ -23,7 +23,7 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
             missing_musicbrainz_data=UserMissingMusicBrainzDataJson(missing_musicbrainz_data=missing_musicbrainz_data),
             source='cf'
         )
-        self.ts_conn = timescale.engine.connect()
+        self.ts_conn = timescale.engine.connect().execution_options(isolation_level="AUTOCOMMIT")
         self.data = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(
             self.db_conn,
             self.ts_conn,
