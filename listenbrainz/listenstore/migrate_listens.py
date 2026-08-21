@@ -91,6 +91,16 @@ DELETE_CHECKPOINT_SQL = """
       FROM listen_delete_metadata
 """
 USER_DELETE_CHECKPOINT_SQL = "SELECT COALESCE(max(id), 0) FROM deleted_user_listen_history"
+TARGET_INTEGRITY_SQL = """
+    SELECT COALESCE(sum(listen_count), 0)::bigint AS total_listens,
+           COALESCE(sum(listen_count - 1), 0)::bigint AS duplicate_listens,
+           count(*) FILTER (WHERE listen_count > 1) AS duplicate_keys
+      FROM (
+            SELECT count(*) AS listen_count
+              FROM listen
+          GROUP BY user_id, listened_at, recording_msid
+           ) listens_by_key
+"""
 
 
 def _uri(name):
@@ -185,12 +195,17 @@ def create_indexes():
     current_app.logger.info("created listen indexes")
 
 
-def _insert_sql(target_conn):
+def _insert_sql(target_conn, require_unique=False):
     """ Use ON CONFLICT DO UPDATE if the unique index exists, otherwise a plain insert. """
     row = _fetch_one(target_conn, "SELECT 1 FROM pg_indexes WHERE tablename = 'listen' AND indexname = %s",
                      (UNIQUE_INDEX_NAME,))
     if row:
         return INSERT_ON_CONFLICT_SQL
+    if require_unique:
+        raise click.ClickException(
+            f"unique index {UNIQUE_INDEX_NAME} does not exist on the target; "
+            "run create-indexes successfully before running an incremental migration"
+        )
     current_app.logger.warning("unique index %s does not exist on the target yet, using plain inserts: "
                                "re-running or overlapping copies will create duplicate listens", UNIQUE_INDEX_NAME)
     return INSERT_SQL
@@ -268,7 +283,8 @@ def migrate_full(start, end, window, batch_size):
                         window_start.isoformat(), window_end.isoformat(), read, inserted,
                         time.monotonic() - t0, total_read, total_inserted)
             window_start = window_end
-        logger.info("full migration complete: read %d, inserted %d in %.1fs, next --since: %s",
+        logger.info("full migration complete: read %d, inserted %d in %.1fs, "
+                    "next --since: %s (subtract a small overlap from this value)",
                     total_read, total_inserted, time.monotonic() - overall_t0,
                     max_created.isoformat() if max_created else None)
     finally:
@@ -282,7 +298,7 @@ def migrate_incremental(since, until, batch_size):
     target_conn = connect_target()
     try:
         max_created = _log_checkpoint(source_conn)
-        insert_sql = _insert_sql(target_conn)
+        insert_sql = _insert_sql(target_conn, require_unique=True)
 
         query = f"SELECT {SELECT_COLUMNS} FROM listen WHERE created >= %s"
         params = [since]
@@ -294,7 +310,8 @@ def migrate_incremental(since, until, batch_size):
         read, inserted = copy_batches(source_conn, target_conn, query, params, insert_sql, INSERT_TEMPLATE,
                                       batch_size, "migrate_listens_incremental")
         current_app.logger.info(
-            "incremental migration complete (created >= %s%s): read %d, inserted/updated %d in %.1fs, next --since: %s",
+            "incremental migration complete (created >= %s%s): read %d, inserted/updated %d in %.1fs, "
+            "next --since: %s (subtract a small overlap from this value)",
             since.isoformat(), f", < {until.isoformat()}" if until else "", read, inserted,
             time.monotonic() - t0, max_created.isoformat() if max_created else None
         )
@@ -341,13 +358,64 @@ def replay_deletes(since_id, since_history_id, batch_size):
         target_conn.close()
 
 
+def check_integrity():
+    """ Check that the target is fully partitioned and contains no duplicate logical listens. """
+    target_conn = connect_target()
+    try:
+        with target_conn.cursor() as cur:
+            cur.execute("SELECT to_regclass('listen')")
+            if cur.fetchone()[0] is None:
+                raise click.ClickException("listen table does not exist on the target; run create-schema first")
+
+            modulus, partition_count = _existing_partitions(cur)
+            if partition_count != modulus:
+                raise click.ClickException(
+                    f"listen table has {partition_count} of {modulus or 0} required hash partitions; "
+                    "run create-schema with the original partition count"
+                )
+
+            cur.execute(TARGET_INTEGRITY_SQL)
+            total_listens, duplicate_listens, duplicate_keys = cur.fetchone()
+        target_conn.rollback()
+    finally:
+        target_conn.close()
+
+    if duplicate_listens:
+        raise click.ClickException(
+            f"target integrity check failed: found {duplicate_listens} duplicate listens "
+            f"across {duplicate_keys} logical listen keys"
+        )
+    current_app.logger.info(
+        "target integrity check passed: %d listens, %d complete hash partitions, no duplicates",
+        total_listens, partition_count
+    )
+
+
 batch_size_option = click.option("--batch-size", type=click.IntRange(min=1), default=DEFAULT_BATCH_SIZE,
                                  show_default=True, help="number of listens to read/write per batch")
 
 
 @click.group()
 def cli():
-    pass
+    """ Migrate listens from TimescaleDB to the user-partitioned PostgreSQL database.
+
+    \b
+    Initial copy checklist:
+      1. create-schema
+      2. full
+      3. check-integrity
+      4. create-indexes
+
+    \b
+    Catch-up cycle checklist:
+      1. replay-deletes using the checkpoints logged by its previous run
+      2. incremental using the previous created checkpoint minus a small overlap
+      3. check-integrity
+
+    \b
+    For the final cycle, stop source writes and let the delete cron drain before running the
+    catch-up cycle one last time.
+    """
 
 
 @cli.command(name="create-schema")
@@ -364,6 +432,13 @@ def create_indexes_command():
     """ Create the indexes on the listen table, run after the initial full copy. """
     with create_app().app_context():
         create_indexes()
+
+
+@cli.command(name="check-integrity")
+def check_integrity_command():
+    """ Verify target partitioning and check for duplicate logical listens. """
+    with create_app().app_context():
+        check_integrity()
 
 
 @cli.command(name="full")
