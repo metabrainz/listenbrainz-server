@@ -248,7 +248,9 @@ def validate_basic_metadata(listen, key, required=True):
 
         listen['track_metadata'][key] = listen['track_metadata'][key].strip()
         if len(listen['track_metadata'][key]) == 0:
-            raise ListenValidationError(f"field track_metadata.{key} is empty.", listen)
+            if required:
+                raise ListenValidationError(f"field track_metadata.{key} is empty.", listen)
+            del listen['track_metadata'][key]
     elif required:
         raise ListenValidationError(f"JSON document does not contain required field track_metadata.{key}.", listen)
 

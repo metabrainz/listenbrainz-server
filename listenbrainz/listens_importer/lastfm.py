@@ -100,6 +100,12 @@ class BaseLastfmImporter(ListensImporter):
                     if isinstance(data["error"], dict) and str(data["error"].get("code")) == "7":
                         return {"recenttracks": {"@attr": {"totalPages": "0"}, "track": []}}
                     raise ExternalServiceAPIError("Error from the API while getting listens: %s" % data.get("message", data["error"]))
+                # Libre.fm returns a single dict instead of a list when there is
+                # only one track; normalize to always be a list.
+                if "recenttracks" in data:
+                    tracks = data["recenttracks"].get("track")
+                    if isinstance(tracks, dict):
+                        data["recenttracks"]["track"] = [tracks]
                 return data
             case 404:
                 raise LastfmUserNotRetryableException("Last.FM user with username %s not found" % (params["user"],))
@@ -131,6 +137,9 @@ class BaseLastfmImporter(ListensImporter):
             the number of recently played listens imported for the user
         """
         imported_listen_count = 0
+
+        if not user.get("external_user_id"):
+            raise LastfmUserNotRetryableException("Last.fm/Libre.fm username is empty")
 
         try:
             session = requests.Session()

@@ -110,6 +110,17 @@ SQLALCHEMY_BINDS = {}
 {{end}}
 
 
+# New listens database (plain postgres, listens partitioned by user_id). Currently only used as the
+# target of listenbrainz/listenstore/migrate_listens.py while listens are migrated away from timescale.
+{{if service "listenbrainz-user-listenstore"}}
+{{with index (service "listenbrainz-user-listenstore") 0}}
+SQLALCHEMY_LISTENS_URI = """postgresql://{{template "KEY" "listens_db_user"}}:{{template "KEY" "listens_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listens_db_name"}}"""
+{{end}}
+{{else}}
+SQLALCHEMY_LISTENS_URI = "SERVICEDOESNOTEXIST_listenbrainz-user-listenstore"
+{{end}}
+
+
 {{if service "pgbouncer-aretha"}}
 {{with index (service "pgbouncer-aretha") 0}}
 MBID_MAPPING_DATABASE_URI = "dbname=musicbrainz_json_dump user=musicbrainz host={{.Address}} port={{.Port}} password=musicbrainz"

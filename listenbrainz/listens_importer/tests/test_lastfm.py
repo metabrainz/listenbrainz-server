@@ -162,3 +162,17 @@ class LastfmRecentTracksTestCase(unittest.TestCase):
     def test_librefm_empty_range(self):
         data = self._get(json={"error": {"code": "7"}}, status_code=200)
         self.assertEqual(data["recenttracks"]["track"], [])
+
+    def test_single_track_dict_normalized_to_list(self):
+        """Libre.fm returns a dict instead of a list when there is one track."""
+        single_track = {"name": "Song", "artist": {"#text": "Artist", "mbid": ""}, "album": {"#text": "", "mbid": ""}, "date": {"uts": "1000"}}
+        data = self._get(json={"recenttracks": {"@attr": {"totalPages": "1"}, "track": single_track}}, status_code=200)
+        self.assertIsInstance(data["recenttracks"]["track"], list)
+        self.assertEqual(len(data["recenttracks"]["track"]), 1)
+        self.assertEqual(data["recenttracks"]["track"][0]["name"], "Song")
+
+    def test_multi_track_list_unchanged(self):
+        tracks = [{"name": "A"}, {"name": "B"}]
+        data = self._get(json={"recenttracks": {"@attr": {"totalPages": "1"}, "track": tracks}}, status_code=200)
+        self.assertIsInstance(data["recenttracks"]["track"], list)
+        self.assertEqual(len(data["recenttracks"]["track"]), 2)
