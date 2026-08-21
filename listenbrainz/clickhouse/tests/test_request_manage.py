@@ -83,6 +83,25 @@ class ClickHouseRequestManageTestCase(unittest.TestCase):
         ])
 
     @mock.patch("listenbrainz.clickhouse.request_manage.send_request_to_clickhouse")
+    def test_request_stats_can_target_activity_types(self, mock_send):
+        result = self.runner.invoke(
+            request_manage.cli,
+            [
+                "request_hourly_stats",
+                "--entity",
+                "daily_activity",
+                "--entity",
+                "listening_activity",
+            ],
+        )
+
+        self.assertEqual(result.exit_code, 0)
+        mock_send.assert_has_calls([
+            mock.call("clickhouse.stats.hourly", entity="daily_activity", batch_size=1000),
+            mock.call("clickhouse.stats.hourly", entity="listening_activity", batch_size=1000),
+        ])
+
+    @mock.patch("listenbrainz.clickhouse.request_manage.send_request_to_clickhouse")
     def test_cron_request_all_stats_requests_metadata_then_hourly_stats(self, mock_send):
         result = self.runner.invoke(
             request_manage.cli,

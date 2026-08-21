@@ -7,6 +7,8 @@ from sentry_sdk import start_transaction
 
 import listenbrainz.db.couchdb as couchdb
 import listenbrainz.db.stats as db_stats
+from data.model.user_daily_activity import DailyActivityRecord
+from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_artist_stat import ArtistRecord
 from data.model.user_recording_stat import RecordingRecord
 from data.model.user_release_group_stat import ReleaseGroupRecord
@@ -18,6 +20,8 @@ ENTITY_MODELS = {
     "artists": ArtistRecord,
     "recordings": RecordingRecord,
     "release_groups": ReleaseGroupRecord,
+    "daily_activity": DailyActivityRecord,
+    "listening_activity": ListeningActivityRecord,
 }
 
 

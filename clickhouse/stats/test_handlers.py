@@ -2,6 +2,11 @@ import unittest
 from unittest import mock
 
 from clickhouse.stats import handlers
+from clickhouse.stats.activity_cache_manager import (
+    ActivityStatsCacheManager,
+    BulkActivityStatsCacheManager,
+)
+from clickhouse.stats.cache_manager import CacheConfig
 
 
 class DumpHandlerTestCase(unittest.TestCase):
@@ -73,6 +78,46 @@ class DeletedListensHandlerTestCase(unittest.TestCase):
             messages = handlers.import_deleted_listens()
         self.assertEqual(messages[0]["status"], "error")
         self.assertIn("TIMESCALE_DSN", messages[0]["error"])
+
+
+class StatsHandlerTestCase(unittest.TestCase):
+
+    def test_activity_types_use_activity_managers(self):
+        incremental = handlers._stats_manager(CacheConfig(), "daily_activity")
+        full = handlers._stats_manager(CacheConfig(), "listening_activity", full=True)
+
+        self.assertIsInstance(incremental, ActivityStatsCacheManager)
+        self.assertIsInstance(full, BulkActivityStatsCacheManager)
+
+    @mock.patch("clickhouse.stats.handlers._stats_manager")
+    @mock.patch("clickhouse.stats.handlers.get_cache_config", return_value=CacheConfig())
+    def test_hourly_job_includes_activity_types_by_default(self, _mock_config, mock_manager_factory):
+        manager = mock.Mock()
+        manager.run_hourly_job.return_value = iter(())
+        mock_manager_factory.return_value = manager
+
+        messages = list(handlers.run_hourly_stats_job())
+
+        requested_types = [call.args[1] for call in mock_manager_factory.call_args_list]
+        self.assertIn("daily_activity", requested_types)
+        self.assertIn("listening_activity", requested_types)
+        self.assertIn("daily_activity", messages[-1]["entities"])
+
+    @mock.patch("clickhouse.stats.handlers._stats_manager")
+    @mock.patch("clickhouse.stats.handlers.get_cache_config", return_value=CacheConfig())
+    def test_full_activity_refresh_does_not_pass_entity_chunk_argument(
+        self, _mock_config, mock_manager_factory,
+    ):
+        manager = mock.Mock()
+        manager.run_full_refresh.return_value = iter(())
+        mock_manager_factory.return_value = manager
+
+        list(handlers.run_full_stats_refresh(entity="daily_activity"))
+
+        manager.run_full_refresh.assert_called_once_with(
+            message_batch_size=100,
+            user_flush_size=5000,
+        )
 
 
 class SchemaHandlerTestCase(unittest.TestCase):

@@ -32,7 +32,13 @@ stats_api_bp = Blueprint('stats_api_v1', __name__)
 
 # Stats for these entities are also computed by the ClickHouse pipeline and can be
 # served from it by passing ``clickhouse=true`` to the corresponding endpoints.
-CLICKHOUSE_ENTITIES = {"artists", "recordings", "release_groups"}
+CLICKHOUSE_ENTITIES = {
+    "artists",
+    "recordings",
+    "release_groups",
+    "daily_activity",
+    "listening_activity",
+}
 
 
 @stats_api_bp.get("/user/<mb_username:user_name>/artists")
@@ -415,7 +421,14 @@ def get_listening_activity(user_name: str):
     """
     user, stats_range = _validate_stats_user_params(user_name)
 
-    stats = db_stats.get(user["id"], "listening_activity", stats_range, ListeningActivityRecord)
+    clickhouse = _use_clickhouse_stats("listening_activity")
+    stats = db_stats.get(
+        user["id"],
+        "listening_activity",
+        stats_range,
+        ListeningActivityRecord,
+        clickhouse=clickhouse,
+    )
     if stats is None:
         raise APINoContent('')
 
@@ -855,7 +868,14 @@ def get_daily_activity(user_name: str):
     """
     user, stats_range = _validate_stats_user_params(user_name)
 
-    stats = db_stats.get(user['id'], "daily_activity", stats_range, DailyActivityRecord)
+    clickhouse = _use_clickhouse_stats("daily_activity")
+    stats = db_stats.get(
+        user['id'],
+        "daily_activity",
+        stats_range,
+        DailyActivityRecord,
+        clickhouse=clickhouse,
+    )
     if stats is None:
         raise APINoContent('')
 

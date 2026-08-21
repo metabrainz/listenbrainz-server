@@ -10,6 +10,11 @@ import logging
 from typing import Iterator, Optional
 
 from clickhouse import config
+from clickhouse.stats.activity_cache_manager import (
+    ACTIVITY_CONFIGS,
+    ActivityStatsCacheManager,
+    BulkActivityStatsCacheManager,
+)
 from clickhouse.stats.bulk_cache_manager import BulkStatsCacheManager
 from clickhouse.stats.deleted_listens import import_deleted_listens as _import_deleted_listens
 from clickhouse.stats.cache_manager import (
@@ -33,6 +38,17 @@ ALL_TIME_USER_CHUNK_SIZES = {
     'recordings': 5000,
     'release_groups': 5000,
 }
+
+STATS_CONFIGS = {**ENTITY_CONFIGS, **ACTIVITY_CONFIGS}
+
+
+def _stats_manager(cache_config, stat_type: str, *, full: bool = False):
+    stat_config = STATS_CONFIGS[stat_type]
+    if stat_type in ACTIVITY_CONFIGS:
+        manager_class = BulkActivityStatsCacheManager if full else ActivityStatsCacheManager
+    else:
+        manager_class = BulkStatsCacheManager if full else StatsCacheManager
+    return manager_class(cache_config, stat_config)
 
 
 def _raise_on_dump_errors(result: dict) -> None:
@@ -204,7 +220,7 @@ def run_hourly_stats_job(
     Run the hourly stats cache refresh job from an RMQ request.
 
     Args:
-        entity: Entity type to process ('artists', 'recordings', 'release_groups', or None for all)
+        entity: Stat type to process, or None for all ClickHouse user stats.
         batch_size: Number of users to process per batch
 
     Yields:
@@ -213,7 +229,7 @@ def run_hourly_stats_job(
     cache_config = get_cache_config()
 
     if entity:
-        if entity not in ENTITY_CONFIGS:
+        if entity not in STATS_CONFIGS:
             yield {
                 'type': 'clk_stats_error',
                 'entity': entity,
@@ -223,14 +239,13 @@ def run_hourly_stats_job(
             return
         entities_to_process = [entity]
     else:
-        entities_to_process = list(ENTITY_CONFIGS)
+        entities_to_process = list(STATS_CONFIGS)
 
     logger.info("Running hourly stats job for entities: %s", entities_to_process)
 
     for entity_type in entities_to_process:
         try:
-            entity_config = ENTITY_CONFIGS[entity_type]
-            manager = StatsCacheManager(cache_config, entity_config)
+            manager = _stats_manager(cache_config, entity_type)
             manager.connect()
 
             message_count = 0
@@ -263,12 +278,13 @@ def run_full_stats_refresh(
     """
     Run a full stats cache refresh from an RMQ request.
 
-    Builds a compact intermediate per entity, then streams each time range
-    from it. It emits start / data / end messages so the LB CouchDB handler
-    swaps databases per (entity, time range).
+    Builds a compact intermediate per stat type, then streams each time range
+    from it. Entity stats rank the top-N entities; activity stats aggregate
+    weekday/hour or timeline buckets. Emits start / data / end messages so the
+    LB CouchDB handler swaps databases per (stat type, time range).
 
     Args:
-        entity: Entity type to process ('artists', 'recordings', 'release_groups', or None for all)
+        entity: Stat type to process, or None for all ClickHouse user stats.
         message_batch_size: Users per outbound RMQ message.
         user_flush_size: Users buffered from the ClickHouse stream before
             messages are emitted and cache state is updated.
@@ -279,7 +295,7 @@ def run_full_stats_refresh(
     cache_config = get_cache_config()
 
     if entity:
-        if entity not in ENTITY_CONFIGS:
+        if entity not in STATS_CONFIGS:
             yield {
                 'type': 'clk_stats_error',
                 'entity': entity,
@@ -289,22 +305,23 @@ def run_full_stats_refresh(
             return
         entities_to_process = [entity]
     else:
-        entities_to_process = list(ENTITY_CONFIGS)
+        entities_to_process = list(STATS_CONFIGS)
 
     logger.info("Running full stats refresh for entities: %s", entities_to_process)
 
     for entity_type in entities_to_process:
         try:
-            entity_config = ENTITY_CONFIGS[entity_type]
-            manager = BulkStatsCacheManager(cache_config, entity_config)
+            manager = _stats_manager(cache_config, entity_type, full=True)
             manager.connect()
 
             message_count = 0
-            for message in manager.run_full_refresh(
-                message_batch_size=message_batch_size,
-                user_flush_size=user_flush_size,
-                all_time_user_chunk_size=ALL_TIME_USER_CHUNK_SIZES.get(entity_type),
-            ):
+            refresh_kwargs = {
+                "message_batch_size": message_batch_size,
+                "user_flush_size": user_flush_size,
+            }
+            if entity_type not in ACTIVITY_CONFIGS:
+                refresh_kwargs["all_time_user_chunk_size"] = ALL_TIME_USER_CHUNK_SIZES.get(entity_type)
+            for message in manager.run_full_refresh(**refresh_kwargs):
                 yield message
                 message_count += 1
 

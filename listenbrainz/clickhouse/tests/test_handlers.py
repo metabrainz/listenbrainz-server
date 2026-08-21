@@ -106,6 +106,32 @@ class ClickHouseHandlerTestCase(unittest.TestCase):
             }],
         )
 
+    @mock.patch("listenbrainz.clickhouse.handlers.db_stats.insert")
+    def test_handle_user_entity_stats_accepts_activity_payloads(self, mock_insert):
+        handle_user_entity_stats({
+            "type": "clk_user_entity",
+            "entity": "daily_activity",
+            "stats_range": "all_time",
+            "from_ts": 1,
+            "to_ts": 2,
+            "database": "clk_daily_activity_all_time_20240101",
+            "data": [{
+                "user_id": 42,
+                "data": [{"day": "Monday", "hour": 8, "listen_count": 3}],
+            }],
+        })
+
+        mock_insert.assert_called_once_with(
+            "clk_daily_activity_all_time_20240101",
+            1,
+            2,
+            [{
+                "user_id": 42,
+                "count": 1,
+                "data": [{"day": "Monday", "hour": 8, "listen_count": 3}],
+            }],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

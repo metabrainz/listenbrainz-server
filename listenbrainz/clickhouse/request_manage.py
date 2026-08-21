@@ -9,7 +9,13 @@ from listenbrainz.webserver import create_app
 
 cli = click.Group()
 
-CLICKHOUSE_ENTITY_TYPES = ["artists", "recordings", "release_groups"]
+CLICKHOUSE_ENTITY_TYPES = [
+    "artists",
+    "recordings",
+    "release_groups",
+    "daily_activity",
+    "listening_activity",
+]
 
 
 def send_request_to_clickhouse(query, **params):
@@ -96,22 +102,22 @@ def import_incremental_dump(workers: int):
 
 @cli.command(name="request_hourly_stats")
 @click.option("--entity", "entities", multiple=True, type=click.Choice(CLICKHOUSE_ENTITY_TYPES),
-              help="Entity stats to refresh. May be passed multiple times; defaults to all.")
+              help="Stat type to refresh. May be passed multiple times; defaults to all.")
 @click.option("--batch-size", type=int, default=1000, help="Users to process per ClickHouse query batch")
 def request_hourly_stats(entities: tuple[str], batch_size: int):
-    """Request an incremental ClickHouse user entity stats refresh."""
+    """Request an incremental ClickHouse user stats refresh."""
     _send_stats_request("clickhouse.stats.hourly", entities, batch_size)
 
 
 @cli.command(name="request_full_stats_refresh")
 @click.option("--entity", "entities", multiple=True, type=click.Choice(CLICKHOUSE_ENTITY_TYPES),
-              help="Entity stats to refresh. May be passed multiple times; defaults to all.")
+              help="Stat type to refresh. May be passed multiple times; defaults to all.")
 @click.option("--message-batch-size", type=int, default=100,
               help="Users per outbound RMQ message.")
 @click.option("--user-flush-size", type=int, default=5000,
               help="Users buffered from the ClickHouse stream before messages are emitted.")
 def request_full_stats_refresh(entities: tuple[str], message_batch_size: int, user_flush_size: int):
-    """Request a full ClickHouse user entity stats refresh."""
+    """Request a full ClickHouse user stats refresh."""
     params = {"message_batch_size": message_batch_size, "user_flush_size": user_flush_size}
     if not entities:
         send_request_to_clickhouse("clickhouse.stats.full_refresh", **params)
