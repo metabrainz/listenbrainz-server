@@ -15,7 +15,6 @@ functions = {
     'clickhouse.import_deleted_listens': clickhouse.stats.handlers.import_deleted_listens,
     'clickhouse.stats.hourly': clickhouse.stats.handlers.run_hourly_stats_job,
     'clickhouse.stats.full_refresh': clickhouse.stats.handlers.run_full_stats_refresh,
-    'clickhouse.stats.bulk_full_refresh': clickhouse.stats.handlers.run_bulk_full_stats_refresh,
     'clickhouse.metadata_cache.refresh': clickhouse.stats.handlers.refresh_metadata_cache,
 }
 

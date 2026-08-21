@@ -239,7 +239,7 @@ class BulkStatsCacheManager(StatsCacheManager):
             database, message_batch_size, max_created,
         )
 
-    def run_bulk_full_refresh(
+    def run_full_refresh(
         self,
         message_batch_size: int = 100,
         user_flush_size: int = 5000,
@@ -248,8 +248,8 @@ class BulkStatsCacheManager(StatsCacheManager):
         """Stream a full refresh via one daily-table scan + per-time-range ranking.
 
         Yields RMQ messages in the same start / data / end pattern as
-        StatsCacheManager.run_full_refresh so the LB-side CouchDB handler
-        creates a fresh database per (entity, time_range).
+            the LB-side CouchDB handler creates a fresh database per
+            (entity, time_range).
 
         Args:
             message_batch_size: Users per outbound RMQ message.

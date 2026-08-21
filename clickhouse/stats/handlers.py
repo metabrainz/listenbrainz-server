@@ -257,14 +257,21 @@ def run_hourly_stats_job(
 
 def run_full_stats_refresh(
     entity: Optional[str] = None,
-    batch_size: int = 1000,
+    message_batch_size: int = 100,
+    user_flush_size: int = 5000,
 ) -> Iterator[dict]:
     """
     Run a full stats cache refresh from an RMQ request.
 
+    Builds a compact intermediate per entity, then streams each time range
+    from it. It emits start / data / end messages so the LB CouchDB handler
+    swaps databases per (entity, time range).
+
     Args:
         entity: Entity type to process ('artists', 'recordings', 'release_groups', or None for all)
-        batch_size: Number of users to process per batch
+        message_batch_size: Users per outbound RMQ message.
+        user_flush_size: Users buffered from the ClickHouse stream before
+            messages are emitted and cache state is updated.
 
     Yields:
         Result messages for the response queue.
@@ -289,11 +296,15 @@ def run_full_stats_refresh(
     for entity_type in entities_to_process:
         try:
             entity_config = ENTITY_CONFIGS[entity_type]
-            manager = StatsCacheManager(cache_config, entity_config)
+            manager = BulkStatsCacheManager(cache_config, entity_config)
             manager.connect()
 
             message_count = 0
-            for message in manager.run_full_refresh(batch_size=batch_size):
+            for message in manager.run_full_refresh(
+                message_batch_size=message_batch_size,
+                user_flush_size=user_flush_size,
+                all_time_user_chunk_size=ALL_TIME_USER_CHUNK_SIZES.get(entity_type),
+            ):
                 yield message
                 message_count += 1
 
@@ -310,80 +321,6 @@ def run_full_stats_refresh(
     yield {
         'type': 'clk_stats_complete',
         'job': 'full_refresh',
-        'entities': entities_to_process,
-    }
-
-
-def run_bulk_full_stats_refresh(
-    entity: Optional[str] = None,
-    message_batch_size: int = 100,
-    user_flush_size: int = 5000,
-) -> Iterator[dict]:
-    """
-    Run a bulk full stats refresh from an RMQ request.
-
-    Uses BulkStatsCacheManager: builds a single per-entity intermediate from
-    user_*_stats_daily (one scan covering all time ranges via conditional
-    aggregation), then streams a top-N ranking per time range off that
-    intermediate. Emits the same start / data / end message contract as
-    run_full_stats_refresh so the LB CouchDB handler swaps databases per
-    (entity, time_range).
-
-    Args:
-        entity: Entity type to process ('artists', 'recordings', 'release_groups',
-            or None for all).
-        message_batch_size: Users per outbound RMQ message.
-        user_flush_size: Users buffered from the ClickHouse stream before
-            messages are emitted and cache state is updated.
-
-    Yields:
-        Result messages for the response queue.
-    """
-    cache_config = get_cache_config()
-
-    if entity:
-        if entity not in ENTITY_CONFIGS:
-            yield {
-                'type': 'clk_stats_error',
-                'entity': entity,
-                'job': 'bulk_full_refresh',
-                'error': f"Unknown entity: {entity}",
-            }
-            return
-        entities_to_process = [entity]
-    else:
-        entities_to_process = list(ENTITY_CONFIGS)
-
-    logger.info("Running bulk full stats refresh for entities: %s", entities_to_process)
-
-    for entity_type in entities_to_process:
-        try:
-            entity_config = ENTITY_CONFIGS[entity_type]
-            manager = BulkStatsCacheManager(cache_config, entity_config)
-            manager.connect()
-
-            message_count = 0
-            for message in manager.run_bulk_full_refresh(
-                message_batch_size=message_batch_size,
-                user_flush_size=user_flush_size,
-                all_time_user_chunk_size=ALL_TIME_USER_CHUNK_SIZES.get(entity_type),
-            ):
-                yield message
-                message_count += 1
-
-            logger.info("Bulk refresh for %s yielded %d messages", entity_type, message_count)
-        except Exception as e:
-            logger.error("Error in bulk full refresh for %s: %s", entity_type, e, exc_info=True)
-            yield {
-                'type': 'clk_stats_error',
-                'entity': entity_type,
-                'job': 'bulk_full_refresh',
-                'error': str(e),
-            }
-
-    yield {
-        'type': 'clk_stats_complete',
-        'job': 'bulk_full_refresh',
         'entities': entities_to_process,
     }
 

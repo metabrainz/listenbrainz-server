@@ -106,27 +106,18 @@ def request_hourly_stats(entities: tuple[str], batch_size: int):
 @cli.command(name="request_full_stats_refresh")
 @click.option("--entity", "entities", multiple=True, type=click.Choice(CLICKHOUSE_ENTITY_TYPES),
               help="Entity stats to refresh. May be passed multiple times; defaults to all.")
-@click.option("--batch-size", type=int, default=1000, help="Users to process per ClickHouse query batch")
-def request_full_stats_refresh(entities: tuple[str], batch_size: int):
-    """Request a full ClickHouse user entity stats refresh."""
-    _send_stats_request("clickhouse.stats.full_refresh", entities, batch_size)
-
-
-@cli.command(name="request_bulk_full_stats_refresh")
-@click.option("--entity", "entities", multiple=True, type=click.Choice(CLICKHOUSE_ENTITY_TYPES),
-              help="Entity stats to refresh. May be passed multiple times; defaults to all.")
 @click.option("--message-batch-size", type=int, default=100,
               help="Users per outbound RMQ message.")
 @click.option("--user-flush-size", type=int, default=5000,
               help="Users buffered from the ClickHouse stream before messages are emitted.")
-def request_bulk_full_stats_refresh(entities: tuple[str], message_batch_size: int, user_flush_size: int):
-    """Request a bulk ClickHouse user entity stats refresh (single intermediate scan)."""
+def request_full_stats_refresh(entities: tuple[str], message_batch_size: int, user_flush_size: int):
+    """Request a full ClickHouse user entity stats refresh."""
     params = {"message_batch_size": message_batch_size, "user_flush_size": user_flush_size}
     if not entities:
-        send_request_to_clickhouse("clickhouse.stats.bulk_full_refresh", **params)
+        send_request_to_clickhouse("clickhouse.stats.full_refresh", **params)
         return
     for entity in entities:
-        send_request_to_clickhouse("clickhouse.stats.bulk_full_refresh", entity=entity, **params)
+        send_request_to_clickhouse("clickhouse.stats.full_refresh", entity=entity, **params)
 
 
 @cli.command(name="refresh_metadata_cache")
@@ -155,18 +146,6 @@ def cron_request_all_stats(ctx, stats_batch_size: int, metadata_batch_size: int,
     """Request metadata refresh and incremental ClickHouse stats refresh."""
     ctx.invoke(refresh_metadata_cache, cache_types=(), batch_size=metadata_batch_size, max_retries=metadata_max_retries)
     ctx.invoke(request_hourly_stats, entities=(), batch_size=stats_batch_size)
-
-
-@cli.command(name="cron_request_full_stats_refresh")
-@click.option("--stats-batch-size", type=int, default=1000, help="Users to process per ClickHouse query batch")
-@click.option("--metadata-batch-size", type=int, default=100000, help="Rows to fetch from PostgreSQL per metadata batch")
-@click.option("--metadata-max-retries", type=int, default=2,
-              help="Retries per metadata cache after a PostgreSQL connection failure")
-@click.pass_context
-def cron_request_full_stats_refresh(ctx, stats_batch_size: int, metadata_batch_size: int, metadata_max_retries: int):
-    """Request metadata refresh and full ClickHouse stats refresh."""
-    ctx.invoke(refresh_metadata_cache, cache_types=(), batch_size=metadata_batch_size, max_retries=metadata_max_retries)
-    ctx.invoke(request_full_stats_refresh, entities=(), batch_size=stats_batch_size)
 
 
 if __name__ == '__main__':

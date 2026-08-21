@@ -59,15 +59,27 @@ class ClickHouseRequestManageTestCase(unittest.TestCase):
                 "artists",
                 "--entity",
                 "recordings",
-                "--batch-size",
-                "500",
+                "--message-batch-size",
+                "50",
+                "--user-flush-size",
+                "5000",
             ],
         )
 
         self.assertEqual(result.exit_code, 0)
         mock_send.assert_has_calls([
-            mock.call("clickhouse.stats.full_refresh", entity="artists", batch_size=500),
-            mock.call("clickhouse.stats.full_refresh", entity="recordings", batch_size=500),
+            mock.call(
+                "clickhouse.stats.full_refresh",
+                entity="artists",
+                message_batch_size=50,
+                user_flush_size=5000,
+            ),
+            mock.call(
+                "clickhouse.stats.full_refresh",
+                entity="recordings",
+                message_batch_size=50,
+                user_flush_size=5000,
+            ),
         ])
 
     @mock.patch("listenbrainz.clickhouse.request_manage.send_request_to_clickhouse")
@@ -95,33 +107,6 @@ class ClickHouseRequestManageTestCase(unittest.TestCase):
             ),
             mock.call("clickhouse.stats.hourly", batch_size=300),
         ])
-
-    @mock.patch("listenbrainz.clickhouse.request_manage.send_request_to_clickhouse")
-    def test_cron_request_full_stats_refresh_requests_metadata_then_full_refresh(self, mock_send):
-        result = self.runner.invoke(
-            request_manage.cli,
-            [
-                "cron_request_full_stats_refresh",
-                "--stats-batch-size",
-                "300",
-                "--metadata-batch-size",
-                "400",
-                "--metadata-max-retries",
-                "5",
-            ],
-        )
-
-        self.assertEqual(result.exit_code, 0)
-        mock_send.assert_has_calls([
-            mock.call(
-                "clickhouse.metadata_cache.refresh",
-                cache_types=None,
-                batch_size=400,
-                max_retries=5,
-            ),
-            mock.call("clickhouse.stats.full_refresh", batch_size=300),
-        ])
-
 
 if __name__ == "__main__":
     unittest.main()

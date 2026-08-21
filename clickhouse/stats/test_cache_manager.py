@@ -111,16 +111,6 @@ class StatsCacheManagerMessageTestCase(unittest.TestCase):
             "clk_stats_database_end",
         )
 
-    def test_full_refresh_does_not_create_databases_when_no_users_exist(self):
-        class EmptyResultClient:
-            def query(self, query):
-                return type("Result", (), {"result_rows": []})()
-
-        manager = StatsCacheManager(CacheConfig(), RECORDING_CONFIG)
-        manager.ch_client = EmptyResultClient()
-
-        self.assertEqual(list(manager.run_full_refresh()), [])
-
     def test_dimension_fields_transform_clickhouse_metadata_shape(self):
         entity = _format_entity_tuple(
             (

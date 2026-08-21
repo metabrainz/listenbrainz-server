@@ -156,7 +156,7 @@ class BulkRunFullRefreshTestCase(unittest.TestCase):
         client.row_count = 0
         manager.ch_client = client
 
-        messages = list(manager.run_bulk_full_refresh())
+        messages = list(manager.run_full_refresh())
 
         self.assertEqual(messages, [])
         drop_commands = [c for c in client.commands if isinstance(c, str) and "DROP TABLE" in c]
@@ -184,7 +184,7 @@ class BulkRunFullRefreshTestCase(unittest.TestCase):
             marker = f"count_{tr}"
             client.stream_blocks_by_marker[marker] = [sample_block]
 
-        messages = list(manager.run_bulk_full_refresh(message_batch_size=10))
+        messages = list(manager.run_full_refresh(message_batch_size=10))
 
         starts = [m for m in messages if m["type"] == "clk_stats_database_start"]
         ends = [m for m in messages if m["type"] == "clk_stats_database_end"]
@@ -217,7 +217,7 @@ class BulkRunFullRefreshTestCase(unittest.TestCase):
         with self.assertLogs(
             "clickhouse.stats.bulk_cache_manager", level="INFO"
         ) as logs:
-            list(manager.run_bulk_full_refresh(all_time_user_chunk_size=2))
+            list(manager.run_full_refresh(all_time_user_chunk_size=2))
 
         all_time_calls = [
             (sql, params)
@@ -250,7 +250,7 @@ class BulkRunFullRefreshTestCase(unittest.TestCase):
         client.max_created = datetime(2026, 5, 27, tzinfo=timezone.utc)
         manager.ch_client = client
 
-        list(manager.run_bulk_full_refresh())
+        list(manager.run_full_refresh())
 
         self.assertEqual(len(client.stream_calls), len(TIME_RANGES))
         self.assertFalse(any("user_id IN" in sql for sql in client.stream_calls))
@@ -270,7 +270,7 @@ class BulkRunFullRefreshTestCase(unittest.TestCase):
         manager.ch_client = client
 
         with self.assertRaises(RuntimeError):
-            list(manager.run_bulk_full_refresh())
+            list(manager.run_full_refresh())
 
         drop_after_build = [
             c for c in client.commands
