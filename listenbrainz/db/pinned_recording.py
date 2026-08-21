@@ -35,19 +35,19 @@ def pin(db_conn, pinned_recording: WritablePinnedRecording):
         'created': pinned_recording.created
     }
 
-    with db_conn.begin():
-        db_conn.execute(sqlalchemy.text("""
-            UPDATE pinned_recording
-               SET pinned_until = NOW()
-             WHERE (user_id = :user_id AND pinned_until >= NOW())
-        """), {"user_id": pinned_recording.user_id})
+    db_conn.execute(sqlalchemy.text("""
+        UPDATE pinned_recording
+           SET pinned_until = NOW()
+         WHERE (user_id = :user_id AND pinned_until >= NOW())
+    """), {"user_id": pinned_recording.user_id})
 
-        result = db_conn.execute(sqlalchemy.text("""
-            INSERT INTO pinned_recording (user_id, recording_msid, recording_mbid, blurb_content, pinned_until, created)
-                 VALUES (:user_id, :recording_msid, :recording_mbid, :blurb_content, :pinned_until, :created)
-              RETURNING (id)
-            """), args)
-        row_id = result.fetchone().id
+    result = db_conn.execute(sqlalchemy.text("""
+        INSERT INTO pinned_recording (user_id, recording_msid, recording_mbid, blurb_content, pinned_until, created)
+             VALUES (:user_id, :recording_msid, :recording_mbid, :blurb_content, :pinned_until, :created)
+          RETURNING (id)
+        """), args)
+    row_id = result.fetchone().id
+    db_conn.commit()
 
     pinned_recording.row_id = row_id
     return PinnedRecording.parse_obj(pinned_recording.dict())
