@@ -31,21 +31,21 @@ RATELIMIT_PER_TOKEN = 100000  # a very high limit so that troi can make virtuall
 def _get_db_conn():
     _db_conn = getattr(g, "_db_conn", None)
     if _db_conn is None:
-        _db_conn = g._db_conn = db.engine.connect()
+        _db_conn = g._db_conn = db.engine.connect().execution_options(isolation_level="AUTOCOMMIT")
     return _db_conn
 
 
 def _get_ts_conn():
     _ts_conn = getattr(g, "_ts_conn", None)
     if _ts_conn is None:
-        _ts_conn = g._ts_conn = timescale.engine.connect()
+        _ts_conn = g._ts_conn = timescale.engine.connect().execution_options(isolation_level="AUTOCOMMIT")
     return _ts_conn
 
 
 def _get_meb_conn():
     _meb_conn = getattr(g, "_meb_conn", None)
     if donation.engine is not None and _meb_conn is None:
-        _meb_conn = g._meb_conn = donation.engine.connect()
+        _meb_conn = g._meb_conn = donation.engine.connect().execution_options(isolation_level="AUTOCOMMIT")
     return _meb_conn
 
 
