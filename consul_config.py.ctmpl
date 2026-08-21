@@ -341,3 +341,12 @@ USER_DATA_EXPORT_BASE_DIR = '''{{template "KEY" "user_data_export_base_dir"}}'''
 NAVIDROME_ENCRYPTION_KEY = '''{{template "KEY" "navidrome/encryption_key"}}'''
 
 BACKGROUND_TASKS_SLEEP_TIME = 5
+
+{{if service "synapse"}}
+{{with index (service "synapse") 0}}
+SYNAPSE_API_URL = "http://{{.Address}}:{{.Port}}"
+{{end}}
+{{else}}
+SYNAPSE_API_URL = ""
+{{end}}
+SYNAPSE_RABBITMQ_VHOST = '''{{template "KEY_OPTIONAL" "synapse_rabbitmq_vhost"}}'''
