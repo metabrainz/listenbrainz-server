@@ -20,44 +20,42 @@ export_bp = Blueprint("export", __name__)
 def create_export_task():
     """ Add a request to export the user data to an archive in background. """
     try:
-        query = """
-            INSERT INTO user_data_export (user_id, type, status, progress)
-                 VALUES (:user_id, :type, 'waiting', :progress)
-            ON CONFLICT (user_id, type)
-                  WHERE status = 'waiting' OR status = 'in_progress'
-             DO NOTHING
-              RETURNING id, type, available_until, created, progress, status, filename
-        """
-        result = db_conn.execute(text(query), {
-            "user_id": current_user.id,
-            "type": "export_all_user_data",
-            "progress": "Your data export will start soon."
-        })
-        export = result.first()
-
-        if export is not None:
-            query = "INSERT INTO background_tasks (user_id, task, metadata) VALUES (:user_id, :task, :metadata) ON CONFLICT DO NOTHING RETURNING id"
+        with db_conn.begin():
+            query = """
+                INSERT INTO user_data_export (user_id, type, status, progress)
+                     VALUES (:user_id, :type, 'waiting', :progress)
+                ON CONFLICT (user_id, type)
+                      WHERE status = 'waiting' OR status = 'in_progress'
+                 DO NOTHING
+                  RETURNING id, type, available_until, created, progress, status, filename
+            """
             result = db_conn.execute(text(query), {
                 "user_id": current_user.id,
-                "task": "export_all_user_data",
-                "metadata": json.dumps({"export_id": export.id})
+                "type": "export_all_user_data",
+                "progress": "Your data export will start soon."
             })
-            task = result.first()
-            if task is not None:
-                db_conn.commit()
-                return jsonify({
-                    "export_id": export.id,
-                    "type": export.type,
-                    "available_until": export.available_until.isoformat() if export.available_until is not None else None,
-                    "created": export.created.isoformat(),
-                    "progress": export.progress,
-                    "status": export.status,
-                    "filename": export.filename,
-                })
+            export = result.first()
 
-        # task already exists in queue, rollback new entry
-        db_conn.rollback()
-        raise APIBadRequest(message="Data export already requested.")
+            if export is not None:
+                query = "INSERT INTO background_tasks (user_id, task, metadata) VALUES (:user_id, :task, :metadata) ON CONFLICT DO NOTHING RETURNING id"
+                result = db_conn.execute(text(query), {
+                    "user_id": current_user.id,
+                    "task": "export_all_user_data",
+                    "metadata": json.dumps({"export_id": export.id})
+                })
+                task = result.first()
+                if task is not None:
+                    return jsonify({
+                        "export_id": export.id,
+                        "type": export.type,
+                        "available_until": export.available_until.isoformat() if export.available_until is not None else None,
+                        "created": export.created.isoformat(),
+                        "progress": export.progress,
+                        "status": export.status,
+                        "filename": export.filename,
+                    })
+
+            raise APIBadRequest(message="Data export already requested.")
 
     except DatabaseError:
         current_app.logger.error('Error while exporting user data: %s', current_user.musicbrainz_id, exc_info=True)
@@ -131,18 +129,16 @@ def download_export_archive(export_id):
 @web_listenstore_needed
 def delete_export_archive(export_id):
     """ Delete the specified export archive """
-    result = db_conn.execute(
-        text("DELETE FROM user_data_export WHERE user_id = :user_id AND id = :export_id RETURNING filename"),
-        {"user_id": current_user.id, "export_id": export_id}
-    )
-    row = result.first()
-    if row is not None:
-        db_conn.execute(
-            text("DELETE FROM background_tasks WHERE user_id = :user_id AND (metadata->'export_id')::int = :export_id"),
+    with db_conn.begin():
+        result = db_conn.execute(
+            text("DELETE FROM user_data_export WHERE user_id = :user_id AND id = :export_id RETURNING filename"),
             {"user_id": current_user.id, "export_id": export_id}
         )
-        db_conn.commit()
-        # file is deleted from disk by cronjob
-        return jsonify({"success": True})
-    else:
-        raise APINotFound("Export not found")
+        row = result.first()
+        if row is not None:
+            db_conn.execute(
+                text("DELETE FROM background_tasks WHERE user_id = :user_id AND (metadata->'export_id')::int = :export_id"),
+                {"user_id": current_user.id, "export_id": export_id}
+            )
+            return jsonify({"success": True})
+    raise APINotFound("Export not found")

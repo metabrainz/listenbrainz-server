@@ -108,27 +108,23 @@ def create_import_task():
         if check_existing is not None:
             raise APIBadRequest("An import task is already in progress!")
 
-        result = background.create_import_task(
-            db_conn,
-            user_id=user["id"],
-            service=service,
-            from_date=from_date,
-            to_date=to_date,
-            save_path=save_path,
-            user_timezone=user_timezone,
-            filename=filename
-        )
-        if result is not None:
-            os.makedirs(current_app.config["UPLOAD_FOLDER"], exist_ok=True)
-            uploaded_file.save(save_path)
+        with db_conn.begin():
+            result = background.create_import_task(
+                db_conn,
+                user_id=user["id"],
+                service=service,
+                from_date=from_date,
+                to_date=to_date,
+                save_path=save_path,
+                user_timezone=user_timezone,
+                filename=filename
+            )
+            if result is not None:
+                os.makedirs(current_app.config["UPLOAD_FOLDER"], exist_ok=True)
+                uploaded_file.save(save_path)
+                return jsonify(result)
 
-            db_conn.commit()
-
-            return jsonify(result)
-
-        # task already exists in queue, rollback new entry
-        db_conn.rollback()
-        raise APIBadRequest(message="Data import already requested.")
+            raise APIBadRequest(message="Data import already requested.")
 
     except DatabaseError:
         current_app.logger.error("Error while creating import user data task: %s", user["musicbrainz_id"], exc_info=True)
@@ -188,18 +184,17 @@ def list_import_tasks():
 def delete_import_task(import_id):
     """ Cancel the specified import in progress """
     user = validate_auth_header()
-    result = db_conn.execute(
-        text("DELETE FROM user_data_import WHERE user_id = :user_id AND id = :import_id AND metadata->>'status' IN ('waiting') RETURNING file_path"),
-        {"user_id": user["id"], "import_id": import_id}
-    )
-    row = result.first()
-    if row is not None:
-        db_conn.execute(
-            text("DELETE FROM background_tasks WHERE user_id = :user_id AND (metadata->>'import_id')::int = :import_id"),
+    with db_conn.begin():
+        result = db_conn.execute(
+            text("DELETE FROM user_data_import WHERE user_id = :user_id AND id = :import_id AND metadata->>'status' IN ('waiting') RETURNING file_path"),
             {"user_id": user["id"], "import_id": import_id}
         )
-        Path(row.file_path).unlink(missing_ok=True)
-        db_conn.commit()
-        return jsonify({"success": True})
-    else:
-        raise APINotFound("Import not found or is already being processed.")
+        row = result.first()
+        if row is not None:
+            db_conn.execute(
+                text("DELETE FROM background_tasks WHERE user_id = :user_id AND (metadata->>'import_id')::int = :import_id"),
+                {"user_id": user["id"], "import_id": import_id}
+            )
+            Path(row.file_path).unlink(missing_ok=True)
+            return jsonify({"success": True})
+    raise APINotFound("Import not found or is already being processed.")
