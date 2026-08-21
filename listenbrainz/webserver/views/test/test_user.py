@@ -38,7 +38,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
         abuser = db_user.get_or_create(self.db_conn, 3, 'abuser')
         self.abuser = User.from_dbrow(abuser)
-        self.ts_conn = timescale.engine.connect()
+        self.ts_conn = timescale.engine.connect().execution_options(isolation_level="AUTOCOMMIT")
 
     def tearDown(self):
         self.ts_conn.close()
