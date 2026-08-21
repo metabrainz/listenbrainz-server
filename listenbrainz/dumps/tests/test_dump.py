@@ -58,7 +58,7 @@ class DumpTestCase(DatabaseTestCase):
             "private_temp": self.tempdir_private_temp,
         }
         self.app = create_app()
-        self.ts_conn = timescale.engine.connect()
+        self.ts_conn = timescale.engine.connect().execution_options(isolation_level="AUTOCOMMIT")
 
     def tearDown(self):
         self.ts_conn.close()
