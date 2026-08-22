@@ -80,6 +80,15 @@ def profile(user_name):
     if pin:
         pin = fetch_track_metadata_for_items(webserver.ts_conn, [pin])[0].to_api()
 
+    search_status = data.get("search_status", {"partial": False})
+    search_status_payload = {
+        "partial": search_status.get("partial", False),
+    }
+    if "continue_max_ts" in search_status:
+        search_status_payload["continueMaxTs"] = search_status["continue_max_ts"]
+    if "continue_min_ts" in search_status:
+        search_status_payload["continueMinTs"] = search_status["continue_min_ts"]
+
     data = {
         "user": {
             "id": user.id,
@@ -93,6 +102,7 @@ def profile(user_name):
         "playingNow": playing_now,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
         "already_reported_user": already_reported_user,
+        "searchStatus": search_status_payload,
     }
 
     return jsonify(data)
