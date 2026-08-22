@@ -73,7 +73,23 @@ def load_config(app):
     # Output config values and some other info
     if deploy_env in ['prod', 'beta', 'test']:
         print('Configuration values are as follows: ')
-        print(pprint.pformat(app.config, indent=4))
+        sensitive_keys = {
+            'SECRET_KEY', 'SQLALCHEMY_DATABASE_URI', 'POSTGRES_ADMIN_URI',
+            'SQLALCHEMY_TIMESCALE_URI', 'TIMESCALE_ADMIN_URI',
+            'TIMESCALE_ADMIN_LB_URI', 'RABBITMQ_PASSWORD', 'RABBITMQ_USERNAME',
+            'OAUTH_CLIENT_SECRET', 'OAUTH_WEBHOOK_SECRET',
+            'LASTFM_API_KEY', 'LIBREFM_API_KEY', 'TYPESENSE_API_KEY',
+            'COUCHDB_USER', 'COUCHDB_PASSWORD', 'COUCHDB_ADMIN_KEY',
+            'SPOTIFY_CLIENT_SECRET', 'SOUNDCLOUD_CLIENT_SECRET',
+            'APPLE_MUSIC_KEY', 'YOUTUBE_API_KEY',
+            'CRITIQUEBRAINZ_CLIENT_SECRET',
+            'SENTRY_DSN',
+        }
+        filtered_config = {
+            k: ('***REDACTED***' if k in sensitive_keys else v)
+            for k, v in app.config.items()
+        }
+        print(pprint.pformat(filtered_config, indent=4))
 
         try:
             with open('.git-version') as git_version_file:
