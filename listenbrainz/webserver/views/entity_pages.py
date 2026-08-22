@@ -2,7 +2,7 @@ from datetime import datetime
 
 from flask import Blueprint, render_template, current_app, jsonify
 from werkzeug.exceptions import BadRequest
-
+from listenbrainz.db.artist import load_artists_from_mbids_with_redirects, get_appears_on_release_groups
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.db import popularity, similarity
 from listenbrainz.db.stats import get_entity_listener
@@ -219,6 +219,30 @@ def artist_entity(artist_mbid: str):
     except Exception:
         current_app.logger.error("Error generating cover art for artist:", exc_info=True)
         cover_art = None
+
+    try:
+        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+                mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
+            
+            appears_on_data = get_appears_on_release_groups(mb_curs, artist_mbid)
+            
+            for rg in appears_on_data:
+                rg_dict = {
+                    "mbid": rg["mbid"],
+                    "name": rg["name"],
+                    "artist_credit_name": rg["artist_credit_name"],
+                    "type": rg["type"] or "Other",
+                    "secondary_types": ["Compilation"] if rg["type"] == "Album" else [],
+                    "date": str(rg["year"]) if rg["year"] else None,
+                    "total_listen_count": 0,
+                    "caa_id": None,
+                    "caa_release_mbid": None
+                }
+                # Preventing duplicates
+                if not any(existing['mbid'] == rg_dict['mbid'] for existing in release_groups):
+                    release_groups.append(rg_dict)
+    except Exception:
+        current_app.logger.error("Error fetching 'appears on' releases:", exc_info=True)
 
     data = {
         "artist": artist,
