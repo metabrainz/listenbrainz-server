@@ -9,6 +9,7 @@ CREATE MATERIALIZED VIEW mbid_manual_mapping_top AS (
            recording_msid
          , recording_mbid
       FROM mbid_manual_mapping
+     WHERE is_unlinked = FALSE
   GROUP BY recording_msid
          , recording_mbid
     HAVING count(DISTINCT user_id) >= 3
