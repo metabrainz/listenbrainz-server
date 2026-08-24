@@ -22,6 +22,12 @@ class RecordingFromRecordingMBIDArtist(BaseModel):
     join_phrase: str
 
 
+class RecordingFromRecordingMBIDTag(BaseModel):
+    tag: str
+    count: int
+    genre_mbid: Optional[UUID] = None
+
+
 class RecordingFromRecordingMBIDOutput(BaseModel):
     artist_credit_name: Optional[str]
     recording_name: Optional[str]
@@ -34,7 +40,7 @@ class RecordingFromRecordingMBIDOutput(BaseModel):
     release_name: Optional[str]
     release_mbid: Optional[UUID]
     artists: list[RecordingFromRecordingMBIDArtist]
-    tags: list[str]
+    tags: Optional[list[RecordingFromRecordingMBIDTag]] = []
 
 
 class RecordingFromRecordingMBIDQuery(Query):

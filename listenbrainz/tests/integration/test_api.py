@@ -561,6 +561,24 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response.json['code'], 400)
         self.assertEqual(response.json['error'], "track_metadata.release_name must be a single string.")
 
+    def test_empty_release_name_stripped(self):
+        """Test that an empty or whitespace-only release_name is stripped and the listen is accepted."""
+        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
+            payload = json.load(f)
+
+        payload['payload'][0]['track_metadata']['release_name'] = '   '
+        ts = int(time.time())
+        payload['payload'][0]['listened_at'] = ts
+        response = self.send_data(payload, recalculate=True)
+        self.assert200(response)
+
+        url = self.custom_url_for('api_v1.get_listens',
+                                  user_name=self.user['musicbrainz_id'])
+        response = self.wait_for_query_to_have_items(
+            url, 1, query_string={'count': '1'})
+        data = json.loads(response.data)['payload']
+        self.assertNotIn('release_name', data['listens'][0]['track_metadata'])
+
     def test_bad_track_name_format(self):
         """Test for invalid submission in which a listen has a track_name field but it's not a string"""
         with open(self.path_to_data_file('empty_track_name.json'), 'r') as f:

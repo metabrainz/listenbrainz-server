@@ -181,8 +181,11 @@ def create_full(location: str, threads: int, dump_id: int, do_listen_dump: bool,
         with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
             f.write("%s %s full\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
 
-        if do_spark_dump:
-            ls.cleanup_listen_delete_metadata()
+        # TODO: reinstate the cleanup once the listens migration to the new listens database is
+        #  done. The listen_delete_metadata / deleted_user_listen_history rows are needed to replay
+        #  deletes against the new database until then.
+        # if do_spark_dump:
+        #     ls.cleanup_listen_delete_metadata()
 
 
 @cli.command(name="create_db_dump")
