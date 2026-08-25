@@ -128,6 +128,9 @@ class BaseLastfmImporter(ListensImporter):
         """
         imported_listen_count = 0
 
+        if not user.get("external_user_id"):
+            raise LastfmUserNotRetryableException("Last.fm/Libre.fm username is empty")
+
         try:
             session = requests.Session()
             session.mount(
