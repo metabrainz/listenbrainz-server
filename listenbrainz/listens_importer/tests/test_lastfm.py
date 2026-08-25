@@ -1,3 +1,7 @@
+import unittest
+from unittest.mock import MagicMock
+
+import requests
 import requests_mock
 import listenbrainz.webserver
 from datetime import datetime, timezone
@@ -132,3 +136,29 @@ class LastfmImporterTestCase(DatabaseTestCase):
 
             self.assertEqual(success2, 1)
             self.assertEqual(failure2, 1)
+
+
+class SingleTrackNormalizationTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.importer = BaseLastfmImporter("t", "t", MagicMock(), "https://ws.audioscrobbler.com/2.0/", "k")
+        self.user = {"external_user_id": "u", "latest_listened_at": datetime.fromtimestamp(0, timezone.utc)}
+
+    def _get(self, **kwargs):
+        with requests_mock.Mocker() as m:
+            m.get("https://ws.audioscrobbler.com/2.0/", **kwargs)
+            return self.importer.get_user_recent_tracks(requests.Session(), self.user, page=1)
+
+    def test_single_track_dict_normalized_to_list(self):
+        """Libre.fm returns a dict instead of a list when there is one track."""
+        single_track = {"name": "Song", "artist": {"#text": "Artist", "mbid": ""}, "album": {"#text": "", "mbid": ""}, "date": {"uts": "1000"}}
+        data = self._get(json={"recenttracks": {"@attr": {"totalPages": "1"}, "track": single_track}}, status_code=200)
+        self.assertIsInstance(data["recenttracks"]["track"], list)
+        self.assertEqual(len(data["recenttracks"]["track"]), 1)
+        self.assertEqual(data["recenttracks"]["track"][0]["name"], "Song")
+
+    def test_multi_track_list_unchanged(self):
+        tracks = [{"name": "A"}, {"name": "B"}]
+        data = self._get(json={"recenttracks": {"@attr": {"totalPages": "1"}, "track": tracks}}, status_code=200)
+        self.assertIsInstance(data["recenttracks"]["track"], list)
+        self.assertEqual(len(data["recenttracks"]["track"]), 2)
