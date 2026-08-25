@@ -59,8 +59,18 @@ def get_time_ranges_for_listens(min_dt: datetime, max_dt: datetime):
     return years
 
 
-def export_query_to_jsonl(conn, file_path, query, **kwargs):
-    """ Export the given query's data to the given file path in jsonl format. """
+def export_query_to_jsonl(conn, file_path, query, int_keys=None, **kwargs):
+    """ Export the given query's data to the given file path in jsonl format.
+
+    Args:
+        conn: database connection
+        file_path: path to write the JSONL file
+        query: SQL query whose rows must have a `line` column (dict or text)
+        int_keys: optional list of dict keys whose float values should be
+                  converted to int (psycopg2 may return SQL ::integer casts
+                  as Python floats when inside JSON objects)
+        **kwargs: bind parameters forwarded to conn.execute
+    """
     rowcount = 0
     with conn.execute(
         text(query).execution_options(yield_per=BATCH_SIZE),
@@ -70,6 +80,10 @@ def export_query_to_jsonl(conn, file_path, query, **kwargs):
             for row in partition:
                 line = row.line
                 if isinstance(line, dict):
+                    if int_keys:
+                        for key in int_keys:
+                            if key in line and line[key] is not None:
+                                line[key] = int(line[key])
                     file.write(orjson.dumps(line))
                 else:
                     file.write(line.encode("utf-8"))
@@ -101,7 +115,7 @@ def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: 
           )
                 SELECT json_build_object(
                             'inserted_at'
-                          , (extract(epoch from inserted_at))::integer
+                          , extract(epoch from inserted_at)
                           , 'listened_at'
                           ,  extract(epoch from listened_at)
                           , 'recording_msid'
@@ -163,7 +177,8 @@ def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: 
                      , release_data->>'caa_release_mbid'
               ORDER BY listened_at
     """
-    return export_query_to_jsonl(ts_conn, file_path, query, user_id=user_id, start_time=start_time, end_time=end_time)
+    return export_query_to_jsonl(ts_conn, file_path, query, int_keys=['inserted_at'],
+                                  user_id=user_id, start_time=start_time, end_time=end_time)
 
 
 def export_listens_for_user(export_id, db_conn, ts_conn, tmp_dir: str, user_id: int) -> list[str]:
