@@ -208,6 +208,19 @@ function buildFontStyleBlock(fontFamily: string): string {
     `;
 }
 
+function getCombinedCaptionBgColor(
+  colorHex: string,
+  opacityPercent: number
+): string {
+  const hex = colorHex.replace("#", "");
+  const alphaByte = Math.min(
+    255,
+    Math.max(0, Math.round((opacityPercent / 100) * 255))
+  );
+  const alphaHex = alphaByte.toString(16).padStart(2, "0");
+  return `#${hex}${alphaHex}`;
+}
+
 const defaultTimeRangeOnLoad: keyof typeof TimeRangeOptions = "this_month";
 
 export default function ArtCreator() {
@@ -244,6 +257,7 @@ export default function ArtCreator() {
   const [showListenCount, setShowListenCount] = useState(false);
   const [captionTextColor, setCaptionTextColor] = useState("#ffffff");
   const [captionBgColor, setCaptionBgColor] = useState("#000000");
+  const [captionBgOpacity, setCaptionBgOpacity] = useState(48);
 
   const showCaption = showRank || showRelease || showArtist || showListenCount;
   const [skipMissing, setSkipMissing] = useState(true);
@@ -649,6 +663,7 @@ export default function ArtCreator() {
         skipMissingArg: boolean,
         captionTextColorArg: string,
         captionBgColorArg: string,
+        captionBgOpacityArg: number,
         fontFamilyArg: string,
         showRankArg: boolean,
         showListenCountArg: boolean,
@@ -671,8 +686,12 @@ export default function ArtCreator() {
           if (captionTextColorArg && captionTextColorArg !== "#ffffff") {
             queryParams.set("caption-text-color", captionTextColorArg);
           }
-          if (captionBgColorArg && captionBgColorArg !== "#000000") {
-            queryParams.set("caption-bg-color", captionBgColorArg);
+          const combinedBgColor = getCombinedCaptionBgColor(
+            captionBgColorArg,
+            captionBgOpacityArg
+          );
+          if (combinedBgColor && combinedBgColor !== "#0000007a") {
+            queryParams.set("caption-bg-color", combinedBgColor);
           }
           if (showRankArg) {
             queryParams.set("show-rank", "true");
@@ -722,6 +741,7 @@ export default function ArtCreator() {
       skipMissing,
       captionTextColor,
       captionBgColor,
+      captionBgOpacity,
       fontFamily,
       showRank,
       showListenCount,
@@ -738,6 +758,7 @@ export default function ArtCreator() {
     skipMissing,
     captionTextColor,
     captionBgColor,
+    captionBgOpacity,
     fontFamily,
     showRank,
     showListenCount,
@@ -796,7 +817,11 @@ export default function ArtCreator() {
             captionTextColor={
               style.type === "grid" ? captionTextColor : undefined
             }
-            captionBgColor={style.type === "grid" ? captionBgColor : undefined}
+            captionBgColor={
+              style.type === "grid"
+                ? getCombinedCaptionBgColor(captionBgColor, captionBgOpacity)
+                : undefined
+            }
             fontFamily={fontFamily !== DEFAULT_FONT ? fontFamily : undefined}
             styles={{
               textColor,
@@ -1007,6 +1032,25 @@ export default function ArtCreator() {
                             readOnly
                           />
                         </div>
+                      </div>
+                      <div>
+                        <label
+                          className="form-label"
+                          htmlFor="caption-bg-opacity"
+                        >
+                          Caption background opacity: {captionBgOpacity}%
+                        </label>
+                        <input
+                          id="caption-bg-opacity"
+                          type="range"
+                          className="form-range"
+                          min="0"
+                          max="100"
+                          value={captionBgOpacity}
+                          onChange={(e) =>
+                            setCaptionBgOpacity(Number(e.target.value))
+                          }
+                        />
                       </div>
                     </div>
                   </>
