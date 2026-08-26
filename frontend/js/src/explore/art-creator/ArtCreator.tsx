@@ -787,6 +787,7 @@ export default function ArtCreator() {
           <Preview
             key={previewUrl}
             url={previewUrl}
+            isGrid={style.type === "grid"}
             showCaption={showCaption}
             showRank={showRank}
             showArtist={showArtist}
