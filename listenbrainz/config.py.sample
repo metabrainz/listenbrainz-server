@@ -23,8 +23,9 @@ SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = SQLALCHEMY_TIMESCALE_URI
 TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@lb_db/postgres"
 TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@lb_db/listenbrainz_ts"
 
-# Listens (postgres, user_id partitioned) - target of listenbrainz/listenstore/migrate_listens.py
-SQLALCHEMY_LISTENS_URI = ""
+# Listens (postgres, user_id partitioned) - migration target and dual-write store
+SQLALCHEMY_LISTENS_URI = "postgresql://listenbrainz_listens:listenbrainz_listens@lb_db/listenbrainz_listens"
+LISTENS_ADMIN_URI = "postgresql://postgres:postgres@lb_db/postgres"
 
 # Server address
 # SERVER_NAME = "localhost:8100"
