@@ -173,16 +173,16 @@ const hardCodedPresets: ColorPreset[] = [
   },
 ];
 
-const fontOptions = [
-  "Sintony",
-  "Inter",
-  "Roboto",
-  "Oswald",
-  "Space Grotesk",
-  "Playfair Display",
-  "Lora",
-  "Bebas Neue",
-];
+const fontOptions: Record<string, string> = {
+  Sintony: "sintony",
+  Inter: "inter",
+  Roboto: "roboto",
+  Oswald: "oswald",
+  "Space Grotesk": "space-grotesk",
+  "Playfair Display": "playfair-display",
+  Lora: "lora",
+  "Bebas Neue": "bebas-neue",
+};
 
 const DEFAULT_IMAGE_SIZE = 750;
 
@@ -193,7 +193,8 @@ const defaultStyleOnLoad = TemplateEnum[
 const DEFAULT_FONT = "Sintony";
 
 function buildFontStyleBlock(fontFamily: string): string {
-  const fontFile = fontFamily.toLowerCase().replace(/\s+/g, "-");
+  const fontFile =
+    fontOptions[fontFamily] ?? fontFamily.toLowerCase().replace(/\s+/g, "-");
   const fontUrl = `${window.location.origin}/static/fonts/${fontFile}.woff2`;
   return `
       <style>
@@ -745,9 +746,10 @@ export default function ArtCreator() {
 
   React.useEffect(() => {
     if (fontFamily !== DEFAULT_FONT) {
-      const fontUrl = `/static/fonts/${fontFamily
-        .replace(/\s+/g, "-")
-        .toLowerCase()}.woff2`;
+      const fontFile =
+        fontOptions[fontFamily] ??
+        fontFamily.toLowerCase().replace(/\s+/g, "-");
+      const fontUrl = `/static/fonts/${fontFile}.woff2`;
       const fontFace = new FontFace(fontFamily, `url(${fontUrl})`);
       fontFace
         .load()
@@ -873,7 +875,7 @@ export default function ArtCreator() {
                     value={fontFamily}
                     onChange={updateFontFamilyCallback}
                   >
-                    {fontOptions.map((opt) => (
+                    {Object.keys(fontOptions).map((opt) => (
                       <option key={opt} value={opt}>
                         {opt}
                       </option>
