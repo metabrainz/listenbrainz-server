@@ -4,6 +4,7 @@ import "external-svg-loader";
 type PreviewProps = React.SVGProps<SVGSVGElement> & {
   size?: number;
   url: string;
+  isGrid?: boolean;
   showCaption?: boolean;
   showRank?: boolean;
   showArtist?: boolean;
@@ -27,6 +28,7 @@ const Preview = React.forwardRef(function PreviewComponent(
     url,
     styles,
     size = 750,
+    isGrid,
     showCaption,
     showRank,
     showArtist,
@@ -88,9 +90,10 @@ const Preview = React.forwardRef(function PreviewComponent(
             stroke: inherit;
           }
         `}
-        {!showCaption
-          ? ` .caption { display: none; } `
-          : `
+        {isGrid &&
+          (!showCaption
+            ? ` .caption { display: none; } `
+            : `
           ${!showRank ? `.caption-rank { display: none; }` : ""}
           ${!showArtist ? `.caption-artist { display: none; }` : ""}
           ${!showRelease ? `.caption-release { display: none; }` : ""}
@@ -105,7 +108,7 @@ const Preview = React.forwardRef(function PreviewComponent(
               ? `.caption rect { fill: ${captionBgColor} !important; fill-opacity: 0.48; }`
               : ""
           }
-        `}
+        `)}
         {textColor
           ? `
           text > tspan,
