@@ -192,6 +192,21 @@ const defaultStyleOnLoad = TemplateEnum[
 
 const DEFAULT_FONT = "Sintony";
 
+function buildFontStyleBlock(fontFamily: string): string {
+  const fontFile = fontFamily.toLowerCase().replace(/\s+/g, "-");
+  const fontUrl = `${window.location.origin}/static/fonts/${fontFile}.woff2`;
+  return `
+      <style>
+        @font-face {
+          font-family: "${fontFamily}";
+          src: url("${fontUrl}") format("woff2");
+          font-weight: normal;
+          font-style: normal;
+        }
+      </style>
+    `;
+}
+
 const defaultTimeRangeOnLoad: keyof typeof TimeRangeOptions = "this_month";
 
 export default function ArtCreator() {
@@ -448,18 +463,7 @@ export default function ArtCreator() {
     let svgString = svgElement.outerHTML;
 
     // Inject @font-face into SVG for reliable canvg rendering
-    const fontFile = fontFamily.toLowerCase().replace(/\s+/g, "-");
-    const fontUrl = `${window.location.origin}/static/fonts/${fontFile}.woff2`;
-    const styleBlock = `
-      <style>
-        @font-face {
-          font-family: "${fontFamily}";
-          src: url("${fontUrl}") format("woff2");
-          font-weight: normal;
-          font-style: normal;
-        }
-      </style>
-    `;
+    const styleBlock = buildFontStyleBlock(fontFamily);
     svgString = svgString.replace(/>/, `>${styleBlock}`);
 
     try {
@@ -496,18 +500,7 @@ export default function ArtCreator() {
     let svgString = svgElement.outerHTML;
 
     // Inject @font-face into SVG for reliable canvg rendering
-    const fontFile = fontFamily.toLowerCase().replace(/\s+/g, "-");
-    const fontUrl = `${window.location.origin}/static/fonts/${fontFile}.woff2`;
-    const styleBlock = `
-      <style>
-        @font-face {
-          font-family: "${fontFamily}";
-          src: url("${fontUrl}") format("woff2");
-          font-weight: normal;
-          font-style: normal;
-        }
-      </style>
-    `;
+    const styleBlock = buildFontStyleBlock(fontFamily);
     svgString = svgString.replace(/>/, `>${styleBlock}`);
 
     try {
