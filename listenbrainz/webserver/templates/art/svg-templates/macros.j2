@@ -65,17 +65,21 @@
       <rect x="{{ image.x }}" y="{{ bar_y }}" width="{{ image.width }}" height="{{ bar_height }}" fill="{{ caption_bg_color }}" />
 
       {% if show_left %}
+      {% set single_y = bar_y + bar_height // 2 + 4 %}
+      {% set listen_y = row2_y if left_rows == 2 else single_y %}
+      {% if show_listen_count and image.listen_count %}
+        <path class="caption-listen-count" d="M256 80C149.9 80 62.4 159.4 49.6 262c9.4-3.8 19.6-6 30.4-6c26.5 0 48 21.5 48 48V432c0 26.5-21.5 48-48 48c-44.2 0-80-35.8-80-80V384 336 288C0 146.6 114.6 32 256 32s256 114.6 256 256v48 48 16c0 44.2-35.8 80-80 80c-26.5 0-48-21.5-48-48V304c0-26.5 21.5-48 48-48c10.8 0 21 2.1 30.4 6C449.6 159.4 362.1 80 256 80z" fill="{{ caption_text_color }}" transform="translate({{ left_x }}, {{ listen_y - 7 }}) scale(0.015625)" />
+      {% endif %}
       <text font-family="Sintony, sans-serif" font-size="10" fill="{{ caption_text_color }}">
         {% if left_rows == 2 %}
           <tspan class="caption-rank" x="{{ left_x }}" y="{{ row1_y }}">{% if show_rank and rank is not none %}#{{ rank }}{% endif %}</tspan>
-          <tspan class="caption-listen-count" x="{{ left_x }}" y="{{ row2_y }}">{% if show_listen_count and image.listen_count %}{{ image.listen_count }}{% endif %}</tspan>
+          <tspan class="caption-listen-count" x="{% if show_listen_count and image.listen_count %}{{ left_x + 10 }}{% else %}{{ left_x }}{% endif %}" y="{{ row2_y }}">{% if show_listen_count and image.listen_count %}{{ image.listen_count }}{% endif %}</tspan>
         {% else %}
-          {% set single_y = bar_y + bar_height // 2 + 4 %}
           {% if show_rank and rank is not none %}
             <tspan class="caption-rank" x="{{ left_x }}" y="{{ single_y }}">#{{ rank }}</tspan>
           {% endif %}
           {% if show_listen_count and image.listen_count %}
-            <tspan class="caption-listen-count" x="{{ left_x }}" y="{{ single_y }}">{{ image.listen_count }}</tspan>
+            <tspan class="caption-listen-count" x="{{ left_x + 10 }}" y="{{ single_y }}">{{ image.listen_count }}</tspan>
           {% endif %}
         {% endif %}
       </text>
