@@ -1157,31 +1157,7 @@ export default function ArtCreator() {
                     onChange={updateGenresCallback}
                   />
                 </div> */}
-                {/* <div>
-                  <ToggleOption onClick={userToggler} buttonName="Users" />
-                  <ToggleOption onClick={dateToggler} buttonName="Date" />
-                  <ToggleOption onClick={rangeToggler} buttonName="Range" />
-                  <ToggleOption onClick={totalToggler} buttonName="Total" />
-                  <ToggleOption onClick={genresToggler} buttonName="Genres" />
-                </div> */}
-                {/* <div>
-                  className="form-label" htmlFor="font-select">Font:</label>
-                  <select
-                    id="font-select"
-                    className="form-select"
-                    value={font}
-                    onChange={updateFontCallback}
-                  >
-                    {fontOptions.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
-                </div> */}
-                {/* <div>
-                  <ToggleOption onClick={vaToggler} buttonName="Ignore VA" />
-                </div> */}
+
               </div>
             </div>
           )}
