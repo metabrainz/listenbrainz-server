@@ -67,12 +67,12 @@
       {% if show_left %}
       <text font-family="Sintony, sans-serif" font-size="10" fill="{{ caption_text_color }}">
         {% if left_rows == 2 %}
-          <tspan class="caption-rank" x="{{ left_x }}" y="{{ row1_y }}">{% if show_rank and rank is not none %}{{ rank }}{% endif %}</tspan>
+          <tspan class="caption-rank" x="{{ left_x }}" y="{{ row1_y }}">{% if show_rank and rank is not none %}#{{ rank }}{% endif %}</tspan>
           <tspan class="caption-listen-count" x="{{ left_x }}" y="{{ row2_y }}">{% if show_listen_count and image.listen_count %}{{ image.listen_count }}{% endif %}</tspan>
         {% else %}
           {% set single_y = bar_y + bar_height // 2 + 4 %}
           {% if show_rank and rank is not none %}
-            <tspan class="caption-rank" x="{{ left_x }}" y="{{ single_y }}">{{ rank }}</tspan>
+            <tspan class="caption-rank" x="{{ left_x }}" y="{{ single_y }}">#{{ rank }}</tspan>
           {% endif %}
           {% if show_listen_count and image.listen_count %}
             <tspan class="caption-listen-count" x="{{ left_x }}" y="{{ single_y }}">{{ image.listen_count }}</tspan>
