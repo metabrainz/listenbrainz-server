@@ -6,7 +6,7 @@ from brainzutils.ratelimit import ratelimit
 from brainzutils import cache
 import listenbrainz.db.fresh_releases
 from listenbrainz.webserver import db_conn, ts_conn
-from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.decorators import cache_public, crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized
 from listenbrainz.webserver.views.api_tools import _parse_int_arg, _parse_bool_arg, ensure_user_token_for_expensive_endpoint
 from listenbrainz.db.color import get_releases_for_color
@@ -28,6 +28,7 @@ explore_api_bp = Blueprint('explore_api_v1', __name__)
 @explore_api_bp.get("/fresh-releases/")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_fresh_releases():
     """
     This endpoint fetches upcoming and recently released (fresh) releases and returns a list of:
@@ -101,6 +102,7 @@ def get_fresh_releases():
 @explore_api_bp.get("/color/<color>")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def huesound(color):
     """
     Fetch a list of releases that have cover art that has a predominant

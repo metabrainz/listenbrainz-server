@@ -13,7 +13,7 @@ from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery, MBIDMa
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MBIDMapper
 from listenbrainz.webserver import ts_conn
 from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
-from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.decorators import cache_public, crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.views.api_tools import is_valid_uuid, validate_auth_header, MAX_ITEMS_PER_GET
@@ -87,6 +87,7 @@ def fetch_release_group_metadata(release_group_mbids, incs):
 @metadata_bp.get("/recording/")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=120)
 def metadata_recording():
     """
     This endpoint takes in a list of recording_mbids and returns an array of dicts that contain
@@ -181,6 +182,7 @@ def metadata_recording_post():
 @metadata_bp.get("/release_group/")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=120)
 def metadata_release_group():
     """
     This endpoint takes in a list of release_group_mbids and returns an array of dicts that contain
@@ -240,6 +242,7 @@ def process_results(match, metadata, incs):
 @metadata_bp.get("/lookup/")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=120)
 def get_mbid_mapping():
     """
     This endpoint looks up mbid metadata for the given artist, recording and optionally a release name.
@@ -541,6 +544,7 @@ def get_manual_mapping():
 @metadata_bp.get("/artist/")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=120)
 def metadata_artist():
     """
     This endpoint takes in a list of artist_mbids and returns an array of dicts that contain

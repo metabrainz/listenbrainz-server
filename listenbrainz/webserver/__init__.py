@@ -271,9 +271,11 @@ def create_app(
                 response.cache_control.max_age = hashed_assets_max_age
             elif request.path.startswith('/static/img'):
                 response.cache_control.max_age = image_assets_max_age
-        else:
+        elif not response.cache_control.public:
             response.cache_control.private = True
             response.cache_control.public = False
+            if request.method in ("POST", "PUT", "DELETE", "PATCH"):
+                response.cache_control.no_store = True
         return response
 
     # Template utilities
