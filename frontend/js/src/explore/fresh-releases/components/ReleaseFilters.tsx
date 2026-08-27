@@ -11,6 +11,7 @@ import type {
   filterRangeOption,
 } from "../FreshReleases";
 import { PAGE_TYPE_SITEWIDE, filterRangeOptions } from "../FreshReleases";
+import useFreshReleasesFilterPersistence from "../hooks/useFreshReleasesFilterPersistence";
 
 const VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377";
 
@@ -53,21 +54,20 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     pageType,
   } = props;
 
-  const [checkedList, setCheckedList] = React.useState<
-    Array<string | undefined>
-  >([]);
-  const [releaseTagsCheckList, setReleaseTagsCheckList] = React.useState<
-    Array<string | undefined>
-  >([]);
-  const [includeVariousArtists, setIncludeVariousArtists] = React.useState<
-    boolean
-  >(false);
+  const {
+    freshReleasesFilters,
+    setFreshReleasesFilters,
+    clearSavedFilters,
+  } = useFreshReleasesFilterPersistence(pageType);
 
-  const [
+  const {
+    checkedList,
+    releaseTagsCheckList,
     releaseTagsExcludeCheckList,
-    setReleaseTagsExcludeCheckList,
-  ] = React.useState<Array<string | undefined>>([]);
-  const [coverartOnly, setCoverartOnly] = React.useState<boolean>(false);
+    includeVariousArtists,
+    coverartOnly,
+  } = freshReleasesFilters;
+
   const [filtersOpen, setFiltersOpen] = React.useState<boolean>(true);
   const [displayOpen, setDisplayOpen] = React.useState<boolean>(true);
 
@@ -85,10 +85,12 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     const isChecked = event.target.checked;
 
     if (isChecked) {
-      setCheckedList([...checkedList, value]);
+      setFreshReleasesFilters({ checkedList: [...checkedList, value] });
     } else {
-      const filtersList = checkedList.filter((item) => item !== value);
-      setCheckedList(filtersList);
+      const filtersList = checkedList.filter(
+        (item: string | undefined) => item !== value
+      );
+      setFreshReleasesFilters({ checkedList: filtersList });
     }
   };
 
@@ -97,18 +99,23 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
   ) => {
     event.preventDefault();
     const { value } = event.target;
-    setReleaseTagsCheckList([...releaseTagsCheckList, value]);
 
     // remove from exclude list if it's there
-    const filtersList = releaseTagsExcludeCheckList.filter(
-      (item) => item !== value
+    const excludeFiltersList = releaseTagsExcludeCheckList.filter(
+      (item: string | undefined) => item !== value
     );
-    setReleaseTagsExcludeCheckList(filtersList);
+
+    setFreshReleasesFilters({
+      releaseTagsCheckList: [...releaseTagsCheckList, value],
+      releaseTagsExcludeCheckList: excludeFiltersList,
+    });
   };
 
   const removeFilterTag = (tag: string) => {
-    const filtersList = releaseTagsCheckList.filter((item) => item !== tag);
-    setReleaseTagsCheckList(filtersList);
+    const filtersList = releaseTagsCheckList.filter(
+      (item: string | undefined) => item !== tag
+    );
+    setFreshReleasesFilters({ releaseTagsCheckList: filtersList });
   };
 
   const handleExcludeTagChange = (
@@ -116,18 +123,23 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
   ) => {
     event.preventDefault();
     const { value } = event.target;
-    setReleaseTagsExcludeCheckList([...releaseTagsExcludeCheckList, value]);
 
     // remove from include list if it's there
-    const filtersList = releaseTagsCheckList.filter((item) => item !== value);
-    setReleaseTagsCheckList(filtersList);
+    const includeFiltersList = releaseTagsCheckList.filter(
+      (item: string | undefined) => item !== value
+    );
+
+    setFreshReleasesFilters({
+      releaseTagsExcludeCheckList: [...releaseTagsExcludeCheckList, value],
+      releaseTagsCheckList: includeFiltersList,
+    });
   };
 
   const removeExcludeTag = (tag: string) => {
     const filtersList = releaseTagsExcludeCheckList.filter(
-      (item) => item !== tag
+      (item: string | undefined) => item !== tag
     );
-    setReleaseTagsExcludeCheckList(filtersList);
+    setFreshReleasesFilters({ releaseTagsExcludeCheckList: filtersList });
   };
 
   const handleRangeDropdown = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -150,15 +162,18 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
 
   // Reset filters when range changes
   React.useEffect(() => {
-    if (coverartOnly === true) {
-      setCoverartOnly(false);
+    if (
+      coverartOnly === true ||
+      (checkedList?.length ?? 0) > 0 ||
+      includeVariousArtists === true
+    ) {
+      setFreshReleasesFilters({
+        coverartOnly: false,
+        checkedList: [],
+        includeVariousArtists: false,
+      });
     }
-    if (checkedList?.length > 0) {
-      setCheckedList([]);
-    }
-    if (includeVariousArtists === true) {
-      setIncludeVariousArtists(false);
-    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [releaseTags, releaseTypes]);
 
   React.useEffect(() => {
@@ -319,15 +334,17 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                 </select>
 
                 <div className="release-tags">
-                  {releaseTagsCheckList?.map((tag, index) => (
-                    <div id={`include-tag-item-${index}`} className="tags">
-                      <span className="release-tag-name">{tag}</span>
-                      <FontAwesomeIcon
-                        icon={faCircleXmark}
-                        onClick={() => removeFilterTag(tag!)}
-                      />
-                    </div>
-                  ))}
+                  {releaseTagsCheckList?.map(
+                    (tag: string | undefined, index: number) => (
+                      <div id={`include-tag-item-${index}`} className="tags">
+                        <span className="release-tag-name">{tag}</span>
+                        <FontAwesomeIcon
+                          icon={faCircleXmark}
+                          onClick={() => removeFilterTag(tag!)}
+                        />
+                      </div>
+                    )
+                  )}
                 </div>
 
                 <label id="tags" htmlFor="exclude-tags">
@@ -354,15 +371,17 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                 </select>
 
                 <div className="release-tags">
-                  {releaseTagsExcludeCheckList?.map((tag, index) => (
-                    <div id={`exclude-tag-item-${index}`} className="tags">
-                      <span className="release-tag-name">{tag}</span>
-                      <FontAwesomeIcon
-                        icon={faCircleXmark}
-                        onClick={() => removeExcludeTag(tag!)}
-                      />
-                    </div>
-                  ))}
+                  {releaseTagsExcludeCheckList?.map(
+                    (tag: string | undefined, index: number) => (
+                      <div id={`exclude-tag-item-${index}`} className="tags">
+                        <span className="release-tag-name">{tag}</span>
+                        <FontAwesomeIcon
+                          icon={faCircleXmark}
+                          onClick={() => removeExcludeTag(tag!)}
+                        />
+                      </div>
+                    )
+                  )}
                 </div>
               </>
             )}
@@ -397,7 +416,9 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
               id="coverart-only"
               value="coverart-only"
               checked={coverartOnly}
-              onChange={(e) => setCoverartOnly(!coverartOnly)}
+              onChange={(e) =>
+                setFreshReleasesFilters({ coverartOnly: !coverartOnly })
+              }
               switchLabel="Only Releases with artwork"
             />
 
@@ -406,7 +427,11 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
               key="include-various-artists-switch"
               value="various-artists"
               checked={includeVariousArtists}
-              onChange={(e) => setIncludeVariousArtists(!includeVariousArtists)}
+              onChange={(e) =>
+                setFreshReleasesFilters({
+                  includeVariousArtists: !includeVariousArtists,
+                })
+              }
               switchLabel="Releases by Various Artists"
             />
 
