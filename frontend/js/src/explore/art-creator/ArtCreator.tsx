@@ -173,6 +173,7 @@ const hardCodedPresets: ColorPreset[] = [
   },
 ];
 
+// Font options dictionary pending LB-TBD for full font selection support
 const fontOptions: Record<string, string> = {
   Sintony: "sintony",
   Inter: "inter",
@@ -890,25 +891,7 @@ export default function ArtCreator() {
                   ))}
                 </select>
               </div>
-              {style.type === "grid" && (
-                <div className="input-group">
-                  <label className="input-group-text" htmlFor="font-family">
-                    Font
-                  </label>
-                  <select
-                    id="font-family"
-                    className="form-select"
-                    value={fontFamily}
-                    onChange={updateFontFamilyCallback}
-                  >
-                    {Object.keys(fontOptions).map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              {/* Font selection dropdown hidden pending LB-TBD until font files/approved font list are available */}
             </div>
           </div>
           {(style.type === "text" || style.type === "grid") && (
