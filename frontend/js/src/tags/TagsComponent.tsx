@@ -11,6 +11,7 @@ import {
 import CreatableSelect from "react-select/creatable";
 import { toast } from "react-toastify";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
+import { matchSorter } from "match-sorter";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import TagComponent, { TagActionType } from "./TagComponent";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -33,6 +34,19 @@ type TagOptionType = {
   entityMBID?: string;
   originalTag?: ArtistTag | RecordingTag | ReleaseGroupTag;
 };
+
+function filterOption(
+  option: { label: string; value: string; data: TagOptionType },
+  inputValue: string
+) {
+  if (!inputValue) {
+    return true;
+  }
+  const results = matchSorter([option], inputValue, {
+    keys: ["label"],
+  });
+  return results.length > 0;
+}
 
 function CreateTagText(input: string) {
   return (
@@ -287,6 +301,7 @@ export default function AddTagSelect(props: {
           entityMBID,
           entityType,
         }))}
+        filterOption={filterOption}
         placeholder="Add genre or tag"
         formatCreateLabel={CreateTagText}
         isSearchable
