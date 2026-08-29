@@ -8,7 +8,7 @@ from listenbrainz.db import popularity, similarity
 from listenbrainz.db.stats import get_entity_listener
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects, load_release_groups_for_recordings
 from listenbrainz.webserver import db_conn, ts_conn
-from listenbrainz.webserver.decorators import web_listenstore_needed
+from listenbrainz.webserver.decorators import cache_public, web_listenstore_needed
 from listenbrainz.webserver.utils import number_readable
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
@@ -93,6 +93,7 @@ def release_page(path):
 
 @release_bp.post("/<release_mbid>/")
 @web_listenstore_needed
+@cache_public(s_maxage=120)
 def release_redirect(release_mbid):
     if not is_valid_uuid(release_mbid):
         return jsonify({"error": "Provided release mbid is invalid: %s" % release_mbid}), 400
@@ -146,6 +147,7 @@ def artist_page(artist_mbid: str):
 
 @artist_bp.post("/<artist_mbid>/")
 @web_listenstore_needed
+@cache_public(s_maxage=120)
 def artist_entity(artist_mbid: str):
     """ Show a artist page with all their relevant information """
     # VA artist mbid
@@ -283,6 +285,7 @@ def album_page(release_group_mbid: str):
 
 @album_bp.post("/<release_group_mbid>/")
 @web_listenstore_needed
+@cache_public(s_maxage=120)
 def album_entity(release_group_mbid: str):
     """ Show an album page with all their relevant information """
 
@@ -377,6 +380,7 @@ def recording_page(recording_mbid: str):
 
 @track_bp.post("/<recording_mbid>/")
 @web_listenstore_needed
+@cache_public(s_maxage=120)
 def recording_entity(recording_mbid: str):
     """ Show a recording page with all their relevant information """
 
