@@ -62,7 +62,9 @@
     {% set row2_y = bar_y + bar_height - 7 %}
 
     <g class="caption" clip-path="url(#clip-{{ image.x }}-{{ image.y }})">
-      <rect x="{{ image.x }}" y="{{ bar_y }}" width="{{ image.width }}" height="{{ bar_height }}" fill="{{ caption_bg_color }}" />
+      {% set bg_color = caption_bg_color[:7] if caption_bg_color|length == 9 else caption_bg_color %}
+      {% set bg_opacity = (caption_bg_color[7:]|int(base=16) / 255.0) if caption_bg_color|length == 9 else 1.0 %}
+      <rect x="{{ image.x }}" y="{{ bar_y }}" width="{{ image.width }}" height="{{ bar_height }}" fill="{{ bg_color }}" fill-opacity="{{ "%.2f"|format(bg_opacity) }}" />
 
       {% if show_left %}
       {% set single_y = bar_y + bar_height // 2 + 4 %}

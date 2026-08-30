@@ -222,6 +222,79 @@ function getCombinedCaptionBgColor(
   return `#${hex}${alphaHex}`;
 }
 
+function prepareSvgForExport(
+  svgElement: SVGSVGElement,
+  isGrid: boolean,
+  captionOptions: {
+    showCaption: boolean;
+    showRank: boolean;
+    showArtist: boolean;
+    showRelease: boolean;
+    showListenCount: boolean;
+    captionTextColor: string;
+    captionBgColor: string;
+    captionBgOpacity: number;
+  },
+  fontFamily: string
+): string {
+  const clone = svgElement.cloneNode(true) as SVGSVGElement;
+
+  // Strip the preview-only <style> tag injected by Preview.tsx
+  // This removes !important CSS and 8-digit hex colors that Canvg cannot parse.
+  clone.querySelectorAll("style").forEach((styleEl) => styleEl.remove());
+
+  if (isGrid) {
+    if (!captionOptions.showCaption) {
+      clone.querySelectorAll(".caption").forEach((el) => {
+        el.setAttribute("display", "none");
+      });
+    } else {
+      const opacityVal = (captionOptions.captionBgOpacity / 100).toFixed(2);
+      clone.querySelectorAll(".caption rect").forEach((rect) => {
+        rect.setAttribute("fill", captionOptions.captionBgColor);
+        rect.setAttribute("fill-opacity", opacityVal);
+      });
+
+      clone
+        .querySelectorAll(
+          ".caption text tspan, .caption path.caption-listen-count"
+        )
+        .forEach((el) => {
+          el.setAttribute("fill", captionOptions.captionTextColor);
+        });
+
+      if (!captionOptions.showRank) {
+        clone.querySelectorAll(".caption-rank").forEach((el) => {
+          el.setAttribute("display", "none");
+        });
+      }
+      if (!captionOptions.showArtist) {
+        clone.querySelectorAll(".caption-artist").forEach((el) => {
+          el.setAttribute("display", "none");
+        });
+      }
+      if (!captionOptions.showRelease) {
+        clone.querySelectorAll(".caption-release").forEach((el) => {
+          el.setAttribute("display", "none");
+        });
+      }
+      if (!captionOptions.showListenCount) {
+        clone.querySelectorAll(".caption-listen-count").forEach((el) => {
+          el.setAttribute("display", "none");
+        });
+      }
+    }
+  }
+
+  let svgString = clone.outerHTML;
+
+  // Prepend @font-face block after preview style tag has been removed
+  const styleBlock = buildFontStyleBlock(fontFamily);
+  svgString = svgString.replace(/>/, `>${styleBlock}`);
+
+  return svgString;
+}
+
 const defaultTimeRangeOnLoad: keyof typeof TimeRangeOptions = "this_month";
 
 export default function ArtCreator() {
@@ -476,11 +549,22 @@ export default function ArtCreator() {
       return;
     }
     const { current: svgElement } = previewSVGRef;
-    let svgString = svgElement.outerHTML;
-
-    // Inject @font-face into SVG for reliable canvg rendering
-    const styleBlock = buildFontStyleBlock(fontFamily);
-    svgString = svgString.replace(/>/, `>${styleBlock}`);
+    const isGrid = style.type === "grid";
+    const svgString = prepareSvgForExport(
+      svgElement,
+      isGrid,
+      {
+        showCaption,
+        showRank,
+        showArtist,
+        showRelease,
+        showListenCount,
+        captionTextColor,
+        captionBgColor,
+        captionBgOpacity,
+      },
+      fontFamily
+    );
 
     try {
       const png = await toPng(
@@ -506,18 +590,43 @@ export default function ArtCreator() {
         { toastId: "download-svg-error" }
       );
     }
-  }, [previewSVGRef, userName, timeRange, style, fontFamily]);
+  }, [
+    previewSVGRef,
+    userName,
+    timeRange,
+    style,
+    fontFamily,
+    showCaption,
+    showRank,
+    showArtist,
+    showRelease,
+    showListenCount,
+    captionTextColor,
+    captionBgColor,
+    captionBgOpacity,
+  ]);
 
   const onClickCopyImage = useCallback(async () => {
     if (!previewSVGRef?.current) {
       return;
     }
     const { current: svgElement } = previewSVGRef;
-    let svgString = svgElement.outerHTML;
-
-    // Inject @font-face into SVG for reliable canvg rendering
-    const styleBlock = buildFontStyleBlock(fontFamily);
-    svgString = svgString.replace(/>/, `>${styleBlock}`);
+    const isGrid = style.type === "grid";
+    const svgString = prepareSvgForExport(
+      svgElement,
+      isGrid,
+      {
+        showCaption,
+        showRank,
+        showArtist,
+        showRelease,
+        showListenCount,
+        captionTextColor,
+        captionBgColor,
+        captionBgOpacity,
+      },
+      fontFamily
+    );
 
     try {
       if (!navigator.clipboard) {
@@ -573,7 +682,19 @@ export default function ArtCreator() {
         { toastId: "copy-svg-error" }
       );
     }
-  }, [previewSVGRef, style, fontFamily]);
+  }, [
+    previewSVGRef,
+    style,
+    fontFamily,
+    showCaption,
+    showRank,
+    showArtist,
+    showRelease,
+    showListenCount,
+    captionTextColor,
+    captionBgColor,
+    captionBgOpacity,
+  ]);
 
   const onClickCopyCode = useCallback(async () => {
     if (!previewSVGRef?.current) {
@@ -1180,7 +1301,6 @@ export default function ArtCreator() {
                     onChange={updateGenresCallback}
                   />
                 </div> */}
-
               </div>
             </div>
           )}
