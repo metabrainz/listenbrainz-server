@@ -1,17 +1,40 @@
 import json
-import os
+import unicodedata
+from urllib.parse import quote
 
-from flask import Blueprint, current_app, jsonify, send_file
+from flask import Blueprint, Response, current_app, jsonify
 from flask_login import current_user
+from minio.error import S3Error
 from psycopg2 import DatabaseError
 from sqlalchemy import text
+from werkzeug.datastructures import Headers
 
+from listenbrainz.garage import get_garage_client, get_user_data_export_bucket
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIBadRequest
 from listenbrainz.webserver.login import api_login_required
 
 export_bp = Blueprint("export", __name__)
+
+STREAM_CHUNK_SIZE = 64 * 1024  # size of the chunks the export archive is streamed to the user in
+
+
+def content_disposition_names(filename: str) -> dict[str, str]:
+    """ Build the Content-Disposition filename parameters for the given filename.
+
+    WSGI headers must be latin-1 encodable but musicbrainz ids (and hence the archive names)
+    may contain arbitrary unicode, so non-ascii names are also sent RFC 5987 encoded. This is
+    what werkzeug's send_file does, we cannot use it because the archive is streamed from garage.
+    """
+    try:
+        filename.encode("ascii")
+    except UnicodeEncodeError:
+        simple = unicodedata.normalize("NFKD", filename).encode("ascii", "ignore").decode("ascii")
+        quoted = quote(filename, safe="!#$&+-.^_`|~")
+        return {"filename": simple, "filename*": f"UTF-8''{quoted}"}
+    else:
+        return {"filename": filename}
 
 
 @export_bp.post("/")
@@ -121,8 +144,29 @@ def download_export_archive(export_id):
     if row is None:
         raise APINotFound("Export not found")
 
-    file_path = os.path.join(current_app.config["USER_DATA_EXPORT_BASE_DIR"], str(row.filename))
-    return send_file(file_path, mimetype="application/zip", as_attachment=True)
+    filename = str(row.filename)
+    try:
+        archive = get_garage_client().get_object(get_user_data_export_bucket(), filename)
+    except S3Error as e:
+        if e.code in ("NoSuchKey", "NoSuchBucket"):
+            raise APINotFound("Export not found")
+        current_app.logger.error("Error while downloading user data export: %s", filename, exc_info=True)
+        raise APIInternalServerError("Error while downloading export, please try again later.")
+
+    def stream_archive():
+        try:
+            yield from archive.stream(STREAM_CHUNK_SIZE)
+        finally:
+            archive.close()
+            archive.release_conn()
+
+    headers = Headers()
+    headers.set("Content-Disposition", "attachment", **content_disposition_names(filename))
+    content_length = archive.headers.get("Content-Length")
+    if content_length is not None:
+        headers.set("Content-Length", content_length)
+
+    return Response(stream_archive(), mimetype="application/zip", headers=headers)
 
 
 
@@ -142,7 +186,7 @@ def delete_export_archive(export_id):
             {"user_id": current_user.id, "export_id": export_id}
         )
         db_conn.commit()
-        # file is deleted from disk by cronjob
+        # archive is deleted from garage by cronjob
         return jsonify({"success": True})
     else:
         raise APINotFound("Export not found")

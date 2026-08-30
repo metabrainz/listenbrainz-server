@@ -1,20 +1,21 @@
 import os.path
-import shutil
 import tempfile
 import zipfile
 from datetime import datetime, date, time, timedelta, timezone
-from pathlib import Path
 
 import orjson
 from brainzutils.mail import send_mail
 from dateutil.relativedelta import relativedelta
 from flask import current_app, render_template
+from minio.deleteobjects import DeleteObject
 from sqlalchemy import text
 
 from listenbrainz.db import user as db_user
+from listenbrainz.garage import ensure_bucket, get_garage_client, get_user_data_export_bucket
 from listenbrainz.webserver import timescale_connection
 
 BATCH_SIZE = 1000
+EXPORT_FAILED_PROGRESS = "Export failed, please try again."
 USER_DATA_EXPORT_AVAILABILITY = timedelta(days=30)  # how long should a user data export be saved for on our servers
 
 
@@ -25,6 +26,24 @@ def update_export_progress(db_conn, export_id, progress):
            SET progress = :progress
          WHERE id = :export_id
     """), {"export_id": export_id, "progress": progress})
+    db_conn.commit()
+
+
+def mark_export_failed(db_conn, export_id):
+    """ Mark the given export as failed.
+
+    An export that is left in progress blocks the user from requesting a new one forever
+    because of the user_data_export_deduplicate_waiting_idx unique index, so any failure
+    must be recorded in the export's status.
+    """
+    # the failure may have left the connection in an aborted transaction
+    db_conn.rollback()
+    db_conn.execute(text("""
+        UPDATE user_data_export
+           SET status = 'failed'
+             , progress = :progress
+         WHERE id = :export_id
+    """), {"export_id": export_id, "progress": EXPORT_FAILED_PROGRESS})
     db_conn.commit()
 
 
@@ -264,8 +283,6 @@ def export_user(db_conn, ts_conn, user_id: int, metadata):
     export_id = export.id
 
     archive_name =  f"listenbrainz_{user.musicbrainz_id}_{int(datetime.now().timestamp())}.zip"
-    dest_path = os.path.join(current_app.config["USER_DATA_EXPORT_BASE_DIR"], archive_name)
-    os.makedirs(current_app.config["USER_DATA_EXPORT_BASE_DIR"], exist_ok=True)
 
     db_conn.execute(text("""
          UPDATE user_data_export
@@ -281,43 +298,50 @@ def export_user(db_conn, ts_conn, user_id: int, metadata):
     })
     db_conn.commit()
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        archive_path = os.path.join(tmp_dir, archive_name)
-        with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-            all_files = []
+    try:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            archive_path = os.path.join(tmp_dir, archive_name)
+            with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+                all_files = []
 
-            user_file = export_info_for_user(export_id, db_conn, tmp_dir, user)
-            all_files.append(user_file)
+                user_file = export_info_for_user(export_id, db_conn, tmp_dir, user)
+                all_files.append(user_file)
 
-            listen_files = export_listens_for_user(export_id, db_conn, ts_conn, tmp_dir, user_id)
-            all_files.extend(listen_files)
+                listen_files = export_listens_for_user(export_id, db_conn, ts_conn, tmp_dir, user_id)
+                all_files.extend(listen_files)
 
-            feedback_file = export_feedback_for_user(export_id, db_conn, tmp_dir, user_id)
-            if feedback_file:
-                all_files.append(feedback_file)
+                feedback_file = export_feedback_for_user(export_id, db_conn, tmp_dir, user_id)
+                if feedback_file:
+                    all_files.append(feedback_file)
 
-            pinned_recording_file = export_pinned_recordings_for_user(export_id, db_conn, tmp_dir, user_id)
-            if pinned_recording_file:
-                all_files.append(pinned_recording_file)
+                pinned_recording_file = export_pinned_recordings_for_user(export_id, db_conn, tmp_dir, user_id)
+                if pinned_recording_file:
+                    all_files.append(pinned_recording_file)
 
-            update_export_progress(db_conn, export_id, "Writing export files")
-            for file in all_files:
-                archive.write(file, arcname=os.path.relpath(file, tmp_dir))
+                update_export_progress(db_conn, export_id, "Writing export files")
+                for file in all_files:
+                    archive.write(file, arcname=os.path.relpath(file, tmp_dir))
 
-        update_export_progress(db_conn, export_id, "Finalizing user data export")
-        shutil.move(archive_path, dest_path)
+            update_export_progress(db_conn, export_id, "Finalizing user data export")
+            client = get_garage_client()
+            bucket = get_user_data_export_bucket()
+            ensure_bucket(client, bucket)
+            client.fput_object(bucket, archive_name, archive_path, content_type="application/zip")
 
-    created = datetime.now()
-    available_until = created + USER_DATA_EXPORT_AVAILABILITY
-    result = db_conn.execute(text("""
-        UPDATE user_data_export
-           SET progress = :progress
-             , available_until = :available_until
-             , status = 'completed'
-         WHERE id = :export_id
-     RETURNING id
-    """), {"export_id": export_id, "available_until": available_until, "progress": "Export completed"})
-    db_conn.commit()
+        created = datetime.now()
+        available_until = created + USER_DATA_EXPORT_AVAILABILITY
+        result = db_conn.execute(text("""
+            UPDATE user_data_export
+               SET progress = :progress
+                 , available_until = :available_until
+                 , status = 'completed'
+             WHERE id = :export_id
+         RETURNING id
+        """), {"export_id": export_id, "available_until": available_until, "progress": "Export completed"})
+        db_conn.commit()
+    except Exception:
+        mark_export_failed(db_conn, export_id)
+        raise
 
     if result.first() is None:
         return
@@ -348,10 +372,18 @@ def cleanup_old_exports(db_conn):
     with db_conn.begin():
         db_conn.execute(text("DELETE FROM user_data_export WHERE available_until < NOW()"))
         result = db_conn.execute(text("SELECT filename FROM user_data_export"))
-        files_to_keep = {r.filename for r in result.all()}
+        files_to_keep = {r.filename for r in result.all() if r.filename is not None}
 
-        # Delete exports that are no longer required
-        for path in Path(current_app.config["USER_DATA_EXPORT_BASE_DIR"]).iterdir():
-            if path.is_file() and path.name not in files_to_keep:
-                current_app.logger.info("Removing file: %s", path)
-                path.unlink(missing_ok=True)
+    client = get_garage_client()
+    bucket = get_user_data_export_bucket()
+    ensure_bucket(client, bucket)
+
+    # Delete exports that are no longer required
+    objects_to_delete = []
+    for obj in client.list_objects(bucket):
+        if obj.object_name not in files_to_keep:
+            current_app.logger.info("Removing export: %s", obj.object_name)
+            objects_to_delete.append(DeleteObject(obj.object_name))
+
+    for error in client.remove_objects(bucket, objects_to_delete):
+        current_app.logger.error("Failed to remove export %s: %s", error.name, error.message)

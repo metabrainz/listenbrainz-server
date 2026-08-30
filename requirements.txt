@@ -37,6 +37,7 @@ pandas==2.3.3
 pyarrow==23.0.1
 more-itertools==10.8.0
 kombu==5.6.2
+minio==7.2.20
 itsdangerous==2.2.0
 urllib3==2.7.0
 orjson==3.11.6

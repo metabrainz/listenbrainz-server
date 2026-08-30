@@ -9,6 +9,7 @@ volumes:
   # The contents of /root, so that bash and ipython can store history
   web_home:
   couchdb:
+  garage:
 
 services:
 
@@ -44,6 +45,25 @@ services:
     ports:
       - "127.0.0.1:25672:15672"
 
+  garage:
+    build:
+      context: ./garage
+    environment:
+      GARAGE_ACCESS_KEY: GK1e5b4c3a2d0f9e8b7a6c5d40
+      GARAGE_SECRET_KEY: 0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0
+      GARAGE_BUCKETS: listenbrainz-user-data-exports
+    volumes:
+      - garage:/var/lib/garage:z
+    ports:
+      - "127.0.0.1:3900:3900"
+    healthcheck:
+      # the S3 api port is open long before the layout is applied and the buckets exist,
+      # the entrypoint only writes this file once provisioning is complete
+      test: ["CMD", "test", "-f", "/tmp/garage-provisioned"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
   web:
     build:
       context: ..
@@ -63,10 +83,16 @@ services:
       - "127.0.0.1:8100:80"
     user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     depends_on:
-      - redis
-      - lb_db
-      - rabbitmq
-      - couchdb
+      redis:
+        condition: service_started
+      lb_db:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      couchdb:
+        condition: service_started
+      garage:
+        condition: service_healthy
 
   api_compat:
     image: web
@@ -101,9 +127,14 @@ services:
       - ..:/code/listenbrainz:z
     user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     depends_on:
-      - redis
-      - lb_db
-      - rabbitmq
+      redis:
+        condition: service_started
+      lb_db:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      garage:
+        condition: service_healthy
 
   spotify_reader:
     image: web
