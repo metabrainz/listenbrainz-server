@@ -177,6 +177,11 @@ and add it to the configuration.
 
 To generate an encryption key, run the following Python command:
 
+.. note::
+    You need to have python installed, alongside the `cryptography`_ package
+
+.. _cryptography: https://pypi.org/project/cryptography/
+
 .. code-block:: bash
 
     python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
