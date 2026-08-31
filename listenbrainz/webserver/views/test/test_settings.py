@@ -9,6 +9,7 @@ import listenbrainz.db.navidrome as db_navidrome
 import time
 
 from data.model.external_service import ExternalServiceType
+from listenbrainz.domain import external_connect
 from listenbrainz.webserver.utils import CONNECT_SERVICES_WITHOUT_EMAIL_ERROR
 from listenbrainz.domain.spotify import SpotifyService, OAUTH_TOKEN_URL
 from listenbrainz.tests.integration import IntegrationTestCase
@@ -221,8 +222,12 @@ class SettingsViewsTestCase(IntegrationTestCase):
             'scope': '',
         }
         self.temporary_login(self.user['login_id'])
+        # the callback only accepts the state created when the authorization was started
+        with self.client.session_transaction() as session:
+            session[external_connect.settings_oauth_state_key('spotify')] = 'oauth-state'
 
-        r = self.client.get(self.custom_url_for('settings.music_services_callback', service_name='spotify', code='code'))
+        r = self.client.get(self.custom_url_for('settings.music_services_callback', service_name='spotify',
+                                                code='code', state='oauth-state'))
 
         self.assertStatus(r, 302)
         mock_fetch_access_token.assert_called_once_with('code')

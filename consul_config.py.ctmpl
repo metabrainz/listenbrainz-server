@@ -110,14 +110,16 @@ SQLALCHEMY_BINDS = {}
 {{end}}
 
 
-# New listens database (plain postgres, listens partitioned by user_id). Currently only used as the
-# target of listenbrainz/listenstore/migrate_listens.py while listens are migrated away from timescale.
+# New listens database (plain postgres, listens partitioned by user_id). During migration, new
+# listens and deletes are mirrored here while Timescale remains the read store.
 {{if service "listenbrainz-user-listenstore"}}
 {{with index (service "listenbrainz-user-listenstore") 0}}
 SQLALCHEMY_LISTENS_URI = """postgresql://{{template "KEY" "listens_db_user"}}:{{template "KEY" "listens_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listens_db_name"}}"""
+LISTENS_ADMIN_URI = """postgresql://postgres:{{template "KEY" "listens_admin_password"}}@{{.Address}}:{{.Port}}/postgres"""
 {{end}}
 {{else}}
 SQLALCHEMY_LISTENS_URI = "SERVICEDOESNOTEXIST_listenbrainz-user-listenstore"
+LISTENS_ADMIN_URI = "SERVICEDOESNOTEXIST_listenbrainz-user-listenstore"
 {{end}}
 
 
