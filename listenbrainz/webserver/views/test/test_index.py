@@ -7,7 +7,7 @@ from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
 
 import listenbrainz.db.user as db_user
 import listenbrainz.webserver.login
-from listenbrainz.background.background_tasks import get_task
+from listenbrainz.background.background_tasks import peek_task
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.tests.integration import IntegrationTestCase
@@ -73,7 +73,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         self.assert200(r)
         mock_authorize_mb_user_deleter.assert_called_once_with('132')
         with self.app.app_context():
-            task = get_task()
+            task = peek_task()
             self.assertIsNotNone(task)
             self.assertEqual(task.user_id, user_id)
             self.assertEqual(task.task, "delete_user")
@@ -98,7 +98,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         self.assert200(r)
         mock_get_user_info.assert_called_with('132')
         with self.app.app_context():
-            task = get_task()
+            task = peek_task()
             self.assertIsNotNone(task)
             self.assertEqual(task.user_id, user_id)
             self.assertEqual(task.task, "delete_user")
