@@ -2,14 +2,14 @@ import json
 import unicodedata
 from urllib.parse import quote
 
+from botocore.exceptions import ClientError
 from flask import Blueprint, Response, current_app, jsonify
 from flask_login import current_user
-from minio.error import S3Error
 from psycopg2 import DatabaseError
 from sqlalchemy import text
 from werkzeug.datastructures import Headers
 
-from listenbrainz.garage import get_garage_client, get_user_data_export_bucket
+from listenbrainz.garage import get_error_code, get_garage_client, get_user_data_export_bucket
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIBadRequest
@@ -146,25 +146,26 @@ def download_export_archive(export_id):
 
     filename = str(row.filename)
     try:
-        archive = get_garage_client().get_object(get_user_data_export_bucket(), filename)
-    except S3Error as e:
-        if e.code in ("NoSuchKey", "NoSuchBucket"):
+        archive = get_garage_client().get_object(Bucket=get_user_data_export_bucket(), Key=filename)
+    except ClientError as e:
+        if get_error_code(e) in ("NoSuchKey", "NoSuchBucket", "404"):
             raise APINotFound("Export not found")
         current_app.logger.error("Error while downloading user data export: %s", filename, exc_info=True)
         raise APIInternalServerError("Error while downloading export, please try again later.")
 
+    body = archive["Body"]
+
     def stream_archive():
         try:
-            yield from archive.stream(STREAM_CHUNK_SIZE)
+            yield from body.iter_chunks(STREAM_CHUNK_SIZE)
         finally:
-            archive.close()
-            archive.release_conn()
+            body.close()
 
     headers = Headers()
     headers.set("Content-Disposition", "attachment", **content_disposition_names(filename))
-    content_length = archive.headers.get("Content-Length")
+    content_length = archive.get("ContentLength")
     if content_length is not None:
-        headers.set("Content-Length", content_length)
+        headers.set("Content-Length", str(content_length))
 
     return Response(stream_archive(), mimetype="application/zip", headers=headers)
 

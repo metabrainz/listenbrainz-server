@@ -21,7 +21,8 @@ import click
 from flask import current_app
 from sqlalchemy import text
 
-from listenbrainz.garage import ensure_bucket, get_garage_client, get_user_data_export_bucket
+from listenbrainz.garage import bucket_exists, ensure_bucket, get_garage_client, \
+    get_user_data_export_bucket, list_object_names
 
 ARCHIVE_MISSING_PROGRESS = "Export archive is no longer available, please create a new export."
 
@@ -73,17 +74,17 @@ def migrate_exports(db_conn, export_dir: str, delete_source: bool = False, dry_r
     if dry_run:
         # the bucket is created by ops in production but may not exist yet, a dry run should
         # still report what it would do instead of erroring out with NoSuchBucket
-        bucket_exists = client.bucket_exists(bucket)
-        if not bucket_exists:
+        bucket_available = bucket_exists(client, bucket)
+        if not bucket_available:
             current_app.logger.info("Bucket %s does not exist yet, it would be created", bucket)
     else:
         ensure_bucket(client, bucket)
-        bucket_exists = True
+        bucket_available = True
 
     exports = get_completed_exports(db_conn)
     known_filenames = get_all_export_filenames(db_conn)
     # archives that do not need to be uploaded (again), this run's uploads are added as they happen
-    available = {obj.object_name for obj in client.list_objects(bucket)} if bucket_exists else set()
+    available = set(list_object_names(client, bucket)) if bucket_available else set()
     files = sorted(path for path in source_dir.iterdir() if path.is_file())
 
     uploaded_count, skipped_count, orphan_count, pending_count = 0, 0, 0, 0
@@ -96,7 +97,8 @@ def migrate_exports(db_conn, export_dir: str, delete_source: bool = False, dry_r
             else:
                 current_app.logger.info("Uploading %s (%d bytes)", path.name, path.stat().st_size)
                 if not dry_run:
-                    client.fput_object(bucket, path.name, str(path), content_type="application/zip")
+                    client.upload_file(str(path), bucket, path.name,
+                                       ExtraArgs={"ContentType": "application/zip"})
                 available.add(path.name)
                 uploaded_count += 1
             deletable = True

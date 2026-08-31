@@ -7,11 +7,11 @@ import orjson
 from brainzutils.mail import send_mail
 from dateutil.relativedelta import relativedelta
 from flask import current_app, render_template
-from minio.deleteobjects import DeleteObject
 from sqlalchemy import text
 
 from listenbrainz.db import user as db_user
-from listenbrainz.garage import ensure_bucket, get_garage_client, get_user_data_export_bucket
+from listenbrainz.garage import delete_objects, ensure_bucket, get_garage_client, \
+    get_user_data_export_bucket, list_object_names
 from listenbrainz.webserver import timescale_connection
 
 BATCH_SIZE = 1000
@@ -326,7 +326,7 @@ def export_user(db_conn, ts_conn, user_id: int, metadata):
             client = get_garage_client()
             bucket = get_user_data_export_bucket()
             ensure_bucket(client, bucket)
-            client.fput_object(bucket, archive_name, archive_path, content_type="application/zip")
+            client.upload_file(archive_path, bucket, archive_name, ExtraArgs={"ContentType": "application/zip"})
 
         created = datetime.now()
         available_until = created + USER_DATA_EXPORT_AVAILABILITY
@@ -380,10 +380,10 @@ def cleanup_old_exports(db_conn):
 
     # Delete exports that are no longer required
     objects_to_delete = []
-    for obj in client.list_objects(bucket):
-        if obj.object_name not in files_to_keep:
-            current_app.logger.info("Removing export: %s", obj.object_name)
-            objects_to_delete.append(DeleteObject(obj.object_name))
+    for object_name in list_object_names(client, bucket):
+        if object_name not in files_to_keep:
+            current_app.logger.info("Removing export: %s", object_name)
+            objects_to_delete.append(object_name)
 
-    for error in client.remove_objects(bucket, objects_to_delete):
-        current_app.logger.error("Failed to remove export %s: %s", error.name, error.message)
+    for error in delete_objects(client, bucket, objects_to_delete):
+        current_app.logger.error("Failed to remove export %s: %s", error.get("Key"), error.get("Message"))

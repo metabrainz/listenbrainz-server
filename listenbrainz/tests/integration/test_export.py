@@ -8,7 +8,6 @@ from io import BytesIO
 from unittest import mock
 
 from brainzutils import cache
-from minio.deleteobjects import DeleteObject
 from sqlalchemy import text
 
 import listenbrainz.db.feedback as db_feedback
@@ -18,7 +17,8 @@ from listenbrainz.background.export import EXPORT_FAILED_PROGRESS, cleanup_old_e
 from listenbrainz.background.migrate_exports import ARCHIVE_MISSING_PROGRESS, migrate_exports
 from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.db.model.pinned_recording import WritablePinnedRecording
-from listenbrainz.garage import ensure_bucket, get_garage_client, get_user_data_export_bucket
+from listenbrainz.garage import delete_objects, ensure_bucket, get_garage_client, \
+    get_user_data_export_bucket, list_object_names
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver import db_conn, ts_conn
@@ -82,9 +82,8 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
         with self.app.app_context():
             self.redis.flushall()
             client, bucket = self.get_export_storage()
-            objects = [DeleteObject(obj.object_name) for obj in client.list_objects(bucket)]
-            for error in client.remove_objects(bucket, objects):
-                self.fail(f"Failed to remove export {error.name}: {error.message}")
+            for error in delete_objects(client, bucket, list_object_names(client, bucket)):
+                self.fail(f"Failed to remove export {error.get('Key')}: {error.get('Message')}")
         super(ExportTestCase, self).tearDown()
 
     def get_export_storage(self):
@@ -305,7 +304,7 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
         with self.app.app_context():
             cleanup_old_exports(db_conn)
             client, bucket = self.get_export_storage()
-            self.assertEqual([obj.object_name for obj in client.list_objects(bucket)], [])
+            self.assertEqual(list_object_names(client, bucket), [])
 
     def create_export_row(self, filename, status="completed", available_until=None, user=None):
         """ Insert a user data export row directly, as if it had been created by an earlier export. """
@@ -348,17 +347,16 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
                 client, bucket = self.get_export_storage()
 
                 migrate_exports(db_conn, export_dir, dry_run=True)
-                self.assertEqual([obj.object_name for obj in client.list_objects(bucket)], [])
+                self.assertEqual(list_object_names(client, bucket), [])
                 self.assertEqual("completed", self.get_export_row(missing_id).status)
 
                 migrate_exports(db_conn, export_dir)
 
                 # the archive with an export row is uploaded, the orphan one is not
-                self.assertEqual([migrated_name], [obj.object_name for obj in client.list_objects(bucket)])
-                archive = client.get_object(bucket, migrated_name)
-                self.assertEqual(b"archive contents of " + migrated_name.encode(), archive.read())
-                archive.close()
-                archive.release_conn()
+                self.assertEqual([migrated_name], list_object_names(client, bucket))
+                archive = client.get_object(Bucket=bucket, Key=migrated_name)
+                with archive["Body"] as body:
+                    self.assertEqual(b"archive contents of " + migrated_name.encode(), body.read())
 
                 # source files are kept unless asked otherwise
                 self.assertEqual({migrated_name, orphan_name}, set(os.listdir(export_dir)))
@@ -371,19 +369,19 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
 
                 # re-running does not upload again and removes the source files when asked to
                 migrate_exports(db_conn, export_dir, delete_source=True)
-                self.assertEqual([migrated_name], [obj.object_name for obj in client.list_objects(bucket)])
+                self.assertEqual([migrated_name], list_object_names(client, bucket))
                 self.assertEqual([], os.listdir(export_dir))
 
     def put_archive(self, filename, contents=b"archive contents"):
         """ Put an archive in the export bucket, as if an earlier export had uploaded it. """
         with self.app.app_context():
             client, bucket = self.get_export_storage()
-            client.put_object(bucket, filename, BytesIO(contents), len(contents))
+            client.put_object(Bucket=bucket, Key=filename, Body=contents)
 
     def list_archives(self):
         with self.app.app_context():
             client, bucket = self.get_export_storage()
-            return [obj.object_name for obj in client.list_objects(bucket)]
+            return list_object_names(client, bucket)
 
     def test_export_endpoints_only_serve_the_owner(self):
         """ An export must not be readable or deletable by any user other than its owner. """
@@ -496,7 +494,7 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
                 client, bucket = self.get_export_storage()
                 migrate_exports(db_conn, export_dir, delete_source=True)
 
-                self.assertEqual([migrated_name], [obj.object_name for obj in client.list_objects(bucket)])
+                self.assertEqual([migrated_name], list_object_names(client, bucket))
                 self.assertEqual([in_progress_name], os.listdir(export_dir))
 
     def test_migrate_exports_does_not_fail_exports_when_no_archive_was_found(self):
