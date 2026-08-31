@@ -19,6 +19,15 @@ def add_task(user_id, task):
     db_conn.commit()
 
 
+def peek_task():
+    """ Return the oldest background task without claiming it.
+
+    Used by tests to verify a task was queued. Workers must use claim_task().
+    """
+    result = db_conn.execute(text("SELECT * FROM background_tasks ORDER BY created LIMIT 1"))
+    return result.first()
+
+
 def claim_task():
     """ Claim the oldest unclaimed task using FOR UPDATE SKIP LOCKED.
 

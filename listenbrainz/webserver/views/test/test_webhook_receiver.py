@@ -6,7 +6,7 @@ from unittest import mock
 
 from sqlalchemy import text
 
-from listenbrainz.background.background_tasks import claim_task
+from listenbrainz.background.background_tasks import peek_task
 from listenbrainz.db import user as db_user
 
 from listenbrainz.tests.integration import IntegrationTestCase
@@ -267,7 +267,7 @@ class WebhookReceiverTestCase(IntegrationTestCase):
         self.assert200(response)
 
         with self.app.app_context():
-            task = claim_task()
+            task = peek_task()
         self.assertIsNone(task)
 
         payload = {
@@ -291,7 +291,7 @@ class WebhookReceiverTestCase(IntegrationTestCase):
         self.assert200(response)
 
         with self.app.app_context():
-            task = claim_task()
+            task = peek_task()
         self.assertIsNotNone(task)
         self.assertEqual(task.user_id, user_id)
         self.assertEqual(task.task, "delete_user")
