@@ -86,7 +86,7 @@ class BackgroundTasks:
                 release_task(self._current_task)
                 current_app.logger.info("Released task %s on shutdown.", self._current_task.id)
             except Exception:
-                current_app.logger.error("Failed to release task on shutdown:", exc_info=True)
+                current_app.logger.error("Failed to release task %s on shutdown:", self._current_task.id, exc_info=True)
         raise SystemExit(0)
 
     def start(self):
