@@ -1,6 +1,6 @@
 import { isFunction, isUndefined, noop, set, sortBy } from "lodash";
 import * as React from "react";
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import {
   ActionMeta,
   DropdownIndicatorProps,
@@ -11,7 +11,6 @@ import {
 import CreatableSelect from "react-select/creatable";
 import { toast } from "react-toastify";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
-import { matchSorter } from "match-sorter";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import TagComponent, { TagActionType } from "./TagComponent";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -35,17 +34,24 @@ type TagOptionType = {
   originalTag?: ArtistTag | RecordingTag | ReleaseGroupTag;
 };
 
-function filterOption(
-  option: { label: string; value: string; data: TagOptionType },
-  inputValue: string
-) {
-  if (!inputValue) {
-    return true;
+/**
+ * Ranks how well a label matches the typed input, without relying on an
+ * external fuzzy-matching library. Lower rank = better match.
+ * 0 = exact match, 1 = starts with input, 2 = contains input, -1 = no match.
+ */
+function getMatchRank(label: string, inputValue: string): number {
+  const normalizedLabel = label.toLowerCase();
+  const normalizedInput = inputValue.toLowerCase();
+  if (normalizedLabel === normalizedInput) {
+    return 0;
   }
-  const results = matchSorter([option], inputValue, {
-    keys: ["label"],
-  });
-  return results.length > 0;
+  if (normalizedLabel.startsWith(normalizedInput)) {
+    return 1;
+  }
+  if (normalizedLabel.includes(normalizedInput)) {
+    return 2;
+  }
+  return -1;
 }
 
 function CreateTagText(input: string) {
@@ -117,6 +123,7 @@ export default function AddTagSelect(props: {
 }) {
   const { tags, entityType, entityMBID } = props;
   const [prevEntityMBID, setPrevEntityMBID] = useState<string>();
+  const [inputValue, setInputValue] = useState<string>("");
   const { APIService, musicbrainzAuth, musicbrainzGenres } = React.useContext(
     GlobalAppContext
   );
@@ -290,18 +297,52 @@ export default function AddTagSelect(props: {
     [submitTagVote]
   );
 
+  // Build the full option list once from available genres
+  const allGenreOptions: TagOptionType[] = useMemo(
+    () =>
+      musicbrainzGenres?.map((genre) => ({
+        value: genre,
+        label: genre,
+        entityMBID,
+        entityType,
+      })) ?? [],
+    [musicbrainzGenres, entityMBID, entityType]
+  );
+
+  // Filter and rank genre options by relevance to what the user has typed,
+  // without relying on an external fuzzy-matching library. Options that don't
+  // match are dropped; the rest are sorted by match quality (exact, then
+  // starts-with, then contains), then alphabetically within each group.
+  const filteredSortedOptions: TagOptionType[] = useMemo(() => {
+    if (!inputValue) {
+      return allGenreOptions;
+    }
+    return allGenreOptions
+      .map((option) => ({
+        option,
+        rank: getMatchRank(option.label, inputValue),
+      }))
+      .filter(({ rank }) => rank !== -1)
+      .sort((a, b) => {
+        if (a.rank !== b.rank) {
+          return a.rank - b.rank;
+        }
+        return a.option.label.localeCompare(b.option.label);
+      })
+      .map(({ option }) => option);
+  }, [allGenreOptions, inputValue]);
+
   return (
     <div className="add-tag-select">
       <CreatableSelect
         createOptionPosition="first"
         value={sortBy(selected, ["originalTag.count", "isOwnTag"]).reverse()}
-        options={musicbrainzGenres?.map((genre) => ({
-          value: genre,
-          label: genre,
-          entityMBID,
-          entityType,
-        }))}
-        filterOption={filterOption}
+        options={filteredSortedOptions}
+        // We already filter options ourselves above based on inputValue,
+        // so tell react-select not to filter again.
+        filterOption={null}
+        inputValue={inputValue}
+        onInputChange={(newValue) => setInputValue(newValue)}
         placeholder="Add genre or tag"
         formatCreateLabel={CreateTagText}
         isSearchable
