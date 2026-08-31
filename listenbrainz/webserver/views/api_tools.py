@@ -18,7 +18,7 @@ import sentry_sdk
 
 from typing import NoReturn
 
-from flask import current_app, request
+from flask import current_app, jsonify, request
 
 from listenbrainz.listenstore import LISTEN_MINIMUM_TS
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW, db_conn
@@ -248,7 +248,9 @@ def validate_basic_metadata(listen, key, required=True):
 
         listen['track_metadata'][key] = listen['track_metadata'][key].strip()
         if len(listen['track_metadata'][key]) == 0:
-            raise ListenValidationError(f"field track_metadata.{key} is empty.", listen)
+            if required:
+                raise ListenValidationError(f"field track_metadata.{key} is empty.", listen)
+            del listen['track_metadata'][key]
     elif required:
         raise ListenValidationError(f"JSON document does not contain required field track_metadata.{key}.", listen)
 
@@ -593,3 +595,14 @@ def _allow_metabrainz_domains(tag, name, value):
 def _filter_description_html(description):
     ok_tags = [u"a", u"strong", u"b", u"em", u"i", u"u", u"ul", u"li", u"p", u"br"]
     return bleach.clean(description, tags=ok_tags, attributes={"a": _allow_metabrainz_domains}, strip=True)
+
+
+def ensure_user_token_for_expensive_endpoint():
+    """ Ensure that the user is passing an auth header for expensive endpoints
+        like /popularity, /lb-radio, etc.
+    """
+    try:
+        _ = validate_auth_header()
+    except APIUnauthorized:
+        raise APIUnauthorized("Due to bad actors and AI scrapers causing undue traffic on our sites, "
+                              "you need to provide an Auth token for this endpoint. Sorry for this mess.")

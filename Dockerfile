@@ -103,8 +103,8 @@ FROM listenbrainz-base AS listenbrainz-prod
 
 # Create directories for cron logs and dumps
 # /mnt/dumps: Temporary working space for dumps
-# /mnt/backup: All dumps
-# /mnt/ftp: Subset of all dumps that are uploaded to
+# /mnt/backup: Non-full public dump backups
+# /mnt/ftp: Temporary dump staging and small FTP-retention markers
 RUN mkdir /logs /mnt/dumps /mnt/backup /mnt/ftp
 
 COPY ./docker/run-lb-command /usr/local/bin

@@ -23,6 +23,10 @@ SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = SQLALCHEMY_TIMESCALE_URI
 TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@lb_db/postgres"
 TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@lb_db/listenbrainz_ts"
 
+# Listens (postgres, user_id partitioned) - migration target and dual-write store
+SQLALCHEMY_LISTENS_URI = "postgresql://listenbrainz_listens:listenbrainz_listens@lb_db/listenbrainz_listens"
+LISTENS_ADMIN_URI = "postgresql://postgres:postgres@lb_db/postgres"
+
 # Server address
 # SERVER_NAME = "localhost:8100"
 
@@ -101,12 +105,13 @@ COUCHDB_DATABASE_PREFIX = ""
 
 # MusicBrainz OAuth
 OAUTH_BASE_URL = "https://musicbrainz.org"
-REGISTRATION_URL = f"{OAUTH_BASE_URL}/register"
 OAUTH_CLIENT_ID = "CLIENT_ID"
 OAUTH_CLIENT_SECRET = "CLIENT_SECRET"
-OAUTH_AUTHORIZE_URL = f"{OAUTH_BASE_URL}/new-oauth2/authorize"
-OAUTH_TOKEN_URL = f"{OAUTH_BASE_URL}/new-oauth2/token"
-OAUTH_INTROSPECTION_URL = f"{OAUTH_BASE_URL}/new-oauth2/introspect"
+OAUTH_WEBHOOK_SECRET = "WEBHOOK_SECRET"
+OAUTH_AUTHORIZE_URL = f"{OAUTH_BASE_URL}/oauth2/authorize"
+OAUTH_TOKEN_URL = f"{OAUTH_BASE_URL}/oauth2/token"
+OAUTH_INTROSPECTION_URL = f"{OAUTH_BASE_URL}/oauth2/introspect"
+OAUTH_USERINFO_URL = f"{OAUTH_BASE_URL}/oauth2/userinfo"
 
 # Lastfm API
 LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/"

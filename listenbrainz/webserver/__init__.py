@@ -13,7 +13,8 @@ from werkzeug.local import LocalProxy
 from flask_htmx import HTMX
 
 from listenbrainz import db
-from listenbrainz.db import create_test_database_connect_strings, timescale, donation
+from listenbrainz.db import create_test_database_connect_strings, timescale, donation, listens
+from listenbrainz.db.listens import create_test_listens_connect_strings
 from listenbrainz.db.timescale import create_test_timescale_connect_strings
 from listenbrainz.webserver.converters import NotApiPathConverter, UsernameConverter
 
@@ -104,16 +105,16 @@ def create_app(
     When `bypass_pgbouncer` is True, the timescale engine connects directly to the
     timescale database instead of going through pgbouncer.
 
-    When `use_pool` is True, the LB postgres, timescale, and metabrainz engines
-    use SQLAlchemy QueuePools sized from config. This is intended for the uwsgi
-    entry points (webserver, api_compat) where many requests share a worker.
+    When `use_pool` is True, the LB postgres, timescale, partitioned listens, and
+    metabrainz engines use SQLAlchemy QueuePools sized from config. This is
+    intended for long-running entry points where connections can be reused.
     Other callers (manage.py, mbid_mapping_writer, background_tasks, etc.) keep
     the NullPool default since they're single-purpose, often short-lived, and
     don't benefit from a long-lived pool.
 
     `pool_size_overrides` (only used when `use_pool=True`) lets entry points
     shrink the per-worker pool below the consul-configured size. Keys: "db",
-    "ts", "meb". Each value is a (pool_size, max_overflow) tuple.
+    "ts", "listens", "meb". Each value is a (pool_size, max_overflow) tuple.
     """
 
     app = CustomFlask(import_name=__name__)
@@ -148,8 +149,12 @@ def create_app(
     if "PYTHON_TESTS_RUNNING" in os.environ:
         db_connect = create_test_database_connect_strings()
         ts_connect = create_test_timescale_connect_strings()
+        listens_connect = create_test_listens_connect_strings()
         db.init_db_connection(db_connect["DB_CONNECT"])
         timescale.init_db_connection(ts_connect["DB_CONNECT"])
+        # tests exercise the dual write too, `manage.py init_listens_db` creates this database
+        listens.init_db_connection(listens_connect["DB_CONNECT"])
+        app.config["SQLALCHEMY_LISTENS_URI"] = listens_connect["DB_CONNECT"]
     elif use_pool:
         overrides = pool_size_overrides or {}
         db_size, db_overflow = overrides.get(
@@ -159,6 +164,10 @@ def create_app(
         ts_size, ts_overflow = overrides.get(
             "ts",
             (app.config.get("TIMESCALE_POOL_SIZE"), app.config.get("TIMESCALE_POOL_MAX_OVERFLOW"))
+        )
+        listens_size, listens_overflow = overrides.get(
+            "listens",
+            (ts_size, ts_overflow),
         )
         meb_size, meb_overflow = overrides.get(
             "meb",
@@ -180,6 +189,13 @@ def create_app(
             max_overflow=ts_overflow,
             pool_pre_ping=True,
         )
+        listens.init_db_connection(
+            app.config.get("SQLALCHEMY_LISTENS_URI"),
+            poolclass=QueuePool,
+            pool_size=listens_size,
+            max_overflow=listens_overflow,
+            pool_pre_ping=True,
+        )
         if app.config.get("SQLALCHEMY_METABRAINZ_URI", None):
             donation.init_meb_db_connection(
                 app.config["SQLALCHEMY_METABRAINZ_URI"],
@@ -192,6 +208,7 @@ def create_app(
         db.init_db_connection(app.config["SQLALCHEMY_DATABASE_URI"])
         timescale_uri_config = "SQLALCHEMY_TIMESCALE_URI" if bypass_pgbouncer else "SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"
         timescale.init_db_connection(app.config[timescale_uri_config])
+        listens.init_db_connection(app.config.get("SQLALCHEMY_LISTENS_URI"))
         if app.config.get("SQLALCHEMY_METABRAINZ_URI", None):
             donation.init_meb_db_connection(app.config["SQLALCHEMY_METABRAINZ_URI"])
 
@@ -271,9 +288,11 @@ def create_app(
                 response.cache_control.max_age = hashed_assets_max_age
             elif request.path.startswith('/static/img'):
                 response.cache_control.max_age = image_assets_max_age
-        else:
+        elif not response.cache_control.public:
             response.cache_control.private = True
             response.cache_control.public = False
+            if request.method in ("POST", "PUT", "DELETE", "PATCH"):
+                response.cache_control.no_store = True
         return response
 
     # Template utilities
@@ -385,6 +404,7 @@ def create_api_compat_app(debug=None):
         pool_size_overrides={
             "db": (1, 1),
             "ts": (1, 1),
+            "listens": (1, 1),
             "meb": (1, 1),
         },
     )
@@ -452,6 +472,9 @@ def _register_blueprints(app):
     app.register_blueprint(settings_bp, url_prefix='/settings')
     # Retro-compatible 'profile' endpoint
     app.register_blueprint(settings_bp, url_prefix='/profile', name='profile')
+
+    from listenbrainz.webserver.views.external_connect import external_connect_bp
+    app.register_blueprint(external_connect_bp, url_prefix='/connect')
 
     from listenbrainz.webserver.views.export import export_bp
     app.register_blueprint(export_bp, url_prefix='/export')
@@ -550,3 +573,6 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.internet_archive_api import internet_archive_api_bp
     app.register_blueprint(internet_archive_api_bp, url_prefix=API_PREFIX+"/internet_archive")
+
+    from listenbrainz.webserver.views.webhook_receiver import webhook_bp
+    app.register_blueprint(webhook_bp, url_prefix='/webhooks')

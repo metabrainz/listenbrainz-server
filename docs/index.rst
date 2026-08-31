@@ -22,6 +22,7 @@ Contents
 
    users/api/index
    users/api-usage
+   users/connect-music-services
    users/json
    users/widgets
    users/clients

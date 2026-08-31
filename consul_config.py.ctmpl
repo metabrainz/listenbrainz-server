@@ -110,6 +110,19 @@ SQLALCHEMY_BINDS = {}
 {{end}}
 
 
+# New listens database (plain postgres, listens partitioned by user_id). During migration, new
+# listens and deletes are mirrored here while Timescale remains the read store.
+{{if service "listenbrainz-user-listenstore"}}
+{{with index (service "listenbrainz-user-listenstore") 0}}
+SQLALCHEMY_LISTENS_URI = """postgresql://{{template "KEY" "listens_db_user"}}:{{template "KEY" "listens_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listens_db_name"}}"""
+LISTENS_ADMIN_URI = """postgresql://postgres:{{template "KEY" "listens_admin_password"}}@{{.Address}}:{{.Port}}/postgres"""
+{{end}}
+{{else}}
+SQLALCHEMY_LISTENS_URI = "SERVICEDOESNOTEXIST_listenbrainz-user-listenstore"
+LISTENS_ADMIN_URI = "SERVICEDOESNOTEXIST_listenbrainz-user-listenstore"
+{{end}}
+
+
 {{if service "pgbouncer-aretha"}}
 {{with index (service "pgbouncer-aretha") 0}}
 MBID_MAPPING_DATABASE_URI = "dbname=musicbrainz_json_dump user=musicbrainz host={{.Address}} port={{.Port}} password=musicbrainz"
@@ -206,12 +219,13 @@ EXTERNAL_SERVICES_SOUNDCLOUD_CACHE_QUEUE = '''{{template "KEY" "external_service
 EXTERNAL_SERVICES_IA_CACHE_QUEUE = '''{{template "KEY" "external_services_ia_cache"}}'''
 
 OAUTH_BASE_URL = '''{{template "KEY" "oauth/base_url"}}'''
-REGISTRATION_URL = f"{OAUTH_BASE_URL}/register"
 OAUTH_CLIENT_ID = '''{{template "KEY" "oauth/client_id"}}'''
 OAUTH_CLIENT_SECRET = '''{{template "KEY" "oauth/client_secret"}}'''
-OAUTH_AUTHORIZE_URL = f"{OAUTH_BASE_URL}/new-oauth2/authorize"
-OAUTH_TOKEN_URL = f"{OAUTH_BASE_URL}/new-oauth2/token"
-OAUTH_INTROSPECTION_URL = f"{OAUTH_BASE_URL}/new-oauth2/introspect"
+OAUTH_WEBHOOK_SECRET = '''{{template "KEY" "oauth/webhook_secret"}}'''
+OAUTH_AUTHORIZE_URL = f"{OAUTH_BASE_URL}/oauth2/authorize"
+OAUTH_TOKEN_URL = f"{OAUTH_BASE_URL}/oauth2/token"
+OAUTH_INTROSPECTION_URL = f"{OAUTH_BASE_URL}/oauth2/introspect"
+OAUTH_USERINFO_URL = f"{OAUTH_BASE_URL}/oauth2/userinfo"
 
 LASTFM_API_URL = '''{{template "KEY" "lastfm_api_url"}}'''
 LASTFM_API_KEY = '''{{template "KEY" "lastfm_api_key"}}'''

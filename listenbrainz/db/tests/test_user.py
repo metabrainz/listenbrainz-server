@@ -1,11 +1,11 @@
 import json
+from unittest import mock
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.external_service_oauth as db_oauth
 import sqlalchemy
 
 from data.model.external_service import ExternalServiceType
-from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.db.testing import DatabaseTestCase
 
 
@@ -113,7 +113,78 @@ class UserTestCase(DatabaseTestCase):
         db_user.pause(self.db_conn, user_id)
         user = db_user.get(self.db_conn, user_id)
         self.assertEqual(user['is_paused'], True)
-        
+
+    def test_pause_multiple_users(self):
+        """ Tests that pauses multiple users and notifies each updated user """
+
+        user_id_1 = db_user.create(self.db_conn, 40, 'anne')
+        user_id_2 = db_user.create(self.db_conn, 41, 'rob')
+
+        with mock.patch("listenbrainz.db.user._notify_user_paused") as notify_user_paused:
+            users, notification_failed_users = db_user.pause(self.db_conn, [user_id_1, user_id_2])
+
+        self.assertCountEqual(users, ['anne', 'rob'])
+        self.assertEqual(notification_failed_users, [])
+        self.assertEqual(db_user.get(self.db_conn, user_id_1)['is_paused'], True)
+        self.assertEqual(db_user.get(self.db_conn, user_id_2)['is_paused'], True)
+        notify_user_paused.assert_has_calls([
+            mock.call(self.db_conn, user_id_1, True),
+            mock.call(self.db_conn, user_id_2, True),
+        ], any_order=True)
+
+    def test_pause_multiple_users_continues_after_notification_failure(self):
+        """ Tests that notification failures do not stop later notifications """
+
+        user_id_1 = db_user.create(self.db_conn, 42, 'anne')
+        user_id_2 = db_user.create(self.db_conn, 43, 'rob')
+        notified_user_ids = []
+
+        def notify_user_paused(db_conn, user_id, paused):
+            notified_user_ids.append(user_id)
+            if user_id == user_id_1:
+                raise Exception("Failed to send email")
+
+        with mock.patch("listenbrainz.db.user._notify_user_paused", side_effect=notify_user_paused):
+            users, notification_failed_users = db_user.pause(self.db_conn, [user_id_1, user_id_2])
+
+        self.assertCountEqual(users, ['anne', 'rob'])
+        self.assertEqual(notification_failed_users, ['anne'])
+        self.assertEqual(db_user.get(self.db_conn, user_id_1)['is_paused'], True)
+        self.assertEqual(db_user.get(self.db_conn, user_id_2)['is_paused'], True)
+        self.assertCountEqual(notified_user_ids, [user_id_1, user_id_2])
+
+    def test_set_reported_users_paused(self):
+        """ Tests that pauses reported users selected by report id """
+
+        reporter_id = db_user.create(self.db_conn, 44, 'reporter')
+        reported_user_id_1 = db_user.create(self.db_conn, 45, 'anne')
+        reported_user_id_2 = db_user.create(self.db_conn, 46, 'rob')
+
+        db_user.report_user(self.db_conn, reporter_id, reported_user_id_1)
+        db_user.report_user(self.db_conn, reporter_id, reported_user_id_2)
+        result = self.db_conn.execute(sqlalchemy.text("""
+            SELECT id
+              FROM reported_users
+             WHERE reporter_user_id = :reporter_id
+          ORDER BY id
+        """), {
+            "reporter_id": reporter_id,
+        })
+        report_ids = [row.id for row in result.fetchall()]
+
+        with mock.patch("listenbrainz.db.user._notify_user_paused") as notify_user_paused:
+            users, notification_failed_users = db_user.set_reported_users_paused(self.db_conn, report_ids, True)
+
+        self.assertCountEqual(users, ['anne', 'rob'])
+        self.assertEqual(notification_failed_users, [])
+        self.assertEqual(db_user.get(self.db_conn, reporter_id)['is_paused'], False)
+        self.assertEqual(db_user.get(self.db_conn, reported_user_id_1)['is_paused'], True)
+        self.assertEqual(db_user.get(self.db_conn, reported_user_id_2)['is_paused'], True)
+        notify_user_paused.assert_has_calls([
+            mock.call(self.db_conn, reported_user_id_1, True),
+            mock.call(self.db_conn, reported_user_id_2, True),
+        ], any_order=True)
+
     def test_unpause(self):
         """ Tests that pauses the given user """
 
@@ -142,40 +213,6 @@ class UserTestCase(DatabaseTestCase):
         self.assertIsNone(user)
         token = db_oauth.get_token(self.db_conn, user_id, ExternalServiceType.SPOTIFY)
         self.assertIsNone(token)
-
-    def test_get_similar_users(self):
-        user_id_21 = db_user.create(self.db_conn, 21, "twenty_one")
-        user_id_22 = db_user.create(self.db_conn, 22, "twenty_two")
-        user_id_23 = db_user.create(self.db_conn, 23, "twenty_three")
-
-        similar_users_21 = {str(user_id_22): 0.4, str(user_id_23): 0.7}
-        similar_users_22 = {str(user_id_21): 0.4}
-        similar_users_23 = {str(user_id_21): 0.7}
-
-        similar_users = {
-            str(user_id_21): similar_users_21,
-            str(user_id_22): similar_users_22,
-            str(user_id_23): similar_users_23,
-        }
-
-        import_user_similarities(similar_users)
-
-        self.assertListEqual([
-                {"id": user_id_23, "musicbrainz_id": "twenty_three", "similarity": 0.7},
-                {"id": user_id_22, "musicbrainz_id": "twenty_two", "similarity": 0.4}
-            ],
-            db_user.get_similar_users(self.db_conn, user_id_21)
-        )
-        
-        self.assertListEqual(
-            [{"id": user_id_21, "musicbrainz_id": "twenty_one", "similarity": 0.4}],
-            db_user.get_similar_users(self.db_conn, user_id_22)
-        )
-        
-        self.assertListEqual(
-            [{"id": user_id_21, "musicbrainz_id": "twenty_one", "similarity": 0.7}],
-            db_user.get_similar_users(self.db_conn, user_id_23)
-        )
 
     def test_get_user_by_id(self):
         user_id_24 = db_user.create(self.db_conn, 24, "twenty_four")
@@ -223,4 +260,3 @@ class UserTestCase(DatabaseTestCase):
         results = db_user.search(self.db_conn, "cif", 10, searcher_id)
         # changing this because the order of the list isnt being returned in a stable manner. 
         self.assertCountEqual(results, [("Cécile", 0.1, None), ("Cecile", 0.1, 0.42), ("lucifer", 0.09090909, 0.61)])
-

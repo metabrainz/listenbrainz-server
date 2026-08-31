@@ -1,16 +1,20 @@
 import datetime
+import requests.exceptions
 from flask import Blueprint, jsonify, request, current_app
 
 from brainzutils.ratelimit import ratelimit
 from brainzutils import cache
 import listenbrainz.db.fresh_releases
 from listenbrainz.webserver import db_conn, ts_conn
-from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.decorators import cache_public, crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized
-from listenbrainz.webserver.views.api_tools import _parse_int_arg, _parse_bool_arg, validate_auth_header
+from listenbrainz.webserver.views.api_tools import _parse_int_arg, _parse_bool_arg, ensure_user_token_for_expensive_endpoint
 from listenbrainz.db.color import get_releases_for_color
 from troi.patches.lb_radio import LBRadioPatch
 from troi.patch import Patch
+from listenbrainz.radio.artist import RecordingSearchByArtistService
+from listenbrainz.radio.tags import RecordingSearchByTagService
+from listenbrainz.radio.recording_lookup import RecordingLookupService
 
 DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS = 14
 MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 90
@@ -24,6 +28,7 @@ explore_api_bp = Blueprint('explore_api_v1', __name__)
 @explore_api_bp.get("/fresh-releases/")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_fresh_releases():
     """
     This endpoint fetches upcoming and recently released (fresh) releases and returns a list of:
@@ -97,6 +102,7 @@ def get_fresh_releases():
 @explore_api_bp.get("/color/<color>")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def huesound(color):
     """
     Fetch a list of releases that have cover art that has a predominant
@@ -170,13 +176,7 @@ def lb_radio():
     :resheader Content-Type: *application/json*
     """
 
-    # Ensure that the user is passing an auth header
-    try:
-        _ = validate_auth_header()
-    except APIUnauthorized:
-        # Improve the error message until we can redirect to the login page.
-        return jsonify({ "error" : "Due to AI scraper's causing undue traffic on our sites, " + \
-                       "provide an Auth token. Sorry for this mess."""}), 401
+    ensure_user_token_for_expensive_endpoint()
 
     prompt = request.args.get("prompt", None)
     if prompt is None:
@@ -201,9 +201,15 @@ def lb_radio():
             "min_recordings": 1,
             "auth_token": auth_token
         })
+        # Register local patches pulling directly from the DB instead of using HTTP API calls
+        patch.register_service(RecordingSearchByArtistService())
+        patch.register_service(RecordingSearchByTagService())
+        patch.register_service(RecordingLookupService())
         playlist = patch.generate_playlist()
     except RuntimeError as err:
         raise APIBadRequest(f"LB Radio generation failed: {err}")
+    except requests.exceptions.ConnectionError:
+        raise APIInternalServerError("LB Radio generation failed due to a connection error, please try again.")
 
     jspf = playlist.get_jspf() if playlist is not None else {
         "playlist": {"tracks": []}}
