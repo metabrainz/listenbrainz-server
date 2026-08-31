@@ -4,7 +4,7 @@ import time
 from brainzutils import cache
 
 import listenbrainz.db.user as db_user
-from listenbrainz.background.background_tasks import get_task
+from listenbrainz.background.background_tasks import claim_task
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.tests.integration import IntegrationTestCase
@@ -84,7 +84,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         self.assertEqual(resp.status_code, 200)
 
         with self.app.app_context():
-            task = get_task()
+            task = claim_task()
             self.assertIsNotNone(task)
             self.assertEqual(task.user_id, self.user["id"])
             self.assertEqual(task.task, "delete_listens")
