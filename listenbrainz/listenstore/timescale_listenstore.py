@@ -214,8 +214,11 @@ class TimescaleListenStore:
                 return
 
             for result in results:
+                listened_at = result[0]
+                user_id = result[2]
+                recording_msid = result[3]
                 # keyed so the partitioned upsert can never affect a row twice
-                source_rows[(result[0], result[2], result[3])] = result
+                source_rows[(listened_at, user_id, recording_msid)] = result
 
             # If this raises an OperationalError, the Timescale transaction is rolled back and
             # RabbitMQ requeues the batch. Both writes are idempotent, so retrying also handles the

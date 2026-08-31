@@ -76,6 +76,18 @@ class TimescaleTestCase(unittest.TestCase):
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'reset_tables.sql'))
 
     def reset_listens_db(self):
+        expected_db_name = create_test_listens_connect_strings()["DB_NAME"]
+        if not expected_db_name.endswith("_test"):
+            raise RuntimeError(f"Refusing to reset non-test listens database {expected_db_name!r}")
+
         with listens_db.engine.connect() as connection:
+            actual_db_name = connection.execute(
+                sqlalchemy.text("SELECT current_database()")
+            ).scalar_one()
+            if actual_db_name != expected_db_name:
+                raise RuntimeError(
+                    f"Refusing to reset listens database {actual_db_name!r}; "
+                    f"expected {expected_db_name!r}"
+                )
             connection.execute(sqlalchemy.text("TRUNCATE TABLE listen"))
             connection.commit()
