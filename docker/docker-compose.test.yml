@@ -30,7 +30,7 @@ services:
     environment:
       GARAGE_ACCESS_KEY: GK1e5b4c3a2d0f9e8b7a6c5d40
       GARAGE_SECRET_KEY: 0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0
-      GARAGE_BUCKETS: listenbrainz-user-data-exports
+      GARAGE_BUCKETS: listenbrainz-user-data-exports listenbrainz-user-data-imports
     healthcheck:
       # the S3 api port is open long before the layout is applied and the buckets exist,
       # the entrypoint only writes this file once provisioning is complete

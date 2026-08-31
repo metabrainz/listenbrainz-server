@@ -240,10 +240,6 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 # Size is in bytes
 MAX_CONTENT_LENGTH = 200 * 1024 * 1024 + 10  # 200MB plus some buffer
 
-# Specify the upload folder where user uploaded files for import will be stored
-# The path must be absolute path
-UPLOAD_FOLDER = '''{{template "KEY" "upload_folder"}}'''
-
 
 API_URL = '''{{template "KEY" "api_url"}}'''
 LASTFM_PROXY_URL = '''{{template "KEY" "lastfm_proxy_url"}}'''
@@ -342,6 +338,7 @@ GARAGE_SECRET_KEY = '''{{template "KEY" "garage/secret_key"}}'''
 GARAGE_SECURE = False
 GARAGE_REGION = "garage"
 GARAGE_USER_DATA_EXPORT_BUCKET = '''{{template "KEY" "garage/user_data_export_bucket"}}'''
+GARAGE_USER_DATA_IMPORT_BUCKET = '''{{template "KEY" "garage/user_data_import_bucket"}}'''
 
 # Navidrome configuration
 # Set to a base64 encoded key for encryption/decryption of passwords.
