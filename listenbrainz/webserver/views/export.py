@@ -1,13 +1,10 @@
 import json
-import unicodedata
-from urllib.parse import quote
 
 from botocore.exceptions import ClientError
-from flask import Blueprint, Response, current_app, jsonify
+from flask import Blueprint, current_app, jsonify, send_file
 from flask_login import current_user
 from psycopg2 import DatabaseError
 from sqlalchemy import text
-from werkzeug.datastructures import Headers
 
 from listenbrainz.garage import get_error_code, get_garage_client, get_user_data_export_bucket
 from listenbrainz.webserver import db_conn
@@ -16,25 +13,6 @@ from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, A
 from listenbrainz.webserver.login import api_login_required
 
 export_bp = Blueprint("export", __name__)
-
-STREAM_CHUNK_SIZE = 64 * 1024  # size of the chunks the export archive is streamed to the user in
-
-
-def content_disposition_names(filename: str) -> dict[str, str]:
-    """ Build the Content-Disposition filename parameters for the given filename.
-
-    WSGI headers must be latin-1 encodable but musicbrainz ids (and hence the archive names)
-    may contain arbitrary unicode, so non-ascii names are also sent RFC 5987 encoded. This is
-    what werkzeug's send_file does, we cannot use it because the archive is streamed from garage.
-    """
-    try:
-        filename.encode("ascii")
-    except UnicodeEncodeError:
-        simple = unicodedata.normalize("NFKD", filename).encode("ascii", "ignore").decode("ascii")
-        quoted = quote(filename, safe="!#$&+-.^_`|~")
-        return {"filename": simple, "filename*": f"UTF-8''{quoted}"}
-    else:
-        return {"filename": filename}
 
 
 @export_bp.post("/")
@@ -153,21 +131,18 @@ def download_export_archive(export_id):
         current_app.logger.error("Error while downloading user data export: %s", filename, exc_info=True)
         raise APIInternalServerError("Error while downloading export, please try again later.")
 
-    body = archive["Body"]
-
-    def stream_archive():
-        try:
-            yield from body.iter_chunks(STREAM_CHUNK_SIZE)
-        finally:
-            body.close()
-
-    headers = Headers()
-    headers.set("Content-Disposition", "attachment", **content_disposition_names(filename))
+    response = send_file(
+        archive["Body"],
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=filename,
+        conditional=False,
+    )
     content_length = archive.get("ContentLength")
     if content_length is not None:
-        headers.set("Content-Length", str(content_length))
+        response.content_length = content_length
 
-    return Response(stream_archive(), mimetype="application/zip", headers=headers)
+    return response
 
 
 

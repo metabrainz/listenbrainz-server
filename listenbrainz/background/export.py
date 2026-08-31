@@ -280,6 +280,10 @@ def export_user(db_conn, ts_conn, user_id: int, metadata):
         current_app.logger.error("No export with export_id: %s, skipping.", metadata["export_id"])
         return
 
+    client = get_garage_client()
+    bucket = get_user_data_export_bucket()
+    ensure_bucket(client, bucket)
+
     export_id = export.id
 
     archive_name =  f"listenbrainz_{user.musicbrainz_id}_{int(datetime.now().timestamp())}.zip"
@@ -323,9 +327,6 @@ def export_user(db_conn, ts_conn, user_id: int, metadata):
                     archive.write(file, arcname=os.path.relpath(file, tmp_dir))
 
             update_export_progress(db_conn, export_id, "Finalizing user data export")
-            client = get_garage_client()
-            bucket = get_user_data_export_bucket()
-            ensure_bucket(client, bucket)
             client.upload_file(archive_path, bucket, archive_name, ExtraArgs={"ContentType": "application/zip"})
 
         created = datetime.now()
