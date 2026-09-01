@@ -250,7 +250,8 @@ export default function ExportButtons({ listens = true, feedback = false }) {
     exports.findIndex(
       (exp) =>
         exp.type === ExportType.allUserData &&
-        exp.status !== ExportStatus.complete
+        exp.status !== ExportStatus.complete &&
+        exp.status !== ExportStatus.failed
     ) !== -1;
 
   const createExport = React.useCallback(
