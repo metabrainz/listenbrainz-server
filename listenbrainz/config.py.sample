@@ -103,7 +103,7 @@ COUCHDB_ADMIN_KEY = "listenbrainz"
 # Prefix is used verbatim; include the trailing separator, e.g. "test_".
 COUCHDB_DATABASE_PREFIX = ""
 
-# MusicBrainz OAuth
+# MetaBrainz OAuth
 OAUTH_BASE_URL = "https://metabrainz.org"
 OAUTH_CLIENT_ID = "CLIENT_ID"
 OAUTH_CLIENT_SECRET = "CLIENT_SECRET"

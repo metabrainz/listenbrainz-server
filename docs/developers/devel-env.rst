@@ -86,7 +86,7 @@ Next look for this section in the file.
 
 .. code-block:: yaml
 
-    # MusicBrainz OAuth
+    # MetaBrainz OAuth
     OAUTH_CLIENT_ID = "CLIENT_ID"
     OAUTH_CLIENT_SECRET = "CLIENT_SECRET"
 
