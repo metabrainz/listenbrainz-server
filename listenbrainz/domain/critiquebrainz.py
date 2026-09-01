@@ -37,7 +37,7 @@ class CritiqueBrainzService(BaseBrainzService):
         payload = review.dict(exclude_none=True)
         payload["is_draft"] = False
         payload["license_choice"] = CRITIQUEBRAINZ_REVIEW_LICENSE
-        return requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, json=payload, headers=headers)
+        return requests.post(CRITIQUEBRAINZ_REVIEW_SUBMIT_URL, json=payload, headers=headers, timeout=10)
 
     def submit_review(self, user_id: int, review: CBReviewMetadata) -> str:
         """ Submit a review for the user to CritiqueBrainz.
@@ -76,7 +76,7 @@ class CritiqueBrainzService(BaseBrainzService):
     def fetch_reviews(self, review_ids: Iterable[str]):
         if not review_ids:
             return None
-        response = requests.get(CRITIQUEBRAINZ_REVIEW_FETCH_URL, params={"review_ids": ",".join(review_ids)})
+        response = requests.get(CRITIQUEBRAINZ_REVIEW_FETCH_URL, params={"review_ids": ",".join(review_ids)}, timeout=10)
         if response.status_code != 200:
             return None
         return response.json()["reviews"]
