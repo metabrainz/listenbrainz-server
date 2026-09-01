@@ -478,6 +478,6 @@ def migrate_user_data_exports(export_dir, delete_source, dry_run, mark_missing_f
     app = create_app()
     with app.app_context():
         app.logger.info("Migrating user data exports from %s to garage", export_dir)
-        migrate_exports(webserver.db_conn, export_dir, delete_source=delete_source, dry_run=dry_run,
+        migrate_exports(webserver.db_conn, export_dir=export_dir, delete_source=delete_source, dry_run=dry_run,
                         mark_missing_failed=mark_missing_failed)
         app.logger.info("Completed migrating user data exports")
