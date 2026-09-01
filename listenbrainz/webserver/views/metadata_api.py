@@ -1,3 +1,4 @@
+from brainzutils import cache
 from brainzutils.ratelimit import ratelimit
 from datasethoster import RequestSource
 from flask import Blueprint, request, jsonify, current_app
@@ -41,21 +42,39 @@ def parse_incs(incs):
     return incs
 
 
+RECORDING_METADATA_CACHE_TTL = 86400  # 24 hours
+
+
+def _apply_incs(full_data, incs):
+    data = {"recording": full_data["recording"]}
+    for field in ("artist", "tag", "release"):
+        if field in incs:
+            data[field] = full_data.get(field)
+    return data
+
+
 def fetch_metadata(recording_mbids, incs):
-    metadata = get_metadata_for_recording(ts_conn, recording_mbids)
     result = {}
-    for entry in metadata:
-        data = {"recording": entry.recording_data}
-        if "artist" in incs:
-            data["artist"] = entry.artist_data
+    misses = []
 
-        if "tag" in incs:
-            data["tag"] = entry.tag_data
+    for mbid in recording_mbids:
+        full = cache.get(f"lb_metadata:{mbid}", decode=True)
+        if full is not None:
+            result[mbid] = _apply_incs(full, incs)
+        else:
+            misses.append(mbid)
 
-        if "release" in incs:
-            data["release"] = entry.release_data
-
-        result[str(entry.recording_mbid)] = data
+    if misses:
+        for entry in get_metadata_for_recording(ts_conn, misses):
+            full = {
+                "recording": entry.recording_data,
+                "artist": entry.artist_data,
+                "tag": entry.tag_data,
+                "release": entry.release_data,
+            }
+            mbid = str(entry.recording_mbid)
+            cache.set(f"lb_metadata:{mbid}", full, RECORDING_METADATA_CACHE_TTL, encode=True)
+            result[mbid] = _apply_incs(full, incs)
 
     return result
 
