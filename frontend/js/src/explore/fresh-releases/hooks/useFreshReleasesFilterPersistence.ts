@@ -30,6 +30,7 @@ export default function useFreshReleasesFilterPersistence(pageType: string) {
     FreshReleasesFilters
   >(DEFAULT_FILTERS);
 
+  // Load persisted filters for this pageType on mount / when pageType changes
   React.useEffect(() => {
     let isMounted = true;
     const storageKey = getStorageKey(pageType);
@@ -47,16 +48,23 @@ export default function useFreshReleasesFilterPersistence(pageType: string) {
     };
   }, [pageType]);
 
+  // Persist filters whenever they change. Kept separate from the state
+  // updater below so that the updater stays a pure function (calling the
+  // async filterStore.setItem() inside a setState updater is an anti-pattern,
+  // since updaters can run more than once, e.g. under React StrictMode).
+  React.useEffect(() => {
+    const storageKey = getStorageKey(pageType);
+    filterStore.setItem(storageKey, freshReleasesFilters);
+  }, [pageType, freshReleasesFilters]);
+
   const setFreshReleasesFilters = React.useCallback(
     (newFilters: Partial<FreshReleasesFilters>) => {
-      setFreshReleasesFiltersState((prevFilters: FreshReleasesFilters) => {
-        const updatedFilters = { ...prevFilters, ...newFilters };
-        const storageKey = getStorageKey(pageType);
-        filterStore.setItem(storageKey, updatedFilters);
-        return updatedFilters;
-      });
+      setFreshReleasesFiltersState((prevFilters: FreshReleasesFilters) => ({
+        ...prevFilters,
+        ...newFilters,
+      }));
     },
-    [pageType]
+    []
   );
 
   const clearSavedFilters = React.useCallback(() => {

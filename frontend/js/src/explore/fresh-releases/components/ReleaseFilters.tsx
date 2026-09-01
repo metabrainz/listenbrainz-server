@@ -87,9 +87,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     if (isChecked) {
       setFreshReleasesFilters({ checkedList: [...checkedList, value] });
     } else {
-      const filtersList = checkedList.filter(
-        (item: string | undefined) => item !== value
-      );
+      const filtersList = checkedList.filter((item) => item !== value);
       setFreshReleasesFilters({ checkedList: filtersList });
     }
   };
@@ -102,7 +100,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
 
     // remove from exclude list if it's there
     const excludeFiltersList = releaseTagsExcludeCheckList.filter(
-      (item: string | undefined) => item !== value
+      (item) => item !== value
     );
 
     setFreshReleasesFilters({
@@ -112,9 +110,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
   };
 
   const removeFilterTag = (tag: string) => {
-    const filtersList = releaseTagsCheckList.filter(
-      (item: string | undefined) => item !== tag
-    );
+    const filtersList = releaseTagsCheckList.filter((item) => item !== tag);
     setFreshReleasesFilters({ releaseTagsCheckList: filtersList });
   };
 
@@ -126,7 +122,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
 
     // remove from include list if it's there
     const includeFiltersList = releaseTagsCheckList.filter(
-      (item: string | undefined) => item !== value
+      (item) => item !== value
     );
 
     setFreshReleasesFilters({
@@ -137,7 +133,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
 
   const removeExcludeTag = (tag: string) => {
     const filtersList = releaseTagsExcludeCheckList.filter(
-      (item: string | undefined) => item !== tag
+      (item) => item !== tag
     );
     setFreshReleasesFilters({ releaseTagsExcludeCheckList: filtersList });
   };
@@ -160,7 +156,13 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
         )
       : Object.values(filterRangeOptions);
 
-  // Reset filters when range changes
+  // Reset filters when range changes.
+  // Intentionally omitting coverartOnly, checkedList, includeVariousArtists,
+  // and setFreshReleasesFilters from the dependency array: this effect should
+  // only re-run when releaseTags/releaseTypes change (e.g. on page type
+  // change), not when the filter values themselves change - since this
+  // effect's own job is to reset those same values, including them as deps
+  // would make it re-fire every time it runs.
   React.useEffect(() => {
     if (
       coverartOnly === true ||
@@ -261,6 +263,13 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
 
         {filtersOpen && (
           <>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary reset-filters-button"
+              onClick={clearSavedFilters}
+            >
+              Reset filters
+            </button>
             <div>
               <label id="range" htmlFor="style">
                 Range:{" "}
@@ -334,17 +343,15 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                 </select>
 
                 <div className="release-tags">
-                  {releaseTagsCheckList?.map(
-                    (tag: string | undefined, index: number) => (
-                      <div id={`include-tag-item-${index}`} className="tags">
-                        <span className="release-tag-name">{tag}</span>
-                        <FontAwesomeIcon
-                          icon={faCircleXmark}
-                          onClick={() => removeFilterTag(tag!)}
-                        />
-                      </div>
-                    )
-                  )}
+                  {releaseTagsCheckList?.map((tag, index) => (
+                    <div id={`include-tag-item-${index}`} className="tags">
+                      <span className="release-tag-name">{tag}</span>
+                      <FontAwesomeIcon
+                        icon={faCircleXmark}
+                        onClick={() => removeFilterTag(tag!)}
+                      />
+                    </div>
+                  ))}
                 </div>
 
                 <label id="tags" htmlFor="exclude-tags">
@@ -371,17 +378,15 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                 </select>
 
                 <div className="release-tags">
-                  {releaseTagsExcludeCheckList?.map(
-                    (tag: string | undefined, index: number) => (
-                      <div id={`exclude-tag-item-${index}`} className="tags">
-                        <span className="release-tag-name">{tag}</span>
-                        <FontAwesomeIcon
-                          icon={faCircleXmark}
-                          onClick={() => removeExcludeTag(tag!)}
-                        />
-                      </div>
-                    )
-                  )}
+                  {releaseTagsExcludeCheckList?.map((tag, index) => (
+                    <div id={`exclude-tag-item-${index}`} className="tags">
+                      <span className="release-tag-name">{tag}</span>
+                      <FontAwesomeIcon
+                        icon={faCircleXmark}
+                        onClick={() => removeExcludeTag(tag!)}
+                      />
+                    </div>
+                  ))}
                 </div>
               </>
             )}
