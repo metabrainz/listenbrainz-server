@@ -103,12 +103,13 @@ class TestRecsElementWithService:
     def test_medium_mode_skips_first_333_recommendations(self, _mock_user, mock_recs):
         # medium offset=333: only recs after index 333 should be considered
         padding = [{"recording_mbid": f"pad-{i:04d}", "score": 1.0, "latest_listened_at": None}
-                   for i in range(333)]
+                   for i in range(400)]
         target_rec = {"recording_mbid": "target-0001", "score": 9.0, "latest_listened_at": None}
         mock_recs.return_value = _make_db_recommendations(padding + [target_rec])
         result = _element_with_service(listened="all", mode="medium").read([])
         mbids = {r.mbid for r in result}
         assert target_rec["recording_mbid"] in mbids
+        assert "pad-0334" in mbids
         assert "pad-0000" not in mbids
 
     @patch("listenbrainz.radio.recs.db_recommendations_cf_recording.get_user_recommendation")

@@ -73,13 +73,13 @@ class TestLBRadioPlaylistService:
     @patch("listenbrainz.radio.playlist.db_playlist.get_by_mbid")
     def test_private_playlist_with_unrelated_user_raises(self, mock_get, _mock_user):
         mock_get.return_value = _make_playlist(public=False, creator_id=CREATOR_ID)
-        with pytest.raises(RuntimeError, match="private"):
+        with pytest.raises(RuntimeError, match="Cannot find playlist"):
             LBRadioPlaylistService().fetch(PLAYLIST_MBID, auth_token="othertoken")
 
     @patch("listenbrainz.radio.playlist.db_playlist.get_by_mbid")
     def test_private_playlist_without_token_raises(self, mock_get):
         mock_get.return_value = _make_playlist(public=False, creator_id=CREATOR_ID)
-        with pytest.raises(RuntimeError, match="private"):
+        with pytest.raises(RuntimeError, match="Cannot find playlist"):
             LBRadioPlaylistService().fetch(PLAYLIST_MBID, auth_token=None)
 
     @patch("listenbrainz.radio.playlist.db_playlist.get_by_mbid")
@@ -119,5 +119,5 @@ class TestPlaylistElementWithService:
     @patch("listenbrainz.radio.playlist.db_playlist.get_by_mbid")
     def test_element_raises_for_private_playlist_without_token(self, mock_get):
         mock_get.return_value = _make_playlist(public=False, creator_id=CREATOR_ID)
-        with pytest.raises(RuntimeError, match="private"):
+        with pytest.raises(RuntimeError, match="Cannot find playlist"):
             self._element(auth_token=None).read([])

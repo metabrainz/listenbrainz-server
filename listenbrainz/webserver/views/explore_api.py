@@ -18,7 +18,7 @@ from listenbrainz.radio.stats import LBRadioStatsService
 from listenbrainz.radio.playlist import LBRadioPlaylistService
 from listenbrainz.radio.recs import LBRadioRecsService
 
-LB_RADIO_PER_TOKEN_LIMIT = 10  # per rate-limit window (10s), separate from the global 100k/10s limit
+LB_RADIO_PER_TOKEN_LIMIT = 5  # per rate-limit window (5s), separate from the global 100k/10s limit
 
 DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS = 14
 MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 90

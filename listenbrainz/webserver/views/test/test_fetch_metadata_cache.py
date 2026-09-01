@@ -83,6 +83,7 @@ class TestFetchMetadataCache:
         result = fetch_metadata([MBID_A], ["release"])
         assert "release" in result[MBID_A]
         assert "artist" not in result[MBID_A]
+        assert "tag" not in result[MBID_A]
 
     @patch("listenbrainz.webserver.views.metadata_api.cache")
     @patch("listenbrainz.webserver.views.metadata_api.get_metadata_for_recording")

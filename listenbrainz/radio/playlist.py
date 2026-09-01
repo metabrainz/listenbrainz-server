@@ -26,6 +26,6 @@ class LBRadioPlaylistService(Service):
                 user_id = user["id"]
 
         if not playlist.is_visible_by(user_id):
-            raise RuntimeError(f"Playlist {playlist_mbid} is private.")
+            raise RuntimeError(f"Cannot find playlist {playlist_mbid}.")
 
         return [str(r.mbid) for r in playlist.recordings]

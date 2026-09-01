@@ -114,7 +114,7 @@ class LBRadioRateLimitTest(IntegrationTestCase):
         mock_patch_cls.return_value = mock_patch
 
         url, headers = self._url(), self._auth()
-        for i in range(10):
+        for i in range(5):
             resp = self.client.get(url, headers=headers)
             self.assert200(resp, f"Request {i + 1} should succeed")
 
@@ -128,8 +128,8 @@ class LBRadioRateLimitTest(IntegrationTestCase):
         mock_patch_cls.return_value = mock_patch
 
         url, headers = self._url(), self._auth()
-        for _ in range(10):
+        for _ in range(5):
             self.client.get(url, headers=headers)
 
         resp = self.client.get(url, headers=headers)
-        self.assertEqual(resp.status_code, 429, "11th request should be rate-limited")
+        self.assertEqual(resp.status_code, 429, "6th request should be rate-limited")
