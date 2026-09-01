@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import secrets
 from datetime import datetime
 from typing import Any
 
@@ -19,6 +20,7 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
+from listenbrainz.domain import external_connect
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError, ExternalServiceError, ExternalServiceAPIError
 from listenbrainz.domain.lastfm import LastfmService
 from listenbrainz.domain.librefm import LibrefmService
@@ -75,14 +77,37 @@ def _user_has_verified_email(user: dict[str, Any] | None) -> bool:
     return bool(user and user["email"])
 
 
+def _user_id_has_verified_email(user_id: int) -> bool:
+    return _user_has_verified_email(db_user.get(db_conn, user_id, fetch_email=True))
+
+
 def _current_user_has_verified_email() -> bool:
-    user = db_user.get(db_conn, current_user.id, fetch_email=True)
-    return _user_has_verified_email(user)
+    return _user_id_has_verified_email(current_user.id)
 
 
 def _require_current_user_verified_email() -> None:
     if not _current_user_has_verified_email():
         raise APIUnauthorized(CONNECT_SERVICES_WITHOUT_EMAIL_ERROR)
+
+
+def _start_service_authorization(service: ExternalService, permissions) -> str:
+    """ Start authorizing a music service from the ListenBrainz settings page.
+
+    Generates the OAuth state protecting the authorization request, stores it in the
+    session so that the callback can verify it and returns the url of the music service
+    the user has to be sent to.
+    """
+    state = base64.b64encode(os.urandom(32)).decode("utf-8")
+    session[external_connect.settings_oauth_state_key(service.service.value)] = state
+    # this authorization was not started by a third party application, make sure the user
+    # is not sent to one that they abandoned earlier
+    session.pop(external_connect.SESSION_KEY, None)
+    return external_connect.build_authorize_url(service, permissions, state)
+
+
+def _return_to_client(connect_request, error: str | None = None, error_description: str | None = None):
+    """ Send the user back to the third party application that started the flow. """
+    return redirect(external_connect.build_return_url(connect_request, error, error_description))
 
 
 @settings_bp.post("/resettoken/")
@@ -287,30 +312,44 @@ def music_services_details():
 
 
 @settings_bp.get('/music-services/<service_name>/callback/')
-@login_required
 def music_services_callback(service_name: str):
     service = _get_service_or_raise_404(service_name, exclude_apple=True, exclude_navidrome=True)
-    if not _current_user_has_verified_email():
+
+    # if a third party application started this authorization, the user is sent back to it
+    # instead of to the ListenBrainz settings page once we are done here. Merely finding the
+    # request must not consume it: first the callback has to prove it knows the OAuth state.
+    connect_request = external_connect.get_request(service_name)
+
+    # a request started by a third party application carries the user it was authorized for,
+    # those users are not logged in to ListenBrainz and must not become logged in either
+    if connect_request is not None:
+        user_id = connect_request.user_id
+    elif current_user.is_authenticated:
+        user_id = current_user.id
+    else:
+        return current_app.login_manager.unauthorized()
+
+    # Preserve the settings-page behavior for logged-in users. External-connect callbacks
+    # defer this check until after state validation so an untrusted callback cannot consume
+    # their pending request.
+    if connect_request is None and not _user_id_has_verified_email(user_id):
         return redirect(url_for("settings.index", path="music-services/details", email_required="1"))
 
-    # Check for error parameter first
-    error = request.args.get("error")
-    if error:
-        if isinstance(service, SoundCloudService):
-            session.pop("soundcloud_code_verifier", None)
-            session.pop("soundcloud_state", None)
+    # Funkwhale has a separate, instance-specific OAuth flow and cannot be started through
+    # external connect. Keep its existing state and callback handling independent.
+    if isinstance(service, FunkwhaleService):
+        error = request.args.get("error")
+        if error:
             return redirect(url_for(
                 "settings.index",
                 path="music-services/details",
-                soundcloud_error="SoundCloud authorization was denied"
+                service_error=f"{service_name.capitalize()} authorization was denied"
             ))
-        return redirect(url_for("settings.index", path="music-services/details"))
 
-    code = request.args.get("code")
-    if not code:
-        raise BadRequest("missing code")
+        code = request.args.get("code")
+        if not code:
+            raise BadRequest("missing code")
 
-    if isinstance(service, FunkwhaleService):
         state = request.args.get("state")
         if not state:
             current_app.logger.error("No state parameter in callback")
@@ -339,7 +378,7 @@ def music_services_callback(service_name: str):
             server = db_funkwhale.get_server_by_host_url(db_conn, host_url)
             if not server:
                 raise Exception("No Funkwhale server found for host_url")
-            service.add_new_user(current_user.id, server['id'], token)
+            service.add_new_user(user_id, server['id'], token)
 
             return redirect(url_for("settings.index", path="music-services/details", _anchor="funkwhale",
                                     success="Successfully connected to Funkwhale"))
@@ -352,40 +391,158 @@ def music_services_callback(service_name: str):
             session.pop("funkwhale_host_url", None)
             session.pop("funkwhale_user_id", None)
 
-    if isinstance(service, SoundCloudService):
-        state = request.args.get("state")
-        stored_state = session.pop("soundcloud_state", None)
-        if not state or state != stored_state:
-            current_app.logger.error("SoundCloud OAuth state mismatch. Expected: %s, Got: %s", stored_state, state)
-            session.pop("soundcloud_code_verifier", None)
+    # Historically an otherwise empty settings callback is a bad request. There is no
+    # pending partner request to protect in this branch.
+    if connect_request is None and not request.args.get("error") and not request.args.get("code"):
+        raise BadRequest("missing code")
+
+    # the state is created either by the settings page or by the third party application
+    # flow, in both cases the music service must hand it back to us unchanged. A missing
+    # state is a failure too, otherwise anyone could hand us an authorization code of their
+    # own and have the account it belongs to connected to whoever opens the callback.
+    expected_state = connect_request.oauth_state if connect_request is not None \
+        else session.get(external_connect.settings_oauth_state_key(service_name))
+    if not expected_state or not secrets.compare_digest(request.args.get("state") or "", expected_state):
+        current_app.logger.error("%s OAuth state mismatch for user %s", service_name, user_id)
+        if connect_request is not None:
+            return _return_to_client(
+                connect_request, external_connect.ERROR_INVALID_REQUEST,
+                f"{service_name.capitalize()} authorization failed: invalid state"
+            )
+        if isinstance(service, SoundCloudService):
             return redirect(url_for(
                 "settings.index",
                 path="music-services/details",
                 soundcloud_error="SoundCloud authorization failed: invalid state"
             ))
+        # without this the user is dropped back on the settings page with the service simply
+        # not connected and no explanation, which is what happens whenever two authorizations
+        # are started at the same time or the first one is finished twice
+        return redirect(url_for(
+            "settings.index",
+            path="music-services/details",
+            service_error=f"{service_name.capitalize()} authorization failed: invalid state, please try again"
+        ))
 
-        code_verifier = session.pop("soundcloud_code_verifier", None)
-        if not code_verifier:
-            current_app.logger.error("SoundCloud PKCE code verifier missing from session for user %s", current_user.id)
+    # State has been validated, so this callback is now authoritative and the pending
+    # authorization can be consumed. Invalid callbacks above deliberately leave all of the
+    # session material intact for the genuine callback.
+    if connect_request is not None:
+        external_connect.pop_request(service_name)
+    else:
+        session.pop(external_connect.settings_oauth_state_key(service_name), None)
+
+    if connect_request is not None and connect_request.has_expired():
+        session.pop("soundcloud_code_verifier", None)
+        return _return_to_client(
+            connect_request, external_connect.ERROR_EXPIRED_REQUEST,
+            "The authorization took too long to complete, please try again."
+        )
+
+    if (connect_request is not None and current_user.is_authenticated
+            and current_user.id != connect_request.user_id):
+        # the user switched accounts halfway through, we have no idea which of the two
+        # this authorization is for anymore
+        current_app.logger.error("%s callback for user %s does not match the pending request for user %s",
+                                 service_name, current_user.id, connect_request.user_id)
+        session.pop("soundcloud_code_verifier", None)
+        return _return_to_client(
+            connect_request, external_connect.ERROR_INVALID_REQUEST,
+            "The authorization does not belong to the current ListenBrainz user"
+        )
+
+    if not _user_id_has_verified_email(user_id):
+        session.pop("soundcloud_code_verifier", None)
+        if connect_request is not None:
+            return _return_to_client(
+                connect_request, external_connect.ERROR_EMAIL_REQUIRED, CONNECT_SERVICES_WITHOUT_EMAIL_ERROR
+            )
+        return redirect(url_for("settings.index", path="music-services/details", email_required="1"))
+
+    error = request.args.get("error")
+    if error:
+        session.pop("soundcloud_code_verifier", None)
+        if connect_request is not None:
+            if error == "access_denied":
+                partner_error = external_connect.ERROR_ACCESS_DENIED
+                description = f"{service_name.capitalize()} authorization was denied"
+            else:
+                # the music service refused for a reason of its own, telling the partner
+                # application the user declined would be a lie
+                partner_error = external_connect.ERROR_SERVER_ERROR
+                description = f"{service_name.capitalize()} authorization failed: {error}"
+            return _return_to_client(connect_request, partner_error, description)
+        if isinstance(service, SoundCloudService):
             return redirect(url_for(
                 "settings.index",
                 path="music-services/details",
-                soundcloud_error="SoundCloud authorization failed: please try again"
+                soundcloud_error="SoundCloud authorization was denied"
             ))
+        return redirect(url_for(
+            "settings.index",
+            path="music-services/details",
+            service_error=f"{service_name.capitalize()} authorization was denied"
+        ))
 
-        try:
+    code = request.args.get("code")
+    if not code:
+        session.pop("soundcloud_code_verifier", None)
+        if connect_request is not None:
+            return _return_to_client(
+                connect_request, external_connect.ERROR_INVALID_REQUEST,
+                f"{service_name.capitalize()} did not return an authorization code"
+            )
+        raise BadRequest("missing code")
+
+    try:
+        if isinstance(service, SoundCloudService):
+            code_verifier = session.pop("soundcloud_code_verifier", None)
+            if not code_verifier:
+                current_app.logger.error("SoundCloud PKCE code verifier missing from session for user %s",
+                                         user_id)
+                if connect_request is not None:
+                    return _return_to_client(
+                        connect_request, external_connect.ERROR_SERVER_ERROR,
+                        "SoundCloud authorization failed: please try again"
+                    )
+                return redirect(url_for(
+                    "settings.index",
+                    path="music-services/details",
+                    soundcloud_error="SoundCloud authorization failed: please try again"
+                ))
             token = service.fetch_access_token(code, code_verifier=code_verifier)
-        except Exception:
-            current_app.logger.error("SoundCloud token exchange failed for user %s", current_user.id, exc_info=True)
+        else:
+            token = service.fetch_access_token(code)
+
+        if connect_request is not None:
+            connectable = external_connect.get_connectable_service(connect_request.service)
+            permissions = connectable.permissions[connect_request.permission]
+            existing_user = service.get_user(user_id)
+            if existing_user and not set(existing_user.get("scopes") or []) >= permissions:
+                # The replacement token has now been exchanged successfully. Remove the old
+                # connection only at this point so abandoning, denying or failing the OAuth
+                # flow cannot disconnect an otherwise working account. Removal is still
+                # needed before saving a narrower token so its listens importer is dropped.
+                service.remove_user(user_id)
+
+        service.add_new_user(user_id, token)
+    except Exception:
+        current_app.logger.error("%s token exchange failed for user %s", service_name, user_id, exc_info=True)
+        if connect_request is not None:
+            return _return_to_client(
+                connect_request, external_connect.ERROR_SERVER_ERROR,
+                f"{service_name.capitalize()} authorization failed: could not exchange token"
+            )
+        if isinstance(service, SoundCloudService):
             return redirect(url_for(
                 "settings.index",
                 path="music-services/details",
                 soundcloud_error="SoundCloud authorization failed: could not exchange token"
             ))
-    else:
-        token = service.fetch_access_token(code)
+        raise
 
-    service.add_new_user(current_user.id, token)
+    if connect_request is not None:
+        return _return_to_client(connect_request)
     return redirect(url_for("settings.index", path="music-services/details"))
 
 
@@ -609,21 +766,12 @@ def music_services_disconnect(service_name: str):
             elif action == 'listen':
                 permissions = SPOTIFY_LISTEN_PERMISSIONS
             if permissions:
-                return jsonify({"url": service.get_authorize_url(permissions)})
+                return jsonify({"url": _start_service_authorization(service, permissions)})
         elif service_name == 'soundcloud':
-            code_verifier, code_challenge = SoundCloudService.generate_pkce_pair()
-            state = base64.b64encode(os.urandom(32)).decode("utf-8")
-            session["soundcloud_code_verifier"] = code_verifier
-            session["soundcloud_state"] = state
-            return jsonify({"url": service.get_authorize_url(
-                [],
-                state=state,
-                code_challenge=code_challenge,
-                code_challenge_method="S256"
-            )})
+            return jsonify({"url": _start_service_authorization(service, [])})
         elif service_name == 'critiquebrainz':
             if action:
-                return jsonify({"url": service.get_authorize_url(CRITIQUEBRAINZ_SCOPES)})
+                return jsonify({"url": _start_service_authorization(service, CRITIQUEBRAINZ_SCOPES)})
         elif service_name == 'apple':
             service.add_new_user(user_id=current_user.id)
             return jsonify({"success": True})

@@ -62,7 +62,15 @@ class RecordingFromRecordingMBIDQuery(Query):
         if not current_app.config["MB_DATABASE_URI"]:
             return []
 
-        mbids = [p.recording_mbid for p in params]
+        mbids = []
+        for p in params:
+            try:
+                UUID(p.recording_mbid)
+                mbids.append(p.recording_mbid)
+            except (ValueError, AttributeError):
+                pass
+        if not mbids:
+            return []
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
                 closing(timescale.engine.raw_connection()) as ts_conn, \
                 mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
