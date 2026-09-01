@@ -5,10 +5,33 @@ All endpoints have this root URL for our current production site.
 
 - **API Root URL**: ``https://api.listenbrainz.org``
 
+.. warning::
+    To avoid being blocked or throttled, read carefully the `Rate limiting <rate-limiting_>`_
+    and `User-agent <user-agent_>`_ sections below to be a good citizen.
+
 .. note::
-    All ListenBrainz services are only available on **HTTPS**!
+    All ListenBrainz services are only available on **HTTPS** only!
 
 
+Reference
+---------
+
+.. toctree::
+   :maxdepth: 1
+
+   core
+   playlist
+   player
+   recordings
+   statistics
+   popularity
+   metadata
+   social
+   recommendation
+   art
+   settings
+   misc
+  
 Authentication
 --------------
 
@@ -64,36 +87,12 @@ Then include the formatted header in the request to use it.
   can be found on the :doc:`API Usage <../api-usage>` page.
 
 
-Reference
----------
-
-.. toctree::
-   :maxdepth: 1
-
-   core
-   playlist
-   player
-   recordings
-   statistics
-   popularity
-   metadata
-   social
-   recommendation
-   art
-   settings
-   misc
-
-
-OpenAPI specification
----------------------
-
-Contributor `rain0r <https://github.com/rain0r>`_ went through the trouble of making
-an OpenAPI 3 specification for the ListenBrainz API. Many thanks! Check it out here:
-`<https://github.com/rain0r/listenbrainz-openapi>`_
-
+.. _rate-limiting:
 
 Rate limiting
 -------------
+
+All users of the API must ensure that each of their client applications never make more than ONE call per second.
 
 The ListenBrainz API is rate limited via the use of rate limiting headers that
 are sent as part of the HTTP response headers. Each call will include the
@@ -122,3 +121,40 @@ receive higher rate limits than those without valid user tokens.
 
 .. _link: https://listenbrainz.org/login/
 .. _settings: https://listenbrainz.org/settings/
+
+.. _user-agent:
+
+User-agent
+----------
+
+We require that all requests to the ListenBrainz API include a valid User-Agent header,
+with enough information for us (MetaBrainz) to contact the application maintainers.
+We strongly suggest including your application's version number in the User-Agent string too.
+
+.. warning::
+  Requests without a valid user agent may be blocked without further notice as collateral damage
+  in our fight against scrapers and botnets.
+
+The user agent should be in the following format:
+
+.. code-block::
+
+  Application name/<version> ( contact-url )
+  - or -
+  Application name/<version> ( contact-email )
+
+For example:
+
+.. code-block::
+
+  MyMusicApp/1.0 ( https://mymusicapp.example.com/contact )
+  MyMusicApp/1.0 ( me@example.com )
+
+
+OpenAPI specification
+---------------------
+
+Contributor `rain0r <https://github.com/rain0r>`_ went through the trouble of making
+an OpenAPI 3 specification for the ListenBrainz API. Many thanks! Check it out here:
+`<https://github.com/rain0r/listenbrainz-openapi>`_
+
