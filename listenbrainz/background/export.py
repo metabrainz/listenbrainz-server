@@ -280,29 +280,28 @@ def export_user(db_conn, ts_conn, user_id: int, metadata):
         current_app.logger.error("No export with export_id: %s, skipping.", metadata["export_id"])
         return
 
-    client = get_garage_client()
-    bucket = get_user_data_export_bucket()
-    ensure_bucket(client, bucket)
-
     export_id = export.id
-
-    archive_name =  f"listenbrainz_{user.musicbrainz_id}_{int(datetime.now().timestamp())}.zip"
-
-    db_conn.execute(text("""
-         UPDATE user_data_export
-            SET
-                filename = :filename
-              , status = 'in_progress'
-              , progress = :progress
-          WHERE id = :export_id    
-    """), {
-        "export_id": export_id,
-        "filename": archive_name,
-        "progress": "Starting export",
-    })
-    db_conn.commit()
-
     try:
+        client = get_garage_client()
+        bucket = get_user_data_export_bucket()
+        ensure_bucket(client, bucket)
+
+        archive_name = f"listenbrainz_{user.musicbrainz_id}_{int(datetime.now().timestamp())}.zip"
+
+        db_conn.execute(text("""
+             UPDATE user_data_export
+                SET
+                    filename = :filename
+                  , status = 'in_progress'
+                  , progress = :progress
+              WHERE id = :export_id
+        """), {
+            "export_id": export_id,
+            "filename": archive_name,
+            "progress": "Starting export",
+        })
+        db_conn.commit()
+
         with tempfile.TemporaryDirectory() as tmp_dir:
             archive_path = os.path.join(tmp_dir, archive_name)
             with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
