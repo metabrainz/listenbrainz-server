@@ -43,6 +43,7 @@ Contents
    developers/architecture
    developers/spark-architecture
    developers/mapping
+   developers/docs
    developers/commands
    developers/troubleshooting
 
