@@ -4,6 +4,7 @@ from datetime import datetime
 from time import monotonic
 
 import psycopg2
+import sqlalchemy.exc
 import orjson
 import sqlalchemy
 from brainzutils import metrics
