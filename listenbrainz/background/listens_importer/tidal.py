@@ -1,5 +1,6 @@
 import csv
 from datetime import datetime, timezone
+from decimal import Decimal, InvalidOperation
 from typing import Any, Iterator, TextIO
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -43,6 +44,9 @@ class TidalListensImporter(BaseListensImporter):
                 "submission_client": self.importer_name,
                 "music_service": "tidal.com",
             }
+            duration_played = self._parse_duration_played(item.get("stream_duration_ms"))
+            if duration_played is not None:
+                additional_info["duration_played"] = duration_played
 
             listen["track_metadata"]["additional_info"] = additional_info
             listens.append(listen)
@@ -69,6 +73,21 @@ class TidalListensImporter(BaseListensImporter):
                 current_app.logger.debug("Invalid Tidal timezone in item: %s", item, exc_info=True)
 
         return datetime.strptime(item["entry_date"], "%d/%m/%Y %H:%M").replace(tzinfo=tzinfo)
+
+    @staticmethod
+    def _parse_duration_played(value: Any) -> int | None:
+        duration = str(value).strip() if value is not None else ""
+        if not duration or duration.lower() == "null":
+            return None
+
+        try:
+            duration_played = int(Decimal(duration) / 1000)
+            if duration_played <= 0:
+                return None
+            return duration_played
+        except (InvalidOperation, ValueError, OverflowError):
+            current_app.logger.debug("Invalid Tidal duration: %s", value, exc_info=True)
+            return None
 
     def _filter_rows(
         self,
