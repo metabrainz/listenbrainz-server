@@ -10,7 +10,7 @@ All endpoints have this root URL for our current production site.
     and `User-agent <user-agent_>`_ sections below to be a good citizen.
 
 .. note::
-    All ListenBrainz services are only available on **HTTPS** only!
+    All ListenBrainz services are only available on **HTTPS**!
 
 
 Reference
