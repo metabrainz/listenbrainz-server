@@ -18,7 +18,7 @@ class TidalListensImporter(BaseListensImporter):
         from_date = import_task["from_date"]
         to_date = import_task["to_date"]
 
-        with open(import_task["file_path"], mode="r", encoding="utf-8-sig") as file:
+        with open(import_task["file_path"], mode="r", newline="", encoding="utf-8-sig") as file:
             header_line = self._read_header_line(file)
             reader = csv.DictReader(file, fieldnames=header_line)
             filtered = self._filter_rows(reader, from_date, to_date)
@@ -50,8 +50,9 @@ class TidalListensImporter(BaseListensImporter):
 
     @staticmethod
     def _looks_like_header(line: str) -> list[str] | None:
-        maybe_header = line.split(",")
-        current_app.logger.debug("Maybe_header is %s", maybe_header)
+        maybe_header = [
+            column.strip(' "').lower() for column in next(csv.reader([line]))
+        ]
         expected = {"artist_name", "track_title", "entry_date"}
         if expected.issubset(maybe_header):
             return maybe_header
