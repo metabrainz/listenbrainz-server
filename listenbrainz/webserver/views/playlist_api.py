@@ -10,6 +10,7 @@ from psycopg2.extras import DictCursor
 
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
+from listenbrainz.db.exceptions import InvalidUser
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
 from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.soundcloud import SoundCloudService
@@ -399,6 +400,8 @@ def create_playlist():
 
     try:
         playlist = db_playlist.create(db_conn, ts_conn, playlist)
+    except InvalidUser as e:
+        log_raise_400(str(e))
     except Exception as e:
         current_app.logger.error("Error while creating new playlist: {}".format(e))
         raise APIInternalServerError("Failed to create the playlist. Please try again.")
@@ -851,6 +854,8 @@ def copy_playlist(playlist_mbid):
 
     try:
         new_playlist = db_playlist.copy_playlist(db_conn, ts_conn, playlist, user["id"])
+    except InvalidUser as e:
+        log_raise_400(str(e))
     except Exception as e:
         current_app.logger.error("Error copying playlist: {}".format(e))
         raise APIInternalServerError("Failed to copy the playlist. Please try again.")
