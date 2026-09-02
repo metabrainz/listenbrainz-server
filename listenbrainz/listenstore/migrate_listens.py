@@ -15,10 +15,11 @@ Its logged --since-id / --since-history-id already include an overlap of DELETE_
 because rows whose id was allocated but not committed yet when the checkpoint was read would
 otherwise be skipped forever. Replays are idempotent so re-applying them is harmless.
 
-Each cycle should run replay-deletes before incremental. Deletes committed in timescale after the
-last replay-deletes are never applied to the target, so before the final cycle stop writes to
-timescale (and let the delete_listens cron drain) and then run replay-deletes + incremental one
-last time.
+Before runtime dual writes are deployed, each cycle should run replay-deletes before incremental.
+After dual writes are active, new listen and user deletes are applied directly to both databases;
+replay-deletes remains necessary for historical deletes and any gap from before that deployment.
+A listen re-submitted while delete_listens is mid-run can end up in timescale only, so keep
+running incremental after dual writes are live.
 """
 import os
 import re

@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 from flask import Blueprint, request, redirect, url_for, session, current_app
 from flask_login import login_user, logout_user, login_required
 from markupsafe import Markup
@@ -14,12 +16,31 @@ from listenbrainz.webserver.utils import EMAIL_REQUIRED_BLOG_URL, METABRAINZ_PRO
 login_bp = Blueprint('login', __name__)
 
 
+def _sanitize_next_url(next_url):
+    """ Only allow redirecting to urls on this server after login, otherwise the login
+    endpoint could be used to send users to another site. """
+    if not next_url:
+        return None
+    parsed = urlparse(next_url)
+    if parsed.netloc:
+        if parsed.scheme and parsed.scheme not in ("http", "https"):
+            return None
+        allowed_hosts = {urlparse(request.host_url).netloc, urlparse(current_app.config["SERVER_ROOT_URL"]).netloc}
+        return next_url if parsed.netloc in allowed_hosts else None
+    # urlparse finds no netloc in "//evil.com", "////evil.com" or "/\evil.com" but browsers
+    # normalize backslashes to slashes and collapse the leading slashes, so all three send
+    # the user to another host. Only a single leading slash is safe.
+    if not next_url.startswith("/") or next_url[1:2] in ("/", "\\"):
+        return None
+    return next_url
+
+
 @login_bp.get('/musicbrainz/')
 @web_musicbrainz_needed
 @web_listenstore_needed
 @login_forbidden
 def musicbrainz():
-    session["next"] = request.args.get("next")
+    session["next"] = _sanitize_next_url(request.args.get("next"))
     login_hint = request.args.get("login_hint")
     return redirect(provider.get_authentication_uri(login_hint=login_hint))
 
@@ -50,7 +71,7 @@ def musicbrainz_post():
             login_user(User.from_dbrow(user),
                        remember=True,
                        duration=datetime.timedelta(current_app.config['SESSION_REMEMBER_ME_DURATION']))
-            next = session.get('next')
+            next = _sanitize_next_url(session.get('next'))
             if next:
                 return redirect(next)
         except MusicBrainzAuthSessionError:

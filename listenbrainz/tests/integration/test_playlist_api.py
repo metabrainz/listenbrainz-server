@@ -10,6 +10,7 @@ from listenbrainz.domain.spotify import OAUTH_TOKEN_URL
 from listenbrainz.tests.integration import IntegrationTestCase
 import listenbrainz.db.user as db_user
 import listenbrainz.db.external_service_oauth as db_oauth
+from listenbrainz.db.exceptions import InvalidUser
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from listenbrainz.webserver.views import playlist_api
 from listenbrainz.webserver.views.playlist_api import PLAYLIST_TRACK_URI_PREFIX, PLAYLIST_URI_PREFIX, PLAYLIST_EXTENSION_URI
@@ -204,6 +205,20 @@ class PlaylistAPITestCase(IntegrationTestCase):
 
         # Make sure the return playlist id is valid
         UUID(response.json["playlist_mbid"])
+
+    @mock.patch("listenbrainz.db.playlist.create")
+    def test_playlist_create_invalid_user(self, mock_create):
+        """ Test to ensure InvalidUser exception in playlist creation returns 400 """
+        mock_create.side_effect = InvalidUser("Invalid creator user ID")
+        playlist = get_test_data()
+
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Invalid creator user ID")
 
     def test_playlist_xspf_additional_metadata(self):
         """ Test for checking that additional meta data field is properly constructed and not causing a crash """

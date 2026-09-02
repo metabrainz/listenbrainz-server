@@ -38,6 +38,7 @@ class MusicBrainzService(BaseBrainzService):
                 "token_type_hint": "access_token",
             },
             headers={"Content-Type": "application/x-www-form-urlencoded"},
+            timeout=10,
         )
         response.raise_for_status()
         return response.json()
@@ -46,6 +47,7 @@ class MusicBrainzService(BaseBrainzService):
         response = requests.get(
             current_app.config["OAUTH_USERINFO_URL"],
             headers={"Authorization": f"Bearer {token}"},
+            timeout=10,
         )
         response.raise_for_status()
         return response.json()

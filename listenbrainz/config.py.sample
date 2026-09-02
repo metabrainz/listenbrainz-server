@@ -23,8 +23,9 @@ SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = SQLALCHEMY_TIMESCALE_URI
 TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@lb_db/postgres"
 TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@lb_db/listenbrainz_ts"
 
-# Listens (postgres, user_id partitioned) - target of listenbrainz/listenstore/migrate_listens.py
-SQLALCHEMY_LISTENS_URI = ""
+# Listens (postgres, user_id partitioned) - migration target and dual-write store
+SQLALCHEMY_LISTENS_URI = "postgresql://listenbrainz_listens:listenbrainz_listens@lb_db/listenbrainz_listens"
+LISTENS_ADMIN_URI = "postgresql://postgres:postgres@lb_db/postgres"
 
 # Server address
 # SERVER_NAME = "localhost:8100"
@@ -102,8 +103,8 @@ COUCHDB_ADMIN_KEY = "listenbrainz"
 # Prefix is used verbatim; include the trailing separator, e.g. "test_".
 COUCHDB_DATABASE_PREFIX = ""
 
-# MusicBrainz OAuth
-OAUTH_BASE_URL = "https://musicbrainz.org"
+# MetaBrainz OAuth
+OAUTH_BASE_URL = "https://metabrainz.org"
 OAUTH_CLIENT_ID = "CLIENT_ID"
 OAUTH_CLIENT_SECRET = "CLIENT_SECRET"
 OAUTH_WEBHOOK_SECRET = "WEBHOOK_SECRET"

@@ -13,7 +13,7 @@ from psycopg2.errors import UntranslatableCharacter
 from psycopg2.extras import execute_values
 from sqlalchemy import text
 
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db, timescale
 from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.dumps.exceptions import SchemaMismatchException
 from listenbrainz.listen import Listen
@@ -159,21 +159,26 @@ class TimescaleListenStore:
 
     def insert(self, listens):
         """
-            Insert a batch of listens. Returns a list of (listened_at, track_name, user_name, user_id) that indicates
-            which rows were inserted into the DB. If the row is not listed in the return values, it was a duplicate.
+            Insert a batch of listens. Returns a list of (listened_at, user_id, recording_msid)
+            identifying rows inserted into Timescale. Rows absent from the result were duplicates.
         """
+
+        if not listens:
+            return []
 
         submit = []
         for listen in listens:
             submit.append(listen.to_timescale())
 
+        # Only newly inserted rows are mirrored. A duplicate was already mirrored by the insert
+        # that first put it in timescale, so fetching and re-upserting it would be pure overhead.
         query = """
             WITH inserted_listens AS (
                 INSERT INTO listen (listened_at, user_id, recording_msid, data)
                      VALUES %s
                 ON CONFLICT (listened_at, user_id, recording_msid)
                  DO NOTHING
-                  RETURNING listened_at, user_id, recording_msid
+                  RETURNING listened_at, created, user_id, recording_msid, data
             ), metadata AS (
                 INSERT INTO listen_user_metadata AS lum (user_id, count, min_listened_at, max_listened_at, created)
                      SELECT user_id, count(*), min(listened_at), max(listened_at), NOW()
@@ -185,26 +190,49 @@ class TimescaleListenStore:
                           , min_listened_at = least(lum.min_listened_at, excluded.min_listened_at)
                           , max_listened_at = greatest(lum.max_listened_at, excluded.max_listened_at)
                           , created = excluded.created
-            ) SELECT * FROM inserted_listens
+            )
+            SELECT listened_at, created, user_id, recording_msid, data::text
+              FROM inserted_listens
         """
 
-        inserted_rows = []
+        source_rows = {}
         conn = timescale.engine.raw_connection()
-        with conn.cursor() as curs:
+        try:
+            # this handler drops the batch instead of retrying it, only acceptable for an
+            # encoding error from timescale itself, so keep it off the partitioned write below
             try:
-                execute_values(curs, query, submit, template=None)
-                while True:
-                    result = curs.fetchone()
-                    if not result:
-                        break
-                    inserted_rows.append((result[0], result[1], result[2]))
+                with conn.cursor() as curs:
+                    results = execute_values(
+                        curs,
+                        query,
+                        submit,
+                        template="(%s::timestamptz, %s::integer, %s::uuid, %s::jsonb)",
+                        fetch=True,
+                    )
             except UntranslatableCharacter:
                 conn.rollback()
                 return
 
-        conn.commit()
+            for result in results:
+                listened_at = result[0]
+                user_id = result[2]
+                recording_msid = result[3]
+                # keyed so the partitioned upsert can never affect a row twice
+                source_rows[(listened_at, user_id, recording_msid)] = result
 
-        return inserted_rows
+            # If this raises an OperationalError, the Timescale transaction is rolled back and
+            # RabbitMQ requeues the batch. Both writes are idempotent, so retrying also handles the
+            # case where this commit fails after the partitioned transaction committed.
+            listens_db.insert(list(source_rows.values()))
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+
+        return [(listened_at, user_id, recording_msid)
+                for listened_at, _, user_id, recording_msid, _ in source_rows.values()]
 
     def fetch_listens(self, user: Dict, from_ts: datetime = None, to_ts: datetime = None, limit: int = DEFAULT_LISTENS_PER_FETCH):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
@@ -704,13 +732,13 @@ class TimescaleListenStore:
     def delete(self, user_id, created=None):
         """ Delete all listens for user with specified user ID.
 
-        Note: this method tries to delete the user 5 times before giving up.
-
         Args:
             user_id: the listenbrainz row id of the user
             created: delete listens created before this timestamp
 
-        Raises: Exception if unable to delete the user in 5 retries
+        Raises: Exception if either store rejects the delete. Callers do not retry, so a
+            timescale commit that fails after the partitioned delete committed leaves the listens
+            in timescale only, which the incremental migration copies back.
         """
         if created is None:
             created = datetime.now(tz=timezone.utc)
@@ -727,9 +755,16 @@ class TimescaleListenStore:
             ts_conn.execute(sqlalchemy.text(query1), {"user_id": user_id})
             ts_conn.execute(sqlalchemy.text(query2), {"user_id": user_id, "created": created})
             ts_conn.execute(sqlalchemy.text(query3), {"user_id": user_id, "created": created})
+            # As with inserts, do not commit the authoritative Timescale mutation until the
+            # partitioned store has accepted the matching delete. Retrying either delete is safe.
+            listens_db.delete_user(user_id, created)
             ts_conn.commit()
-        except psycopg2.OperationalError as e:
+        except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError) as e:
+            ts_conn.rollback()
             self.log.error("Cannot delete listens for user: %s" % str(e))
+            raise
+        except Exception:
+            ts_conn.rollback()
             raise
 
     def delete_listen(self, listened_at: datetime, user_id: int, recording_msid: str):
