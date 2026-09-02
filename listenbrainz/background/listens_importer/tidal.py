@@ -1,16 +1,18 @@
 import csv
 from datetime import datetime, timezone
 from typing import Any, Iterator, TextIO
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from flask import current_app
 from more_itertools import chunked
-from dateutil import parser as dateutil_parser
 
 from listenbrainz.background.listens_importer.base import BaseListensImporter
 from listenbrainz.webserver.errors import ImportFailedError
 
 
 class TidalListensImporter(BaseListensImporter):
+    DEFAULT_TIMEZONE = timezone.utc
+
     def process_import_file(self, import_task: dict[str, Any]) -> Iterator[list[dict[str, Any]]]:
         """Processes the Tidal streaming.csv file and returns a generator of batches of items."""
         self._from_date = import_task["from_date"]
@@ -26,13 +28,13 @@ class TidalListensImporter(BaseListensImporter):
         listens = []
         for item in batch:
             try:
-                date_time = datetime.strptime(item["entry_date"], "%d/%m/%Y %H:%M") # TODO: Do we use the timezone column of the streaming csv file to append info about the timezone?
+                date_time = self._parse_datetime(item)
                 ts = int(date_time.timestamp())
             except (TypeError, ValueError):
                 current_app.logger.debug("Invalid Timestamp in item: %s", item, exc_info=True)
                 continue
 
-            if not (self._from_date <= datetime.fromtimestamp(ts, tz=timezone.utc) <= self._to_date):
+            if not (self._from_date <= date_time <= self._to_date):
                 continue
 
             artist_name = item["artist_name"]
@@ -63,6 +65,18 @@ class TidalListensImporter(BaseListensImporter):
         if expected.issubset(maybe_header):
             return maybe_header
         return None
+
+    @classmethod
+    def _parse_datetime(cls, item: dict[str, Any]) -> datetime:
+        time_zone = item.get("time_zone", "").strip()
+        tzinfo = cls.DEFAULT_TIMEZONE
+        if time_zone and time_zone.lower() != "null":
+            try:
+                tzinfo = ZoneInfo(time_zone)
+            except ZoneInfoNotFoundError:
+                current_app.logger.debug("Invalid Tidal timezone in item: %s", item, exc_info=True)
+
+        return datetime.strptime(item["entry_date"], "%d/%m/%Y %H:%M").replace(tzinfo=tzinfo)
 
     def _read_header_line(self, file: TextIO) -> list[str]:
         file.seek(0)
