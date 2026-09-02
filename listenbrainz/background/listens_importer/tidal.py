@@ -15,33 +15,24 @@ class TidalListensImporter(BaseListensImporter):
 
     def process_import_file(self, import_task: dict[str, Any]) -> Iterator[list[dict[str, Any]]]:
         """Processes the Tidal streaming.csv file and returns a generator of batches of items."""
-        self._from_date = import_task["from_date"]
-        self._to_date = import_task["to_date"]
+        from_date = import_task["from_date"]
+        to_date = import_task["to_date"]
 
         with open(import_task["file_path"], mode="r", encoding="utf-8-sig") as file:
             header_line = self._read_header_line(file)
             reader = csv.DictReader(file, fieldnames=header_line)
-            yield from chunked(reader, self.batch_size)
+            filtered = self._filter_rows(reader, from_date, to_date)
+            yield from chunked(filtered, self.batch_size)
 
     def parse_listen_batch(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Parse Tidal's streaming.csv file into a listens batch"""
         listens = []
         for item in batch:
-            try:
-                date_time = self._parse_datetime(item)
-                ts = int(date_time.timestamp())
-            except (TypeError, ValueError):
-                current_app.logger.debug("Invalid Timestamp in item: %s", item, exc_info=True)
-                continue
-
-            if not (self._from_date <= date_time <= self._to_date):
-                continue
-
             artist_name = item["artist_name"]
             track_title = item["track_title"]
 
             listen: dict[str, Any] = {
-                "listened_at": ts,
+                "listened_at": item["parsed_timestamp"],
                 "track_metadata": {
                     "track_name": track_title,
                     "artist_name": artist_name
@@ -77,6 +68,24 @@ class TidalListensImporter(BaseListensImporter):
                 current_app.logger.debug("Invalid Tidal timezone in item: %s", item, exc_info=True)
 
         return datetime.strptime(item["entry_date"], "%d/%m/%Y %H:%M").replace(tzinfo=tzinfo)
+
+    def _filter_rows(
+        self,
+        reader: csv.DictReader,
+        from_date: datetime,
+        to_date: datetime,
+    ) -> Iterator[dict[str, Any]]:
+        for row in reader:
+            try:
+                date_time = self._parse_datetime(row)
+            except (TypeError, ValueError):
+                current_app.logger.debug("Invalid Timestamp in Tidal item: %s", row, exc_info=True)
+                continue
+
+            if not (from_date <= date_time <= to_date):
+                continue
+
+            yield {**row, "parsed_timestamp": int(date_time.timestamp())}
 
     def _read_header_line(self, file: TextIO) -> list[str]:
         file.seek(0)
