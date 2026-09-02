@@ -20,6 +20,7 @@ class TidalListensImporter(BaseListensImporter):
             header_line = self._read_header_line(file)
             reader = csv.DictReader(file, fieldnames=header_line)
             yield from chunked(reader, self.batch_size)
+
     def parse_listen_batch(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Parse Tidal's streaming.csv file into a listens batch"""
         listens = []
@@ -70,5 +71,3 @@ class TidalListensImporter(BaseListensImporter):
             if header:
                 return header
         raise ImportFailedError("Could not find Tidal header row in streaming file.")
- 
-            
