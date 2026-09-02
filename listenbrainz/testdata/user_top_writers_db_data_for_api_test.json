@@ -1,0 +1,383 @@
+[
+    {
+        "user_id": 1,
+        "count": 75,
+        "data": [
+            {
+                "writer_mbid": "d59d99ea-23d4-4a80-b066-edca32ee158f",
+                "listen_count": 500,
+                "writer_name": "Max Martin"
+            },
+            {
+                "writer_mbid": "ae9ed5e2-4caf-4b3d-9cb3-2ad626b91714",
+                "listen_count": 495,
+                "writer_name": "Guy Berryman"
+            },
+            {
+                "writer_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234",
+                "listen_count": 490,
+                "writer_name": "Jonny Buckland"
+            },
+            {
+                "writer_mbid": "fecda98e-0533-4b87-a9d1-c89b4521918b",
+                "listen_count": 485,
+                "writer_name": "Dan Reynolds"
+            },
+            {
+                "writer_mbid": "9d5adabb-9775-4535-93eb-12b485aed8bf",
+                "listen_count": 480,
+                "writer_name": "Adam Levine"
+            },
+            {
+                "writer_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8",
+                "listen_count": 475,
+                "writer_name": "Shellback"
+            },
+            {
+                "writer_mbid": "67f4ae2e-260e-4020-b957-f2df5b719501",
+                "listen_count": 470,
+                "writer_name": "Ryan Tedder"
+            },
+            {
+                "writer_mbid": "2b0646af-f3f0-4a5b-b629-6c31301c1c29",
+                "listen_count": 465,
+                "writer_name": "Chris Martin"
+            },
+            {
+                "writer_mbid": "a7f7df4a-77d8-4f12-8acd-5c60c93f4de8",
+                "listen_count": 460,
+                "writer_name": "Sia"
+            },
+            {
+                "writer_mbid": "181c4177-f33a-441d-b15d-910acaf18b07",
+                "listen_count": 455,
+                "writer_name": "Will Champion"
+            },
+            {
+                "writer_mbid": "bb4c33ee-bb3f-4372-854d-2797c13c2f12",
+                "listen_count": 450,
+                "writer_name": "Writer 11"
+            },
+            {
+                "writer_mbid": "c9dbde6f-0e00-471d-9330-3b7eff068532",
+                "listen_count": 445,
+                "writer_name": "Writer 12"
+            },
+            {
+                "writer_mbid": "dccb210c-70cc-4891-9692-b5cae9d8569e",
+                "listen_count": 440,
+                "writer_name": "Writer 13"
+            },
+            {
+                "writer_mbid": "c91246a7-4c28-4ac6-a9b8-055d3b373ce7",
+                "listen_count": 435,
+                "writer_name": "Writer 14"
+            },
+            {
+                "writer_mbid": "f557f52f-8012-44d7-ab75-c41959f8fd33",
+                "listen_count": 430,
+                "writer_name": "Writer 15"
+            },
+            {
+                "writer_mbid": "e56609cc-7eb2-4f31-b8e2-b38cc626d38b",
+                "listen_count": 425,
+                "writer_name": "Writer 16"
+            },
+            {
+                "writer_mbid": "160b53e0-6ac8-44dc-82d5-dc99dbbed94c",
+                "listen_count": 420,
+                "writer_name": "Writer 17"
+            },
+            {
+                "writer_mbid": "6bd7f5a7-0ec0-418b-9964-18672adbc46d",
+                "listen_count": 415,
+                "writer_name": "Writer 18"
+            },
+            {
+                "writer_mbid": "aaf47ea9-3a82-4ec1-a811-3c8b0c8a01f4",
+                "listen_count": 410,
+                "writer_name": "Writer 19"
+            },
+            {
+                "writer_mbid": "96bc4df1-088f-4e97-b021-a3bc0419c8ec",
+                "listen_count": 405,
+                "writer_name": "Writer 20"
+            },
+            {
+                "writer_mbid": "84d42db2-4a18-4e9b-8580-e4e726862659",
+                "listen_count": 400,
+                "writer_name": "Writer 21"
+            },
+            {
+                "writer_mbid": "48af4ca5-7547-4a5e-8117-59fcde05345c",
+                "listen_count": 395,
+                "writer_name": "Writer 22"
+            },
+            {
+                "writer_mbid": "5fdceb58-8b83-4b22-b3e5-0515c4678fcd",
+                "listen_count": 390,
+                "writer_name": "Writer 23"
+            },
+            {
+                "writer_mbid": "9778be86-3102-4e33-96c8-71fb3890c022",
+                "listen_count": 385,
+                "writer_name": "Writer 24"
+            },
+            {
+                "writer_mbid": "86f4ebb4-8c05-4ab0-ad16-fbb7581d8cf3",
+                "listen_count": 380,
+                "writer_name": "Writer 25"
+            },
+            {
+                "writer_mbid": "b0d6bd8d-5e1b-4d34-b3f7-d6add9e3ffc6",
+                "listen_count": 375,
+                "writer_name": "Writer 26"
+            },
+            {
+                "writer_mbid": "d7c6fcec-542a-4a50-b33e-b30e56504933",
+                "listen_count": 370,
+                "writer_name": "Writer 27"
+            },
+            {
+                "writer_mbid": "8c4739e5-ef0d-4844-b503-dedf25e341de",
+                "listen_count": 365,
+                "writer_name": "Writer 28"
+            },
+            {
+                "writer_mbid": "2b7eefeb-e6f6-43ba-9fa1-98158adce0fa",
+                "listen_count": 360,
+                "writer_name": "Writer 29"
+            },
+            {
+                "writer_mbid": "c91829c6-0a49-4e17-ae72-8913f4341606",
+                "listen_count": 355,
+                "writer_name": "Writer 30"
+            },
+            {
+                "writer_mbid": "9e3b23cd-b6a3-4e7b-9e88-e9801565285c",
+                "listen_count": 350,
+                "writer_name": "Writer 31"
+            },
+            {
+                "writer_mbid": "0f33d9be-d900-47cd-81a0-fbf912f72d74",
+                "listen_count": 345,
+                "writer_name": "Writer 32"
+            },
+            {
+                "writer_mbid": "9df661d5-8464-4e46-851b-5d3702aff650",
+                "listen_count": 340,
+                "writer_name": "Writer 33"
+            },
+            {
+                "writer_mbid": "61ceabef-1264-4d95-8021-0401f7270636",
+                "listen_count": 335,
+                "writer_name": "Writer 34"
+            },
+            {
+                "writer_mbid": "d2386ff1-fa87-4255-a29f-1b3f3303382a",
+                "listen_count": 330,
+                "writer_name": "Writer 35"
+            },
+            {
+                "writer_mbid": "d66b1a50-40da-4a0c-8783-2fb150b430bd",
+                "listen_count": 325,
+                "writer_name": "Writer 36"
+            },
+            {
+                "writer_mbid": "8152dcdc-b651-4a4f-8f87-7cd9589d8414",
+                "listen_count": 320,
+                "writer_name": "Writer 37"
+            },
+            {
+                "writer_mbid": "1a910e27-2275-4716-8475-e486b154aa8b",
+                "listen_count": 315,
+                "writer_name": "Writer 38"
+            },
+            {
+                "writer_mbid": "1b42100b-0e33-4d18-b40e-760ec875606c",
+                "listen_count": 310,
+                "writer_name": "Writer 39"
+            },
+            {
+                "writer_mbid": "51e0116e-c8e6-4df9-95c4-bda92876c72c",
+                "listen_count": 305,
+                "writer_name": "Writer 40"
+            },
+            {
+                "writer_mbid": "cfdc3604-8bdc-4dc6-9380-bdbca1662d09",
+                "listen_count": 300,
+                "writer_name": "Writer 41"
+            },
+            {
+                "writer_mbid": "bedf00df-1d84-4238-a26e-96b80627bccf",
+                "listen_count": 295,
+                "writer_name": "Writer 42"
+            },
+            {
+                "writer_mbid": "260f5ba1-a76d-4dd7-8f2d-71ef14af28b7",
+                "listen_count": 290,
+                "writer_name": "Writer 43"
+            },
+            {
+                "writer_mbid": "7c42b308-0a20-42ab-97e4-2f9c20b5cc70",
+                "listen_count": 285,
+                "writer_name": "Writer 44"
+            },
+            {
+                "writer_mbid": "4e7b24ad-a9fb-41b5-a0d4-e43925e92874",
+                "listen_count": 280,
+                "writer_name": "Writer 45"
+            },
+            {
+                "writer_mbid": "3b4b4ea2-bc5d-4372-a406-5059c0564fa2",
+                "listen_count": 275,
+                "writer_name": "Writer 46"
+            },
+            {
+                "writer_mbid": "23857bc3-f132-4c27-8f6d-963c207d49b8",
+                "listen_count": 270,
+                "writer_name": "Writer 47"
+            },
+            {
+                "writer_mbid": "8be9a5ac-4ca0-419f-b064-d0f8c111daaa",
+                "listen_count": 265,
+                "writer_name": "Writer 48"
+            },
+            {
+                "writer_mbid": "06bd2dc7-ea88-4784-a91c-b28f0d5f3d39",
+                "listen_count": 260,
+                "writer_name": "Writer 49"
+            },
+            {
+                "writer_mbid": "911ee6fc-2a27-47f0-8990-2a2e5f7477cb",
+                "listen_count": 255,
+                "writer_name": "Writer 50"
+            },
+            {
+                "writer_mbid": "7c83d526-067e-4886-b674-764f40ce13b8",
+                "listen_count": 250,
+                "writer_name": "Writer 51"
+            },
+            {
+                "writer_mbid": "0b59cd4e-699b-4621-9ec6-00fce9080b13",
+                "listen_count": 245,
+                "writer_name": "Writer 52"
+            },
+            {
+                "writer_mbid": "d2a05b12-fe09-4b7a-912e-e16030eda7f1",
+                "listen_count": 240,
+                "writer_name": "Writer 53"
+            },
+            {
+                "writer_mbid": "13f3268f-dbb4-4800-9044-877c2fa7b6ac",
+                "listen_count": 235,
+                "writer_name": "Writer 54"
+            },
+            {
+                "writer_mbid": "0eeb7a42-2eaf-4a2c-90c4-76e0925bc019",
+                "listen_count": 230,
+                "writer_name": "Writer 55"
+            },
+            {
+                "writer_mbid": "f54b3ff7-7d54-4277-98ab-02232d38c60e",
+                "listen_count": 225,
+                "writer_name": "Writer 56"
+            },
+            {
+                "writer_mbid": "bed7ccac-8e35-44eb-98fb-9a1fce9cc60b",
+                "listen_count": 220,
+                "writer_name": "Writer 57"
+            },
+            {
+                "writer_mbid": "58d160d1-10f1-4626-ab93-661b8cf15bb7",
+                "listen_count": 215,
+                "writer_name": "Writer 58"
+            },
+            {
+                "writer_mbid": "e10f6c27-6b5e-41a1-80aa-a9d498c7ef00",
+                "listen_count": 210,
+                "writer_name": "Writer 59"
+            },
+            {
+                "writer_mbid": "b5e94df7-b39a-4026-9d8d-33cf813de8c9",
+                "listen_count": 205,
+                "writer_name": "Writer 60"
+            },
+            {
+                "writer_mbid": "cff73839-0deb-4398-ab87-d2a3242407af",
+                "listen_count": 200,
+                "writer_name": "Writer 61"
+            },
+            {
+                "writer_mbid": "6e3e8d2f-dbf5-4415-9791-0da557ba1223",
+                "listen_count": 195,
+                "writer_name": "Writer 62"
+            },
+            {
+                "writer_mbid": "f2deb456-020a-4775-bdb4-a6d135a9a6aa",
+                "listen_count": 190,
+                "writer_name": "Writer 63"
+            },
+            {
+                "writer_mbid": "99acbc5a-02df-48e3-817b-91dc5d07990f",
+                "listen_count": 185,
+                "writer_name": "Writer 64"
+            },
+            {
+                "writer_mbid": "def6ab72-47f8-44fd-b9b7-08055e1b446c",
+                "listen_count": 180,
+                "writer_name": "Writer 65"
+            },
+            {
+                "writer_mbid": "60716941-999b-43ab-9271-0d4212a3fbd3",
+                "listen_count": 175,
+                "writer_name": "Writer 66"
+            },
+            {
+                "writer_mbid": "90c1ac95-6c6f-484f-a3ed-4ea854954dc6",
+                "listen_count": 170,
+                "writer_name": "Writer 67"
+            },
+            {
+                "writer_mbid": "216d7d50-005e-4564-b5ed-acac81d32ecd",
+                "listen_count": 165,
+                "writer_name": "Writer 68"
+            },
+            {
+                "writer_mbid": "bf9528a6-233f-46cc-b3fa-36a460fea945",
+                "listen_count": 160,
+                "writer_name": "Writer 69"
+            },
+            {
+                "writer_mbid": "5c59a5f1-ec5b-4cd6-8112-d7d2b21127ac",
+                "listen_count": 155,
+                "writer_name": "Writer 70"
+            },
+            {
+                "writer_mbid": "fc469853-39bc-46de-8685-1453816420b0",
+                "listen_count": 150,
+                "writer_name": "Writer 71"
+            },
+            {
+                "writer_mbid": "411f5e53-99b8-4a6f-ba38-511a651c3dec",
+                "listen_count": 145,
+                "writer_name": "Writer 72"
+            },
+            {
+                "writer_mbid": "0c7e45df-b70d-4bc2-b813-c71b4ad2999f",
+                "listen_count": 140,
+                "writer_name": "Writer 73"
+            },
+            {
+                "writer_mbid": "f3f9020b-ac01-436d-b2b1-f9bd189a16f9",
+                "listen_count": 135,
+                "writer_name": "Writer 74"
+            },
+            {
+                "writer_mbid": "fc1515cc-e65f-446a-b231-83e8f295f4d2",
+                "listen_count": 130,
+                "writer_name": "Writer 75"
+            }
+        ]
+    }
+]
