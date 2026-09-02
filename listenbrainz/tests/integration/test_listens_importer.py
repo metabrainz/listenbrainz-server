@@ -307,6 +307,18 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json["error"], "Only csv files are allowed for this service!")
 
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data={
+                "service": "tidal",
+                "file": self.create_empty_zip(),
+            },
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Only csv files are allowed for this service!")
+
     def test_file_path_attack(self):
         file = self.create_empty_zip()
         data = {
@@ -1197,3 +1209,45 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertIn("success_count", metadata)
         self.assertEqual(metadata["attempted_count"], 5)
         self.assertEqual(metadata["success_count"], 3)
+
+    def test_import_tidal(self):
+        data = {
+            "service": "tidal",
+            "file": open(self.path_to_data_file("tidal_streaming.csv"), "rb"),
+            "from_date": datetime(2022, 3, 9, 0, 0, tzinfo=timezone.utc),
+            "to_date": datetime(2022, 3, 9, 1, 0, tzinfo=timezone.utc),
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert200(response)
+        import_id = response.json["import_id"]
+
+        url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
+        response = self.wait_for_query_to_have_items(url, num_items=9, attempts=20)
+        listens = response.json["payload"]["listens"]
+        self.assertEqual(len(listens), 9)
+
+        first_listen = listens[0]
+        self.assertEqual(first_listen["listened_at"], 1646785860)
+        track_metadata = first_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "Marc E. Bassy")
+        self.assertEqual(track_metadata["track_name"], "Lock It Up (feat. Kehlani)")
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(additional_info["music_service"], "tidal.com")
+        self.assertEqual(additional_info["duration_played"], 226)
+
+        response = self.client.get(
+            self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+        )
+        self.assert200(response)
+        metadata = response.json["metadata"]
+        self.assertIn("attempted_count", metadata)
+        self.assertIn("success_count", metadata)
+        self.assertEqual(metadata["attempted_count"], 9)
+        self.assertEqual(metadata["success_count"], 9)
