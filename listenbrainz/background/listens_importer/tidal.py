@@ -41,7 +41,7 @@ class TidalListensImporter(BaseListensImporter):
 
             additional_info: dict[str, Any] = {
                 "submission_client": self.importer_name,
-                "original_submission_client": "Tidal",
+                "music_service": "tidal.com",
             }
 
             listen["track_metadata"]["additional_info"] = additional_info
