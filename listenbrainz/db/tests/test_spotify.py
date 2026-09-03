@@ -65,8 +65,8 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(users[1]['user_id'], self.user['id'])
         self.assertEqual(users[2]['user_id'], user3['id'])
 
-        db_import.update_import_status(self.db_conn, user2['id'], ExternalServiceType.SPOTIFY, 'something broke')
-        db_import.update_import_status(self.db_conn, user3['id'], ExternalServiceType.SPOTIFY, 'oops.')
+        db_import.update_status(self.db_conn, user2['id'], ExternalServiceType.SPOTIFY, "Error", 0, error={'message': 'something broke', 'retry': True})
+        db_import.update_status(self.db_conn, user3['id'], ExternalServiceType.SPOTIFY, "Error", 0, error={'message': 'oops.', 'retry': True})
         users = db_import.get_active_users_to_process(self.db_conn, ExternalServiceType.SPOTIFY, True)
         self.assertEqual(len(users), 1)
         self.assertEqual(users[0]['user_id'], self.user['id'])

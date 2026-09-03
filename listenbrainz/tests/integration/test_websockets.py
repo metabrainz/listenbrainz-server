@@ -17,10 +17,6 @@ class WebSocketTests(ListenAPIIntegrationTestCase):
         with open(self.path_to_data_file("valid_single.json"), "r") as f:
             payload = json.load(f)
 
-        response = self.send_data(payload)
-        self.assert200(response)
-        self.assertEqual(response.json["status"], "ok")
-
         received_listen = None
         timeout = 5  # 5 seconds timeout
 
@@ -28,6 +24,10 @@ class WebSocketTests(ListenAPIIntegrationTestCase):
         def listen(message):
             nonlocal received_listen
             received_listen = message
+
+        response = self.send_data(payload)
+        self.assert200(response)
+        self.assertEqual(response.json["status"], "ok")
 
         start_time = time.time()
         while received_listen is None and time.time() - start_time < timeout:
@@ -46,10 +46,6 @@ class WebSocketTests(ListenAPIIntegrationTestCase):
         with open(self.path_to_data_file("valid_playing_now.json"), "r") as f:
             payload = json.load(f)
 
-        response = self.send_data(payload)
-        self.assert200(response)
-        self.assertEqual(response.json['status'], 'ok')
-
         received_playing_now = None
         timeout = 5  # 5 seconds timeout
 
@@ -57,6 +53,10 @@ class WebSocketTests(ListenAPIIntegrationTestCase):
         def playing_now(message):
             nonlocal received_playing_now
             received_playing_now = message
+
+        response = self.send_data(payload)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
 
         # Wait for the 'playing_now' event
         start_time = time.time()
