@@ -1,4 +1,3 @@
-import json
 import os
 
 from flask import Blueprint, current_app, jsonify, send_file
@@ -22,13 +21,8 @@ def create_export_task():
     try:
         export_data = user_data_export.request_user_data_export(db_conn, current_user.id)
         if export_data is not None:
-            db_conn.commit()
             return jsonify(export_data)
-
-        # task already exists in queue, rollback new entry
-        db_conn.rollback()
         raise APIBadRequest(message="Data export already requested.")
-
     except DatabaseError:
         current_app.logger.error('Error while exporting user data: %s', current_user.musicbrainz_id, exc_info=True)
         raise APIInternalServerError(f'Error while exporting user data {current_user.musicbrainz_id}, please try again later.')
@@ -75,8 +69,6 @@ def delete_export_archive(export_id):
     """ Delete the specified export archive """
     success = user_data_export.delete_export_task(db_conn, current_user.id, export_id)
     if success:
-        db_conn.commit()
-        # file is deleted from disk by cronjob
         return jsonify({"success": True})
     else:
         raise APINotFound("Export not found")
