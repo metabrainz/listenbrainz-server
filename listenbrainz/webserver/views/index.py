@@ -39,6 +39,8 @@ SEARCH_USER_LIMIT = 100  # max number of users to return in search username resu
 
 ROBOTS_TXT_CONTENT = """
 User-agent: facebookexternalhit
+User-agent: meta-webindexer
+User-agent: meta-externalads
 User-agent: meta-externalagent
 User-agent: meta-externalfetcher
 Allow: /track/
