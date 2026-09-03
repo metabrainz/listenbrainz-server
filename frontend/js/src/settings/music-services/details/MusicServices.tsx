@@ -1072,7 +1072,8 @@ export default function MusicServices() {
               color="#FF0000"
             />
           }
-          title="Youtube"
+          title="YouTube"
+          isConnected
           collapsible={false}
           showStatusIndicator
           statusLabel="Active"
@@ -1092,7 +1093,8 @@ export default function MusicServices() {
               color="#6c757d"
             />
           }
-          title="InternetArchive"
+          title="Internet Archive"
+          isConnected
           collapsible={false}
           showStatusIndicator
           statusLabel="Active"
