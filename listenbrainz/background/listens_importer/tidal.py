@@ -20,6 +20,8 @@ class TidalListensImporter(BaseListensImporter):
         from_date = import_task["from_date"]
         to_date = import_task["to_date"]
 
+        # Encoding set to utf-8-sig to handle BOM prefix present in csv exports from Tidal.
+        # This ensures that the BOM is ignored and does not interfere with header parsing.
         with open(import_task["file_path"], mode="r", newline="", encoding="utf-8-sig") as file:
             header_line = self._read_header_line(file)
             reader = csv.DictReader(file, fieldnames=header_line)
