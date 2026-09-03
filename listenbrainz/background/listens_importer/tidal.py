@@ -58,7 +58,7 @@ class TidalListensImporter(BaseListensImporter):
         maybe_header = [
             column.strip(' "').lower() for column in next(csv.reader([line]))
         ]
-        expected = {"artist_name", "track_title", "entry_date"}
+        expected = {"artist_name", "track_title", "entry_date", "product_type"}
         if expected.issubset(maybe_header):
             return maybe_header
         return None
@@ -107,7 +107,7 @@ class TidalListensImporter(BaseListensImporter):
 
             try:
                 date_time = self._parse_datetime(row)
-            except (TypeError, ValueError):
+            except (AttributeError, TypeError, ValueError):
                 current_app.logger.debug("Invalid Timestamp in Tidal item: %s", row, exc_info=True)
                 continue
 
