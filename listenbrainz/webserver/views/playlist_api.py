@@ -14,7 +14,7 @@ from listenbrainz.db.exceptions import InvalidUser
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
 from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.soundcloud import SoundCloudService
-from listenbrainz.troi.export import export_to_spotify, export_to_apple_music, export_to_soundcloud
+from listenbrainz.troi.export import PlaylistExportError, export_to_spotify, export_to_apple_music, export_to_soundcloud
 from listenbrainz.troi.import_ms import import_from_spotify, import_from_apple_music, import_from_soundcloud
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.metadata_cache.apple.client import Apple
@@ -925,7 +925,10 @@ def export_playlist(playlist_mbid, service):
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
+    except PlaylistExportError as exc:
+        raise APIError(str(exc), 502)
     except Exception as exc:
+        current_app.logger.exception("Failed to export playlist to %s", service)
         raise APIError(f"Failed to export playlist to {service}: {str(exc)}", 500)
 
 
@@ -1147,5 +1150,8 @@ def export_playlist_jspf(service):
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
+    except PlaylistExportError as exc:
+        raise APIError(str(exc), 502)
     except Exception as exc:
+        current_app.logger.exception("Failed to export playlist to %s", service)
         raise APIError(f"Failed to export playlist to {service}: {str(exc)}", 500)
