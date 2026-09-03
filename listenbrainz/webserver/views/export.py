@@ -1,4 +1,5 @@
 import json
+import os
 
 from botocore.exceptions import ClientError
 from flask import Blueprint, current_app, jsonify, send_file
@@ -24,13 +25,8 @@ def create_export_task():
     try:
         export_data = user_data_export.request_user_data_export(db_conn, current_user.id)
         if export_data is not None:
-            db_conn.commit()
             return jsonify(export_data)
-
-        # task already exists in queue, rollback new entry
-        db_conn.rollback()
         raise APIBadRequest(message="Data export already requested.")
-
     except DatabaseError:
         current_app.logger.error('Error while exporting user data: %s', current_user.musicbrainz_id, exc_info=True)
         raise APIInternalServerError(f'Error while exporting user data {current_user.musicbrainz_id}, please try again later.')
@@ -98,8 +94,16 @@ def download_export_archive(export_id):
 @web_listenstore_needed
 def delete_export_archive(export_id):
     """ Delete the specified export archive """
-    success = user_data_export.delete_export_task(db_conn, current_user.id, export_id)
-    if success:
+    result = db_conn.execute(
+        text("DELETE FROM user_data_export WHERE user_id = :user_id AND id = :export_id RETURNING filename"),
+        {"user_id": current_user.id, "export_id": export_id}
+    )
+    row = result.first()
+    if row is not None:
+        db_conn.execute(
+            text("DELETE FROM background_tasks WHERE user_id = :user_id AND (metadata->'export_id')::int = :export_id"),
+            {"user_id": current_user.id, "export_id": export_id}
+        )
         db_conn.commit()
         # archive is deleted from garage by cronjob
         return jsonify({"success": True})

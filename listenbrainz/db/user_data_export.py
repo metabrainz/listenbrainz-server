@@ -3,6 +3,18 @@ from typing import Optional, Dict, Any, List
 from sqlalchemy import text
 
 
+def _row_to_dict(row) -> Dict[str, Any]:
+    return {
+        "export_id": row.id,
+        "type": row.type,
+        "available_until": row.available_until.isoformat() if row.available_until is not None else None,
+        "created": row.created.isoformat(),
+        "progress": row.progress,
+        "status": row.status,
+        "filename": row.filename,
+    }
+
+
 def request_user_data_export(db_conn, user_id: int) -> Optional[Dict[str, Any]]:
     """ Add a request to export the user data to an archive in background. """
     query = """
@@ -29,15 +41,10 @@ def request_user_data_export(db_conn, user_id: int) -> Optional[Dict[str, Any]]:
         })
         task = result.first()
         if task is not None:
-            return {
-                "export_id": export.id,
-                "type": export.type,
-                "available_until": export.available_until.isoformat() if export.available_until is not None else None,
-                "created": export.created.isoformat(),
-                "progress": export.progress,
-                "status": export.status,
-                "filename": export.filename,
-            }
+            db_conn.commit()
+            return _row_to_dict(export)
+
+    db_conn.rollback()
     return None
 
 
@@ -50,16 +57,8 @@ def get_export_task(db_conn, user_id: int, export_id: int) -> Optional[Dict[str,
     row = result.first()
     if row is None:
         return None
-        
-    return {
-        "export_id": row.id,
-        "type": row.type,
-        "available_until": row.available_until.isoformat() if row.available_until is not None else None,
-        "created": row.created.isoformat(),
-        "progress": row.progress,
-        "status": row.status,
-        "filename": row.filename,
-    }
+
+    return _row_to_dict(row)
 
 
 def list_export_tasks(db_conn, user_id: int) -> List[Dict[str, Any]]:
@@ -68,16 +67,7 @@ def list_export_tasks(db_conn, user_id: int) -> List[Dict[str, Any]]:
         text("SELECT * FROM user_data_export WHERE user_id = :user_id ORDER BY created DESC"),
         {"user_id": user_id}
     )
-    rows = result.mappings().all()
-    return [{
-        "export_id": row["id"],
-        "type": row["type"],
-        "available_until": row["available_until"].isoformat() if row["available_until"] is not None else None,
-        "created": row["created"].isoformat(),
-        "progress": row["progress"],
-        "status": row["status"],
-        "filename": row["filename"],
-    } for row in rows]
+    return [_row_to_dict(row) for row in result.all()]
 
 
 def get_completed_export_filename(db_conn, user_id: int, export_id: int) -> Optional[str]:
@@ -104,5 +94,6 @@ def delete_export_task(db_conn, user_id: int, export_id: int) -> bool:
             text("DELETE FROM background_tasks WHERE user_id = :user_id AND (metadata->'export_id')::int = :export_id"),
             {"user_id": user_id, "export_id": export_id}
         )
+        db_conn.commit()
         return True
     return False
