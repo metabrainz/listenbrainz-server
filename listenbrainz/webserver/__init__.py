@@ -343,7 +343,7 @@ def create_web_app(debug=None):
     htmx = HTMX(app)
 
     # Static files
-    import listenbrainz.webserver.static_manager as static_manager
+    import listenbrainz.webserver.static_manager
     static_manager.read_manifest()
     app.static_folder = '/static'
 
@@ -409,7 +409,7 @@ def create_api_compat_app(debug=None):
         },
     )
 
-    import listenbrainz.webserver.static_manager as static_manager
+    import listenbrainz.webserver.static_manager
     static_manager.read_manifest()
     app.static_folder = '/static'
 
