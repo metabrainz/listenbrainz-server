@@ -1227,9 +1227,9 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         import_id = response.json["import_id"]
 
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
-        response = self.wait_for_query_to_have_items(url, num_items=9, attempts=20)
+        response = self.wait_for_query_to_have_items(url, num_items=11, attempts=20)
         listens = response.json["payload"]["listens"]
-        self.assertEqual(len(listens), 9)
+        self.assertEqual(len(listens), 11)
 
         first_listen = listens[0]
         self.assertEqual(first_listen["listened_at"], 1646785860)
@@ -1241,6 +1241,15 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(additional_info["music_service"], "tidal.com")
         self.assertEqual(additional_info["duration_played"], 226)
 
+        # The "Null Timezone" and "Invalid Timezone" rows are only imported if their timestamps are interpreted as UTC
+        #  otherwise they would fall outside the from_date/to_date import window
+        invalid_timezone_listen = listens[8]
+        self.assertEqual(invalid_timezone_listen["track_metadata"]["track_name"], "Invalid Timezone Track")
+        self.assertEqual(invalid_timezone_listen["listened_at"], 1646784120)
+        null_timezone_listen = listens[10]
+        self.assertEqual(null_timezone_listen["track_metadata"]["track_name"], "Null Timezone Track")
+        self.assertEqual(null_timezone_listen["listened_at"], 1646784000)
+
         response = self.client.get(
             self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
             headers={"Authorization": f"Token {self.user['auth_token']}"},
@@ -1249,5 +1258,5 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         metadata = response.json["metadata"]
         self.assertIn("attempted_count", metadata)
         self.assertIn("success_count", metadata)
-        self.assertEqual(metadata["attempted_count"], 9)
-        self.assertEqual(metadata["success_count"], 9)
+        self.assertEqual(metadata["attempted_count"], 11)
+        self.assertEqual(metadata["success_count"], 11)
