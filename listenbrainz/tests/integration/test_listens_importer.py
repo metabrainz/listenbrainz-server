@@ -13,6 +13,7 @@ from sqlalchemy import text
 import listenbrainz.db.user as db_user
 from listenbrainz.db import background
 from listenbrainz.metadata_cache.spotify.handler import SpotifyCrawlerHandler
+from listenbrainz.background.listens_importer.youtubemusic import YouTubeMusicListensImporter
 
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 
@@ -117,7 +118,8 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         )
         self.assert401(response)
 
-        with mock.patch("listenbrainz.webserver.views.import_listens.mb_engine"):
+        old_reject_setting = self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]
+        try:
             self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = True
             response = self.client.post(
                 self.custom_url_for("import_listens_api_v1.create_import_task"),
@@ -129,6 +131,8 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
                 content_type="multipart/form-data"
             )
             self.assert401(response)
+        finally:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = old_reject_setting
 
         db_user.pause(self.db_conn, self.user["id"])
         response = self.client.post(
@@ -476,9 +480,11 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         metadata = response.json["metadata"]
         self.assertIn("attempted_count", metadata)
         self.assertIn("success_count", metadata)
-        self.assertEqual(metadata["success_count"], 2)
+        self.assertIn("detailed_message", metadata)
         # More tracks were attempted but filtered during processing
-        self.assertGreaterEqual(metadata["attempted_count"], 2)
+        self.assertEqual(metadata["success_count"], 2)
+        self.assertEqual(metadata["attempted_count"], 15)
+        self.assertEqual(metadata["detailed_message"], "Discarded: 12 manually skipped or interrupted, 1 incognito mode")
 
 
     def test_import_listenbrainz(self):
@@ -984,6 +990,20 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertIn("success_count", metadata)
         self.assertEqual(metadata["attempted_count"], 1)
         self.assertEqual(metadata["success_count"], 1)
+
+    def test_youtube_music_video_id_formats(self):
+        extract_video_id = YouTubeMusicListensImporter._extract_video_id
+
+        self.assertEqual(
+            extract_video_id("https://music.youtube.com/watch?v=2o9aoL0NWpw"), "2o9aoL0NWpw"
+        )
+        self.assertEqual(
+            extract_video_id("https://youtu.be/2o9aoL0NWpw?t=10"), "2o9aoL0NWpw"
+        )
+        self.assertEqual(
+            extract_video_id("https://www.youtube.com/shorts/2o9aoL0NWpw"), "2o9aoL0NWpw"
+        )
+        self.assertIsNone(extract_video_id("https://www.youtube.com/watch?v=not-a-video-id"))
 
 
     def test_import_with_partial_validation_failures(self):

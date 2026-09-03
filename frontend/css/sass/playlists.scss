@@ -1,5 +1,5 @@
 $playlist-background-color: $body-tertiary-bg;
-$description-lines: 3;
+$description-lines: 2;
 $long-description-lines: 8;
 
 #playlists-page .playlist-view-options {
@@ -257,4 +257,9 @@ $long-description-lines: 8;
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+.playlist-card-list-view .text-summary,
+.playlist .text-summary {
+  mask-image: none;
+  -webkit-mask-image: none;
 }

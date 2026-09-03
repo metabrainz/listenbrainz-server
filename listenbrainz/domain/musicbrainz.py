@@ -4,7 +4,7 @@ from flask import current_app, url_for
 from data.model.external_service import ExternalServiceType
 from listenbrainz.domain.brainz_service import BaseBrainzService
 
-MUSICBRAINZ_SCOPES = ["tag", "rating", "profile"]
+MUSICBRAINZ_SCOPES = ["musicbrainz:tag", "musicbrainz:rating", "profile", "email"]
 
 
 class MusicBrainzService(BaseBrainzService):
@@ -38,6 +38,16 @@ class MusicBrainzService(BaseBrainzService):
                 "token_type_hint": "access_token",
             },
             headers={"Content-Type": "application/x-www-form-urlencoded"},
+            timeout=10,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def get_user_profile(self, token: str):
+        response = requests.get(
+            current_app.config["OAUTH_USERINFO_URL"],
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=10,
         )
         response.raise_for_status()
         return response.json()

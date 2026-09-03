@@ -44,12 +44,18 @@ declare type MBIDMappingArtist = {
   join_phrase: string;
 };
 
+declare type MBIDMappingUrlRel = {
+  type: string;
+  url: string;
+};
+
 declare type MBIDMapping = {
   recording_name?: string;
   recording_mbid: string;
   release_mbid: string;
   artist_mbids: Array<string>;
   artists?: Array<MBIDMappingArtist>;
+  url_rels?: Array<MBIDMappingUrlRel>;
   caa_id?: number;
   caa_release_mbid?: string;
   release_group_mbid?: string;
