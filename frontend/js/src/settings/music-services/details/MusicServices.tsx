@@ -85,10 +85,10 @@ export default function MusicServices() {
     navidrome: loaderData.current_navidrome_permissions,
     librefm: loaderData.current_librefm_permissions,
   } as Record<string, string>);
-  const isConnected = (service: string | null | undefined) => {
+  const isConnected = (service: string | null | undefined): boolean => {
     if (!service) return false;
     const permission = permissions[service];
-    return (
+    return Boolean(
       permission &&
       permission !== "disabled" &&
       permission !== "disable" &&

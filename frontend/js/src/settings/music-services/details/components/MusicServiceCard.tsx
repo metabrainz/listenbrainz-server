@@ -28,32 +28,39 @@ export default function MusicServiceCard({
   const isClickable = collapsible && onToggle;
   const shouldShowBody = collapsible ? isOpen : true;
 
+  const headerContent = (
+    <>
+      <span className="service-logo">{icon}</span>
+      <h3 className="card-title">{title}</h3>
+      {showStatusIndicator && (
+        <div className="status-indicator">
+          <div
+            className={`status-dot ${
+              isConnected ? "connected" : "disconnected"
+            }`}
+          />
+          <span>{statusLabel ?? (isConnected ? "Connected" : "Not Connected")}</span>
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div className="card">
-      <div
-        className="card-header"
-        role={isClickable ? "button" : undefined}
-        tabIndex={isClickable ? 0 : undefined}
-        onClick={isClickable ? onToggle : undefined}
-        onKeyDown={
-          isClickable ? (e) => e.key === "Enter" && onToggle?.() : undefined
-        }
-        style={{ cursor: isClickable ? "pointer" : "default" }}
-      >
-        <span className="service-logo">{icon}</span>
-
-        <h3 className="card-title">{title}</h3>
-        {showStatusIndicator && (
-          <div className="status-indicator">
-            <div
-              className={`status-dot ${
-                isConnected ? "connected" : "disconnected"
-              }`}
-            />
-            <span>{statusLabel ?? (isConnected ? "Connected" : "Not Connected")}</span>
-          </div>
-        )}
-      </div>
+      {isClickable ? (
+        <div
+          className="card-header"
+          role="button"
+          tabIndex={0}
+          onClick={onToggle}
+          onKeyDown={(e) => e.key === "Enter" && onToggle?.()}
+          style={{ cursor: "pointer" }}
+        >
+          {headerContent}
+        </div>
+      ) : (
+        <div className="card-header">{headerContent}</div>
+      )}
       {shouldShowBody && <div className="card-body">{children}</div>}
     </div>
   );
