@@ -1,3 +1,4 @@
+from brainzutils import cache
 from brainzutils.ratelimit import ratelimit
 from datasethoster import RequestSource
 from flask import Blueprint, request, jsonify, current_app
@@ -13,7 +14,7 @@ from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery, MBIDMa
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MBIDMapper
 from listenbrainz.webserver import ts_conn
 from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
-from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.decorators import cache_public, crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.views.api_tools import is_valid_uuid, validate_auth_header, MAX_ITEMS_PER_GET
@@ -31,6 +32,8 @@ def parse_incs(incs):
 
     if not incs:
         return []
+    if not isinstance(incs, str):
+        raise APIBadRequest("inc must be a string")
     incs = incs.split()
     for inc in incs:
         if inc not in allowed_incs:
@@ -39,21 +42,39 @@ def parse_incs(incs):
     return incs
 
 
+RECORDING_METADATA_CACHE_TTL = 86400  # 24 hours
+
+
+def _apply_incs(full_data, incs):
+    data = {"recording": full_data["recording"]}
+    for field in ("artist", "tag", "release"):
+        if field in incs:
+            data[field] = full_data.get(field)
+    return data
+
+
 def fetch_metadata(recording_mbids, incs):
-    metadata = get_metadata_for_recording(ts_conn, recording_mbids)
     result = {}
-    for entry in metadata:
-        data = {"recording": entry.recording_data}
-        if "artist" in incs:
-            data["artist"] = entry.artist_data
+    misses = []
 
-        if "tag" in incs:
-            data["tag"] = entry.tag_data
+    for mbid in recording_mbids:
+        full = cache.get(f"lb_metadata:{mbid}", decode=True)
+        if full is not None:
+            result[mbid] = _apply_incs(full, incs)
+        else:
+            misses.append(mbid)
 
-        if "release" in incs:
-            data["release"] = entry.release_data
-
-        result[str(entry.recording_mbid)] = data
+    if misses:
+        for entry in get_metadata_for_recording(ts_conn, misses):
+            full = {
+                "recording": entry.recording_data,
+                "artist": entry.artist_data,
+                "tag": entry.tag_data,
+                "release": entry.release_data,
+            }
+            mbid = str(entry.recording_mbid)
+            cache.set(f"lb_metadata:{mbid}", full, RECORDING_METADATA_CACHE_TTL, encode=True)
+            result[mbid] = _apply_incs(full, incs)
 
     return result
 
@@ -85,6 +106,7 @@ def fetch_release_group_metadata(release_group_mbids, incs):
 @metadata_bp.get("/recording/")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=120)
 def metadata_recording():
     """
     This endpoint takes in a list of recording_mbids and returns an array of dicts that contain
@@ -154,10 +176,7 @@ def metadata_recording_post():
     """
     data = request.json
 
-    try:
-        incs = parse_incs(data["inc"])
-    except KeyError:
-        incs = []
+    incs = parse_incs(data.get("inc"))
 
     try:
         recording_mbids = data["recording_mbids"]
@@ -182,6 +201,7 @@ def metadata_recording_post():
 @metadata_bp.get("/release_group/")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=120)
 def metadata_release_group():
     """
     This endpoint takes in a list of release_group_mbids and returns an array of dicts that contain
@@ -241,6 +261,7 @@ def process_results(match, metadata, incs):
 @metadata_bp.get("/lookup/")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=120)
 def get_mbid_mapping():
     """
     This endpoint looks up mbid metadata for the given artist, recording and optionally a release name.
@@ -542,6 +563,7 @@ def get_manual_mapping():
 @metadata_bp.get("/artist/")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=120)
 def metadata_artist():
     """
     This endpoint takes in a list of artist_mbids and returns an array of dicts that contain

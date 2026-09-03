@@ -18,7 +18,7 @@ import sentry_sdk
 
 from typing import NoReturn
 
-from flask import current_app, request
+from flask import current_app, jsonify, request
 
 from listenbrainz.listenstore import LISTEN_MINIMUM_TS
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW, db_conn
@@ -56,7 +56,7 @@ MAX_DURATION_LIMIT = 24 * 24 * 60 * 60
 #: The max permitted value of duration_ms field - 24 days
 MAX_DURATION_MS_LIMIT = MAX_DURATION_LIMIT * 1000
 
-MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
+MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 100
 
 MAX_LISTENS_PER_RMQ_MESSAGE = 100  # internal limit on number of listens per RMQ message to avoid timeouts in TS writer
 
@@ -121,11 +121,24 @@ def _send_listens_to_queue(listen_type, listens):
     if submit:
         if listen_type == LISTEN_TYPE_PLAYING_NOW:
             exchange = rabbitmq_connection.PLAYING_NOW_EXCHANGE
+            # playing_now is fire-and-forget: it is fine for the message to be dropped
+            # if no dispatcher is listening, so we only declare the exchange and don't
+            # require the message to be routable.
+            declare = [exchange]
+            mandatory = False
         else:
             exchange = rabbitmq_connection.INCOMING_EXCHANGE
+            # Declaring the queue also declares the incoming exchange and binds the two,
+            # so any producer (web, api_compat, spotify/lastfm importers, ...) guarantees
+            # the queue exists and is bound before publishing. Together with mandatory and
+            # the connection's publisher confirms this prevents silently dropping listens
+            # into an unrouted fanout exchange. kombu's maybe_declare caches the
+            # declaration per connection, so this is cheap after the first publish.
+            declare = [rabbitmq_connection.INCOMING_QUEUE]
+            mandatory = True
 
         for chunk in chunked(submit, MAX_LISTENS_PER_RMQ_MESSAGE):
-            publish_data_to_queue(chunk, exchange)
+            publish_data_to_queue(chunk, exchange, declare=declare, mandatory=mandatory)
 
 
 def _raise_error_if_has_unicode_null(value, listen):
@@ -235,7 +248,9 @@ def validate_basic_metadata(listen, key, required=True):
 
         listen['track_metadata'][key] = listen['track_metadata'][key].strip()
         if len(listen['track_metadata'][key]) == 0:
-            raise ListenValidationError(f"field track_metadata.{key} is empty.", listen)
+            if required:
+                raise ListenValidationError(f"field track_metadata.{key} is empty.", listen)
+            del listen['track_metadata'][key]
     elif required:
         raise ListenValidationError(f"JSON document does not contain required field track_metadata.{key}.", listen)
 
@@ -280,7 +295,7 @@ def validate_duration_field(listen, key, max_value):
             # the listen submission docs say we accept only integers for duration fields, but the current validation
             # also allows strings if those are convertible to integers. we need this to work around api_compat quirks.
             # see commit message for details.
-            value = int(duration)
+            value = int(float(duration))
             if value <= 0:
                 raise ListenValidationError(f"Value for {key} is invalid, should be a positive integer.", listen)
             if value > max_value:
@@ -366,12 +381,18 @@ def validate_listened_at(listen):
                                     "should be greater than 1033410600 (2002-10-01 00:00:00 UTC).", listen)
 
 
-def publish_data_to_queue(data, exchange):
-    """ Publish specified data to the specified queue.
+def publish_data_to_queue(data, exchange, declare, mandatory=False):
+    """ Publish specified data to the specified exchange.
 
     Args:
         data: the data to be published
-        exchange: the name of the exchange
+        exchange: the exchange to publish to
+        declare: the list of entities (exchanges/queues) to declare before publishing.
+            Declaring a queue also declares its exchange and binding, ensuring the
+            message is routable.
+        mandatory: if True, ask the broker to return the message if it cannot be routed
+            to any queue. Combined with the connection's publisher confirms, this surfaces
+            lost listens instead of silently dropping them.
     """
     try:
         with rabbitmq_connection.rabbitmq.acquire(block=True, timeout=60) as producer:
@@ -380,9 +401,10 @@ def publish_data_to_queue(data, exchange):
                 routing_key='',
                 body=orjson.dumps(data),
                 delivery_mode=PERSISTENT_DELIVERY_MODE,
+                mandatory=mandatory,
                 retry=True,
                 retry_policy={"max_retries": 5},
-                declare=[exchange]
+                declare=declare
             )
     except Exception:
         current_app.logger.error("Cannot publish to rabbitmq channel:", exc_info=True)
@@ -463,7 +485,7 @@ def _validate_get_endpoint_params() -> Tuple[int, int, int]:
     max_ts = _parse_int_arg("max_ts")
     min_ts = _parse_int_arg("min_ts")
 
-    if max_ts and min_ts and max_ts < min_ts:
+    if max_ts and min_ts and max_ts <= min_ts:
         log_raise_400("max_ts should be greater than min_ts")
 
     # Validate requested listen count is positive
@@ -482,7 +504,7 @@ def _validate_get_listens_endpoint_params() -> Tuple[datetime, datetime, int]:
     max_ts = _parse_datetime_arg("max_ts")
     min_ts = _parse_datetime_arg("min_ts")
 
-    if max_ts and min_ts and max_ts < min_ts:
+    if max_ts and min_ts and max_ts <= min_ts:
         log_raise_400("max_ts should be greater than min_ts")
 
     # Validate requested listen count is positive
@@ -573,3 +595,14 @@ def _allow_metabrainz_domains(tag, name, value):
 def _filter_description_html(description):
     ok_tags = [u"a", u"strong", u"b", u"em", u"i", u"u", u"ul", u"li", u"p", u"br"]
     return bleach.clean(description, tags=ok_tags, attributes={"a": _allow_metabrainz_domains}, strip=True)
+
+
+def ensure_user_token_for_expensive_endpoint():
+    """ Ensure that the user is passing an auth header for expensive endpoints
+        like /popularity, /lb-radio, etc.
+    """
+    try:
+        validate_auth_header()
+    except APIUnauthorized:
+        raise APIUnauthorized("Due to bad actors and AI scrapers causing undue traffic on our sites, "
+                              "you need to provide an Auth token for this endpoint. Sorry for this mess.")

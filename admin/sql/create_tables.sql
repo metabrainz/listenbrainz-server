@@ -5,7 +5,7 @@ CREATE TABLE "user" (
   created               TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   musicbrainz_id        VARCHAR NOT NULL,
   auth_token            VARCHAR,
-  last_login            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  last_login            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT TIMESTAMP 'epoch',
   latest_import         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT TIMESTAMP 'epoch',
   gdpr_agreed           TIMESTAMP WITH TIME ZONE,
   musicbrainz_row_id    INTEGER NOT NULL,
@@ -48,6 +48,11 @@ CREATE TABLE data_dump (
   id          SERIAL,
   created     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   dump_type   data_dump_type_type
+);
+
+CREATE TABLE statistics_generation (
+  stats_type    TEXT PRIMARY KEY,
+  last_updated  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE missing_musicbrainz_data (
@@ -119,6 +124,8 @@ CREATE TABLE external_service_oauth (
     access_token            TEXT,
     refresh_token           TEXT,
     token_expires           TIMESTAMP WITH TIME ZONE,
+    refresh_token_expires   TIMESTAMP WITH TIME ZONE,
+    refresh_token_expiry_last_notified TIMESTAMP WITH TIME ZONE,
     last_updated            TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     scopes                  TEXT[]
 );
@@ -217,7 +224,8 @@ CREATE TABLE background_tasks (
     user_id         INTEGER NOT NULL,
     task            background_tasks_type NOT NULL,
     created         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    metadata        JSONB
+    metadata        JSONB,
+    claimed_at      TIMESTAMP WITH TIME ZONE
 );
 
 CREATE TABLE user_data_export (
