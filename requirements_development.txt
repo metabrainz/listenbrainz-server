@@ -7,5 +7,5 @@ pytest-cov==6.1.1
 requests-mock==1.12.1
 pytest-subtests==0.14.1
 python-socketio[client]
-lxml==5.4.0
+lxml==6.1.0
 pytest-timeout==2.3.1

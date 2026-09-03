@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, Any
 
 import sqlalchemy
 import uuid
@@ -34,6 +34,7 @@ def create(db_conn, musicbrainz_row_id: int, musicbrainz_id: str, email: str = N
     result = db_conn.execute(text("""
         INSERT INTO "user" (musicbrainz_id, musicbrainz_row_id, auth_token, email)
              VALUES (:mb_id, :mb_row_id, :token, :email)
+        ON CONFLICT DO NOTHING
           RETURNING id
     """), {
         "mb_id": musicbrainz_id,
@@ -42,7 +43,14 @@ def create(db_conn, musicbrainz_row_id: int, musicbrainz_id: str, email: str = N
         "email": email,
     })
     db_conn.commit()
-    return result.fetchone().id
+    if (row := result.first()) is not None:
+        return row.id
+
+    result = db_conn.execute(
+        text("""SELECT id FROM "user" WHERE musicbrainz_row_id = :mb_row_id"""),
+        {"mb_row_id": musicbrainz_row_id}
+    )
+    return result.first().id
 
 
 def update_token(db_conn, id):
@@ -108,7 +116,7 @@ def get_by_login_id(db_conn, login_id):
 
     Args:
         db_conn: database connection
-        id (UUID): login ID of a user.
+        login_id (UUID): login ID of a user.
 
     Returns:
         Dictionary with the following structure:
@@ -381,7 +389,7 @@ def agree_to_gdpr(db_conn, musicbrainz_id):
             "Couldn't update gdpr agreement for user: %s" % str(err))
 
 
-def get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id=None):
+def get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id=None, *, fetch_email: bool = False) -> dict[str, Any] | None:
     """ Get user with specified MusicBrainz row id.
 
     Note: this function also optionally takes a MusicBrainz username to fall back on
@@ -391,9 +399,12 @@ def get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id=None):
         db_conn: database connection
         musicbrainz_row_id (int): the MusicBrainz row ID of the user
         musicbrainz_id (str): the MusicBrainz username of the user
+        fetch_email: whether to return email in response
 
     Returns: a dict representing the user if found, else None.
     """
+    columns = USER_GET_COLUMNS + ["email"] if fetch_email else USER_GET_COLUMNS
+
     filter_str = ''
     filter_data = {}
     if musicbrainz_id:
@@ -407,7 +418,7 @@ def get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id=None):
           FROM "user"
          WHERE musicbrainz_row_id = :musicbrainz_row_id
          {optional_filter}
-    """.format(columns=','.join(USER_GET_COLUMNS), optional_filter=filter_str)), filter_data)
+    """.format(columns=','.join(columns), optional_filter=filter_str)), filter_data)
 
     return result.mappings().first()
 
@@ -593,55 +604,93 @@ def get_all_usernames():
     return user_id_map
 
 
-def pause(db_conn,id):
-    """ Sets the user's is_paused flag to true
-    with specified row ID from the database.
-    
+def pause(db_conn, user_ids):
+    """ Sets the user's is_paused flag to true with specified row ID(s) from the database.
+
     Args:
         db_conn: database connection
-        id (int): the row ID of the listenbrainz user
+        user_ids (int or list): row ID(s) of the listenbrainz user(s)
     """
+    return set_users_paused(db_conn, _normalize_user_ids(user_ids), True)
+
+
+def unpause(db_conn, user_ids):
+    """ Sets the user's is_paused flag to false with specified row ID(s) from the database.
+
+    Args:
+        db_conn: database connection
+        user_ids (int or list): row ID(s) of the listenbrainz user(s)
+    """
+    return set_users_paused(db_conn, _normalize_user_ids(user_ids), False)
+
+
+def _normalize_user_ids(user_ids):
+    if isinstance(user_ids, (str, int)):
+        return [user_ids]
+    return user_ids
+
+
+def set_users_paused(db_conn, user_ids, is_paused):
+    user_ids = [int(user_id) for user_id in user_ids]
+    return _set_users_paused(db_conn, ":user_ids", {"user_ids": tuple(user_ids)}, is_paused)
+
+
+def set_reported_users_paused(db_conn, report_ids, is_paused):
+    report_ids = [int(report_id) for report_id in report_ids]
+    return _set_users_paused(
+        db_conn,
+        """
+            (SELECT DISTINCT reported_user_id
+               FROM reported_users
+              WHERE id IN :report_ids)
+        """,
+        {"report_ids": tuple(report_ids)},
+        is_paused,
+    )
+
+
+def _set_users_paused(db_conn, user_ids_expression, params, is_paused):
+    if not any(params.values()):
+        return [], []
+
     try:
-        db_conn.execute(sqlalchemy.text("""
+        result = db_conn.execute(sqlalchemy.text(f"""
             UPDATE "user"
-               SET is_paused = true
-             WHERE id = :id
-            """), {
-            'id': id,
+               SET is_paused = :is_paused
+             WHERE "user".id IN {user_ids_expression}
+         RETURNING "user".id, "user".musicbrainz_id
+        """), {
+            **params,
+            "is_paused": is_paused,
         })
+        users = result.mappings().all()
         db_conn.commit()
-        _notify_user_paused(db_conn,id,True)
 
     except sqlalchemy.exc.ProgrammingError as err:
         logger.error(err)
-        raise DatabaseException("Couldn't pause user: %s" % str(err))
+        action = "pause" if is_paused else "unpause"
+        raise DatabaseException("Couldn't %s user: %s" % (action, str(err)))
+
+    musicbrainz_ids = [user["musicbrainz_id"] for user in users]
+    notification_failed_musicbrainz_ids = []
+
+    for user in users:
+        try:
+            _notify_user_paused(db_conn, user["id"], is_paused)
+        except Exception as err:
+            notification_failed_musicbrainz_ids.append(user["musicbrainz_id"])
+            logger.error(
+                "Failed to notify user %s after setting is_paused=%s: %s",
+                user["musicbrainz_id"],
+                is_paused,
+                err,
+                exc_info=True,
+            )
+
+    return musicbrainz_ids, notification_failed_musicbrainz_ids
 
 
-def unpause(db_conn,id):
-    """ Sets the user's is_paused flag to false
-    with specified row ID from the database.
-    
-    Args:
-        db_conn: database connection
-        id (int): the row ID of the listenbrainz user
-    """
-    try:
-        db_conn.execute(sqlalchemy.text("""
-            UPDATE "user"
-               SET is_paused = false
-             WHERE id = :id
-            """), {
-            'id': id,
-        })
-        db_conn.commit()
-        _notify_user_paused(db_conn,id,False)
-
-    except sqlalchemy.exc.ProgrammingError as err:
-        logger.error(err)
-        raise DatabaseException("Couldn't unpause user: %s" % str(err))
-
-
-def _notify_user_paused(db_conn, user_id,paused):
+def _notify_user_paused(db_conn, user_id, paused):
     user = get(db_conn, user_id, fetch_email=True)
     if user["email"] is None:
         logger.error("%s's email not found" % user["musicbrainz_id"])

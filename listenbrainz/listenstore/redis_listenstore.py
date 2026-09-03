@@ -1,5 +1,6 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Optional
+from uuid import uuid4
 
 import redis
 import orjson
@@ -15,6 +16,8 @@ class RedisListenStore:
     PLAYING_NOW_KEY = "pn."
     LISTEN_COUNT_PER_DAY_EXPIRY_TIME = 3 * 24 * 60 * 60  # 3 days in seconds
     LISTEN_COUNT_PER_DAY_KEY = "lc-day-"
+    ADMIN_FLASH_MESSAGES_KEY = "admin-flash-messages"
+    ADMIN_FLASH_MESSAGE_LEVELS = ("info", "success", "warning", "error")
 
     def __init__(self, logger):
         self.log = logger
@@ -111,3 +114,68 @@ class RedisListenStore:
         if listen_count:
             return int(listen_count)
         return None
+
+    def get_admin_flash_messages(self):
+        """Get site-wide flash messages configured from the admin interface."""
+        messages = []
+        key = cache._prep_key(self.ADMIN_FLASH_MESSAGES_KEY)
+        for message in cache._r.lrange(key, 0, -1):
+            try:
+                messages.append(orjson.loads(message))
+            except orjson.JSONDecodeError:
+                self.log.error("Invalid admin flash message found in Redis")
+        return messages
+
+    def add_admin_flash_message(self, level: str, message: str):
+        """Add a site-wide flash message configured from the admin interface."""
+        if level not in self.ADMIN_FLASH_MESSAGE_LEVELS:
+            raise ValueError("Invalid flash message level")
+
+        flash_message = {
+            "id": str(uuid4()),
+            "level": level,
+            "message": message,
+            "created": datetime.now(UTC).isoformat(),
+        }
+        cache._r.rpush(cache._prep_key(self.ADMIN_FLASH_MESSAGES_KEY), orjson.dumps(flash_message))
+        return flash_message
+
+    def update_admin_flash_message(self, message_id: str, level: str, message: str) -> bool:
+        """Update a site-wide admin flash message by ID."""
+        if level not in self.ADMIN_FLASH_MESSAGE_LEVELS:
+            raise ValueError("Invalid flash message level")
+
+        messages = self.get_admin_flash_messages()
+        updated = False
+        for flash_message in messages:
+            if flash_message.get("id") == message_id:
+                flash_message["level"] = level
+                flash_message["message"] = message
+                flash_message["updated"] = datetime.now(UTC).isoformat()
+                updated = True
+                break
+
+        if not updated:
+            return False
+
+        key = cache._prep_key(self.ADMIN_FLASH_MESSAGES_KEY)
+        pipeline = cache._r.pipeline()
+        pipeline.delete(key)
+        pipeline.rpush(key, *[orjson.dumps(message) for message in messages])
+        pipeline.execute()
+        return True
+
+    def delete_admin_flash_message(self, message_id: str) -> bool:
+        """Delete a site-wide admin flash message by ID."""
+        messages = self.get_admin_flash_messages()
+        remaining_messages = [message for message in messages if message.get("id") != message_id]
+        if len(remaining_messages) == len(messages):
+            return False
+
+        key = cache._prep_key(self.ADMIN_FLASH_MESSAGES_KEY)
+        pipeline = cache._r.pipeline()
+        pipeline.delete(key)
+        if remaining_messages:
+            pipeline.rpush(key, *[orjson.dumps(message) for message in remaining_messages])
+        pipeline.execute()
+        return True
