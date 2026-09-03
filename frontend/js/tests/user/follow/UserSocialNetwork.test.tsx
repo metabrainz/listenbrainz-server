@@ -42,7 +42,7 @@ jest.mock("react-toastify", () => ({
 
 const { loggedInUser, ...otherProps } = userSocialNetworkProps;
 const props = {
-  ...otherProps,
+  userName: otherProps.user.name,
 };
 
 const globalContext: GlobalAppContextT = {
@@ -148,7 +148,7 @@ describe("<UserSocialNetwork />", () => {
 
   it("renders CompatibilityCard when viewing another user's profile", async () => {
     const differentUserProps = {
-      user: { id: 2, name: "differentuser" },
+      userName: "differentuser",
     };
 
     renderWithProviders(
@@ -163,7 +163,7 @@ describe("<UserSocialNetwork />", () => {
 
   it("does not render CompatibilityCard when viewing own profile", async () => {
     const ownProfileProps = {
-      user: { id: 1, name: loggedInUser.name },
+      userName: loggedInUser.name,
     };
 
     renderWithProviders(
@@ -202,8 +202,8 @@ describe("<UserSocialNetwork />", () => {
 
     // Wait for component to mount and make API calls
     await waitFor(() => {
-      expect(getFollowersOfUserSpy).toHaveBeenCalledWith(props.user.name);
-      expect(getFollowingForUserSpy).toHaveBeenCalledWith(props.user.name);
+      expect(getFollowersOfUserSpy).toHaveBeenCalledWith(props.userName);
+      expect(getFollowingForUserSpy).toHaveBeenCalledWith(props.userName);
     });
 
     // Verify the modal component receives the data (check if it's rendered)
@@ -237,7 +237,7 @@ describe("<UserSocialNetwork />", () => {
 
     // Wait for API call to be made
     await waitFor(() => {
-      expect(getSimilarUsersForUserSpy).toHaveBeenCalledWith(props.user.name);
+      expect(getSimilarUsersForUserSpy).toHaveBeenCalledWith(props.userName);
     });
 
     // Verify the similar users modal is rendered
@@ -256,8 +256,8 @@ describe("<UserSocialNetwork />", () => {
   it("handles API errors gracefully with toast notifications", async () => {
     // Mock server to return error
     server.use(
-      http.get("/1/user/*/followers", () => {
-        return HttpResponse.json({ error: "Server error" }, { status: 500 });
+      http.get("*/1/user/*/followers", () => {
+        return HttpResponse.json({ error: "Server error" }, { status: 418 });
       })
     );
 
@@ -282,8 +282,8 @@ describe("<UserSocialNetwork />", () => {
 
   it("handles similar users API error gracefully", async () => {
     server.use(
-      http.get("/1/user/*/similar", () => {
-        return HttpResponse.json({ error: "Server error" }, { status: 500 });
+      http.get("*/1/user/*/similar-users", () => {
+        return HttpResponse.json({ error: "Server error" }, { status: 418 });
       })
     );
 
@@ -335,7 +335,7 @@ describe("<UserSocialNetwork />", () => {
 
   it("does not fetch similarity data when viewing own profile", async () => {
     const ownProfileProps = {
-      user: { id: 1, name: loggedInUser.name },
+      userName: loggedInUser.name,
     };
 
     renderWithProviders(
@@ -363,7 +363,7 @@ describe("<UserSocialNetwork />", () => {
     );
 
     const differentUserProps = {
-      user: { id: 2, name: "differentuser" },
+      userName: "differentuser",
     };
 
     renderWithProviders(
@@ -389,7 +389,7 @@ describe("<UserSocialNetwork />", () => {
   it("re-fetches data when profileUser changes", async () => {
     const { rerender } = renderWithProviders(
       <QueryClientProvider client={queryClient}>
-        <UserSocialNetwork user={{ id: 1, name: "user1" }} />
+        <UserSocialNetwork userName="user1" />
       </QueryClientProvider>,
       globalContext
     );
@@ -403,7 +403,7 @@ describe("<UserSocialNetwork />", () => {
     // Change the user prop
     rerender(
       <QueryClientProvider client={queryClient}>
-        <UserSocialNetwork user={{ id: 2, name: "user2" }} />
+        <UserSocialNetwork userName="user2" />
       </QueryClientProvider>
     );
 
@@ -441,7 +441,7 @@ describe("<UserSocialNetwork />", () => {
   );
 
   renderWithProviders(
-    <UserSocialNetwork user={{ name: "nonexistent_user" }} />,
+    <UserSocialNetwork userName="nonexistent_user" />,
     globalContext
   );
 
