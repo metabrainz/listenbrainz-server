@@ -13,6 +13,7 @@ from listenbrainz.webserver.errors import ImportFailedError
 
 class TidalListensImporter(BaseListensImporter):
     DEFAULT_TIMEZONE = timezone.utc
+    TRACK_PRODUCT_TYPE = "track"
 
     def process_import_file(self, import_task: dict[str, Any]) -> Iterator[list[dict[str, Any]]]:
         """Processes the Tidal streaming.csv file and returns a generator of batches of items."""
@@ -89,6 +90,11 @@ class TidalListensImporter(BaseListensImporter):
             current_app.logger.debug("Invalid Tidal duration: %s", value, exc_info=True)
             return None
 
+    @classmethod
+    def _is_track_row(cls, row: dict[str, Any]) -> bool:
+        product_type = row.get("product_type")
+        return isinstance(product_type, str) and product_type.strip().lower() == cls.TRACK_PRODUCT_TYPE
+
     def _filter_rows(
         self,
         reader: csv.DictReader,
@@ -96,6 +102,9 @@ class TidalListensImporter(BaseListensImporter):
         to_date: datetime,
     ) -> Iterator[dict[str, Any]]:
         for row in reader:
+            if not self._is_track_row(row):
+                continue
+
             try:
                 date_time = self._parse_datetime(row)
             except (TypeError, ValueError):
