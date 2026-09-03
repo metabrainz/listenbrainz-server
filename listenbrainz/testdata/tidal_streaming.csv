@@ -3,6 +3,7 @@ Kid Cudi Feat. MGMT Feat. Ratatat,Pursuit Of Happiness (Nightmare),08/03/2022 19
 Filtered Artist,Filtered Album,08/03/2022 19:02,270000.0,ALBUM,000.00.000.099,Tidal Web Player with Widevine DRM Flac OAuth,Canada,Province,Cityname,A1B,America/Toronto
 Null Timezone Artist,Null Timezone Track,09/03/2022 0:00,120000.0,TRACK,null,mobile,null,null,null,null,null
 Invalid Timezone Artist,Invalid Timezone Track,09/03/2022 0:02,120000.0,TRACK,null,mobile,null,null,null,null,Not/AZone
+Invalid Timestamp Artist,Invalid Timestamp Track,not-a-date,120000.0,TRACK,null,mobile,null,null,null,null,UTC
 WZRD Feat. Desire,"Teleport 2 Me, Jamie",08/03/2022 19:06,238000.0,TRACK,000.00.000.001,Tidal Web Player with Widevine DRM Flac OAuth,Canada,Province,Cityname,A1B,America/Toronto
 Childish Gambino,3005,08/03/2022 19:10,234000.0,TRACK,000.00.000.002,Tidal Web Player with Widevine DRM Flac OAuth,Canada,Province,Cityname,A1B,America/Toronto
 A$AP Rocky,L$D,08/03/2022 19:14,238000.0,TRACK,000.00.000.003,Tidal Web Player with Widevine DRM Flac OAuth,Canada,Province,Cityname,A1B,America/Toronto

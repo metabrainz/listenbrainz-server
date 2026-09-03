@@ -1230,6 +1230,8 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         response = self.wait_for_query_to_have_items(url, num_items=11, attempts=20)
         listens = response.json["payload"]["listens"]
         self.assertEqual(len(listens), 11)
+        track_names = [listen["track_metadata"]["track_name"] for listen in listens]
+        self.assertNotIn("Invalid Timestamp Track", track_names)
 
         first_listen = listens[0]
         self.assertEqual(first_listen["listened_at"], 1646785860)
