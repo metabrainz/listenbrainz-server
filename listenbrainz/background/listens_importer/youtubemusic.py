@@ -1,13 +1,26 @@
 import json
 import re
-from datetime import datetime, timezone
-from typing import Any, Iterator
+from datetime import datetime
+from typing import Any, Iterator, TypedDict
+from urllib.parse import parse_qs, urlparse
 
 from flask import current_app
 from more_itertools import chunked
 
 from listenbrainz.background.listens_importer.base import BaseListensImporter
 from listenbrainz.metadata_cache.youtube.handler import YouTubeCacheHandler
+
+
+class YouTubeSubtitle(TypedDict, total=False):
+    name: str
+
+
+class YouTubeHistoryItem(TypedDict, total=False):
+    header: str
+    title: str
+    titleUrl: str
+    subtitles: list[YouTubeSubtitle]
+    time: str
 
 
 class YouTubeMusicListensImporter(BaseListensImporter):
@@ -63,7 +76,7 @@ class YouTubeMusicListensImporter(BaseListensImporter):
                 listens.append(converted)
                 continue
 
-            # Only send entries for enrichment when  valid
+            # Only send entries for enrichment when valid
             # and missing channel metadata.
             if not self._needs_metadata_enrichment(item):
                 continue
@@ -87,15 +100,18 @@ class YouTubeMusicListensImporter(BaseListensImporter):
             meta = video_meta.get(video_id)
             if not meta:
                 continue
-            item["title"] = meta.title
-            item["subtitles"] = [{"name": meta.channel_name}]
-            converted = self._convert_item_to_listen(item)
+            enriched_item = {
+                **item,
+                "title": meta.title,
+                "subtitles": [{"name": meta.channel_name}],
+            }
+            converted = self._convert_item_to_listen(enriched_item)
             if converted:
                 listens.append(converted)
 
         return listens
 
-    def _convert_item_to_listen(self, item: dict[str, Any]) -> dict[str, Any] | None:
+    def _convert_item_to_listen(self, item: YouTubeHistoryItem) -> dict[str, Any] | None:
         """Attempt to convert a single history item into a ListenBrainz listen.
 
         Returns the listen dict on success or None if required metadata is
@@ -104,7 +120,7 @@ class YouTubeMusicListensImporter(BaseListensImporter):
         try:
             title = item.get("title", "")
             if title.startswith("Watched "):
-                title = title[8:]
+                title = title.removeprefix("Watched ")
 
             if not title:
                 return None
@@ -118,7 +134,7 @@ class YouTubeMusicListensImporter(BaseListensImporter):
                 return None
 
             if channel_name.endswith(" - Topic"):
-                channel_name = channel_name[:-8]
+                channel_name = channel_name.removesuffix(" - Topic")
 
             track_metadata: dict[str, Any] = {
                 "artist_name": channel_name,
@@ -173,18 +189,20 @@ class YouTubeMusicListensImporter(BaseListensImporter):
 
         return True
 
-    def _extract_video_id(self, video_url: str) -> str | None:
-        patterns = [
-            r"watch\?v=([^&]+)",
-            r"youtu\.be/([^?]+)",
-            r"embed/([^?]+)",
-            r"v/([^?]+)",
-            r"e/([^?]+)",
-        ]
-
-        for pat in patterns:
-            m = re.search(pat, video_url)
-            if m:
-                return m.group(1)
-
+    @staticmethod
+    def _extract_video_id(video_url: str) -> str | None:
+        parsed_url = urlparse(video_url)
+        hostname = (parsed_url.hostname or "").removeprefix("www.")
+        video_id = None
+        if hostname == "youtu.be":
+            video_id = parsed_url.path.lstrip("/").split("/", 1)[0]
+        elif hostname.endswith("youtube.com"):
+            if parsed_url.path == "/watch":
+                video_id = parse_qs(parsed_url.query).get("v", [None])[0]
+            else:
+                path_parts = parsed_url.path.strip("/").split("/")
+                if len(path_parts) == 2 and path_parts[0] in {"embed", "v", "e", "shorts"}:
+                    video_id = path_parts[1]
+        if video_id and re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):
+            return video_id
         return None
