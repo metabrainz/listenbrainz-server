@@ -17,6 +17,7 @@ from listenbrainz.db import background
 from listenbrainz.garage import delete_objects, ensure_bucket, get_garage_client, \
     get_user_data_import_bucket, list_object_names
 from listenbrainz.metadata_cache.spotify.handler import SpotifyCrawlerHandler
+from listenbrainz.background.listens_importer.youtubemusic import YouTubeMusicListensImporter
 
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver import db_conn
@@ -1013,6 +1014,20 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertIn("success_count", metadata)
         self.assertEqual(metadata["attempted_count"], 1)
         self.assertEqual(metadata["success_count"], 1)
+
+    def test_youtube_music_video_id_formats(self):
+        extract_video_id = YouTubeMusicListensImporter._extract_video_id
+
+        self.assertEqual(
+            extract_video_id("https://music.youtube.com/watch?v=2o9aoL0NWpw"), "2o9aoL0NWpw"
+        )
+        self.assertEqual(
+            extract_video_id("https://youtu.be/2o9aoL0NWpw?t=10"), "2o9aoL0NWpw"
+        )
+        self.assertEqual(
+            extract_video_id("https://www.youtube.com/shorts/2o9aoL0NWpw"), "2o9aoL0NWpw"
+        )
+        self.assertIsNone(extract_video_id("https://www.youtube.com/watch?v=not-a-video-id"))
 
 
     def test_import_with_partial_validation_failures(self):
