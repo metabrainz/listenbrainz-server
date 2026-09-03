@@ -302,6 +302,7 @@ export default function LFMMusicServicePermissions({
                 <input
                   type="text"
                   className="form-control"
+                  id={`${serviceName}Username`}
                   name={`${serviceName}Username`}
                   title={`${serviceDisplayName} Username`}
                   placeholder={`${serviceDisplayName} Username`}
@@ -314,13 +315,14 @@ export default function LFMMusicServicePermissions({
                 />
               </div>
               <div>
-                <label className="form-label" htmlFor="datetime">
+                <label className="form-label" htmlFor={`${serviceName}Datetime`}>
                   Start import from (optional):
                 </label>
                 <input
                   type="datetime-local"
                   className="form-control"
-                  max={new Date().toISOString()}
+                  id={`${serviceName}Datetime`}
+                  max={new Date().toISOString().slice(0, 16)}
                   value={latestListenedAt}
                   onChange={(e) => {
                     setLatestListenedAt(e.target.value);
