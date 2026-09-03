@@ -1320,3 +1320,16 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert200(response)
         self.assertEqual(response.json, {"external_url": "apple_music_url"})
+
+        mock_export_to_apple_music.side_effect = playlist_api.PlaylistExportError(
+            "Apple Music did not return an exported playlist URL."
+        )
+        response = self.client.post(
+            self.custom_url_for(
+                "playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="apple_music"
+            ),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+        )
+        self.assertStatus(response, 502)
+        self.assertEqual(response.json["error"], "Apple Music did not return an exported playlist URL.")
