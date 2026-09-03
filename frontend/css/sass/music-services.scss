@@ -40,7 +40,7 @@ $checkbox-size: 40px;
       transition: background-color 0.3s ease;
       min-height: 100px;
 
-      &:hover {
+      &[role="button"]:hover {
         background-color: rgba(0, 0, 0, 0.02);
         cursor: pointer;
       }
