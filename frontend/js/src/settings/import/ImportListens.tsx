@@ -39,7 +39,7 @@ enum Services {
   librefm = "Libre.fm",
   panoscrobbler = "PanoScrobbler",
   maloja = "Maloja",
-  youtubemusic = "Youtube Music",
+  youtubemusic = "YouTube Music",
   audioscrobbler = "Audioscrobbler/Rockbox",
   spinitron = "Spinitron",
 }
