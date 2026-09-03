@@ -88,10 +88,14 @@ export default class NavidromePlayer
     }
   }
 
-  stop = () => {
+  pause = () => {
     if (!this.audioRef?.current?.paused) {
       this.audioRef?.current?.pause();
     }
+  };
+
+  stop = () => {
+    this.pause();
   };
 
   setupAudioListeners = (): void => {
@@ -242,7 +246,10 @@ export default class NavidromePlayer
     );
   };
 
-  playListen = async (listen: Listen | JSPFTrack): Promise<void> => {
+  playListen = async (
+    listen: Listen | JSPFTrack,
+    streamingUrl?: string
+  ): Promise<void> => {
     if (this.abortController) {
       this.abortController.abort();
     }
