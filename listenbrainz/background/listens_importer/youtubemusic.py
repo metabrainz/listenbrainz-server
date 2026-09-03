@@ -1,13 +1,27 @@
 import json
 import re
 import requests
-from datetime import datetime, timezone
-from typing import Any, Iterator
+from datetime import datetime
+from typing import Any, Iterator, TypedDict
+from urllib.parse import parse_qs, urlparse
 
 from flask import current_app
 from more_itertools import chunked
 
 from listenbrainz.background.listens_importer.base import BaseListensImporter
+
+
+class YouTubeSubtitle(TypedDict, total=False):
+    name: str
+    url: str
+
+
+class YouTubeHistoryItem(TypedDict, total=False):
+    header: str
+    title: str
+    titleUrl: str
+    subtitles: list[YouTubeSubtitle]
+    time: str
 
 
 class YouTubeMusicListensImporter(BaseListensImporter):
@@ -25,7 +39,7 @@ class YouTubeMusicListensImporter(BaseListensImporter):
         with open(import_task["file_path"], mode="r", encoding="utf-8") as infile:
             data = json.load(infile)
 
-        youtube_music_items: list[dict[str, Any]] = []
+        youtube_music_items: list[YouTubeHistoryItem] = []
         for item in data:
             if item.get("header") != "YouTube Music":
                 continue
@@ -67,14 +81,14 @@ class YouTubeMusicListensImporter(BaseListensImporter):
 
         api_key = current_app.config.get("YOUTUBE_API_KEY")
         if missing and api_key:
-            id_map: dict[str, list[dict[str, Any]]] = {}
+            id_map: dict[str, list[YouTubeHistoryItem]] = {}
             for orig, vid in missing:
                 if not vid:
                     continue
                 id_map.setdefault(vid, []).append(orig)
 
             if id_map:
-                for ids_chunk in chunked(list(id_map.keys()), 50):
+                for ids_chunk in chunked(id_map.keys(), 50):
                     try:
                         metas = self._fetch_videos_metadata(ids_chunk)
                     except Exception:
@@ -86,16 +100,22 @@ class YouTubeMusicListensImporter(BaseListensImporter):
                             continue
                         snippet = item_meta.get("snippet", {})
                         for orig in id_map.get(vid, []):
-                            if snippet.get("title"):
-                                orig["title"] = snippet.get("title")
-                            if snippet.get("channelTitle"):
-                                orig["subtitles"] = [{"name": snippet.get("channelTitle")}]
-                            converted2 = self._convert_item_to_listen(orig)
-                            if converted2:
-                                listens.append(converted2)
+                            title = snippet.get("title")
+                            channel_name = snippet.get("channelTitle")
+                            if not title or not channel_name:
+                                continue
+                            enriched_item = {
+                                **orig,
+                                "title": title,
+                                "subtitles": [{"name": channel_name}],
+                            }
+                            converted_listen = self._convert_item_to_listen(enriched_item)
+                            if converted_listen:
+                                listens.append(converted_listen)
 
         return listens
-    def _convert_item_to_listen(self, item: dict[str, Any]) -> dict[str, Any] | None:
+
+    def _convert_item_to_listen(self, item: YouTubeHistoryItem) -> dict[str, Any] | None:
         """Attempt to convert a single history item into a ListenBrainz listen.
 
         Returns the listen dict on success or None if required metadata is
@@ -104,7 +124,7 @@ class YouTubeMusicListensImporter(BaseListensImporter):
         try:
             title = item.get("title", "")
             if title.startswith("Watched "):
-                title = title[8:]
+                title = title.removeprefix("Watched ")
 
             if not title:
                 return None
@@ -118,7 +138,7 @@ class YouTubeMusicListensImporter(BaseListensImporter):
                 return None
 
             if channel_name.endswith(" - Topic"):
-                channel_name = channel_name[:-8]
+                channel_name = channel_name.removesuffix(" - Topic")
 
             track_metadata: dict[str, Any] = {
                 "artist_name": channel_name,
@@ -145,24 +165,28 @@ class YouTubeMusicListensImporter(BaseListensImporter):
 
             return {"listened_at": listened_at, "track_metadata": track_metadata}
 
-        except (KeyError, TypeError, ValueError):
+        except (TypeError, ValueError):
             current_app.logger.error("Error parsing YouTube item: %s", item, exc_info=True)
             return None
 
-    def _extract_video_id(self, video_url: str) -> str | None:
-        patterns = [
-            r"watch\?v=([^&]+)",
-            r"youtu\.be/([^?]+)",
-            r"embed/([^?]+)",
-            r"v/([^?]+)",
-            r"e/([^?]+)",
-        ]
+    @staticmethod
+    def _extract_video_id(video_url: str) -> str | None:
+        parsed_url = urlparse(video_url)
+        hostname = (parsed_url.hostname or "").removeprefix("www.")
+        video_id = None
 
-        for pat in patterns:
-            m = re.search(pat, video_url)
-            if m:
-                return m.group(1)
+        if hostname == "youtu.be":
+            video_id = parsed_url.path.lstrip("/").split("/", 1)[0]
+        elif hostname.endswith("youtube.com"):
+            if parsed_url.path == "/watch":
+                video_id = parse_qs(parsed_url.query).get("v", [None])[0]
+            else:
+                path_parts = parsed_url.path.strip("/").split("/")
+                if len(path_parts) == 2 and path_parts[0] in {"embed", "v", "e", "shorts"}:
+                    video_id = path_parts[1]
 
+        if video_id and re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):
+            return video_id
         return None
 
     def _fetch_videos_metadata(self, video_ids: list[str]) -> dict[str, dict[str, Any]]:
@@ -176,7 +200,7 @@ class YouTubeMusicListensImporter(BaseListensImporter):
 
         url = "https://www.googleapis.com/youtube/v3/videos"
         params = {
-            "part": "snippet,contentDetails,player",
+            "part": "snippet",
             "id": ",".join(video_ids),
             "key": api_key,
         }
@@ -186,4 +210,4 @@ class YouTubeMusicListensImporter(BaseListensImporter):
         data = resp.json()
         items = data.get("items", [])
 
-        return {item.get("id"): item for item in items}
+        return {item["id"]: item for item in items if item.get("id") is not None}
