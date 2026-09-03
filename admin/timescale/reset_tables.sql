@@ -17,4 +17,6 @@ DELETE FROM spotify_cache.album;
 
 DELETE FROM internetarchive_cache.track;
 
+DELETE FROM youtube_cache.video;
+
 COMMIT;
