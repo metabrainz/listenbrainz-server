@@ -6,6 +6,7 @@ import {
   IconProp,
   SizeProp,
 } from "@fortawesome/fontawesome-svg-core";
+import { Link } from "react-router";
 
 export type ListenControlProps = {
   buttonClassName?: string;
@@ -48,8 +49,8 @@ function ListenControl(props: ListenControlProps) {
     // When using the link property,
     // render an anchor tag with an href instead of onClick
     return (
-      <a
-        href={link}
+      <Link
+        to={link}
         aria-label={ariaLabel ?? title ?? text}
         title={title ?? text}
         {...anchorTagAttributes}
@@ -57,7 +58,7 @@ function ListenControl(props: ListenControlProps) {
       >
         {icon && <FontAwesomeIcon icon={icon} color={iconColor} />}
         &nbsp;{text}
-      </a>
+      </Link>
     );
   }
 

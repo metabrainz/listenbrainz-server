@@ -1,6 +1,8 @@
 @use "sass:map";
 @use "sass:color";
 
+@import "~react-resizable/css/styles.css";
+
 $primary-color: $listenbrainz-blue;
 $brainzplayer-height: 60px;
 $brainzplayer-padding: 0px;
@@ -12,8 +14,9 @@ $white-background: $white;
 // Recommended minimum size required by Youtube
 $youtube-player-height: 200px;
 $youtube-player-width: 350px;
-$youtube-drag-handle-size: 30px;
-$youtube-resize-transition: height 0.25s ease-out;
+$youtube-button-size: 30px;
+$youtube-resize-transition: width 0.15s ease-in-out, height 0.15s ease-in-out;
+$youtube-expanded-width: 1280px;
 
 #brainz-player {
   position: fixed;
@@ -59,7 +62,7 @@ $youtube-resize-transition: height 0.25s ease-out;
         height: $cover-art-size;
         width: $cover-art-size;
         position: absolute;
-        // transition: height, width 0.4s;
+        transition: height, width 0.4s;
         bottom: 0;
       }
 
@@ -75,22 +78,57 @@ $youtube-resize-transition: height 0.25s ease-out;
         position: absolute;
         bottom: $brainzplayer-height + 10px;
         right: 10px;
-        height: $youtube-player-height + $youtube-drag-handle-size;
-        width: $youtube-player-width;
+        height: auto;
+        width: auto;
         max-width: calc(100vw - 20px);
+        @media (min-width: $offscreen-sidenav-breakpoint) {
+          max-width: calc(100vw - 200px - 20px);
+        }
         z-index: 4;
         text-align: right; // to align the move and reduce buttons
-        transition: $youtube-resize-transition;
+
+        .react-resizable-handle {
+          z-index: 100;
+          position: absolute;
+
+          &.react-resizable-handle-nw {
+            top: 0;
+            left: 0;
+            cursor: nw-resize;
+            width: 20px;
+            height: 20px;
+            z-index: 2;
+            position: absolute;
+            &::after {
+              content: "";
+              width: 12px;
+              height: 12px;
+              top: 4px;
+              left: 4px;
+              position: absolute;
+              border-left: 2px solid rgba(255, 255, 255, 0.978);
+              border-top: 2px solid rgba(255, 255, 255, 0.978);
+            }
+            &:hover::after {
+              border-color: #fff;
+            }
+          }
+        }
 
         &.reduced {
-          height: $youtube-drag-handle-size;
+          height: $youtube-button-size;
           .youtube-player {
             height: 0;
           }
         }
 
+        .no-video-interaction {
+          pointer-events: none;
+        }
+
         .youtube-player {
-          height: $youtube-player-height;
+          height: 100%;
+          width: 100%;
           border-radius: 8px;
           border-top-right-radius: 0; // intersection with the square drag handle
           overflow: hidden;
@@ -100,17 +138,28 @@ $youtube-resize-transition: height 0.25s ease-out;
           }
         }
 
-        .youtube-drag-handle,
-        .youtube-reduce-button {
-          height: $youtube-drag-handle-size;
+        .youtube-button {
+          height: $youtube-button-size;
+          min-width: $youtube-button-size;
           display: inline-block;
-          background: fadeout(black, 50%);
+          background: color.change($black, $alpha: 50%);
           color: $white;
+          + .youtube-button {
+            margin-left: 0.5em;
+          }
         }
         .youtube-drag-handle {
           cursor: grab;
           &:active {
             cursor: grabbing;
+          }
+        }
+
+        .youtube-resizable-container {
+          position: relative;
+          > div {
+            height: 100%;
+            width: 100%;
           }
         }
       }
@@ -474,31 +523,26 @@ $youtube-resize-transition: height 0.25s ease-out;
     min-width: 3em;
   }
 
-  // First header with negative top margin to remove gap with buttons above
-  > :nth-child(1 of .queue-headers) {
-    margin-top: -30px;
-  }
   .queue-headers {
-    font-size: 16px;
     margin-top: 4px;
     margin-bottom: 4px;
-    display: flex;
-    justify-content: space-between;
     border-bottom: 1px solid #ccc;
 
     h4 {
-      font-size: 18px;
       margin: 0;
       padding: 10px;
       padding-left: 0;
-      width: 100%;
     }
-
-    .queue-buttons {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+  }
+  .queue-buttons {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    gap: 1em;
+  }
+  // Negative top margin to remove gap with buttons above
+  .queue-buttons + .queue-headers {
+    margin-top: -30px;
   }
 }
 
@@ -702,4 +746,47 @@ $alert-thumbnail-size: 60px;
 .Toastify__toast-container--bottom-left,
 .Toastify__toast-container--bottom-right {
   bottom: calc(1em + $brainzplayer-height);
+}
+
+// Custom styling for Funkwhale icon
+svg.fa-funkwhale,
+.fa-funkwhale {
+  width: 1.3em !important;
+  height: 1.3em !important;
+
+  // Match the vertical alignment used by other music service icons
+  vertical-align: text-bottom !important;
+
+  // Default duotone colors for Funkwhale branding
+  --fa-primary-color: #009fe3; // Blue arcs
+  --fa-secondary-color: #3c3c3b; // dark whale fluke
+  --fa-primary-opacity: 1;
+  --fa-secondary-opacity: 1;
+}
+
+// When in a muted context, use currentColor to match other services
+.text-muted svg.fa-funkwhale,
+.text-muted .fa-funkwhale {
+  --fa-primary-color: currentColor !important;
+  --fa-secondary-color: currentColor !important;
+  --fa-primary-opacity: 1 !important;
+  --fa-secondary-opacity: 1 !important;
+}
+
+// Custom styling for Navidrome icon
+svg.fa-navidrome,
+.fa-navidrome {
+  --fa-secondary-color: #0084ff; // Blue disc with transparent inner circle
+  --fa-primary-color: #000000; // Black decorative rings and arcs
+  --fa-secondary-opacity: 1;
+  --fa-primary-opacity: 1;
+}
+
+// // When in a muted context, use currentColor to match other services
+.text-muted svg.fa-navidrome,
+.text-muted .fa-navidrome {
+  --fa-primary-color: currentColor !important;
+  --fa-secondary-color: currentColor !important;
+  --fa-primary-opacity: 0.6 !important;
+  --fa-secondary-opacity: 1 !important;
 }

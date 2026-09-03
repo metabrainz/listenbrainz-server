@@ -143,30 +143,43 @@ export default function BarDualTone(props: BarDualToneProps) {
 
   const { dateFormat, keys, itemWidth } = rangeMap[range] || {};
 
+  const maxValue = React.useMemo(() => {
+    if (!Array.isArray(data) || data.length === 0) return 0;
+    return Math.max(
+      ...data.map((d) => Math.max(d.lastRangeCount || 0, d.thisRangeCount || 0))
+    );
+  }, [data]);
+
+  const tickValues = React.useMemo(() => {
+    return maxValue <= 10
+      ? Array.from({ length: maxValue + 1 }, (_, i) => i)
+      : undefined;
+  }, [maxValue]);
+
   const customTooltip = (elem: BarTooltipProps<UserListeningActivityDatum>) => {
     const { id, data: datum, color, value } = elem;
 
     let dateString: string;
-    let listenCount: number;
     if (id === "lastRangeCount") {
       const lastRangeDate = new Date((datum.lastRangeTs ?? 0) * 1000);
       dateString = lastRangeDate.toLocaleString("en-us", {
         ...dateFormat,
         timeZone: "UTC",
       });
-      listenCount = datum.lastRangeCount!;
     } else {
       const thisRangeDate = new Date((datum?.thisRangeTs ?? 0) * 1000);
       dateString = thisRangeDate.toLocaleString("en-us", {
         ...dateFormat,
         timeZone: "UTC",
       });
-      listenCount = datum.thisRangeCount!;
     }
+    const formattedValue = new Intl.NumberFormat().format(value);
     return (
       <BasicTooltip
         id={dateString}
-        value={`${value} ${Number(value) === 1 ? "listen" : "listens"}`}
+        value={`${formattedValue} ${
+          Number(value) === 1 ? "listen" : "listens"
+        }`}
         color={color}
       />
     );
@@ -196,6 +209,7 @@ export default function BarDualTone(props: BarDualToneProps) {
         }}
         axisLeft={{
           format: ".2~s",
+          tickValues,
         }}
         minValue={0}
         padding={0.3}

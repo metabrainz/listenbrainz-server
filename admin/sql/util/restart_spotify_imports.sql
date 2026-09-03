@@ -4,7 +4,7 @@
 BEGIN;
 
 UPDATE listens_importer
-   SET error_message = NULL
+   SET error = NULL
  WHERE service = 'spotify';
 
 COMMIT;

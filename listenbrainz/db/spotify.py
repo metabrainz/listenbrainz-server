@@ -15,7 +15,7 @@ def get_user_import_details(db_conn, user_id: int) -> Optional[dict]:
              , listens_importer.id
              , listens_importer.last_updated
              , latest_listened_at
-             , error_message
+             , error
           FROM listens_importer
      LEFT JOIN external_service_oauth
             ON listens_importer.external_service_oauth_id = external_service_oauth.id
@@ -42,9 +42,12 @@ def get_user(db_conn, user_id: int) -> Optional[dict]:
              , refresh_token
              , external_service_oauth.last_updated
              , token_expires
+             , refresh_token_expires
+             , refresh_token_expiry_last_notified
              , scopes
              , latest_listened_at
-             , error_message
+             , status
+             , error
           FROM external_service_oauth
           JOIN "user"
             ON "user".id = external_service_oauth.user_id

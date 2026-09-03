@@ -8,6 +8,7 @@ import UserFeedback, {
 import * as userFeedbackProps from "../../__mocks__/userFeedbackProps.json";
 import * as userFeedbackAPIResponse from "../../__mocks__/userFeedbackAPIResponse.json";
 import { ReactQueryWrapper } from "../../test-react-query";
+import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 
 const { totalCount, user, feedback } = userFeedbackProps;
 
@@ -34,10 +35,12 @@ describe("UserFeedback", () => {
   });
 
   it("renders ListenCard items for each feedback item", async () => {
-    render(
-      <ReactQueryWrapper>
-        <UserFeedback {...props} />
-      </ReactQueryWrapper>
+    renderWithProviders(
+      <UserFeedback {...props} />,
+      {},
+      {
+        wrapper: ReactQueryWrapper,
+      }
     );
     const listensContainer = screen.getByTestId("userfeedback-listens");
     expect(listensContainer).toBeInTheDocument();
@@ -72,10 +75,12 @@ describe("UserFeedback", () => {
         },
       ],
     };
-    render(
-      <ReactQueryWrapper>
-        <UserFeedback {...(withoutTrackNameProps as UserFeedbackProps)} />
-      </ReactQueryWrapper>
+    renderWithProviders(
+      <UserFeedback {...(withoutTrackNameProps as UserFeedbackProps)} />,
+      {},
+      {
+        wrapper: ReactQueryWrapper,
+      }
     );
     const listensContainer = screen.getByTestId("userfeedback-listens");
     expect(listensContainer).toBeInTheDocument();
@@ -84,10 +89,12 @@ describe("UserFeedback", () => {
 
   describe("getFeedbackItemsFromAPI", () => {
     it("sets the state and updates browser history", async () => {
-      render(
-        <ReactQueryWrapper>
-          <UserFeedback {...props} />
-        </ReactQueryWrapper>
+      renderWithProviders(
+        <UserFeedback {...props} />,
+        {},
+        {
+          wrapper: ReactQueryWrapper,
+        }
       );
 
       fetchMock.mockResponseOnce(JSON.stringify(userFeedbackAPIResponse));

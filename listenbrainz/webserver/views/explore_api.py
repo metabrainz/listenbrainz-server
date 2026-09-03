@@ -1,16 +1,25 @@
 import datetime
+import requests.exceptions
 from flask import Blueprint, jsonify, request, current_app
 
-from brainzutils.ratelimit import ratelimit
+from brainzutils.ratelimit import ratelimit, RateLimit, get_rate_limit_data, on_over_limit
 from brainzutils import cache
 import listenbrainz.db.fresh_releases
 from listenbrainz.webserver import db_conn, ts_conn
-from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
-from listenbrainz.webserver.views.api_tools import _parse_int_arg, _parse_bool_arg
+from listenbrainz.webserver.decorators import cache_public, crossdomain
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized
+from listenbrainz.webserver.views.api_tools import _parse_int_arg, _parse_bool_arg, ensure_user_token_for_expensive_endpoint
 from listenbrainz.db.color import get_releases_for_color
 from troi.patches.lb_radio import LBRadioPatch
 from troi.patch import Patch
+from listenbrainz.radio.artist import RecordingSearchByArtistService
+from listenbrainz.radio.tags import RecordingSearchByTagService
+from listenbrainz.radio.recording_lookup import RecordingLookupService
+from listenbrainz.radio.stats import LBRadioStatsService
+from listenbrainz.radio.playlist import LBRadioPlaylistService
+from listenbrainz.radio.recs import LBRadioRecsService
+
+LB_RADIO_PER_TOKEN_LIMIT = 5  # per rate-limit window (5s), separate from the global 100k/10s limit
 
 DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS = 14
 MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 90
@@ -24,6 +33,7 @@ explore_api_bp = Blueprint('explore_api_v1', __name__)
 @explore_api_bp.get("/fresh-releases/")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_fresh_releases():
     """
     This endpoint fetches upcoming and recently released (fresh) releases and returns a list of:
@@ -97,6 +107,7 @@ def get_fresh_releases():
 @explore_api_bp.get("/color/<color>")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def huesound(color):
     """
     Fetch a list of releases that have cover art that has a predominant
@@ -169,9 +180,19 @@ def lb_radio():
     :statuscode 500: Troi encountered an error
     :resheader Content-Type: *application/json*
     """
+
+    ensure_user_token_for_expensive_endpoint()
+
+    data = get_rate_limit_data(request)
+    rl = RateLimit("lb_radio:" + data["key"], LB_RADIO_PER_TOKEN_LIMIT, data["window"])
+    if rl.over_limit:
+        return on_over_limit(rl)
+
     prompt = request.args.get("prompt", None)
     if prompt is None:
         raise APIBadRequest(f"The prompt parameter cannot be empty.")
+
+    current_app.logger.info("LB radio: '%s'" % prompt)
 
     mode = request.args.get("mode", None)
     if mode is None or mode not in ("easy", "medium", "hard"):
@@ -179,10 +200,29 @@ def lb_radio():
             f"The mode parameter must be one of 'easy', 'medium', 'hard'.")
 
     try:
-        patch = LBRadioPatch({ "mode": mode, "prompt": prompt, "quiet": True, "min_recordings": 1})
+        auth_token = request.headers.get("Authorization")
+        if auth_token is not None:
+            auth_token = auth_token.split(" ")[1]
+
+        patch = LBRadioPatch({
+            "mode": mode,
+            "prompt": prompt,
+            "quiet": True,
+            "min_recordings": 1,
+            "auth_token": auth_token
+        })
+        # Register local patches pulling directly from the DB instead of using HTTP API calls
+        patch.register_service(RecordingSearchByArtistService())
+        patch.register_service(RecordingSearchByTagService())
+        patch.register_service(RecordingLookupService())
+        patch.register_service(LBRadioStatsService())
+        patch.register_service(LBRadioPlaylistService())
+        patch.register_service(LBRadioRecsService())
         playlist = patch.generate_playlist()
     except RuntimeError as err:
         raise APIBadRequest(f"LB Radio generation failed: {err}")
+    except requests.exceptions.ConnectionError:
+        raise APIInternalServerError("LB Radio generation failed due to a connection error, please try again.")
 
     jspf = playlist.get_jspf() if playlist is not None else {
         "playlist": {"tracks": []}}

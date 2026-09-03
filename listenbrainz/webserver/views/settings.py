@@ -1,9 +1,12 @@
+import base64
 import json
+import os
+import secrets
 from datetime import datetime
 from typing import Any
 
 from flask import Blueprint, render_template, request, url_for, \
-    redirect, current_app, jsonify
+    redirect, current_app, jsonify, session
 from flask_login import current_user, login_required
 from werkzeug.exceptions import NotFound, BadRequest
 import requests
@@ -13,12 +16,12 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_setting as db_usersetting
 from data.model.external_service import ExternalServiceType
 from listenbrainz.background.background_tasks import add_task
-from listenbrainz.db import listens_importer
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
-from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
+from listenbrainz.domain import external_connect
+from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError, ExternalServiceError, ExternalServiceAPIError
 from listenbrainz.domain.lastfm import LastfmService
 from listenbrainz.domain.librefm import LibrefmService
 from listenbrainz.domain.musicbrainz import MusicBrainzService
@@ -27,12 +30,84 @@ from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIO
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError, \
-    APIBadRequest
+    APIBadRequest, APIUnauthorized
 from listenbrainz.webserver.login import api_login_required
-from data.model.external_service import ExternalServiceType
+from listenbrainz.webserver.utils import CONNECT_SERVICES_WITHOUT_EMAIL_ERROR
+from listenbrainz.domain.funkwhale import FunkwhaleService
+from listenbrainz.domain.navidrome import NavidromeService
+from listenbrainz.db import funkwhale as db_funkwhale
+
+
+
+def validate_funkwhale_url(url: str) -> str:
+    """Validate of Funkwhale server URL.
+    
+    Args:
+        url: The URL to validate
+        
+    Returns:
+        The normalized URL
+        
+    Raises:
+        APIBadRequest: If the URL is invalid
+    """
+    from urllib.parse import urlparse
+    try:
+        parsed = urlparse(url)
+        if not parsed.scheme or not parsed.netloc:
+            raise APIBadRequest("Invalid Funkwhale server URL. Must include scheme (http:// or https://) and hostname.")
+        
+        # Allow HTTP for localhost and development environments
+        if parsed.scheme != 'https' and not (parsed.netloc.startswith('localhost') or parsed.netloc.startswith('127.0.0.1')):
+            raise APIBadRequest("Funkwhale server URL must use HTTPS unless it's localhost")
+            
+        # Normalize the URL
+        normalized = f"{parsed.scheme}://{parsed.netloc}"
+        return normalized.rstrip('/')
+    except Exception as e:
+        raise APIBadRequest(f"Invalid Funkwhale server URL: {str(e)}")
 
 
 settings_bp = Blueprint("settings", __name__)
+
+
+def _user_has_verified_email(user: dict[str, Any] | None) -> bool:
+    if not current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]:
+        return True
+    return bool(user and user["email"])
+
+
+def _user_id_has_verified_email(user_id: int) -> bool:
+    return _user_has_verified_email(db_user.get(db_conn, user_id, fetch_email=True))
+
+
+def _current_user_has_verified_email() -> bool:
+    return _user_id_has_verified_email(current_user.id)
+
+
+def _require_current_user_verified_email() -> None:
+    if not _current_user_has_verified_email():
+        raise APIUnauthorized(CONNECT_SERVICES_WITHOUT_EMAIL_ERROR)
+
+
+def _start_service_authorization(service: ExternalService, permissions) -> str:
+    """ Start authorizing a music service from the ListenBrainz settings page.
+
+    Generates the OAuth state protecting the authorization request, stores it in the
+    session so that the callback can verify it and returns the url of the music service
+    the user has to be sent to.
+    """
+    state = base64.b64encode(os.urandom(32)).decode("utf-8")
+    session[external_connect.settings_oauth_state_key(service.service.value)] = state
+    # this authorization was not started by a third party application, make sure the user
+    # is not sent to one that they abandoned earlier
+    session.pop(external_connect.SESSION_KEY, None)
+    return external_connect.build_authorize_url(service, permissions, state)
+
+
+def _return_to_client(connect_request, error: str | None = None, error_description: str | None = None):
+    """ Send the user back to the third party application that started the flow. """
+    return redirect(external_connect.build_return_url(connect_request, error, error_description))
 
 
 @settings_bp.post("/resettoken/")
@@ -72,15 +147,16 @@ def set_troi_prefs():
 @api_login_required
 def import_data():
     """ Displays the import page to user, giving various options """
-    user = db_user.get(db_conn, current_user.id, fetch_email=True)
-    # if the flag is turned off (local development) then do not perform email check
-    if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]:
-        user_has_email = user["email"] is not None
-    else:
-        user_has_email = True
+    user_has_email = _current_user_has_verified_email()
+
+    pg_timezones = db_usersetting.get_pg_timezone(db_conn)
+    user_settings = db_usersetting.get(db_conn, current_user.id)
+    user_timezone = user_settings['timezone_name']
 
     data = {
         "user_has_email": user_has_email,
+        "pg_timezones": pg_timezones,
+        "user_timezone": user_timezone,
     }
 
     return jsonify(data)
@@ -128,7 +204,7 @@ def delete_listens():
         raise APIInternalServerError(f"Error while deleting listens for user: {current_user.musicbrainz_id}")
 
 
-def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False) -> ExternalService:
+def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False, exclude_navidrome=False) -> ExternalService:
     """Returns the music service for the given name and raise 404 if
     service is not found
 
@@ -151,6 +227,10 @@ def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False) 
             return AppleService()
         elif include_mb and service == ExternalServiceType.MUSICBRAINZ:
             return MusicBrainzService()
+        elif service == ExternalServiceType.FUNKWHALE:
+            return FunkwhaleService()
+        elif not exclude_navidrome and service == ExternalServiceType.NAVIDROME:
+            return NavidromeService()
     except KeyError:
         raise NotFound("Service %s is invalid." % (name,))
 
@@ -188,16 +268,28 @@ def music_services_details():
     lastfm_user = lastfm_service.get_user(current_user.id)
     current_lastfm_permissions = "import" if lastfm_user else "disable"
 
+    funkwhale_tokens = db_funkwhale.get_all_user_tokens(db_conn, current_user.id)
+    funkwhale_host_urls = [token["host_url"] for token in funkwhale_tokens]
+    current_funkwhale_permission = "listen" if funkwhale_tokens else "disable"
+
     librefm_service = LibrefmService()
     librefm_user = librefm_service.get_user(current_user.id)
     current_librefm_permissions = "import" if librefm_user else "disable"
 
+    navidrome_service = NavidromeService()
+    navidrome_connection = navidrome_service.get_user(current_user.id, include_token=False)
+    current_navidrome_permissions = "listen" if navidrome_connection else "disable"
+
     data: dict[str, Any] = {
+        "user_has_email": _current_user_has_verified_email(),
         "current_spotify_permissions": current_spotify_permissions,
         "current_critiquebrainz_permissions": current_critiquebrainz_permissions,
         "current_soundcloud_permissions": current_soundcloud_permissions,
         "current_apple_permissions": current_apple_permissions,
         "current_lastfm_permissions": current_lastfm_permissions,
+        "current_funkwhale_permission": current_funkwhale_permission,
+        "funkwhale_host_urls": funkwhale_host_urls,
+        "current_navidrome_permissions": current_navidrome_permissions,
         "current_librefm_permissions": current_librefm_permissions,
     }
     if lastfm_user:
@@ -210,40 +302,293 @@ def music_services_details():
             "external_user_id": librefm_user["external_user_id"],
             "latest_listened_at": librefm_user["latest_listened_at"],
         }
+    if navidrome_connection:
+        data["current_navidrome_settings"] = {
+            "instance_url": navidrome_connection["instance_url"],
+            "username": navidrome_connection["username"],
+        }
 
     return jsonify(data)
 
 
 @settings_bp.get('/music-services/<service_name>/callback/')
-@login_required
 def music_services_callback(service_name: str):
-    service = _get_service_or_raise_404(service_name, exclude_apple=True)
+    service = _get_service_or_raise_404(service_name, exclude_apple=True, exclude_navidrome=True)
 
-    code = request.args.get('code')
+    # if a third party application started this authorization, the user is sent back to it
+    # instead of to the ListenBrainz settings page once we are done here. Merely finding the
+    # request must not consume it: first the callback has to prove it knows the OAuth state.
+    connect_request = external_connect.get_request(service_name)
+
+    # a request started by a third party application carries the user it was authorized for,
+    # those users are not logged in to ListenBrainz and must not become logged in either
+    if connect_request is not None:
+        user_id = connect_request.user_id
+    elif current_user.is_authenticated:
+        user_id = current_user.id
+    else:
+        return current_app.login_manager.unauthorized()
+
+    # Preserve the settings-page behavior for logged-in users. External-connect callbacks
+    # defer this check until after state validation so an untrusted callback cannot consume
+    # their pending request.
+    if connect_request is None and not _user_id_has_verified_email(user_id):
+        return redirect(url_for("settings.index", path="music-services/details", email_required="1"))
+
+    # Funkwhale has a separate, instance-specific OAuth flow and cannot be started through
+    # external connect. Keep its existing state and callback handling independent.
+    if isinstance(service, FunkwhaleService):
+        error = request.args.get("error")
+        if error:
+            return redirect(url_for(
+                "settings.index",
+                path="music-services/details",
+                service_error=f"{service_name.capitalize()} authorization was denied"
+            ))
+
+        code = request.args.get("code")
+        if not code:
+            raise BadRequest("missing code")
+
+        state = request.args.get("state")
+        if not state:
+            current_app.logger.error("No state parameter in callback")
+            return redirect(url_for(
+                "settings.index", path="music-services/details", _anchor="funkwhale",
+                error="Missing state parameter"
+            ))
+        
+        stored_state = session.get("state")
+        if not stored_state or state != stored_state:
+            current_app.logger.error("Invalid state parameter. Expected: %s, Got: %s", stored_state, state)
+            return redirect(url_for(
+                "settings.index", path="music-services/details", _anchor="funkwhale", error="Invalid state parameter"
+            ))
+
+        host_url = session.get("funkwhale_host_url")
+        if not host_url:
+            current_app.logger.error("No host URL in session")
+            return redirect(url_for(
+                "settings.index", path="music-services/details", _anchor="funkwhale",
+                error="No host URL found in session"
+            ))
+
+        try:
+            token = service.fetch_access_token(code)
+            server = db_funkwhale.get_server_by_host_url(db_conn, host_url)
+            if not server:
+                raise Exception("No Funkwhale server found for host_url")
+            service.add_new_user(user_id, server['id'], token)
+
+            return redirect(url_for("settings.index", path="music-services/details", _anchor="funkwhale",
+                                    success="Successfully connected to Funkwhale"))
+        except Exception as e:
+            current_app.logger.error("Error in FunkwhaleService: %s", str(e), exc_info=True)
+            return redirect(url_for("settings.index", path="music-services/details", _anchor="funkwhale",
+                                    error=f"Failed to connect to Funkwhale: {str(e)}"))
+        finally:
+            session.pop("state", None)
+            session.pop("funkwhale_host_url", None)
+            session.pop("funkwhale_user_id", None)
+
+    # Historically an otherwise empty settings callback is a bad request. There is no
+    # pending partner request to protect in this branch.
+    if connect_request is None and not request.args.get("error") and not request.args.get("code"):
+        raise BadRequest("missing code")
+
+    # the state is created either by the settings page or by the third party application
+    # flow, in both cases the music service must hand it back to us unchanged. A missing
+    # state is a failure too, otherwise anyone could hand us an authorization code of their
+    # own and have the account it belongs to connected to whoever opens the callback.
+    expected_state = connect_request.oauth_state if connect_request is not None \
+        else session.get(external_connect.settings_oauth_state_key(service_name))
+    if not expected_state or not secrets.compare_digest(request.args.get("state") or "", expected_state):
+        current_app.logger.error("%s OAuth state mismatch for user %s", service_name, user_id)
+        if connect_request is not None:
+            return _return_to_client(
+                connect_request, external_connect.ERROR_INVALID_REQUEST,
+                f"{service_name.capitalize()} authorization failed: invalid state"
+            )
+        if isinstance(service, SoundCloudService):
+            return redirect(url_for(
+                "settings.index",
+                path="music-services/details",
+                soundcloud_error="SoundCloud authorization failed: invalid state"
+            ))
+        # without this the user is dropped back on the settings page with the service simply
+        # not connected and no explanation, which is what happens whenever two authorizations
+        # are started at the same time or the first one is finished twice
+        return redirect(url_for(
+            "settings.index",
+            path="music-services/details",
+            service_error=f"{service_name.capitalize()} authorization failed: invalid state, please try again"
+        ))
+
+    # State has been validated, so this callback is now authoritative and the pending
+    # authorization can be consumed. Invalid callbacks above deliberately leave all of the
+    # session material intact for the genuine callback.
+    if connect_request is not None:
+        external_connect.pop_request(service_name)
+    else:
+        session.pop(external_connect.settings_oauth_state_key(service_name), None)
+
+    if connect_request is not None and connect_request.has_expired():
+        session.pop("soundcloud_code_verifier", None)
+        return _return_to_client(
+            connect_request, external_connect.ERROR_EXPIRED_REQUEST,
+            "The authorization took too long to complete, please try again."
+        )
+
+    if (connect_request is not None and current_user.is_authenticated
+            and current_user.id != connect_request.user_id):
+        # the user switched accounts halfway through, we have no idea which of the two
+        # this authorization is for anymore
+        current_app.logger.error("%s callback for user %s does not match the pending request for user %s",
+                                 service_name, current_user.id, connect_request.user_id)
+        session.pop("soundcloud_code_verifier", None)
+        return _return_to_client(
+            connect_request, external_connect.ERROR_INVALID_REQUEST,
+            "The authorization does not belong to the current ListenBrainz user"
+        )
+
+    if not _user_id_has_verified_email(user_id):
+        session.pop("soundcloud_code_verifier", None)
+        if connect_request is not None:
+            return _return_to_client(
+                connect_request, external_connect.ERROR_EMAIL_REQUIRED, CONNECT_SERVICES_WITHOUT_EMAIL_ERROR
+            )
+        return redirect(url_for("settings.index", path="music-services/details", email_required="1"))
+
+    error = request.args.get("error")
+    if error:
+        session.pop("soundcloud_code_verifier", None)
+        if connect_request is not None:
+            if error == "access_denied":
+                partner_error = external_connect.ERROR_ACCESS_DENIED
+                description = f"{service_name.capitalize()} authorization was denied"
+            else:
+                # the music service refused for a reason of its own, telling the partner
+                # application the user declined would be a lie
+                partner_error = external_connect.ERROR_SERVER_ERROR
+                description = f"{service_name.capitalize()} authorization failed: {error}"
+            return _return_to_client(connect_request, partner_error, description)
+        if isinstance(service, SoundCloudService):
+            return redirect(url_for(
+                "settings.index",
+                path="music-services/details",
+                soundcloud_error="SoundCloud authorization was denied"
+            ))
+        return redirect(url_for(
+            "settings.index",
+            path="music-services/details",
+            service_error=f"{service_name.capitalize()} authorization was denied"
+        ))
+
+    code = request.args.get("code")
     if not code:
-        raise BadRequest('missing code')
-    token = service.fetch_access_token(code)
+        session.pop("soundcloud_code_verifier", None)
+        if connect_request is not None:
+            return _return_to_client(
+                connect_request, external_connect.ERROR_INVALID_REQUEST,
+                f"{service_name.capitalize()} did not return an authorization code"
+            )
+        raise BadRequest("missing code")
 
-    service.add_new_user(current_user.id, token)
-    return redirect(url_for('settings.index', path='music-services/details'))
+    try:
+        if isinstance(service, SoundCloudService):
+            code_verifier = session.pop("soundcloud_code_verifier", None)
+            if not code_verifier:
+                current_app.logger.error("SoundCloud PKCE code verifier missing from session for user %s",
+                                         user_id)
+                if connect_request is not None:
+                    return _return_to_client(
+                        connect_request, external_connect.ERROR_SERVER_ERROR,
+                        "SoundCloud authorization failed: please try again"
+                    )
+                return redirect(url_for(
+                    "settings.index",
+                    path="music-services/details",
+                    soundcloud_error="SoundCloud authorization failed: please try again"
+                ))
+            token = service.fetch_access_token(code, code_verifier=code_verifier)
+        else:
+            token = service.fetch_access_token(code)
+
+        if connect_request is not None:
+            connectable = external_connect.get_connectable_service(connect_request.service)
+            permissions = connectable.permissions[connect_request.permission]
+            existing_user = service.get_user(user_id)
+            if existing_user and not set(existing_user.get("scopes") or []) >= permissions:
+                # The replacement token has now been exchanged successfully. Remove the old
+                # connection only at this point so abandoning, denying or failing the OAuth
+                # flow cannot disconnect an otherwise working account. Removal is still
+                # needed before saving a narrower token so its listens importer is dropped.
+                service.remove_user(user_id)
+
+        service.add_new_user(user_id, token)
+    except Exception:
+        current_app.logger.error("%s token exchange failed for user %s", service_name, user_id, exc_info=True)
+        if connect_request is not None:
+            return _return_to_client(
+                connect_request, external_connect.ERROR_SERVER_ERROR,
+                f"{service_name.capitalize()} authorization failed: could not exchange token"
+            )
+        if isinstance(service, SoundCloudService):
+            return redirect(url_for(
+                "settings.index",
+                path="music-services/details",
+                soundcloud_error="SoundCloud authorization failed: could not exchange token"
+            ))
+        raise
+
+    if connect_request is not None:
+        return _return_to_client(connect_request)
+    return redirect(url_for("settings.index", path="music-services/details"))
 
 
 @settings_bp.post('/music-services/<service_name>/refresh/')
 @api_login_required
 def refresh_service_token(service_name: str):
-    service = _get_service_or_raise_404(service_name, include_mb=True, exclude_apple=True)
-    user = service.get_user(current_user.id)
-    if not user:
-        raise APINotFound("User has not authenticated to %s" % service_name.capitalize())
+    service = _get_service_or_raise_404(service_name, include_mb=True, exclude_apple=True, exclude_navidrome=True)
 
-    if service.user_oauth_token_has_expired(user):
-        try:
-            user = service.refresh_access_token(current_user.id, user["refresh_token"])
-        except ExternalServiceInvalidGrantError:
-            raise APIForbidden("User has revoked authorization to %s" % service_name.capitalize())
-        except Exception:
-            current_app.logger.error("Unable to refresh %s token:", exc_info=True)
-            raise APIServiceUnavailable("Cannot refresh %s token right now" % service_name.capitalize())
+    if isinstance(service, FunkwhaleService):
+        data = request.get_json() or {}
+        host_url = data.get('host_url')
+        if not host_url:
+            raise APIBadRequest("Missing host_url parameter for Funkwhale token refresh")
+
+        host_url = validate_funkwhale_url(host_url)
+        user = service.get_user(current_user.id, host_url)
+        if not user:
+            raise APINotFound("User has not authenticated to Funkwhale at %s" % host_url)
+
+        if service.user_oauth_token_has_expired(user):
+            try:
+                user = service.refresh_access_token(
+                    current_user.id,
+                    user,
+                    user['refresh_token']
+                )
+            except ExternalServiceInvalidGrantError:
+                current_app.logger.warning(
+                    f"User {current_user.id} has revoked authorization to Funkwhale at {host_url}")
+                raise APIForbidden("User has revoked authorization to Funkwhale")
+            except Exception as e:
+                current_app.logger.error(f"Funkwhale service error for user {current_user.id} at {host_url}: {e}", exc_info=True)
+                raise APIServiceUnavailable("Cannot refresh Funkwhale token right now")
+    else:
+        user = service.get_user(current_user.id)
+        if not user:
+            raise APINotFound("User has not authenticated to %s" % service_name.capitalize())
+
+        if service.user_oauth_token_has_expired(user):
+            try:
+                user = service.refresh_access_token(current_user.id, user["refresh_token"])
+            except ExternalServiceInvalidGrantError:
+                raise APIForbidden("User has revoked authorization to %s" % service_name.capitalize())
+            except Exception:
+                current_app.logger.error(f"Unable to refresh {service_name.capitalize()} token:", exc_info=True)
+                raise APIServiceUnavailable("Cannot refresh %s token right now" % service_name.capitalize())
 
     return jsonify({"access_token": user["access_token"]})
 
@@ -251,7 +596,56 @@ def refresh_service_token(service_name: str):
 @settings_bp.post('/music-services/<service_name>/connect/')
 @api_login_required
 def music_services_connect(service_name: str):
-    """ Connect last.fm/libre.fm account to ListenBrainz user. """
+    """ Connect last.fm/libre.fm/funkwhale account to ListenBrainz user. """
+    _require_current_user_verified_email()
+
+    if service_name.lower() == "funkwhale":
+        data = request.get_json() or {}
+        host_url = data.get("host_url")
+        if not host_url:
+            raise APIBadRequest("Missing 'host_url' in request body for Funkwhale connect.")
+
+        try:
+            host_url = validate_funkwhale_url(host_url)
+        except Exception as e:
+            raise APIBadRequest(str(e))
+
+        state = base64.b64encode(os.urandom(32)).decode('utf-8')
+        session["state"] = state
+        session['funkwhale_host_url'] = host_url
+
+        try:
+            service = FunkwhaleService()
+            scopes = ['read']
+            auth_url = service.get_authorize_url(host_url, scopes, state)
+        except Exception as e:
+            current_app.logger.error("Failed to get authorization URL: %s", str(e), exc_info=True)
+            raise APIInternalServerError(f"Failed to connect to Funkwhale server: {str(e)}")
+
+        return jsonify({"url": auth_url})
+
+    if service_name.lower() == "navidrome":
+        data = request.get_json() or {}
+        host_url = data.get("host_url")
+        username = data.get("username") 
+        password = data.get("password")
+
+        if not all([host_url, username, password]):
+            raise APIBadRequest("Missing 'host_url', 'username', or 'password' for Navidrome connect.")
+
+        if not (host_url.startswith("http://") or host_url.startswith("https://")):
+            raise APIBadRequest(f"Invalid host_url '{host_url}' for Navidrome connect.")
+
+        try:
+            service = NavidromeService()
+            service.connect_user(current_user.id, host_url, username, password)
+            return jsonify({})
+        except (ExternalServiceError, ExternalServiceAPIError) as e:
+            raise APIBadRequest(str(e))
+        except Exception as e:
+            current_app.logger.error("Unexpected error during Navidrome connection for user %s: %s", current_user.id, str(e), exc_info=True)
+            raise APIBadRequest("An unexpected error occurred while connecting to Navidrome")
+    
     if service_name.lower() not in {"lastfm", "librefm"}:
         raise APINotFound("Service %s is invalid." % (service_name,))
 
@@ -275,8 +669,8 @@ def music_services_connect(service_name: str):
         api_key = current_app.config["LIBREFM_API_KEY"]
         api_base_url = current_app.config["LIBREFM_API_URL"]
 
-    session = requests.Session()
-    session.mount("https://", HTTPAdapter(max_retries=Retry(total=2, backoff_factor=1, allowed_methods=["GET"])))
+    requests_session = requests.Session()
+    requests_session.mount("https://", HTTPAdapter(max_retries=Retry(total=2, backoff_factor=1, allowed_methods=["GET"])))
 
     params = {
         "method": "user.getrecenttracks",
@@ -287,9 +681,17 @@ def music_services_connect(service_name: str):
     }
     if latest_listened_at:
         params["from"] = int(latest_listened_at.timestamp())
-    response = session.get(api_base_url, params=params)
+    response = requests_session.get(api_base_url, params=params)
     if response.status_code == 404:
         raise APINotFound(f"User with username '{data['external_user_id']}' not found for service {service_name.capitalize()}.")
+    
+    response_data = response.json()
+    if response.status_code != 200:
+        if service_name.lower() == "lastfm" and "error" in response_data and response_data.get("error") == 17:
+            raise APIUnauthorized(
+                "Please disable privacy mode in the settings of your Last.fm account to allow importing listens."
+            )
+        raise APIServiceUnavailable(f"Error from the {service_name.capitalize()} API while verifying user: {response.text}")
 
     service.add_new_user(current_user.id, {
         "external_user_id": data["external_user_id"],
@@ -297,18 +699,53 @@ def music_services_connect(service_name: str):
     })
 
     total_listens = 0
-    try:
-        lfm_data = response.json()
-        total_listens = int(lfm_data["recenttracks"]["@attr"]["total"])
-    except Exception:
-        current_app.logger.error(f"Unable to fetch {service_name} user data:", exc_info=True)
+    if service == ExternalServiceType.LASTFM:
+        try:
+            total_listens = int(response_data["recenttracks"]["@attr"]["total"])
+        except Exception:
+            current_app.logger.error(f"Unable to fetch {service_name} user data:", exc_info=True)
 
-    return jsonify({"success": True, "totalLfmListens": total_listens})
+    return jsonify({"totalLfmListens": total_listens})
 
 
 @settings_bp.post('/music-services/<service_name>/disconnect/')
 @api_login_required
 def music_services_disconnect(service_name: str):
+    if service_name.lower() == 'funkwhale':
+        # remove all Funkwhale tokens for user
+        try:
+            service = FunkwhaleService()
+            service.remove_user(current_user.id)
+            return jsonify({
+                'status': 'ok',
+                'message': 'Successfully disconnected from Funkwhale'
+            })
+        except Exception as e:
+            current_app.logger.error("Error in disconnect_funkwhale: %s", str(e), exc_info=True)
+            raise APIInternalServerError("An error occurred while disconnecting from Funkwhale")
+    
+    if service_name.lower() == 'navidrome':
+        # remove all Navidrome tokens for user
+        try:
+            service = NavidromeService()
+            service.remove_user(current_user.id)
+            return jsonify({
+                'status': 'ok',
+                'message': 'Successfully disconnected from Navidrome'
+            })
+        except Exception as e:
+            current_app.logger.error("Error in disconnect_navidrome: %s", str(e), exc_info=True)
+            raise APIInternalServerError("An error occurred while disconnecting from Navidrome")
+
+    try:
+        action = json.loads(request.data).get('action', None)
+    except json.JSONDecodeError:
+        raise BadRequest('Invalid JSON')
+
+    if action and action != 'disable':
+        _require_current_user_verified_email()
+
+    # Handle other services
     service = _get_service_or_raise_404(service_name)
     user = service.get_user(current_user.id)
     # this is to support the workflow of changing permissions in a single step
@@ -316,11 +753,6 @@ def music_services_disconnect(service_name: str):
     # we should try to delete the current permissions only if the user has connected previously
     if user:
         service.remove_user(current_user.id)
-
-    try:
-        action = json.loads(request.data).get('action', None)
-    except json.JSONDecodeError:
-        raise BadRequest('Invalid JSON')
 
     if not action or action == 'disable':
         return jsonify({"success": True})
@@ -334,12 +766,12 @@ def music_services_disconnect(service_name: str):
             elif action == 'listen':
                 permissions = SPOTIFY_LISTEN_PERMISSIONS
             if permissions:
-                return jsonify({"url": service.get_authorize_url(permissions)})
+                return jsonify({"url": _start_service_authorization(service, permissions)})
         elif service_name == 'soundcloud':
-            return jsonify({"url": service.get_authorize_url([])})
+            return jsonify({"url": _start_service_authorization(service, [])})
         elif service_name == 'critiquebrainz':
             if action:
-                return jsonify({"url": service.get_authorize_url(CRITIQUEBRAINZ_SCOPES)})
+                return jsonify({"url": _start_service_authorization(service, CRITIQUEBRAINZ_SCOPES)})
         elif service_name == 'apple':
             service.add_new_user(user_id=current_user.id)
             return jsonify({"success": True})
@@ -352,6 +784,8 @@ def music_services_disconnect(service_name: str):
 def music_services_set_token(service_name: str):
     if service_name != 'apple':
         raise APIInternalServerError("The set-token method not implemented for this service")
+
+    _require_current_user_verified_email()
 
     music_user_token = request.data.decode('UTF-8')
 

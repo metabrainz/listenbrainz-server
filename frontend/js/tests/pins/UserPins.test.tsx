@@ -1,40 +1,51 @@
-/* eslint-disable jest/no-disabled-tests */
-
 import * as React from "react";
-import { mount, ReactWrapper } from "enzyme";
-import * as timeago from "time-ago";
-import { act } from "react-dom/test-utils";
-import { GlobalAppContextT } from "../../src/utils/GlobalAppContext";
+import GlobalAppContext, {
+  GlobalAppContextT,
+} from "../../src/utils/GlobalAppContext";
 import APIService from "../../src/utils/APIService";
-
 import * as pinsPageProps from "../__mocks__/userPinsProps.json";
-import * as APIPins from "../__mocks__/pinProps.json";
-
 import UserPins, {
   UserPinsProps,
-  UserPinsState,
 } from "../../src/user/taste/components/UserPins";
-import PinnedRecordingCard from "../../src/user/components/PinnedRecordingCard";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 import { ReactQueryWrapper } from "../test-react-query";
+import {
+  render,
+  screen,
+  waitForElementToBeRemoved,
+  within,
+} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { textContentMatcher } from "../test-utils/rtl-test-utils";
 
-// Font Awesome generates a random hash ID for each icon everytime.
-// Mocking Math.random() fixes this
-// https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
-jest.spyOn(global.Math, "random").mockImplementation(() => 0);
+const user = userEvent.setup();
 
-function UserPinsWithWrapper(props: UserPinsProps) {
-  return (
-    <ReactQueryWrapper>
-      <UserPins {...props} />
-    </ReactQueryWrapper>
-  );
-}
-
-// typescript doesn't recognise string literal values
-const props = {
+const defaultContext: GlobalAppContextT = {
+  APIService: new APIService("foo"),
+  websocketsUrl: "",
+  youtubeAuth: pinsPageProps.youtube as YoutubeUser,
+  spotifyAuth: pinsPageProps.spotify as SpotifyUser,
+  currentUser: { ...pinsPageProps.user, auth_token: "fnord" },
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIService("foo"),
+    { name: "Fnord" }
+  ),
+};
+const defaultProps: UserPinsProps = {
   ...pinsPageProps,
-  pins: pinsPageProps.pins as Array<PinnedRecording>,
+};
+// Helper function to render the component with all necessary providers.
+const renderComponent = (
+  props: Partial<UserPinsProps> = {},
+  context: Partial<GlobalAppContextT> = {}
+) => {
+  return render(
+    <GlobalAppContext.Provider value={{ ...defaultContext, ...context }}>
+      <ReactQueryWrapper>
+        <UserPins {...defaultProps} {...props} />
+      </ReactQueryWrapper>
+    </GlobalAppContext.Provider>
+  );
 };
 
 const APIPinsPageTwo = {
@@ -49,8 +60,8 @@ const APIPinsPageTwo = {
       recording_msid: "a539519f-e99e-4a6a-acc8-b80f6cd38476",
       row_id: 30,
       track_metadata: {
-        artist_name: "Lorde",
-        track_name: "400 Lux",
+        artist_name: "Elder",
+        track_name: "Ne Plus Ultra",
       },
     },
   ],
@@ -58,110 +69,90 @@ const APIPinsPageTwo = {
   user_name: "jdaok",
 };
 
-// Create a new instance of GlobalAppContext
-const mountOptions: { context: GlobalAppContextT } = {
-  context: {
-    APIService: new APIService("foo"),
-    websocketsUrl: "",
-    youtubeAuth: pinsPageProps.youtube as YoutubeUser,
-    spotifyAuth: pinsPageProps.spotify as SpotifyUser,
-    currentUser: pinsPageProps.user,
-    recordingFeedbackManager: new RecordingFeedbackManager(
-      new APIService("foo"),
-      { name: "Fnord" }
-    ),
-  },
-};
-
 describe("UserPins", () => {
   it("renders correctly", () => {
-    const wrapper = mount(<UserPinsWithWrapper {...props} />, mountOptions);
-    expect(wrapper.find("#pinned-recordings")).toHaveLength(1);
-    expect(wrapper.getDOMNode()).toHaveTextContent("Lorde");
-    expect(wrapper.getDOMNode()).toHaveTextContent("400 Lux");
+    renderComponent();
+    expect(screen.getByTestId("pinned-recordings")).toBeInTheDocument();
+    expect(screen.getByText("All the Way Down")).toBeInTheDocument();
+    expect(screen.getByText("Kelela")).toBeInTheDocument();
+    expect(screen.getByText(textContentMatcher("Your Pins")));
   });
 
   it("renders the correct number of pinned recordings", () => {
-    const wrapper = mount(<UserPinsWithWrapper {...props} />, mountOptions);
-
-    const wrapperElement = wrapper.find("#pinned-recordings");
-    const pinnedRecordings = wrapperElement.find(PinnedRecordingCard);
-    expect(pinnedRecordings).toHaveLength(props.pins.length);
+    renderComponent();
+    // PinnedRecordingCards render a ListenCard under the hood which we can target
+    const pinnedRecordings = screen.getAllByTestId("listen");
+    expect(pinnedRecordings).toHaveLength(defaultProps.pins.length);
   });
 
   describe("handleLoadMore", () => {
     describe("handleClickOlder", () => {
       it("does nothing if page >= maxPage", async () => {
-        const wrapper = mount(<UserPinsWithWrapper {...props} />, mountOptions);
-        const userPinWrapper = wrapper.find(UserPins);
-        const instance = userPinWrapper.instance() as UserPins;
+        const getPinsForUserSpy = jest.spyOn(
+          defaultContext.APIService,
+          "getPinsForUser"
+        );
 
-        const spy = jest.fn().mockImplementation(() => {});
-        instance.getPinsFromAPI = spy;
-        await act(() => {
-          userPinWrapper.setState({ maxPage: 1 });
-        });
+        renderComponent({ totalCount: 25 });
 
-        await act(async () => {
-          await instance.handleLoadMore();
-        });
+        await user.click(
+          screen.getByRole("button", { name: "No more pins to show" })
+        );
 
-        expect(userPinWrapper.state("loading")).toBeFalsy();
-        expect(spy).not.toHaveBeenCalled();
+        expect(getPinsForUserSpy).not.toHaveBeenCalled();
       });
 
       it("calls the API to get next page", async () => {
-        const wrapper = mount(<UserPinsWithWrapper {...props} />, mountOptions);
-        const userPinWrapper = wrapper.find(UserPins);
-        const instance = userPinWrapper.instance() as UserPins;
+        const getPinsForUserSpy = jest
+          .spyOn(defaultContext.APIService, "getPinsForUser")
+          .mockResolvedValue(APIPinsPageTwo);
 
-        const apiSpy = jest
-          .fn()
-          .mockImplementation(() => Promise.resolve(APIPinsPageTwo));
-        instance.context.APIService.getPinsForUser = apiSpy;
+        renderComponent();
 
-        const getPinsFromAPISpy = jest.spyOn(instance, "getPinsFromAPI");
+        expect(screen.queryByText("Elder")).not.toBeInTheDocument();
+        expect(screen.queryByText("Ne Plus Ultra")).not.toBeInTheDocument();
+        let pinnedRecordings = screen.getAllByTestId("listen");
+        expect(pinnedRecordings).toHaveLength(25);
 
         // second page is fetchable
-        await act(async () => {
-          await instance.handleLoadMore();
-        });
+        await user.click(screen.getByRole("button", { name: "Load more…" }));
 
-        expect(getPinsFromAPISpy).toHaveBeenCalledWith(2);
-        expect(apiSpy).toHaveBeenCalledWith(props.user.name, 25, 25);
-
-        expect(userPinWrapper.state("loading")).toBeFalsy();
-        expect(userPinWrapper.state("page")).toEqual(2);
-        // result should be combined previous pins and new pins
-        expect(userPinWrapper.state("pins")).toEqual([
-          ...props.pins,
-          ...APIPinsPageTwo.pinned_recordings,
-        ]);
+        expect(getPinsForUserSpy).toHaveBeenCalledWith("jdaok", 25, 25);
+        // The text in the button also changes
+        expect(
+          screen.getByRole("button", { name: "No more pins to show" })
+        ).toBeDisabled();
+        // result should combine previous pins and new pin
+        pinnedRecordings = screen.getAllByTestId("listen");
+        expect(pinnedRecordings).toHaveLength(26);
+        expect(screen.getByText("All the Way Down")).toBeInTheDocument();
+        expect(screen.getByText("Kelela")).toBeInTheDocument();
+        expect(screen.getByText("Elder")).toBeInTheDocument();
+        expect(screen.getByText("Ne Plus Ultra")).toBeInTheDocument();
       });
     });
   });
 
   describe("removePinFromPinsList", () => {
     it("updates the listens state after removing particular pin", async () => {
-      const wrapper = mount(<UserPinsWithWrapper {...props} />, mountOptions);
-      const userPinWrapper = wrapper.find(UserPins);
-      const instance = userPinWrapper.instance() as UserPins;
+      const deletePinSpy = jest
+        .spyOn(defaultContext.APIService, "deletePin")
+        .mockResolvedValue(200);
 
-      await act(() => {
-        userPinWrapper.setState({ pins: props.pins });
-      });
+      renderComponent();
 
-      expect(userPinWrapper.state("pins")).toHaveLength(25);
+      const pinnedRecordings = screen.getAllByTestId("listen");
+      expect(pinnedRecordings).toHaveLength(25);
+      expect(screen.getByText("All the Way Down")).toBeInTheDocument();
+      expect(screen.getByText("Kelela")).toBeInTheDocument();
 
-      const expectedNewFirstPin = props.pins[1];
-      await act(() => {
-        instance.removePinFromPinsList(props.pins[0]);
-      });
-
-      expect(userPinWrapper.state("pins")).toHaveLength(24);
-      expect(userPinWrapper.state("pins")[0].recording_msid).toEqual(
-        expectedNewFirstPin.recording_msid
-      );
+      // Click the "delete pin" option in the first listen card
+      const button = within(pinnedRecordings[0]).getByTitle("Delete Pin");
+      await user.click(button);
+      // Called with currentUser.auth_token and pin.row_id
+      expect(deletePinSpy).toHaveBeenCalledWith("fnord", 100);
+      // Wait for removePinFromPinsList to be called after a 1s setTimeout
+      waitForElementToBeRemoved(pinnedRecordings[0]);
     });
   });
 });

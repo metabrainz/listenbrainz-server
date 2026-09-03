@@ -29,6 +29,7 @@ export type CBReviewModalProps = {
   initialBlurbContent?: string;
   initialLanguage?: string;
   hideForm?: boolean;
+  onReviewSubmitted?: () => void;
 };
 
 const minTextLength = 25;
@@ -44,6 +45,7 @@ export default NiceModal.create((props: CBReviewModalProps) => {
     initialBlurbContent,
     initialLanguage,
     hideForm,
+    onReviewSubmitted,
   } = props;
 
   const modal = useModal();
@@ -313,6 +315,8 @@ export default NiceModal.create((props: CBReviewModalProps) => {
               { toastId: "review-submit-success" }
             );
             modal.hide();
+            // Trigger refetch of reviews if callback is provided
+            onReviewSubmitted?.();
           }
         } catch (error) {
           if (maxRetries > 0 && error.message === "invalid_token") {

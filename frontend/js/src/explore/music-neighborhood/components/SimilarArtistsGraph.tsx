@@ -21,7 +21,7 @@ function CustomNodeComponent({
 }: NodeProps<NodeType>) {
   return (
     <animated.g
-      className="artist-similarity-graph-node"
+      className="entity-similarity-graph-node"
       transform={to(
         [animatedProps.x, animatedProps.y, animatedProps.scale],
         (x, y, scale) => {
@@ -140,8 +140,8 @@ function SimilarArtistsGraph({
 
   return data ? (
     <div
-      className="artist-similarity-graph-container"
-      id="artist-similarity-graph-container"
+      className="entity-similarity-graph-container"
+      id="entity-similarity-graph-container"
       style={{
         background,
       }}

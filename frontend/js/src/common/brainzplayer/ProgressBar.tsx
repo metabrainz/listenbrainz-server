@@ -1,8 +1,9 @@
 import { throttle } from "lodash";
 import * as React from "react";
 import ReactTooltip from "react-tooltip";
+import { useAtomValue } from "jotai";
 import { millisecondsToStr } from "../../playlists/utils";
-import { useBrainzPlayerContext } from "./BrainzPlayerContext";
+import { durationMsAtom, progressMsAtom } from "./BrainzPlayerAtoms";
 
 type ProgressBarProps = {
   seekToPositionMs: (msTimeCode: number) => void;
@@ -36,18 +37,14 @@ const useThrottle = (callback: any, delay: number | undefined) => {
 };
 
 function ProgressBar(props: ProgressBarProps) {
-  const brainzPlayerContext = useBrainzPlayerContext();
-  const brainzPlayerContextRef = React.useRef(brainzPlayerContext);
-  brainzPlayerContextRef.current = brainzPlayerContext;
+  const progressMs = useAtomValue(progressMsAtom);
+  const durationMs = useAtomValue(durationMsAtom);
 
   const { seekToPositionMs, showNumbers } = props;
   const [tipContent, setTipContent] = React.useState(TOOLTIP_INITIAL_CONTENT);
   const progressBarRef = React.useRef<HTMLDivElement>(null);
   const progressPercentage = Number(
-    (
-      (brainzPlayerContextRef.current.progressMs * 100) /
-      brainzPlayerContextRef.current.durationMs
-    ).toFixed()
+    ((progressMs * 100) / durationMs).toFixed()
   );
 
   const mouseEventHandler = useThrottle(
@@ -58,9 +55,7 @@ function ProgressBar(props: ProgressBarProps) {
       const absoluteClickXPos = event.clientX;
       const relativeClickXPos = absoluteClickXPos - musicPlayerXOffset;
       const percentPos = relativeClickXPos / progressBarWidth;
-      const positionMs = Math.round(
-        brainzPlayerContextRef.current.durationMs * percentPos
-      );
+      const positionMs = Math.round(durationMs * percentPos);
       const positionTime = millisecondsToStr(positionMs);
 
       const isMobile = /Mobi/.test(navigator.userAgent);
@@ -91,24 +86,20 @@ function ProgressBar(props: ProgressBarProps) {
     if (event.key === EVENT_KEY_ARROWLEFT) {
       let oneStepEarlier;
       if (event.shiftKey) {
-        oneStepEarlier =
-          brainzPlayerContextRef.current.progressMs - KEYBOARD_STEP_MS;
+        oneStepEarlier = progressMs - KEYBOARD_STEP_MS;
       } else {
-        oneStepEarlier =
-          brainzPlayerContextRef.current.progressMs - KEYBOARD_BIG_STEP_MS;
+        oneStepEarlier = progressMs - KEYBOARD_BIG_STEP_MS;
       }
       seekToPositionMs(oneStepEarlier > 0 ? oneStepEarlier : 0);
     }
     if (event.key === EVENT_KEY_ARROWRIGHT) {
       let oneStepLater;
       if (event.shiftKey) {
-        oneStepLater =
-          brainzPlayerContextRef.current.progressMs + KEYBOARD_BIG_STEP_MS;
+        oneStepLater = progressMs + KEYBOARD_BIG_STEP_MS;
       } else {
-        oneStepLater =
-          brainzPlayerContextRef.current.progressMs + KEYBOARD_STEP_MS;
+        oneStepLater = progressMs + KEYBOARD_STEP_MS;
       }
-      if (oneStepLater <= brainzPlayerContextRef.current.durationMs - 500) {
+      if (oneStepLater <= durationMs - 500) {
         seekToPositionMs(oneStepLater);
       }
     }
@@ -156,13 +147,9 @@ function ProgressBar(props: ProgressBarProps) {
       </div>
       {showNumbers && (
         <div className="progress-numbers">
-          <span>
-            {millisecondsToStr(brainzPlayerContextRef.current.progressMs)}
-          </span>
+          <span>{millisecondsToStr(progressMs)}</span>
           <span className="divider">&#8239;/&#8239;</span>
-          <span>
-            {millisecondsToStr(brainzPlayerContextRef.current.durationMs)}
-          </span>
+          <span>{millisecondsToStr(durationMs)}</span>
         </div>
       )}
     </div>

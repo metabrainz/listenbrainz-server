@@ -18,7 +18,7 @@ services:
       - redis:/data:z
 
   lb_db:
-    image: timescale/timescaledb:2.6.0-pg12
+    image: timescale/timescaledb:latest-pg14
     volumes:
       - timescaledb:/var/lib/postgresql/data:z
     ports:
@@ -60,7 +60,7 @@ services:
       - ..:/code/listenbrainz:z
       - ../frontend:/static
     ports:
-      - "8100:80"
+      - "127.0.0.1:8100:80"
     user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     depends_on:
       - redis
@@ -74,7 +74,7 @@ services:
       FLASK_APP: listenbrainz.webserver:create_api_compat_app()
     command: flask run -h 0.0.0.0 -p 8101 --debug
     ports:
-      - "8101:8101"
+      - "127.0.0.1:8101:8101"
     volumes:
       - ..:/code/listenbrainz:z
     user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
@@ -142,9 +142,9 @@ services:
     image: web
     volumes:
       - ..:/code/listenbrainz:z
-    command: python manage.py run_websockets -h 0.0.0.0 -p 8102
+    command: python run_websockets.py -h 0.0.0.0 -p 8102
     ports:
-      - "8102:8102"
+      - "127.0.0.1:8102:8102"
     user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     depends_on:
       - redis
@@ -163,7 +163,7 @@ services:
 
 # Uncomment the following lines if you want to connect the LB network to a musicbrainz-docker network to access a MB replica
 # TODO: re-comment these before merging this code
-#networks:
-# default:
-#   name: musicbrainz-docker_default
-#             external: true
+# networks:
+#   default:
+#     name: musicbrainz-docker_default
+#     external: true

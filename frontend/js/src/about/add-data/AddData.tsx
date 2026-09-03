@@ -36,6 +36,12 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://bocan.app/">Bòcan</a>
+          </em>
+          , a native macOS music player for people who own their music
+        </li>
+        <li>
+          <em>
             <a href="https://github.com/ciderapp">Cider</a>
           </em>
           , a cross-platform Apple Music player:{" "}
@@ -51,6 +57,13 @@ export default function AddData() {
           <a href="https://github.com/vjeranc/cmus-status-scrobbler">
             <code>cmus-status-scrobbler</code>
           </a>
+        </li>
+        <li>
+          <em>
+            <a href="https://github.com/digimezzo/dopamine">Dopamine</a>
+          </em>
+          , an audio player which tries to make organizing and listening to
+          music as simple and pretty as possible
         </li>
         <li>
           <em>
@@ -71,7 +84,7 @@ export default function AddData() {
           <em>
             <a href="https://longplay.app/">Longplay</a>
           </em>
-          , an album-based music player for iOS
+          , an album-based music player for iOS and macOS
         </li>
         <li>
           <em>
@@ -84,6 +97,19 @@ export default function AddData() {
           ,{" "}
           <a href="https://github.com/kori/wylt">
             <code>wylt</code>
+          </a>
+        </li>
+        <li>
+          <em>
+            <a href="https://mpv.io/">MPV</a>
+          </em>
+          , cross-platform multimedia player:{" "}
+          <a href="https://gist.github.com/madeindjs/f33225cf4d8fdc9f61e0fe3ebe2dcce7">
+            <code>plugin</code>
+          </a>
+          ,{" "}
+          <a href="https://github.com/kufern/mpv-listenbrainz-windows/">
+            <code>plugin (Windows)</code>
           </a>
         </li>
         <li>
@@ -148,7 +174,7 @@ export default function AddData() {
           , a cross-platform music player and streaming service:{" "}
           <a href="https://github.com/Inrixia/TidaLuna">
             <code>TidaLuna client mod</code>
-          </a>
+          </a>{" "}
           +{" "}
           <a href="https://github.com/Inrixia/neptune-plugins?tab=readme-ov-file#listenbrainz">
             <code>ListenBrainz plugin</code>
@@ -240,12 +266,24 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://lyrion.org/">Lyrion</a>
+          </em>
+          , open-source server software to control Squeezebox audio players
+        </li>
+        <li>
+          <em>
             <a href="https://kodi.tv/">Kodi</a>
           </em>
           , a free and open source media center:{" "}
           <a href="https://kodi.tv/addons/matrix/service.listenbrainz">
             <code>ListenBrainz add-on</code>
           </a>
+        </li>
+        <li>
+          <em>
+            <a href="https://koito.io/">Koito</a>
+          </em>
+          , a self-hosted themeable LB-compatible scrobbler
         </li>
         <li>
           <em>
@@ -309,21 +347,20 @@ export default function AddData() {
           , a Mac menu bar utility for displaying the current track, submits
           Apple Music and Spotify listens
         </li>
+        <li>
+          <em>
+            <a href="https://unstream.stream/">Unstream</a>
+          </em>
+          , a MacOS app and browser extension that detects and submits your
+          listens, and shows the best ways to support your favorite artists
+        </li>
       </ul>
 
       <h4>Browser extensions</h4>
       <ul>
         <li>
           <em>
-            <a href="https://add0n.com/lastfm-scrobbler.html">
-              Last.fm Scrobbler
-            </a>
-          </em>
-          , an extension for Firefox and Chrome
-        </li>
-        <li>
-          <em>
-            <a href="https://web-scrobbler.com/">Web Scrobbler</a>
+            <a href="https://webscrobbler.com/">Web Scrobbler</a>
           </em>
           , an extension for Firefox and Chrome/Chromium-based browsers
         </li>
@@ -341,11 +378,23 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://www.jewelcase.app/">Jewelcase</a>
+          </em>
+          , an offline music player for iOS
+        </li>
+        <li>
+          <em>
             <a href="https://play.google.com/store/apps/details?id=com.arn.scrobble">
               Pano Scrobbler
             </a>
           </em>
           , a scrobbling application for Android Devices
+        </li>
+        <li>
+          <em>
+            <a href="https://boomingmusic.org/">Booming Music</a>
+          </em>
+          , a clean and fast, and Material You music player for Android
         </li>
       </ul>
 
@@ -418,13 +467,23 @@ export default function AddData() {
         </li>
         <li>
           <em>
-            <a href="https://github.com/regorxxx/ListenBrainz-SMP">
-              ListenBrainz-SMP
+            <a href="https://github.com/regorxxx/Infinity-Tools-SMP">
+              ListenBrainz tools (Infinity-Tools-SMP)
             </a>
           </em>
-          , a Foobar2000 plugin for submitting and retrieving playlists from
-          ListenBrainz (+ Spotify). Can retrieve recommendations and submit
-          track feedback.
+          , a{" "}
+          <em>
+            <a href="https://www.foobar2000.org/">Foobar2000</a>
+          </em>{" "}
+          plugin for submitting and retrieving playlists from ListenBrainz (+
+          Spotify). Can retrieve recommendations, submit tracks feedback (love
+          and hate) and batch upload{" "}
+          <em>
+            <a href="https://kawaiidango.github.io/pano-scrobbler/">
+              Pano Scrobbler
+            </a>
+          </em>{" "}
+          listens.
         </li>
         <li>
           <em>
@@ -437,8 +496,8 @@ export default function AddData() {
             <a href="https://www.foobar2000.org/">Foobar2000</a>
           </em>{" "}
           plugin for syncing local playlists with ListenBrainz (+ Spotify).
-          Tracks playlists changes and resolves tracks with local content and
-          YouTube links.
+          Provides tracking for playlists changes and resolves tracks with local
+          content and YouTube links.
         </li>
         <li>
           <em>
@@ -482,11 +541,17 @@ export default function AddData() {
         </li>
         <li>
           <em>
-            <a href="https://github.com/regorxxx/Wrapped-SMP">Wrapped-SMP</a>
+            <a href="https://github.com/regorxxx/Infinity-Tools-SMP">
+              Wrapped (Infinity-Tools-SMP)
+            </a>
           </em>
-          , a Foobar2000 plugin that creates listening reports, similar to
-          Spotify&apos;s annual report. Can utilize ListenBrainz
-          recommendations.
+          , a{" "}
+          <em>
+            <a href="https://www.foobar2000.org/">Foobar2000</a>
+          </em>{" "}
+          plugin that creates listening reports, similar to Spotify&apos;s
+          annual report for any time period. Can use ListenBrainz listening
+          history and recommendations.
         </li>
       </ul>
 

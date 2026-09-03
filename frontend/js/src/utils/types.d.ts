@@ -35,6 +35,7 @@ interface AdditionalInfo {
   track_mbid?: string | null;
   tracknumber?: string | number | null;
   work_mbids?: Array<string> | null;
+  funkwhale_id?: string | null;
 }
 
 declare type MBIDMappingArtist = {
@@ -43,12 +44,18 @@ declare type MBIDMappingArtist = {
   join_phrase: string;
 };
 
+declare type MBIDMappingUrlRel = {
+  type: string;
+  url: string;
+};
+
 declare type MBIDMapping = {
   recording_name?: string;
   recording_mbid: string;
   release_mbid: string;
   artist_mbids: Array<string>;
   artists?: Array<MBIDMappingArtist>;
+  url_rels?: Array<MBIDMappingUrlRel>;
   caa_id?: number;
   caa_release_mbid?: string;
   release_group_mbid?: string;
@@ -110,6 +117,10 @@ declare type LatestImportResponse = {
   status?: {
     state: ImportStatusT;
     count: number;
+  };
+  error?: {
+    retry: boolean;
+    message?: string;
   };
 };
 
@@ -293,16 +304,74 @@ declare type UserDailyActivityResponse = {
 };
 
 declare type UserArtistActivityResponse = {
-  result: Array<{
-    name: string;
-    listen_count: number;
-    artist_mbid: string | null;
-    albums: Array<{
+  payload: {
+    artist_activity: Array<{
       name: string;
+      artist_name?: string;
       listen_count: number;
-      release_group_mbid: string;
+      artist_mbid: string | null;
+      albums: Array<{
+        name: string;
+        listen_count: number;
+        release_group_mbid: string | null;
+      }>;
     }>;
-  }>;
+    user_id?: string;
+    range: UserStatsAPIRange;
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+  };
+};
+
+declare type UserEraActivityResponse = {
+  payload: {
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    user_id: string;
+    range: UserStatsAPIRange;
+    era_activity: Array<{
+      year: number;
+      count: number;
+    }>;
+  };
+};
+
+declare type UserArtistEvolutionActivityResponse = {
+  payload: {
+    user_id: string;
+    artist_evolution_activity: RawUserArtistEvolutionRow[];
+    range: UserStatsAPIRange;
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    offset_year?: number;
+  };
+};
+
+declare type RawUserArtistEvolutionRow = {
+  time_unit: string | number;
+  artist_mbid: string;
+  artist_name: string;
+  listen_count: number;
+};
+
+declare type GenreHourData = {
+  genre: string;
+  hour: number;
+  listen_count: number;
+};
+
+declare type UserGenreActivityResponse = {
+  payload: {
+    genre_activity: Array<GenreHourData>;
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    user_id: string;
+    range: UserStatsAPIRange;
+  };
 };
 
 declare type UserArtistMapArtist = {
@@ -473,6 +542,7 @@ declare type PinnedRecording = {
   recording_mbid: string | null;
   recording_msid?: string;
   track_metadata: TrackMetadata;
+  user_name?: string | null;
 };
 
 /** For recommending a track from the front-end */
@@ -689,13 +759,22 @@ declare type SearchUser = {
 };
 
 declare type BrainzPlayerSettings = {
-  youtubeEnabled?: boolean;
-  spotifyEnabled?: boolean;
-  soundcloudEnabled?: boolean;
-  appleMusicEnabled?: boolean;
-  brainzplayerEnabled?: boolean;
-  dataSourcesPriority?: Array<
-    "spotify" | "youtube" | "soundcloud" | "appleMusic"
+  youtubeEnabled : boolean;
+  spotifyEnabled : boolean;
+  soundcloudEnabled : boolean;
+  appleMusicEnabled : boolean;
+  internetArchiveEnabled : boolean;
+  funkwhaleEnabled : boolean;
+  navidromeEnabled : boolean;
+  brainzplayerEnabled : boolean;
+  dataSourcesPriority : Array<
+    | "spotify"
+    | "youtube"
+    | "soundcloud"
+    | "appleMusic"
+    | "funkwhale"
+    | "navidrome"
+    | "internetArchive"
   >;
 };
 

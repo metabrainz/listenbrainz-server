@@ -91,8 +91,11 @@ In production, webservers run uwsgi server to serve the flask application. In de
      - runs a nginx container for the compat API that exposes this service on a local IP, not through gateways.
 
    * - listenbrainz-cron-prod
-     - runs cron jobs used to execute periodic tasks like creating dumps, invoking spark jobs to import dump, requesting
-       statistics and so on.
+     - runs cron jobs used to execute periodic tasks like creating non-full dumps, invoking spark jobs to import dumps,
+       requesting statistics and so on.
+
+   * - listenbrainz-full-dumps-cron-prod
+     - runs the twice-monthly full dump cron job.
 
    * - exim-relay-listenbrainz.org
      - smtp relay used by LB to send emails.
@@ -128,6 +131,8 @@ Playing now listens are ephemeral are only `stored <https://github.com/metabrain
 in Redis, with an expiry time of the duration of the track (if duration is unavailable then a configurable fallback time
 is used). The Playing now queue is consumed by Websockets service. The frontend connects with the Websockets service to
 display listens on the website without manually reloading the page.
+You can get a recording_msid for the purpose of submitting love/hate feedback by submitting a ``playing_now`` listen
+with the parameter :code:`return_msid` set to :json:`true`. See the :ref:`submit-listens` example for more details.
 
 On the other hand, "Permanent" Listens need to be persisted in the database. Timescale Writer service consumes from the
 Incoming queue. It begins with `querying <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/listenbrainz/timescale_writer/timescale_writer.py#L72>`_

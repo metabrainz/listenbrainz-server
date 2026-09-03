@@ -18,7 +18,7 @@ class RecommendationArtistType(Enum):
     raw = 'raw'
 
 
-@recommendations_cf_recording_api_bp.get("/user/<user_name>/recording")
+@recommendations_cf_recording_api_bp.get("/user/<mb_username:user_name>/recording")
 @crossdomain
 @ratelimit()
 def get_recommendations(user_name):

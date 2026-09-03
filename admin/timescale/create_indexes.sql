@@ -23,6 +23,11 @@ CREATE INDEX added_by_id_playlist_recording ON playlist.playlist_recording (adde
 
 CREATE INDEX playlist_id_playlist_collaborator ON playlist.playlist_collaborator (playlist_id);
 CREATE INDEX collaborator_id_playlist_collaborator ON playlist.playlist_collaborator (collaborator_id);
+CREATE INDEX playlist_id_collaborator_id_playlist_collaborator
+    ON playlist.playlist_collaborator (playlist_id, collaborator_id);
+CREATE INDEX public_playlist_idx ON playlist.playlist (creator_id, created_for_id) WHERE public = true;
+CREATE INDEX playlist_name_trgm_gin ON playlist.playlist USING GIN (name gin_trgm_ops);
+CREATE INDEX playlist_description_trgm_gin ON playlist.playlist USING GIN (description gin_trgm_ops);
 
 -- MBID Mapping
 
@@ -32,8 +37,52 @@ CREATE UNIQUE INDEX recording_mbid_ndx_mbid_mapping_metadata ON mbid_mapping_met
 -- these indexes are defined in listenbrainz/mbid_mapping/mapping/mb_metadata_cache.py and created in production
 -- there. this definition is only for tests and local development. remember to keep both in sync.
 CREATE UNIQUE INDEX mb_metadata_cache_idx_recording_mbid ON mapping.mb_metadata_cache (recording_mbid);
+CREATE UNIQUE INDEX mb_metadata_cache_idx_recording_id ON mapping.mb_metadata_cache (recording_id);
 CREATE INDEX mb_metadata_cache_idx_artist_mbids ON mapping.mb_metadata_cache USING gin(artist_mbids);
+CREATE INDEX mb_metadata_cache_idx_artist_ids ON mapping.mb_metadata_cache USING gin(artist_ids);
 CREATE INDEX mb_metadata_cache_idx_dirty ON mapping.mb_metadata_cache (dirty);
+
+CREATE UNIQUE INDEX mb_release_group_cache_idx_release_group_mbid ON mapping.mb_release_group_cache (release_group_mbid);
+CREATE INDEX mb_release_group_cache_idx_artist_mbids ON mapping.mb_release_group_cache USING gin(artist_mbids);
+CREATE INDEX mb_release_group_cache_idx_dirty ON mapping.mb_release_group_cache (dirty);
+
+CREATE UNIQUE INDEX mb_artist_metadata_cache_idx_artist_mbid ON mapping.mb_artist_metadata_cache (artist_mbid);
+CREATE INDEX mb_artist_metadata_cache_idx_dirty ON mapping.mb_artist_metadata_cache (dirty);
+
+CREATE INDEX canonical_musicbrainz_data_idx_combined_lookup
+    ON mapping.canonical_musicbrainz_data (combined_lookup);
+CREATE INDEX canonical_musicbrainz_data_idx_artist_credit_recording_name
+    ON mapping.canonical_musicbrainz_data (artist_credit_name, recording_name);
+CREATE UNIQUE INDEX canonical_musicbrainz_data_idx_recording_mbid
+    ON mapping.canonical_musicbrainz_data (recording_mbid);
+
+CREATE INDEX can_mb_data_release_idx_combined_lookup
+    ON mapping.canonical_musicbrainz_data_release_support (combined_lookup);
+CREATE INDEX can_mb_data_release_idx_ac_rec_rel
+    ON mapping.canonical_musicbrainz_data_release_support (artist_credit_name, recording_name, release_name);
+CREATE UNIQUE INDEX can_mb_data_release_idx_recording_mbid_release_mbid
+    ON mapping.canonical_musicbrainz_data_release_support (recording_mbid, release_mbid);
+
+CREATE INDEX canonical_recording_redirect_ndx_canonical_recording_mbid
+    ON mapping.canonical_recording_redirect (canonical_recording_mbid);
+CREATE UNIQUE INDEX canonical_recording_redirect_ndx_recording_mbid
+    ON mapping.canonical_recording_redirect (recording_mbid);
+
+CREATE UNIQUE INDEX release_mbid_ndx_canonical_release_redirect
+    ON mapping.canonical_release_redirect (release_mbid);
+
+CREATE INDEX spotify_metadata_index_idx_combined_lookup_all
+    ON mapping.spotify_metadata_index (combined_lookup_all);
+CREATE INDEX spotify_metadata_index_idx_combined_lookup_without_album
+    ON mapping.spotify_metadata_index (combined_lookup_without_album);
+
+CREATE INDEX apple_metadata_index_idx_combined_lookup_all
+    ON mapping.apple_metadata_index (combined_lookup_all);
+CREATE INDEX apple_metadata_index_idx_combined_lookup_without_album
+    ON mapping.apple_metadata_index (combined_lookup_without_album);
+
+CREATE INDEX soundcloud_metadata_index_idx_combined_lookup
+    ON mapping.soundcloud_metadata_index (combined_lookup_without_album);
 
 CREATE UNIQUE INDEX recording_msid_ndx_mbid_mapping ON mbid_mapping (recording_msid);
 CREATE INDEX recording_mbid_ndx_mbid_mapping ON mbid_mapping (recording_mbid);
@@ -66,6 +115,15 @@ CREATE INDEX apple_cache_rel_track_artist_track_id_idx ON apple_cache.rel_track_
 
 CREATE UNIQUE INDEX soundcloud_cache_track_soundcloud_id_idx ON soundcloud_cache.track (track_id);
 CREATE UNIQUE INDEX soundcloud_cache_artist_soundcloud_id_idx ON soundcloud_cache.artist (artist_id);
+
+-- Internet Archive indexes
+CREATE UNIQUE INDEX internetarchive_cache_track_track_id_idx ON internetarchive_cache.track (track_id);
+CREATE INDEX internetarchive_cache_track_artist_gin_idx ON internetarchive_cache.track USING GIN (artist);
+CREATE INDEX internetarchive_cache_track_name_idx ON internetarchive_cache.track (name);
+CREATE INDEX internetarchive_cache_track_album_idx ON internetarchive_cache.track (album);
+CREATE INDEX internetarchive_cache_track_stream_urls_gin_idx ON internetarchive_cache.track USING GIN (stream_urls);
+CREATE INDEX internetarchive_cache_track_last_updated_idx ON internetarchive_cache.track (last_updated);
+
 
 CREATE UNIQUE INDEX similar_recordings_dev_uniq_idx ON similarity.recording_dev (mbid0, mbid1);
 CREATE UNIQUE INDEX similar_recordings_dev_reverse_uniq_idx ON similarity.recording_dev (mbid1, mbid0);
@@ -102,5 +160,7 @@ CREATE INDEX popularity_top_release_artist_mbid_listen_count_idx ON popularity.t
 CREATE INDEX popularity_top_release_artist_mbid_user_count_idx ON popularity.top_release (artist_mbid, total_user_count) INCLUDE (release_mbid);
 
 CREATE INDEX tags_lb_tag_radio_percent_idx ON tags.lb_tag_radio (tag, percent) INCLUDE (source, recording_mbid, tag_count);
+
+CREATE UNIQUE INDEX year_in_music_cover_user_id_idx ON statistics.year_in_music_cover (user_id, year);
 
 COMMIT;

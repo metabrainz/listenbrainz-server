@@ -19,13 +19,14 @@ export default function Bar(props: BarProps) {
 
   const customTooltip = (tooltipProps: BarTooltipProps<BarDatum>) => {
     const { data: datum, value } = tooltipProps;
+    const formattedValue = new Intl.NumberFormat().format(value);
     return (
       <TooltipWrapper anchor="center" position={[0, 0]}>
         <div className="graph-tooltip" id={datum.entity.toString()}>
           <span className="badge bg-info">#{datum.idx}</span> {datum.entity}
           :&nbsp;
           <b>
-            {value} {Number(value) === 1 ? "listen" : "listens"}
+            {formattedValue} {Number(value) === 1 ? "listen" : "listens"}
           </b>
           {datum.artist && <div>{datum.artist}</div>}
         </div>
@@ -45,12 +46,18 @@ export default function Bar(props: BarProps) {
     ? Math.min(5, maxValue)
     : Math.min(9, maxValue);
 
+  const tickValues =
+    maxValue <= 10
+      ? Array.from({ length: maxValue + 1 }, (_, i) => i)
+      : numberOfTicks;
+
   const horizontalAxis = {
     tickSize: 5,
-    tickValues: numberOfTicks,
+    tickValues,
     tickPadding: 5,
     legend: "Number of listens",
-    legendOffset: 30,
+    legendOffset: 45,
+    legendPosition: "middle",
   };
 
   return (

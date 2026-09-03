@@ -6,6 +6,7 @@ import {
   act,
   waitFor,
   waitForElementToBeRemoved,
+  fireEvent,
 } from "@testing-library/react";
 import WS from "jest-websocket-mock";
 import { SocketIO as mockSocketIO } from "mock-socket";
@@ -80,6 +81,13 @@ jest.mock("react-router", () => ({
     ];
   },
 }));
+
+jest.mock("react-datetime-picker/dist/entry.nostyle", () => (props: any) => (
+  <input
+    data-testid="mock-date-picker"
+    onChange={(e) => props.onChange(new Date(e.target.value))}
+  />
+));
 
 describe("Dashboard page", () => {
   jest.setTimeout(10000);
@@ -263,7 +271,7 @@ describe("Dashboard page", () => {
   it("doesn't call removeListenFromListenList or update state if status code is not 200", async () => {
     server.use(
       http.post("/1/delete-listen", async (path) => {
-        return HttpResponse.json({}, { status: 500 });
+        return HttpResponse.json({}, { status: 418 });
       })
     );
     renderWithProviders(
@@ -788,6 +796,34 @@ describe("Dashboard page", () => {
 
         expect(newestButton).toHaveAttribute("href", "/");
         expect(newestButton).toHaveAttribute("aria-disabled", "false");
+      });
+    });
+
+    describe("DateTimePicker", () => {
+      it("updates search params with max_ts when a date is selected", async () => {
+        renderWithProviders(
+          <Listens />,
+          {
+            currentUser,
+          },
+          {
+            wrapper: reactQueryWrapper,
+          }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        const datePicker = screen.getByTestId("mock-date-picker");
+        // Trigger change with a specific date
+        fireEvent.change(datePicker, { target: { value: "2024-03-14" } });
+
+        // The expected timestamp for 2024-03-15 00:00:00 in Europe/London (GMT) is 1710460800
+        await waitFor(() => {
+          expect(mockSearchParam).toEqual({ max_ts: "1710460800" });
+        });
       });
     });
   });

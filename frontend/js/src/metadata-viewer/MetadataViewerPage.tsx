@@ -2,8 +2,9 @@
 import * as React from "react";
 import { toast } from "react-toastify";
 import { io } from "socket.io-client";
-import { Link, useLoaderData } from "react-router";
+import { useLoaderData } from "react-router";
 import GlobalAppContext from "../utils/GlobalAppContext";
+import buildAuthUrl from "../utils/auth";
 
 import MetadataViewer from "./components/MetadataViewer";
 import { ToastMsg } from "../notifications/Notifications";
@@ -24,6 +25,7 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
       setCurrentListen(playingNowListen);
       try {
         const metadata = await APIService.lookupRecordingMetadata(
+          currentUser?.auth_token || "",
           playingNowListen.track_metadata.track_name,
           playingNowListen.track_metadata.artist_name
         );
@@ -40,7 +42,7 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
         );
       }
     },
-    [setCurrentListen, setRecordingData]
+    [setCurrentListen, setRecordingData, currentUser?.auth_token]
   );
 
   /** Websockets connection */
@@ -96,7 +98,7 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
   if (!currentUser) {
     return (
       <div>
-        Please <Link to="/login/">log in to ListenBrainz</Link>
+        Please <a href={buildAuthUrl("login")}>log in to ListenBrainz</a>
       </div>
     );
   }

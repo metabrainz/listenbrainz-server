@@ -164,7 +164,7 @@ def _init_feed(id, title, alternate_url, self_url):
     return fg
 
 
-@atom_bp.get("/user/<user_name>/listens")
+@atom_bp.get("/user/<mb_username:user_name>/listens")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -183,12 +183,11 @@ def get_listens(user_name):
     if user is None:
         return NotFound("User not found")
 
-    minutes = request.args.get("minutes", DEFAULT_MINUTES_OF_LISTENS)
-    if minutes:
-        try:
-            minutes = int(minutes)
-        except ValueError:
-            return BadRequest("Invalid value for minutes")
+    minutes = request.args.get("minutes") or DEFAULT_MINUTES_OF_LISTENS
+    try:
+        minutes = int(minutes)
+    except ValueError:
+        return BadRequest("Invalid value for minutes")
     if minutes < 1 or minutes > MAX_MINUTES_OF_LISTENS:
         return BadRequest("Value of minutes is out of range")
 
@@ -234,8 +233,7 @@ def get_listens(user_name):
             recording_mb_page_base_url="https://musicbrainz.org/recording/",
             track_name=track_name,
             recording_mbid=recording_mbid,
-            artist_page_base_url=_external_url_for(
-                "artist.artist_page", path=""),
+            artist_page_base_url=_external_url_for("artist.artist_page", artist_mbid=""),
             artist_mbid=artist_mbid,
             artist_name=artist_name,
         )
@@ -305,15 +303,14 @@ def get_fresh_releases():
             f"{this_feed_url}/{uts}/{artist_credit_name}/{release_name}"
         )
         fe.title(f"{release_name} by {artist_credit_name}")
-        fe.link(href=f"{_external_url_for('release.release_page')}{release_mbid}", rel="alternate")
+        fe.link(href=f"{_external_url_for('release.release_page', path="")}{release_mbid}", rel="alternate")
 
         content = render_template(
             "atom/fresh_releases.html",
-            release_lb_page_base_url=_external_url_for('release.release_page'),
+            release_lb_page_base_url=_external_url_for('release.release_page', path=""),
             release_name=release_name,
             release_mbid=release_mbid,
-            artist_page_base_url=_external_url_for(
-                "artist.artist_page", path=""),
+            artist_page_base_url=_external_url_for("artist.artist_page", artist_mbid=""),
             artist_mbid=artist_mbid,
             artist_name=artist_credit_name,
             explore_fresh_releases_url=_external_url_for(
@@ -333,7 +330,7 @@ def get_fresh_releases():
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.get("/user/<user_name>/fresh-releases")
+@atom_bp.get("/user/<mb_username:user_name>/fresh-releases")
 @crossdomain
 @ratelimit()
 def get_user_fresh_releases(user_name):
@@ -389,15 +386,14 @@ def get_user_fresh_releases(user_name):
             f"{this_feed_url}/{uts}/{artist_credit_name}/{release_name}"
         )
         fe.title(f"{release_name} by {artist_credit_name}")
-        fe.link(href=f"{_external_url_for('release.release_page')}{release_mbid}", rel="alternate")
+        fe.link(href=f"{_external_url_for('release.release_page', path="")}{release_mbid}", rel="alternate")
 
         content = render_template(
             "atom/fresh_releases.html",
-            release_lb_page_base_url=_external_url_for('release.release_page'),
+            release_lb_page_base_url=_external_url_for('release.release_page', path=""),
             release_name=release_name,
             release_mbid=release_mbid,
-            artist_page_base_url=_external_url_for(
-                "artist.artist_page", path=""),
+            artist_page_base_url=_external_url_for("artist.artist_page", artist_mbid=""),
             artist_mbid=artist_mbid,
             artist_name=artist_credit_name,
             explore_fresh_releases_url=_external_url_for(
@@ -427,7 +423,7 @@ def _get_entity_stats(user_id: str, entity: str, range: str, count: int):
     return entity_list, stats.to_ts, stats.last_updated
 
 
-@atom_bp.get("/user/<user_name>/stats/top-artists")
+@atom_bp.get("/user/<mb_username:user_name>/stats/top-artists")
 @crossdomain
 @ratelimit()
 def get_artist_stats(user_name):
@@ -493,7 +489,7 @@ def get_artist_stats(user_name):
     content = render_template(
         "atom/top_artists.html",
         artists=entity_list,
-        artist_page_base_url=_external_url_for("artist.artist_page", path=""),
+        artist_page_base_url=_external_url_for("artist.artist_page", artist_mbid=""),
     )
     fe.content(
         content=content,
@@ -508,7 +504,7 @@ def get_artist_stats(user_name):
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.get("/user/<user_name>/stats/top-albums")
+@atom_bp.get("/user/<mb_username:user_name>/stats/top-albums")
 @crossdomain
 @ratelimit()
 def get_release_group_stats(user_name):
@@ -574,8 +570,8 @@ def get_release_group_stats(user_name):
     content = render_template(
         "atom/top_albums.html",
         release_groups=entity_list,
-        artist_page_base_url=_external_url_for("artist.artist_page", path=""),
-        album_page_base_url=_external_url_for("album.album_page", path=""),
+        artist_page_base_url=_external_url_for("artist.artist_page", artist_mbid=""),
+        album_page_base_url=_external_url_for("album.album_page", release_group_mbid=""),
     )
     fe.content(
         content=content,
@@ -590,7 +586,7 @@ def get_release_group_stats(user_name):
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.get("/user/<user_name>/stats/top-tracks")
+@atom_bp.get("/user/<mb_username:user_name>/stats/top-tracks")
 @crossdomain
 @ratelimit()
 def get_recording_stats(user_name):
@@ -656,7 +652,7 @@ def get_recording_stats(user_name):
     content = render_template(
         "atom/top_tracks.html",
         tracks=entity_list,
-        artist_page_base_url=_external_url_for("artist.artist_page", path=""),
+        artist_page_base_url=_external_url_for("artist.artist_page", artist_mbid=""),
     )
     fe.content(
         content=content,
@@ -727,8 +723,7 @@ def get_playlist_recordings(playlist_mbid):
             artist_credit=recording.artist_credit,
             artist_mbid=recording.artist_mbids[0] if recording.artist_mbids else None,
             recording_mb_page_base_url="https://musicbrainz.org/recording/",
-            artist_page_base_url=_external_url_for(
-                "artist.artist_page", path=""),
+            artist_page_base_url=_external_url_for("artist.artist_page", artist_mbid=""),
         )
         fe.content(
             content=content,
@@ -744,7 +739,7 @@ def get_playlist_recordings(playlist_mbid):
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.get("/user/<user_name>/recommendations")
+@atom_bp.get("/user/<mb_username:user_name>/recommendations")
 @crossdomain
 @api_listenstore_needed
 @ratelimit()
@@ -818,7 +813,7 @@ def get_recommendation(user_name):
         "atom/playlist.html",
         tracks=playlist.recordings,
         recording_mb_page_base_url="https://musicbrainz.org/recording/",
-        artist_page_base_url=_external_url_for("artist.artist_page", path=""),
+        artist_page_base_url=_external_url_for("artist.artist_page", artist_mbid=""),
     )
     fe.content(
         content=content,
@@ -834,7 +829,7 @@ def get_recommendation(user_name):
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.get("/user/<user_name>/stats/art/grid")
+@atom_bp.get("/user/<mb_username:user_name>/stats/art/grid")
 @crossdomain
 @ratelimit()
 def get_cover_art_grid_stats(user_name):
@@ -937,7 +932,7 @@ def get_cover_art_grid_stats(user_name):
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.get("/user/<user_name>/stats/art/custom")
+@atom_bp.get("/user/<mb_username:user_name>/stats/art/custom")
 @crossdomain
 @ratelimit()
 def get_cover_art_custom_stats(user_name):
@@ -1082,7 +1077,7 @@ def _generate_event_title(event):
 
 # Commented out as new OAuth is not merged yet. Once merged, update this function to use the new OAuth API to 
 # authenticate the user and then fetch the user's events feed.
-# @atom_bp.get("/user/<user_name>/events")
+# @atom_bp.get("/user/<mb_username:user_name>/events")
 # @crossdomain
 # @ratelimit()
 # @api_listenstore_needed
@@ -1128,7 +1123,7 @@ def _generate_event_title(event):
 
 #     user_page_url = _external_url_for("user.index", user_name=user_name)
 #     user_page_base_url = _external_url_for("user.index", user_name="")[:-1]
-#     artist_page_base_url = _external_url_for("artist.artist_page", path="")
+#     artist_page_base_url = _external_url_for("artist.artist_page", artist_mbid="")
 #     recording_mb_page_base_url = "https://musicbrainz.org/recording/"
 
 #     for event in user_events:

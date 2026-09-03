@@ -24,12 +24,6 @@ ALTER TABLE reported_users
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
-ALTER TABLE spotify_auth
-    ADD CONSTRAINT spotify_auth_user_id_foreign_key
-    FOREIGN KEY (user_id)
-    REFERENCES "user" (id)
-    ON DELETE CASCADE;
-
 ALTER TABLE external_service_oauth
     ADD CONSTRAINT external_service_oauth_user_id_foreign_key
     FOREIGN KEY (user_id)
@@ -149,6 +143,36 @@ ALTER TABLE user_data_export
     ADD CONSTRAINT user_data_export_user_id_foreign_key
     FOREIGN KEY (user_id)
     REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE user_data_import
+    ADD CONSTRAINT user_data_import_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE funkwhale_tokens
+    ADD CONSTRAINT funkwhale_tokens_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE funkwhale_tokens
+    ADD CONSTRAINT funkwhale_tokens_server_id_foreign_key
+    FOREIGN KEY (funkwhale_server_id)
+    REFERENCES funkwhale_servers (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE navidrome_tokens
+    ADD CONSTRAINT navidrome_tokens_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE navidrome_tokens
+    ADD CONSTRAINT navidrome_tokens_server_id_foreign_key
+    FOREIGN KEY (navidrome_server_id)
+    REFERENCES navidrome_servers (id)
     ON DELETE CASCADE;
 
 COMMIT;

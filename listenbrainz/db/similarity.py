@@ -3,6 +3,7 @@ from psycopg2.sql import SQL, Literal, Identifier, Composable
 
 from listenbrainz.db import timescale
 from listenbrainz.db.artist import load_artists_from_mbids_with_redirects
+from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.spark.spark_dataset import DatabaseDataset, SparkDataset
 
 
@@ -211,4 +212,19 @@ def get_artists(mb_curs, ts_curs, mbids, algorithm, count):
     for item in metadata:
         item["score"] = score_idx.get(item["original_artist_mbid"])
         item["reference_mbid"] = mbid_idx.get(item["artist_mbid"])
+    return metadata
+
+
+def get_recordings(mb_curs, ts_curs, mbids, algorithm, count):
+    """ For the given recording mbids, fetch at most `count` number of similar recordings using the given algorithm
+        along with their metadata. """
+    similar_mbids, score_idx, mbid_idx = get(ts_curs, "recording_dev", mbids, algorithm, count)
+    if not similar_mbids:
+        return []
+
+    metadata = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, similar_mbids)
+
+    for item in metadata:
+        item["score"] = score_idx.get(item["original_recording_mbid"])
+        item["reference_mbid"] = mbid_idx.get(item["recording_mbid"])
     return metadata

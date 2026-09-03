@@ -6,6 +6,7 @@ import tinycolor from "tinycolor2";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { Link, useNavigate, useParams } from "react-router";
+import { useSetAtom } from "jotai";
 import ColorWheel from "./components/ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -15,14 +16,14 @@ import ListenCard from "../../common/listens/ListenCard";
 import Card from "../../components/Card";
 import { COLOR_WHITE } from "../../utils/constants";
 import { ToastMsg } from "../../notifications/Notifications";
-import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
+import { setAmbientQueueAtom } from "../../common/brainzplayer/BrainzPlayerAtoms";
 
 export default function HueSound() {
   const { colorURLParam } = useParams();
   const navigate = useNavigate();
   const { APIService } = React.useContext(GlobalAppContext);
   const { lookupReleaseFromColor } = APIService;
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
   const [loading, setLoading] = React.useState(false);
   const [colorReleases, setColorReleases] = React.useState<ColorReleaseItem[]>(
     []
@@ -44,10 +45,7 @@ export default function HueSound() {
       return;
     }
     selectedReleaseTracks?.shift();
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: selectedReleaseTracks,
-    });
+    setAmbientQueue(selectedReleaseTracks);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedReleaseTracks]);
 

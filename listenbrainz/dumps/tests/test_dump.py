@@ -48,8 +48,15 @@ class DumpTestCase(DatabaseTestCase):
     def setUp(self):
         super().setUp()
         self.tempdir = tempfile.mkdtemp()
+        self.tempdir_temp = tempfile.mkdtemp()
         self.tempdir_private = tempfile.mkdtemp()
-        self.tempdir_locations = {"public": self.tempdir, "private": self.tempdir_private}
+        self.tempdir_private_temp = tempfile.mkdtemp()
+        self.tempdir_locations = {
+            "public": self.tempdir,
+            "public_temp": self.tempdir_temp,
+            "private": self.tempdir_private,
+            "private_temp": self.tempdir_private_temp,
+        }
         self.app = create_app()
         self.ts_conn = timescale.engine.connect()
 

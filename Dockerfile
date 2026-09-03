@@ -37,7 +37,7 @@ RUN apt-get update \
 
 # PostgreSQL client
 RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-ENV PG_MAJOR=12
+ENV PG_MAJOR=14
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" $PG_MAJOR > /etc/apt/sources.list.d/pgdg.list
 RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-$PG_MAJOR \
@@ -83,7 +83,7 @@ WORKDIR /code
 COPY package.json package-lock.json /code/
 RUN npm install
 
-COPY webpack.config.js babel.config.js enzyme.config.ts jest.config.js tsconfig.json .eslintrc.js .stylelintrc.js /code/
+COPY webpack.config.js babel.config.js jest.config.js tsconfig.json .eslintrc.js .stylelintrc.js /code/
 
 
 #########################################################################
@@ -103,8 +103,8 @@ FROM listenbrainz-base AS listenbrainz-prod
 
 # Create directories for cron logs and dumps
 # /mnt/dumps: Temporary working space for dumps
-# /mnt/backup: All dumps
-# /mnt/ftp: Subset of all dumps that are uploaded to
+# /mnt/backup: Non-full public dump backups
+# /mnt/ftp: Temporary dump staging and small FTP-retention markers
 RUN mkdir /logs /mnt/dumps /mnt/backup /mnt/ftp
 
 COPY ./docker/run-lb-command /usr/local/bin
@@ -201,6 +201,12 @@ COPY ./docker/services/soundcloud_metadata_cache/soundcloud_metadata_cache.servi
 COPY ./docker/services/soundcloud_metadata_cache/soundcloud_metadata_cache.finish /etc/service/soundcloud_metadata_cache/finish
 RUN touch /etc/service/soundcloud_metadata_cache/down
 
+# Internet Archive Metadata Cache
+COPY ./docker/services/internetarchive_metadata_cache/consul-template-internetarchive-metadata-cache.conf /etc/consul-template-internetarchive-metadata-cache.conf
+COPY ./docker/services/internetarchive_metadata_cache/internetarchive_metadata_cache.service /etc/service/internetarchive_metadata_cache/run
+COPY ./docker/services/internetarchive_metadata_cache/internetarchive_metadata_cache.finish /etc/service/internetarchive_metadata_cache/finish
+RUN touch /etc/service/internetarchive_metadata_cache/down
+
 # uwsgi (website)
 COPY ./docker/services/uwsgi/uwsgi.ini.ctmpl /etc/uwsgi/uwsgi.ini.ctmpl
 COPY ./docker/services/uwsgi/consul-template-uwsgi.conf /etc/consul-template-uwsgi.conf
@@ -210,12 +216,15 @@ RUN touch /etc/service/uwsgi/down
 
 COPY ./docker/rc.local /etc/rc.local
 
-# crontab
-COPY ./docker/services/cron/crontab /etc/cron.d/crontab
-RUN chmod 0644 /etc/cron.d/crontab
+# crontabs
+RUN mkdir -p /etc/listenbrainz-crontabs
+COPY ./docker/services/cron/crontab /etc/listenbrainz-crontabs/crontab
+COPY ./docker/services/cron/full-dumps-crontab /etc/listenbrainz-crontabs/full-dumps-crontab
+RUN chmod 0644 /etc/listenbrainz-crontabs/*
 
 # copy the compiled js files and statis assets from image to prod
 COPY --from=listenbrainz-frontend-prod /code/frontend/robots.txt /static/
+COPY --from=listenbrainz-frontend-prod /code/frontend/favicon.ico /static/
 COPY --from=listenbrainz-frontend-prod /code/frontend/sound /static/sound
 COPY --from=listenbrainz-frontend-prod /code/frontend/fonts /static/fonts
 COPY --from=listenbrainz-frontend-prod /code/frontend/img /static/img

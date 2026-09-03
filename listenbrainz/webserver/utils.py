@@ -7,15 +7,28 @@ from flask_login import current_user
 
 from listenbrainz.webserver import db_conn, meb_conn
 from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user, \
-    get_current_critiquebrainz_user, get_current_musicbrainz_user, get_current_soundcloud_user, get_current_apple_music_user
+    get_current_critiquebrainz_user, get_current_musicbrainz_user, get_current_soundcloud_user, get_current_apple_music_user, \
+    get_current_funkwhale_user, get_current_navidrome_user
 import listenbrainz.db.user_setting as db_usersetting
 import listenbrainz.db.donation as db_donation
+import listenbrainz.db.spotify as db_spotify
+
+METABRAINZ_PROFILE_URL = "https://metabrainz.org/profile"
+EMAIL_REQUIRED_BLOG_URL = "https://blog.metabrainz.org/?p=8915"
+
+EMAIL_VERIFICATION_REQUIRED_MESSAGE = \
+    'Please check your inbox for a verification email, or go to your MetaBrainz profile page ' \
+    'to verify your email: ' \
+    f'{METABRAINZ_PROFILE_URL}. ' \
+    f'Read the blog post at {EMAIL_REQUIRED_BLOG_URL} to understand why we need your email.'
 
 REJECT_LISTENS_WITHOUT_EMAIL_ERROR = \
-    'The listens were rejected because the user does not has not provided an email. ' \
-    'Please visit https://musicbrainz.org/account/edit to add an email address. ' \
-    'Read the blog post at https://blog.metabrainz.org/?p=8915 to understand why ' \
-    'we need your email.'
+    'The listens were rejected because your MetaBrainz account does not have a verified email address. ' \
+    f'{EMAIL_VERIFICATION_REQUIRED_MESSAGE}'
+
+CONNECT_SERVICES_WITHOUT_EMAIL_ERROR = \
+    'You need to verify an email address before connecting a service. ' \
+    f'{EMAIL_VERIFICATION_REQUIRED_MESSAGE}'
 
 REJECT_LISTENS_FROM_PAUSED_USER_ERROR = \
     'User account is paused and is currently not accepting listens. ' \
@@ -92,6 +105,8 @@ def get_global_props():
         "musicbrainz": get_current_musicbrainz_user(),
         "soundcloud": get_current_soundcloud_user(),
         "appleMusic": get_current_apple_music_user(),
+        "funkwhale": get_current_funkwhale_user(),
+        "navidrome": get_current_navidrome_user(),
         "sentry_traces_sample_rate": sentry_config.get("traces_sample_rate", 0.0),
     }
 
@@ -105,11 +120,49 @@ def get_global_props():
             props["flair"] = flair_props
 
         if meb_conn:
-            show_flair = db_donation.is_user_eligible_donor(meb_conn, current_user.id)
+            show_flair = db_donation.is_user_eligible_donor(meb_conn, current_user.musicbrainz_row_id)
             if show_flair is not None:
                 props["show_flair"] = show_flair
 
     return orjson.dumps(props).decode("utf-8")
+
+
+def get_initial_alerts():
+    """Generate initial alerts for the React frontend."""
+    alerts = []
+
+    from listenbrainz.webserver import redis_connection
+    try:
+        messages = redis_connection._redis.get_admin_flash_messages()
+    except Exception:
+        current_app.logger.error("Could not load admin flash messages from Redis", exc_info=True)
+        messages = []
+
+    for message in messages:
+        alerts.append({
+            "id": message["id"],
+            "level": message["level"],
+            "message": message["message"],
+        })
+
+    if current_user.is_authenticated:
+        try:
+            spotify_details = db_spotify.get_user_import_details(db_conn, current_user.id)
+        except Exception:
+            current_app.logger.error("Could not load Spotify import status for initial alerts", exc_info=True)
+        else:
+            error = spotify_details.get("error") if spotify_details else None
+            if error and error.get("reason") == "invalid_grant":
+                alerts.append({
+                    "id": "spotify-reconnect-required",
+                    "level": "error",
+                    "message": (
+                        'Your Spotify connection has expired or been revoked, so imports have stopped. '
+                        '<a href="/settings/music-services/details/">Reconnect Spotify</a> to resume imports.'
+                    ),
+                })
+
+    return orjson.dumps(alerts).decode("utf-8")
 
 
 def parse_boolean_arg(name, default=None):

@@ -6,11 +6,10 @@ import click
 import orjson
 from click import UsageError
 from dateutil.relativedelta import relativedelta, MO
-from kombu import Connection
 from kombu.entity import PERSISTENT_DELIVERY_MODE, Exchange
 
+from listenbrainz.rabbitmq import create_rabbitmq_connection
 from listenbrainz.troi.weekly_playlists import get_users_for_weekly_playlists
-from listenbrainz.utils import get_fallback_connection_name
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.webserver import create_app
 
@@ -69,16 +68,9 @@ def send_request_to_spark_cluster(query, **params):
     app = create_app()
     with app.app_context():
         message = _prepare_query_message(query, **params)
-        connection = Connection(
-            hostname=app.config["RABBITMQ_HOST"],
-            userid=app.config["RABBITMQ_USERNAME"],
-            port=app.config["RABBITMQ_PORT"],
-            password=app.config["RABBITMQ_PASSWORD"],
-            virtual_host=app.config["RABBITMQ_VHOST"],
-            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
-        )
+        connection = create_rabbitmq_connection(app.config)
         producer = connection.Producer()
-        spark_request_exchange = Exchange(app.config["SPARK_REQUEST_EXCHANGE"], "fanout", durable=False)
+        spark_request_exchange = Exchange(app.config["SPARK_REQUEST_EXCHANGE"], "fanout", durable=True)
         producer.publish(
             message,
             routing_key="",
@@ -89,7 +81,7 @@ def send_request_to_spark_cluster(query, **params):
 
 
 @cli.command(name="request_user_stats")
-@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity']),
+@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity', 'artist_evolution_activity', 'era_activity', 'genre_activity']),
               help="Type of statistics to calculate", required=True)
 @click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
@@ -108,7 +100,7 @@ def request_user_stats(type_, range_, entity, database):
 
 
 @cli.command(name="request_sitewide_stats")
-@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity']),
+@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'era_activity', 'artist_evolution_activity']),
               help="Type of statistics to calculate", required=True)
 @click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
@@ -170,6 +162,14 @@ def request_yim_most_listened_year(year: int):
     send_request_to_spark_cluster("year_in_music.most_listened_year", year=year)
 
 
+@cli.command(name="request_yim_artist_evolution")
+@click.option("--year", type=int, help="Year for which to calculate artist evolution",
+              default=date.today().year)
+def request_yim_artist_evolution(year: int):
+    """Calculate artist evolution activity for Year in Music"""
+    send_request_to_spark_cluster("year_in_music.artist_evolution_activity", year=year)
+
+
 @cli.command(name="request_yim_top_stats")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
@@ -227,6 +227,13 @@ def request_yim_new_artists_discovered(year: int):
 def request_yim_top_genres(year: int):
     """ Send request to calculate top genres each user listened to this year. """
     send_request_to_spark_cluster("year_in_music.top_genres", year=year)
+
+
+@cli.command(name="request_yim_genre_activity")
+@click.option("--year", type=int, help="Year for which to calculate genre activity", default=date.today().year)
+def request_yim_genre_activity(year: int):
+    """Calculate genre activity for Year in Music"""
+    send_request_to_spark_cluster("year_in_music.genre_activity", year=year)
 
 
 @cli.command(name="request_import_full")
@@ -294,7 +301,7 @@ def parse_list(ctx, param, value):
 def request_model(rank, itr, lmbda, alpha, use_transformed_listencounts):
     """ Send the cluster a request to train the model.
 
-    For more details refer to https://spark.apache.org/docs/2.1.0/mllib-collaborative-filtering.html
+    For more details refer to https://spark.apache.org/docs/latest/mllib-collaborative-filtering.html
     """
     params = {
         'ranks': rank,
@@ -446,41 +453,51 @@ def request_yim_similar_users(year: int):
 @cli.command(name="request_yim_top_missed_recordings")
 @click.option("--year", type=int, help="Year for which to generate the playlists",
               default=date.today().year)
-def request_yim_top_missed_recordings(year: int):
+@click.option("--export-to-spotify/--no-export-to-spotify", is_flag=True, default=True,
+              help="Whether to export the generated playlists to Spotify.")
+def request_yim_top_missed_recordings(year: int, export_to_spotify: bool):
     """ Send the cluster a request to generate tracks of the year data and then
      once the data has been imported generate YIM playlists. """
-    send_request_to_spark_cluster("year_in_music.top_missed_recordings", year=year)
+    send_request_to_spark_cluster("year_in_music.top_missed_recordings", year=year, export_to_spotify=export_to_spotify)
 
 
 @cli.command(name="request_yim_top_discoveries")
 @click.option("--year", type=int, help="Year for which to generate the playlists",
               default=date.today().year)
-def request_yim_top_discoveries(year: int):
+@click.option("--export-to-spotify/--no-export-to-spotify", is_flag=True, default=True,
+              help="Whether to export the generated playlists to Spotify.")
+def request_yim_top_discoveries(year: int, export_to_spotify: bool):
     """ Send the cluster a request to generate tracks of the year data and then
      once the data has been imported generate YIM playlists. """
-    send_request_to_spark_cluster("year_in_music.top_discoveries", year=year)
+    send_request_to_spark_cluster("year_in_music.top_discoveries", year=year, export_to_spotify=export_to_spotify)
 
 
 @cli.command(name="request_year_in_music")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
+@click.option("--import-pg-tables/--no-import-pg-tables", is_flag=True, default=True, help="whether to import the pg tables before generating the stats.")
+@click.option("--export-to-spotify/--no-export-to-spotify", is_flag=True, default=True,
+              help="Whether to export the generated playlists to Spotify.")
 @click.pass_context
-def request_year_in_music(ctx, year: int):
+def request_year_in_music(ctx, year: int, import_pg_tables: bool, export_to_spotify: bool):
     """ Send the cluster a request to generate all year in music statistics. """
     send_request_to_spark_cluster("echo.echo", message={"year": year, "action": "year_in_music_start"})
-    ctx.invoke(request_import_pg_tables)
+    if import_pg_tables:
+        ctx.invoke(request_import_pg_tables)
     ctx.invoke(request_yim_new_release_stats, year=year)
     ctx.invoke(request_yim_day_of_week, year=year)
     ctx.invoke(request_yim_most_listened_year, year=year)
+    ctx.invoke(request_yim_artist_evolution, year=year)
     ctx.invoke(request_yim_top_genres, year=year)
+    ctx.invoke(request_yim_genre_activity, year=year)
     ctx.invoke(request_yim_top_stats, year=year)
     ctx.invoke(request_yim_listens_per_day, year=year)
     ctx.invoke(request_yim_listen_count, year=year)
     ctx.invoke(request_yim_similar_users, year=year)
     ctx.invoke(request_yim_new_artists_discovered, year=year)
     ctx.invoke(request_yim_listening_time, year=year)
-    ctx.invoke(request_yim_top_missed_recordings, year=year)
-    ctx.invoke(request_yim_top_discoveries, year=year)
+    ctx.invoke(request_yim_top_missed_recordings, year=year, export_to_spotify=export_to_spotify)
+    ctx.invoke(request_yim_top_discoveries, year=year, export_to_spotify=export_to_spotify)
     send_request_to_spark_cluster("echo.echo", message={"year": year, "action": "year_in_music_end"})
 
 
@@ -525,13 +542,13 @@ def cron_request_all_stats(ctx):
         for entity in ["artists", "releases", "recordings", "release_groups"]:
             ctx.invoke(request_user_stats, type_="entity", range_=stats_range, entity=entity)
 
-        for stat in ["listening_activity", "daily_activity"]:
+        for stat in ["listening_activity", "daily_activity", "genre_activity", "era_activity", "artist_evolution_activity"]:
             ctx.invoke(request_user_stats, type_=stat, range_=stats_range)
 
         for entity in ["artists", "releases", "recordings", "release_groups"]:
             ctx.invoke(request_sitewide_stats, type_="entity", range_=stats_range, entity=entity)
 
-        for stat in ["listening_activity"]:
+        for stat in ["listening_activity", "era_activity", "artist_evolution_activity"]:
             ctx.invoke(request_sitewide_stats, type_=stat, range_=stats_range)
 
         for entity in ["artists", "release_groups"]:

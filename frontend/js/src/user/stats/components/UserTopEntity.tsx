@@ -17,6 +17,9 @@ export type UserTopEntityProps = {
   entity: Entity;
   user?: ListenBrainzUser;
   terminology: string;
+  contentCssClassName?: string;
+  numberOfEntities?: number;
+  extraButtons?: JSX.Element[];
 };
 
 export type UserTopEntityState = {
@@ -29,7 +32,15 @@ export type UserTopEntityState = {
 export default function UserTopEntity(props: UserTopEntityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
 
-  const { range, entity, user, terminology } = props;
+  const {
+    range,
+    entity,
+    user,
+    terminology,
+    contentCssClassName,
+    numberOfEntities = 10,
+    extraButtons,
+  } = props;
 
   // Loader Data
   const { data: loaderData, isLoading: loading } = useQuery({
@@ -41,7 +52,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
           entity,
           range,
           0,
-          10
+          numberOfEntities
         );
         return {
           data: queryData,
@@ -65,7 +76,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
 
   let statsUrl;
   if (user) {
-    statsUrl = `/user/${user.name}/stats`;
+    statsUrl = `/user/${encodeURIComponent(user.name)}/stats`;
   } else {
     statsUrl = `/statistics`;
   }
@@ -74,7 +85,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
   const entityTextOnCard = `${terminology}s`;
   if (hasError) {
     return (
-      <Card className="mt-4" data-testid="error-message">
+      <Card data-testid="error-message">
         <h3 className="capitalize-bold text-center">Top {entityTextOnCard}</h3>
         <div className="text-center">
           <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
@@ -85,10 +96,14 @@ export default function UserTopEntity(props: UserTopEntityProps) {
   }
 
   return (
-    <Card className="mt-4" data-testid={`top-${entity}`}>
+    <Card className="flex-grow-1" data-testid={`top-${entity}`}>
       <h3 className="capitalize-bold text-center">Top {entityTextOnCard}</h3>
       <Loader isLoading={loading}>
-        <div style={{ padding: "1em" }} data-testid={`top-${entity}-list`}>
+        <div
+          style={{ padding: "1em" }}
+          data-testid={`top-${entity}-list`}
+          className={contentCssClassName}
+        >
           {entity === "artist" &&
             Object.keys(data).length > 0 &&
             (data as UserArtistsResponse).payload.artists.map(
@@ -103,6 +118,9 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                 };
                 const listenDetails = getChartEntityDetails(interchangeFormat);
                 const listen = userChartEntityToListen(interchangeFormat);
+                const formattedListenCount = new Intl.NumberFormat().format(
+                  artist.listen_count
+                );
                 return (
                   <ListenCard
                     key={`top-artist-${getListenCardKey(listen)}`}
@@ -112,7 +130,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                     showUsername={false}
                     additionalActions={
                       <span className="badge bg-info">
-                        {artist.listen_count}
+                        {formattedListenCount}
                       </span>
                     }
                     // no thumbnail for artist entities
@@ -148,6 +166,9 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                 };
                 const listenDetails = getChartEntityDetails(interchangeFormat);
                 const listen = userChartEntityToListen(interchangeFormat);
+                const formattedListenCount = new Intl.NumberFormat().format(
+                  release.listen_count
+                );
                 return (
                   <ListenCard
                     key={`top-release-${getListenCardKey(listen)}`}
@@ -157,7 +178,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                     showUsername={false}
                     additionalActions={
                       <span className="badge bg-info">
-                        {release.listen_count}
+                        {formattedListenCount}
                       </span>
                     }
                     // eslint-disable-next-line react/jsx-no-useless-fragment
@@ -202,6 +223,9 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                     },
                   },
                 };
+                const formattedListenCount = new Intl.NumberFormat().format(
+                  listen_count
+                );
                 return (
                   <ListenCard
                     key={`top-recording-${getListenCardKey(
@@ -211,7 +235,9 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                     showTimestamp={false}
                     showUsername={false}
                     additionalActions={
-                      <span className="badge bg-info">{listen_count}</span>
+                      <span className="badge bg-info">
+                        {formattedListenCount}
+                      </span>
                     }
                     // Disabling the feedback component here because of display issues with the badge
                     // eslint-disable-next-line react/jsx-no-useless-fragment
@@ -240,6 +266,9 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                 };
                 const listenDetails = getChartEntityDetails(interchangeFormat);
                 const listen = userChartEntityToListen(interchangeFormat);
+                const formattedListenCount = new Intl.NumberFormat().format(
+                  releaseGroup.listen_count
+                );
                 return (
                   <ListenCard
                     key={`top-release-group-${getListenCardKey(listen)}`}
@@ -249,7 +278,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                     showUsername={false}
                     additionalActions={
                       <span className="badge bg-info">
-                        {releaseGroup.listen_count}
+                        {formattedListenCount}
                       </span>
                     }
                     // eslint-disable-next-line react/jsx-no-useless-fragment
@@ -260,10 +289,15 @@ export default function UserTopEntity(props: UserTopEntityProps) {
               }
             )}
         </div>
-        <div className="mb-4 text-center">
-          <Link to={statsUrl} className="btn btn-outline-info">
+        <div className="mb-4 mt-auto d-flex gap-2 flex-wrap justify-content-around">
+          <Link
+            to={statsUrl}
+            className="btn btn-outline-info"
+            title={`View more ${entityTextOnCard}`}
+          >
             View more…
           </Link>
+          {extraButtons}
         </div>
       </Loader>
     </Card>

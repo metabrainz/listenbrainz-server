@@ -50,7 +50,7 @@ class SpotifyCrawlerHandler(AlbumHandler):
     @staticmethod
     def transform_album(album) -> Album:
         tracks = []
-        for track in album.pop("tracks"):
+        for track in album.pop("tracks")["items"]:
             track_artists = [
                 Artist(id=artist["id"], name=artist["name"], data=artist)
                 for artist in track.pop("artists")
@@ -82,6 +82,7 @@ class SpotifyCrawlerHandler(AlbumHandler):
         new_items = []
         albums = self.sp.albums(album_ids).get("albums")
 
+        transformed_albums = []
         for album in albums:
             if album is None:
                 continue
@@ -100,9 +101,7 @@ class SpotifyCrawlerHandler(AlbumHandler):
                         discovered_items = self.discover_albums(track_artist["id"])
                         new_items.extend(discovered_items)
 
-            album["tracks"] = tracks
-
-        transformed_albums = [self.transform_album(album) for album in albums]
+            transformed_albums.append(self.transform_album(album))
 
         return transformed_albums, new_items
 

@@ -238,7 +238,7 @@ class InvalidAPIUsage(Exception):
         return orjson.dumps({
             "error": self.api_error.code,
             "message": self.api_error.message
-        }, indent=4).decode("utf-8")
+        }, option=orjson.OPT_INDENT_2).decode("utf-8")
 
     def to_xml(self):
         doc, tag, text = Doc().tagtext()
@@ -276,6 +276,15 @@ class ListenValidationError(Exception):
     Only use for code paths common to LB API, API compat & API compat deprecated.
     Throw this error from an util method, capture it in each of the corresponding
     views and re-raise the API dependent error.
+    """
+
+    def __init__(self, message, payload=None):
+        self.message = message
+        self.payload = payload
+
+class ImportFailedError(Exception):
+    """
+    Error class for raising when the listens import fails.
     """
 
     def __init__(self, message, payload=None):

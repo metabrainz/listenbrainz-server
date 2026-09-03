@@ -19,12 +19,24 @@ import {
   IconProp,
   SizeProp,
 } from "@fortawesome/fontawesome-svg-core";
+import { useAtomValue } from "jotai";
 import ProgressBar from "./ProgressBar";
-import { useBrainzPlayerContext } from "./BrainzPlayerContext";
 import { getAlbumArtFromListenMetadata } from "../../utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { FeedbackValue } from "./utils";
 import MenuOptions from "./MenuOptions";
+import {
+  playerPausedAtom,
+  queueRepeatModeAtom,
+  currentTrackNameAtom,
+  currentTrackArtistAtom,
+  currentTrackAlbumAtom,
+  currentTrackCoverURLAtom,
+  currentListenAtom,
+  currentListenIndexAtom,
+  queueAtom,
+  ambientQueueAtom,
+} from "./BrainzPlayerAtoms";
 
 type PlaybackControlButtonProps = {
   className?: string;
@@ -52,6 +64,7 @@ function PlaybackControlButton(props: PlaybackControlButtonProps) {
         disabled ? "disabled" : ""
       }`}
       title={title}
+      aria-label={title}
       onClick={disabled ? noop : action}
       type="button"
       tabIndex={0}
@@ -173,18 +186,17 @@ function MusicPlayer(props: MusicPlayerProps) {
   } = props;
 
   // BrainzPlayer Context
-  const {
-    currentListen,
-    currentListenIndex,
-    currentTrackName,
-    currentTrackArtist,
-    currentTrackAlbum,
-    currentTrackCoverURL,
-    playerPaused,
-    queueRepeatMode,
-    queue,
-    ambientQueue,
-  } = useBrainzPlayerContext();
+  const currentListenIndex = useAtomValue(currentListenIndexAtom);
+  const queue = useAtomValue(queueAtom);
+  const ambientQueue = useAtomValue(ambientQueueAtom);
+
+  const currentListen = useAtomValue(currentListenAtom);
+  const playerPaused = useAtomValue(playerPausedAtom);
+  const queueRepeatMode = useAtomValue(queueRepeatModeAtom);
+  const currentTrackName = useAtomValue(currentTrackNameAtom);
+  const currentTrackArtist = useAtomValue(currentTrackArtistAtom);
+  const currentTrackAlbum = useAtomValue(currentTrackAlbumAtom);
+  const currentTrackCoverURL = useAtomValue(currentTrackCoverURLAtom);
 
   // Global App Context
   const { spotifyAuth, APIService } = React.useContext(GlobalAppContext);

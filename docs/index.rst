@@ -22,7 +22,9 @@ Contents
 
    users/api/index
    users/api-usage
+   users/connect-music-services
    users/json
+   users/widgets
    users/clients
    users/api-compat
    users/listenbrainz-dumps
@@ -57,10 +59,3 @@ Contents
    maintainers/rabbitmq
    maintainers/updating-prod-db-schema
    maintainers/pull-requests
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

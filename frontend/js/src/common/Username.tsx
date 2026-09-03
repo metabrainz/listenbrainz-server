@@ -61,7 +61,7 @@ function Username(props: WithLinkProps | WithElementProps) {
   if (!hideLink) {
     return (
       <Link
-        to={`/user/${username}/`}
+        to={`/user/${encodeURIComponent(username)}/`}
         {...otherProps}
         className={cssClasses}
         title={username}

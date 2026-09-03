@@ -8,29 +8,6 @@ import sqlalchemy
 import json
 
 
-def update_import_status(db_conn, user_id: int, service: ExternalServiceType, error_message: str = None):
-    """ Add an error message to be shown to the user, thereby setting the user as inactive.
-
-    Args:
-        db_conn: database connection
-        user_id (int): the ListenBrainz row ID of the user
-        service (data.model.ExternalServiceType): service to add error for the user
-        error_message (str): the user-friendly error message to be displayed
-    """
-    db_conn.execute(sqlalchemy.text("""
-        UPDATE listens_importer
-           SET last_updated = now()
-             , error_message = :error_message
-         WHERE user_id = :user_id
-           AND service = :service
-    """), {
-        "user_id": user_id,
-        "error_message": error_message,
-        "service": service.value
-    })
-    db_conn.commit()
-
-
 def update_latest_listened_at(db_conn, user_id: int, service: ExternalServiceType, timestamp: Union[int, float]):
     """ Update the timestamp of the last listen imported for the user with
     specified LB user ID.
@@ -71,6 +48,7 @@ def get_import_status(db_conn, user_id: int, service: ExternalServiceType) -> di
     result = db_conn.execute(sqlalchemy.text("""
         SELECT latest_listened_at
              , status
+             , error
           FROM listens_importer
          WHERE user_id = :user_id
            AND service = :service
@@ -85,6 +63,7 @@ def get_import_status(db_conn, user_id: int, service: ExternalServiceType) -> di
     return {
         "status": row.status,
         "latest_listened_at": int(row.latest_listened_at.timestamp()) if row.latest_listened_at is not None else 0,
+        "error": row.error,
     }
 
 
@@ -92,8 +71,11 @@ def get_active_users_to_process(db_conn, service, exclude_error=False) -> list[d
     """ Returns a list of users whose listens should be imported from the external service.
     """
     filters = ["external_service_oauth.service = :service"]
+    # always exclude users with non-retryable errors
     if exclude_error:
-        filters.append("error_message IS NULL")
+        filters.append("error IS NULL")
+    else:
+        filters.append("(error IS NULL OR (error->>'retry')::boolean)")
     filter_str = " AND ".join(filters)
 
     result = db_conn.execute(text(f"""
@@ -108,7 +90,7 @@ def get_active_users_to_process(db_conn, service, exclude_error=False) -> list[d
              , latest_listened_at
              , status
              , external_service_oauth.external_user_id
-             , error_message
+             , error
              , is_paused
           FROM external_service_oauth
           JOIN "user"
@@ -123,8 +105,15 @@ def get_active_users_to_process(db_conn, service, exclude_error=False) -> list[d
     return users
 
 
-def update_status(db_conn, user_id: int, service: ExternalServiceType, state: str, listens_count: int):
-    """ 
+def update_status(
+    db_conn,
+    user_id: int,
+    service: ExternalServiceType,
+    state: str,
+    listens_count: int,
+    error: dict = None
+):
+    """
         Update status information for a user's import.
 
     Args:
@@ -133,6 +122,7 @@ def update_status(db_conn, user_id: int, service: ExternalServiceType, state: st
         service: ExternalServiceType enum of the service
         state: Import status of that service
         listens_count: Number of listens imported
+        error: optional error dict with 'message' (str) and 'retry' (bool) fields
     """
 
     params = {
@@ -140,6 +130,7 @@ def update_status(db_conn, user_id: int, service: ExternalServiceType, state: st
             "state": state,
             "count": listens_count
         }),
+        "error": json.dumps(error) if error else None,
         "service": service.value,
         "user_id": user_id,
     }
@@ -147,6 +138,8 @@ def update_status(db_conn, user_id: int, service: ExternalServiceType, state: st
     query = """
         UPDATE listens_importer
            SET status = :status
+             , last_updated = now()
+             , error = :error
          WHERE user_id = :user_id
            AND service = :service
     """

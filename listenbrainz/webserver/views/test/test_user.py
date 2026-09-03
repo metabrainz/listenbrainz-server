@@ -3,8 +3,9 @@ import logging
 import time
 from datetime import datetime, timezone
 from unittest import mock
-
+from urllib.parse import quote_plus
 import orjson
+from brainzutils import cache
 from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
@@ -31,7 +32,8 @@ class UserViewsTestCase(IntegrationTestCase):
         user = db_user.get(self.db_conn, user['id'])
         self.user = User.from_dbrow(user)
 
-        weirduser = db_user.get_or_create(self.db_conn, 2, 'weird\\user name')
+        weirduser = db_user.get_or_create(
+            self.db_conn, 2, '</weird?\\user_name>')
         self.weirduser = User.from_dbrow(weirduser)
 
         abuser = db_user.get_or_create(self.db_conn, 3, 'abuser')
@@ -47,7 +49,7 @@ class UserViewsTestCase(IntegrationTestCase):
         my_listens_url = self.custom_url_for("redirect.index", path="")
         # Not logged in
         response = self.client.get(my_listens_url)
-        self.assertRedirects(response, self.custom_url_for("login.index", next=my_listens_url))
+        self.assertRedirects(response, self.custom_url_for("login.musicbrainz", next=my_listens_url))
 
     def test_user_redirects(self):
         response = self.client.get('/user/iliekcomputers/')
@@ -147,6 +149,27 @@ class UserViewsTestCase(IntegrationTestCase):
         self.assertContext('user', self.user)
         self.assert200(response1)
         self.assert200(response2)
+    
+    def test_weird_usernames(self):
+        """Tests that the username parsing allows the full range of MusicBrainz usernames
+        This includes encoded slashes (%2F), question marks (%3F)"""
+        encoded_username = quote_plus(
+            self.weirduser.musicbrainz_id)
+        # First test get request
+        response = self.client.get(self.custom_url_for('user.index', path="", user_name=self.weirduser.musicbrainz_id))
+        self.assert200(response)
+        self.assertContext('user', self.weirduser)
+        # Now the same with encoded username
+        response = self.client.get(f"/user/{encoded_username}/")
+        self.assert200(response)
+        self.assertContext('user', self.weirduser)
+        # Then test post request to get user data
+        response = self.client.post(f"/user/{encoded_username}/")
+        self.assert200(response)
+        parsed_response = orjson.loads(response.data)
+        # Check username is equal to unencoded name
+        self.assertDictEqual(parsed_response['user'], {
+                             'id': self.weirduser.id, 'name': self.weirduser.musicbrainz_id})
 
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
     def test_ts_filters(self, timescale):
@@ -155,28 +178,30 @@ class UserViewsTestCase(IntegrationTestCase):
         timescale.return_value = ([], EPOCH, EPOCH)
 
         self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'))
-        req_call = mock.call(user, limit=25)
+        req_call = mock.call(user, None, None, 25)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # max_ts query param -> to_ts timescale param
         self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'),
                         query_string={'max_ts': 1520946000})
-        req_call = mock.call(user, limit=25, to_ts=datetime.fromtimestamp(1520946000, timezone.utc)) 
+        req_call = mock.call(user, None, datetime.fromtimestamp(1520946000, timezone.utc), 25)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # min_ts query param -> from_ts timescale param
         self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'),
                         query_string={'min_ts': 1520941000})
-        req_call = mock.call(user, limit=25, from_ts=datetime.fromtimestamp(1520941000, timezone.utc))
+        req_call = mock.call(user, datetime.fromtimestamp(1520941000, timezone.utc), None, 25)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
+        # clear listens cache
+        cache._r.flushdb()
         # If max_ts and min_ts set, only max_ts is used
         self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'),
                         query_string={'min_ts': 1520941000, 'max_ts': 1520946000})
-        req_call = mock.call(user, limit=25, to_ts=datetime.fromtimestamp(1520946000, timezone.utc))
+        req_call = mock.call(user, None, datetime.fromtimestamp(1520946000, timezone.utc), 25)
         timescale.assert_has_calls([req_call])
 
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
@@ -187,12 +212,12 @@ class UserViewsTestCase(IntegrationTestCase):
         response = self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'),
                                    query_string={'max_ts': 'a'})
         self.assert400(response)
-        self.assertIn(b'Incorrect timestamp argument max_ts: a', response.data)
+        self.assertIn("Incorrect max_ts timestamp argument: a", response.json["error"])
 
         response = self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'),
                                    query_string={'min_ts': 'b'})
         self.assert400(response)
-        self.assertIn(b'Incorrect timestamp argument min_ts: b', response.data)
+        self.assertIn("Incorrect min_ts timestamp argument: b", response.json["error"])
 
         timescale.assert_not_called()
 
@@ -236,10 +261,13 @@ class UserViewsTestCase(IntegrationTestCase):
     def test_user_pins(self):
         self.ts_conn.execute(text("""
             INSERT INTO mapping.mb_metadata_cache
-                               (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
+                               (recording_mbid, recording_id, artist_mbids, artist_ids, release_mbid, release_id, recording_data, artist_data, tag_data, release_data, dirty)
                 VALUES ('1fe669c9-5a2b-4dcb-9e95-77480d1e732e'
+                      , 1
                       , '{5b24fbab-c58f-4c37-a59d-ab232e2d98c4}'::UUID[]
+                      , '{1}'::INTEGER[]
                       , '607cc05a-e462-4f39-91b5-e9322544e0a6'
+                      , 1
                       , '{"name": "The Final Confrontation, Part 1", "rels": [], "length": 312000}'
                       , '{"name": "Danny Elfman", "artist_credit_id": 204, "artists": [{"area": "United States", "rels": {"youtube": "https://www.youtube.com/channel/UCjhIy2xUURhJvN0S7s_ztuw", "wikidata": "https://www.wikidata.org/wiki/Q193338", "streaming": "https://music.apple.com/gb/artist/486493", "free streaming": "https://www.deezer.com/artist/760", "social network": "https://www.instagram.com/dannyelfman/", "official homepage": "https://www.dannyelfman.com/", "purchase for download": "https://itunes.apple.com/us/artist/id486493"}, "type": "Person", "gender": "Male", "begin_year": 1953, "name": "Danny Elfman", "join_phrase": ""}]}'
                       , '{"artist": [], "recording": [], "release_group": []}'

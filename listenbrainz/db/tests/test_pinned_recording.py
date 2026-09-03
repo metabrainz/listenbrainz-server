@@ -114,10 +114,13 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
 
         query = """
                 INSERT INTO mapping.mb_metadata_cache
-                           (recording_mbid, artist_mbids, release_mbid, recording_data, artist_data, tag_data, release_data, dirty)
+                           (recording_mbid, recording_id, artist_mbids, artist_ids, release_mbid, release_id, recording_data, artist_data, tag_data, release_data, dirty)
                     VALUES ('2f3d422f-8890-41a1-9762-fbe16f107c31'
+                          , 1
                           , '{8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11}'::UUID[]
+                          , '{1}'::INTEGER[]
                           , '76df3287-6cda-33eb-8e9a-044b5e15ffdd'
+                          , 1
                           , '{"name": "Strangers", "rels": [], "length": 291160}'
                           , '{"name": "Portishead", "artist_credit_id": 204, "artists": [{"area": "United Kingdom", "rels": {"lyrics": "https://muzikum.eu/en/122-6105/portishead/lyrics.html", "youtube": "https://www.youtube.com/user/portishead1002", "wikidata": "https://www.wikidata.org/wiki/Q191352", "streaming": "https://tidal.com/artist/27441", "free streaming": "https://www.deezer.com/artist/1069", "social network": "https://www.facebook.com/portishead", "official homepage": "http://www.portishead.co.uk/", "purchase for download": "https://www.junodownload.com/artists/Portishead/releases/"}, "type": "Group", "begin_year": 1991, "name": "Portishead", "join_phrase": ""}]}'
                           , '{"artist": [], "recording": [], "release_group": []}'

@@ -11,6 +11,7 @@ import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import NiceModal from "@ebay/nice-modal-react";
+import { useSetAtom } from "jotai";
 import PlaylistItemCard from "../../playlists/components/PlaylistItemCard";
 import {
   getPlaylistExtension,
@@ -20,9 +21,9 @@ import {
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { preciseTimestamp } from "../../utils/utils";
 import RecommendationPlaylistSettings from "./components/RecommendationPlaylistSettings";
-import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 import HorizontalScrollContainer from "../../components/HorizontalScrollContainer";
 import StatsExplanationsModal from "../../common/stats/StatsExplanationsModal";
+import { setAmbientQueueAtom } from "../../common/brainzplayer/BrainzPlayerAtoms";
 
 export type RecommendationsPageProps = {
   playlists?: JSPFObject[];
@@ -43,54 +44,54 @@ function getPlaylistInfo(
   const extension = getPlaylistExtension(playlist);
   const sourcePatch =
     extension?.additional_metadata?.algorithm_metadata?.source_patch;
-  let year;
-  switch (sourcePatch) {
-    case "weekly-jams":
-      return {
-        shortTitle: !isOld ? "Weekly Jams" : `Last Week's Jams`,
-        cssClasses: "weekly-jams green",
-      };
-    case "weekly-exploration":
-      return {
-        shortTitle: !isOld ? "Weekly Exploration" : `Last Week's Exploration`,
-        cssClasses: "green",
-      };
-    case "daily-jams":
-      return {
-        shortTitle: "Daily Jams",
-        cssClasses: "blue",
-      };
-    case "top-discoveries-for-year":
-      // get year from title, fallback to using creation date minus 1
-      year =
-        playlist.title.match(/\d{2,4}/)?.[0] ??
-        new Date(playlist.date).getUTCFullYear() - 1;
-      return {
-        shortTitle: `${year} Top Discoveries`,
-        cssClasses: "red",
-      };
-    case "top-missed-recordings-for-year":
-      // get year from title, fallback to using creation date minus 1
-      year =
-        playlist.title.match(/\d{2,4}/)?.[0] ??
-        new Date(playlist.date).getUTCFullYear() - 1;
-      return {
-        shortTitle: `${year} Missed Tracks`,
-        cssClasses: "red",
-      };
-    default:
-      return {
-        shortTitle: playlist.title,
-        cssClasses: "blue",
-      };
+
+  if (sourcePatch === "weekly-jams") {
+    return {
+      shortTitle: !isOld ? "Weekly Jams" : `Last Week's Jams`,
+      cssClasses: "weekly-jams green",
+    };
   }
+  if (sourcePatch === "weekly-exploration") {
+    return {
+      shortTitle: !isOld ? "Weekly Exploration" : `Last Week's Exploration`,
+      cssClasses: "green",
+    };
+  }
+  if (sourcePatch === "daily-jams") {
+    return {
+      shortTitle: "Daily Jams",
+      cssClasses: "blue",
+    };
+  }
+  if (sourcePatch?.startsWith("top-discoveries-of-")) {
+    // get year from source patch, fallback to using creation date minus 1
+    const year =
+      sourcePatch?.match(/\d{2,4}/)?.[0] ??
+      new Date(playlist.date).getUTCFullYear() - 1;
+    return {
+      shortTitle: `${year} Top Discoveries`,
+      cssClasses: "red",
+    };
+  }
+  if (sourcePatch?.startsWith("top-missed-recordings-of-")) {
+    const year =
+      sourcePatch?.match(/\d{2,4}/)?.[0] ??
+      new Date(playlist.date).getUTCFullYear() - 1;
+    return {
+      shortTitle: `${year} Missed Tracks`,
+      cssClasses: "red",
+    };
+  }
+  return {
+    shortTitle: playlist.title,
+    cssClasses: "blue",
+  };
 }
 
 export default function RecommendationsPage() {
   // Context
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
-  const dispatch = useBrainzPlayerDispatch();
-
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
   // Loader
   const props = useLoaderData() as RecommendationsPageLoaderData;
   const { playlists: loaderPlaylists = [], user } = props;
@@ -319,10 +320,7 @@ export default function RecommendationsPage() {
   React.useEffect(() => {
     if (selectedPlaylist) {
       const listensFromJSPFTracks = selectedPlaylist?.track ?? [];
-      dispatch({
-        type: "SET_AMBIENT_QUEUE",
-        data: listensFromJSPFTracks,
-      });
+      setAmbientQueue(listensFromJSPFTracks);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPlaylist]);
@@ -346,6 +344,19 @@ export default function RecommendationsPage() {
           <p className="hidden">
             Oh no. Either something’s gone wrong, or you need to submit more
             listens before we can prepare delicious fresh produce just for you.
+          </p>
+          <p>
+            If you recently imported your listens, it may take up to a week.
+            <br />
+            We generate weekly playlists on monday mornings (
+            <a
+              href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              more details
+            </a>
+            )
           </p>
           <div>
             <button

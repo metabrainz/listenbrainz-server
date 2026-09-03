@@ -4,10 +4,13 @@ import requests_mock
 import spotipy
 
 import listenbrainz.db.user as db_user
+import listenbrainz.db.funkwhale as db_funkwhale
+import listenbrainz.db.navidrome as db_navidrome
 import time
 
 from data.model.external_service import ExternalServiceType
-from listenbrainz.domain.external_service import ExternalServiceInvalidGrantError
+from listenbrainz.domain import external_connect
+from listenbrainz.webserver.utils import CONNECT_SERVICES_WITHOUT_EMAIL_ERROR
 from listenbrainz.domain.spotify import SpotifyService, OAUTH_TOKEN_URL
 from listenbrainz.tests.integration import IntegrationTestCase
 from unittest.mock import patch
@@ -33,8 +36,21 @@ class SettingsViewsTestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertIn(self.user['auth_token'], response.data.decode('utf-8'))
 
-    def test_reset_import_timestamp(self):
+    @requests_mock.Mocker()
+    def test_reset_import_timestamp(self, mock_requests):
         self.temporary_login(self.user['login_id'])
+        mock_requests.get('https://ws.audioscrobbler.com/2.0/', status_code=200, json={
+            "recenttracks": {
+                "track": [],
+                "@attr": {
+                    "user": "lucifer",
+                    "page": "1",
+                    "perPage": "2",
+                    "totalPages": "0",
+                    "total": "0"
+                }
+            }
+        })
         response = self.client.post(
             self.custom_url_for('settings.music_services_connect', service_name='lastfm'),
             json={"external_user_id": "lucifer"}
@@ -61,7 +77,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         """Tests user info view when not logged in"""
         profile_info_url = self.custom_url_for('settings.index', path='')
         response = self.client.get(profile_info_url)
-        self.assertRedirects(response, self.custom_url_for('login.index', next=profile_info_url))
+        self.assertRedirects(response, self.custom_url_for('login.musicbrainz', next=profile_info_url))
 
     def test_delete_listens(self):
         """Tests delete listens end point"""
@@ -77,7 +93,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         """Tests delete listens view when not logged in"""
         delete_listens_url = self.custom_url_for('settings.index', path='delete-listens')
         response = self.client.get(delete_listens_url)
-        self.assertRedirects(response, self.custom_url_for('login.index', next=delete_listens_url))
+        self.assertRedirects(response, self.custom_url_for('login.musicbrainz', next=delete_listens_url))
 
         response = self.client.post(delete_listens_url)
         self.assert401(response)
@@ -94,7 +110,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         select_timezone_url = self.custom_url_for('settings.index', path='select_timezone')
         response = self.client.get(select_timezone_url)
         self.assertStatus(response, 302)
-        self.assertRedirects(response, self.custom_url_for('login.index', next=select_timezone_url))
+        self.assertRedirects(response, self.custom_url_for('login.musicbrainz', next=select_timezone_url))
 
     def test_music_services_details(self):
         self.temporary_login(self.user['login_id'])
@@ -107,6 +123,94 @@ class SettingsViewsTestCase(IntegrationTestCase):
         with self.app.app_context():
             self.assertIsNone(self.service.get_user(self.user['id']))
 
+    def test_music_services_details_reports_email_verification_state(self):
+        self.temporary_login(self.user['login_id'])
+        old_reject_setting = self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]
+        try:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = True
+
+            response = self.client.post(self.custom_url_for("settings.music_services_details"))
+            self.assert200(response)
+            self.assertFalse(response.json["user_has_email"])
+
+            db_user.update_user_details(
+                self.db_conn,
+                self.user["id"],
+                self.user["musicbrainz_id"],
+                "verified@example.com"
+            )
+            response = self.client.post(self.custom_url_for("settings.music_services_details"))
+            self.assert200(response)
+            self.assertTrue(response.json["user_has_email"])
+        finally:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = old_reject_setting
+
+    def test_music_services_connect_requires_verified_email(self):
+        self.temporary_login(self.user['login_id'])
+        old_reject_setting = self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]
+        try:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = True
+
+            response = self.client.post(
+                self.custom_url_for('settings.music_services_connect', service_name='lastfm'),
+                json={"external_user_id": "lucifer"}
+            )
+            self.assert401(response)
+            self.assertEqual(response.json["error"], CONNECT_SERVICES_WITHOUT_EMAIL_ERROR)
+
+            response = self.client.post(
+                self.custom_url_for('settings.music_services_disconnect', service_name='spotify'),
+                json={"action": "listen"}
+            )
+            self.assert401(response)
+            self.assertEqual(response.json["error"], CONNECT_SERVICES_WITHOUT_EMAIL_ERROR)
+
+            response = self.client.post(
+                self.custom_url_for('settings.music_services_disconnect', service_name='spotify'),
+                json={"action": "disable"}
+            )
+            self.assert200(response)
+        finally:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = old_reject_setting
+
+    @patch('listenbrainz.domain.spotify.SpotifyService.fetch_access_token')
+    def test_music_services_callback_requires_verified_email(self, mock_fetch_access_token):
+        self.temporary_login(self.user['login_id'])
+        old_reject_setting = self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]
+        try:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = True
+
+            response = self.client.get(
+                self.custom_url_for('settings.music_services_callback', service_name='spotify', code='code')
+            )
+            self.assertStatus(response, 302)
+            self.assertIn("email_required=1", response.location)
+            mock_fetch_access_token.assert_not_called()
+        finally:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = old_reject_setting
+
+    def test_spotify_invalid_grant_initial_alert(self):
+        self.temporary_login(self.user['login_id'])
+        db_oauth.save_token(self.db_conn, user_id=self.user['id'], service=ExternalServiceType.SPOTIFY,
+                            access_token='old-token', refresh_token='old-refresh-token',
+                            token_expires_ts=int(time.time()) - 1000, record_listens=True,
+                            scopes=['user-read-recently-played'])
+        listens_importer.update_status(
+            self.db_conn,
+            self.user['id'],
+            ExternalServiceType.SPOTIFY,
+            "Error",
+            0,
+            error={"message": "Spotify needs to be reconnected.", "retry": False, "reason": "invalid_grant"},
+        )
+        db_oauth.delete_token(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY, remove_import_log=False)
+
+        r = self.client.get(self.custom_url_for('settings.index', path='music-services/details'))
+
+        self.assert200(r)
+        self.assertIn(b"spotify-reconnect-required", r.data)
+        self.assertIn(b"Reconnect Spotify", r.data)
+
     @patch('listenbrainz.domain.spotify.SpotifyService.fetch_access_token')
     @patch.object(spotipy.Spotify, 'current_user')
     def test_spotify_callback(self, mock_current_user, mock_fetch_access_token):
@@ -118,8 +222,12 @@ class SettingsViewsTestCase(IntegrationTestCase):
             'scope': '',
         }
         self.temporary_login(self.user['login_id'])
+        # the callback only accepts the state created when the authorization was started
+        with self.client.session_transaction() as session:
+            session[external_connect.settings_oauth_state_key('spotify')] = 'oauth-state'
 
-        r = self.client.get(self.custom_url_for('settings.music_services_callback', service_name='spotify', code='code'))
+        r = self.client.get(self.custom_url_for('settings.music_services_callback', service_name='spotify',
+                                                code='code', state='oauth-state'))
 
         self.assertStatus(r, 302)
         mock_fetch_access_token.assert_called_once_with('code')
@@ -177,12 +285,191 @@ class SettingsViewsTestCase(IntegrationTestCase):
         self.assert200(r)
         self.assertDictEqual(r.json, {'access_token': 'new-token'})
 
-    @patch('listenbrainz.domain.spotify.SpotifyService.refresh_access_token')
-    def test_spotify_refresh_token_which_has_been_revoked(self, mock_refresh_user_token):
+    @requests_mock.Mocker()
+    def test_spotify_refresh_token_which_has_been_revoked(self, mock_requests):
         self.temporary_login(self.user['login_id'])
         self._create_spotify_user(expired=True)
-        mock_refresh_user_token.side_effect = ExternalServiceInvalidGrantError
+        mock_requests.post(OAUTH_TOKEN_URL, status_code=400, json={
+            'error': 'invalid_grant',
+            'error_description': 'Refresh token expired',
+        })
 
         response = self.client.post(self.custom_url_for('settings.refresh_service_token', service_name='spotify'))
 
         self.assertEqual(response.json, {'code': 403, 'error': 'User has revoked authorization to Spotify'})
+        self.assertIsNone(db_oauth.get_token(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY))
+        details = self.client.post(self.custom_url_for('settings.music_services_details'))
+        self.assertEqual("disable", details.json["current_spotify_permissions"])
+
+    def _create_funkwhale_user(self):
+        """Helper to create a Funkwhale user with token"""
+        host_url = 'https://demo.funkwhale.audio'
+        server_id = db_funkwhale.get_or_create_server(
+            self.db_conn, host_url, 'client_id', 'client_secret', 'read'
+        )
+        expires_at = int(time.time()) + 3600
+        token_expiry_datetime = datetime.fromtimestamp(expires_at, tz=timezone.utc)
+        db_funkwhale.save_token(
+            self.db_conn, self.user['id'], server_id, 'access_token', 'refresh_token', token_expiry_datetime
+        )
+        return server_id
+
+    @patch('listenbrainz.domain.funkwhale.FunkwhaleService.get_authorize_url')
+    def test_funkwhale_connect(self, mock_auth):
+        """Test Funkwhale connect success"""
+        mock_auth.return_value = 'https://demo.funkwhale.audio/api/v1/oauth/authorize?client_id=test'
+        
+        self.temporary_login(self.user['login_id'])
+        response = self.client.post(
+            self.custom_url_for('settings.music_services_connect', service_name='funkwhale'),
+            json={"host_url": "https://demo.funkwhale.audio"}
+        )
+        self.assert200(response)
+
+    def test_funkwhale_connect_missing_host_url(self):
+        """Test Funkwhale connect without host_url"""
+        self.temporary_login(self.user['login_id'])
+        response = self.client.post(
+            self.custom_url_for('settings.music_services_connect', service_name='funkwhale'),
+            json={}
+        )
+        self.assert400(response)
+
+    @patch('listenbrainz.domain.funkwhale.FunkwhaleService.fetch_access_token')
+    @patch('listenbrainz.domain.funkwhale.FunkwhaleService.add_new_user')
+    def test_funkwhale_callback(self, mock_add_user, mock_fetch_token):
+        """Test successful Funkwhale OAuth callback"""
+        import base64
+        test_state = base64.b64encode(b'test_state').decode('utf-8')
+        
+        mock_fetch_token.return_value = {
+            'access_token': 'callback_access_token',
+            'refresh_token': 'callback_refresh_token',
+            'expires_in': 3600
+        }
+        mock_add_user.return_value = True
+        
+        db_funkwhale.get_or_create_server(
+            self.db_conn, 'https://demo.funkwhale.audio', 'client_id', 'client_secret', 'read'
+        )
+        
+        self.temporary_login(self.user['login_id'])
+        
+        # Mock session within the request context
+        with self.client.session_transaction() as sess:
+            sess['state'] = test_state
+            sess['funkwhale_host_url'] = 'https://demo.funkwhale.audio'
+        
+        response = self.client.get(
+            self.custom_url_for('settings.music_services_callback', service_name='funkwhale'),
+            query_string={'code': 'auth_code', 'state': test_state}
+        )
+        self.assertStatus(response, 302)
+        mock_fetch_token.assert_called_once_with('auth_code')
+        mock_add_user.assert_called_once()
+
+    @patch('listenbrainz.domain.funkwhale.FunkwhaleService.refresh_access_token')
+    @patch('listenbrainz.domain.funkwhale.FunkwhaleService.user_oauth_token_has_expired')
+    def test_funkwhale_refresh_token(self, mock_expired, mock_refresh):
+        """Test Funkwhale token refresh"""
+        self._create_funkwhale_user()
+        mock_expired.return_value = True
+        mock_refresh.return_value = {
+            'access_token': 'new_access_token',
+            'refresh_token': 'new_refresh_token'
+        }
+        
+        self.temporary_login(self.user['login_id'])
+        response = self.client.post(
+            self.custom_url_for('settings.refresh_service_token', service_name='funkwhale'),
+            json={"host_url": "https://demo.funkwhale.audio"}
+        )
+        self.assert200(response)
+        data = response.json
+        self.assertEqual(data['access_token'], 'new_access_token')
+
+    def test_funkwhale_disconnect(self):
+        """Test Funkwhale disconnect"""
+        self._create_funkwhale_user()
+        
+        self.temporary_login(self.user['login_id'])
+        response = self.client.post(
+            self.custom_url_for('settings.music_services_disconnect', service_name='funkwhale'),
+            json={"action": "disable"}
+        )
+        self.assert200(response)
+        data = response.json
+        self.assertEqual(data['status'], 'ok')
+
+    @requests_mock.Mocker()
+    def test_navidrome_connect_and_disconnect(self, mock_requests):
+        """Test Navidrome connect success"""
+        self.app.config["NAVIDROME_ENCRYPTION_KEY"] = "nB9WKue4CGLZjEjV_w75RqRUImbpht2HjMj5spVwiKw="
+        mock_requests.get(
+            "https://demo.navidrome.org/rest/ping",
+            status_code=200,
+            json={
+                "subsonic-response": {
+                    "status": "ok",
+                    "version": "1.16.1",
+                    "type": "navidrome",
+                    "serverVersion": "0.49.3"
+                }
+            }
+        )
+        self.temporary_login(self.user["login_id"])
+        response = self.client.post(
+            self.custom_url_for("settings.music_services_connect", service_name="navidrome"),
+            json={
+                "host_url": "https://demo.navidrome.org",
+                "username": "test_user",
+                "password": "test_password"
+            }
+        )
+        self.assert200(response)
+        result = db_navidrome.get_user_token(self.db_conn, self.user["id"])
+        self.assertEqual(result["host_url"], "https://demo.navidrome.org")
+        self.assertEqual(result["username"], "test_user")
+        self.assertIsNotNone(result["encrypted_password"])
+
+        response = self.client.post(
+            self.custom_url_for("settings.music_services_disconnect", service_name="navidrome"),
+            json={"action": "disable"}
+        )
+        self.assert200(response)
+        data = response.json
+        self.assertIn("Successfully disconnected", data["message"])
+
+        self.assertIsNone(db_navidrome.get_user_token(self.db_conn, self.user["id"]))
+
+    def test_navidrome_connect_missing_params(self):
+        """Test Navidrome connect without host_url or username/password"""
+        self.temporary_login(self.user["login_id"])
+        response = self.client.post(
+            self.custom_url_for("settings.music_services_connect", service_name="navidrome"),
+            json={"username": "test_user", "password": "test_password"}
+        )
+        self.assert400(response)
+        self.assertEqual(
+            response.json["error"],
+            "Missing 'host_url', 'username', or 'password' for Navidrome connect."
+        )
+
+        self.temporary_login(self.user["login_id"])
+        response = self.client.post(
+            self.custom_url_for("settings.music_services_connect", service_name="navidrome"),
+            json={"host_url": "https://demo.navidrome.org"}
+        )
+        self.assert400(response)
+
+    def test_navidrome_connect_invalid_host_url(self):
+        self.temporary_login(self.user["login_id"])
+        response = self.client.post(
+            self.custom_url_for("settings.music_services_connect", service_name="navidrome"),
+            json={"username": "test_user", "password": "test_password", "host_url": "demo.navidrome.org"}
+        )
+        self.assert400(response)
+        self.assertEqual(
+            response.json["error"],
+            "Invalid host_url 'demo.navidrome.org' for Navidrome connect."
+        )

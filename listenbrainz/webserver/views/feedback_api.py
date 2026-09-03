@@ -6,7 +6,8 @@ import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 from listenbrainz.db.model.feedback import Feedback
 
-from listenbrainz.domain import lastfm
+from listenbrainz.domain.lastfm import LastfmService
+from listenbrainz.domain.librefm import LibrefmService
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APINotFound, APIBadRequest
@@ -71,7 +72,7 @@ def recording_feedback():
     return jsonify({'status': 'ok'})
 
 
-@feedback_api_bp.get("/user/<user_name>/get-feedback")
+@feedback_api_bp.get("/user/<mb_username:user_name>/get-feedback")
 @crossdomain
 @ratelimit()
 def get_feedback_for_user(user_name):
@@ -229,7 +230,7 @@ def _get_feedback_for_recordings_for_user_helper(user_name, recording_msids, rec
     })
 
 
-@feedback_api_bp.post("/user/<user_name>/get-feedback-for-recordings")
+@feedback_api_bp.post("/user/<mb_username:user_name>/get-feedback-for-recordings")
 @crossdomain
 @ratelimit()
 def get_feedback_for_recordings_for_user_post(user_name):
@@ -256,7 +257,7 @@ def get_feedback_for_recordings_for_user_post(user_name):
     return _get_feedback_for_recordings_for_user_helper(user_name, recording_msids, recording_mbids)
 
 
-@feedback_api_bp.get("/user/<user_name>/get-feedback-for-recordings")
+@feedback_api_bp.get("/user/<mb_username:user_name>/get-feedback-for-recordings")
 @crossdomain
 @ratelimit()
 def get_feedback_for_recordings_for_user_get(user_name):
@@ -309,10 +310,15 @@ def import_feedback():
     if "service" not in data:
         raise APIBadRequest("missing service")
     if "user_name" not in data:
-        raise APIBadRequest("missing last.fm user name")
+        raise APIBadRequest("missing user name")
 
     if data["service"] == "lastfm":
-        counts = lastfm.import_feedback(user["id"], data["user_name"])
-        return jsonify(counts)
+        service = LastfmService()
+    elif data["service"] == "librefm":
+        service = LibrefmService()
+    else:
+        raise APIBadRequest(f"Service {data['service']} is not supported for feedback import.")
 
-    return APIBadRequest(f"Service {data['service']} is not supported for feedback import.")
+    counts = service.import_feedback(user["id"], data["user_name"])
+
+    return jsonify(counts)

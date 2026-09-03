@@ -1,80 +1,89 @@
 import logging
-from collections import defaultdict
-from operator import itemgetter
-import math
 from typing import Iterable
-from pyspark.sql.dataframe import DataFrame
+from pyspark.sql import DataFrame, Window
 
+from more_itertools import chunked
 from pyspark.mllib.linalg.distributed import CoordinateMatrix, MatrixEntry, RowMatrix
-from pyspark.sql.functions import struct, collect_list
+from pyspark.sql.functions import struct, collect_list, col, row_number
 
-import listenbrainz_spark
 from listenbrainz_spark.path import USER_SIMILARITY_PLAYCOUNTS_DATAFRAME, USER_SIMILARITY_USERS_DATAFRAME
 from listenbrainz_spark.utils import read_files_from_HDFS
 
 logger = logging.getLogger(__name__)
 
+USERS_PER_MESSAGE = 10000
+
 
 def create_messages(similar_users_df: DataFrame) -> Iterable[dict]:
     """
-    Iterate over the similar_users_df to create a message of the following format for sending using the request consumer
+    Iterate over the similar_users_df to create messages for sending using the request consumer.
+
+    The dataset is too big to fit in one message so it is split into multiple messages: a start message,
+    multiple data messages and an end message. The start message lets the consumer set up a temporary
+    table, the data messages carry the actual similar users data in chunks and the end message tells the
+    consumer to swap the temporary table into place.
+
+    Each data message has the following format:
 
         {
             "type": "similar_users",
             "data": [
-                "user_1": {
-                    "user_2": 0.5,
-                    "user_3": 0.7,
+                {
+                    "user_id": 1,
+                    "similar_users": {"2": 0.5, "3": 0.7}
                 },
-                "user_2": {
-                    "user_1": 0.5
-                }
+                {
+                    "user_id": 2,
+                    "similar_users": {"1": 0.5}
+                },
                 ...
             ]
         }
     """
+    yield {"type": "similar_users_start"}
+
     itr = similar_users_df.toLocalIterator()
-    message = {}
-    for row in itr:
-        message[row.user_id] = {
-            user.other_user_id: user.similarity
-            for user in row.similar_users
-        }
-    yield {
-        "type": "similar_users",
-        "data": message
-    }
+    for rows in chunked(itr, USERS_PER_MESSAGE):
+        data = [
+            {
+                "user_id": row.user_id,
+                "similar_users": {
+                    user.other_user_id: user.similarity
+                    for user in row.similar_users
+                }
+            }
+            for row in rows
+        ]
+        yield {"type": "similar_users", "data": data}
+
+    yield {"type": "similar_users_end"}
 
 
 def process_similarities(matrix: CoordinateMatrix, max_num_users: int) -> DataFrame:
     """ Post process the similarity matrix.
 
-        Convert the coordinate matrix of similarities to a dict where the key is the user id and the value is a list
-        of the most similar users in descending order of similarity.
+        Convert the coordinate matrix of column similarities to a DataFrame of top N similar columns.
     """
-    all_similar_users = defaultdict(list)
-    for entry in matrix.entries.collect():
-        if entry.i == entry.j or math.isnan(entry.value) or entry.value < 0:
-            continue
+    df = matrix.entries.toDF()
+    filtered_df = df.filter(col("value") > 0)
 
-        all_similar_users[entry.i].append((entry.j, entry.value))
-        all_similar_users[entry.j].append((entry.i, entry.value))
-
-    thresholded_similar_users = {}
-    for user_id, similar_users in all_similar_users.items():
-        thresholded_similar_users[user_id] = sorted(
-            similar_users, key=itemgetter(1), reverse=True
-        )[:max_num_users]
-
-    thresholded_entries = []
-    for user_id, similar_users in thresholded_similar_users.items():
-        for other_user_id, similarity in similar_users:
-            thresholded_entries.append((user_id, other_user_id, similarity))
-
-    return listenbrainz_spark.session.createDataFrame(
-        thresholded_entries,
-        ["spark_user_id", "other_spark_user_id", "similarity"]
+    # column similarities only contain pairs where i < j, add the symmetrically reverse pairs
+    forward = filtered_df.select(
+        col("i").alias("spark_user_id"),
+        col("j").alias("other_spark_user_id"),
+        col("value").alias("similarity")
     )
+    backward = filtered_df.select(
+        col("j").alias("spark_user_id"),
+        col("i").alias("other_spark_user_id"),
+        col("value").alias("similarity")
+    )
+    combined_df = forward.union(backward)
+
+    window = Window.partitionBy("spark_user_id").orderBy(col("similarity").desc())
+    ranked_df = combined_df.withColumn("rank", row_number().over(window))
+
+    return ranked_df.filter(col("rank") <= max_num_users).drop("rank")
 
 
 def get_row_matrix(playcounts_df) -> RowMatrix:

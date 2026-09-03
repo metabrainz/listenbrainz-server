@@ -16,6 +16,7 @@
 @import "music-services";
 @import "cb-review";
 @import "huesound";
+@import "legacy-year-in-music";
 @import "year-in-music";
 @import "brainzplayer";
 @import "metadata-viewer";
@@ -41,11 +42,21 @@
 @import "similarity";
 @import "dashboard";
 @import "genre-explorer";
+@import "cover-art-grids";
 
 // pre is used in a tooltip with a different background color
 pre {
   background-color: inherit;
   border: none;
+}
+.noscript {
+  font-size: 2em;
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  gap: 2em;
+  justify-content: center;
+  align-items: center;
 }
 // For use with highlight.js
 pre code.hljs {
@@ -184,4 +195,8 @@ details[open] > summary .summary-indicator {
 .capitalize-bold {
   font-weight: 700;
   text-transform: capitalize;
+}
+
+.Toastify__close-button {
+  color: inherit;
 }

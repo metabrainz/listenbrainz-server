@@ -19,8 +19,8 @@
  */
 
 import * as React from "react";
-import { mount, ReactWrapper } from "enzyme";
-import { act } from "react-dom/test-utils";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import FollowButton from "../../../src/user/components/follow/FollowButton";
 import GlobalAppContext, {
   GlobalAppContextT,
@@ -36,6 +36,7 @@ const user = {
 const loggedInUser = {
   id: 2,
   name: "iliekcomputers",
+  auth_token: "FNORD",
 };
 
 const globalContext: GlobalAppContextT = {
@@ -51,22 +52,26 @@ const globalContext: GlobalAppContextT = {
 };
 
 describe("<FollowButton />", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it("renders correct styling based on type prop", () => {
     // button is icon-only and renders text on hover
-    let wrapper = mount(
+    const { rerender } = render(
       <GlobalAppContext.Provider value={globalContext}>
         <FollowButton type="icon-only" user={user} loggedInUserFollowsUser />
       </GlobalAppContext.Provider>
     );
-    let btn = wrapper.find(FollowButton)
-    expect(btn).toHaveLength(1);
-    let btnFirstChild = btn.childAt(0).getDOMNode();
-    expect(btnFirstChild).toHaveClass("lb-follow-button following icon-only");
-    expect(btnFirstChild).toHaveClass("following");
-    expect(btnFirstChild).toHaveClass("icon-only");
+
+    let followButton = screen.getByRole("button");
+    expect(followButton).toBeInTheDocument();
+    expect(followButton).toHaveClass("lb-follow-button");
+    expect(followButton).toHaveClass("following");
+    expect(followButton).toHaveClass("icon-only");
 
     // button is solid and has no icon
-    wrapper = mount(
+    rerender(
       <GlobalAppContext.Provider value={globalContext}>
         <FollowButton
           type="block"
@@ -75,24 +80,24 @@ describe("<FollowButton />", () => {
         />
       </GlobalAppContext.Provider>
     );
-    btn = wrapper.find(FollowButton);
-    btnFirstChild = btn.childAt(0).getDOMNode();
-    expect(btn).toHaveLength(1);
-    expect(btnFirstChild).toHaveClass("lb-follow-button");
-    expect(btnFirstChild).toHaveClass("block");
+    followButton = screen.getByRole("button");
+    expect(followButton).toBeInTheDocument();
+    expect(followButton).toHaveClass("lb-follow-button");
+    expect(followButton).toHaveClass("block");
   });
 
-  it("renders with the correct text based on the props", async () => {
+  it("renders with the correct text based on the props and hover state", async () => {
     // already follows the user, should show "Following"
-    let wrapper = mount(
+    const { rerender } = render(
       <GlobalAppContext.Provider value={globalContext}>
         <FollowButton type="icon-only" user={user} loggedInUserFollowsUser />
       </GlobalAppContext.Provider>
     );
-    expect(wrapper.contains("Following")).toBeTruthy();
+    expect(screen.getByText("Following")).toBeInTheDocument();
+    expect(screen.queryByText("Follow")).not.toBeInTheDocument();
 
     // doesn't already follow the user, should show "Follow"
-    wrapper = mount(
+    rerender(
       <GlobalAppContext.Provider value={globalContext}>
         <FollowButton
           type="icon-only"
@@ -101,35 +106,40 @@ describe("<FollowButton />", () => {
         />
       </GlobalAppContext.Provider>
     );
-    expect(wrapper.contains("Follow")).toBeTruthy();
-    expect(wrapper.contains("Following")).toBeFalsy();
+    expect(screen.getByText("Follow")).toBeInTheDocument();
+    expect(screen.queryByText("Following")).not.toBeInTheDocument();
 
     // follows the user, hover, so should show "Unfollow"
-    await act(() => {
-      wrapper.setState({ loggedInUserFollowsUser: true, hover: true });
-    });
-    expect(wrapper.contains("Unfollow")).toBeTruthy();
+    // Rerender with loggedInUserFollowsUser as true to set up the "following" state
+    rerender(
+      <GlobalAppContext.Provider value={globalContext}>
+        <FollowButton type="icon-only" user={user} loggedInUserFollowsUser />
+      </GlobalAppContext.Provider>
+    );
+    const followButton = screen.getByRole("button");
+    expect(followButton).toHaveTextContent("Following"); // Initially "Following"
+
+    await userEvent.hover(followButton);
+    // After hover, it should change to "Unfollow" if loggedInUserFollowsUser is true
+    expect(screen.queryByText("Following")).not.toBeInTheDocument();
+    expect(followButton).toHaveTextContent("Unfollow");
   });
 
   describe("handleButtonClick", () => {
-    const clickButton = (wrapper: ReactWrapper) => {
-      wrapper.find(".lb-follow-button").at(0).simulate("click");
-    };
-
-    const mockFollowAPICall = (instance: any, status: number) => {
-      const spy = jest.spyOn(instance.context.APIService, "followUser");
+    const mockFollowAPICall = (status: number) => {
+      const spy = jest.spyOn(globalContext.APIService, "followUser");
       spy.mockImplementation(() => Promise.resolve({ status }));
       return spy;
     };
 
-    const mockUnfollowAPICall = (instance: any, status: number) => {
-      const spy = jest.spyOn(instance.context.APIService, "unfollowUser");
+    const mockUnfollowAPICall = (status: number) => {
+      const spy = jest.spyOn(globalContext.APIService, "unfollowUser");
       spy.mockImplementation(() => Promise.resolve({ status }));
       return spy;
     };
 
     it("follows the user if logged in user isn't following the user", async () => {
-      const wrapper = mount(
+      render(
         <GlobalAppContext.Provider value={globalContext}>
           <FollowButton
             type="icon-only"
@@ -138,28 +148,133 @@ describe("<FollowButton />", () => {
           />
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const followButton = screen.getByRole("button", { name: "Follow" });
 
-      const spy = mockFollowAPICall(instance, 200);
-      await act(() => {
-        clickButton(wrapper);
+      const spy = mockFollowAPICall(200);
+      await userEvent.click(followButton);
+
+      await waitFor(() => {
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledWith("followed_user", "FNORD");
       });
-      expect(spy).toHaveBeenCalledTimes(1);
+      // Verify button text changes to "Following" after successful follow
+      expect(
+        screen.getByRole("button", { name: "Following" })
+      ).toBeInTheDocument();
     });
 
     it("unfollows the user if logged in user is already following the user", async () => {
-      const wrapper = mount(
+      render(
         <GlobalAppContext.Provider value={globalContext}>
           <FollowButton type="icon-only" user={user} loggedInUserFollowsUser />
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const followButton = screen.getByRole("button", { name: "Following" });
+      expect(followButton).toBeInTheDocument();
 
-      const spy = mockUnfollowAPICall(instance, 200);
-      await act(() => {
-        clickButton(wrapper);
+      // Hover to reveal "Unfollow" text
+      await userEvent.hover(followButton);
+      const unfollowButton = screen.getByRole("button", { name: "Unfollow" });
+
+      const spy = mockUnfollowAPICall(200);
+      await userEvent.click(unfollowButton);
+
+      await waitFor(() => {
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledWith("followed_user", "FNORD");
       });
-      expect(spy).toHaveBeenCalledTimes(1);
+      // Verify button text changes back to "Follow" after successful unfollow
+      expect(
+        screen.getByRole("button", { name: "Follow" })
+      ).toBeInTheDocument();
+    });
+
+    it("shows error state if follow fails", async () => {
+      render(
+        <GlobalAppContext.Provider value={globalContext}>
+          <FollowButton
+            type="icon-only"
+            user={user}
+            loggedInUserFollowsUser={false}
+          />
+        </GlobalAppContext.Provider>
+      );
+      const followButton = screen.getByRole("button", { name: "Follow" });
+
+      const spy = mockFollowAPICall(500); // Simulate an error
+      await userEvent.click(followButton);
+
+      await waitFor(() => {
+        expect(spy).toHaveBeenCalledTimes(1);
+      });
+      expect(
+        screen.getByRole("button", { name: "Error!!" })
+      ).toBeInTheDocument();
+    });
+
+    it("shows error state if unfollow fails", async () => {
+      render(
+        <GlobalAppContext.Provider value={globalContext}>
+          <FollowButton type="icon-only" user={user} loggedInUserFollowsUser />
+        </GlobalAppContext.Provider>
+      );
+      const followButton = screen.getByRole("button", { name: "Following" });
+      await userEvent.hover(followButton); // Hover to get "Unfollow" text
+      const unfollowButton = screen.getByRole("button", { name: "Unfollow" });
+
+      const spy = mockUnfollowAPICall(500); // Simulate an error
+      await userEvent.click(unfollowButton);
+
+      await waitFor(() => {
+        expect(spy).toHaveBeenCalledTimes(1);
+      });
+      expect(
+        screen.getByRole("button", { name: "Error!!" })
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("updates state when loggedInUserFollowsUser prop changes", async () => {
+    const { rerender } = render(
+      <GlobalAppContext.Provider value={globalContext}>
+        <FollowButton
+          type="icon-only"
+          user={user}
+          loggedInUserFollowsUser={false}
+        />
+      </GlobalAppContext.Provider>
+    );
+
+    expect(screen.getByText("Follow")).toBeInTheDocument();
+
+    // Simulate prop change
+    rerender(
+      <GlobalAppContext.Provider value={globalContext}>
+        <FollowButton
+          type="icon-only"
+          user={user}
+          loggedInUserFollowsUser={true}
+        />
+      </GlobalAppContext.Provider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Following")).toBeInTheDocument();
+    });
+
+    // Simulate prop change back
+    rerender(
+      <GlobalAppContext.Provider value={globalContext}>
+        <FollowButton
+          type="icon-only"
+          user={user}
+          loggedInUserFollowsUser={false}
+        />
+      </GlobalAppContext.Provider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Follow")).toBeInTheDocument();
     });
   });
 });

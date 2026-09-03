@@ -17,11 +17,13 @@ from listenbrainz.spark.handlers import (
     handle_missing_musicbrainz_data,
     cf_recording_recommendations_complete,
     handle_sitewide_listening_activity,
-    handle_similar_users,
+    handle_sitewide_era_activity,
+    handle_sitewide_artist_evolution_activity,
     handle_yim_new_releases_of_top_artists,
     handle_yim_similar_users,
     handle_yim_day_of_week,
     handle_yim_most_listened_year,
+    handle_yim_artist_evolution_activity,
     handle_yim_top_stats,
     handle_yim_listens_per_day,
     handle_yim_listen_counts,
@@ -32,15 +34,19 @@ from listenbrainz.spark.handlers import (
     handle_troi_playlists,
     handle_troi_playlists_end,
     handle_yim_top_genres,
+    handle_yim_genre_activity,
     handle_yim_playlists,
     handle_yim_playlists_end,
     handle_echo,
-    handle_sitewide_artist_map
+    handle_sitewide_artist_map,
+    handle_statistics_generation_complete
 )
 from listenbrainz.spark.spark_dataset import CouchDbDataset, UserEntityStatsDataset, DailyActivityStatsDataset, \
-    ListeningActivityStatsDataset, EntityListenerStatsDataset
+    ListeningActivityStatsDataset, GenreActivityStatsDataset, EntityListenerStatsDataset, EraStatsDataset, \
+    ArtistEvolutionActivityStatsDataset
 from listenbrainz.db.popularity import get_all_popularity_datasets
 from listenbrainz.db.similarity import SimilarRecordingsDataset, SimilarArtistsDataset, MlhdSimilarRecordingsDataset
+from listenbrainz.db.similar_users import SimilarUsersDataset
 from listenbrainz.db.tags import TagsDataset
 from listenbrainz.webserver import ts_conn, db_conn
 
@@ -80,10 +86,14 @@ class BackgroundJobProcessor:
             UserEntityStatsDataset,
             DailyActivityStatsDataset,
             ListeningActivityStatsDataset,
+            EraStatsDataset,
+            GenreActivityStatsDataset,
             EntityListenerStatsDataset,
+            ArtistEvolutionActivityStatsDataset,
             SimilarRecordingsDataset,
             SimilarArtistsDataset,
             MlhdSimilarRecordingsDataset,
+            SimilarUsersDataset,
             TagsDataset,
             *get_all_popularity_datasets()
         ]
@@ -122,6 +132,10 @@ class BackgroundJobProcessor:
                     self.internal_message_ack_queue.put(message)
                 except Empty:
                     self.app.logger.debug("Empty internal message queue")
+                except Exception:
+                    self.app.logger.exception("Unhandled error in spark reader. Stopping background job.")
+                    self.stop()
+                    self.terminate()
 
             self.stop()
 
@@ -144,7 +158,10 @@ class BackgroundJobProcessor:
             "echo": handle_echo,
             "sitewide_entity": handle_sitewide_entity,
             "sitewide_listening_activity": handle_sitewide_listening_activity,
+            "sitewide_era_activity": handle_sitewide_era_activity,
             "sitewide_artist_map": handle_sitewide_artist_map,
+            "sitewide_artist_evolution_activity": handle_sitewide_artist_evolution_activity,
+            "statistics_generation_complete": handle_statistics_generation_complete,
             "fresh_releases": handle_fresh_releases,
             "import_full_dump": handle_dump_imported,
             "import_incremental_dump": handle_dump_imported,
@@ -155,7 +172,6 @@ class BackgroundJobProcessor:
             "import_mapping": notify_mapping_import,
             "missing_musicbrainz_data": handle_missing_musicbrainz_data,
             "cf_recommendations_recording_mail": cf_recording_recommendations_complete,
-            "similar_users": handle_similar_users,
             "year_in_music_top_stats": handle_yim_top_stats,
             "year_in_music_listens_per_day": handle_yim_listens_per_day,
             "year_in_music_listen_count": handle_yim_listen_counts,
@@ -163,10 +179,12 @@ class BackgroundJobProcessor:
             "year_in_music_new_releases_of_top_artists": handle_yim_new_releases_of_top_artists,
             "year_in_music_day_of_week": handle_yim_day_of_week,
             "year_in_music_most_listened_year": handle_yim_most_listened_year,
+            "year_in_music_artist_evolution_activity": handle_yim_artist_evolution_activity,
             "year_in_music_listening_time": handle_yim_listening_time,
             "year_in_music_artist_map": handle_yim_artist_map,
             "year_in_music_new_artists_discovered_count": handle_yim_new_artists_discovered_count,
             "year_in_music_top_genres": handle_yim_top_genres,
+            "year_in_music_genre_activity": handle_yim_genre_activity,
             "year_in_music_playlists": handle_yim_playlists,
             "year_in_music_playlists_end": handle_yim_playlists_end,
             "troi_playlists": handle_troi_playlists,

@@ -279,6 +279,7 @@ export default function AddTagSelect(props: {
   return (
     <div className="add-tag-select">
       <CreatableSelect
+        createOptionPosition="first"
         value={sortBy(selected, ["originalTag.count", "isOwnTag"]).reverse()}
         options={musicbrainzGenres?.map((genre) => ({
           value: genre,
@@ -311,6 +312,7 @@ export default function AddTagSelect(props: {
             flexWrap: "nowrap",
             overflowX: "auto",
             paddingRight: "3.5em",
+            scrollbarWidth: "thin",
             "::-webkit-scrollbar": {
               height: "5px",
               backgroundColor: "#f5f5f5",

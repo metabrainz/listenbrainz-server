@@ -1,7 +1,8 @@
 import React, { useCallback, useContext, useState } from "react";
 import { Helmet } from "react-helmet";
+import { useSetAtom } from "jotai";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
+import { setAmbientQueueAtom } from "../../common/brainzplayer/BrainzPlayerAtoms";
 
 const totallyInnocentListen: Listen = {
   listened_at: 1654079332,
@@ -26,9 +27,9 @@ const totallyInnocentListen: Listen = {
 };
 
 function AIBrainzHeader() {
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
   React.useEffect(() => {
-    dispatch({ type: "SET_AMBIENT_QUEUE", data: [totallyInnocentListen] });
+    setAmbientQueue([totallyInnocentListen]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totallyInnocentListen]);
   return (

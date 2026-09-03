@@ -70,9 +70,9 @@ export default class UserPins extends React.Component<
     this.setState({ loading: true });
 
     try {
-      const limit = (page - 1) * this.DEFAULT_PINS_PER_PAGE;
+      const offset = (page - 1) * this.DEFAULT_PINS_PER_PAGE;
       const count = this.DEFAULT_PINS_PER_PAGE;
-      const newPins = await APIService.getPinsForUser(user.name, limit, count);
+      const newPins = await APIService.getPinsForUser(user.name, offset, count);
 
       if (!newPins.pinned_recordings.length) {
         // No pins were fetched
@@ -174,6 +174,7 @@ export default class UserPins extends React.Component<
             </div>
             <div
               id="pinned-recordings"
+              data-testid="pinned-recordings"
               style={{ opacity: loading ? "0.4" : "1" }}
             >
               {pins?.map((pin, index) => {

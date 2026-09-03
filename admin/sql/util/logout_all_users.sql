@@ -2,5 +2,5 @@
 -- see https://flask-login.readthedocs.io/en/latest/#alternative-tokens for how/why it works
 BEGIN;
 UPDATE "user"
-    SET login_id = uuid_generate_v4()::text;
+    SET login_id = gen_random_uuid()::text;
 COMMIT;

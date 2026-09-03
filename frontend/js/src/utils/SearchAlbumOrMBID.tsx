@@ -17,9 +17,10 @@ import GlobalAppContext from "./GlobalAppContext";
 import DropdownRef from "./Dropdown";
 import {
   LB_ALBUM_MBID_REGEXP,
-  RELEASE_GROUP_MBID_REGEXP,
-  RELEASE_MBID_REGEXP,
-  RECORDING_MBID_REGEXP,
+  LB_RELEASE_MBID_REGEXP,
+  MB_RELEASE_GROUP_MBID_REGEXP,
+  MB_RELEASE_MBID_REGEXP,
+  MB_RECORDING_MBID_REGEXP,
   UUID_REGEXP,
 } from "./constants";
 
@@ -30,6 +31,7 @@ type SearchAlbumOrMBIDProps = {
   defaultValue?: string;
   switchMode?: (text: string) => void;
   requiredInput?: boolean;
+  onSearchTextChange?: (text: string) => void;
 };
 
 const SearchAlbumOrMBID = forwardRef<
@@ -41,6 +43,7 @@ const SearchAlbumOrMBID = forwardRef<
     defaultValue,
     switchMode,
     requiredInput = true,
+    onSearchTextChange,
   }: SearchAlbumOrMBIDProps,
   inputRefForParent
 ) {
@@ -117,10 +120,11 @@ const SearchAlbumOrMBID = forwardRef<
       throttle(
         async (input: string) => {
           const newReleaseMBID =
-            RELEASE_MBID_REGEXP.exec(input)?.[1] ??
+            MB_RELEASE_MBID_REGEXP.exec(input)?.[1] ??
+            LB_RELEASE_MBID_REGEXP.exec(input)?.[1] ??
             UUID_REGEXP.exec(input)?.[0];
           const newReleaseGroupMBID =
-            RELEASE_GROUP_MBID_REGEXP.exec(input)?.[1].toLowerCase() ??
+            MB_RELEASE_GROUP_MBID_REGEXP.exec(input)?.[1].toLowerCase() ??
             LB_ALBUM_MBID_REGEXP.exec(input)?.[1].toLowerCase();
           try {
             if (newReleaseMBID) {
@@ -168,10 +172,11 @@ const SearchAlbumOrMBID = forwardRef<
     setLoading(true);
     const isValidUUID = UUID_REGEXP.test(inputValue);
     const isValidAlbumUUID =
-      RELEASE_MBID_REGEXP.test(inputValue) ||
-      RELEASE_GROUP_MBID_REGEXP.test(inputValue) ||
+      MB_RELEASE_MBID_REGEXP.test(inputValue) ||
+      LB_RELEASE_MBID_REGEXP.test(inputValue) ||
+      MB_RELEASE_GROUP_MBID_REGEXP.test(inputValue) ||
       LB_ALBUM_MBID_REGEXP.test(inputValue);
-    const isValidRecordingUUID = RECORDING_MBID_REGEXP.test(inputValue);
+    const isValidRecordingUUID = MB_RECORDING_MBID_REGEXP.test(inputValue);
     if (isValidRecordingUUID && isFunction(switchMode)) {
       switchMode(inputValue);
       return;
@@ -207,6 +212,7 @@ const SearchAlbumOrMBID = forwardRef<
           name="release-mbid"
           onChange={(event) => {
             setInputValue(event.target.value);
+            onSearchTextChange?.(event.target.value);
           }}
           placeholder="Album name or MusicBrainz URL/MBID"
           required={requiredInput}

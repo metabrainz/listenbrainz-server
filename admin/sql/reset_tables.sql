@@ -8,6 +8,7 @@ DELETE FROM api_compat.session             CASCADE;
 DELETE FROM api_compat.token               CASCADE;
 
 DELETE FROM data_dump                      CASCADE;
+DELETE FROM statistics_generation          CASCADE;
 DELETE FROM missing_musicbrainz_data       CASCADE;
 
 DELETE FROM recommendation.cf_recording    CASCADE;
@@ -19,7 +20,6 @@ DELETE FROM recommendation.similar_user    CASCADE;
 DELETE FROM user_timeline_event            CASCADE;
 DELETE FROM hide_user_timeline_event       CASCADE;
 
--- DELETE FROM spotify_auth                   CASCADE;
 DELETE FROM external_service_oauth         CASCADE;
 DELETE FROM listens_importer               CASCADE;
 
@@ -29,5 +29,15 @@ DELETE FROM user_relationship              CASCADE;
 DELETE FROM release_color                  CASCADE;
 DELETE FROM pinned_recording               CASCADE;
 DELETE FROM user_setting                   CASCADE;
+
+DELETE FROM funkwhale_tokens               CASCADE;
+DELETE FROM funkwhale_servers              CASCADE;
+
+DELETE FROM navidrome_tokens               CASCADE;
+DELETE FROM navidrome_servers              CASCADE;
+
+DELETE FROM background_tasks               CASCADE;
+DELETE FROM user_data_export               CASCADE;
+DELETE FROM user_data_import               CASCADE;
 
 COMMIT;

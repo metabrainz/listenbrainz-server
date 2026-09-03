@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 
 import psycopg2
 import orjson
-from brainzutils.musicbrainz_db import engine as mb_engine
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, request, jsonify, current_app
 
@@ -20,12 +19,14 @@ from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
     APIUnauthorized, ListenValidationError, APIForbidden
+from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 from listenbrainz.webserver.models import SubmitListenUserMetadata
-from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
+from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR, parse_boolean_arg
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, \
     is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, \
-    LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
-    get_non_negative_param, _parse_int_arg
+    LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
+    get_non_negative_param, _parse_int_arg, _validate_get_listens_endpoint_params
+from listenbrainz.messybrainz import submit_recording
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -65,6 +66,8 @@ def submit_listen():
 
     For complete details on the format of the JSON to be POSTed to this endpoint, see :ref:`json-doc`.
 
+    :param return_msid: If set to true and the listen_type is 'playing_now', the response will include a recording_msid
+        (to be used for submitting love/hate feedback). Defaults to false.
     :reqheader Authorization: Token <user token>
     :reqheader Content-Type: *application/json*
     :statuscode 200: listen(s) accepted.
@@ -73,7 +76,7 @@ def submit_listen():
     :resheader Content-Type: *application/json*
     """
     user = validate_auth_header(fetch_email=True, scopes=["listenbrainz:submit-listens"])
-    if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
+    if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
         raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
 
     if user['is_paused']:
@@ -130,14 +133,37 @@ def submit_listen():
         validated_payload = [validate_listen(listen, listen_type) for listen in payload]
     except ListenValidationError as err:
         raise APIBadRequest(err.message, err.payload)
+    
+    msid = None
+    if listen_type == LISTEN_TYPE_PLAYING_NOW and request.args.get('return_msid', False):
+        listen = validated_payload[0]
+        track_metadata = listen.get("track_metadata", {})
+        duration = track_metadata.get('duration') or (
+            track_metadata.get('duration_ms') or 0) / 1000 or None
+        additional_info = track_metadata.get("additional_info", {})
+        track_number = additional_info.get('tracknumber')
+
+        msid = submit_recording(connection=ts_conn,
+                        recording=track_metadata.get('track_name'),
+                        artist=track_metadata.get('artist_name'),
+                        release=track_metadata.get('release_name'),
+                        track_number=track_number,
+                        duration=duration)
+        if msid:
+            # Set additional_info if it doesn't exist already in the listen metadata
+            track_metadata["additional_info"] = additional_info
+            additional_info.update({"recording_msid": msid})
 
     user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
     insert_payload(validated_payload, user_metadata, listen_type)
 
+    if msid:
+        return jsonify({'status': 'ok', 'recording_msid': msid})
+    
     return jsonify({'status': 'ok'})
 
 
-@api_bp.get("/user/<user_name>/listens")
+@api_bp.get("/user/<mb_username:user_name>/listens")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -160,30 +186,18 @@ def get_listens(user_name):
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
-    min_ts, max_ts, count = _validate_get_endpoint_params()
-    if min_ts and max_ts and min_ts >= max_ts:
-        raise APIBadRequest("min_ts should be less than max_ts")
-
-    listens, min_ts_per_user, max_ts_per_user = timescale_connection._ts.fetch_listens(
+    min_ts, max_ts, count = _validate_get_listens_endpoint_params()
+    data = timescale_connection._ts.fetch_listens_with_cache(
         user,
         limit=count,
-        from_ts=datetime.fromtimestamp(min_ts, timezone.utc) if min_ts else None,
-        to_ts=datetime.fromtimestamp(max_ts, timezone.utc) if max_ts else None
+        from_ts=min_ts,
+        to_ts=max_ts
     )
-    listen_data = []
-    for listen in listens:
-        listen_data.append(listen.to_api())
-
-    return jsonify({'payload': {
-        'user_id': user_name,
-        'count': len(listen_data),
-        'listens': listen_data,
-        'latest_listen_ts': int(max_ts_per_user.timestamp()),
-        'oldest_listen_ts': int(min_ts_per_user.timestamp()),
-    }})
+    data["user_id"] = user_name
+    return jsonify({"payload": data})
 
 
-@api_bp.get("/user/<user_name>/listen-count")
+@api_bp.get("/user/<mb_username:user_name>/listen-count")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -213,7 +227,7 @@ def get_listen_count(user_name):
     }})
 
 
-@api_bp.get("/user/<user_name>/playing-now")
+@api_bp.get("/user/<mb_username:user_name>/playing-now")
 @crossdomain
 @ratelimit()
 def get_playing_now(user_name):
@@ -251,7 +265,55 @@ def get_playing_now(user_name):
     })
 
 
-@api_bp.get("/user/<user_name>/similar-users")
+@api_bp.post("/playing-now/delete")
+@crossdomain
+@ratelimit()
+def delete_playing_now():
+    """
+    Clear the playing now status for the user. If a ``client`` is provided in the request body,
+    the endpoint will only clear the playing_now if it was submitted by the specified client.
+    If no ``client`` is provided, the playing_now will be cleared unconditionally.
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Successfully cleared playing now status (or no playing_now exists).
+    :statuscode 400: Invalid request (invalid JSON).
+    :statuscode 401: Invalid authorization.
+    :statuscode 404: The current playing_now was not submitted by the specified client.
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header(fetch_email=False, scopes=["listenbrainz:submit-listens"])
+
+    playing_now_listen = redis_connection._redis.get_playing_now(user['id'])
+    if playing_now_listen is None:
+        return jsonify({'status': 'ok', 'message': 'Playing now was already cleared'})
+
+    body = request.get_data()
+    client_name = None
+    if body:
+        try:
+            data = orjson.loads(body.decode("utf-8"))
+        except (ValueError, UnicodeDecodeError) as e:
+            raise APIBadRequest("Cannot parse JSON document: %s" % e)
+
+        if not isinstance(data, dict):
+            raise APIBadRequest("Invalid JSON document submitted. Top level of JSON document should be a json object.")
+
+        client_name = data.get('client')
+        if client_name is not None and not isinstance(client_name, str):
+            raise APIBadRequest("The 'client' field must be a string.")
+
+    if client_name:
+        track_metadata = playing_now_listen.data
+        submission_client = track_metadata.get('additional_info', {}).get('submission_client')
+        if submission_client and submission_client != client_name:
+            raise APINotFound("No playing now listen found for the specified client.")
+
+    redis_connection._redis.delete_playing_now(user['id'])
+    return jsonify({'status': 'ok', 'message': 'Playing now cleared successfully'})
+
+
+@api_bp.get("/user/<mb_username:user_name>/similar-users")
 @crossdomain
 @ratelimit()
 def get_similar_users(user_name):
@@ -287,7 +349,7 @@ def get_similar_users(user_name):
     })
 
 
-@api_bp.get("/user/<user_name>/similar-to/<other_user_name>")
+@api_bp.get("/user/<mb_username:user_name>/similar-to/<mb_username:other_user_name>")
 @crossdomain
 @ratelimit()
 def get_similar_to_user(user_name, other_user_name):
@@ -342,6 +404,10 @@ def latest_import():
                 "state": "a short string denoting the state of the import",
                 "count": "the number of listens that have been imported for the user by the importer",
             },
+            "error": {
+                "retry": boolean,
+                "message": "Optional error message from the import service"
+            }
         }
 
     :param user_name: the MusicBrainz ID of the user whose data is needed
@@ -375,7 +441,8 @@ def latest_import():
         return jsonify({
             "musicbrainz_id": user["musicbrainz_id"],
             "latest_import": status["latest_listened_at"],
-            "status": status["status"]
+            "status": status["status"],
+            "error": status.get("error", None),
         })
     elif request.method == 'POST':
         user = validate_auth_header()
@@ -518,6 +585,7 @@ def delete_listen():
     try:
         timescale_connection._ts.delete_listen(listened_at=listened_at,
                                                recording_msid=recording_msid, user_id=user["id"])
+        invalidate_user_listen_caches(user["id"])
     except TimescaleListenStoreException as e:
         current_app.logger.error("Cannot delete listen for user: %s" % str(e))
         raise APIServiceUnavailable(
@@ -680,12 +748,19 @@ def user_recommendations(playlist_user_name):
 @api_listenstore_needed
 def search_user_playlist(playlist_user_name):
     """
-    Search for a playlist by name for a user.
+    Search for playlists associated with a user by name or description.
+
+    The search is a fuzzy match based on PostgreSQL trigram similarity and is performed against
+    the playlist title and description. Results are ordered by decreasing similarity.
+    The query is treated as a plain string
 
     :param playlist_user_name: the MusicBrainz ID of the user whose playlists are being searched.
-    :queryparam name: the name of the playlist to search for.
+    :queryparam query: the query string used to search for playlists. Must be at least 3 characters long.
+    :queryparam name: deprecated alias for :queryparam:`query`.
     :queryparam count: the number of playlists to return. Default: 25.
     :queryparam offset: the offset of the playlists to return. Default: 0.
+    :queryparam include_global: if true, also include all public playlists globally in addition to
+        the user's associated playlists. Default: false.
 
     :statuscode 200: success
     :statuscode 404: user not found
@@ -695,16 +770,26 @@ def search_user_playlist(playlist_user_name):
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
-    query = request.args.get("query")
+    user = validate_auth_header(optional=True)
+
+    query = request.args.get("query") or request.args.get("name")
     count = get_non_negative_param("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = get_non_negative_param("offset", 0)
+    include_global = parse_boolean_arg("include_global", False)
 
-    playlists, playlist_count = db_playlist.search_playlists_for_user(db_conn, ts_conn, playlist_user.id, query, count, offset)
+    if not query or len(query) < 3:
+        log_raise_400("Query string must be at least 3 characters long.")
+
+    viewer_id = user["id"] if user else None
+    playlists, playlist_count = db_playlist.search_playlists_for_user(
+        db_conn, ts_conn, playlist_user["id"], query, count, offset, 
+        viewer_id=viewer_id, include_global=include_global
+    )
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-@api_bp.get("/user/<user_name>/services")
+@api_bp.get("/user/<mb_username:user_name>/services")
 @crossdomain
 @ratelimit()
 def get_service_details(user_name):

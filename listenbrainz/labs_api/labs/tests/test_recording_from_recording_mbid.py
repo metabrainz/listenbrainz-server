@@ -61,6 +61,7 @@ metadata_db_response = {
                 "join_phrase": ""
             }
         ],
+        "tags": [],
         "caa_id": None,
         "caa_release_mbid": None
     },
@@ -82,6 +83,7 @@ metadata_db_response = {
                 "join_phrase": ""
             }
         ],
+        "tags": [],
         "caa_id": None,
         "caa_release_mbid": None
     },
@@ -103,6 +105,7 @@ metadata_db_response = {
                 "join_phrase": ""
             }
         ],
+        "tags": [],
         "caa_id": None,
         "caa_release_mbid": None
     }
@@ -128,6 +131,7 @@ json_response = [
                 "join_phrase": ""
             }
         ],
+        "tags": [],
         "original_recording_mbid": "a96bf3b6-651d-49f4-9a89-eee27cecc18e"
     },
     {
@@ -149,6 +153,7 @@ json_response = [
             }
         ],
         "release_name": "Erna 20: Swing und Blues",
+        "tags": [],
         "original_recording_mbid": "8fa0023e-1268-4d32-8341-83bb7506086e"
     },
     {
@@ -170,6 +175,7 @@ json_response = [
             }
         ],
         "release_name": "Madvillainy",
+        "tags": [],
         "original_recording_mbid": "5948f779-0b96-4eba-b6a7-d1f0f6c7cf9f"
     },
     {
@@ -183,6 +189,7 @@ json_response = [
         "release_mbid": None,
         "release_name": None,
         "artists": [],
+        "tags": [],
         "original_recording_mbid": "a1e97901-7ddf-4a0d-87ff-7f601ad3ccd3"
     }
 ]
@@ -194,6 +201,7 @@ class MainTestCase(flask_testing.TestCase):
         app = create_app()
         app.config['MB_DATABASE_URI'] = 'yermom'
         app.config['SQLALCHEMY_TIMESCALE_URI'] = 'yermom'
+        app.config['SQLALCHEMY_TIMESCALE_PGBOUNCER_URI'] = 'yermom'
         return app
 
     def setUp(self):
@@ -231,10 +239,11 @@ class MainTestCase(flask_testing.TestCase):
         self.assertCountEqual(q.outputs().__fields__.keys(), [
             'recording_mbid', 'recording_name', 'length', 'artist_credit_id', 'artist_credit_name',
             'artist_credit_mbids', 'canonical_recording_mbid', 'original_recording_mbid', 'release_name',
-            'release_mbid', 'artists'])
+            'release_mbid', 'artists', 'tags'])
 
+    @patch('listenbrainz.db.timescale.engine')
     @patch('psycopg2.connect')
-    def test_fetch(self, mock_connect):
+    def test_fetch(self, mock_connect, mock_engine):
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request, RequestSource.json_post)
         self.assertEqual(len(resp), 4)
@@ -243,15 +252,17 @@ class MainTestCase(flask_testing.TestCase):
         self.assertDictEqual(json.loads(resp[2].json()), json_response[2])
         self.assertDictEqual(json.loads(resp[3].json()), json_response[3])
 
+    @patch('listenbrainz.db.timescale.engine')
     @patch('psycopg2.connect')
-    def test_count(self, mock_connect):
+    def test_count(self, mock_connect, mock_engine):
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request, RequestSource.json_post, count=1)
         self.assertEqual(len(resp), 1)
         self.assertDictEqual(json.loads(resp[0].json()), json_response[0])
 
+    @patch('listenbrainz.db.timescale.engine')
     @patch('psycopg2.connect')
-    def test_offset(self, mock_connect):
+    def test_offset(self, mock_connect, mock_engine):
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request, RequestSource.json_post, offset=1)
         self.assertEqual(len(resp), 3)
@@ -259,8 +270,9 @@ class MainTestCase(flask_testing.TestCase):
         self.assertDictEqual(json.loads(resp[1].json()), json_response[2])
         self.assertDictEqual(json.loads(resp[2].json()), json_response[3])
 
+    @patch('listenbrainz.db.timescale.engine')
     @patch('psycopg2.connect')
-    def test_count_and_offset(self, mock_connect):
+    def test_count_and_offset(self, mock_connect, mock_engine):
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request, RequestSource.json_post, count=1, offset=1)
         self.assertEqual(len(resp), 1)

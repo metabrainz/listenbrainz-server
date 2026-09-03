@@ -5,9 +5,11 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
 .entity-page-header {
   padding: 2em;
   gap: 2em;
+  border-radius: 8px;
   background: linear-gradient(45deg, var(--bg-color), transparent 80%);
   flex-wrap: wrap;
   justify-content: center;
+  margin-top: 1.5em;
   .cover-art {
     aspect-ratio: 1;
     height: 100%;
@@ -16,16 +18,22 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
     flex-grow: 1;
     flex-shrink: 0;
     border-radius: 5px;
+    overflow: hidden;
     text-align: center;
     > * {
       max-width: inherit;
       height: 100%;
       margin-bottom: 0.5em;
     }
+
+    @media (max-width: 768px) {
+      max-height: -webkit-fill-available;
+      max-width: -webkit-fill-available;
+    }
   }
   .artist-info,
   .playlist-info {
-    flex-grow: 2;
+    flex-grow: 1.5;
     display: flex;
     flex-direction: column;
     min-width: 15em;
@@ -52,6 +60,8 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
   .lb-radio-button {
     align-self: flex-end;
     gap: 0.1em;
+    border-top-left-radius: 0.5rem;
+    border-bottom-left-radius: 0.5rem;
     .tags-list {
       overflow: hidden;
       text-overflow: ellipsis;

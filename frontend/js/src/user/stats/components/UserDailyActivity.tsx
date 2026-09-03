@@ -81,13 +81,15 @@ export default function UserDailyActivity(props: UserDailyActivityProps) {
       const dayData = unProcessedData.payload.daily_activity[day];
       let hourData: any = [];
 
-      hourData = dayData.map((elem) => {
-        const hour = (elem.hour + tzOffset + 24) % 24;
-        return {
-          x: hour,
-          y: elem.listen_count,
-        };
-      });
+      hourData = dayData
+        .map((elem) => {
+          const hour = (elem.hour + tzOffset + 24) % 24;
+          return {
+            x: hour,
+            y: elem.listen_count,
+          };
+        })
+        .sort((a, b) => a.x - b.x);
 
       result.push({
         id: day,
@@ -103,13 +105,15 @@ export default function UserDailyActivity(props: UserDailyActivityProps) {
     });
 
     let averageData: any = [];
-    averageData = average.map((elem, index) => {
-      const hour = (index + tzOffset + 24) % 24;
-      return {
-        x: hour,
-        y: Math.ceil(elem / 7),
-      };
-    });
+    averageData = average
+      .map((elem, index) => {
+        const hour = (index + tzOffset + 24) % 24;
+        return {
+          x: hour,
+          y: Math.ceil(elem / 7),
+        };
+      })
+      .sort((a, b) => a.x - b.x);
 
     result.unshift({
       id: "Average",

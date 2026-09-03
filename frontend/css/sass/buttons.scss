@@ -26,13 +26,14 @@
 .btn-rounded {
   --bs-btn-border-radius: 3em;
 }
+.btn-small-rounding,
+.btn.dropdown-toggle {
+  --bs-btn-border-radius: #{$btn-border-radius-lg};
+}
 @each $color, $value in $theme-colors {
   .btn-outline-#{$color} {
     --bs-btn-border-radius: #{$btn-border-radius-lg};
   }
-}
-.btn.dropdown-toggle {
-  --bs-btn-border-radius: 4px;
 }
 
 .btn-link {

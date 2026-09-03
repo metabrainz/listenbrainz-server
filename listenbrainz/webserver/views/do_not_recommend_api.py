@@ -15,7 +15,7 @@ allowed_entity_types = ['artist', 'release', 'release_group', 'recording']
 do_not_recommend_api_bp = Blueprint('do_not_recommend_api_v1', __name__)
 
 
-@do_not_recommend_api_bp.get("/user/<user_name>/do-not-recommend")
+@do_not_recommend_api_bp.get("/user/<mb_username:user_name>/do-not-recommend")
 @crossdomain
 @ratelimit()
 def get_do_not_recommends(user_name):

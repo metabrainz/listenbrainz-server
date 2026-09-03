@@ -17,6 +17,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Iterable
 
@@ -58,7 +59,7 @@ DEFAULT_LISTEN_EVENT_WINDOW_NEW = timedelta(days=7)
 user_timeline_event_api_bp = Blueprint('user_timeline_event_api_bp', __name__)
 
 
-@user_timeline_event_api_bp.post('/user/<user_name>/timeline-event/create/recording')
+@user_timeline_event_api_bp.post('/user/<mb_username:user_name>/timeline-event/create/recording')
 @crossdomain
 @ratelimit()
 def create_user_recording_recommendation_event(user_name):
@@ -114,7 +115,7 @@ def create_user_recording_recommendation_event(user_name):
     return jsonify(event_data)
 
 
-@user_timeline_event_api_bp.post('/user/<user_name>/timeline-event/create/notification')
+@user_timeline_event_api_bp.post('/user/<mb_username:user_name>/timeline-event/create/notification')
 @crossdomain
 @ratelimit()
 def create_user_notification_event(user_name):
@@ -173,7 +174,7 @@ def create_user_notification_event(user_name):
     return jsonify(event_data)
 
 
-@user_timeline_event_api_bp.post('/user/<user_name>/timeline-event/create/review')
+@user_timeline_event_api_bp.post('/user/<mb_username:user_name>/timeline-event/create/review')
 @crossdomain
 @ratelimit()
 def create_user_cb_review_event(user_name):
@@ -242,7 +243,7 @@ def create_user_cb_review_event(user_name):
     return jsonify(event_data)
 
 
-@user_timeline_event_api_bp.get('/user/<user_name>/feed/events')
+@user_timeline_event_api_bp.get('/user/<mb_username:user_name>/feed/events')
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -343,7 +344,7 @@ def user_feed_event(user_name: str, event_id: int):
     }})
 
 
-@user_timeline_event_api_bp.get('/user/<user_name>/feed/events/listens/following')
+@user_timeline_event_api_bp.get('/user/<mb_username:user_name>/feed/events/listens/following')
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -392,7 +393,7 @@ def user_feed_listens_following(user_name: str):
     }})
 
 
-@user_timeline_event_api_bp.get('/user/<user_name>/feed/events/listens/similar')
+@user_timeline_event_api_bp.get('/user/<mb_username:user_name>/feed/events/listens/similar')
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -451,7 +452,7 @@ def user_feed_listens_similar(user_name: str):
     })
 
 
-@user_timeline_event_api_bp.post("/user/<user_name>/feed/events/delete")
+@user_timeline_event_api_bp.post("/user/<mb_username:user_name>/feed/events/delete")
 @crossdomain
 @ratelimit()
 def delete_feed_events(user_name):
@@ -514,7 +515,7 @@ def delete_feed_events(user_name):
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
 
-@user_timeline_event_api_bp.post("/user/<user_name>/feed/events/hide")
+@user_timeline_event_api_bp.post("/user/<mb_username:user_name>/feed/events/hide")
 @crossdomain
 @ratelimit()
 def hide_user_timeline_event(user_name):
@@ -566,9 +567,14 @@ def hide_user_timeline_event(user_name):
 
     row_id = data["event_id"]
     event_type = data["event_type"]
+
     if event_type in [
-            UserTimelineEventType.RECORDING_RECOMMENDATION.value, UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value,
-            UserTimelineEventType.THANKS.value]:
+        UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+        UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value,
+        UserTimelineEventType.THANKS.value,
+        UserTimelineEventType.NOTIFICATION.value,
+        UserTimelineEventType.CRITIQUEBRAINZ_REVIEW.value,
+    ]:
         result = db_user_timeline_event.get_user_timeline_event_by_id(
             db_conn, row_id)
     elif data["event_type"] == UserTimelineEventType.RECORDING_PIN.value:
@@ -580,6 +586,14 @@ def hide_user_timeline_event(user_name):
         raise APIBadRequest(
             f"{data['event_type']} event with id {row_id} not found")
 
+    # Notification events are directly created for a user, so we can skip the follower check.
+    if event_type == UserTimelineEventType.NOTIFICATION.value:
+        if result.user_id == user["id"]:
+            db_user_timeline_event.hide_user_timeline_event(db_conn, user["id"], event_type, row_id)
+            return jsonify({"status": "ok"})
+        else:
+            raise APIUnauthorized("You cannot hide events of this user")
+
     if db_user_relationship.is_following_user(db_conn, user['id'], result.user_id):
         db_user_timeline_event.hide_user_timeline_event(
             db_conn, user['id'], data["event_type"], data["event_id"])
@@ -588,7 +602,7 @@ def hide_user_timeline_event(user_name):
         raise APIUnauthorized("You cannot hide events of this user")
 
 
-@user_timeline_event_api_bp.post("/user/<user_name>/feed/events/unhide")
+@user_timeline_event_api_bp.post("/user/<mb_username:user_name>/feed/events/unhide")
 @crossdomain
 @ratelimit()
 def unhide_user_timeline_event(user_name):
@@ -633,7 +647,7 @@ def unhide_user_timeline_event(user_name):
     return jsonify({"status": "ok"})
 
 
-@user_timeline_event_api_bp.post('/user/<user_name>/timeline-event/create/recommend-personal')
+@user_timeline_event_api_bp.post('/user/<mb_username:user_name>/timeline-event/create/recommend-personal')
 @crossdomain
 @ratelimit()
 def create_personal_recommendation_event(user_name):
@@ -704,7 +718,7 @@ def create_personal_recommendation_event(user_name):
     return jsonify(event_data)
 
 
-@user_timeline_event_api_bp.post('/user/<user_name>/timeline-event/create/thanks')
+@user_timeline_event_api_bp.post('/user/<mb_username:user_name>/timeline-event/create/thanks')
 @crossdomain
 @ratelimit()
 def create_thanks_event(user_name):
@@ -781,94 +795,50 @@ def get_feed_events_for_user(
     max_ts: int,
     count: int,
 ) -> List[APITimelineEvent]:
-    """Gets all user events in the feed."""
+    """Gets all user events in the feed, fetching all event types concurrently."""
 
     users_for_events = followed_users + [user]
-    follow_events = get_follow_events(
-        users_for_events=users_for_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
+    min_ts = min_ts or 0
+    max_ts = max_ts or int(time.time())
 
-    recording_recommendation_events = get_recording_recommendation_events(
-        users_for_events=users_for_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
+    app = current_app._get_current_object()
 
-    personal_recording_recommendation_events = get_personal_recording_recommendation_events(
-        user=user,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
+    def in_context(fn, **kwargs):
+        def run():
+            with app.app_context():
+                return fn(**kwargs)
+        return run
 
-    thanks_events = get_thanks_events(
-        user=user,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
+    tasks = {
+        "follow": in_context(get_follow_events, users_for_events=users_for_events, min_ts=min_ts, max_ts=max_ts, count=count),
+        "rec_rec": in_context(get_recording_recommendation_events, users_for_events=users_for_events, min_ts=min_ts, max_ts=max_ts, count=count),
+        "personal": in_context(get_personal_recording_recommendation_events, user=user, min_ts=min_ts, max_ts=max_ts, count=count),
+        "thanks": in_context(get_thanks_events, user=user, min_ts=min_ts, max_ts=max_ts, count=count),
+        "cb_review": in_context(get_cb_review_events, users_for_events=users_for_events, min_ts=min_ts, max_ts=max_ts, count=count),
+        "notification": in_context(get_notification_events, user=user, min_ts=min_ts, max_ts=max_ts, count=count),
+        "pin": in_context(get_recording_pin_events, users_for_events=users_for_events, min_ts=min_ts, max_ts=max_ts, count=count),
+    }
 
-    cb_review_events = get_cb_review_events(
-        users_for_events=users_for_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    notification_events = get_notification_events(
-        user=user,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    recording_pin_events = get_recording_pin_events(
-        users_for_events=users_for_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    hidden_events = db_user_timeline_event.get_hidden_timeline_events(
-        db_conn, user['id'], count)
-    hidden_events_pin = {}
-    hidden_events_recommendation = {}
-
-    for hidden_event in hidden_events:
-        if hidden_event.event_type.value in [
-                UserTimelineEventType.RECORDING_RECOMMENDATION.value,
-                UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
-            hidden_events_recommendation[hidden_event.event_id] = hidden_event
-        else:
-            hidden_events_pin[hidden_event.event_id] = hidden_event
-
-    for event in recording_recommendation_events:
-        if event.id in hidden_events_recommendation:
-            event.hidden = True
-
-    for event in personal_recording_recommendation_events:
-        if event.id in hidden_events_recommendation:
-            event.hidden = True
-
-    for event in recording_pin_events:
-        if event.id in hidden_events_pin:
-            event.hidden = True
+    all_events = []
+    with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
+        futures = {executor.submit(fn): name for name, fn in tasks.items()}
+        for future in as_completed(futures):
+            name = futures[future]
+            try:
+                all_events.extend(future.result())
+            except Exception:
+                current_app.logger.error("Error fetching %s feed events:", name, exc_info=True)
 
     # TODO: add playlist event and like event
-    all_events = sorted(
-        follow_events
-        + recording_recommendation_events
-        + recording_pin_events
-        + cb_review_events
-        + notification_events
-        + personal_recording_recommendation_events
-        + thanks_events,
-        key=lambda event: -event.created,
+    all_events.sort(key=lambda event: -event.created)
+
+    hidden_event_ids = db_user_timeline_event.get_hidden_timeline_event_ids(
+        db_conn, user["id"], count
     )
+    for event in all_events:
+        if event.id in hidden_event_ids:
+            event.hidden = True
+
     return all_events
 
 

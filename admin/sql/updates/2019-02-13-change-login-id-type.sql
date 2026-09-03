@@ -1,7 +1,7 @@
 BEGIN;
 
 ALTER TABLE "user" DROP COLUMN user_login_id;
-ALTER TABLE "user" ADD COLUMN login_id TEXT NOT NULL DEFAULT uuid_generate_v4()::text;
+ALTER TABLE "user" ADD COLUMN login_id TEXT NOT NULL DEFAULT gen_random_uuid()::text;
 
 UPDATE "user"
    SET login_id = id::text;

@@ -7,12 +7,15 @@ type ExternalServiceButtonProps = {
     | "critiquebrainz"
     | "appleMusic"
     | "lastfm"
-    | "librefm";
+    | "librefm"
+    | "funkwhale"
+    | "navidrome";
   current: string;
   value: string;
   title: string;
   details: string;
   handlePermissionChange: (serviceName: string, newValue: string) => void;
+  disabled?: boolean;
 };
 
 export default function ServicePermissionButton(
@@ -25,6 +28,7 @@ export default function ServicePermissionButton(
     title,
     details,
     handlePermissionChange,
+    disabled = false,
   } = props;
   const className =
     value === "disable"
@@ -33,7 +37,7 @@ export default function ServicePermissionButton(
 
   const isChecked = current === value;
 
-  const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onChange = () => {
     handlePermissionChange(service, value);
   };
 
@@ -46,6 +50,7 @@ export default function ServicePermissionButton(
         value={value}
         onChange={onChange}
         checked={isChecked}
+        disabled={disabled}
       />
       <label htmlFor={`${service}_${value}`}>
         <div className="title">{title}</div>

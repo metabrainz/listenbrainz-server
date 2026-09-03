@@ -6,7 +6,7 @@ from flask import Blueprint, current_app, jsonify, request
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIInternalServerError, APINotFound
+from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIForbidden
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import (
     log_raise_400,
@@ -28,6 +28,9 @@ def pin_recording_for_user():
     """
     Pin a recording for user. A user token (found on  https://listenbrainz.org/settings/)
     must be provided in the Authorization header! Each request should contain only one pinned recording item in the payload.
+
+    **Note:** Pinning a new recording will automatically unpin (deactivate) any currently active pin.
+    Pins are active for a default duration (:data:`~listenbrainz.db.model.pinned_recording.DAYS_UNTIL_UNPIN` days) unless ``pinned_until`` is specified.
 
     The format of the JSON to be POSTed to this endpoint should look like the following:
 
@@ -81,6 +84,9 @@ def unpin_recording_for_user():
     Unpins the currently active pinned recording for the user. A user token (found on  https://listenbrainz.org/settings/)
     must be provided in the Authorization header!
 
+    **Note:** This action only *deactivates* the current pin. It does NOT delete the pin from the user's history.
+    The pin will still appear in ``GET /<user_name>/pins``. To fully remove a pin, use ``POST /pin/delete/<row_id>``.
+
     :reqheader Authorization: Token <user token>
     :statuscode 200: recording unpinned.
     :statuscode 401: invalid authorization. See error message for details.
@@ -109,6 +115,8 @@ def delete_pin_for_user(row_id):
     Deletes the pinned recording with given ``row_id`` from the server.
     A user token (found on  https://listenbrainz.org/settings/) must be provided in the Authorization header!
 
+    **Note:** Unlike unpinning, this action permanently removes the pin from the user's history.
+
     :reqheader Authorization: Token <user token>
     :param row_id: the row_id of the pinned recording that should be deleted.
     :type row_id: ``int``
@@ -131,13 +139,71 @@ def delete_pin_for_user(row_id):
     return jsonify({"status": "ok"})
 
 
-@pinned_recording_api_bp.get("/<user_name>/pins")
+@pinned_recording_api_bp.get("/pin/<int:row_id>")
+@crossdomain
+@ratelimit()
+def get_pin_by_id(row_id):
+    """
+    Get a pinned recording by its row_id. Returns the pin with track metadata.
+    The JSON returned by the API will look like the following:
+
+    .. code-block:: json
+
+        {
+            "pinned_recording": {
+                "blurb_content": "Awesome recording!",
+                "created": 1623997168,
+                "row_id": 10,
+                "pinned_until": 1623997485,
+                "recording_mbid": "af60273b-3c3f-4b07-8e91-1f9f4aa9d627",
+                "recording_msid": "fd7d9162-a284-4a10-906c-faae4f1e166b",
+                "track_metadata": {
+                    "artist_name": "Rick Astley",
+                    "track_name": "Never Gonna Give You Up"
+                },
+                "user_name": "-- the MusicBrainz ID of the user who pinned this recording --"
+            }
+        }
+
+    :param row_id: the row_id of the pinned recording.
+    :type row_id: ``int``
+    :statuscode 200: Yay, you have data!
+    :statuscode 404: The requested pin was not found.
+    :resheader Content-Type: *application/json*
+    """
+    try:
+        pin = db_pinned_rec.get_pin_by_id(db_conn, row_id)
+    except Exception as e:
+        current_app.logger.error("Error while fetching pin: {}".format(e))
+        raise APIInternalServerError("Something went wrong. Please try again.")
+
+    if pin is None:
+        raise APINotFound("Cannot find pin with row_id '%s'" % row_id)
+
+    user_map = db_user.get_users_by_id(db_conn, [pin.user_id])
+    if pin.user_id not in user_map:
+        raise APINotFound("Cannot find user for pin with row_id '%s'" % row_id)
+
+    pins_with_metadata = fetch_track_metadata_for_items(ts_conn, [pin])
+    pin = pins_with_metadata[0] if pins_with_metadata else pin
+
+    pin_data = pin.to_api()
+    pin_data["user_name"] = user_map[pin.user_id]
+
+    return jsonify({"pinned_recording": pin_data})
+
+
+@pinned_recording_api_bp.get("/<mb_username:user_name>/pins")
 @crossdomain
 @ratelimit()
 def get_pins_for_user(user_name):
     """
     Get a list of all recordings ever pinned by a user with given ``user_name`` in descending order of the time
-    they were originally pinned. The JSON returned by the API will look like the following:
+    they were originally pinned.
+
+    **Note:** This includes both currently active pins and past (deactivated/unpinned) pins.
+
+    The JSON returned by the API will look like the following:
 
     .. code-block:: json
 
@@ -209,7 +275,7 @@ def get_pins_for_user(user_name):
     )
 
 
-@pinned_recording_api_bp.get("/<user_name>/pins/following")
+@pinned_recording_api_bp.get("/<mb_username:user_name>/pins/following")
 @crossdomain
 @ratelimit()
 def get_pins_for_user_following(user_name):
@@ -282,7 +348,7 @@ def get_pins_for_user_following(user_name):
     )
 
 
-@pinned_recording_api_bp.get("/<user_name>/pins/current")
+@pinned_recording_api_bp.get("/<mb_username:user_name>/pins/current")
 @crossdomain
 @ratelimit()
 def get_current_pin_for_user(user_name):
@@ -310,6 +376,8 @@ def get_current_pin_for_user(user_name):
 
 
     If there is no current pin for the user, "pinned_recording" field will be null.
+
+    **Note:** A pin ceases to be current if it is manually unpinned, expires (defaults to :data:`~listenbrainz.db.model.pinned_recording.DAYS_UNTIL_UNPIN` days), or is replaced by a new pin.
 
     :param user_name: the MusicBrainz ID of the user whose pin track history requested.
     :type user_name: ``str``
@@ -353,13 +421,21 @@ def update_blurb_content_pinned_recording(row_id):
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    validate_auth_header()
+    user = validate_auth_header()
 
     data = request.json
     try:
         row_id = int(row_id)
+        pin = db_pinned_rec.get_pin_by_id(db_conn, row_id)
     except ValueError:
         log_raise_400("Invalid row_id provided")
+
+    if pin is None:
+        raise APINotFound("Cannot find pin for row_id: %s" % (row_id,))
+
+    if pin.user_id != user["id"]:
+        raise APIForbidden("Cannot update pin for another user")
+
     if "blurb_content" not in data:
         log_raise_400("JSON document must contain blurb_content", data)
 

@@ -85,12 +85,8 @@ function MenuOptions(props: MenuOptionsProps) {
           {recordingMBID && (
             <ListenControl
               icon={faExternalLinkAlt}
-              text="Open in MusicBrainz"
-              link={`https://musicbrainz.org/recording/${recordingMBID}`}
-              anchorTagAttributes={{
-                target: "_blank",
-                rel: "noopener noreferrer",
-              }}
+              text="Go to track page"
+              link={`/track/${recordingMBID}`}
             />
           )}
           {spotifyURL && (

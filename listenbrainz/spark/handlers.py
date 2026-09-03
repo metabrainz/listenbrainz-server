@@ -11,13 +11,14 @@ from sentry_sdk import start_transaction
 
 import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
+import listenbrainz.db.statistics_generation as db_statistics_generation
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+import listenbrainz.shared.status_cache_helpers as status_cache_helpers
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from listenbrainz.db import year_in_music
 from listenbrainz.db.fresh_releases import insert_fresh_releases
-from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.troi.daily_jams import run_post_recommendation_troi_bot
 from listenbrainz.troi.weekly_playlists import process_weekly_playlists, process_weekly_playlists_end
 from listenbrainz.troi.year_in_music import process_yim_playlists, process_yim_playlists_end
@@ -68,6 +69,17 @@ def handle_user_daily_activity(message):
     """ Take daily activity stats for user and save it in database. """
     _handle_stats(message, "daily_activity", "user_id")
 
+def handle_user_genre_activity(message):
+    """ Take genre activity stats for user and save it in database. """
+    _handle_stats(message, "genre_activity", "user_id")
+
+def handle_user_artist_evolution_activity(message):
+    """ Take artist evolution activity stats for user and save it in database. """
+    _handle_stats(message, "artist_evolution_activity", "user_id")
+
+def handle_user_era_activity(message):
+    """ Take daily activity stats for user and save it in database. """
+    _handle_stats(message, "era_activity", "user_id")
 
 def _handle_sitewide_stats(message, stat_type, has_count=False):
     try:
@@ -99,6 +111,14 @@ def handle_sitewide_artist_map(message):
 
 def handle_sitewide_listening_activity(message):
     _handle_sitewide_stats(message, "listening_activity")
+
+
+def handle_sitewide_era_activity(message):
+    _handle_sitewide_stats(message, "era_activity")
+
+
+def handle_sitewide_artist_evolution_activity(message):
+    _handle_sitewide_stats(message, "artist_evolution_activity")
 
 
 def handle_dump_imported(data):
@@ -243,6 +263,11 @@ def handle_fresh_releases(message):
         current_app.logger.error(f"{str(e)}. Response: %s", e.response.json(), exc_info=True)
 
 
+def handle_statistics_generation_complete(message):
+    db_statistics_generation.mark_statistics_generated(db_conn, message["stats_type"])
+    status_cache_helpers.invalidate_stats_timestamps()
+
+
 def notify_mapping_import(data):
     """ Send an email after msid mbid mapping has been successfully imported into the cluster.
     """
@@ -285,32 +310,6 @@ def cf_recording_recommendations_complete(data):
     )
 
 
-def handle_similar_users(message):
-    """ Save the similar users data to the DB
-    """
-
-    if current_app.config['TESTING']:
-        return
-
-    user_count, avg_similar_users, error = import_user_similarities(message['data'])
-    if error:
-        send_mail(
-            subject='Similar User data failed to be calculated',
-            text=render_template('emails/similar_users_failed_notification.txt', error=error),
-            recipients=['listenbrainz-observability@metabrainz.org'],
-            from_name='ListenBrainz',
-            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
-        )
-    else:
-        send_mail(
-            subject='Similar User data has been calculated',
-            text=render_template('emails/similar_users_updated_notification.txt', user_count=str(user_count), avg_similar_users="%.1f" % avg_similar_users),
-            recipients=['listenbrainz-observability@metabrainz.org'],
-            from_name='ListenBrainz',
-            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
-        )
-
-
 def handle_yim_similar_users(message):
     year_in_music.insert_similar_users(message["year"], message["data"])
 
@@ -325,6 +324,10 @@ def handle_yim_day_of_week(message):
 
 def handle_yim_most_listened_year(message):
     year_in_music.insert_heavy("most_listened_year", message["year"], message["data"])
+
+
+def handle_yim_artist_evolution_activity(message):
+    year_in_music.insert_heavy("artist_evolution_activity", message["year"], message["data"])
 
 
 def handle_yim_top_stats(message):
@@ -355,12 +358,17 @@ def handle_yim_top_genres(message):
     year_in_music.insert_heavy("top_genres", message["year"], message["data"])
 
 
+def handle_yim_genre_activity(message):
+    year_in_music.insert_heavy("genre_activity", message["year"], message["data"])
+
+
 def handle_yim_playlists(message):
-    process_yim_playlists(message["slug"], message["year"], message["data"])
+    process_yim_playlists(message["slug"], message["year"], message["data"], message["export_to_spotify"])
 
 
 def handle_yim_playlists_end(message):
     process_yim_playlists_end(message["slug"], message["year"])
+
 
 def handle_troi_playlists(message):
     process_weekly_playlists(message["slug"], message["data"])

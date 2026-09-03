@@ -1,5 +1,5 @@
 $playlist-background-color: $body-tertiary-bg;
-$description-lines: 3;
+$description-lines: 2;
 $long-description-lines: 8;
 
 #playlists-page .playlist-view-options {
@@ -7,6 +7,10 @@ $long-description-lines: 8;
   align-items: end;
   margin-top: 0.8rem;
   gap: 1rem;
+}
+
+.playlist-info .description {
+  white-space: pre-wrap;
 }
 
 #playlists-container {
@@ -213,52 +217,6 @@ $long-description-lines: 8;
   min-width: 3em;
 }
 
-#CreateOrEditPlaylistModal {
-  .cover-art-grid {
-    display: flex;
-    gap: 10px;
-  }
-
-  .cover-art-option {
-    position: relative;
-    cursor: pointer;
-  }
-
-  .cover-art-radio {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-
-  .cover-art-image {
-    width: 100%;
-    height: auto;
-    border: 2px solid transparent;
-    border-radius: 4px;
-    transition: all 0.2s;
-  }
-
-  .cover-art-radio:checked + .cover-art-image {
-    border-color: #353070;
-
-    &::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(53, 48, 112, 0.3);
-      border-radius: 2px;
-    }
-  }
-
-  .cover-art-radio:focus + .cover-art-image {
-    box-shadow: 0 0 0 2px rgba(53, 48, 112, 0.5);
-  }
-}
-
 /* Pure CSS multiline ellipsis by Sagi Shrieber:
     http://hackingui.com/a-pure-css-solution-for-multiline-text-truncation/
 */
@@ -299,4 +257,9 @@ $long-description-lines: 8;
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+.playlist-card-list-view .text-summary,
+.playlist .text-summary {
+  mask-image: none;
+  -webkit-mask-image: none;
 }

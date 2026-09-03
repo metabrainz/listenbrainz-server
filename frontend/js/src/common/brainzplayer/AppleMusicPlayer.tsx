@@ -10,8 +10,8 @@ import {
 } from "../../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { BrainzPlayerContext } from "./BrainzPlayerContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
+import { currentDataSourceNameAtom, store } from "./BrainzPlayerAtoms";
 
 export type AppleMusicPlayerProps = DataSourceProps;
 
@@ -149,19 +149,23 @@ export default class AppleMusicPlayer
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show, volume } = this.props;
-    const player = this.appleMusicPlayer;
-    if (prevProps.volume !== volume && player) {
-      player.volume = (volume ?? 100) / 100;
-    }
-    if (prevProps.show && !show) {
-      this.stopAndClear();
+    const { volume } = this.props;
+    if (this.appleMusicPlayer && prevProps.volume !== volume) {
+      this.appleMusicPlayer.volume = (volume ?? 100) / 100;
     }
   }
 
   componentWillUnmount(): void {
     this.disconnectAppleMusicPlayer();
   }
+
+  pause = () => {
+    this.appleMusicPlayer?.pause();
+  };
+
+  stop = () => {
+    this.appleMusicPlayer?.stop();
+  };
 
   playAppleMusicId = async (
     appleMusicId: string,
@@ -259,11 +263,10 @@ export default class AppleMusicPlayer
     return false;
   };
 
-  playListen = async (listen: Listen | JSPFTrack): Promise<void> => {
-    const { show } = this.props;
-    if (!show) {
-      return;
-    }
+  playListen = async (
+    listen: Listen | JSPFTrack,
+    streamingUrl?: string
+  ): Promise<void> => {
     const apple_music_id = AppleMusicPlayer.getURLFromListen(listen as Listen);
     if (apple_music_id) {
       await this.playAppleMusicId(apple_music_id);
@@ -471,10 +474,13 @@ export default class AppleMusicPlayer
   };
 
   render() {
-    const { show } = this.props;
-    if (!show) {
-      return null;
-    }
-    return <div>{this.getAlbumArt()}</div>;
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
+
+    return (
+      <div className={!isCurrentDataSource ? "hiddden" : ""}>
+        {this.getAlbumArt()}
+      </div>
+    );
   }
 }

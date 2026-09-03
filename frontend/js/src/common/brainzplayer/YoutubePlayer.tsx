@@ -7,14 +7,18 @@ import {
   isFunction as _isFunction,
   isNil as _isNil,
   isString as _isString,
+  throttle,
 } from "lodash";
-
-import Draggable from "react-draggable";
+import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
+import { ResizableBox, ResizeCallbackData } from "react-resizable";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowsAlt,
   faWindowMaximize,
   faWindowMinimize,
+  faTimes,
+  faExpand,
+  faCompress,
 } from "@fortawesome/free-solid-svg-icons";
 import { faYoutube } from "@fortawesome/free-brands-svg-icons";
 import { Link } from "react-router";
@@ -24,13 +28,34 @@ import {
   searchForYoutubeTrack,
 } from "../../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
-import { BrainzPlayerContext } from "./BrainzPlayerContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
+import { currentDataSourceNameAtom, store } from "./BrainzPlayerAtoms";
 
 export type YoutubePlayerProps = DataSourceProps & {
   youtubeUser?: YoutubeUser;
   refreshYoutubeToken: () => Promise<string>;
 };
+
+type YoutubePlayerState = {
+  hidePlayer?: boolean;
+  isExpanded?: boolean;
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  isInteracting: boolean;
+};
+
+const DEFAULT_WIDTH = 350;
+const DEFAULT_HEIGHT = 200;
+const SIDEBAR_WIDTH = 200;
+const PLAYER_HEIGHT = 60;
+const BUTTON_HEIGHT = 30;
+const SIDEBAR_BREAKPOINT = 992;
+const EXPANDED_WIDTH = 1280;
+const EXPANDED_HEIGHT = 720;
+const PADDING = 10;
+const PADDING_TOP = 30;
 
 // For some reason Youtube types do not document getVideoData,
 // which we need to determine if there was no search results
@@ -38,7 +63,8 @@ type ExtendedYoutubePlayer = {
   getVideoData?: () => { video_id?: string; author: string; title: string };
 } & YT.Player;
 
-export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
+export default class YoutubePlayer
+  extends React.Component<YoutubePlayerProps, YoutubePlayerState>
   implements DataSourceType {
   static getVideoIDFromListen(listen: Listen | JSPFTrack): string | undefined {
     // This may be either video ID or video link.
@@ -117,18 +143,54 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
   public iconColor = dataSourcesInfo.youtube.color;
   youtubePlayer?: ExtendedYoutubePlayer;
   checkVideoLoadedTimerId?: NodeJS.Timeout;
+  handleWindowResizeThrottle: (() => void) & {
+    cancel: () => void;
+    flush: () => void;
+  };
+
+  constructor(props: YoutubePlayerProps) {
+    super(props);
+    this.state = {
+      hidePlayer: false,
+      isExpanded: false,
+      width: DEFAULT_WIDTH,
+      height: DEFAULT_HEIGHT,
+      x: 0,
+      y: 0,
+      isInteracting: false,
+    };
+    this.handleWindowResizeThrottle = throttle(this.handleWindowResize, 100);
+  }
+
+  componentDidMount(): void {
+    window.addEventListener("resize", this.handleWindowResizeThrottle);
+  }
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show, volume } = this.props;
+    const { volume, playerPaused } = this.props;
     if (prevProps.volume !== volume && this.youtubePlayer?.setVolume) {
       this.youtubePlayer?.setVolume(volume ?? 100);
     }
-    if (prevProps.show && !show && this.youtubePlayer) {
-      this.youtubePlayer.stopVideo();
-      // Clear playlist
-      this.youtubePlayer.cueVideoById("");
+    if (prevProps.playerPaused && !playerPaused) {
+      // Show player if playing music
+      this.setState({ hidePlayer: false });
     }
   }
+
+  componentWillUnmount(): void {
+    window.removeEventListener("resize", this.handleWindowResizeThrottle);
+    this.handleWindowResizeThrottle.cancel();
+  }
+
+  stop = () => {
+    this.youtubePlayer?.stopVideo();
+    // Clear playlist
+    this.youtubePlayer?.cueVideoById("");
+  };
+
+  pause = () => {
+    this.youtubePlayer?.pauseVideo();
+  };
 
   onReady = (event: YT.PlayerEvent): void => {
     this.youtubePlayer = event.target;
@@ -162,11 +224,7 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
       onDurationChange,
       onProgressChange,
       onTrackInfoChange,
-      show,
     } = this.props;
-    if (!show) {
-      return;
-    }
     if (state === YouTube.PlayerState.ENDED) {
       const { onTrackEnd } = this.props;
       onTrackEnd();
@@ -295,11 +353,7 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
     return false;
   };
 
-  playListen = (listen: Listen | JSPFTrack) => {
-    const { show } = this.props;
-    if (!show) {
-      return;
-    }
+  playListen = (listen: Listen | JSPFTrack, streamingUrl?: string) => {
     const youtubeId = YoutubePlayer.getVideoIDFromListen(listen);
 
     if (youtubeId) {
@@ -328,7 +382,6 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
       return;
     }
     this.youtubePlayer.seekTo(msTimecode / 1000, true);
-    this.youtubePlayer.playVideo();
   };
 
   onError = (event: YT.OnErrorEvent): void => {
@@ -360,8 +413,121 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
     onTrackNotFound();
   };
 
+  // Handle hide button click
+  handleHide = () => {
+    const { playerPaused } = this.props;
+    this.setState({ hidePlayer: true }, () => {
+      if (!playerPaused) {
+        this.togglePlay();
+      }
+    });
+  };
+
+  getMaxAvailableWidth = (): number => {
+    let maxWidth = window.innerWidth - PADDING * 2;
+
+    if (window.innerWidth > SIDEBAR_BREAKPOINT) {
+      maxWidth -= SIDEBAR_WIDTH;
+    }
+    return maxWidth;
+  };
+
+  calculateDimensions = () => {
+    const maxWidth = this.getMaxAvailableWidth();
+    const targetWidth = Math.min(EXPANDED_WIDTH, maxWidth);
+    const calculatedHeight = (targetWidth * 9) / 16 + BUTTON_HEIGHT;
+    const maxHeight =
+      window.innerHeight - (PLAYER_HEIGHT + BUTTON_HEIGHT + PADDING_TOP);
+    const targetHeight = Math.min(
+      EXPANDED_HEIGHT + BUTTON_HEIGHT,
+      calculatedHeight,
+      maxHeight
+    );
+    return {
+      width: targetWidth,
+      height: targetHeight,
+    };
+  };
+
+  handleExpandToggle = () => {
+    this.setState((prev) => {
+      const isNowExpanded = !prev.isExpanded;
+
+      if (isNowExpanded) {
+        const { width, height } = this.calculateDimensions();
+        return {
+          isExpanded: true,
+          width,
+          height,
+          x: 0,
+          y: 0,
+        };
+      }
+      return {
+        isExpanded: false,
+        width: DEFAULT_WIDTH,
+        height: DEFAULT_HEIGHT,
+        x: 0,
+        y: 0,
+      };
+    });
+  };
+
+  handleWindowResize = () => {
+    const { isExpanded, width, height } = this.state;
+    if (isExpanded) {
+      const { width: newWidth, height: newHeight } = this.calculateDimensions();
+      this.setState({
+        width: newWidth,
+        height: newHeight,
+      });
+    } else {
+      const maxSafeWidth = this.getMaxAvailableWidth();
+      const maxSafeHeight =
+        window.innerHeight - (PLAYER_HEIGHT + BUTTON_HEIGHT + PADDING_TOP);
+      if (width > maxSafeWidth || height > maxSafeHeight) {
+        this.setState({
+          width: Math.min(width, maxSafeWidth),
+          height: Math.min(height, maxSafeHeight),
+        });
+      }
+    }
+  };
+
+  onResize = (event: React.SyntheticEvent, data: ResizeCallbackData) => {
+    this.setState({
+      width: data.size.width,
+      height: data.size.height,
+      isExpanded: false,
+    });
+  };
+
+  onInteractionStart = () => {
+    this.setState({ isInteracting: true });
+  };
+
+  onInteractionStop = () => {
+    this.setState({ isInteracting: false });
+  };
+
+  onDrag = (event: DraggableEvent, data: DraggableData) => {
+    this.setState({
+      x: data.x,
+      y: data.y,
+    });
+  };
+
   render() {
-    const { show } = this.props;
+    const {
+      hidePlayer,
+      isExpanded,
+      width,
+      height,
+      x,
+      y,
+      isInteracting,
+    } = this.state;
+
     const options: Options = {
       playerVars: {
         controls: 0,
@@ -375,14 +541,27 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
       width: "100%",
       height: "100%",
     };
+
     const draggableBoundPadding = 10;
     // width of screen - padding on each side - youtube player width
     const leftBound =
-      document.body.clientWidth - draggableBoundPadding * 2 - 350;
+      document.body.clientWidth - draggableBoundPadding * 2 - width;
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
+    const isPlayerVisible = isCurrentDataSource && !hidePlayer;
+    const maxResizableWidth = this.getMaxAvailableWidth();
+    const maxResizableHeight =
+      window.innerHeight - PLAYER_HEIGHT - BUTTON_HEIGHT - PADDING_TOP;
 
     return (
       <Draggable
         handle=".youtube-drag-handle"
+        position={{ x, y }}
+        disabled={isInteracting}
+        cancel=".react-resizable-handle"
+        onDrag={this.onDrag}
+        onStart={this.onInteractionStart}
+        onStop={this.onInteractionStop}
         bounds={{
           left: -leftBound,
           right: -draggableBoundPadding,
@@ -390,20 +569,54 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
         }}
       >
         <div
-          className={`youtube-wrapper${!show ? " hidden" : ""}`}
-          data-testid={`youtube-wrapper${!show ? " hidden" : ""}`}
+          className={`youtube-wrapper${!isPlayerVisible ? " hidden" : ""}`}
+          data-testid="youtube-wrapper"
         >
-          <button className="btn btn-sm youtube-drag-handle" type="button">
+          <button
+            className="btn btn-sm youtube-button youtube-drag-handle"
+            type="button"
+          >
             <FontAwesomeIcon icon={faArrowsAlt} />
           </button>
-          <YouTube
-            className="youtube-player"
-            opts={options}
-            onError={this.onError}
-            onStateChange={this.handlePlayerStateChanged}
-            onReady={this.onReady}
-            videoId=""
-          />
+          <button
+            className="btn btn-sm youtube-button"
+            type="button"
+            onClick={this.handleExpandToggle}
+            title={isExpanded ? "Restore size" : "Expand video"}
+            aria-label={isExpanded ? "Restore size" : "Expand video"}
+          >
+            <FontAwesomeIcon icon={isExpanded ? faCompress : faExpand} />
+          </button>
+          <button
+            className="btn btn-sm youtube-button"
+            type="button"
+            onClick={this.handleHide}
+          >
+            <FontAwesomeIcon icon={faTimes} />
+          </button>
+          <ResizableBox
+            width={width}
+            height={height}
+            onResizeStart={this.onInteractionStart}
+            onResize={this.onResize}
+            onResizeStop={this.onInteractionStop}
+            resizeHandles={["nw"]}
+            minConstraints={[DEFAULT_WIDTH, DEFAULT_HEIGHT]}
+            maxConstraints={[maxResizableWidth, maxResizableHeight]}
+            axis="both"
+            className="youtube-resizable-container"
+          >
+            <YouTube
+              className={`youtube-player${
+                isInteracting ? " no-video-interaction" : ""
+              }`}
+              opts={options}
+              onError={this.onError}
+              onStateChange={this.handlePlayerStateChanged}
+              onReady={this.onReady}
+              videoId=""
+            />
+          </ResizableBox>
         </div>
       </Draggable>
     );

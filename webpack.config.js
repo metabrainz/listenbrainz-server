@@ -88,6 +88,10 @@ module.exports = function (env, argv) {
           },
         },
         {
+          test: /\.css$/i,
+          use: ["style-loader", "css-loader"],
+        },
+        {
           // Supportthis library used by markdown-react, needs nodeJS style `process`
           test: /node_modules\/kleur\/index\.js/,
           use: [
@@ -104,7 +108,9 @@ module.exports = function (env, argv) {
     },
     optimization: {
       minimize: isProd,
-      minimizer: [new CssMinimizerPlugin()],
+      // "..." is a shortcut to access the default Webpack minimizer config.
+      // see https://webpack.js.org/configuration/optimization/#optimizationminimizer
+      minimizer: [new CssMinimizerPlugin(), "..."],
     },
     resolve: {
       modules: [

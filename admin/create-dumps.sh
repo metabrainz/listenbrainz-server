@@ -20,7 +20,7 @@
 
 # usage
 # the first argument to this script is the dump type, it can be either
-# full, incremental or feedback. the remaining arguments are forwarded
+# full, db, incremental or feedback. the remaining arguments are forwarded
 # the python dump_manager script. this can be useful in scenarios where
 # we want to pass in the --dump-id manually for recreating a failed dump.
 
@@ -32,13 +32,15 @@ cd "$LB_SERVER_ROOT" || exit 1
 source "admin/config.sh"
 source "admin/functions.sh"
 
-# This variable contains the name of a directory that is deleted when the script
-# exits, so we sanitise it here in case it was included in the environment.
-DUMP_TEMP_DIR=""
+# These variables contain the names of directories that are deleted when the script
+# exits, so we sanitise them here in case they were included in the environment.
+DUMP_INTERMEDIATE_DIR=""
+PRIVATE_DUMP_INTERMEDIATE_DIR=""
 
-if [ "$CONTAINER_NAME" == "listenbrainz-cron-prod" ] && [ "$PROD" == "prod" ]
+if [ "$DEPLOY_ENV" == "prod" ] && \
+   { [ "$CONTAINER_NAME" == "listenbrainz-cron-prod" ] || [ "$CONTAINER_NAME" == "listenbrainz-full-dumps-cron-prod" ]; }
 then
-    echo "Running in listenbrainz-cron-prod container, good!"
+    echo "Running in $CONTAINER_NAME container, good!"
 else
     echo "This container is not the production cron container, exiting..."
     exit
@@ -61,12 +63,12 @@ function add_rsync_include_rule {
 function on_exit {
     echo "Disk space when create-dumps ends:"; df -m
 
-    if [ -n "$DUMP_TEMP_DIR" ]; then
-        rm -rf "$DUMP_TEMP_DIR"
+    if [ -n "$DUMP_INTERMEDIATE_DIR" ]; then
+        rm -rf "$DUMP_INTERMEDIATE_DIR"
     fi
 
-    if [ -n "$PRIVATE_DUMP_TEMP_DIR" ]; then
-        rm -rf "$PRIVATE_DUMP_TEMP_DIR"
+    if [ -n "$PRIVATE_DUMP_INTERMEDIATE_DIR" ]; then
+        rm -rf "$PRIVATE_DUMP_INTERMEDIATE_DIR"
     fi
 
     if [ -n "$START_TIME" ]; then
@@ -99,6 +101,9 @@ shift
 
 if [ "$DUMP_TYPE" == "full" ]; then
     SUB_DIR="fullexport"
+elif [ "$DUMP_TYPE" == "db" ]; then
+    # database dumps are published alongside the full listen dumps
+    SUB_DIR="fullexport"
 elif [ "$DUMP_TYPE" == "incremental" ]; then
     SUB_DIR="incremental"
 elif [ "$DUMP_TYPE" == "feedback" ]; then
@@ -108,7 +113,7 @@ elif [ "$DUMP_TYPE" == "mbcanonical" ]; then
 elif [ "$DUMP_TYPE" == "sample" ]; then
     SUB_DIR="sample"
 else
-    echo "ERROR: Dump Type $DUMP_TYPE is invalid. Dump type must be one of 'full', 'incremental', 'feedback', 'mbcanonical' or 'sample'"
+    echo "ERROR: Dump Type $DUMP_TYPE is invalid. Dump type must be one of 'full', 'db', 'incremental', 'feedback', 'mbcanonical' or 'sample'"
     exit
 fi
 
@@ -118,38 +123,50 @@ fi
 # Trap should not be called before we lock cron to avoid wiping out an existing lock file
 trap on_exit EXIT
 
-DUMP_TEMP_DIR="$DUMP_BASE_DIR/$SUB_DIR.$$"
+DUMP_INTERMEDIATE_DIR="$DUMP_BASE_DIR/$SUB_DIR.$$"
 echo "DUMP_BASE_DIR is $DUMP_BASE_DIR"
-echo "creating DUMP_TEMP_DIR $DUMP_TEMP_DIR"
-mkdir -p "$DUMP_TEMP_DIR"
+echo "creating DUMP_INTERMEDIATE_DIR $DUMP_INTERMEDIATE_DIR"
+mkdir -p "$DUMP_INTERMEDIATE_DIR"
 
-PRIVATE_DUMP_TEMP_DIR="$PRIVATE_DUMP_BASE_DIR/$SUB_DIR.$$"
-echo "PRIVATE_DUMP_BASE_DIR is $PRIVATE_DUMP_BASE_DIR"
-echo "creating PRIVATE_DUMP_TEMP_DIR $PRIVATE_DUMP_TEMP_DIR"
-mkdir -p "$PRIVATE_DUMP_TEMP_DIR"
+DUMP_TEMP_DIR="$DUMP_BASE_DIR"
+
+# only the db dumps create private dumps
+if [ "$DUMP_TYPE" == "db" ]; then
+    PRIVATE_DUMP_INTERMEDIATE_DIR="$PRIVATE_DUMP_BASE_DIR/$SUB_DIR.$$"
+    echo "PRIVATE_DUMP_BASE_DIR is $PRIVATE_DUMP_BASE_DIR"
+    echo "creating PRIVATE_DUMP_INTERMEDIATE_DIR $PRIVATE_DUMP_INTERMEDIATE_DIR"
+    mkdir -p "$PRIVATE_DUMP_INTERMEDIATE_DIR"
+
+    PRIVATE_DUMP_TEMP_DIR="$PRIVATE_DUMP_BASE_DIR"
+fi
 
 if [ "$DUMP_TYPE" == "full" ]; then
-    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_TEMP_DIR" -lp "$PRIVATE_DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
+    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_INTERMEDIATE_DIR" -lt "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
         echo "Full dump failed, exiting!"
         exit 1
     fi
+elif [ "$DUMP_TYPE" == "db" ]; then
+    if ! /usr/local/bin/python manage.py dump create_db_dump -l "$DUMP_INTERMEDIATE_DIR" -lp "$PRIVATE_DUMP_INTERMEDIATE_DIR" -lt "$DUMP_TEMP_DIR" -lpt "$PRIVATE_DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
+        echo "Database dump failed, exiting!"
+        exit 1
+    fi
 elif [ "$DUMP_TYPE" == "incremental" ]; then
-    if ! /usr/local/bin/python manage.py dump create_incremental -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
+    if ! /usr/local/bin/python manage.py dump create_incremental -l "$DUMP_INTERMEDIATE_DIR" -t "$DUMP_THREADS" "$@"; then
         echo "Incremental dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "feedback" ]; then
-    if ! /usr/local/bin/python manage.py dump create_feedback -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
+    if ! /usr/local/bin/python manage.py dump create_feedback -l "$DUMP_INTERMEDIATE_DIR" -t "$DUMP_THREADS" "$@"; then
         echo "Feedback dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "mbcanonical" ]; then
-    if ! /usr/local/bin/python manage.py dump create_mbcanonical -l "$DUMP_TEMP_DIR" "$@"; then
+    if ! /usr/local/bin/python manage.py dump create_mbcanonical -l "$DUMP_INTERMEDIATE_DIR" "$@"; then
         echo "MB Canonical dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "sample" ]; then
-    if ! /usr/local/bin/python manage.py dump create_sample -l "$DUMP_TEMP_DIR" "$@"; then
+    if ! /usr/local/bin/python manage.py dump create_sample -l "$DUMP_INTERMEDIATE_DIR" "$@"; then
         echo "Sample dump failed, exiting!"
         exit 1
     fi
@@ -158,13 +175,13 @@ else
     exit 1
 fi
 
-DUMP_ID_FILE=$(find "$DUMP_TEMP_DIR" -type f -name 'DUMP_ID.txt')
+DUMP_ID_FILE=$(find "$DUMP_INTERMEDIATE_DIR" -type f -name 'DUMP_ID.txt')
 if [ -z "$DUMP_ID_FILE" ]; then
     echo "DUMP_ID.txt not found, exiting."
     exit 1
 fi
 
-HAS_EMPTY_DIRS_OR_FILES=$(find "$DUMP_TEMP_DIR" -empty)
+HAS_EMPTY_DIRS_OR_FILES=$(find "$DUMP_INTERMEDIATE_DIR" -empty)
 if [ -n "$HAS_EMPTY_DIRS_OR_FILES" ]; then
     echo "Empty files or dirs found, exiting."
     echo "$HAS_EMPTY_DIRS_OR_FILES"
@@ -177,31 +194,46 @@ echo "Dump created with timestamp $DUMP_TIMESTAMP"
 DUMP_DIR=$(dirname "$DUMP_ID_FILE")
 DUMP_NAME=$(basename "$DUMP_DIR")
 
-# Backup dumps to the backup volume
-echo "Creating Backup directories..."
-mkdir -m "$BACKUP_DIR_MODE" -p \
-    "$BACKUP_DIR/$SUB_DIR" \
-    "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME"
-echo "Backup directories created!"
+# Full listen dumps are already published to the remote FTP server and are too
+# large to keep a second public copy on the backup volume. Other dump types,
+# including the db dumps, retain their existing local backup.
+if [ "$DUMP_TYPE" != "full" ]; then
+    echo "Creating Backup directories..."
+    mkdir -m "$BACKUP_DIR_MODE" -p \
+        "$BACKUP_DIR/$SUB_DIR" \
+        "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME"
+    echo "Backup directories created!"
 
-# Copy the files into the backup directory
-echo "Begin copying dumps to backup directory..."
-retry rsync -a "$DUMP_DIR/" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME/"
-chmod "$BACKUP_FILE_MODE" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME/"*
-echo "Dumps copied to backup directory!"
+    echo "Begin copying dumps to backup directory..."
+    retry rsync -a "$DUMP_DIR/" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME/"
+    chmod "$BACKUP_FILE_MODE" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME/"*
+    echo "Dumps copied to backup directory!"
+else
+    echo "Skipping the redundant public full dump backup."
+fi
 
-HAS_EMPTY_PRIVATE_DIRS_OR_FILES=$(find "$PRIVATE_DUMP_TEMP_DIR" -empty)
-if [ -z "$HAS_EMPTY_PRIVATE_DIRS_OR_FILES" ]; then
-    # private dumps directory is not empty
+if [ -n "$PRIVATE_DUMP_INTERMEDIATE_DIR" ]; then
+    HAS_EMPTY_PRIVATE_DIRS_OR_FILES=$(find "$PRIVATE_DUMP_INTERMEDIATE_DIR" -empty)
+    if [ -n "$HAS_EMPTY_PRIVATE_DIRS_OR_FILES" ]; then
+        echo "Empty private files or dirs found, exiting."
+        echo "$HAS_EMPTY_PRIVATE_DIRS_OR_FILES"
+        exit 1
+    fi
 
-    PRIVATE_DUMP_ID_FILE=$(find "$PRIVATE_DUMP_TEMP_DIR" -type f -name 'DUMP_ID.txt')
+    PRIVATE_DUMP_ID_FILE=$(find "$PRIVATE_DUMP_INTERMEDIATE_DIR" -type f -name 'DUMP_ID.txt')
     if [ -z "$PRIVATE_DUMP_ID_FILE" ]; then
         echo "DUMP_ID.txt not found, exiting."
         exit 1
     fi
 
     read -r PRIVATE_DUMP_TIMESTAMP PRIVATE_DUMP_ID PRIVATE_DUMP_TYPE < "$PRIVATE_DUMP_ID_FILE"
-    echo "Dump created with timestamp $PRIVATE_DUMP_TIMESTAMP"
+    if [ "$PRIVATE_DUMP_TIMESTAMP" != "$DUMP_TIMESTAMP" ] || \
+        [ "$PRIVATE_DUMP_ID" != "$DUMP_ID" ] || \
+        [ "$PRIVATE_DUMP_TYPE" != "$DUMP_TYPE" ]; then
+        echo "Public and private dump metadata do not match, exiting."
+        exit 1
+    fi
+
     PRIVATE_DUMP_DIR=$(dirname "$PRIVATE_DUMP_ID_FILE")
     PRIVATE_DUMP_NAME=$(basename "$PRIVATE_DUMP_DIR")
 
@@ -229,17 +261,23 @@ mkdir  -m "$FTP_DIR_MODE" -p \
     "$FTP_DIR/$SUB_DIR" \
     "$FTP_CURRENT_DUMP_DIR"
 
-# make sure all dump files are owned by the correct user
-# and set appropriate mode for files to be uploaded to
-# the FTP server
-retry rsync -a "$DUMP_DIR/" "$FTP_CURRENT_DUMP_DIR/"
+# Make sure all dump files are owned by the correct user and set appropriate
+# mode for files to be uploaded to the FTP server. Move full-dump files into
+# staging instead of retaining another complete copy in the working directory.
+if [ "$DUMP_TYPE" == "full" ]; then
+    retry rsync -a --remove-source-files "$DUMP_DIR/" "$FTP_CURRENT_DUMP_DIR/"
+    rm -rf -- "$DUMP_DIR"
+else
+    retry rsync -a "$DUMP_DIR/" "$FTP_CURRENT_DUMP_DIR/"
+fi
 echo "Fixing FTP permissions"
 chmod "$FTP_DIR_MODE" "$FTP_CURRENT_DUMP_DIR"
 chmod "$FTP_FILE_MODE" "$FTP_CURRENT_DUMP_DIR/"*
 
-# create an explicit rsync filter for the new private dump in the
-# ftp folder
-touch "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
+# Create a fresh rsync filter for this dump. A directory reused after a retry
+# may contain a retention-marker filter, which must not hide the new payload.
+rm -f -- "$FTP_CURRENT_DUMP_DIR/.ftp-retention-marker"
+: > "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
@@ -270,12 +308,27 @@ EXCLUDE_RULE="exclude *"
 echo "$EXCLUDE_RULE" >> "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 cat "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
+# Publish the dump and expire whatever has aged out on the FTP server. The
+# server's retention is applied from a listing of the server itself, so nothing
+# here has to stand in for dumps that are published but not kept locally.
+./admin/rsync-dump-files.sh "$DUMP_TYPE" "$DUMP_NAME" "$FTP_CURRENT_DUMP_DIR"
 
+if [ "$DUMP_TYPE" == "full" ]; then
+    # A published full listen dump is far too large to keep a local copy of too.
+    echo "Removing the local copy of the published full dump..."
+    rm -rf -- "$FTP_CURRENT_DUMP_DIR"
+fi
+
+# Apply local retention now that the new dump has been published.
 /usr/local/bin/python manage.py dump delete_old_dumps "$FTP_DIR/$SUB_DIR"
-/usr/local/bin/python manage.py dump delete_old_dumps "$BACKUP_DIR/$SUB_DIR"
 /usr/local/bin/python manage.py dump delete_old_dumps "$PRIVATE_BACKUP_DIR/$SUB_DIR"
 
-# rsync to ftp folder taking care of the rules
-./admin/rsync-dump-files.sh "$DUMP_TYPE"
+if [ "$DUMP_TYPE" == "full" ]; then
+    # Public full dumps are no longer backed up locally. Override the normal
+    # retention count (two) with zero to remove any legacy full dump backups.
+    /usr/local/bin/python manage.py dump delete_old_dumps --keep full=0 "$BACKUP_DIR/$SUB_DIR"
+else
+    /usr/local/bin/python manage.py dump delete_old_dumps "$BACKUP_DIR/$SUB_DIR"
+fi
 
-echo "Dumps created, backed up and uploaded to the FTP server!"
+echo "Dumps created and uploaded to the FTP server; applicable backups completed!"

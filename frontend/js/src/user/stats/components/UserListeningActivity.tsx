@@ -346,7 +346,6 @@ export default function UserListeningActivity(
   ): UserListeningActivityData => {
     const { dateFormat } = rangeMap.all_time;
     let totalListensForAllTime = 0;
-    let totalYears = 0;
     const allTimeData = [];
     const currYear = new Date().getFullYear();
     let encounteredNonEmptyYear: boolean = false;
@@ -355,7 +354,6 @@ export default function UserListeningActivity(
       const yearData = unprocessedData.payload.listening_activity.filter(
         (year) => year.time_range === String(i)
       )[0];
-      totalYears += 1;
 
       if (yearData) {
         if (encounteredNonEmptyYear === false) {
@@ -385,10 +383,12 @@ export default function UserListeningActivity(
         });
       }
     }
-
+    const totalActiveYears = allTimeData.filter(
+      (year) => year.thisRangeCount > 0
+    ).length;
     setAvgListens(
       totalListensForAllTime > 0
-        ? Math.ceil(totalListensForAllTime / totalYears)
+        ? Math.ceil(totalListensForAllTime / totalActiveYears)
         : 0
     );
     setTotalListens(totalListensForAllTime);
@@ -428,13 +428,11 @@ export default function UserListeningActivity(
   }, [rawData]);
 
   const { perRange } = rangeMap[range] || {};
+  const formattedTotalListens = new Intl.NumberFormat().format(totalListens);
+  const formattedAvgListens = new Intl.NumberFormat().format(avgListens);
 
   return (
-    <Card
-      className="user-stats-card"
-      style={{ marginTop: 20, minHeight: 400 }}
-      data-testid="listening-activity"
-    >
+    <Card className="user-stats-card" data-testid="listening-activity">
       <div className="d-flex align-items-baseline">
         <h3 className="capitalize-bold">Listening Activity</h3>
         <a
@@ -478,7 +476,7 @@ export default function UserListeningActivity(
                       fontWeight: "bold",
                     }}
                   >
-                    {totalListens}
+                    {formattedTotalListens}
                   </span>
                   <span>
                     <span style={{ fontSize: 24 }}>&nbsp;Listens</span>
@@ -491,7 +489,7 @@ export default function UserListeningActivity(
                       fontWeight: "bold",
                     }}
                   >
-                    {avgListens}
+                    {formattedAvgListens}
                   </span>
                   <span style={{ fontSize: 24 }}>
                     &nbsp;Listens per {perRange}
@@ -513,7 +511,7 @@ export default function UserListeningActivity(
                             fontWeight: "bold",
                           }}
                         >
-                          {totalListens}
+                          {formattedTotalListens}
                         </td>
                         <td>
                           <span style={{ fontSize: 22, textAlign: "start" }}>
@@ -530,7 +528,7 @@ export default function UserListeningActivity(
                             fontWeight: "bold",
                           }}
                         >
-                          {avgListens}
+                          {formattedAvgListens}
                         </td>
                         <td>
                           <span style={{ fontSize: 22, textAlign: "start" }}>

@@ -5,8 +5,7 @@ from flask import current_app
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
-from listenbrainz.db import listens_importer
-from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError
+from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError, LastfmUserNotRetryableException
 from listenbrainz.domain.importer_service import ImporterService
 from listenbrainz.domain.lastfm import LastfmService
 from listenbrainz.listens_importer.base import ListensImporter
@@ -14,8 +13,6 @@ from listenbrainz.listenstore import LISTEN_MINIMUM_DATE
 from listenbrainz.webserver import create_app
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_IMPORT, \
     LISTEN_TYPE_PLAYING_NOW
-
-from listenbrainz.webserver import db_conn
 
 
 class BaseLastfmImporter(ListensImporter):
@@ -80,7 +77,7 @@ class BaseLastfmImporter(ListensImporter):
 
 
     def get_user_recent_tracks(self, session, user, page):
-        """ Get user’s recently played tracks from last.fm api. """
+        """ Get user's recently played tracks from last.fm api. """
         latest_listened_at = user["latest_listened_at"] or LISTEN_MINIMUM_DATE
         params = {
             "method": "user.getrecenttracks",
@@ -94,11 +91,36 @@ class BaseLastfmImporter(ListensImporter):
         response = session.get(self.api_base_url, params=params)
         match response.status_code:
             case 200:
-                return response.json()
+                try:
+                    data = response.json()
+                except requests.exceptions.JSONDecodeError:
+                    raise ExternalServiceAPIError("Error from the API while getting listens: %s" % response.text)
+                if "error" in data:
+                    # Libre.fm: no scrobbles since the given timestamp
+                    if isinstance(data["error"], dict) and str(data["error"].get("code")) == "7":
+                        return {"recenttracks": {"@attr": {"totalPages": "0"}, "track": []}}
+                    raise ExternalServiceAPIError("Error from the API while getting listens: %s" % data.get("message", data["error"]))
+                # Libre.fm returns a single dict instead of a list when there is
+                # only one track; normalize to always be a list.
+                if "recenttracks" in data:
+                    tracks = data["recenttracks"].get("track")
+                    if isinstance(tracks, dict):
+                        data["recenttracks"]["track"] = [tracks]
+                return data
             case 404:
-                raise ExternalServiceError("Last.FM user with username %s not found" % (params["user"],))
+                raise LastfmUserNotRetryableException("Last.FM user with username %s not found" % (params["user"],))
             case 429:
                 raise ExternalServiceError("Encountered a rate limit.")
+            case 400 | 403:
+                try:
+                    data = response.json()
+                except requests.exceptions.JSONDecodeError:
+                    raise ExternalServiceAPIError("Error from the API while getting listens: %s" % response.text)
+                if "error" in data and data.get("error") == 17:
+                    raise LastfmUserNotRetryableException(
+                        "Please disable privacy mode in the settings of your Last.fm account to allow importing listens."
+                    )
+                raise ExternalServiceAPIError("Error from the API while getting listens: %s" % response.text)
             case _:
                 raise ExternalServiceAPIError("Error from the API while getting listens: %s" % response.text)
 
@@ -114,9 +136,12 @@ class BaseLastfmImporter(ListensImporter):
         Returns:
             the number of recently played listens imported for the user
         """
-        try:
-            imported_listen_count = 0
+        imported_listen_count = 0
 
+        if not user.get("external_user_id"):
+            raise LastfmUserNotRetryableException("Last.fm/Libre.fm username is empty")
+
+        try:
             session = requests.Session()
             session.mount(
                 "https://",
@@ -130,9 +155,7 @@ class BaseLastfmImporter(ListensImporter):
             )
 
             initial_imported_listens = user["status"]["count"] if user["status"] else 0
-            listens_importer.update_status(
-                db_conn, user["user_id"], self.service.service, "Importing", initial_imported_listens
-            )
+            self.service.update_status(user["user_id"], "Importing", initial_imported_listens)
 
             pages = self.get_total_pages(session, user)
 
@@ -155,27 +178,23 @@ class BaseLastfmImporter(ListensImporter):
                     current_app.logger.info('imported %d listens for %s' % (len(listens), str(user['musicbrainz_id'])))
                     imported_listen_count += len(listens)
                 
-                listens_importer.update_status(
-                    db_conn, user["user_id"], self.service.service,
-                    "Importing", initial_imported_listens + imported_listen_count
-                )
+                self.service.update_status(user["user_id"], "Importing", initial_imported_listens + imported_listen_count)
 
-            listens_importer.update_status(
-                db_conn, user["user_id"], self.service.service, "Synced",
-                initial_imported_listens + imported_listen_count
-            )
+            self.service.update_status(user["user_id"], "Synced", initial_imported_listens + imported_listen_count)
 
             return imported_listen_count
+        except LastfmUserNotRetryableException as e:
+            self.service.update_status(user["user_id"], "Error", initial_imported_listens, error_message=str(e), retry=False)
+            if not current_app.config["TESTING"]:
+                self.notify_error(user["musicbrainz_id"], str(e))
+            raise e
         except ExternalServiceAPIError as e:
-            # if it is an error from the Spotify API, show the error message to the user
-            self.service.update_user_import_status(user_id=user["user_id"], error=str(e))
+            self.service.update_status(user["user_id"], "Error", initial_imported_listens, error_message=str(e), retry=True)
             if not current_app.config["TESTING"]:
                 self.notify_error(user["musicbrainz_id"], str(e))
             raise e
 
     def process_all_users(self):
-        # todo: last.fm is prone to errors, especially for entire history imports. currently doing alternate passes
-        #   where we ignore and reattempt
         result = super().process_all_users()
         self.exclude_error = not self.exclude_error
         return result

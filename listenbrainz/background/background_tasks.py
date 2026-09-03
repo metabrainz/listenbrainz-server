@@ -1,3 +1,4 @@
+import signal
 import time
 
 from flask import current_app
@@ -6,6 +7,9 @@ from sqlalchemy import text
 from listenbrainz.background.delete import delete_listens_history, delete_user
 from listenbrainz.background.export import export_user
 from listenbrainz.webserver import create_app, db_conn, ts_conn
+from listenbrainz.background.listens_importer import import_listens
+
+CLAIM_TIMEOUT_HOURS = 6
 
 
 def add_task(user_id, task):
@@ -15,51 +19,109 @@ def add_task(user_id, task):
     db_conn.commit()
 
 
-def get_task():
-    """ Fetch one task from the database """
-    query = "SELECT * FROM background_tasks LIMIT 1"
-    result = db_conn.execute(text(query))
+def peek_task():
+    """ Return the oldest background task without claiming it.
+
+    Used by tests to verify a task was queued. Workers must use claim_task().
+    """
+    result = db_conn.execute(text("SELECT * FROM background_tasks ORDER BY created LIMIT 1"))
     return result.first()
 
 
+def claim_task():
+    """ Claim the oldest unclaimed task using FOR UPDATE SKIP LOCKED.
+
+    The lock is only held for the duration of the UPDATE — once committed,
+    the claim survives any intermediate commits during processing.
+    Crashed workers' tasks are auto-reclaimed after CLAIM_TIMEOUT_HOURS.
+    """
+    result = db_conn.execute(text(f"""
+        WITH claimable AS (
+            SELECT id
+              FROM background_tasks
+             WHERE claimed_at IS NULL
+                OR claimed_at < now() - interval '{CLAIM_TIMEOUT_HOURS} hours'
+          ORDER BY created
+             LIMIT 1
+               FOR UPDATE SKIP LOCKED
+        )
+        UPDATE background_tasks
+           SET claimed_at = now()
+         WHERE id = (SELECT id FROM claimable)
+     RETURNING *
+    """))
+    task = result.first()
+    db_conn.commit()
+    return task
+
+
+def release_task(task):
+    """ Release a claimed task so it can be retried by another worker. """
+    db_conn.execute(text("""
+        UPDATE background_tasks SET claimed_at = NULL WHERE id = :id
+    """), {"id": task.id})
+    db_conn.commit()
+
+
 def remove_task(task):
-    query = "DELETE FROM background_tasks WHERE id = :id"
-    db_conn.execute(text(query), {"id": task.id})
+    """ Delete a completed task. """
+    db_conn.execute(text("DELETE FROM background_tasks WHERE id = :id"), {"id": task.id})
     db_conn.commit()
 
 
 class BackgroundTasks:
 
-    def process_task(self, task) -> bool:
-        """ Perform the task and return whether the task succeeded """
+    def __init__(self):
+        self._current_task = None
+
+    def process_task(self, task):
+        """ Perform the task """
+        current_app.logger.info(f"Processing task: {task.id}")
         if task.task == "delete_listens":
             delete_listens_history(db_conn, task.user_id, task.created)
         elif task.task == "delete_user":
-            delete_user(db_conn, task.user_id, task.created)
+            delete_user(db_conn, ts_conn, task.user_id, task.created)
         elif task.task == "export_all_user_data":
             export_user(db_conn, ts_conn, task.user_id, task.metadata)
+        elif task.task == "import_listens":
+            import_listens(db_conn, ts_conn, task.user_id, task.metadata)
         else:
             current_app.logger.error(f"Unknown task type: {task}")
-        return True
+
+    def _release_on_shutdown(self, signum, frame):
+        """ Best-effort release of the current task on SIGTERM (docker stop, deploys). """
+        if self._current_task:
+            try:
+                release_task(self._current_task)
+                current_app.logger.info("Released task %s on shutdown.", self._current_task.id)
+            except Exception:
+                current_app.logger.error("Failed to release task %s on shutdown:", self._current_task.id, exc_info=True)
+        raise SystemExit(0)
 
     def start(self):
         current_app.logger.info("Background tasks processor started.")
+        signal.signal(signal.SIGTERM, self._release_on_shutdown)
         while True:
             try:
-                task = get_task()
+                task = claim_task()
                 if task is None:
-                    time.sleep(5)
+                    time.sleep(current_app.config.get("BACKGROUND_TASKS_SLEEP_TIME", 5))
                     continue
-                status = self.process_task(task)
-                if status:
+                self._current_task = task
+                try:
+                    self.process_task(task)
                     remove_task(task)
+                except Exception:
+                    current_app.logger.error("Error processing task:", exc_info=True)
+                    release_task(task)
+                finally:
+                    self._current_task = None
             except KeyboardInterrupt:
                 current_app.logger.error("Keyboard interrupt!")
                 break
             except Exception:
                 current_app.logger.error("Error in background tasks processor:", exc_info=True)
                 time.sleep(2)
-                # Exit the container, restart
                 current_app.logger.info("Exiting process, letting container restart.")
                 break
             finally:
@@ -71,6 +133,7 @@ class BackgroundTasks:
                 # by simply exiting the container when this happens and start fresh.
                 db_conn.rollback()
                 ts_conn.rollback()
+
 
 if __name__ == "__main__":
     bt = BackgroundTasks()

@@ -17,8 +17,9 @@ import {
   useParams,
 } from "react-router";
 import { Helmet } from "react-helmet";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
+import { useSetAtom } from "jotai";
 import { getReviewEventContent } from "../utils/utils";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../common/listens/ListenCard";
@@ -35,14 +36,14 @@ import type {
 } from "../album/utils";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import { RouteQuery } from "../utils/Loader";
-import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
 import Pill from "../components/Pill";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import Username from "../common/Username";
 import CBReview from "../cb-review/CBReview";
+import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
 
-function SortingButtons({
+export function SortingButtons({
   sort,
   setSort,
 }: {
@@ -71,7 +72,8 @@ function SortingButtons({
   );
 }
 
-interface ReleaseGroupWithSecondaryTypesAndListenCount extends ReleaseGroup {
+export interface ReleaseGroupWithSecondaryTypesAndListenCount
+  extends ReleaseGroup {
   secondary_types: string[];
   total_listen_count: number | null;
 }
@@ -89,7 +91,57 @@ export type ArtistPageProps = {
   coverArt?: string;
 };
 
-const COVER_ART_SINGLE_ROW_COUNT = 8;
+export const COVER_ART_SINGLE_ROW_COUNT = 8;
+export const typeOrder = [
+  "Album",
+  "EP",
+  "Single",
+  "Live",
+  "Compilation",
+  "Remix",
+  "Broadcast",
+];
+export const sortReleaseGroups = (
+  sort: "release_date" | "total_listen_count",
+  releaseGroupsInput: ReleaseGroupWithSecondaryTypesAndListenCount[]
+) =>
+  orderBy(
+    releaseGroupsInput,
+    [
+      sort === "release_date"
+        ? (rg) => rg.date || ""
+        : (rg) => rg.total_listen_count ?? 0,
+      sort === "release_date"
+        ? (rg) => rg.total_listen_count ?? 0
+        : (rg) => rg.date || "",
+      "name",
+    ],
+    ["desc", "desc", "asc"]
+  );
+
+export const getReleaseCard = (rg: ReleaseGroup) => {
+  return (
+    <ReleaseCard
+      key={rg.mbid}
+      releaseDate={rg.date ?? undefined}
+      dateFormatOptions={{ year: "numeric", month: "short" }}
+      releaseGroupMBID={rg.mbid}
+      releaseName={rg.name}
+      releaseTypePrimary={rg.type}
+      artistCredits={rg.artists}
+      artistCreditName={rg.artists
+        .map((ar) => ar.artist_credit_name + ar.join_phrase)
+        .join("")}
+      artistMBIDs={rg.artists.map((ar) => ar.artist_mbid)}
+      caaID={rg.caa_id}
+      caaReleaseMBID={rg.caa_release_mbid}
+      showInformation
+      showArtist
+      showReleaseTitle
+      showListens
+    />
+  );
+};
 
 export default function ArtistPage(): JSX.Element {
   const _ = useLoaderData();
@@ -116,7 +168,7 @@ export default function ArtistPage(): JSX.Element {
     total_user_count: userCount,
   } = listeningStats || {};
 
-  const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
+  const queryClient = useQueryClient();
   const [wikipediaExtract, setWikipediaExtract] = React.useState<
     WikipediaExtract
   >();
@@ -139,32 +191,6 @@ export default function ArtistPage(): JSX.Element {
     (rg) => rg.secondary_types?.[0] ?? rg.type ?? "Other"
   );
 
-  const sortReleaseGroups = (
-    releaseGroupsInput: ReleaseGroupWithSecondaryTypesAndListenCount[]
-  ) =>
-    orderBy(
-      releaseGroupsInput,
-      [
-        sort === "release_date"
-          ? (rg) => rg.date || ""
-          : (rg) => rg.total_listen_count ?? 0,
-        sort === "release_date"
-          ? (rg) => rg.total_listen_count ?? 0
-          : (rg) => rg.date || "",
-        "name",
-      ],
-      ["desc", "desc", "asc"]
-    );
-
-  const typeOrder = [
-    "Album",
-    "EP",
-    "Single",
-    "Live",
-    "Compilation",
-    "Remix",
-    "Broadcast",
-  ];
   const last = Object.keys(rgGroups).length;
   const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), (type) =>
     typeOrder.indexOf(type) !== -1 ? typeOrder.indexOf(type) : last
@@ -175,24 +201,40 @@ export default function ArtistPage(): JSX.Element {
     ReleaseGroupWithSecondaryTypesAndListenCount[]
   > = {};
   sortedRgGroupsKeys.forEach((type) => {
-    groupedReleaseGroups[type] = sortReleaseGroups(rgGroups[type]);
+    groupedReleaseGroups[type] = sortReleaseGroups(sort, rgGroups[type]);
   });
 
-  React.useEffect(() => {
-    async function fetchReviews() {
-      try {
-        const response = await fetch(
-          `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${artistMBID}&entity_type=artist`
-        );
-        const body = await response.json();
-        if (!response.ok) {
-          throw body?.message ?? response.statusText;
-        }
-        setReviews(body.reviews);
-      } catch (error) {
-        toast.error(error);
+  // Fetch reviews using React Query
+  const { data: reviewsData, isError: reviewsError } = useQuery<{
+    reviews: CritiqueBrainzReviewAPI[];
+  }>({
+    queryKey: ["critiquebrainz-reviews", artistMBID, "artist"],
+    queryFn: async () => {
+      if (!artistMBID) {
+        return { reviews: [] };
       }
+      const response = await fetch(
+        `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${artistMBID}&entity_type=artist`
+      );
+      const body = await response.json();
+      if (!response.ok) {
+        throw new Error(body?.message ?? response.statusText);
+      }
+      return body;
+    },
+    enabled: Boolean(artistMBID),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const reviews = reviewsData?.reviews ?? [];
+
+  React.useEffect(() => {
+    if (reviewsError) {
+      toast.error("Failed to load reviews from CritiqueBrainz");
     }
+  }, [reviewsError]);
+
+  React.useEffect(() => {
     async function fetchWikipediaExtract() {
       try {
         const response = await fetch(
@@ -207,20 +249,16 @@ export default function ArtistPage(): JSX.Element {
         toast.error(error);
       }
     }
-    fetchReviews();
     fetchWikipediaExtract();
   }, [artistMBID]);
 
   const listensFromPopularRecordings =
     popularRecordings?.map(popularRecordingToListen) ?? [];
 
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
 
   React.useEffect(() => {
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: listensFromPopularRecordings,
-    });
+    setAmbientQueue(listensFromPopularRecordings);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listensFromPopularRecordings]);
 
@@ -248,30 +286,6 @@ export default function ArtistPage(): JSX.Element {
 
   const graphParentElementRef = React.useRef<HTMLDivElement>(null);
 
-  const getReleaseCard = (rg: ReleaseGroup) => {
-    return (
-      <ReleaseCard
-        key={rg.mbid}
-        releaseDate={rg.date ?? undefined}
-        dateFormatOptions={{ year: "numeric", month: "short" }}
-        releaseGroupMBID={rg.mbid}
-        releaseName={rg.name}
-        releaseTypePrimary={rg.type}
-        artistCredits={rg.artists}
-        artistCreditName={rg.artists
-          .map((ar) => ar.artist_credit_name + ar.join_phrase)
-          .join("")}
-        artistMBIDs={rg.artists.map((ar) => ar.artist_mbid)}
-        caaID={rg.caa_id}
-        caaReleaseMBID={rg.caa_release_mbid}
-        showInformation
-        showArtist
-        showReleaseTitle
-        showListens
-      />
-    );
-  };
-
   React.useEffect(() => {
     // Reset default view
     setExpandDiscography(false);
@@ -289,6 +303,8 @@ export default function ArtistPage(): JSX.Element {
         rows + (curr[1].length > COVER_ART_SINGLE_ROW_COUNT ? 2 : 1),
       0
     ) > 4;
+
+  const hasSimilarArtists = similarArtists && similarArtists.artists.length > 0;
 
   return (
     <div id="entity-page" className="artist-page" role="main">
@@ -356,7 +372,7 @@ export default function ArtistPage(): JSX.Element {
                 className="btn btn-info"
                 to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
               >
-                <FontAwesomeIcon icon={faPlayCircle} /> Radio
+                <FontAwesomeIcon icon={faPlayCircle} /> Artist Radio
               </Link>
               <button
                 type="button"
@@ -545,22 +561,26 @@ export default function ArtistPage(): JSX.Element {
         </div>
       </div>
 
-      {similarArtists && similarArtists.artists.length > 0 ? (
-        <>
-          <h3 className="header-with-line">Similar Artists</h3>
-          <div className="similarity">
-            <SimilarArtistComponent
-              onArtistChange={onArtistChange}
-              artistGraphNodeInfo={artistGraphNodeInfo}
-              similarArtistsList={similarArtists.artists as ArtistNodeInfo[]}
-              topAlbumReleaseColor={similarArtists.topReleaseGroupColor}
-              topRecordingReleaseColor={similarArtists.topRecordingColor}
-              similarArtistsLimit={18}
-              graphParentElementRef={graphParentElementRef}
-            />
-          </div>
-        </>
-      ) : null}
+      <h3 className="header-with-line">Similar Artists</h3>
+      {!hasSimilarArtists && (
+        <p>
+          Similar artists will appear here once enough people have listened to
+          this artist on ListenBrainz.
+        </p>
+      )}
+      {hasSimilarArtists && (
+        <div className="similarity">
+          <SimilarArtistComponent
+            onArtistChange={onArtistChange}
+            artistGraphNodeInfo={artistGraphNodeInfo}
+            similarArtistsList={similarArtists.artists as ArtistNodeInfo[]}
+            topAlbumReleaseColor={similarArtists.topReleaseGroupColor}
+            topRecordingReleaseColor={similarArtists.topRecordingColor}
+            similarArtistsLimit={18}
+            graphParentElementRef={graphParentElementRef}
+          />
+        </div>
+      )}
       <div className="reviews">
         <h3 className="header-with-line">Reviews</h3>
         <div className="row">
@@ -570,6 +590,12 @@ export default function ArtistPage(): JSX.Element {
                 type: "artist",
                 mbid: artistMBID,
                 name: artist?.name,
+              }}
+              onReviewSubmitted={() => {
+                // Refetch reviews when a review is submitted
+                queryClient.invalidateQueries({
+                  queryKey: ["critiquebrainz-reviews", artistMBID, "artist"],
+                });
               }}
             />
           </div>

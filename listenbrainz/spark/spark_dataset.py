@@ -166,7 +166,9 @@ class _UserStatsDataset(_StatsDataset):
 UserEntityStatsDataset = _UserStatsDataset("user_entity")
 DailyActivityStatsDataset = _UserStatsDataset("user_daily_activity")
 ListeningActivityStatsDataset = _UserStatsDataset("user_listening_activity")
-
+EraStatsDataset = _UserStatsDataset("user_era_activity")
+ArtistEvolutionActivityStatsDataset = _UserStatsDataset("user_artist_evolution_activity")
+GenreActivityStatsDataset = _UserStatsDataset("user_genre_activity")
 
 class _EntityListenerStatsDataset(_StatsDataset):
 
@@ -200,6 +202,14 @@ class DatabaseDataset(SparkDataset, ABC):
         super().__init__(name)
         self.base_table_name = table_name
         self.schema = schema
+
+    def get_engine(self):
+        """ Return the SQLAlchemy engine to use for this dataset.
+
+        Defaults to the timescale engine. Override this to store the dataset in a different database
+        (for instance the main ListenBrainz database).
+        """
+        return timescale.engine
 
     def _get_table_name(self, suffix=None, exclude_schema=False):
         if suffix is None:
@@ -277,7 +287,7 @@ class DatabaseDataset(SparkDataset, ABC):
         cursor.execute(query)
 
     def handle_start(self, message):
-        conn = timescale.engine.raw_connection()
+        conn = self.get_engine().raw_connection()
         try:
             with conn.cursor() as curs:
                 self.create_table(curs)
@@ -286,7 +296,7 @@ class DatabaseDataset(SparkDataset, ABC):
             conn.close()
 
     def handle_end(self, message):
-        conn = timescale.engine.raw_connection()
+        conn = self.get_engine().raw_connection()
         try:
             with conn.cursor() as curs:
                 self.create_indices(curs)
@@ -306,7 +316,7 @@ class DatabaseDataset(SparkDataset, ABC):
         if isinstance(template, str):
             template = SQL(template)
 
-        conn = timescale.engine.raw_connection()
+        conn = self.get_engine().raw_connection()
         try:
             with conn.cursor() as curs:
                 execute_values(curs, query, values, template)

@@ -2,6 +2,7 @@ import calendar
 import heapq
 from typing import Dict, Tuple, Optional
 
+import psycopg2.extras
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, jsonify, request
 
@@ -10,12 +11,15 @@ import listenbrainz.db.user as db_user
 from data.model.common_stat import StatApi, StatisticsRange
 from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import DailyActivityRecord
+from data.model.user_genre_activity import GenreActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
+from data.model.user_era_activity import EraActivityRecord
+from data.model.user_artist_evolution_activity import ArtistEvolutionActivityRecord
 from listenbrainz.db import year_in_music as db_year_in_music
-from listenbrainz.db.metadata import get_metadata_for_artist
+from listenbrainz.db.year_in_music import LAST_FM_FOUNDING_YEAR, MAX_YEAR_IN_MUSIC_YEAR
 from listenbrainz.webserver import db_conn, ts_conn
-from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.decorators import cache_public, crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APINoContent, APINotFound)
 from listenbrainz.webserver.models import ArtistActivityArtistEntry, ArtistActivityReleaseGroupData
@@ -26,7 +30,7 @@ from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
 
-@stats_api_bp.get("/user/<user_name>/artists")
+@stats_api_bp.get("/user/<mb_username:user_name>/artists")
 @crossdomain
 @ratelimit()
 def get_artist(user_name):
@@ -42,17 +46,17 @@ def get_artist(user_name):
             "payload": {
                 "artists": [
                     {
-                       "artist_mbids": ["93e6118e-7fa8-49f6-9e02-699a1ebce105"],
+                       "artist_mbid": "93e6118e-7fa8-49f6-9e02-699a1ebce105",
                        "artist_name": "The Local train",
                        "listen_count": 385
                     },
                     {
-                       "artist_mbids": ["ae9ed5e2-4caf-4b3d-9cb3-2ad626b91714"],
+                       "artist_mbid": "ae9ed5e2-4caf-4b3d-9cb3-2ad626b91714",
                        "artist_name": "Lenka",
                        "listen_count": 333
                     },
                     {
-                       "artist_mbids": ["cc197bad-dc9c-440d-a5b5-d52ba2e14234"],
+                       "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234",
                        "artist_name": "Coldplay",
                        "listen_count": 321
                     }
@@ -68,7 +72,7 @@ def get_artist(user_name):
         }
 
     .. note::
-        ``artist_mbids`` is an optional field and may not be present in all the responses
+        ``artist_mbid`` is an optional field and may not be present in all the responses
 
 
     :param count: Optional, number of artists to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
@@ -89,7 +93,7 @@ def get_artist(user_name):
     return _get_entity_stats(user_name, "artists", "total_artist_count")
 
 
-@stats_api_bp.get("/user/<user_name>/releases")
+@stats_api_bp.get("/user/<mb_username:user_name>/releases")
 @crossdomain
 @ratelimit()
 def get_release(user_name):
@@ -157,7 +161,7 @@ def get_release(user_name):
     return _get_entity_stats(user_name, "releases", "total_release_count")
 
 
-@stats_api_bp.get("/user/<user_name>/release-groups")
+@stats_api_bp.get("/user/<mb_username:user_name>/release-groups")
 @crossdomain
 @ratelimit()
 def get_release_group(user_name):
@@ -228,7 +232,7 @@ def get_release_group(user_name):
     return _get_entity_stats(user_name, "release_groups", "total_release_group_count")
 
 
-@stats_api_bp.get("/user/<user_name>/recordings")
+@stats_api_bp.get("/user/<mb_username:user_name>/recordings")
 @crossdomain
 @ratelimit()
 def get_recording(user_name):
@@ -327,7 +331,7 @@ def get_entity_stats_last_updated(user_name: str, entity: str, count_key: str):
     return stats.last_updated
 
 
-@stats_api_bp.get("/user/<user_name>/listening-activity")
+@stats_api_bp.get("/user/<mb_username:user_name>/listening-activity")
 @crossdomain
 @ratelimit()
 def get_listening_activity(user_name: str):
@@ -455,21 +459,28 @@ def _get_artist_activity(release_groups_list):
 
     artist_mbids = [x["artist_mbid"] for x in top_results if x["artist_mbid"] is not None]
     if artist_mbids:
-        metadata = get_metadata_for_artist(ts_conn, artist_mbids)
+        query = """
+        SELECT
+            artist_mbid,
+            artist_data->>'name' AS artist_name
+        FROM mapping.mb_artist_metadata_cache
+        WHERE artist_mbid IN %s
+        """
+        artist_mbid_tuple = tuple(artist_mbids)
+        with ts_conn.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+            curs.execute(query, (artist_mbid_tuple,))
+            artist_mbid_name_map = {str(row["artist_mbid"]): row["artist_name"] for row in curs.fetchall() if row["artist_name"]}
+
         # replace credited artist name on release group with artist name where possible
-        artist_mbid_name_map: dict[str, str] = {
-            str(item.artist_mbid): item.artist_data["name"]
-            for item in metadata
-        }
         for result in top_results:
             artist_mbid = result["artist_mbid"]
-            if artist_mbid in artist_mbid_name_map:
+            if artist_mbid and artist_mbid in artist_mbid_name_map:
                 result["artist_name"] = artist_mbid_name_map[artist_mbid]
 
     return top_results
 
 
-@stats_api_bp.get("/user/<user_name>/artist-activity")
+@stats_api_bp.get("/user/<mb_username:user_name>/artist-activity")
 @crossdomain
 @ratelimit()
 def get_artist_activity(user_name: str):
@@ -482,31 +493,71 @@ def get_artist_activity(user_name: str):
     .. code-block:: json
 
         {
-            "result": [
-                {
-                    "name": "Radiohead",
-                    "listen_count": 120,
-                    "albums": [
-                        {"name": "OK Computer", "listen_count": 45},
-                        {"name": "In Rainbows", "listen_count": 75}
-                    ]
-                },
-                {
-                    "name": "The Beatles",
-                    "listen_count": 95,
-                    "albums": [
-                        {"name": "Abbey Road", "listen_count": 60},
-                        {"name": "Revolver", "listen_count": 35}
-                    ]
-                }
-            ]
+            "payload": {
+                "artist_activity": [
+                    {
+                        "name": "Radiohead",
+                        "artist_name": "Radiohead",
+                        "artist_mbid": "a74b1b7f-71a5-4011-9441-dc7410c7388a",
+                        "listen_count": 120,
+                        "albums": [
+                            {
+                                "name": "OK Computer",
+                                "listen_count": 45,
+                                "release_group_mbid": "1c2b57e1-9b3d-4f5a-8c7d-9e0f1a2b3c4d"
+                            },
+                            {
+                                "name": "In Rainbows",
+                                "listen_count": 75,
+                                "release_group_mbid": null
+                            }
+                        ]
+                    },
+                    {
+                        "name": "The Beatles",
+                        "artist_name": "The Beatles",
+                        "artist_mbid": null,
+                        "listen_count": 95,
+                        "albums": [
+                            {
+                                "name": "Abbey Road",
+                                "listen_count": 60,
+                                "release_group_mbid": "2d3c68f2-0a4e-5g6b-9d8e-0f1a2b3c4d5e"
+                            },
+                            {
+                                "name": "Revolver",
+                                "listen_count": 35,
+                                "release_group_mbid": null
+                            }
+                        ]
+                    }
+                ],
+                "user_id": "foobar",
+                "range": "all_time",
+                "from_ts": 1609459200,
+                "to_ts": 1640995200,
+                "last_updated": 1640995200
+            }
         }
 
     .. note::
 
         - The example above shows artist activity data with two artists and their respective albums.
         - The statistics are aggregated based on the number of listens recorded for each artist and their albums.
+        - Each artist entry includes:
+            * ``name``: The artist name (may be the credited name on the release group)
+            * ``artist_name``: The canonical artist name (only present for user-specific requests when available)
+            * ``artist_mbid``: The MusicBrainz artist ID (may be null if unavailable)
+            * ``listen_count``: Total number of listens for this artist
+            * ``albums``: List of albums/release groups for this artist
+        - Each album entry includes:
+            * ``name``: The release group name
+            * ``listen_count``: Number of listens for this release group
+            * ``release_group_mbid``: The MusicBrainz release group ID (may be null if unavailable)
 
+    :param range: Optional stats range (see :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`),
+                  defaults to ``all_time``.
+    :type range: ``str``
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
     :statuscode 400: Bad request, check ``response['error']`` for more details
@@ -522,10 +573,212 @@ def get_artist_activity(user_name: str):
 
     release_groups_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
     result = _get_artist_activity(release_groups_list)
-    return jsonify({"result": result})
-    
+    return jsonify({"payload": {
+        "user_id": user_name,
+        "artist_activity": result,
+        "range": stats_range,
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
+        "last_updated": stats.last_updated
+    }})
 
-@stats_api_bp.get("/user/<user_name>/daily-activity")
+
+@stats_api_bp.get("/user/<mb_username:user_name>/era-activity")
+@crossdomain
+@ratelimit()
+def get_era_activity(user_name: str):
+    """
+    Get the release-year activity for user ``user_name``. Each entry represents the number of listens
+    to recordings whose **original release year** equals the listed ``year``. (Frontends may group
+    these years into decades to present a classic “era” visualization.)
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "era_activity": [
+                    {"year": 1971, "listen_count": 3},
+                    {"year": 1997, "listen_count": 9},
+                    {"year": 2024, "listen_count": 1}
+                ],
+                "from_ts": 315532800,
+                "to_ts": 1735603200,
+                "range": "week",
+                "last_updated": 1735603200,
+                "user_id": "John Doe"
+            }
+        }
+
+    .. note::
+        - ``year`` is the recording's release year; multiple listens to different tracks from the same year are aggregated.
+        - Clients may bucket by decade (e.g. 1970s, 1990s) if they want true "era" bars.
+        - Empty years are omitted (only years with > 0 listens are returned for the selected range).
+
+    :param range: Optional, time interval for which statistics should be returned,
+        possible values are :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`,
+        defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+    user, stats_range = _validate_stats_user_params(user_name)
+    offset = get_non_negative_param("offset", default=0)
+    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
+    stats = db_stats.get(user["id"], "era_activity", stats_range, EraActivityRecord)
+    if stats is None:
+        raise APINoContent('')
+
+    era_activity_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
+
+    return jsonify({"payload": {
+        "user_id": user_name,
+        "era_activity": era_activity_list,
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
+        "range": stats_range,
+        "last_updated": stats.last_updated,
+    }})
+
+@stats_api_bp.get("/user/<mb_username:user_name>/genre-activity")
+@crossdomain
+@ratelimit()
+def get_genre_activity(user_name: str):
+    """
+    Get the genre activity for user ``user_name``. The genre activity shows the total number of listens
+    for each genre broken down by hour of the day.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "result": [
+                {
+                    "genre": "alternative dance",
+                    "hour": 14,
+                    "listen_count": 3
+                },
+                {
+                    "genre": "alternative punk",
+                    "hour": 11,
+                    "listen_count": 6
+                },
+                {
+                    "genre": "alternative rock",
+                    "hour": 11,
+                    "listen_count": 8
+                },
+                {
+                    "genre": "electronic",
+                    "hour": 10,
+                    "listen_count": 13
+                },
+                {
+                    "genre": "rock",
+                    "hour": 11,
+                    "listen_count": 16
+                }
+            ]
+        }
+
+    .. note::
+
+        - The example above shows genre activity data with listening patterns across different hours.
+        - Each entry represents the number of times a genre was listened to during a specific hour of the day.
+        - Hours are in 24-hour format (0-23).
+        - The statistics help identify when users prefer to listen to different genres throughout the day.
+
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+    user, stats_range = _validate_stats_user_params(user_name)
+    stats = db_stats.get(user['id'], "genre_activity", stats_range, GenreActivityRecord)
+    if stats is None:
+        raise APINoContent('')
+
+    genre_activity = [x.dict() for x in stats.data.__root__]
+    return jsonify({"payload": {
+        "user_id": user_name,
+        "genre_activity": genre_activity,
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
+        "range": stats_range,
+        "last_updated": stats.last_updated
+    }})
+
+@stats_api_bp.get("/user/<mb_username:user_name>/artist-evolution-activity")
+@crossdomain
+@ratelimit()
+def get_artist_evolution_activity(user_name: str):
+    """
+    Get the artist evolution activity for a specific user. Over the selected time range, this
+    returns raw rows of listen counts per artist per time unit (e.g., weekday, day-of-month,
+    month, or year). The structure mirrors the sitewide endpoint.
+
+    A sample response may look like:
+
+    .. code-block:: json
+
+        {
+          "payload": {
+            "artist_evolution_activity": [
+              { "time_unit": "Monday",    "artist_mbid": "mbid_taylor",  "artist_name": "Taylor Swift", "listen_count": 120 },
+              { "time_unit": "Monday",    "artist_mbid": "mbid_drake",   "artist_name": "Drake",        "listen_count": 80  },
+              { "time_unit": "Sunday",    "artist_mbid": "mbid_weeknd",  "artist_name": "The Weeknd",   "listen_count": 400 }
+            ],
+            "range": "week",
+            "from_ts": 1609459200,
+            "to_ts": 1640995200,
+            "last_updated": 1640995200,
+            "user_id": "foobar"
+          }
+        }
+
+    .. note::
+        - ``time_unit`` depends on the stats range:
+            * ``week``, ``this_week``  → weekday names (Monday..Sunday)
+            * ``month``, ``this_month`` → day numbers as strings ("1".."31")
+            * ``year``, ``this_year``, ``half_yearly``, ``quarter``  → month names (January..December)
+            * ``all_time`` → calendar years as strings ("2019", "2020", ...)
+        - ``artist_mbid`` may be null/omitted if unavailable.
+
+    :param range: Optional stats range (see :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`),
+                  defaults to ``all_time``.
+    :type range: ``str``
+    :statuscode 200: Successful query.
+    :statuscode 204: Statistics not available.
+    :statuscode 400: Bad request.
+    :statuscode 404: User not found.
+    :resheader Content-Type: *application/json*
+    """
+    user, stats_range = _validate_stats_user_params(user_name)
+    stats = db_stats.get(user['id'], "artist_evolution_activity", stats_range, ArtistEvolutionActivityRecord)
+    if stats is None:
+        raise APINoContent('')
+
+    stats_unprocessed = [x.dict() for x in stats.data.__root__]
+
+    return jsonify({
+        "payload": {
+            "user_id": user_name,
+            "artist_evolution_activity": stats_unprocessed,
+            "range": stats_range,
+            "from_ts": stats.from_ts,
+            "to_ts": stats.to_ts,
+            "last_updated": stats.last_updated
+        }
+    })
+
+
+@stats_api_bp.get("/user/<mb_username:user_name>/daily-activity")
 @crossdomain
 @ratelimit()
 def get_daily_activity(user_name: str):
@@ -560,7 +813,7 @@ def get_daily_activity(user_name: str):
                     "Tuesday": ["..."],
                     "..."
                 },
-                "stats_range": "all_time",
+                "range": "all_time",
                 "to_ts": 1589155200,
                 "user_id": "ishaanshah"
             }
@@ -607,7 +860,7 @@ def get_daily_activity(user_name: str):
     }})
 
 
-@stats_api_bp.get("/user/<user_name>/artist-map")
+@stats_api_bp.get("/user/<mb_username:user_name>/artist-map")
 @crossdomain
 @ratelimit()
 def get_artist_map(user_name: str):
@@ -637,7 +890,7 @@ def get_artist_map(user_name: str):
                         "artist_count": 32
                     }
                 ],
-                "stats_range": "all_time"
+                "range": "all_time",
                 "to_ts": 1589155200,
                 "user_id": "ishaanshah"
             }
@@ -673,6 +926,7 @@ def get_artist_map(user_name: str):
 @stats_api_bp.get("/artist/<artist_mbid>/listeners")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_artist_listeners(artist_mbid):
     """ Get top listeners for artist ``artist_mbid``. This includes the total listen count for the entity
     and top N listeners with their individual listen count for that artist in a given time range. A sample
@@ -712,7 +966,7 @@ def get_artist_listeners(artist_mbid):
                 "user_name": "oldpunisher"
               }
             ],
-            "stats_range": "all_time",
+            "range": "all_time",
             "to_ts": 1681777035,
             "total_listen_count": 16393
           }
@@ -734,6 +988,7 @@ def get_artist_listeners(artist_mbid):
 @stats_api_bp.get("/release-group/<release_group_mbid>/listeners")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_release_group_listeners(release_group_mbid):
     """ Get top listeners for release group ``release_group_mbid``. This includes the total listen count
     for the entity and top N listeners with their individual listen count for that release group in a
@@ -803,7 +1058,7 @@ def get_release_group_listeners(release_group_mbid):
             ],
             "release_group_mbid": "087b3a7d-d532-44d9-b37a-84427677ddcd",
             "release_group_name": "Indigo",
-            "stats_range": "all_time",
+            "range": "all_time",
             "to_ts": 1681777035,
             "total_listen_count": 10291
           }
@@ -840,6 +1095,7 @@ def _get_entity_listeners(entity, mbid):
 @stats_api_bp.get("/sitewide/artists")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_sitewide_artist():
     """
     Get sitewide top artists.
@@ -853,12 +1109,12 @@ def get_sitewide_artist():
             "payload": {
                 "artists": [
                     {
-                        "artist_mbids": [],
+                        "artist_mbid": null,
                         "artist_name": "Kanye West",
                         "listen_count": 1305
                     },
                     {
-                        "artist_mbids": ["0b30341b-b59d-4979-8130-b66c0e475321"],
+                        "artist_mbid": "0b30341b-b59d-4979-8130-b66c0e475321",
                         "artist_name": "Lil Nas X",
                         "listen_count": 1267
                     }
@@ -874,7 +1130,7 @@ def get_sitewide_artist():
         }
 
     .. note::
-        - ``artist_mbids`` is optional field and may not be present in all the entries
+        - ``artist_mbid`` is optional field and may not be present in all the entries
         - We only calculate the top 1000 artists for each time period.
 
     :param count: Optional, number of artists to return for each time range,
@@ -898,6 +1154,7 @@ def get_sitewide_artist():
 @stats_api_bp.get("/sitewide/releases")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_sitewide_release():
     """
     Get sitewide top releases.
@@ -966,6 +1223,7 @@ def get_sitewide_release():
 @stats_api_bp.get("/sitewide/release-groups")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_sitewide_release_group():
     """
     Get sitewide top release groups.
@@ -1036,6 +1294,7 @@ def get_sitewide_release_group():
 @stats_api_bp.get("/sitewide/recordings")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_sitewide_recording():
     """
     Get sitewide top recordings.
@@ -1136,6 +1395,7 @@ def _get_sitewide_stats(entity: str, count_key: str, entire_range: bool = False)
 @stats_api_bp.get("/sitewide/listening-activity")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_sitewide_listening_activity():
     """
     Get the listening activity for entire site. The listening activity shows the number of listens
@@ -1209,10 +1469,11 @@ def get_sitewide_listening_activity():
 @stats_api_bp.get("/sitewide/artist-activity")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_sitewide_artist_activity():
     """
-    Get the sitewide artist activity. The daily activity shows the number of listens
-    submitted by the user for each hour of the day over a period of time. We assume that all listens are in UTC.
+    Get the sitewide artist activity. The artist activity shows the total number of listens
+    across all users for each artist along with their albums and corresponding listen counts.
 
     A sample response from the endpoint may look like:
 
@@ -1220,40 +1481,69 @@ def get_sitewide_artist_activity():
 
         {
             "payload": {
+                "artist_activity": [
+                    {
+                        "name": "Radiohead",
+                        "artist_mbid": null,
+                        "listen_count": 12000,
+                        "albums": [
+                            {
+                                "name": "OK Computer",
+                                "listen_count": 4500,
+                                "release_group_mbid": "1c2b57e1-9b3d-4f5a-8c7d-9e0f1a2b3c4d"
+                            },
+                            {
+                                "name": "In Rainbows",
+                                "listen_count": 7500,
+                                "release_group_mbid": null
+                            }
+                        ]
+                    },
+                    {
+                        "name": "The Beatles",
+                        "artist_mbid": null,
+                        "listen_count": 9500,
+                        "albums": [
+                            {
+                                "name": "Abbey Road",
+                                "listen_count": 6000,
+                                "release_group_mbid": "2d3c68f2-0a4e-5g6b-9d8e-0f1a2b3c4d5e"
+                            },
+                            {
+                                "name": "Revolver",
+                                "listen_count": 3500,
+                                "release_group_mbid": null
+                            }
+                        ]
+                    }
+                ],
+                "range": "all_time",
                 "from_ts": 1587945600,
-                "last_updated": 1592807084,
-                "daily_activity": {
-                    "Monday": [
-                        {
-                            "hour": 0
-                            "listen_count": 26,
-                        },
-                        {
-                            "hour": 1
-                            "listen_count": 30,
-                        },
-                        {
-                            "hour": 2
-                            "listen_count": 4,
-                        },
-                        "..."
-                    ],
-                    "Tuesday": ["..."],
-                    "..."
-                },
-                "stats_range": "all_time",
-                "to_ts": 1589155200,
-                "user_id": "ishaanshah"
+                "to_ts": 1640995200,
+                "last_updated": 1640995200
             }
         }
+
+    .. note::
+
+        - The example above shows sitewide artist activity data with two artists and their respective albums.
+        - The statistics are aggregated based on the number of listens recorded across all users for each artist and their albums.
+        - Each artist entry includes:
+            * ``name``: The artist name
+            * ``artist_mbid``: The MusicBrainz artist ID (always null for sitewide stats)
+            * ``listen_count``: Total number of listens for this artist across all users
+            * ``albums``: List of albums/release groups for this artist
+        - Each album entry includes:
+            * ``name``: The release group name
+            * ``listen_count``: Number of listens for this release group across all users
+            * ``release_group_mbid``: The MusicBrainz release group ID (may be null if unavailable)
 
     :param range: Optional, time interval for which statistics should be returned, possible values are
         :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
     :type range: ``str``
     :statuscode 200: Successful query, you have data!
-    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 204: Statistics haven't been calculated, empty response will be returned
     :statuscode 400: Bad request, check ``response['error']`` for more details
-    :statuscode 404: User not found
     :resheader Content-Type: *application/json*
 
     """
@@ -1267,12 +1557,146 @@ def get_sitewide_artist_activity():
     
     release_groups_list = stats["data"]
     result = _get_artist_activity(release_groups_list)
-    return jsonify({"result": result})
+    return jsonify({"payload": {
+        "artist_activity": result,
+        "range": stats_range,
+        "from_ts": stats["from_ts"],
+        "to_ts": stats["to_ts"],
+        "last_updated": stats["last_updated"]
+    }})
+
+
+@stats_api_bp.get("/sitewide/era-activity")
+@crossdomain
+@ratelimit()
+@cache_public(s_maxage=300)
+def get_sitewide_era_activity():
+    """
+    Get sitewide release-year activity. Each entry represents the number of listens across all users
+    to recordings whose **original release year** equals the listed ``year``. (Frontends may group
+    these years into decades to present a classic “era” visualization.)
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "era_activity": [
+                    {"year": 1973, "listen_count": 1043},
+                    {"year": 1997, "listen_count": 3877},
+                    {"year": 2011, "listen_count": 2610}
+                ],
+                "from_ts": 315532800,
+                "to_ts": 1735603200,
+                "range": "year",
+                "last_updated": 1735603200
+            }
+        }
+
+    .. note::
+        - ``year`` is the recording's release year; counts are aggregated across the entire ListenBrainz userbase.
+        - Clients may bucket by decade (e.g. 1970s, 1990s) if they want true "era" bars.
+        - Empty years are omitted.
+
+    :param range: Optional, time interval for which statistics should be returned,
+        possible values are :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`,
+        defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :resheader Content-Type: *application/json*
+    """
+    stats_range = request.args.get("range", default="all_time")
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest(f"Invalid range: {stats_range}")
+
+    stats = db_stats.get_sitewide_stats("era_activity", stats_range)
+    if stats is None:
+        raise APINoContent("")
+
+    return jsonify({
+        "payload": {
+            "era_activity": stats["data"],
+            "from_ts": stats["from_ts"],
+            "to_ts": stats["to_ts"],
+            "range": stats_range,
+            "last_updated": stats["last_updated"],
+        }
+    })
+
+
+@stats_api_bp.get("/sitewide/artist-evolution-activity")
+@crossdomain
+@ratelimit()
+@cache_public(s_maxage=300)
+def get_sitewide_artist_evolution_activity():
+    """
+    Get the sitewide artist evolution activity. Over the selected time range, this returns raw rows
+    of listen counts per artist per time unit (e.g., weekday, day-of-month, month, or year).
+    The structure mirrors the user endpoint.
+
+    A sample response may look like:
+
+    .. code-block:: json
+
+        {
+          "payload": {
+            "artist_evolution_activity": [
+              { "time_unit": "Monday",    "artist_mbid": "mbid_taylor",  "artist_name": "Taylor Swift", "listen_count": 120 },
+              { "time_unit": "Tuesday",   "artist_mbid": "mbid_drake",   "artist_name": "Drake",        "listen_count": 200 },
+              { "time_unit": "Sunday",    "artist_mbid": "mbid_weeknd",  "artist_name": "The Weeknd",   "listen_count": 400 }
+            ],
+            "range": "week",
+            "from_ts": 1609459200,
+            "to_ts": 1640995200,
+            "last_updated": 1640995200
+          }
+        }
+
+    .. note::
+        - ``time_unit`` depends on the stats range:
+            * ``week``, ``this_week``  → weekday names (Monday..Sunday)
+            * ``month``, ``this_month`` → day numbers as strings ("1".."31")
+            * ``year``, ``this_year``, ``half_yearly``, ``quarter``  → month names (January..December)
+            * ``all_time`` → calendar years as strings ("2019", "2020", ...)
+        - ``artist_mbid`` may be null/omitted if unavailable.
+        - Shape matches ``/user/<user_name>/artist-evolution-activity`` for easy client reuse.
+
+    :param range: Optional stats range (see :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`),
+                  defaults to ``all_time``.
+    :type range: ``str``
+    :statuscode 200: Successful query.
+    :statuscode 204: Statistics not available.
+    :statuscode 400: Bad request.
+    :resheader Content-Type: *application/json*
+    """
+    stats_range = request.args.get("range", default="all_time")
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest(f"Invalid range: {stats_range}")
+
+    stats = db_stats.get_sitewide_stats("artist_evolution_activity", stats_range)
+    if stats is None:
+        raise APINoContent("")
+
+    stats_unprocessed = stats["data"]
+
+    return jsonify({
+        "payload": {
+            "artist_evolution_activity": stats_unprocessed,
+            "range": stats_range,
+            "from_ts": stats["from_ts"],
+            "to_ts": stats["to_ts"],
+            "last_updated": stats["last_updated"]
+        }
+    })
 
 
 @stats_api_bp.get("/sitewide/artist-map")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_sitewide_artist_map():
     """
     Get the sitewide artist map. The artist map shows the number of artists listened to by users
@@ -1300,7 +1724,7 @@ def get_sitewide_artist_map():
                         "artist_count": 32
                     }
                 ],
-                "stats_range": "all_time"
+                "range": "all_time",
                 "to_ts": 1589155200,
             }
         }
@@ -1329,17 +1753,231 @@ def get_sitewide_artist_map():
             "from_ts": stats["from_ts"],
             "to_ts": stats["to_ts"],
             "last_updated": stats["last_updated"],
-            "stats_range": stats_range
+            "range": stats_range
         }
     })
 
 
-@stats_api_bp.get("/user/<user_name>/year-in-music")
-@stats_api_bp.get("/user/<user_name>/year-in-music/<int:year>")
+@stats_api_bp.get("/user/<mb_username:user_name>/year-in-music")
+@stats_api_bp.get("/user/<mb_username:user_name>/year-in-music/<int:year>")
 @crossdomain
-def year_in_music(user_name: str, year: int = 2024):
-    """ Get data for year in music stuff """
-    if year != 2021 and year != 2022 and year != 2023 and year != 2024:
+@ratelimit()
+def year_in_music(user_name: str, year: int = 2025):
+    """
+    Get the Year in Music data for specific user. It returns a JSON object containing all calculated Year in Music
+    statistics for the specified user and year.
+
+    A sample response from the endpoint may look like:
+ 
+    .. code-block:: json
+
+        {
+            "payload": {
+                "user_name": "example_user",
+                "year": 2025,
+                "data": {
+                    "artist_evolution_activity": [
+                        {
+                            "artist_mbid": "artist_mbid_example",
+                            "artist_name": "Example Artist",
+                            "listen_count": 7,
+                            "time_unit": "September"
+                        }
+                    ],
+                    "artist_map": [
+                        {
+                            "country": "USA",
+                            "artist_count": 3,
+                            "listen_count": 920,
+                            "artists": [
+                                {
+                                    "artist_mbid": "artist_mbid_1",
+                                    "artist_name": "Artist One",
+                                    "listen_count": 191
+                                },
+                                ...,
+                            ]
+                        }
+                    ],
+                    "day_of_week": "Monday",
+                    "genre_activity": [
+                        {
+                            "genre": "alternative pop",
+                            "hour": 21,
+                            "listen_count": 13
+                        },
+                        ...,
+                    ],
+                    "listens_per_day": [
+                        {
+                            "from_ts": 1735689600,
+                            "to_ts": 1735775999,
+                            "time_range": "01 January 2025",
+                            "listen_count": 0
+                        },
+                        ...,
+                    ],
+                    "most_listened_year": {
+                        "1957": 2,
+                        "1928": 1,
+                        ...,
+                    },
+                    "new_releases_of_top_artists": [
+                        {
+                            "title": "Example Release Title",
+                            "release_group_mbid": "release_group_mbid_example",
+                            "caa_id": 123456789,
+                            "caa_release_mbid": "caa_release_mbid_example",
+                            "artist_credit_mbids": [
+                                "artist_mbid_example"
+                            ],
+                            "artist_credit_name": "Example Artist",
+                            "artists": [
+                                {
+                                    "artist_credit_name": "Example Artist",
+                                    "artist_mbid": "artist_mbid_example",
+                                    "join_phrase": ""
+                                }
+                            ]
+                        },
+                        ...,
+                    ],
+                    "playlist-top-discoveries-for-year": {
+                        "title": "Top Discoveries of 2025 for example_user",
+                        "creator": "listenbrainz",
+                        "date": "2025-01-01T00:00:00+00:00",
+                        "identifier": "https://listenbrainz.org/playlist/example",
+                        "annotation": "<p>Example annotation</p>",
+                        "extension": {
+                            "https://musicbrainz.org/doc/jspf#playlist": {
+                                "created_for": "example_user",
+                                "creator": "listenbrainz",
+                                "public": true
+                            }
+                        },
+                        "track": [
+                            {
+                                "title": "Example Track",
+                                "creator": "Example Artist",
+                                "album": "Example Album",
+                                "duration": 180000,
+                                "identifier": [
+                                    "https://musicbrainz.org/recording/recording_mbid_example"
+                                ],
+                                "extension": {
+                                    "https://musicbrainz.org/doc/jspf#track": {
+                                        "added_at": "2025-01-01T00:00:00+00:00",
+                                        "added_by": "listenbrainz",
+                                        "artist_identifiers": [
+                                            "https://musicbrainz.org/artist/artist_mbid_example"
+                                        ],
+                                        "additional_metadata": {
+                                            "caa_id": 123456789,
+                                            "caa_release_mbid": "caa_release_mbid_example",
+                                            "artists": [
+                                                {
+                                                    "artist_credit_name": "Example Artist",
+                                                    "artist_mbid": "artist_mbid_example",
+                                                    "join_phrase": ""
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            },
+                            ...,
+                        ]
+                    },
+                    "playlist-top-missed-recordings-for-year": {
+                        "..." : "Same structure as playlist-top-discoveries-for-year"
+                    },
+                    "similar_users": {
+                        "user_a": 0.05,
+                        "user_b": 0.06,
+                        ...,
+                    },
+                    "top_artists": [
+                        {
+                            "artist_mbid": "artist_mbid_example",
+                            "artist_name": "Example Artist",
+                            "listen_count": 507
+                        },
+                        ...,
+                    ],
+                    "top_genres": [
+                        {
+                            "genre": "rock",
+                            "genre_count": 13483,
+                            "genre_count_percent": 6.02
+                        },
+                        ...,
+                    ],
+                    "top_recordings": [
+                        {
+                            "track_name": "Example Track",
+                            "artist_name": "Example Artist",
+                            "listen_count": 55,
+                            "recording_mbid": "recording_mbid_example",
+                            "release_name": "Example Release",
+                            "release_mbid": "release_mbid_example",
+                            "caa_id": null,
+                            "caa_release_mbid": null,
+                            "artist_mbids": [],
+                            "artists": [  
+                              {  
+                                "artist_credit_name": "Example Artist",  
+                                "artist_mbid": "artist_mbid_example",  
+                                "join_phrase": " & "  
+                              },  
+                              ...,
+                            ]  
+                        },
+                        ...,
+                    ],
+                    "top_release_groups": [
+                        {
+                            "release_group_name": "Example Release Group",
+                            "release_group_mbid": "release_group_mbid_example",
+                            "artist_name": "Example Artist",
+                            "artist_mbids": [
+                                "artist_mbid_example"
+                            ],
+                            "listen_count": 210,
+                            "caa_id": 123456789,
+                            "caa_release_mbid": "caa_release_mbid_example",
+                            "artists": [
+                                {
+                                    "artist_credit_name": "Example Artist",
+                                    "artist_mbid": "artist_mbid_example",
+                                    "join_phrase": ""
+                                }
+                            ]
+                        },
+                        ...,
+                    ],
+                    "total_artists_count": 2059,
+                    "total_listen_count": 20989,
+                    "total_listening_time": 4154743.722,
+                    "total_new_artists_discovered": 1227,
+                    "total_recordings_count": 12716,
+                    "total_release_groups_count": 1861
+                }
+            }
+        }
+
+    .. warning::
+        The Year in Music payload can be significantly larger than other stats 
+        endpoints, as it may include full playlist data.
+
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Year in Music data for the user hasn't been calculated,
+        empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found or Year in Music data not available for the given year
+
+    :resheader Content-Type: *application/json*
+    """
+    if year < LAST_FM_FOUNDING_YEAR or year > MAX_YEAR_IN_MUSIC_YEAR:
         raise APINotFound(f"Cannot find Year in Music report for year: {year}")
 
     user = db_user.get_by_mb_id(db_conn, user_name)
@@ -1349,7 +1987,250 @@ def year_in_music(user_name: str, year: int = 2024):
     return jsonify({
         "payload": {
             "user_name": user_name,
-            "data": db_year_in_music.get(user["id"], year) or {}
+            "year": year,
+            "data": db_year_in_music.get(user["id"], year, legacy=False) or {}
+        }
+    })
+
+
+@stats_api_bp.get("/user/<mb_username:user_name>/year-in-music/legacy/<int:year>")
+@crossdomain
+@ratelimit()
+def legacy_year_in_music(user_name: str, year: int):
+    """
+    Get legacy Year in Music data for a specific user and year. This endpoint returns historical 
+    Year in Music payloads that were generated by earlier data pipelines. The response structure 
+    is not stable across years and should be treated as archival data.
+
+    Payload structure varies by year.
+
+    **2021**
+
+    - Payload structure differs significantly from later years.
+    - Playlist entries are wrapped in a JSPF structure under the ``jspf`` key.
+    - Each playlist includes an associated ``mbid``.
+    - Playlist cover art URLs are provided separately via ``*-coverart`` mappings.
+    - Several fields present in payloads of later years are not included.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "user_name": "example_user",
+                "year": 2021,
+                "data": {
+                    "day_of_week": "Friday",
+                    "listens_per_day": [
+                        {
+                        "from_ts": 1609459200,
+                        "to_ts": 1609545599,
+                        "time_range": "01 January 2021",
+                        "listen_count": 0
+                        },
+                        ...,
+                    ],
+                    "most_listened_year": {
+                        "1995": 12,
+                        "2005": 30,
+                        "...": "..."
+                    },
+                    "most_prominent_color": "(165, 166, 156)",
+                    "new_releases_of_top_artists": [
+                        {
+                            "title": "Example Release Title",
+                            "type": "Album",
+                            "first_release_date": "2021-03-05",
+                            "release_mbid": "release_mbid_example",
+                            "artist_credit_names": [
+                                "Example Artist A",
+                                "Example Artist B"
+                            ],
+                            "artist_credit_mbids": [
+                                "artist_mbid_a",
+                                "artist_mbid_b"
+                            ]
+                        },
+                        ...,
+                    ],
+                    "playlist-top-discoveries-for-year": {
+                        "jspf": {
+                            "playlist": {
+                                "title": "Top Discoveries of 2021 for example_user",
+                                "creator": "listenbrainz",
+                                "annotation": "<p>Example annotation</p>",
+                                "extension": {
+                                    "https://musicbrainz.org/doc/jspf#playlist": {
+                                        "public": true,
+                                        "algorithm_metadata": {
+                                            "source_patch": "top-discoveries-for-year"
+                                        }
+                                    }
+                                },
+                                "track": [
+                                    {
+                                        "title": "Example Track",
+                                        "creator": "Example Artist",
+                                        "album": "Example Album",
+                                        "identifier": "https://musicbrainz.org/recording/example_recording_mbid",
+                                        "extension": {
+                                            "https://musicbrainz.org/recording/": {
+                                                "artist_mbids": [
+                                                "example_artist_mbid"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    ...,
+                                ]
+                            }
+                        },
+                        "mbid": "playlist_mbid_example"
+                    },
+                    "playlist-top-discoveries-for-year-coverart": {
+                        "example_recording_mbid":
+                        "https://archive.org/download/example_coverart.jpg",
+                        "...": "..."
+                    },
+                    "playlist-top-missed-recordings-for-year": {
+                        "..." : "Same structure as playlist-top-discoveries-for-year"
+                    }
+                    "playlist-top-missed-recordings-for-year-coverart": {
+                        "..." : "Same structure as playlist-top-discoveries-for-year-coverart"
+                    }
+                    "playlist-top-new-recordings-for-year": {
+                        "..." : "Same structure as playlist-top-discoveries-for-year"
+                    },
+                    "playlist-top-new-recordings-for-year-coverart": {
+                        "..." : "Same structure as playlist-top-discoveries-for-year-coverart"
+                    },
+                    "playlist-top-recordings-for-year": {
+                        "..." : "Same structure as playlist-top-discoveries-for-year"
+                    },
+                    "playlist-top-recordings-for-year-coverart": {
+                        "..." : "Same structure as playlist-top-discoveries-for-year-coverart"
+                    },
+                    "similar_users": {
+                        "example_user_a": 0.12,
+                        "example_user_b": 0.27,
+                        "...": "..."
+                    },
+                    "top_artists": [
+                        {
+                            "artist_name": "Example Artist",
+                            "artist_mbids": [
+                                "example_artist_mbid"
+                            ],
+                            "listen_count": 507
+                        },
+                        ...,
+                    ],
+                    "top_recordings": [
+                        {
+                            "track_name": "Example Track",
+                            "artist_name": "Example Artist",
+                            "recording_mbid": "example_recording_mbid",
+                            "release_name": "Example Release",
+                            "release_mbid": "example_release_mbid",
+                            "artist_mbids": [
+                                "example_artist_mbid"
+                            ],
+                            "listen_count": 55
+                        },
+                        ...,
+                    ],
+                    "top_releases": [
+                        {
+                            "release_name": "Example Release",
+                            "artist_name": "Example Artist",
+                            "release_mbid": "example_release_mbid",
+                            "artist_mbids": [
+                                "example_artist_mbid"
+                            ],
+                            "listen_count": 210
+                        },
+                        ...,
+                    ],
+                    "top_releases_coverart": {
+                        "example_release_mbid":
+                        "https://archive.org/download/example_release_coverart.jpg",
+                        "...": "..."
+                    },
+                    "total_listen_count": 12731
+                }
+            }
+        }
+
+    **2022**
+
+    - Core payload structure matches the non-legacy Year in Music endpoint.
+    - Playlist objects are no longer wrapped in JSPF.
+    - Some playlists have been removed, leaving ``playlist-top-discoveries-for-year`` and ``playlist-top-missed-recordings-for-year``.  
+    - Playlist cover art is provided via additional ``*-coverart`` mappings.  
+
+    **2023 and later**
+
+    - Payload structure matches the non-legacy endpoint.
+    - Playlist cover art mappings (``playlist-*-coverart``) are no longer included.
+      Instead, cover art information is provided per track using the ``caa_id`` and ``caa_release_mbid`` 
+      fields in ``track.extension["https://musicbrainz.org/doc/jspf#track"].additional_metadata``.
+
+    A sample response from the endpoint may look like (top-level fields only):
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "user_name": "example_user",
+                "year": 2023,
+                "data": {
+                    "artist_map": [ ... ],
+                    "day_of_week": "Tuesday",
+                    "listens_per_day": [ ... ],
+                    "most_listened_year": { ... },
+                    "new_releases_of_top_artists": [ ... ],
+                    "playlist-top-discoveries-for-year": { ... },
+                    "playlist-top-missed-recordings-for-year": { ... },
+                    "similar_users": { ... },
+                    "top_artists": [ ... ],
+                    "top_genres": [ ... ],
+                    "top_recordings": [ ... ],
+                    "top_release_groups": [ ... ],
+                    "total_artists_count": 1555,
+                    "total_listen_count": 7476,
+                    "total_listening_time": 2011192.0139999997,
+                    "total_new_artists_discovered": 686,
+                    "total_recordings_count": 4674,
+                    "total_release_groups_count": 1896
+                }
+            }
+        }
+
+
+    .. warning::
+        The legacy Year in Music payload can be significantly larger than other stats 
+        endpoints, as it may include full playlist data and cover art mappings.
+
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Year in Music data for the user hasn't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found or Year in Music data not available for the given year
+
+    :resheader Content-Type: *application/json*
+    """
+    if year < 2021 or year > 2024:
+        raise APINotFound(f"Cannot find legacy Year in Music report for year: {year}")
+
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if user is None:
+        raise APINotFound(f"Cannot find user: {user_name}")
+
+    return jsonify({
+        "payload": {
+            "user_name": user_name,
+            "year": year,
+            "data": db_year_in_music.get(user["id"], year, legacy=True) or {}
         }
     })
 

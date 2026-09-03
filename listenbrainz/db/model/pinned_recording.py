@@ -6,7 +6,8 @@ from pydantic import validator, constr, NonNegativeInt
 from data.model.validators import check_datetime_has_tzinfo
 from listenbrainz.db.msid_mbid_mapping import MsidMbidModel
 
-DAYS_UNTIL_UNPIN = 7  # default = unpin after one week
+#: Default number of days after which a pinned recording expires (gets unpinned).
+DAYS_UNTIL_UNPIN = 7
 MAX_BLURB_CONTENT_LENGTH = 280  # maximum length of blurb content
 
 
@@ -14,6 +15,7 @@ class PinnedRecording(MsidMbidModel):
     """Represents a pinned recording object.
     Args:
         user_id: the row id of the user in the DB
+        user_name: (Optional) the name of the user associated with the user_id
         row_id: the row id of the pinned_recording in the DB
         recording_mbid: the MusicBrainz ID of the recording
         blurb_content: (Optional) the custom text content of the pinned recording

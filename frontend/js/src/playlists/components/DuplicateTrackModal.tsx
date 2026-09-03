@@ -1,5 +1,6 @@
 import * as React from "react";
-import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import NiceModal, { bootstrapDialog, useModal } from "@ebay/nice-modal-react";
+import { Modal } from "react-bootstrap";
 
 type DuplicateTrackModalProps = {
   message: string;
@@ -25,64 +26,41 @@ export default NiceModal.create((props: DuplicateTrackModalProps) => {
   };
 
   return (
-    <div
-      className={`modal fade ${modal.visible ? "show" : ""}`}
-      style={{ display: modal.visible ? "block" : "none" }}
-      tabIndex={-1}
-      role="dialog"
-      data-bs-backdrop="true"
-      aria-hidden={!modal.visible}
+    <Modal
+      {...bootstrapDialog(modal)}
+      title="Duplicate track"
+      aria-labelledby="DuplicateTrackModalLabel"
+      id="DuplicateTrackModal"
     >
-      <div
-        className="modal-dialog"
-        role="document"
-        style={{ margin: "20% auto" }}
-      >
-        <div className="modal-content">
-          <div className="modal-header">
-            <button
-              type="button"
-              className="btn-close"
-              onClick={cancel}
-              aria-label="Close"
-            />
-            <h4 className="modal-title">Duplicate Track</h4>
-          </div>
-          <div className="modal-body">
-            <p>{message}</p>
-          </div>
-          <div className="modal-footer" style={{ display: "inline-block" }}>
-            <div className="form-check pull-left">
-              <input
-                id="dontAskAgain"
-                type="checkbox"
-                className="form-check-input"
-                checked={localDontAskAgain}
-                onChange={(e) => setLocalDontAskAgain(e.target.checked)}
-              />
-              <label className="form-check-label" htmlFor="dontAskAgain">
-                Don&apos;t ask me again until I close this page
-              </label>
-            </div>
-            <div className="pull-right">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={cancel}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={confirm}
-              >
-                Add Anyway
-              </button>
-            </div>
-          </div>
+      <Modal.Header closeButton>
+        <Modal.Title id="DuplicateTrackModalLabel">Duplicate Track</Modal.Title>
+      </Modal.Header>
+
+      <Modal.Body>
+        <p>{message}</p>
+      </Modal.Body>
+      <Modal.Footer style={{ display: "inline-block" }}>
+        <div className="form-check pull-left">
+          <input
+            id="dontAskAgain"
+            type="checkbox"
+            className="form-check-input"
+            checked={localDontAskAgain}
+            onChange={(e) => setLocalDontAskAgain(e.target.checked)}
+          />
+          <label className="form-check-label" htmlFor="dontAskAgain">
+            Don&apos;t ask me again until I close this page
+          </label>
         </div>
-      </div>
-    </div>
+        <div className="pull-right">
+          <button type="button" className="btn btn-secondary" onClick={cancel}>
+            Cancel
+          </button>
+          <button type="button" className="btn btn-primary" onClick={confirm}>
+            Add Anyway
+          </button>
+        </div>
+      </Modal.Footer>
+    </Modal>
   );
 });

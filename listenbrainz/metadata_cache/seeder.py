@@ -1,11 +1,12 @@
 from flask import current_app
-from kombu import Connection, Exchange
+from kombu import Exchange
 from kombu.entity import PERSISTENT_DELIVERY_MODE
 
 from listenbrainz.metadata_cache.apple.handler import AppleCrawlerHandler
 from listenbrainz.metadata_cache.soundcloud.handler import SoundcloudCrawlerHandler
 from listenbrainz.metadata_cache.spotify.handler import SpotifyCrawlerHandler
-from listenbrainz.utils import get_fallback_connection_name
+from listenbrainz.metadata_cache.internetarchive.handler import InternetArchiveHandler
+from listenbrainz.rabbitmq import create_rabbitmq_connection
 from listenbrainz.webserver import create_app
 
 
@@ -26,14 +27,7 @@ def submit_new_releases_to_cache():
     """ Query spotify new releases for album ids and submit those to spotify metadata cache """
     app = create_app()
     with app.app_context():
-        connection = Connection(
-            hostname=current_app.config["RABBITMQ_HOST"],
-            userid=current_app.config["RABBITMQ_USERNAME"],
-            port=current_app.config["RABBITMQ_PORT"],
-            password=current_app.config["RABBITMQ_PASSWORD"],
-            virtual_host=current_app.config["RABBITMQ_VHOST"],
-            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
-        )
+        connection = create_rabbitmq_connection(current_app.config)
 
         try:
             current_app.logger.info("Searching new album ids to seed spotify metadata cache")
@@ -64,3 +58,13 @@ def submit_new_releases_to_cache():
             current_app.logger.info("Submitted new release track ids")
         except Exception:
             app.logger.error("Unable to generate seeds for soundcloud:", exc_info=True)
+
+        try:
+            current_app.logger.info("Searching new identifiers to seed IA metadata cache")
+            ia_handler = InternetArchiveHandler(app)
+            ia_identifiers = ia_handler.get_seed_ids()
+            current_app.logger.info("Found %d IA identifiers", len(ia_identifiers))
+            submit_albums(connection, ia_handler.external_service_queue, {"ia_identifiers": ia_identifiers})
+            current_app.logger.info("Submitted new IA identifiers")
+        except Exception:
+            app.logger.error("Unable to generate seeds for IA:", exc_info=True)

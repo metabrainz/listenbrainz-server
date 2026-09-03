@@ -3,9 +3,16 @@ import time
 from datetime import datetime, timezone
 from random import randint
 
+import amqp
+import orjson
+from flask import current_app
+from kombu import Queue, Exchange
+from kombu.entity import PERSISTENT_DELIVERY_MODE
+
 import listenbrainz.db.user as db_user
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
+from listenbrainz.rabbitmq import create_rabbitmq_connection
 from listenbrainz.tests.integration import NonAPIIntegrationTestCase
 from listenbrainz.webserver import redis_connection, timescale_connection
 
@@ -130,3 +137,59 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         to_ts = datetime.now(timezone.utc)
         listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 4)
+
+    def test_rejection_queue_on_error(self):
+        """ Test that listens are published to rejection queue when processing fails """
+        user = db_user.get_or_create(self.db_conn, 1, 'difftracksametsuser')
+
+        connection = create_rabbitmq_connection(current_app.config)
+
+        with connection:
+            ts = int(time.time())
+            invalid_listen_data = [
+                {
+                    "user_id": user["id"],
+                    "listened_at": ts,
+                    "track_metadata": {
+                        "artist_name": "\x00Rick Astley",
+                        "track_name": "Never Gonna Give You Up",
+                    }
+                }
+            ]
+
+            producer = connection.Producer()
+            producer.publish(
+                orjson.dumps(invalid_listen_data).decode("utf-8"),
+                exchange=current_app.config["INCOMING_EXCHANGE"],
+                routing_key="",
+                delivery_mode=PERSISTENT_DELIVERY_MODE,
+            )
+
+            channel = connection.channel()
+            message = None
+            for i in range(5):
+                time.sleep(0.5)
+
+                try:
+                    message = channel.basic_get(current_app.config["REJECTION_QUEUE"], no_ack=True)
+                    if message:
+                        break
+                except amqp.exceptions.NotFound:
+                    print("no rejection queue yet, trying again in 0.5 seconds")
+                    pass
+
+            self.assertIsNotNone(message, "Expected a message in the rejection queue")
+
+            body = orjson.loads(message.body)
+            self.assertIsInstance(body, list)
+            self.assertGreater(len(body), 0)
+
+            self.assertEqual(body[0]['user_id'], user["id"])
+            self.assertEqual(body[0]['listened_at'], ts)
+            listens, _, _ = self.ls.fetch_listens(user, to_ts=datetime.now(timezone.utc))
+            self.assertEqual(len(listens), 0)
+            # test timescale writer is still working and processing listens
+            r = self.send_listen(user, "valid_single.json")
+            self.assert200(r)
+            listens, _, _ = self.ls.fetch_listens(user, to_ts=datetime.now(timezone.utc))
+            self.assertEqual(len(listens), 1)

@@ -5,7 +5,7 @@ import UserListModalEntry from "./UserListModalEntry";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 export type SimilarUsersModalProps = {
-  user: ListenBrainzUser;
+  userName: string;
   similarUsersList: Array<SimilarUser>;
   loggedInUserFollowsUser: (user: ListenBrainzUser | SimilarUser) => boolean;
   updateFollowingList: (
@@ -16,12 +16,13 @@ export type SimilarUsersModalProps = {
 
 function SimilarUsersModal(props: SimilarUsersModalProps) {
   const {
-    user,
+    userName,
     loggedInUserFollowsUser,
     updateFollowingList,
     similarUsersList,
   } = props;
   const { currentUser } = React.useContext(GlobalAppContext);
+  const currentUserName = currentUser?.name;
 
   const renderSimilarUsersList = React.useCallback(() => {
     if (similarUsersList.length === 0) {
@@ -30,7 +31,7 @@ function SimilarUsersModal(props: SimilarUsersModalProps) {
           <hr />
           <div className="similar-users-empty text-center text-muted">
             Users with similar music tastes to{" "}
-            {user.name === currentUser?.name ? "you" : user.name} will appear
+            {userName === currentUserName ? "you" : userName} will appear
             here.
           </div>
         </>
@@ -53,8 +54,8 @@ function SimilarUsersModal(props: SimilarUsersModalProps) {
     );
   }, [
     similarUsersList,
-    user,
-    currentUser,
+    userName,
+    currentUserName,
     loggedInUserFollowsUser,
     updateFollowingList,
   ]);

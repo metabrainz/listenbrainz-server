@@ -131,7 +131,7 @@ export function getChartEntityDetails(datum: UserEntityDatum): JSX.Element {
 
   return (
     <>
-      <div title={entityName} className="ellipsis-2-lines">
+      <div title={entityName} className="ellipsis">
         {getEntityLink(entityType, entityName, entityMBID)}
       </div>
 

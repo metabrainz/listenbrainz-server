@@ -76,7 +76,7 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
         IntegrationTestCase.tearDown(self)
         TimescaleTestCase.tearDown(self)
 
-    def wait_for_query_to_have_items(self, url, num_items, **kwargs):
+    def wait_for_query_to_have_items(self, url, num_items, attempts=10, **kwargs):
         """Try the provided query in a loop until the required number of returned listens is available.
         In integration tests, we send data through a number of services before it hits the database,
         so we often have to wait. In some cases this takes longer than others, so we loop a few
@@ -90,7 +90,7 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
         Returns the result from a flask client GET
         """
         count = 0
-        while count < 10:
+        while count < attempts:
             count += 1
 
             response = self.client.get(url, **kwargs)
@@ -101,13 +101,13 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
 
         return response
 
-    def send_data(self, payload, user=None, recalculate=False):
+    def send_data(self, payload, user=None, recalculate=False, url_params={}):
         """ Sends payload to api.submit_listen and return the response
         """
         if not user:
             user = self.user
         response = self.client.post(
-            self.custom_url_for('api_v1.submit_listen'),
+            self.custom_url_for('api_v1.submit_listen', **url_params),
             data=json.dumps(payload),
             headers={'Authorization': 'Token {}'.format(user['auth_token'])},
             content_type='application/json'

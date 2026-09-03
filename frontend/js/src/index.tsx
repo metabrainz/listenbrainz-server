@@ -16,17 +16,22 @@ import { getPageProps } from "./utils/utils";
 import getRoutes from "./routes/routes";
 import queryClient from "./utils/QueryClient";
 import ReactQueryDevtool from "./utils/ReactQueryDevTools";
-import { BrainzPlayerProvider } from "./common/brainzplayer/BrainzPlayerContext";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const { domContainer, globalAppContext, sentryProps } = await getPageProps();
+  const {
+    domContainer,
+    globalAppContext,
+    initialAlerts,
+    sentryProps,
+  } = await getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
+  const { currentUser } = globalAppContext;
 
   if (sentry_dsn) {
     Sentry.init({
       dsn: sentry_dsn,
       integrations: [
-        Sentry.reactRouterV6BrowserTracingIntegration({
+        Sentry.reactRouterV7BrowserTracingIntegration({
           useEffect: React.useEffect,
           useLocation,
           useNavigationType,
@@ -36,16 +41,22 @@ document.addEventListener("DOMContentLoaded", async () => {
       ],
       tracesSampleRate: sentry_traces_sample_rate,
     });
-  }
 
-  const { currentUser } = globalAppContext;
+    if (currentUser?.name) {
+      Sentry.setUser({ username: currentUser.name });
+    }
+  }
 
   const brainzPlayerDisabled =
     globalAppContext?.userPreferences?.brainzplayer?.brainzplayerEnabled ===
     false;
 
-  const routes = getRoutes(currentUser?.name, !brainzPlayerDisabled);
-  const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouter(
+  const routes = getRoutes(
+    currentUser?.name,
+    !brainzPlayerDisabled,
+    initialAlerts
+  );
+  const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouterV7(
     createBrowserRouter
   );
   const router = sentryCreateBrowserRouter(routes);
@@ -56,13 +67,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <Helmet defaultTitle="ListenBrainz" titleTemplate="%s - ListenBrainz" />
         <ReactQueryDevtool client={queryClient}>
-          {brainzPlayerDisabled ? (
-            <RouterProvider router={router} />
-          ) : (
-            <BrainzPlayerProvider>
-              <RouterProvider router={router} />
-            </BrainzPlayerProvider>
-          )}
+          <RouterProvider router={router} />
         </ReactQueryDevtool>
       </GlobalAppContext.Provider>
     </ErrorBoundary>

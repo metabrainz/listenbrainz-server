@@ -6,7 +6,7 @@ from typing import List
 
 from brainzutils import cache
 from dateutil.relativedelta import relativedelta
-from flask import Blueprint, render_template, current_app, request, jsonify
+from flask import Blueprint, render_template, current_app, request, jsonify, Response, send_from_directory
 from flask_login import current_user, login_required
 from requests.exceptions import HTTPError
 from werkzeug.exceptions import Unauthorized, NotFound
@@ -37,6 +37,34 @@ NUMBER_OF_RECENT_LISTENS = 50
 
 SEARCH_USER_LIMIT = 100  # max number of users to return in search username results
 
+ROBOTS_TXT_CONTENT = """User-agent: *
+Disallow: /admin/
+Disallow: /login/
+Disallow: /player/
+Disallow: /listening-now/
+Disallow: /settings/
+Disallow: /profile
+Disallow: /explore/
+Disallow: /artist/
+Disallow: /album/
+Disallow: /release/
+Disallow: /release-group/
+Disallow: /recording/
+Disallow: /track/
+Allow: /explore/fresh-releases/
+Allow: /explore/huesound/
+Allow: /explore/cover-art-collage/
+Allow: /explore/art-creator/
+"""
+
+
+@index_bp.get("/robots.txt/")
+def robots_txt():
+    return Response(ROBOTS_TXT_CONTENT, mimetype='text/plain')
+
+@index_bp.get("/favicon.ico/")
+def favicon():
+    return send_from_directory(current_app.static_folder, "favicon.ico", mimetype="image/vnd.microsoft.icon")
 
 @index_bp.post("/")
 def index():
@@ -68,23 +96,31 @@ def index():
 @index_bp.post("/current-status/")
 @web_listenstore_needed
 def current_status():
-    load = "%.2f %.2f %.2f" % os.getloadavg()
-
     service_status = get_service_status()
     listen_count = _ts.get_total_listen_count()
     try:
         user_count = format(int(_get_user_count()), ',d')
     except DatabaseException as e:
         user_count = 'Unknown'
+    try:
+       user_count_evolution = [
+           {
+               "period": period,
+               "total_users": total_users,
+               "new_users": new_users
+           }
+           for period, total_users, new_users in _get_user_count_evolution()
+       ]
+    except DatabaseException as e:
+        user_count_evolution = {}
 
     listen_counts_per_day: List[dict] = []
     for delta in range(2):
         day = datetime.today() - relativedelta(days=delta)
         try:
             day_listen_count = _redis.get_listen_count_for_day(day)
-        except:
-            current_app.logger.error("Could not get %s listen count from redis", day.strftime('%Y-%m-%d'),
-                                     exc_info=True)
+        except Exception:
+            current_app.logger.error("Could not get %s listen count from redis", day.strftime('%Y-%m-%d'), exc_info=True)
             day_listen_count = None
         listen_counts_per_day.append({
             "date": day.strftime('%Y-%m-%d'),
@@ -93,10 +129,10 @@ def current_status():
         })
 
     data = {
-        "load": load,
-        "service-status": service_status,
+        "serviceStatus": service_status,
         "listenCount": format(int(listen_count), ",d") if listen_count else "0",
         "userCount": user_count,
+        "userCountEvolution": user_count_evolution,
         "listenCountsPerDay": listen_counts_per_day,
     }
 
@@ -127,9 +163,7 @@ def recent_listens():
         recent_donors = []
 
     # Get MusicBrainz IDs for donors who are ListenBrainz users
-    musicbrainz_ids = [donor["musicbrainz_id"]
-                       for donor in recent_donors
-                       if donor.get('is_listenbrainz_user')]
+    musicbrainz_ids = [donor["musicbrainz_id"] for donor in recent_donors if donor.get('is_listenbrainz_user')]
 
     # Fetch donor info only if there are valid MusicBrainz IDs
     donors_info = db_user.get_many_users_by_mb_id(db_conn, musicbrainz_ids) if musicbrainz_ids else {}
@@ -142,8 +176,7 @@ def recent_listens():
         if pinned_recordings:
             pinned_recordings_metadata = fetch_track_metadata_for_items(ts_conn, pinned_recordings)
             # Map recordings by user_id for quick lookup
-            pinned_recordings_data = {recording.user_id: dict(recording)
-                                      for recording in pinned_recordings_metadata}
+            pinned_recordings_data = {recording.user_id: dict(recording) for recording in pinned_recordings_metadata}
 
     # Add pinned recordings to recent donors
     for donor in recent_donors:
@@ -185,10 +218,7 @@ def search():
     else:
         users = []
 
-    return jsonify({
-        "searchTerm": search_term,
-        "users": users
-    })
+    return jsonify({"searchTerm": search_term, "users": users})
 
 
 @index_bp.post("/feed/")
@@ -203,11 +233,13 @@ def feed():
         "musicbrainz_id": current_user.musicbrainz_id,
     }
 
-    users_following = db_user_relationship.get_following_for_user(
-        db_conn, user_id)
+    users_following = db_user_relationship.get_following_for_user(db_conn, user_id)
 
-    user_events = get_feed_events_for_user(
-        user=current_user_data, followed_users=users_following, min_ts=min_ts, max_ts=max_ts, count=count)
+    user_events = get_feed_events_for_user(user=current_user_data,
+                                           followed_users=users_following,
+                                           min_ts=min_ts,
+                                           max_ts=max_ts,
+                                           count=count)
 
     user_events = user_events[:count]
 
@@ -269,6 +301,21 @@ def _get_user_count():
         cache.set(user_count_key, int(user_count), CACHE_TIME, encode=False)
         return user_count
 
+
+def _get_user_count_evolution():
+    user_count_evolution_key = "{}.{}".format(STATS_PREFIX, 'user_count_evolution')
+    user_count_evolution = cache.get(user_count_evolution_key, decode=True)
+    user_count_evolution = None
+    if user_count_evolution:
+        return user_count_evolution
+    else:
+        user_count_evolution = db_user.get_user_count_evolution(db_conn)
+
+        cache_time_seconds = 24 * 60 * 60
+        cache.set(user_count_evolution_key, user_count_evolution,
+                    cache_time_seconds, encode=True)
+
+        return user_count_evolution
 
 @index_bp.get("/", defaults={'path': ''})
 @index_bp.get('/<not_api_path:path>/')

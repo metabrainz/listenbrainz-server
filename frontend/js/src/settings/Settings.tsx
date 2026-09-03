@@ -68,7 +68,7 @@ export default function Settings() {
             Username: <Username username={name} hideLink elementType="span" />
           </h4>
           <a
-            href={`https://musicbrainz.org/user/${name}`}
+            href={`https://musicbrainz.org/user/${encodeURIComponent(name)}`}
             aria-label="Edit Profile on MusicBrainz"
             title="Edit Profile on MusicBrainz"
             className="btn btn-outline-info"

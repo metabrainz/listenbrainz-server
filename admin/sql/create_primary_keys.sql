@@ -2,7 +2,6 @@ BEGIN;
 
 ALTER TABLE "user" ADD CONSTRAINT user_pkey PRIMARY KEY (id);
 ALTER TABLE api_compat.session ADD CONSTRAINT session_pkey PRIMARY KEY (sid);
-ALTER TABLE spotify_auth ADD CONSTRAINT spotify_auth_pkey PRIMARY KEY (user_id);
 ALTER TABLE external_service_oauth ADD CONSTRAINT external_service_oauth_pkey PRIMARY KEY (id);
 ALTER TABLE listens_importer ADD CONSTRAINT listens_importer_pkey PRIMARY KEY (id);
 
@@ -33,5 +32,15 @@ ALTER TABLE recommendation.do_not_recommend ADD CONSTRAINT rec_do_not_recommend_
 ALTER TABLE background_tasks ADD CONSTRAINT background_tasks_id_pkey PRIMARY KEY (id);
 
 ALTER TABLE user_data_export ADD CONSTRAINT user_data_export_id_pkey PRIMARY KEY (id);
+
+ALTER TABLE user_data_import ADD CONSTRAINT user_data_import_id_pkey PRIMARY KEY (id);
+
+ALTER TABLE funkwhale_servers ADD CONSTRAINT funkwhale_servers_id_pkey PRIMARY KEY (id);
+
+ALTER TABLE funkwhale_tokens ADD CONSTRAINT funkwhale_tokens_id_pkey PRIMARY KEY (id);
+
+ALTER TABLE navidrome_servers ADD CONSTRAINT navidrome_servers_id_pkey PRIMARY KEY (id);
+
+ALTER TABLE navidrome_tokens ADD CONSTRAINT navidrome_tokens_id_pkey PRIMARY KEY (id);
 
 COMMIT;

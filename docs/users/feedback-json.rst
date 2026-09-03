@@ -51,6 +51,11 @@ Score can have one of these three values:
 
    - Indicates user wants to remove the feedback (loved or hated) from the recording
 
+You can get a recording_msid by submitting a ``playing_now`` listen with the parameter :code:`return_msid` set to :json:`true`.
+See the :ref:`submit-listens` example for more details.
+
+You can get a recording_mbid using the metadata endpoints. See `Lookup MBIDs`_ for an example.
+
 
 Fetching feedback JSON
 ----------------------

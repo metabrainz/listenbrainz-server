@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as Sentry from "@sentry/react";
 
 export type ErrorBoundaryState = {
   hasError: boolean;
@@ -21,6 +22,7 @@ export default class ErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error) {
+    Sentry.captureException(error);
     // Update state so the next render will show the fallback UI.
     this.setState({ hasError: true, error });
   }
@@ -33,6 +35,7 @@ export default class ErrorBoundary extends React.Component<
   }
 
   promiseRejectionHandler = (event: PromiseRejectionEvent) => {
+    Sentry.captureException(event.reason);
     this.setState({
       error: event.reason,
       hasError: true,

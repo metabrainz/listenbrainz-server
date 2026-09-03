@@ -32,7 +32,7 @@ def get_similar_users(from_date, to_date):
     df.createOrReplaceTempView("similar_users_for_missed_recordings")
 
 
-def generate_top_missed_recordings(year):
+def generate_top_missed_recordings(year, export_to_spotify):
     time_filter = datetime(year, 1, 1)
     from_date = datetime(year, 1, 1)
     to_date = datetime.combine(date(year, 12, 31), time.max)
@@ -109,6 +109,7 @@ def generate_top_missed_recordings(year):
         yield {
             "slug": "top-missed-recordings",
             "year": year,
+            "export_to_spotify": export_to_spotify,
             "data": playlists,
             "type": "year_in_music_playlists"
         }

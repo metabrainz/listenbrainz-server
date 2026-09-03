@@ -113,13 +113,13 @@ $mb_blue_dark: #211e45;
   }
 }
 
-.artist-similarity-graph-container {
+.entity-similarity-graph-container {
   flex: 1;
   height: calc(100vh - $brainzplayer-height);
   max-height: 1120px; // 80% of the max content width (so we have a square aspect ratio
   overflow: auto;
 
-  .artist-similarity-graph-node {
+  .entity-similarity-graph-node {
     cursor: pointer;
 
     .centered-text {

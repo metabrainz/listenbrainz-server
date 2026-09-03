@@ -85,3 +85,15 @@ class ExternalServiceInvalidGrantError(ExternalServiceAPIError):
     through external means without unlinking the account from ListenBrainz.
     """
     pass
+
+
+class ListensImporterUserError(ExternalServiceError):
+    """ Raised if the external music services cannot import data because of a user error or
+    misconfiguration.
+    """
+    pass
+
+
+class LastfmUserNotRetryableException(ListensImporterUserError):
+    """ Raised when the last.fm user is not found or has privacy mode enabled. """
+    pass

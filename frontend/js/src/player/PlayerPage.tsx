@@ -15,6 +15,7 @@ import {
   useSearchParams,
 } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useSetAtom } from "jotai";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import {
@@ -27,7 +28,7 @@ import ListenCard from "../common/listens/ListenCard";
 import { ToastMsg } from "../notifications/Notifications";
 import { RouteQuery } from "../utils/Loader";
 import { getObjectForURLSearchParams } from "../utils/utils";
-import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
+import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
 
 export type PlayerPageProps = {
   playlist?: JSPFObject;
@@ -255,15 +256,12 @@ export function PlayerPageWrapper() {
   );
 
   // BrainzPlayer
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
   const playlist = data?.playlist?.playlist;
   const { track: tracks } = playlist || {};
   React.useEffect(() => {
     const listens = tracks?.map(JSPFTrackToListen);
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: listens,
-    });
+    setAmbientQueue(listens ?? []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tracks]);
 

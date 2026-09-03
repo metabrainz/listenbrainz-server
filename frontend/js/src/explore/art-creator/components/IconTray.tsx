@@ -48,22 +48,16 @@ function IconTray(props: IconTrayProps) {
           type="button"
           className="btn btn-icon btn-info"
           onClick={onClickDownload}
+          title="Download PNG image"
         >
           <FontAwesomeIcon icon={faDownload} fixedWidth />
-        </button>
-        <button
-          type="button"
-          className="btn btn-icon btn-info"
-          onClick={onClickCopyFeedUrl}
-          title="Subscribe to syndication feed (Atom)"
-        >
-          <FontAwesomeIcon icon={faRss} fixedWidth />
         </button>
         {browserHasClipboardAPI && (
           <button
             type="button"
             className="btn btn-icon btn-info"
             onClick={onClickCopy}
+            title="Copy PNG image"
           >
             <FontAwesomeIcon icon={faCopy} fixedWidth />
           </button>
@@ -73,10 +67,19 @@ function IconTray(props: IconTrayProps) {
             type="button"
             className="btn btn-icon btn-info"
             onClick={onClickCopyCode}
+            title="Copy SVG image code"
           >
             <FontAwesomeIcon icon={faCode} fixedWidth />
           </button>
         )}
+        <button
+          type="button"
+          className="btn btn-icon btn-info"
+          onClick={onClickCopyFeedUrl}
+          title="Subscribe to syndication feed (Atom)"
+        >
+          <FontAwesomeIcon icon={faRss} fixedWidth />
+        </button>
         <div className="input-group link-container">
           <input
             type="text"
@@ -88,7 +91,8 @@ function IconTray(props: IconTrayProps) {
             <button
               type="button"
               onClick={onClickCopyURL}
-              className="btn btn-info btn-sm"
+              className="btn btn-info btn-icon"
+              title="Copy link to SVG image"
             >
               <FontAwesomeIcon icon={faLink} fixedWidth />
             </button>
@@ -99,6 +103,7 @@ function IconTray(props: IconTrayProps) {
             type="button"
             className="btn btn-icon btn-link text-nowrap"
             onClick={onClickCopyAlt}
+            title="Copy alt text for image"
           >
             <span className="text-muted">alt text</span>
             <FontAwesomeIcon className="text-muted" icon={faClone} fixedWidth />
