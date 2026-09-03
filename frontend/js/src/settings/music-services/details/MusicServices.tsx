@@ -11,7 +11,6 @@ import {
   faSoundcloud,
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
-import { faFontAwesome } from "@fortawesome/free-solid-svg-icons";
 import { ToastMsg } from "../../../notifications/Notifications";
 import ServicePermissionButton from "./components/ExternalServiceButton";
 import LFMMusicServicePermissions from "./components/LFMMusicServicePermissions";
@@ -26,7 +25,6 @@ import GlobalAppContext from "../../../utils/GlobalAppContext";
 import faInternetArchive from "../../../common/icons/faInternetArchive";
 import faFunkwhale from "../../../common/icons/faFunkwhale";
 import { faNavidrome } from "../../../common/icons/faNavidrome";
-import { dataSourcesInfo } from "../../brainzplayer/BrainzPlayerSettings";
 import {
   EmailVerificationRequiredAlert,
   EmailVerificationRequiredToastMessage,
@@ -278,8 +276,6 @@ export default function MusicServices() {
     }
   };
 
-  // Last.FM and Libre.FM connection handling is now managed in c
-
   const handleFunkwhaleConnect = async (
     evt: React.FormEvent<HTMLFormElement>
   ) => {
@@ -379,7 +375,7 @@ export default function MusicServices() {
       // If already connected, disconnect first to avoid duplicates
       if (permissions.navidrome === "listen") {
         try {
-          const disconnectResponse = await fetch(
+          await fetch(
             `/settings/music-services/navidrome/disconnect/`,
             {
               method: "POST",
@@ -1082,6 +1078,7 @@ export default function MusicServices() {
           isConnected
           collapsible={false}
           showStatusIndicator
+          statusLabel="Active"
         >
           <p>
             Playing music using YouTube on ListenBrainz does not require an
@@ -1102,6 +1099,7 @@ export default function MusicServices() {
           isConnected
           collapsible={false}
           showStatusIndicator
+          statusLabel="Active"
         >
           <p>
             Playing music using InternetArchive on ListenBrainz does not require

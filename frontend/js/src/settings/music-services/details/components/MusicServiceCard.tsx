@@ -10,6 +10,7 @@ interface MusicServiceCardProps {
   children?: React.ReactNode;
   collapsible?: boolean;
   showStatusIndicator?: boolean;
+  statusLabel?: string;
 }
 
 export default function MusicServiceCard({
@@ -22,6 +23,7 @@ export default function MusicServiceCard({
   children,
   collapsible = true,
   showStatusIndicator = true,
+  statusLabel,
 }: MusicServiceCardProps) {
   const isClickable = collapsible && onToggle;
   const shouldShowBody = collapsible ? isOpen : true;
@@ -48,7 +50,7 @@ export default function MusicServiceCard({
                 isConnected ? "connected" : "disconnected"
               }`}
             />
-            <span>{isConnected ? "Connected" : "Not Connected"}</span>
+            <span>{statusLabel ?? (isConnected ? "Connected" : "Not Connected")}</span>
           </div>
         )}
       </div>
