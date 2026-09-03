@@ -1,6 +1,8 @@
 ﻿artist_name,track_title,entry_date,stream_duration_ms,product_type,ip_address,client_name_from_session,country_name,region_name,city_name,postal_code,time_zone
 Kid Cudi Feat. MGMT Feat. Ratatat,Pursuit Of Happiness (Nightmare),08/03/2022 19:01,270000.0,TRACK,000.00.000.000,Tidal Web Player with Widevine DRM Flac OAuth,Canada,Province,Cityname,A1B,America/Toronto
 Filtered Artist,Filtered Album,08/03/2022 19:02,270000.0,ALBUM,000.00.000.099,Tidal Web Player with Widevine DRM Flac OAuth,Canada,Province,Cityname,A1B,America/Toronto
+Null Timezone Artist,Null Timezone Track,09/03/2022 0:00,120000.0,TRACK,null,mobile,null,null,null,null,null
+Invalid Timezone Artist,Invalid Timezone Track,09/03/2022 0:02,120000.0,TRACK,null,mobile,null,null,null,null,Not/AZone
 WZRD Feat. Desire,"Teleport 2 Me, Jamie",08/03/2022 19:06,238000.0,TRACK,000.00.000.001,Tidal Web Player with Widevine DRM Flac OAuth,Canada,Province,Cityname,A1B,America/Toronto
 Childish Gambino,3005,08/03/2022 19:10,234000.0,TRACK,000.00.000.002,Tidal Web Player with Widevine DRM Flac OAuth,Canada,Province,Cityname,A1B,America/Toronto
 A$AP Rocky,L$D,08/03/2022 19:14,238000.0,TRACK,000.00.000.003,Tidal Web Player with Widevine DRM Flac OAuth,Canada,Province,Cityname,A1B,America/Toronto
