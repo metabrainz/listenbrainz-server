@@ -1,17 +1,12 @@
-from flask import Blueprint, render_template, request, jsonify, current_app
+from flask import Blueprint, current_app, jsonify, render_template, request
 from flask_login import current_user
 from sqlalchemy import text
-import psycopg2
 from collections import defaultdict
-from psycopg2.extras import DictCursor
 
-from brainzutils import cache
-
+from listenbrainz.db.genre import get_tag_hierarchy_data
 from listenbrainz.db.similar_users import get_top_similar_users
-from listenbrainz.db.genre import load_genre_with_subgenres
 from listenbrainz.webserver import db_conn, ts_conn
-from listenbrainz.webserver.views.user import TAG_HEIRARCHY_CACHE_KEY, TAG_HEIRARCHY_CACHE_EXPIRY
-from listenbrainz.webserver.views.api_tools import is_valid_uuid, validate_auth_header
+from listenbrainz.webserver.views.api_tools import validate_auth_header
 
 explore_bp = Blueprint('explore', __name__)
 
@@ -62,7 +57,7 @@ def ai_brainz():
     return render_template("index.html")
 
 
-def process_genre_explorer_data(data: list, name: str) -> tuple[dict, list[dict], dict, list[dict]]:
+def process_genre_explorer_data(data: list[dict], name: str) -> tuple[dict | None, list[dict] | None, dict | None, list[dict] | None]:
     adj_matrix = defaultdict(list)
     name_id_map = {}
     parent_map = defaultdict(set)
@@ -70,9 +65,8 @@ def process_genre_explorer_data(data: list, name: str) -> tuple[dict, list[dict]
     # Build the graph
     for row in data:
         genre_name = row["genre"]
-        name_id_map[genre_name] = row.get("genre_gid")
-        
-        # Initialize parent_map entry for genre_id if not exists
+        name_id_map[genre_name] = row["genre_gid"]
+
         if genre_name not in parent_map:
             parent_map[genre_name] = set()
 
@@ -92,17 +86,17 @@ def process_genre_explorer_data(data: list, name: str) -> tuple[dict, list[dict]
     current_genre = {"id": name_id_map[name], "name": name}
 
     # 2. Get children
-    children = [
+    children = sorted([
         {"id": name_id_map[child_name], "name": child_name}
         for child_name in adj_matrix[name]
-    ]
+    ], key=lambda child: child["name"])
 
     # 3. Get immediate parents only
     parent_nodes = []
     parent_edges = []
-    
+
     # Get immediate parents of the current genre
-    for parent_name in parent_map[name]:
+    for parent_name in sorted(parent_map[name]):
         parent_nodes.append({"id": name_id_map[parent_name], "name": parent_name})
         parent_edges.append({"source": name_id_map[parent_name], "target": name_id_map[name]})
 
@@ -116,7 +110,10 @@ def process_genre_explorer_data(data: list, name: str) -> tuple[dict, list[dict]
     for parent in parent_map[name]:
         siblings.update(adj_matrix[parent])
     siblings.discard(name)
-    siblings_list = [{"id": name_id_map[genre], "name": genre} for genre in siblings]
+    siblings_list = [
+        {"id": name_id_map[genre], "name": genre}
+        for genre in sorted(siblings)
+    ]
 
     return current_genre, children, parent_graph, siblings_list
 
@@ -125,15 +122,9 @@ def process_genre_explorer_data(data: list, name: str) -> tuple[dict, list[dict]
 def genre_explorer(genre_name):
     """ Get genre explorer data """
     try:
-        data = cache.get(TAG_HEIRARCHY_CACHE_KEY)
-        if not data:
-            with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn,\
-                    mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
-                data = load_genre_with_subgenres(mb_curs)
-                data = [dict(row) for row in data] if data else []
-            cache.set(TAG_HEIRARCHY_CACHE_KEY, data, expirein=TAG_HEIRARCHY_CACHE_EXPIRY)
-    except Exception as e:
-        current_app.logger.error("Error loading genre explorer data: %s", e)
+        data = get_tag_hierarchy_data()
+    except Exception:
+        current_app.logger.exception("Error loading genre explorer data")
         return jsonify({"error": "Failed to load genre explorer data"}), 500
 
     genre, children, parents, siblings = process_genre_explorer_data(data, genre_name)

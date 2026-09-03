@@ -2,7 +2,6 @@ import * as React from "react";
 import { faInfo } from "@fortawesome/free-solid-svg-icons";
 import { useQuery } from "@tanstack/react-query";
 import Spinner from "react-loader-spinner";
-import { Link } from "react-router";
 import SideBar from "../../../components/Sidebar";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
@@ -57,14 +56,14 @@ function Panel({ genre }: PanelProps) {
           <div className="genre-panel-info">
             <div id="genre-wiki">{wikiData}</div>
             <div className="genre-mb-link">
-              <Link
+              <a
                 id="genre-mb-link-button"
                 target="_blank"
                 rel="noopener noreferrer"
-                to={`https://musicbrainz.org/genre/${genre.id}`}
+                href={`https://musicbrainz.org/genre/${genre.id}`}
               >
                 <strong>Genre page</strong>
-              </Link>
+              </a>
             </div>
           </div>
         </>

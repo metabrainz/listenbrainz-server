@@ -2,11 +2,12 @@ import * as React from "react";
 import { faCopy, faDownload } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery } from "@tanstack/react-query";
+import { useSetAtom } from "jotai";
 import { kebabCase, merge } from "lodash";
 import { Helmet } from "react-helmet";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { toast } from "react-toastify";
-import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
+import { setAmbientQueueAtom } from "../../common/brainzplayer/BrainzPlayerAtoms";
 import Loader from "../../components/Loader";
 import { ToastMsg } from "../../notifications/Notifications";
 import PlaylistItemCard from "../../playlists/components/PlaylistItemCard";
@@ -39,12 +40,13 @@ export default function GenreExplorer() {
   const params = useParams<GenreExplorerParams>();
   const graphParentElementRef = React.useRef<HTMLDivElement>(null);
   const { APIService } = React.useContext(GlobalAppContext);
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
 
   // Query for genre data
-  const { data: genreData } = useQuery<GenreExplorerLoaderData>(
-    RouteQuery(["genre-explorer", params], location.pathname)
-  );
+  const { data: genreData } = useQuery<GenreExplorerLoaderData>({
+    ...RouteQuery(["genre-explorer", params], location.pathname),
+    enabled: Boolean(params.genreName),
+  });
 
   const graphData = React.useMemo(() => transformGenreData(genreData!), [
     genreData,
@@ -119,15 +121,14 @@ export default function GenreExplorer() {
   // Update BrainzPlayer queue when playlist data changes
   React.useEffect(() => {
     if (playlistData?.payload.jspf.playlist?.track) {
-      dispatch({
-        type: "SET_AMBIENT_QUEUE",
-        data: playlistData.payload.jspf.playlist.track.map(JSPFTrackToListen),
-      });
+      setAmbientQueue(
+        playlistData.payload.jspf.playlist.track.map(JSPFTrackToListen)
+      );
     }
-  }, [playlistData, dispatch]);
+  }, [playlistData, setAmbientQueue]);
 
   const handleGenreChange = (genreName: string) => {
-    navigate(`/explore/genre-explorer/${genreName}/`);
+    navigate(`/explore/genre-explorer/${encodeURIComponent(genreName)}/`);
   };
 
   const onClickDownload = React.useCallback(async () => {

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Outlet } from "react-router";
-import type { RouteObject } from "react-router";
+import type { LoaderFunctionArgs, RouteObject } from "react-router";
 import RouteLoader, { RouteQueryLoader } from "../../utils/Loader";
 
 const getExploreRoutes = (): RouteObject[] => {
@@ -124,14 +124,19 @@ const getExploreRoutes = (): RouteObject[] => {
           },
         },
         {
-          path: "genre-explorer/:genreMBID",
+          path: "genre-explorer/:genreName?",
           lazy: async () => {
             const GenreExplorer = await import(
               "../genre-explorer/GenreExplorer"
             );
             return { Component: GenreExplorer.default };
           },
-          loader: RouteQueryLoader("genre-explorer"),
+          loader: async (args: LoaderFunctionArgs) => {
+            if (!args.params.genreName) {
+              return null;
+            }
+            return RouteQueryLoader("genre-explorer")(args);
+          },
         },
       ],
     },

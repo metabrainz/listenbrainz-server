@@ -1,5 +1,5 @@
 type GenreExplorerParams = {
-  genreMBID: string;
+  genreName?: string;
 };
 
 type GenreNode = {
