@@ -40,6 +40,7 @@ class EraActivityUserStatsQueryEntity(UserStatsQueryProvider):
             LEFT JOIN release r ON l.release_mbid = r.release_mbid
             LEFT JOIN release_groups rg ON r.release_group_mbid = rg.release_group_mbid
             WHERE rg.first_release_date_year IS NOT NULL
+            AND rg.first_release_date_year >= 1800
             GROUP BY l.user_id, rg.first_release_date_year
         """
 

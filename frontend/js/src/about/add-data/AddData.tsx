@@ -36,6 +36,12 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://bocan.app/">Bòcan</a>
+          </em>
+          , a native macOS music player for people who own their music
+        </li>
+        <li>
+          <em>
             <a href="https://github.com/ciderapp">Cider</a>
           </em>
           , a cross-platform Apple Music player:{" "}
@@ -51,6 +57,13 @@ export default function AddData() {
           <a href="https://github.com/vjeranc/cmus-status-scrobbler">
             <code>cmus-status-scrobbler</code>
           </a>
+        </li>
+        <li>
+          <em>
+            <a href="https://github.com/digimezzo/dopamine">Dopamine</a>
+          </em>
+          , an audio player which tries to make organizing and listening to
+          music as simple and pretty as possible
         </li>
         <li>
           <em>
@@ -334,13 +347,20 @@ export default function AddData() {
           , a Mac menu bar utility for displaying the current track, submits
           Apple Music and Spotify listens
         </li>
+        <li>
+          <em>
+            <a href="https://unstream.stream/">Unstream</a>
+          </em>
+          , a MacOS app and browser extension that detects and submits your
+          listens, and shows the best ways to support your favorite artists
+        </li>
       </ul>
 
       <h4>Browser extensions</h4>
       <ul>
         <li>
           <em>
-            <a href="https://web-scrobbler.com/">Web Scrobbler</a>
+            <a href="https://webscrobbler.com/">Web Scrobbler</a>
           </em>
           , an extension for Firefox and Chrome/Chromium-based browsers
         </li>
@@ -369,6 +389,12 @@ export default function AddData() {
             </a>
           </em>
           , a scrobbling application for Android Devices
+        </li>
+        <li>
+          <em>
+            <a href="https://boomingmusic.org/">Booming Music</a>
+          </em>
+          , a clean and fast, and Material You music player for Android
         </li>
       </ul>
 

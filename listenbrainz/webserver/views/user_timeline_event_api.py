@@ -17,6 +17,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Iterable
 
@@ -794,69 +795,42 @@ def get_feed_events_for_user(
     max_ts: int,
     count: int,
 ) -> List[APITimelineEvent]:
-    """Gets all user events in the feed."""
+    """Gets all user events in the feed, fetching all event types concurrently."""
 
     users_for_events = followed_users + [user]
-    follow_events = get_follow_events(
-        users_for_events=users_for_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
+    min_ts = min_ts or 0
+    max_ts = max_ts or int(time.time())
 
-    recording_recommendation_events = get_recording_recommendation_events(
-        users_for_events=users_for_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
+    app = current_app._get_current_object()
 
-    personal_recording_recommendation_events = get_personal_recording_recommendation_events(
-        user=user,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
+    def in_context(fn, **kwargs):
+        def run():
+            with app.app_context():
+                return fn(**kwargs)
+        return run
 
-    thanks_events = get_thanks_events(
-        user=user,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
+    tasks = {
+        "follow": in_context(get_follow_events, users_for_events=users_for_events, min_ts=min_ts, max_ts=max_ts, count=count),
+        "rec_rec": in_context(get_recording_recommendation_events, users_for_events=users_for_events, min_ts=min_ts, max_ts=max_ts, count=count),
+        "personal": in_context(get_personal_recording_recommendation_events, user=user, min_ts=min_ts, max_ts=max_ts, count=count),
+        "thanks": in_context(get_thanks_events, user=user, min_ts=min_ts, max_ts=max_ts, count=count),
+        "cb_review": in_context(get_cb_review_events, users_for_events=users_for_events, min_ts=min_ts, max_ts=max_ts, count=count),
+        "notification": in_context(get_notification_events, user=user, min_ts=min_ts, max_ts=max_ts, count=count),
+        "pin": in_context(get_recording_pin_events, users_for_events=users_for_events, min_ts=min_ts, max_ts=max_ts, count=count),
+    }
 
-    cb_review_events = get_cb_review_events(
-        users_for_events=users_for_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    notification_events = get_notification_events(
-        user=user,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
-
-    recording_pin_events = get_recording_pin_events(
-        users_for_events=users_for_events,
-        min_ts=min_ts or 0,
-        max_ts=max_ts or int(time.time()),
-        count=count,
-    )
+    all_events = []
+    with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
+        futures = {executor.submit(fn): name for name, fn in tasks.items()}
+        for future in as_completed(futures):
+            name = futures[future]
+            try:
+                all_events.extend(future.result())
+            except Exception:
+                current_app.logger.error("Error fetching %s feed events:", name, exc_info=True)
 
     # TODO: add playlist event and like event
-    all_events = sorted(
-        follow_events
-        + recording_recommendation_events
-        + recording_pin_events
-        + cb_review_events
-        + notification_events
-        + personal_recording_recommendation_events
-        + thanks_events,
-        key=lambda event: -event.created,
-    )
+    all_events.sort(key=lambda event: -event.created)
 
     hidden_event_ids = db_user_timeline_event.get_hidden_timeline_event_ids(
         db_conn, user["id"], count

@@ -221,12 +221,12 @@
   "year_in_music.top_discoveries": {
     "name": "year_in_music.top_discoveries",
     "description": "Calculate the top discoveries playlists the given year",
-    "params": ["year"]
+    "params": ["year", "export_to_spotify"]
   },
   "year_in_music.top_missed_recordings": {
     "name": "year_in_music.top_missed_recordings",
     "description": "Calculate the top missed recordings playlists the given year",
-    "params": ["year"]
+    "params": ["year", "export_to_spotify"]
   },
   "year_in_music.top_stats": {
     "name": "year_in_music.top_stats",

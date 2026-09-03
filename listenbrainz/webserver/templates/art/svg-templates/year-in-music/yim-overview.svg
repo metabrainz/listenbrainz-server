@@ -5,6 +5,25 @@
   fill="none"
   xmlns="http://www.w3.org/2000/svg"
   xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>{{ year }} in Music overview for {{ user_name }}</title>
+  <desc>&#xA;
+  {{ "{:,}".format(artists_count) }} artists,
+  {{ "{:,}".format(albums_count) }} albums,
+  {{ "{:,}".format(songs_count) }} songs listened to.&#xA;
+  {%- if album_1 -%}
+  #1: {{ album_1['title'] }} by {{ album_1['artist'] }}
+  ({{ "{:,}".format(album_1['listen_count']) }} listens).&#xA;
+  {%- endif -%}
+  {%- if album_2 -%}
+  #2: {{ album_2['title'] }} by {{ album_2['artist'] }}
+  ({{ "{:,}".format(album_2['listen_count']) }} listens).&#xA;
+  {%- endif -%}
+  Top genres:
+  {%- for genre in genres -%}
+  {{ genre['genre'] }} {{ genre['genre_count_percent'] }}%
+  {%- if not loop.last %}, {% endif -%}
+  {%- endfor -%}.
+  </desc>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;900');
     text {

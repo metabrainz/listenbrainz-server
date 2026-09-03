@@ -8,7 +8,7 @@ from psycopg2.extras import execute_values
 from sqlalchemy import text
 
 from listenbrainz import db
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db, timescale
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +96,13 @@ def delete_listens():
     # select the maximum id in the table till now, we are only to process
     # deletes with row id earlier than this.
     select_max_id = "SELECT max(id) AS max_id FROM listen_delete_metadata"
+
+    select_pending_deletes = """
+        SELECT user_id, listened_at, recording_msid
+          FROM listen_delete_metadata
+         WHERE id <= :max_id
+           AND status = 'pending'
+    """
 
     # count deleted listens, checked created and update listen counts
     delete_listens_and_update_listen_counts = """
@@ -204,12 +211,17 @@ def delete_listens():
         result = connection.execute(text(select_max_id))
         row = result.fetchone()
 
-        if not row:
+        if not row or row.max_id is None:
             logger.info("No pending deletes")
             return
 
         max_id = row.max_id
         logger.info("Found max id in listen_delete_metadata table: %s", max_id)
+
+        # collected before the statements below mark them invalid, so target-only rows are
+        # cleaned up too. applied at the end of the block, see the comment there.
+        result = connection.execute(text(select_pending_deletes), {"max_id": max_id})
+        pending_deletes = [(row.user_id, row.listened_at, row.recording_msid) for row in result]
 
         logger.info("Deleting Listens and updating affected listens counts")
         connection.execute(text(delete_listens_and_update_listen_counts), {"max_id": max_id})
@@ -222,6 +234,13 @@ def delete_listens():
 
         logger.info("Cleanup listen delete metadata table")
         connection.execute(text(mark_invalid_rows_query), {"max_id": max_id})
+
+        # Applied last so this commit sits next to the timescale one instead of being separated
+        # by the heavy statements above. Applying it first instead leaves a listen re-submitted
+        # in between in the partitioned store only, which only replay-deletes repairs; this way
+        # it is in timescale only, which incremental repairs. Raising rolls back timescale too.
+        logger.info("Deleting listens from the partitioned database")
+        listens_db.delete(pending_deletes)
 
         logger.info("Completed deleting listens and updating affected metadata")
 

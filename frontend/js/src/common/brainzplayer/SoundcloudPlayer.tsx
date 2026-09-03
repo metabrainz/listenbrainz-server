@@ -177,10 +177,12 @@ export default class SoundcloudPlayer
     );
   };
 
+  pause = () => {
+    this.soundcloudPlayer?.pause();
+  };
+
   stop = () => {
-    if (!this.soundcloudPlayer?.isPaused) {
-      this.soundcloudPlayer?.pause();
-    }
+    this.pause();
   };
 
   onReady = (): void => {
@@ -326,7 +328,7 @@ export default class SoundcloudPlayer
     onInvalidateDataSource(this, errorMessage);
   };
 
-  playListen = (listen: Listen | JSPFTrack) => {
+  playListen = (listen: Listen | JSPFTrack, streamingUrl?: string) => {
     if (SoundcloudPlayer.isListenFromThisService(listen)) {
       const originURL = _get(
         listen,

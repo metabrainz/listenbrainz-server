@@ -32,7 +32,7 @@ from listenbrainz.db.dump_entry import get_latest_incremental_dump, add_dump_ent
     get_previous_incremental_dump
 from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.dumps.check import check_ftp_dump_ages
-from listenbrainz.dumps.cleanup import _cleanup_dumps
+from listenbrainz.dumps.cleanup import _cleanup_dumps, parse_keep_overrides, select_expired_dumps
 from listenbrainz.dumps.exporter import create_statistics_dump, dump_feedback_for_spark, dump_database, \
     create_sample_dump
 from listenbrainz.dumps.importer import import_postgres_dump
@@ -65,7 +65,7 @@ def create_mbcanonical(location, use_lb_conn):
     - If called with --use-mb-conn then all tables will be in the musicbrainz database connection.
     - The canonical release redirect table will always be in the musicbrainz database connection.
     """
-    app = create_app()
+    app = create_app(bypass_pgbouncer=True)
     with app.app_context():
         end_time = datetime.now()
         ts = end_time.strftime('%Y%m%d-%H%M%S')
@@ -101,8 +101,6 @@ def create_mbcanonical(location, use_lb_conn):
 @cli.command(name="create_full")
 @click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'),
               help="path to the directory where the dump should be made")
-@click.option('--location-private', '-lp', default=None,
-              help="path to the directory where the private dumps should be made")
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT,
               help="the number of threads to be used while compression")
 @click.option('--dump-id', type=int, default=None,
@@ -111,33 +109,19 @@ def create_mbcanonical(location, use_lb_conn):
               help="If True, make a listens dump")
 @click.option('--spark/--no-spark', 'do_spark_dump', type=bool, default=True,
               help="If True, make a spark listens dump")
-@click.option('--db/--no-db', 'do_db_dump', type=bool, default=True,
-              help="If True, make a public/private postgres dump")
-@click.option('--timescale/--no-timescale', 'do_timescale_dump', type=bool, default=True,
-              help="If True, make a public/private timescale dump")
 @click.option('--stats/--no-stats', 'do_stats_dump', type=bool, default=True,
               help="If True, make a couchdb stats dump")
 @click.option("--location-temp", "-lt", default=None,
               help="path to directory to use for creating necessary temporary files during dumps.")
-@click.option("--location-private-temp", "-lpt", default=None,
-              help="path to directory to use for creating necessary temporary files during private dumps.")
-def create_full(location: str, location_private: str, threads: int, dump_id: int, do_listen_dump: bool,
-                do_spark_dump: bool, do_db_dump: bool, do_timescale_dump: bool, do_stats_dump: bool,
-                location_temp: str = None, location_private_temp: str = None):
-    """ Create a ListenBrainz data dump which includes a private dump, a statistics dump
-        and a dump of the actual listens from the listenstore.
+def create_full(location: str, threads: int, dump_id: int, do_listen_dump: bool, do_spark_dump: bool,
+                do_stats_dump: bool, location_temp: str = None):
+    """ Create a ListenBrainz full data dump which includes a dump of the actual listens from the
+        listenstore, a spark formatted listens dump and a statistics dump.
+
+        The public and private database dumps are created separately by the create_db_dump command.
     """
-    app = create_app()
+    app = create_app(bypass_pgbouncer=True)
     with app.app_context():
-        if not location_private and (do_db_dump or do_timescale_dump):
-            current_app.logger.error("No location specified for creating private database and timescale dumps")
-            sys.exit(-1)
-        if location_private and os.path.normpath(location_private) == os.path.normpath(location):
-            current_app.logger.error("Location specified for public and private dumps cannot be same")
-            sys.exit(-1)
-        if location_private and PurePath(location_private).is_relative_to(PurePath(location)):
-            current_app.logger.error("Private dumps location cannot be a subdirectory of public dumps location")
-            sys.exit(-1)
         ls = DumpListenStore(app)
         if dump_id is None:
             latest_inc_dump = get_latest_incremental_dump()
@@ -158,28 +142,7 @@ def create_full(location: str, location_private: str, threads: int, dump_id: int
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
 
-        private_dump_path = None
-        if location_private:
-            private_dump_path = os.path.join(location_private, dump_name)
-            create_path(private_dump_path)
-
-        locations = {
-            "public": dump_path,
-            "private": private_dump_path,
-            "public_temp": location_temp,
-            "private_temp": location_private_temp,
-        }
-
         expected_num_dumps = 0
-        expected_num_private_dumps = 0
-        if do_db_dump:
-            dump_database("postgres", locations, end_time, threads)
-            expected_num_dumps += 1
-            expected_num_private_dumps += 1
-        if do_timescale_dump:
-            dump_database("timescale", locations, end_time, threads)
-            expected_num_dumps += 1
-            expected_num_private_dumps += 1
         if do_listen_dump:
             ls.dump_listens(
                 dump_path, dump_id=dump_id, start_time=start_time,
@@ -200,37 +163,131 @@ def create_full(location: str, location_private: str, threads: int, dump_id: int
 
         try:
             write_hashes(dump_path)
-            if private_dump_path:
-                write_hashes(private_dump_path)
         except IOError as e:
             current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
             sys.exit(-1)
 
         try:
-            # 6 types of dumps, archive, md5, sha256 for each
+            # archive, md5, sha256 for each expected dump archive
             expected_num_dump_files = expected_num_dumps * 3
-            expected_num_private_dumps = expected_num_private_dumps * 3
             if not sanity_check_dumps(dump_path, expected_num_dump_files):
-                return sys.exit(-1)
-            if private_dump_path and not sanity_check_dumps(private_dump_path, expected_num_private_dumps):
                 return sys.exit(-1)
         except OSError:
             sys.exit(-1)
 
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
-        if private_dump_path:
-            current_app.logger.info('Private dumps created and hashes written at %s' % private_dump_path)
 
         # Write the DUMP_ID file so that the FTP sync scripts can be more robust
         with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
             f.write("%s %s full\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
-        if private_dump_path:
-            # Write the DUMP_ID file so that the backup sync scripts can be more robust
-            with open(os.path.join(private_dump_path, "DUMP_ID.txt"), "w") as f:
-                f.write("%s %s full\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
 
-        if do_spark_dump:
-            ls.cleanup_listen_delete_metadata()
+        # TODO: reinstate the cleanup once the listens migration to the new listens database is
+        #  done. The listen_delete_metadata / deleted_user_listen_history rows are needed to replay
+        #  deletes against the new database until then.
+        # if do_spark_dump:
+        #     ls.cleanup_listen_delete_metadata()
+
+
+@cli.command(name="create_db_dump")
+@click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'),
+              help="path to the directory where the public dumps should be made")
+@click.option('--location-private', '-lp', default=None,
+              help="path to the directory where the private dumps should be made")
+@click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT,
+              help="the number of threads to be used while compression")
+@click.option('--dump-id', type=int, default=None,
+              help="the ID of the ListenBrainz data dump")
+@click.option('--postgres/--no-postgres', 'do_db_dump', type=bool, default=True,
+              help="If True, make a public/private postgres dump")
+@click.option('--timescale/--no-timescale', 'do_timescale_dump', type=bool, default=True,
+              help="If True, make a public/private timescale dump")
+@click.option("--location-temp", "-lt", default=None,
+              help="path to directory to use for creating necessary temporary files during dumps.")
+@click.option("--location-private-temp", "-lpt", default=None,
+              help="path to directory to use for creating necessary temporary files during private dumps.")
+def create_db_dump(location: str, location_private: str, threads: int, dump_id: int, do_db_dump: bool,
+                   do_timescale_dump: bool, location_temp: str = None, location_private_temp: str = None):
+    """ Create a dump of the public and private data in the postgres and timescale databases.
+
+        The listens, spark and statistics dumps are created separately by the create_full command.
+    """
+    app = create_app(bypass_pgbouncer=True)
+    with app.app_context():
+        if not do_db_dump and not do_timescale_dump:
+            current_app.logger.error("Nothing to dump, both postgres and timescale dumps are disabled")
+            sys.exit(-1)
+        if not location_private:
+            current_app.logger.error("No location specified for creating private database and timescale dumps")
+            sys.exit(-1)
+        if os.path.normpath(location_private) == os.path.normpath(location):
+            current_app.logger.error("Location specified for public and private dumps cannot be same")
+            sys.exit(-1)
+        if PurePath(location_private).is_relative_to(PurePath(location)):
+            current_app.logger.error("Private dumps location cannot be a subdirectory of public dumps location")
+            sys.exit(-1)
+
+        if dump_id is None:
+            end_time = datetime.now(tz=timezone.utc)
+            dump_id = add_dump_entry(end_time, "db")
+        else:
+            dump_entry = get_dump_entry(dump_id, "db")
+            if dump_entry is None:
+                current_app.logger.error("No db dump with ID %d found", dump_id)
+                sys.exit(-1)
+            end_time = dump_entry['created']
+
+        dump_name = f'listenbrainz-dump-{dump_id}-{end_time.strftime("%Y%m%d-%H%M%S")}-db'
+        dump_path = os.path.join(location, dump_name)
+        create_path(dump_path)
+
+        private_dump_path = os.path.join(location_private, dump_name)
+        create_path(private_dump_path)
+
+        locations = {
+            "public": dump_path,
+            "private": private_dump_path,
+            "public_temp": location_temp,
+            "private_temp": location_private_temp,
+        }
+
+        expected_num_dumps = 0
+        expected_num_private_dumps = 0
+        if do_db_dump:
+            dump_database("postgres", locations, end_time, threads)
+            expected_num_dumps += 1
+            expected_num_private_dumps += 1
+        if do_timescale_dump:
+            dump_database("timescale", locations, end_time, threads)
+            expected_num_dumps += 1
+            expected_num_private_dumps += 1
+
+        try:
+            write_hashes(dump_path)
+            write_hashes(private_dump_path)
+        except IOError as e:
+            current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
+            sys.exit(-1)
+
+        try:
+            # archive, md5, sha256 for each expected dump archive
+            expected_num_dump_files = expected_num_dumps * 3
+            expected_num_private_dump_files = expected_num_private_dumps * 3
+            if not sanity_check_dumps(dump_path, expected_num_dump_files):
+                return sys.exit(-1)
+            if not sanity_check_dumps(private_dump_path, expected_num_private_dump_files):
+                return sys.exit(-1)
+        except OSError:
+            sys.exit(-1)
+
+        current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
+        current_app.logger.info('Private dumps created and hashes written at %s' % private_dump_path)
+
+        # Write the DUMP_ID file so that the FTP sync scripts can be more robust
+        with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
+            f.write("%s %s db\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
+        # Write the DUMP_ID file so that the backup sync scripts can be more robust
+        with open(os.path.join(private_dump_path, "DUMP_ID.txt"), "w") as f:
+            f.write("%s %s db\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
 
 
 @cli.command(name="create_incremental")
@@ -238,7 +295,7 @@ def create_full(location: str, location_private: str, threads: int, dump_id: int
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
 @click.option('--dump-id', type=int, default=None)
 def create_incremental(location, threads, dump_id):
-    app = create_app()
+    app = create_app(bypass_pgbouncer=True)
     with app.app_context():
         ls = DumpListenStore(app)
         if dump_id is None:
@@ -293,7 +350,7 @@ def create_incremental(location, threads, dump_id):
               help="the number of threads to be used while compression")
 def create_feedback(location, threads):
     """ Create a spark formatted dump of user/recommendation feedback data."""
-    app = create_app()
+    app = create_app(bypass_pgbouncer=True)
     with app.app_context():
 
         end_time = datetime.now()
@@ -331,7 +388,7 @@ def create_feedback(location, threads):
               help="the number of threads to be used while compression")
 def create_sample(location, threads):
     """ Create a sample data dump."""
-    app = create_app()
+    app = create_app(bypass_pgbouncer=True)
     with app.app_context():
 
         end_time = datetime.now()
@@ -396,7 +453,7 @@ def import_dump(private_archive, private_timescale_archive,
         table in the public dump in order to satisfy foreign key constraints. Then it imports
         the listen dump.
     """
-    app = create_app()
+    app = create_app(bypass_pgbouncer=True)
     with app.app_context():
         if private_archive or private_timescale_archive or public_archive or public_timescale_archive:
             import_postgres_dump(private_archive, private_timescale_archive,
@@ -411,10 +468,40 @@ def import_dump(private_archive, private_timescale_archive,
             import_sample_data(sample_archive, threads)
 
 
+def _parse_keep_overrides(overrides):
+    try:
+        return parse_keep_overrides(overrides)
+    except ValueError as err:
+        raise click.BadParameter(str(err), param_hint='--keep')
+
+
+keep_option = click.option(
+    '--keep', 'keep_overrides', multiple=True, metavar='KIND=COUNT',
+    help='Keep COUNT dumps of kind KIND instead of the default, e.g. --keep full=0. May be repeated.'
+)
+
+
 @cli.command(name="delete_old_dumps")
 @click.argument('location', type=str)
-def delete_old_dumps(location):
-    _cleanup_dumps(location)
+@keep_option
+def delete_old_dumps(location, keep_overrides):
+    """ Delete the dumps in LOCATION which have fallen outside their kind's retention window. """
+    _cleanup_dumps(location, _parse_keep_overrides(keep_overrides))
+
+
+@cli.command(name="list_expired_dumps")
+@keep_option
+def list_expired_dumps(keep_overrides):
+    """ Read dump directory names on stdin and print the expired ones to stdout.
+
+    The retention policy lives here so that the shell scripts which own the rsync
+    credentials do not need to know it: they list the remote host, pipe the listing
+    through this command and delete whatever it names. Diagnostics are written to
+    stderr so that stdout stays machine readable.
+    """
+    dump_names = [line.strip() for line in sys.stdin if line.strip()]
+    for name in select_expired_dumps(dump_names, _parse_keep_overrides(keep_overrides)):
+        click.echo(name)
 
 
 @cli.command(name="check_dump_ages")

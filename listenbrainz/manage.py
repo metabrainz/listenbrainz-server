@@ -8,7 +8,7 @@ import sqlalchemy
 from listenbrainz import db
 from listenbrainz import webserver
 from listenbrainz.background import export
-from listenbrainz.db import timescale as ts, do_not_recommend
+from listenbrainz.db import listens as listens_db, timescale as ts, do_not_recommend
 
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
     update_user_listen_data as ts_update_user_listen_data, \
@@ -28,21 +28,6 @@ def cli():
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'admin', 'sql')
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'admin', 'timescale')
-
-
-@cli.command(name="run_websockets")
-@click.option("--host", "-h", default="0.0.0.0", show_default=True)
-@click.option("--port", "-p", default=7082, show_default=True)
-@click.option("--debug",
-              "-d",
-              is_flag=True,
-              help="Turns debugging mode on or off. If specified, overrides "
-              "'DEBUG' value in the config file.")
-def run_websockets(host, port, debug=True):
-    from listenbrainz.websockets.websockets import run_websockets
-    application = webserver.create_app()
-    with application.app_context():
-        run_websockets(application, host=host, port=port, debug=debug)
 
 
 @cli.command(name="init_db")
@@ -120,7 +105,78 @@ def init_db(force, create_db):
         print('PG: Creating indexes...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
-        print("Done!")\
+        print("Done!")
+
+
+# routing behaves the same with a handful of partitions, without the catalog churn
+TEST_LISTENS_PARTITION_COUNT = 4
+
+
+@cli.command(name="init_listens_db")
+@click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
+@click.option("--create-db", is_flag=True, help="Create the database and user.")
+@click.option("--partitions", type=click.IntRange(min=1), default=None,
+              help="number of hash partitions to create, defaults to the production count "
+                   "(the test count when running tests)")
+def init_listens_db(force, create_db, partitions):
+    """Initializes the user-partitioned listens database.
+
+    Creates the listen table, its hash partitions and its indexes.
+    """
+    import psycopg2
+    from listenbrainz import config
+    from listenbrainz.listenstore.migrate_listens import PARTITION_COUNT, create_indexes, create_schema
+
+    testing = "PYTHON_TESTS_RUNNING" in os.environ
+    if testing:
+        listens_connect = listens_db.create_test_listens_connect_strings()
+        admin_uri = listens_connect["DB_CONNECT_ADMIN"]
+        config.PYTHON_TESTS_RUNNING = True
+        if partitions is None:
+            partitions = TEST_LISTENS_PARTITION_COUNT
+    else:
+        listens_connect = {"DB_NAME": "listenbrainz_listens", "DB_USER": "listenbrainz_listens"}
+        admin_uri = getattr(config, "LISTENS_ADMIN_URI", None)
+    if partitions is None:
+        partitions = PARTITION_COUNT
+
+    def run_as_admin(uri, queries):
+        if not uri:
+            raise click.UsageError("LISTENS_ADMIN_URI is not set in the config")
+        connection = psycopg2.connect(uri)
+        connection.autocommit = True
+        try:
+            with connection.cursor() as cursor:
+                for query in queries:
+                    cursor.execute(query)
+        finally:
+            connection.close()
+
+    if force:
+        run_as_admin(admin_uri, [
+            f"DROP DATABASE IF EXISTS {listens_connect['DB_NAME']}",
+            f"DROP USER IF EXISTS {listens_connect['DB_USER']}",
+        ])
+
+    if create_db or force:
+        print("LISTENS: Creating user and a database...")
+        run_as_admin(admin_uri, [
+            f"CREATE USER {listens_connect['DB_USER']} NOCREATEDB NOSUPERUSER",
+            f"ALTER USER {listens_connect['DB_USER']} WITH PASSWORD 'listenbrainz_listens'",
+            f"CREATE DATABASE {listens_connect['DB_NAME']} WITH OWNER = {listens_connect['DB_USER']}"
+            " TEMPLATE template0 ENCODING = 'UNICODE'",
+        ])
+
+    application = webserver.create_app()
+    with application.app_context():
+        print("LISTENS: Creating table and partitions...")
+        create_schema(partitions)
+
+        print("LISTENS: Creating indexes...")
+        create_indexes()
+
+        print("Done!")
+
 
 @cli.command(name="update_db")
 @click.argument('filename', type=click.Path(exists=True, dir_okay=False))
@@ -246,6 +302,7 @@ def init_ts_db(force, create_db):
 
 @cli.command(name="update_user_emails")
 def update_user_emails():
+    """Backfill missing ListenBrainz emails from the MetaBrainz user database."""
     from listenbrainz.webserver.login import copy_files_from_mb_to_lb
     application = webserver.create_app()
     with application.app_context():
@@ -339,6 +396,18 @@ def notify_yim_users(year: int):
     with application.app_context():
         from listenbrainz.db import year_in_music
         year_in_music.notify_yim_users(webserver.db_conn, webserver.ts_conn, year)
+
+
+@cli.command(name="notify_spotify_refresh_token_expiry")
+def notify_spotify_refresh_token_expiry():
+    application = webserver.create_app()
+    with application.app_context():
+        from listenbrainz.domain.spotify import notify_refresh_token_expiry
+        stats = notify_refresh_token_expiry(webserver.db_conn)
+        click.echo(
+            "Spotify refresh-token expiry notifications: "
+            f"{stats['sent']} sent, {stats['skipped']} skipped, {stats['failed']} failed"
+        )
 
 
 @cli.command()

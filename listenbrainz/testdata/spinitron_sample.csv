@@ -1,0 +1,13 @@
+"Playlist Title","The Rack"
+"DJ Name","DJ Tom"
+"Playlist Start Date","Sep 5, 2024"
+"Playlist Start Time","1:00:00 AM"
+"Playlist End Time","3:00:00 AM"
+"Show Description","<p>An eclectic mix of art rock and avant-garde.</p>"
+
+Date-time,Artist,Song,Release,Label
+2024-09-05T03:03:07-0500,Microdisney,"People Just Want To Dream","Crooked Mile","UMC (Universal Music Catalogue)"
+2024-09-05T02:59:33-0500,Ganglians,Jungle,"Still Living","Souterrain Transmissions"
+2024-09-05T02:54:34-0500,Kramer,"Hello Music","The Guilt Trip","Shimmy Disc"
+INVALID-TIMESTAMP,SomeArtist,"Some Song","Some Release","Some Label"
+2024-09-05T02:50:00-0500,,,"",""

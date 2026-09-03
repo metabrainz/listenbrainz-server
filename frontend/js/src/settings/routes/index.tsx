@@ -75,7 +75,7 @@ const getSettingsRoutes = (): RouteObject[] => {
           path: "select_timezone/",
           lazy: {
             Component: async () => {
-              return (await import("../select_timezone/SelectTimezone")).SelectTimezoneWrapper;
+              return (await import("../select_timezone/SelectTimezone")).default;
             },
             loader: async () => {
               return RouteLoader;
@@ -86,7 +86,7 @@ const getSettingsRoutes = (): RouteObject[] => {
           path: "troi/",
           lazy: {
             Component: async () => {
-              return (await import("../troi/SelectTroiPreferences")).SelectTroiPreferencesWrapper;
+              return (await import("../troi/SelectTroiPreferences")).default;
             },
             loader: async () => {
               return RouteLoader;

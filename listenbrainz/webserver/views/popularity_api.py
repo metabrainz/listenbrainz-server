@@ -1,11 +1,11 @@
 from brainzutils.ratelimit import ratelimit
-from flask import Blueprint, request, current_app
+from flask import Blueprint, request, current_app, jsonify
 
 from listenbrainz.db import popularity
 from listenbrainz.webserver import ts_conn, db_conn
-from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.decorators import cache_public, crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
-from listenbrainz.webserver.views.api_tools import is_valid_uuid, MAX_ITEMS_PER_GET
+from listenbrainz.webserver.views.api_tools import is_valid_uuid, MAX_ITEMS_PER_GET, ensure_user_token_for_expensive_endpoint
 
 popularity_api_bp = Blueprint('popularity_api_v1', __name__)
 
@@ -13,6 +13,7 @@ popularity_api_bp = Blueprint('popularity_api_v1', __name__)
 @popularity_api_bp.get("/top-recordings-for-artist/<artist_mbid>")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=600)
 def top_recordings_for_artist(artist_mbid):
     """ Get the top recordings by listen count for a given artist. The response is of the following format:
 
@@ -47,6 +48,8 @@ def top_recordings_for_artist(artist_mbid):
     if not is_valid_uuid(artist_mbid):
         raise APIBadRequest(f"artist_mbid: '{artist_mbid}' is not a valid uuid")
 
+    ensure_user_token_for_expensive_endpoint()
+
     try:
         recordings = popularity.get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid)
         return recordings
@@ -58,6 +61,7 @@ def top_recordings_for_artist(artist_mbid):
 @popularity_api_bp.get("/top-release-groups-for-artist/<artist_mbid>")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=600)
 def top_release_groups_for_artist(artist_mbid):
     """ Get the top release groups by listen count for a given artist. The response is of the following format:
 
@@ -106,6 +110,8 @@ def top_release_groups_for_artist(artist_mbid):
     if not is_valid_uuid(artist_mbid):
         raise APIBadRequest(f"artist_mbid: '{artist_mbid}' is not a valid uuid")
 
+    ensure_user_token_for_expensive_endpoint()
+
     try:
         releases = popularity.get_top_release_groups_for_artist(db_conn, ts_conn, artist_mbid)
         return releases
@@ -119,7 +125,7 @@ def fetch_entity_popularity_counts(entity):
     entity_mbid_key = f"{entity}_mbids"
     try:
         entity_mbids = request.json[entity_mbid_key]
-    except KeyError:
+    except (KeyError, TypeError):
         raise APIBadRequest(f"{entity_mbid_key} JSON element must be present and contain a list of {entity_mbid_key}")
 
     for mbid in entity_mbids:

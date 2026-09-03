@@ -21,13 +21,13 @@ class Feedback(MsidMbidModel):
     created: datetime = None
 
     def to_api(self) -> dict:
-        fb = copy(self)
-        fb.user_id = fb.user_name
-        if fb.created is not None:
-            fb.created = int(fb.created.timestamp())
-        del fb.user_name
+        data = self.dict()
+        data["user_id"] = self.user_name
+        if self.created is not None:
+            data["created"] = int(self.created.timestamp())
+        data.pop("user_name", None)
+        return data
 
-        return fb.dict()
 
     @validator('score')
     def check_score_is_valid(cls, scr):

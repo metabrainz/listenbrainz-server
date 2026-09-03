@@ -13,7 +13,6 @@ from listenbrainz.db.background import _with_validation_counts
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed, crossdomain
 from brainzutils.ratelimit import ratelimit
-from brainzutils.musicbrainz_db import engine as mb_engine
 from listenbrainz.db import background
 from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIBadRequest, APIUnauthorized
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
@@ -43,7 +42,7 @@ def create_import_task():
     """ Add a request to upload files and create a background task for the importer """
     user = validate_auth_header(fetch_email=True, scopes=["listenbrainz:submit-listens"])
 
-    if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
+    if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
         raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
 
     if user["is_paused"]:
@@ -58,7 +57,7 @@ def create_import_task():
         raise APIBadRequest("No service selected!")
     service = service.lower()
 
-    allowed_services = ["spotify", "listenbrainz", "librefm", "maloja", "panoscrobbler", "audioscrobbler"]
+    allowed_services = ["spotify", "listenbrainz", "librefm", "maloja", "panoscrobbler", "audioscrobbler", "spinitron"]
     if service not in allowed_services:
         raise APIBadRequest("This service is not supported!")
 
@@ -88,6 +87,8 @@ def create_import_task():
         raise APIBadRequest("Only JSON files are allowed for this service!")
     if service == "audioscrobbler" and extension != ".log":
         raise APIBadRequest("Only .log files are allowed for this service!")
+    if service == "spinitron" and extension != ".csv":
+        raise APIBadRequest("Only csv files are allowed for this service!")
 
     # add a unique ID to the filename to avoid collisions
     saved_filename = str(uuid.uuid4()) + "-" + secure_filename(filename)

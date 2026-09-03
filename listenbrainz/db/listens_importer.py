@@ -8,29 +8,6 @@ import sqlalchemy
 import json
 
 
-def update_import_status(db_conn, user_id: int, service: ExternalServiceType, error: dict = None):
-    """ Add an error message to be shown to the user, thereby setting the user as inactive.
-
-    Args:
-        db_conn: database connection
-        user_id (int): the ListenBrainz row ID of the user
-        service (data.model.ExternalServiceType): service to add error for the user
-        error (dict): the error object with 'message' (str) and 'retry' (bool) fields
-    """
-    db_conn.execute(sqlalchemy.text("""
-        UPDATE listens_importer
-           SET last_updated = now()
-             , error = :error
-         WHERE user_id = :user_id
-           AND service = :service
-    """), {
-        "user_id": user_id,
-        "error": json.dumps(error) if error else None,
-        "service": service.value
-    })
-    db_conn.commit()
-
-
 def update_latest_listened_at(db_conn, user_id: int, service: ExternalServiceType, timestamp: Union[int, float]):
     """ Update the timestamp of the last listen imported for the user with
     specified LB user ID.
@@ -128,7 +105,14 @@ def get_active_users_to_process(db_conn, service, exclude_error=False) -> list[d
     return users
 
 
-def update_status(db_conn, user_id: int, service: ExternalServiceType, state: str, listens_count: int):
+def update_status(
+    db_conn,
+    user_id: int,
+    service: ExternalServiceType,
+    state: str,
+    listens_count: int,
+    error: dict = None
+):
     """
         Update status information for a user's import.
 
@@ -138,6 +122,7 @@ def update_status(db_conn, user_id: int, service: ExternalServiceType, state: st
         service: ExternalServiceType enum of the service
         state: Import status of that service
         listens_count: Number of listens imported
+        error: optional error dict with 'message' (str) and 'retry' (bool) fields
     """
 
     params = {
@@ -145,6 +130,7 @@ def update_status(db_conn, user_id: int, service: ExternalServiceType, state: st
             "state": state,
             "count": listens_count
         }),
+        "error": json.dumps(error) if error else None,
         "service": service.value,
         "user_id": user_id,
     }
@@ -152,6 +138,8 @@ def update_status(db_conn, user_id: int, service: ExternalServiceType, state: st
     query = """
         UPDATE listens_importer
            SET status = :status
+             , last_updated = now()
+             , error = :error
          WHERE user_id = :user_id
            AND service = :service
     """

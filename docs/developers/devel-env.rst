@@ -39,15 +39,15 @@ If you haven't already, follow the `docker installation instructions for your pl
 
 .. _docker installation instructions for your platform: https://docs.docker.com/get-docker/
 
-Register a MusicBrainz application
+Register a MetaBrainz application
 ----------------------------------
 
 Next, you need to register your application and get an OAuth token from
-MusicBrainz. This allows you to sign into your development
-environment with your MusicBrainz account.
+MetaBrainz. This allows you to sign into your development
+environment with your MetaBrainz account.
 
-To register, visit the `MusicBrainz applications page`_. There, look for the
-option to `register`_ your application. Fill out the form with the following data:
+To register, visit the `MetaBrainz applications page`_. There, look for the
+option to `create`_ your application. Fill out the form with the following data:
 
 - **Name**: any name that you want and will recognize (e.g.
   ``listenbrainz-server-devel``)
@@ -58,8 +58,8 @@ option to `register`_ your application. Fill out the form with the following dat
 After entering this information, you'll have an OAuth client ID and OAuth client
 secret. You'll use these for configuring ListenBrainz.
 
-.. _MusicBrainz applications page: https://musicbrainz.org/new-oauth2/client/list
-.. _register: https://musicbrainz.org/new-oauth2/client/create
+.. _MetaBrainz applications page: https://metabrainz.org/profile/applications
+.. _create: https://metabrainz.org/profile/applications/create
 Update config.py
 ^^^^^^^^^^^^^^^^
 
@@ -86,7 +86,7 @@ Next look for this section in the file.
 
 .. code-block:: yaml
 
-    # MusicBrainz OAuth
+    # MetaBrainz OAuth
     OAUTH_CLIENT_ID = "CLIENT_ID"
     OAUTH_CLIENT_SECRET = "CLIENT_SECRET"
 
@@ -176,6 +176,11 @@ securely storing Navidrome passwords. Generate a base64 encoded encryption key
 and add it to the configuration.
 
 To generate an encryption key, run the following Python command:
+
+.. note::
+    You need to have python installed, alongside the `cryptography`_ package
+
+.. _cryptography: https://pypi.org/project/cryptography/
 
 .. code-block:: bash
 

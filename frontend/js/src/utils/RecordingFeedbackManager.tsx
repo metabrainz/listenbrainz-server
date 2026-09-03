@@ -86,7 +86,6 @@ export default class RecordingFeedbackManager {
       // empty the queues
       this.mbidFetchQueue.length = 0;
       this.msidFetchQueue.length = 0;
-      // TODO: add retry mechanism ?
     }
   };
 

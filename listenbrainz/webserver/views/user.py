@@ -370,7 +370,6 @@ def year_in_music_get(user_name, year: int):
     if not user:
         og_meta_tags = None
     else:
-        current_app.config['SERVER_ROOT_URL'] = "https://test.listenbrainz.org"
         url = f'{current_app.config["SERVER_ROOT_URL"]}/user/{user_name}/year-in-music/{year}/'
         title = f"ListenBrainz {year} Year in Music for {user_name}"
         description = f'Check out the music review for {year} that @ListenBrainz created from my listening history!'

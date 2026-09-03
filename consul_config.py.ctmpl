@@ -12,6 +12,10 @@
     json.loads('''{{template "KEY" .}}''')
 {{- end -}}
 
+{{- define "KEY_OPTIONAL" -}}
+  {{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) "" }}
+{{- end -}}
+
 # Put everything after the defines otherwise the rendered config might eat up some newlines
 import os
 import json
@@ -28,9 +32,9 @@ REMEMBER_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
 REMEMBER_COOKIE_HTTPONLY = True
 
-{{if service "pgbouncer-master"}}
-{{with index (service "pgbouncer-master") 0}}
-SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
+{{if service "virtual.virtual-pgbouncer-master"}}
+{{with index (service "virtual.virtual-pgbouncer-master") 0}}
+SQLALCHEMY_DATABASE_URI = "postgresql://{{template "KEY" "listenbrainz_db_user"}}:{{template "KEY" "listenbrainz_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listenbrainz_db_name"}}"
 POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/postgres"
 SQLALCHEMY_METABRAINZ_URI = "postgresql://metabrainz:metabrainz@{{.Address}}:{{.Port}}/metabrainz_db"
 {{end}}
@@ -48,13 +52,13 @@ IS_MUSICBRAINZ_UP = {{template "KEY_JSON" "musicbrainz_up"}}
      call a template in an if statement or variable declaration */}}
 {{- $musicbrainz_up := (key (printf "docker-server-configs/LB/config.%s.json/musicbrainz_up" (env "DEPLOY_ENV"))) }}
 {{- if $musicbrainz_up | parseBool}}
-    {{if service "pgbouncer-slave"}}
-    {{with index (service "pgbouncer-slave") 0}}
+    {{if service "virtual.virtual-pgbouncer-slave"}}
+    {{with index (service "virtual.virtual-pgbouncer-slave") 0}}
 MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrainz_db'
 MB_DATABASE_MAPPING_URI = 'postgresql://mbid_mapper@{{.Address}}:{{.Port}}/musicbrainz_db'
     {{end}}
-    {{else if service "pgbouncer-master"}}
-    {{with index (service "pgbouncer-master") 0}}
+    {{else if service "virtual.virtual-pgbouncer-master"}}
+    {{with index (service "virtual.virtual-pgbouncer-master") 0}}
 MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrainz_db'
 MB_DATABASE_MAPPING_URI = 'postgresql://mbid_mapper@{{.Address}}:{{.Port}}/musicbrainz_db'
     {{end}}
@@ -76,25 +80,46 @@ MB_DATABASE_URI = ""
 {{- if $listenstore_up | parseBool}}
     {{- if service "timescale-listenbrainz"}}
     {{with index (service "timescale-listenbrainz") 0}}
-SQLALCHEMY_TIMESCALE_URI = """postgresql://listenbrainz_ts:{{template "KEY" "timescale_lb_password"}}@{{.Address}}:{{.Port}}/listenbrainz_ts"""
+SQLALCHEMY_TIMESCALE_URI = """postgresql://{{template "KEY" "timescale_lb_user"}}:{{template "KEY" "timescale_lb_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "timescale_db_name"}}"""
 TIMESCALE_ADMIN_URI = """postgresql://postgres:{{template "KEY" "timescale_admin_password"}}@{{.Address}}:{{.Port}}/postgres"""
-TIMESCALE_ADMIN_LB_URI = """postgresql://postgres:{{template "KEY" "timescale_admin_password"}}@{{.Address}}:{{.Port}}/listenbrainz_ts"""
-# for use in playlists admin view
-SQLALCHEMY_BINDS = {
-   'timescale': SQLALCHEMY_TIMESCALE_URI
-}
+TIMESCALE_ADMIN_LB_URI = """postgresql://postgres:{{template "KEY" "timescale_admin_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "timescale_db_name"}}"""
     {{end}}
     {{else}}
 SQLALCHEMY_TIMESCALE_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
 TIMESCALE_ADMIN_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
 TIMESCALE_ADMIN_LB_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
+    {{end}}
+    {{- if service "pgbouncer-listenbrainz"}}
+    {{with index (service "pgbouncer-listenbrainz") 0}}
+SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = """postgresql://{{template "KEY" "timescale_lb_user"}}:{{template "KEY" "timescale_lb_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "timescale_db_name"}}"""
+# for use in playlists admin view
+SQLALCHEMY_BINDS = {
+   'timescale': SQLALCHEMY_TIMESCALE_PGBOUNCER_URI
+}
+    {{end}}
+    {{else}}
+SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = "SERVICEDOESNOTEXIST_pgbouncer-listenbrainz"
 SQLALCHEMY_BINDS = {}
     {{end}}
 {{else}}
 SQLALCHEMY_TIMESCALE_URI = ""
 TIMESCALE_ADMIN_URI=""
 TIMESCALE_ADMIN_LB_URI=""
+SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = ""
 SQLALCHEMY_BINDS = {}
+{{end}}
+
+
+# New listens database (plain postgres, listens partitioned by user_id). During migration, new
+# listens and deletes are mirrored here while Timescale remains the read store.
+{{if service "listenbrainz-user-listenstore"}}
+{{with index (service "listenbrainz-user-listenstore") 0}}
+SQLALCHEMY_LISTENS_URI = """postgresql://{{template "KEY" "listens_db_user"}}:{{template "KEY" "listens_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listens_db_name"}}"""
+LISTENS_ADMIN_URI = """postgresql://postgres:{{template "KEY" "listens_admin_password"}}@{{.Address}}:{{.Port}}/postgres"""
+{{end}}
+{{else}}
+SQLALCHEMY_LISTENS_URI = "SERVICEDOESNOTEXIST_listenbrainz-user-listenstore"
+LISTENS_ADMIN_URI = "SERVICEDOESNOTEXIST_listenbrainz-user-listenstore"
 {{end}}
 
 
@@ -105,6 +130,17 @@ MBID_MAPPING_DATABASE_URI = "dbname=musicbrainz_json_dump user=musicbrainz host=
 {{else}}
 MBID_MAPPING_DATABASE_URI = ""
 {{end}}
+
+# SQLAlchemy connection pool sizing (per uwsgi worker). Each engine uses a
+# QueuePool sized for concurrent requests within a worker. Total connections
+# to the upstream = processes * (pool_size + max_overflow). Tune based on
+# pgbouncer max_client_conn and postgres max_connections for the target host.
+DB_POOL_SIZE = {{template "KEY" "db_pool_size"}}
+DB_POOL_MAX_OVERFLOW = {{template "KEY" "db_pool_max_overflow"}}
+TIMESCALE_POOL_SIZE = {{template "KEY" "timescale_pool_size"}}
+TIMESCALE_POOL_MAX_OVERFLOW = {{template "KEY" "timescale_pool_max_overflow"}}
+MEB_POOL_SIZE = {{template "KEY" "meb_pool_size"}}
+MEB_POOL_MAX_OVERFLOW = {{template "KEY" "meb_pool_max_overflow"}}
 
 {{if service "typesense-listenbrainz-new"}}
 {{with index (service "typesense-listenbrainz-new") 0}}
@@ -128,12 +164,13 @@ COUCHDB_PORT = 5984
 {{end}}
 COUCHDB_USER = "listenbrainz"
 COUCHDB_ADMIN_KEY = '''{{template "KEY" "couchdb_admin_key"}}'''
+COUCHDB_DATABASE_PREFIX = '''{{template "KEY_OPTIONAL" "couchdb_database_prefix"}}'''
 
 {{if service "listenbrainz-redis"}}
 {{with index (service "listenbrainz-redis") 0}}
 REDIS_HOST = "{{.Address}}"
 REDIS_PORT = {{.Port}}
-REDIS_NAMESPACE = "listenbrainz"
+REDIS_NAMESPACE = '''{{template "KEY" "redis_namespace"}}'''
 {{end}}
 {{else}}
 REDIS_HOST = "SERVICEDOESNOTEXIST_listenbrainz-redis"
@@ -142,16 +179,15 @@ REDIS_NAMESPACE = "SERVICEDOESNOTEXIST_listenbrainz-redis"
 {{end}}
 
 {{ $rabbitmq_key := (printf "docker-server-configs/LB/config.%s.json/rabbitmq_service" (env "DEPLOY_ENV")) }}
-{{- with $rabbitmq_service_name := keyOrDefault $rabbitmq_key "rabbitmq"}}
-{{- if service $rabbitmq_service_name}}
-{{- with index (service $rabbitmq_service_name) 0}}
-RABBITMQ_HOST = "{{.Address}}"
-RABBITMQ_PORT = {{.Port}}
-{{end}}
+{{- $rabbitmq_services := service "rabbitmq-listenbrainz"}}
+{{- if $rabbitmq_services}}
+RABBITMQ_HOSTS = [
+{{- range $rabbitmq_services}}
+    ("{{.Address}}", {{.Port}}),
+{{- end}}
+]
 {{else}}
-RABBITMQ_HOST = "SERVICEDOESNOTEXIST_rabbitmq"
-RABBITMQ_PORT = "SERVICEDOESNOTEXIST_rabbitmq"
-{{end}}
+RABBITMQ_HOSTS = [("SERVICEDOESNOTEXIST_rabbitmq-listenbrainz", "SERVICEDOESNOTEXIST_rabbitmq-listenbrainz")]
 {{end}}
 RABBITMQ_USERNAME = '''{{template "KEY" "rabbitmq_user"}}'''
 RABBITMQ_PASSWORD = '''{{template "KEY" "rabbitmq_pass"}}'''
@@ -182,12 +218,14 @@ EXTERNAL_SERVICES_APPLE_CACHE_QUEUE = '''{{template "KEY" "external_services_app
 EXTERNAL_SERVICES_SOUNDCLOUD_CACHE_QUEUE = '''{{template "KEY" "external_services_soundcloud_cache"}}'''
 EXTERNAL_SERVICES_IA_CACHE_QUEUE = '''{{template "KEY" "external_services_ia_cache"}}'''
 
-MUSICBRAINZ_BASE_URL = "https://musicbrainz.org"
+OAUTH_BASE_URL = '''{{template "KEY" "oauth/base_url"}}'''
 OAUTH_CLIENT_ID = '''{{template "KEY" "oauth/client_id"}}'''
 OAUTH_CLIENT_SECRET = '''{{template "KEY" "oauth/client_secret"}}'''
-OAUTH_AUTHORIZE_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/authorize"
-OAUTH_TOKEN_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/token"
-OAUTH_INTROSPECTION_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/introspect"
+OAUTH_WEBHOOK_SECRET = '''{{template "KEY" "oauth/webhook_secret"}}'''
+OAUTH_AUTHORIZE_URL = f"{OAUTH_BASE_URL}/oauth2/authorize"
+OAUTH_TOKEN_URL = f"{OAUTH_BASE_URL}/oauth2/token"
+OAUTH_INTROSPECTION_URL = f"{OAUTH_BASE_URL}/oauth2/introspect"
+OAUTH_USERINFO_URL = f"{OAUTH_BASE_URL}/oauth2/userinfo"
 
 LASTFM_API_URL = '''{{template "KEY" "lastfm_api_url"}}'''
 LASTFM_API_KEY = '''{{template "KEY" "lastfm_api_key"}}'''
@@ -200,7 +238,7 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 
 # MAX file size to be allowed for file uploads, default is infinite
 # Size is in bytes
-MAX_CONTENT_LENGTH = 25 * 1024 * 1024  # 25MB
+MAX_CONTENT_LENGTH = 200 * 1024 * 1024 + 10  # 200MB plus some buffer
 
 # Specify the upload folder where user uploaded files for import will be stored
 # The path must be absolute path
