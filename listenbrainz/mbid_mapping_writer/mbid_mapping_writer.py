@@ -1,10 +1,10 @@
 import json
 import time
 
-from kombu import Exchange, Queue, Connection, Consumer, Message
+from kombu import Exchange, Queue, Consumer, Message
 from kombu.mixins import ConsumerMixin
 
-from listenbrainz.utils import get_fallback_connection_name
+from listenbrainz.rabbitmq import create_rabbitmq_connection
 from listenbrainz.webserver import create_app
 from listenbrainz.mbid_mapping_writer.job_queue import MappingJobQueue
 
@@ -18,7 +18,7 @@ class MBIDMappingWriter(ConsumerMixin):
         self.app = app
         self.queue = None
         self.connection = None
-        self.unique_exchange = Exchange(self.app.config["UNIQUE_EXCHANGE"], "fanout", durable=False)
+        self.unique_exchange = Exchange(self.app.config["UNIQUE_EXCHANGE"], "fanout", durable=True)
         self.unique_queue = Queue(self.app.config["UNIQUE_QUEUE"], exchange=self.unique_exchange, durable=True)
 
     def get_consumers(self, _, channel):
@@ -30,14 +30,7 @@ class MBIDMappingWriter(ConsumerMixin):
         message.ack()
 
     def init_rabbitmq_connection(self):
-        self.connection = Connection(
-            hostname=self.app.config["RABBITMQ_HOST"],
-            userid=self.app.config["RABBITMQ_USERNAME"],
-            port=self.app.config["RABBITMQ_PORT"],
-            password=self.app.config["RABBITMQ_PASSWORD"],
-            virtual_host=self.app.config["RABBITMQ_VHOST"],
-            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
-        )
+        self.connection = create_rabbitmq_connection(self.app.config)
 
     def start(self):
         while True:
@@ -63,7 +56,21 @@ class MBIDMappingWriter(ConsumerMixin):
 
 
 if __name__ == "__main__":
-    app = create_app()
+    # Pool sizing for the writer process:
+    #   ts: 3 ThreadPoolExecutor workers (matcher) each hold up to 2 timescale
+    #       connections at peak (ts_conn for the surrounding work + a brief
+    #       raw_connection() inside recording_lookup_base) → 6, plus 1 main
+    #       job_queue thread + 1 occasional legacy loader ≈ 8 concurrent users.
+    #   db / meb: writer never touches them, keep the pool minimal so we don't
+    #       hold idle slots on pgbouncer-master for nothing.
+    app = create_app(
+        use_pool=True,
+        pool_size_overrides={
+            "db": (1, 1),
+            "ts": (6, 4),
+            "meb": (1, 1),
+        },
+    )
     with app.app_context():
         mw = MBIDMappingWriter(app)
         mw.start()

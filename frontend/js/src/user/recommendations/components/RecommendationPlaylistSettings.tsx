@@ -95,7 +95,7 @@ export default function RecommendationPlaylistSettings({
           >
             <FontAwesomeIcon
               icon={faPlayCircle}
-              title="Play this playlists"
+              title="Play this playlist"
               fixedWidth
             />
           </button>

@@ -80,18 +80,20 @@ class UserAdminView(AdminModelView):
         confirmation="Pause selected users?",
     )
     def pause_users(self, ids):
-        for user_id in ids:
-            # making sure user_id is valid
-            user = User.query.get(user_id)
-            if user:
-                try:
-                    db_user.pause(db_conn,user.id)
-                    db_conn.commit()
-                    flash(f"{user.musicbrainz_id} paused", "success")
-                except Exception as e:
-                    flash(f"Failed for {user.musicbrainz_id}: {str(e)}", "error")
-            else:
-                flash(f"{user_id} not found!", "error")
+        try:
+            users, notification_failed_users = db_user.pause(db_conn, ids)
+            flash(f"Paused {len(users)} users", "success")
+            if notification_failed_users:
+                flash(
+                    "Sent %d notifications. Failed to notify %d users: %s" % (
+                        len(users) - len(notification_failed_users),
+                        len(notification_failed_users),
+                        ", ".join(notification_failed_users),
+                    ),
+                    "warning",
+                )
+        except Exception as e:
+            flash(f"Failed to pause users: {str(e)}", "error")
         return redirect('/admin/user_model/')
 
 
@@ -102,16 +104,18 @@ class UserAdminView(AdminModelView):
         confirmation="Unpause selected users?",
     )
     def unpause_users(self, ids):
-        for user_id in ids:
-            # making sure user_id is valid
-            user = User.query.get(user_id)
-            if user:
-                try:
-                    db_user.unpause(db_conn,user.id)
-                    db_conn.commit()
-                    flash(f"{user.musicbrainz_id} unpaused", "success")
-                except Exception as e:
-                    flash(f"Failed for {user.musicbrainz_id}: {str(e)}", "error")
-            else:
-                flash(f"{user_id} not found!", "error")
+        try:
+            users, notification_failed_users = db_user.unpause(db_conn, ids)
+            flash(f"Unpaused {len(users)} users", "success")
+            if notification_failed_users:
+                flash(
+                    "Sent %d notifications. Failed to notify %d users: %s" % (
+                        len(users) - len(notification_failed_users),
+                        len(notification_failed_users),
+                        ", ".join(notification_failed_users),
+                    ),
+                    "warning",
+                )
+        except Exception as e:
+            flash(f"Failed to unpause users: {str(e)}", "error")
         return redirect('/admin/user_model/')

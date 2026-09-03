@@ -151,6 +151,47 @@ class DumpImporterJobTestCase(SparkNewTestCase):
         self.assertListEqual(expected_import_list, messages[0]["imported_dump"])
 
     @patch("ftplib.FTP")
+    @patch.object(ListenBrainzFtpDumpLoader, "get_latest_dump_id", return_value=206)
+    @patch.object(
+        ListenBrainzFtpDumpLoader,
+        "check_dump_type",
+        side_effect=[DumpType.FULL, DumpType.DB, DumpType.INCREMENTAL, DumpType.INCREMENTAL],
+    )
+    @patch("listenbrainz_spark.listens.dump.import_incremental_dump_to_hdfs",
+           side_effect=mock_import_dump_to_hdfs)
+    @patch("listenbrainz_spark.listens.dump.search_dump", return_value=False)
+    @patch("listenbrainz_spark.listens.dump.get_latest_full_dump")
+    def test_import_incremental_dump_handler_skips_full_and_db_dump_ids(
+        self,
+        mock_latest_full_dump,
+        _,
+        mock_import_dump,
+        mock_check_dump_type,
+        __,
+        ___,
+    ):
+        """Full and database dump IDs interleaved in the sequence are not errors."""
+        mock_latest_full_dump.return_value = {
+            "dump_id": 202,
+            "imported_at": datetime(2020, 9, 29),
+            "dump_type": DumpType.FULL,
+        }
+
+        messages = import_incremental_dump_handler(local=False)
+
+        mock_check_dump_type.assert_has_calls([call(203), call(204), call(205), call(206)])
+        mock_import_dump.assert_has_calls([
+            call(mock.ANY, dump_id=205),
+            call(mock.ANY, dump_id=206),
+        ])
+        self.assertEqual(mock_import_dump.call_count, 2)
+        self.assertListEqual([
+            "listenbrainz-spark-dump-205-incremental.tar",
+            "listenbrainz-spark-dump-206-incremental.tar",
+        ], messages[0]["imported_dump"])
+        self.assertListEqual([], messages[0]["errors"])
+
+    @patch("ftplib.FTP")
     @patch.object(ListenBrainzFtpDumpLoader, "get_latest_dump_id", return_value=210)
     @patch.object(ListenBrainzFtpDumpLoader, "check_dump_type", return_value=DumpType.INCREMENTAL)
     @patch("listenbrainz_spark.listens.dump.import_incremental_dump_to_hdfs", side_effect=mock_import_dump_to_hdfs_error)

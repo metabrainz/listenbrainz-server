@@ -1,12 +1,14 @@
+from contextlib import closing
 from uuid import UUID
 
-from flask import current_app
 from pydantic import BaseModel
 from werkzeug.exceptions import BadRequest
 import psycopg2
 import psycopg2.extras
 
 from datasethoster import Query
+
+from listenbrainz.db import timescale
 
 
 class BulkTagLookupInput(BaseModel):
@@ -40,27 +42,38 @@ class BulkTagLookup(Query):
 
     def fetch(self, params, source, offset=-1, count=-1):
 
-        mbids = tuple([psycopg2.extensions.adapt(p.recording_mbid) for p in params])
+        mbids = []
+        for p in params:
+            for mbid in p.recording_mbid.split(","):
+                mbid = mbid.strip()
+                if mbid:
+                    mbids.append(mbid)
+
         if len(mbids) > 1000:
             raise BadRequest("Cannot lookup more than 1,000 recordings at a time.")
 
-        with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as conn:
-            with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-                query = '''SELECT recording_mbid
-                                , tag
-                                , tag_count
-                                , percent
-                                , source
-                             FROM tags.lb_tag_radio
-                            WHERE recording_mbid IN %s'''
+        if not mbids:
+            return []
 
-                curs.execute(query, tuple([mbids]))
-                output = []
-                while True:
-                    row = curs.fetchone()
-                    if not row:
-                        break
+        with (
+            closing(timescale.engine.raw_connection()) as conn,
+            conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs
+        ):
+            query = '''SELECT recording_mbid
+                            , tag
+                            , tag_count
+                            , percent
+                            , source
+                         FROM tags.lb_tag_radio
+                        WHERE recording_mbid IN %s'''
 
-                    output.append(BulkTagLookupOutput(**row))
+            curs.execute(query, (tuple(mbids),))
+            output = []
+            while True:
+                row = curs.fetchone()
+                if not row:
+                    break
+
+                output.append(BulkTagLookupOutput(**row))
 
         return output
