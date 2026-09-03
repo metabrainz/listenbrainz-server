@@ -36,7 +36,7 @@ class ExportAPIIntegrationTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(data['status'], 'waiting')
 
         # 3. List all exports
-        response = self.client.get('/1/export/', headers=self.auth_headers)
+        response = self.client.get('/1/export/list', headers=self.auth_headers)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
         
@@ -56,7 +56,7 @@ class ExportAPIIntegrationTestCase(ListenAPIIntegrationTestCase):
         response = self.client.post('/1/export/')
         self.assertEqual(response.status_code, 401)
         
-        response = self.client.get('/1/export/')
+        response = self.client.get('/1/export/list')
         self.assertEqual(response.status_code, 401)
 
     def test_get_nonexistent_export(self):
