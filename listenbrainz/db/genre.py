@@ -8,11 +8,11 @@ TAG_HEIRARCHY_CACHE_KEY = "tag_hierarchy"
 
 # Entity types that have tags in MusicBrainz: (entity_type, tag_table, id_column, order_column, limit).
 # order_column: artist uses sort_name, others use name (per MusicBrainz EntityTag role).
-TAGGED_ENTITY_TYPES = [
+TAGGED_ENTITY_TYPES = (
     ("artist", "artist_tag", "artist", "sort_name", 12),
     ("release_group", "release_group_tag", "release_group", "name", 100),
     ("recording", "recording_tag", "recording", "name", 12),
-]
+)
 TAG_HEIRARCHY_CACHE_EXPIRY = 60 * 60 * 24 * 7  # 7 days
 
 
@@ -41,10 +41,8 @@ def load_genre_with_subgenres(mb_curs: DictCursor):
     return mb_curs.fetchall()
 
 
-def search_genres(mb_curs, query: str, limit: int = 50):
-    """Search MusicBrainz genre table by name (case-insensitive).
-    Orders by: exact match first, then prefix match, then contains; then by name.
-    Returns list of dicts with gid, name."""
+def search_genres(mb_curs: DictCursor, query: str, limit: int = 50) -> list[dict]:
+    """Search genres by name, prioritizing exact and prefix matches."""
     if not query or not query.strip():
         return []
     query_clean = query.strip()
@@ -97,12 +95,12 @@ def get_genre_by_name(mb_curs: DictCursor, name: str) -> dict | None:
     return dict(row) if row else None
 
 
-def load_genres_from_mbids(mb_curs: DictCursor, mbids: Iterable[str]):
-    """ Given a list of mbids return a map with mbid as key and the genre info as value. """
+def load_genres_from_mbids(mb_curs: DictCursor, mbids: Iterable[str]) -> dict[str, dict]:
+    """Return genre information keyed by MusicBrainz ID."""
 
     if not mbids:
         return {}
-    
+
     query = """
         SELECT
             g.name as name,
@@ -113,11 +111,11 @@ def load_genres_from_mbids(mb_curs: DictCursor, mbids: Iterable[str]):
         WHERE g.gid::text IN %s
     """
     mb_curs.execute(query, (tuple(mbids),))
-    return {row["genre_gid"]: row for row in mb_curs.fetchall()}
+    return {row["genre_gid"]: dict(row) for row in mb_curs.fetchall()}
 
 
 def get_tag_id_by_name(mb_curs: DictCursor, tag_name: str) -> int | None:
-    """Resolve a tag name (e.g. genre name) to MusicBrainz tag id. Returns None if not found."""
+    """Resolve a tag name to a MusicBrainz tag ID."""
     if not tag_name or not tag_name.strip():
         return None
     mb_curs.execute(
@@ -137,13 +135,7 @@ def find_tagged_entities(
     tag_name: str,
     limits: dict[str, int] | None = None,
 ) -> dict[str, Any]:
-    """
-    Fetch top tagged entities from MusicBrainz for a given tag name (e.g. genre name).
-    One query per entity type (artist, release_group, recording), ordered by tag count
-    descending then by name/sort_name, same pattern as MusicBrainz tag index.
-    Returns a dict keyed by entity type, each value: {"count": int, "entities": [{"mbid", "name", "tag_count"}, ...]}.
-    limits: optional dict of entity_type -> limit; defaults from TAGGED_ENTITY_TYPES.
-    """
+    """Return the highest-voted entities for a tag, grouped by entity type."""
     tag_id = get_tag_id_by_name(mb_curs, tag_name)
     if tag_id is None:
         return {
@@ -155,7 +147,6 @@ def find_tagged_entities(
     result: dict[str, Any] = {}
     for entity_type, tag_table, id_column, order_column, default_limit in TAGGED_ENTITY_TYPES:
         limit = override_limits.get(entity_type, default_limit)
-        # Table names in MusicBrainz: artist, release_group, recording
         query = f"""
             SELECT
                 e.gid::text AS mbid,
@@ -189,4 +180,3 @@ def find_tagged_entities(
             ],
         }
     return result
-

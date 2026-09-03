@@ -172,7 +172,7 @@ export default function TagComponent(props: {
   // Otherwise, link to the MusicBrainz tag page
   const tagLink =
     genreMbid != null ? (
-      <Link to={`/genre/${tag.tag}`} title={`${tag.tag} on ListenBrainz`}>
+      <Link to={`/genre/${genreMbid}/`} title={`${tag.tag} on ListenBrainz`}>
         {tag.tag}
       </Link>
     ) : (
