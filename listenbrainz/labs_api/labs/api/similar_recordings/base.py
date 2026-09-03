@@ -1,5 +1,6 @@
 import abc
 from abc import ABC
+from contextlib import closing
 from enum import Enum
 from brainzutils import cache
 from typing import Union, Optional
@@ -115,7 +116,7 @@ class BaseSimilarRecordingsViewerQuery(Query, ABC):
         count = count if count > 0 else 100
 
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-                psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+                closing(timescale.engine.raw_connection()) as ts_conn, \
                 mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
                 ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
             results = []

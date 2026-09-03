@@ -304,6 +304,8 @@ export default function ArtistPage(): JSX.Element {
       0
     ) > 4;
 
+  const hasSimilarArtists = similarArtists && similarArtists.artists.length > 0;
+
   return (
     <div id="entity-page" className="artist-page" role="main">
       <Helmet>
@@ -370,7 +372,7 @@ export default function ArtistPage(): JSX.Element {
                 className="btn btn-info"
                 to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
               >
-                <FontAwesomeIcon icon={faPlayCircle} /> Radio
+                <FontAwesomeIcon icon={faPlayCircle} /> Artist Radio
               </Link>
               <button
                 type="button"
@@ -559,22 +561,26 @@ export default function ArtistPage(): JSX.Element {
         </div>
       </div>
 
-      {similarArtists && similarArtists.artists.length > 0 ? (
-        <>
-          <h3 className="header-with-line">Similar Artists</h3>
-          <div className="similarity">
-            <SimilarArtistComponent
-              onArtistChange={onArtistChange}
-              artistGraphNodeInfo={artistGraphNodeInfo}
-              similarArtistsList={similarArtists.artists as ArtistNodeInfo[]}
-              topAlbumReleaseColor={similarArtists.topReleaseGroupColor}
-              topRecordingReleaseColor={similarArtists.topRecordingColor}
-              similarArtistsLimit={18}
-              graphParentElementRef={graphParentElementRef}
-            />
-          </div>
-        </>
-      ) : null}
+      <h3 className="header-with-line">Similar Artists</h3>
+      {!hasSimilarArtists && (
+        <p>
+          Similar artists will appear here once enough people have listened to
+          this artist on ListenBrainz.
+        </p>
+      )}
+      {hasSimilarArtists && (
+        <div className="similarity">
+          <SimilarArtistComponent
+            onArtistChange={onArtistChange}
+            artistGraphNodeInfo={artistGraphNodeInfo}
+            similarArtistsList={similarArtists.artists as ArtistNodeInfo[]}
+            topAlbumReleaseColor={similarArtists.topReleaseGroupColor}
+            topRecordingReleaseColor={similarArtists.topRecordingColor}
+            similarArtistsLimit={18}
+            graphParentElementRef={graphParentElementRef}
+          />
+        </div>
+      )}
       <div className="reviews">
         <h3 className="header-with-line">Reviews</h3>
         <div className="row">
