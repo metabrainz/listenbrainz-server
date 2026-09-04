@@ -3,7 +3,9 @@ import * as React from "react";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  FetchNextPageOptions,
   InfiniteData,
+  InfiniteQueryObserverResult,
   QueryClient,
   useInfiniteQuery,
   useQueryClient,
@@ -25,6 +27,7 @@ import {
   PLAYLIST_ARTIST_URI_PREFIX,
   PLAYLIST_TRACK_URI_PREFIX,
 } from "../playlists/utils";
+import ListenCard from "../common/listens/ListenCard";
 import { RouteQuery } from "../utils/Loader";
 import { generateAlbumArtThumbnailLink } from "../utils/utils";
 
@@ -37,9 +40,31 @@ import type {
 
 const DEFAULT_PAGE_SIZE = 100;
 const FLATTEN_TRACKS_PAGE_SIZE = 500;
+const MAX_FLATTEN_TRACKS = 5000;
 const DEFAULT_ESTIMATED_ROW_HEIGHT_PX = 110;
 const RELEASE_ROW_ESTIMATED_HEIGHT_PX = 72;
 const LOAD_MORE_THRESHOLD_ROWS = 20;
+
+type FetchNextCollectionPage = (
+  options?: FetchNextPageOptions
+) => Promise<
+  InfiniteQueryObserverResult<
+    InfiniteData<MusicBrainzCollectionDetailResponse, number>,
+    Error
+  >
+>;
+
+type CollectionViewProps = {
+  collectionMBID: string;
+  collection: MusicBrainzCollectionDetailResponse["collection"];
+  coverArt?: string | null;
+  itemCount: number;
+  data: InfiniteData<MusicBrainzCollectionDetailResponse, number> | undefined;
+  fetchNextPage: FetchNextCollectionPage;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+  isLoading: boolean;
+};
 
 function asJSPFTrack(track: MusicBrainzCollectionTrack): JSPFTrack {
   const recordingMBID = track.recording_mbid;
@@ -84,42 +109,95 @@ function asJSPFTrack(track: MusicBrainzCollectionTrack): JSPFTrack {
   return jspfTrack;
 }
 
-function ReleaseCollectionItemRow({
+function asReleaseListen(item: MusicBrainzCollectionReleaseItem): Listen {
+  return {
+    listened_at: 0,
+    track_metadata: {
+      track_name: "",
+      artist_name: item.artist_credit_name ?? "",
+      release_name: item.title ?? "",
+      additional_info: {
+        release_mbid: item.release_mbid,
+      },
+      mbid_mapping: {
+        artist_mbids: [],
+        recording_mbid: "",
+        release_mbid: item.release_mbid,
+        caa_id: item.caa_id ?? undefined,
+        caa_release_mbid: item.caa_release_mbid ?? undefined,
+      },
+    },
+  };
+}
+
+function ReleaseCollectionItemCard({
   item,
 }: {
   item: MusicBrainzCollectionReleaseItem;
 }) {
+  const navigate = useNavigate();
   const releaseUrl = `/release/${item.release_mbid}/`;
   const coverArtSrc =
     item.caa_id != null && item.caa_release_mbid
       ? generateAlbumArtThumbnailLink(item.caa_id, item.caa_release_mbid)
       : "/static/img/cover-art-placeholder.jpg";
 
+  const openReleasePage = () => {
+    navigate(releaseUrl);
+  };
+
   return (
-    <div className="card listen-card">
-      <div className="card-body">
-        <div className="listen-thumbnail">
-          <img
-            src={coverArtSrc}
-            alt={item.title ?? "Release cover art"}
-            width={64}
-            height={64}
-            loading="lazy"
-            onError={(event) => {
-              // eslint-disable-next-line no-param-reassign
-              event.currentTarget.src = "/static/img/cover-art-placeholder.jpg";
-            }}
-          />
-        </div>
-        <div className="listen-content">
-          <div className="title-duration">
-            <a href={releaseUrl}>{item.title ?? "Unknown release"}</a>
+    <div
+      role="link"
+      tabIndex={0}
+      className="collection-release-card-wrap"
+      onClick={openReleasePage}
+      onKeyDown={(event: React.KeyboardEvent) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openReleasePage();
+        }
+      }}
+    >
+      <ListenCard
+        className="playlist-item-card"
+        listen={asReleaseListen(item)}
+        showTimestamp={false}
+        showUsername={false}
+        compact
+        disablePlayback
+        customThumbnail={
+          <div className="listen-thumbnail">
+            <img
+              src={coverArtSrc}
+              alt={item.title ?? "Release cover art"}
+              width={56}
+              height={56}
+              loading="lazy"
+              onError={(event) => {
+                // eslint-disable-next-line no-param-reassign
+                event.currentTarget.src =
+                  "/static/img/cover-art-placeholder.jpg";
+              }}
+            />
           </div>
-          <div className="text-muted">
-            {item.artist_credit_name ?? "Unknown artist"}
-          </div>
-        </div>
-      </div>
+        }
+        listenDetails={
+          <>
+            <div title={item.title ?? "Unknown release"} className="ellipsis">
+              {item.title ?? "Unknown release"}
+            </div>
+            <div
+              className="small text-muted ellipsis"
+              title={item.artist_credit_name ?? "Unknown artist"}
+            >
+              {item.artist_credit_name ?? "Unknown artist"}
+            </div>
+          </>
+        }
+        // eslint-disable-next-line react/jsx-no-useless-fragment
+        feedbackComponent={<></>}
+      />
     </div>
   );
 }
@@ -140,8 +218,9 @@ async function fetchAllFlattenedCollectionTracks(
 ): Promise<JSPFTrack[]> {
   const allTracks: JSPFTrack[] = [];
   let offset = 0;
+  let totalCount: number | undefined;
 
-  while (true) {
+  while (allTracks.length < MAX_FLATTEN_TRACKS) {
     // eslint-disable-next-line no-await-in-loop
     const page = (await queryClient.fetchQuery(
       RouteQuery(
@@ -149,91 +228,135 @@ async function fetchAllFlattenedCollectionTracks(
         `/collection/${collectionMBID}/?count=${FLATTEN_TRACKS_PAGE_SIZE}&offset=${offset}&flatten=tracks`
       )
     )) as MusicBrainzCollectionDetailResponse;
+
+    if (totalCount === undefined) {
+      totalCount = page.track_count;
+      if (totalCount > MAX_FLATTEN_TRACKS) {
+        throw new Error(
+          `This collection is too large to save as a playlist (${totalCount} tracks; the limit is ${MAX_FLATTEN_TRACKS}).`
+        );
+      }
+    }
+
     const pageTracks = (page.tracks ?? []).map(asJSPFTrack);
-    allTracks.push(...pageTracks);
-    const nextOffset = offset + pageTracks.length;
-    if (nextOffset >= page.track_count || pageTracks.length === 0) {
+    if (pageTracks.length === 0) {
       break;
     }
-    offset = nextOffset;
+    allTracks.push(...pageTracks);
+    offset += pageTracks.length;
+    if (offset >= totalCount) {
+      break;
+    }
   }
 
   return allTracks;
 }
 
-export default function CollectionPage() {
-  const { currentUser, APIService } = React.useContext(GlobalAppContext);
-  const { collectionMBID } = useParams();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const loaderData = useLoaderData() as MusicBrainzCollectionDetailResponse;
+function CollectionShell({
+  title,
+  mbUrl,
+  coverArt,
+  visibilityLabel,
+  countLabel,
+  sectionTitle,
+  sectionAction,
+  saveButton,
+  isLoading,
+  children,
+}: {
+  title: string;
+  mbUrl?: string;
+  coverArt?: string | null;
+  visibilityLabel: React.ReactNode;
+  countLabel: string;
+  sectionTitle: string;
+  sectionAction?: React.ReactNode;
+  saveButton?: React.ReactNode;
+  isLoading: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div role="main">
+      <Helmet>
+        <title>{title} — ListenBrainz</title>
+        <meta property="og:title" content={`${title} — ListenBrainz`} />
+        {mbUrl && <meta property="og:url" content={mbUrl} />}
+      </Helmet>
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-  } = useInfiniteQuery<
-    MusicBrainzCollectionDetailResponse,
-    Error,
-    InfiniteData<MusicBrainzCollectionDetailResponse, number>,
-    (string | undefined)[],
-    number
-  >({
-    queryKey: ["collection", collectionMBID],
-    queryFn: ({ pageParam = 0 }) =>
-      queryClient.fetchQuery(
-        RouteQuery(
-          ["collection", collectionMBID, pageParam],
-          `/collection/${collectionMBID}/?count=${DEFAULT_PAGE_SIZE}&offset=${pageParam}`
-        )
-      ),
-    getNextPageParam: (lastPage, pages) => {
-      const loaded = getLoadedCount(pages, lastPage.collection.entity_type);
-      return loaded < lastPage.track_count ? loaded : undefined;
-    },
-    initialPageParam: 0,
-    initialData: {
-      pages: [loaderData],
-      pageParams: [0],
-    },
-  });
+      <div className="entity-page-header flex">
+        <div
+          className="cover-art"
+          title={title}
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(
+              coverArt ??
+                "<img src='/static/img/cover-art-placeholder.jpg' alt='Collection cover' />"
+            ),
+          }}
+        />
+        <div className="playlist-info">
+          <h1>{title}</h1>
+          <div className="details h4">
+            <div>
+              {visibilityLabel}
+              {mbUrl && (
+                <>
+                  {" "}
+                  ·{" "}
+                  <a href={mbUrl} target="_blank" rel="noreferrer">
+                    View on MusicBrainz
+                  </a>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="details">
+            <div>{countLabel}</div>
+          </div>
+        </div>
+        <div className="right-side">{saveButton}</div>
+      </div>
 
-  const firstPage = data?.pages[0];
-  const collection = firstPage?.collection;
-  const coverArt = firstPage?.cover_art;
-  const itemCount = firstPage?.track_count ?? 0;
-  const entityType: MusicBrainzCollectionEntityType | undefined =
-    collection?.entity_type;
-  const isRecordingCollection = entityType === "recording";
-  const isReleaseCollection = entityType === "release";
-  const itemLabel = isReleaseCollection ? "release" : "track";
-  const itemsLabel = isReleaseCollection ? "releases" : "tracks";
-  const sectionTitle = isReleaseCollection ? "Releases" : "Tracks";
-
-  const tracks = React.useMemo(
-    () =>
-      (data?.pages ?? []).flatMap((page) => page.tracks ?? []).map(asJSPFTrack),
-    [data]
+      <div className="col-md-8 offset-md-2">
+        <div className="header">
+          <h3 className="header-with-line">
+            {sectionTitle}
+            {sectionAction}
+          </h3>
+        </div>
+        <Loader isLoading={isLoading} />
+        {children}
+      </div>
+    </div>
   );
-  const releases = React.useMemo(
-    () => (data?.pages ?? []).flatMap((page) => page.items ?? []),
-    [data]
-  );
-  const loadedRowCount = isReleaseCollection ? releases.length : tracks.length;
+}
 
-  const [isSaving, setIsSaving] = React.useState(false);
-  const [isPlayingAll, setIsPlayingAll] = React.useState(false);
-
+function VirtualizedCollectionList<T>({
+  items,
+  estimatedRowHeightPx,
+  hasNextPage,
+  isFetchingNextPage,
+  isLoading,
+  fetchNextPage,
+  emptyMessage,
+  renderRow,
+}: {
+  items: T[];
+  estimatedRowHeightPx: number;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+  isLoading: boolean;
+  fetchNextPage: FetchNextCollectionPage;
+  emptyMessage: string;
+  renderRow: (item: T, index: number) => React.ReactNode;
+}) {
+  const loadedRowCount = items.length;
   const hasMore = Boolean(hasNextPage);
   const totalRows = loadedRowCount + (hasMore ? 1 : 0);
   const rowVirtualizer = useWindowVirtualizer({
     count: totalRows,
-    estimateSize: () =>
-      isReleaseCollection
-        ? RELEASE_ROW_ESTIMATED_HEIGHT_PX
-        : DEFAULT_ESTIMATED_ROW_HEIGHT_PX,
+    estimateSize: () => estimatedRowHeightPx,
     measureElement: (el) => el.getBoundingClientRect().height,
     overscan: 6,
   });
@@ -259,6 +382,180 @@ export default function CollectionPage() {
     virtualItems,
   ]);
 
+  if (!isLoading && loadedRowCount === 0) {
+    return (
+      <div className="lead text-center">
+        <p>{emptyMessage}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        height: rowVirtualizer.getTotalSize(),
+        position: "relative",
+        width: "100%",
+      }}
+    >
+      {virtualItems.map((virtualRow: VirtualItem) => {
+        const isLoaderRow = virtualRow.index >= loadedRowCount;
+        const item = items[virtualRow.index];
+        let rowContent: React.ReactNode = null;
+        if (isLoaderRow) {
+          rowContent = <Loader isLoading={isFetchingNextPage} />;
+        } else if (item) {
+          rowContent = renderRow(item, virtualRow.index);
+        }
+        return (
+          <div
+            key={String(virtualRow.key)}
+            ref={rowVirtualizer.measureElement}
+            data-index={virtualRow.index}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              transform: `translateY(${virtualRow.start}px)`,
+            }}
+          >
+            {rowContent}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function useSaveCollectionAsPlaylist(
+  collection: MusicBrainzCollectionDetailResponse["collection"],
+  mbUrl?: string
+) {
+  const { currentUser, APIService } = React.useContext(GlobalAppContext);
+  const navigate = useNavigate();
+  const [isSaving, setIsSaving] = React.useState(false);
+
+  const saveTracks = React.useCallback(
+    async (getTracks: () => Promise<JSPFTrack[]>) => {
+      if (!currentUser?.auth_token) {
+        toast.error(
+          <ToastMsg
+            title="Error"
+            message="You must be logged in for this operation"
+          />,
+          { toastId: "auth-error" }
+        );
+        return;
+      }
+      if (isSaving) {
+        return;
+      }
+
+      setIsSaving(true);
+      try {
+        const allTracks = await getTracks();
+        if (allTracks.length === 0) {
+          toast.error(
+            <ToastMsg
+              title="Could not create playlist"
+              message="No tracks found in this collection"
+            />,
+            { toastId: "mb-collection-import-empty" }
+          );
+          return;
+        }
+
+        const publicFlag = Boolean(collection.public);
+        const playlistTitle = collection.name;
+        const playlistObject: JSPFObject = {
+          playlist: {
+            creator: currentUser.name,
+            identifier: "",
+            date: "",
+            track: allTracks,
+            title: playlistTitle,
+            annotation: mbUrl
+              ? `Imported from MusicBrainz collection: ${mbUrl}`
+              : "Imported from MusicBrainz collection",
+            extension: {
+              [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
+                public: publicFlag,
+                collaborators: [],
+              },
+            },
+          },
+        };
+
+        const newPlaylistId = await APIService.createPlaylist(
+          currentUser.auth_token,
+          playlistObject
+        );
+
+        toast.success(
+          <ToastMsg
+            title="Created playlist"
+            message={
+              <>
+                Created new {publicFlag ? "public" : "private"} playlist{" "}
+                <Link to={`/playlist/${newPlaylistId}/`}>{playlistTitle}</Link>
+              </>
+            }
+          />,
+          { toastId: "mb-collection-import-success" }
+        );
+        navigate(`/playlist/${newPlaylistId}/`);
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="Could not create playlist"
+            message={error?.message ?? error}
+          />,
+          { toastId: "mb-collection-import-error" }
+        );
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [
+      APIService,
+      collection,
+      currentUser?.auth_token,
+      currentUser?.name,
+      isSaving,
+      mbUrl,
+      navigate,
+    ]
+  );
+
+  return { isSaving, saveTracks };
+}
+
+function RecordingCollectionView({
+  collectionMBID,
+  collection,
+  coverArt,
+  itemCount,
+  data,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+  isLoading,
+}: CollectionViewProps) {
+  const queryClient = useQueryClient();
+  const [isPlayingAll, setIsPlayingAll] = React.useState(false);
+  const mbUrl = `https://musicbrainz.org/collection/${collectionMBID}`;
+  const { isSaving, saveTracks } = useSaveCollectionAsPlaylist(
+    collection,
+    mbUrl
+  );
+
+  const tracks = React.useMemo(
+    () =>
+      (data?.pages ?? []).flatMap((page) => page.tracks ?? []).map(asJSPFTrack),
+    [data]
+  );
+
   const loadAllRemainingPages = React.useCallback(async () => {
     let hasMorePages = true;
     while (hasMorePages) {
@@ -268,16 +565,8 @@ export default function CollectionPage() {
     }
   }, [fetchNextPage]);
 
-  const title = collection?.name ?? "MusicBrainz collection";
-  const mbUrl = collectionMBID
-    ? `https://musicbrainz.org/collection/${collectionMBID}`
-    : undefined;
-  const collectionTypeLabel = isReleaseCollection
-    ? "release collection"
-    : "collection";
-
   const playAllTracks = React.useCallback(async () => {
-    if (!isRecordingCollection || !collectionMBID || isPlayingAll) {
+    if (isPlayingAll) {
       return;
     }
 
@@ -320,285 +609,243 @@ export default function CollectionPage() {
     collectionMBID,
     hasNextPage,
     isPlayingAll,
-    isRecordingCollection,
     loadAllRemainingPages,
     queryClient,
   ]);
 
   const saveAsPlaylist = React.useCallback(async () => {
-    if (!isRecordingCollection && !isReleaseCollection) {
+    if (tracks.length === 0) {
       return;
     }
-    if (!collectionMBID) {
-      return;
-    }
-    if (!currentUser?.auth_token) {
-      toast.error(
-        <ToastMsg
-          title="Error"
-          message="You must be logged in for this operation"
-        />,
-        { toastId: "auth-error" }
-      );
-      return;
-    }
-    if (!collection) {
-      toast.error(
-        <ToastMsg title="Error" message="Collection is not loaded yet" />,
-        { toastId: "collection-not-loaded" }
-      );
-      return;
-    }
-    if (isSaving) {
-      return;
-    }
-    if (isRecordingCollection && tracks.length === 0) {
-      return;
-    }
-    if (isReleaseCollection && releases.length === 0) {
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      let allTracks: JSPFTrack[] = [];
-      if (isReleaseCollection) {
-        allTracks = await fetchAllFlattenedCollectionTracks(
-          queryClient,
-          collectionMBID
-        );
-      } else {
-        if (hasNextPage) {
-          await loadAllRemainingPages();
-        }
-        allTracks =
-          queryClient
-            .getQueryData<
-              InfiniteData<MusicBrainzCollectionDetailResponse, number>
-            >(["collection", collectionMBID])
-            ?.pages.flatMap((page) => page.tracks ?? [])
-            .map(asJSPFTrack) ?? [];
+    await saveTracks(async () => {
+      if (hasNextPage) {
+        await loadAllRemainingPages();
       }
-
-      if (allTracks.length === 0) {
-        toast.error(
-          <ToastMsg
-            title="Could not create playlist"
-            message="No tracks found in this collection"
-          />,
-          { toastId: "mb-collection-import-empty" }
-        );
-        return;
-      }
-
-      const publicFlag = Boolean(collection.public);
-      const playlistTitle = collection.name;
-
-      const playlistObject: JSPFObject = {
-        playlist: {
-          creator: currentUser.name,
-          identifier: "",
-          date: "",
-          track: allTracks,
-          title: playlistTitle,
-          annotation: mbUrl
-            ? `Imported from MusicBrainz collection: ${mbUrl}`
-            : "Imported from MusicBrainz collection",
-          extension: {
-            [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
-              public: publicFlag,
-              collaborators: [],
-            },
-          },
-        },
-      };
-
-      const newPlaylistId = await APIService.createPlaylist(
-        currentUser.auth_token,
-        playlistObject
+      return (
+        queryClient
+          .getQueryData<
+            InfiniteData<MusicBrainzCollectionDetailResponse, number>
+          >(["collection", collectionMBID])
+          ?.pages.flatMap((page) => page.tracks ?? [])
+          .map(asJSPFTrack) ?? []
       );
-
-      toast.success(
-        <ToastMsg
-          title="Created playlist"
-          message={
-            <>
-              Created new {publicFlag ? "public" : "private"} playlist{" "}
-              <Link to={`/playlist/${newPlaylistId}/`}>{playlistTitle}</Link>
-            </>
-          }
-        />,
-        { toastId: "mb-collection-import-success" }
-      );
-      navigate(`/playlist/${newPlaylistId}/`);
-    } catch (error) {
-      toast.error(
-        <ToastMsg
-          title="Could not create playlist"
-          message={error?.message ?? error}
-        />,
-        { toastId: "mb-collection-import-error" }
-      );
-    } finally {
-      setIsSaving(false);
-    }
+    });
   }, [
-    APIService,
-    collection,
     collectionMBID,
-    currentUser?.auth_token,
-    currentUser?.name,
     hasNextPage,
-    isRecordingCollection,
-    isReleaseCollection,
-    isSaving,
     loadAllRemainingPages,
-    mbUrl,
-    navigate,
     queryClient,
-    releases.length,
+    saveTracks,
     tracks.length,
   ]);
 
   return (
-    <div role="main">
-      <Helmet>
-        <title>{title} — ListenBrainz</title>
-        <meta property="og:title" content={`${title} — ListenBrainz`} />
-        {mbUrl && <meta property="og:url" content={mbUrl} />}
-      </Helmet>
-
-      <div className="entity-page-header flex">
-        <div
-          className="cover-art"
-          title={title}
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(
-              coverArt ??
-                "<img src='/static/img/cover-art-placeholder.jpg' alt='Collection cover' />"
-            ),
-          }}
-        />
-        <div className="playlist-info">
-          <h1>{title}</h1>
-          <div className="details h4">
-            <div>
-              {collection ? (
-                <>
-                  {collection.public ? "Public" : "Private"} MusicBrainz{" "}
-                  {collectionTypeLabel}
-                </>
-              ) : (
-                <>MusicBrainz collection</>
-              )}
-              {mbUrl && (
-                <>
-                  {" "}
-                  ·{" "}
-                  <a href={mbUrl} target="_blank" rel="noreferrer">
-                    View on MusicBrainz
-                  </a>
-                </>
-              )}
-            </div>
-          </div>
-          <div className="details">
-            <div>
-              {itemCount} {itemCount === 1 ? itemLabel : itemsLabel}
-            </div>
-          </div>
-        </div>
-        <div className="right-side">
-          {(isRecordingCollection || isReleaseCollection) && (
-            <button
-              type="button"
-              className="btn btn-info"
-              disabled={
-                isLoading ||
-                isSaving ||
-                (isRecordingCollection && tracks.length === 0) ||
-                (isReleaseCollection && releases.length === 0)
-              }
-              onClick={saveAsPlaylist}
-            >
-              {isSaving ? "Saving..." : "Save as playlist"}
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="col-md-8 offset-md-2">
-        <div className="header">
-          <h3 className="header-with-line">
-            {sectionTitle}
-            {isRecordingCollection && Boolean(itemCount) && (
-              <button
-                type="button"
-                className="btn btn-info btn-rounded play-tracks-button"
-                title="Play all tracks"
-                disabled={isLoading || isPlayingAll}
-                onClick={playAllTracks}
-              >
-                <FontAwesomeIcon icon={faPlayCircle} fixedWidth />{" "}
-                {isPlayingAll ? "Loading..." : "Play all"}
-              </button>
-            )}
-          </h3>
-        </div>
-
-        <Loader isLoading={isLoading} />
-
-        {!isLoading && loadedRowCount === 0 ? (
-          <div className="lead text-center">
-            <p>No {itemsLabel} found in this collection</p>
-          </div>
-        ) : (
-          <div
-            style={{
-              height: rowVirtualizer.getTotalSize(),
-              position: "relative",
-              width: "100%",
-            }}
+    <CollectionShell
+      title={collection.name}
+      mbUrl={mbUrl}
+      coverArt={coverArt}
+      visibilityLabel={
+        <>{collection.public ? "Public" : "Private"} MusicBrainz collection</>
+      }
+      countLabel={`${itemCount} ${itemCount === 1 ? "track" : "tracks"}`}
+      sectionTitle="Tracks"
+      isLoading={isLoading}
+      sectionAction={
+        Boolean(itemCount) && (
+          <button
+            type="button"
+            className="btn btn-info btn-rounded play-tracks-button"
+            title="Play all tracks"
+            disabled={isLoading || isPlayingAll}
+            onClick={playAllTracks}
           >
-            {virtualItems.map((virtualRow: VirtualItem) => {
-              const isLoaderRow = virtualRow.index >= loadedRowCount;
-              const track = tracks[virtualRow.index];
-              const release = releases[virtualRow.index];
-              let rowContent: React.ReactNode = null;
-              if (isLoaderRow) {
-                rowContent = <Loader isLoading={isFetchingNextPage} />;
-              } else if (isReleaseCollection && release) {
-                rowContent = <ReleaseCollectionItemRow item={release} />;
-              } else if (track) {
-                rowContent = (
-                  <PlaylistItemCard
-                    key={`${track.id}-${virtualRow.index.toString()}`}
-                    canEdit={false}
-                    track={track}
-                  />
-                );
-              }
-              return (
-                <div
-                  key={String(virtualRow.key)}
-                  ref={rowVirtualizer.measureElement}
-                  data-index={virtualRow.index}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    transform: `translateY(${virtualRow.start}px)`,
-                  }}
-                >
-                  {rowContent}
-                </div>
-              );
-            })}
+            <FontAwesomeIcon icon={faPlayCircle} fixedWidth />{" "}
+            {isPlayingAll ? "Loading..." : "Play all"}
+          </button>
+        )
+      }
+      saveButton={
+        <button
+          type="button"
+          className="btn btn-info"
+          disabled={isLoading || isSaving || tracks.length === 0}
+          onClick={saveAsPlaylist}
+        >
+          {isSaving ? "Saving..." : "Save as playlist"}
+        </button>
+      }
+    >
+      <VirtualizedCollectionList
+        items={tracks}
+        estimatedRowHeightPx={DEFAULT_ESTIMATED_ROW_HEIGHT_PX}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        isLoading={isLoading}
+        fetchNextPage={fetchNextPage}
+        emptyMessage="No tracks found in this collection"
+        renderRow={(track, index) => (
+          <PlaylistItemCard
+            key={`${track.id}-${index.toString()}`}
+            canEdit={false}
+            track={track}
+          />
+        )}
+      />
+    </CollectionShell>
+  );
+}
+
+function ReleaseCollectionView({
+  collectionMBID,
+  collection,
+  coverArt,
+  itemCount,
+  data,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+  isLoading,
+}: CollectionViewProps) {
+  const queryClient = useQueryClient();
+  const mbUrl = `https://musicbrainz.org/collection/${collectionMBID}`;
+  const { isSaving, saveTracks } = useSaveCollectionAsPlaylist(
+    collection,
+    mbUrl
+  );
+
+  const releases = React.useMemo(
+    () => (data?.pages ?? []).flatMap((page) => page.items ?? []),
+    [data]
+  );
+
+  const saveAsPlaylist = React.useCallback(async () => {
+    if (releases.length === 0) {
+      return;
+    }
+    await saveTracks(() =>
+      fetchAllFlattenedCollectionTracks(queryClient, collectionMBID)
+    );
+  }, [collectionMBID, queryClient, releases.length, saveTracks]);
+
+  return (
+    <CollectionShell
+      title={collection.name}
+      mbUrl={mbUrl}
+      coverArt={coverArt}
+      visibilityLabel={
+        <>
+          {collection.public ? "Public" : "Private"} MusicBrainz release
+          collection
+        </>
+      }
+      countLabel={`${itemCount} ${itemCount === 1 ? "release" : "releases"}`}
+      sectionTitle="Releases"
+      isLoading={isLoading}
+      saveButton={
+        <button
+          type="button"
+          className="btn btn-info"
+          disabled={isLoading || isSaving || releases.length === 0}
+          onClick={saveAsPlaylist}
+        >
+          {isSaving ? "Saving..." : "Save as playlist"}
+        </button>
+      }
+    >
+      <VirtualizedCollectionList
+        items={releases}
+        estimatedRowHeightPx={RELEASE_ROW_ESTIMATED_HEIGHT_PX}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        isLoading={isLoading}
+        fetchNextPage={fetchNextPage}
+        emptyMessage="No releases found in this collection"
+        renderRow={(release) => <ReleaseCollectionItemCard item={release} />}
+      />
+    </CollectionShell>
+  );
+}
+
+const COLLECTION_VIEWS: Record<
+  MusicBrainzCollectionEntityType,
+  React.FC<CollectionViewProps>
+> = {
+  recording: RecordingCollectionView,
+  release: ReleaseCollectionView,
+};
+
+export default function CollectionPage() {
+  const { collectionMBID } = useParams();
+  const queryClient = useQueryClient();
+  const loaderData = useLoaderData() as MusicBrainzCollectionDetailResponse;
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useInfiniteQuery<
+    MusicBrainzCollectionDetailResponse,
+    Error,
+    InfiniteData<MusicBrainzCollectionDetailResponse, number>,
+    (string | undefined)[],
+    number
+  >({
+    queryKey: ["collection", collectionMBID],
+    queryFn: ({ pageParam = 0 }) =>
+      queryClient.fetchQuery(
+        RouteQuery(
+          ["collection", collectionMBID, pageParam],
+          `/collection/${collectionMBID}/?count=${DEFAULT_PAGE_SIZE}&offset=${pageParam}`
+        )
+      ),
+    getNextPageParam: (lastPage, pages) => {
+      const loaded = getLoadedCount(pages, lastPage.collection.entity_type);
+      return loaded < lastPage.track_count ? loaded : undefined;
+    },
+    initialPageParam: 0,
+    initialData: {
+      pages: [loaderData],
+      pageParams: [0],
+    },
+  });
+
+  const firstPage = data?.pages[0];
+  const collection = firstPage?.collection;
+  const entityType = collection?.entity_type;
+  const CollectionView = entityType ? COLLECTION_VIEWS[entityType] : undefined;
+
+  if (!collectionMBID || !collection || !CollectionView) {
+    return (
+      <CollectionShell
+        title={collection?.name ?? "MusicBrainz collection"}
+        coverArt={firstPage?.cover_art}
+        visibilityLabel="MusicBrainz collection"
+        countLabel=""
+        sectionTitle="Items"
+        isLoading={isLoading}
+      >
+        {!isLoading && (
+          <div className="lead text-center">
+            <p>No items found in this collection</p>
           </div>
         )}
-      </div>
-    </div>
+      </CollectionShell>
+    );
+  }
+
+  return (
+    <CollectionView
+      collectionMBID={collectionMBID}
+      collection={collection}
+      coverArt={firstPage?.cover_art}
+      itemCount={firstPage?.track_count ?? 0}
+      data={data}
+      fetchNextPage={fetchNextPage}
+      hasNextPage={Boolean(hasNextPage)}
+      isFetchingNextPage={isFetchingNextPage}
+      isLoading={isLoading}
+    />
   );
 }
