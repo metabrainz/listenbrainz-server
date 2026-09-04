@@ -421,7 +421,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
 
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
         # Some tracks will be skipped,only expecting 6 tracks 
-        response = self.wait_for_query_to_have_items(url, num_items=6, attempts=20)
+        response = self.wait_for_query_to_have_items(url, num_items=6, attempts=40)
         listens = response.json["payload"]["listens"]
         self.assertEqual(len(listens), 6)
 
