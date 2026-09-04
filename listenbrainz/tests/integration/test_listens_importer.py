@@ -161,6 +161,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             content_type="multipart/form-data"
         )
         self.assert200(response)
+        first_file_path = response.json["file_path"]
 
         orig_data = response.json
         response = self.client.get(
@@ -356,11 +357,12 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             content_type="multipart/form-data"
         )
         self.assert200(response)
+        second_file_path = response.json["file_path"]
 
-        self.assertEqual(
-            len(list(Path(self.app.config["UPLOAD_FOLDER"]).iterdir())),
-            2
-        )
+        # The worker can process and remove an empty import file immediately;
+        # verify the collision protection using the persisted task paths rather
+        # than the transient upload directory contents.
+        self.assertNotEqual(first_file_path, second_file_path)
 
     def test_import_task_auth(self):
         from_date = datetime(2024, 1, 1, tzinfo=timezone.utc)
