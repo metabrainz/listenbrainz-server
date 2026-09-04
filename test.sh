@@ -256,10 +256,6 @@ if [ $DB_RUNNING -eq 1 ] ; then
     echo "Running tests"
     docker_compose_run listenbrainz pytest "$@"
     RET=$?
-    if [ $RET -ne 0 ]; then
-        echo "Tests failed; background task worker logs follow"
-        invoke_docker_compose logs --no-color background_tasks
-    fi
     exit $RET
 else
     # Else, we have containers, just run tests
