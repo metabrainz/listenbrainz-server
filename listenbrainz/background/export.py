@@ -175,7 +175,12 @@ def export_listens_for_user(export_id, db_conn, ts_conn, tmp_dir: str, user_id: 
             update_export_progress(db_conn, export_id, f"Exporting listens for the period {period_str}")
             file_path = os.path.join(year_dir, f"{period['month']}.jsonl")
 
-            rowcount = export_listens_for_time_range(ts_conn, file_path, user_id, period["start"], period["end"])
+            # ``yield_per`` below uses a PostgreSQL server-side cursor, which
+            # requires a real transaction. The request-scoped Timescale
+            # connection is AUTOCOMMIT, so check out a short-lived transactional
+            # connection for each streamed export file.
+            with ts_conn.engine.begin() as txn:
+                rowcount = export_listens_for_time_range(txn, file_path, user_id, period["start"], period["end"])
             if rowcount > 0:
                 files.append(file_path)
 
