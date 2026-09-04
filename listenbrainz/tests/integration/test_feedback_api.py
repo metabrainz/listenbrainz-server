@@ -16,7 +16,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         super(FeedbackAPITestCase, self).setUp()
         self.user = db_user.get_or_create(self.db_conn, 1, "testuserpleaseignore")
         self.user2 = db_user.get_or_create(self.db_conn, 2, "anothertestuserpleaseignore")
-        self.ts_conn = timescale.engine.connect()
+        self.ts_conn = timescale.engine.connect().execution_options(isolation_level="AUTOCOMMIT")
 
     def tearDown(self):
         self.ts_conn.close()

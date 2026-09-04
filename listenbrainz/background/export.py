@@ -61,6 +61,11 @@ def get_time_ranges_for_listens(min_dt: datetime, max_dt: datetime):
 
 def export_query_to_jsonl(conn, file_path, query, **kwargs):
     """ Export the given query's data to the given file path in jsonl format. """
+    # Server-side cursors need a transaction; AUTOCOMMIT connections do not have one.
+    if conn.get_execution_options().get("isolation_level") == "AUTOCOMMIT":
+        with conn.engine.begin() as txn:
+            return export_query_to_jsonl(txn, file_path, query, **kwargs)
+
     rowcount = 0
     with conn.execute(
         text(query).execution_options(yield_per=BATCH_SIZE),
