@@ -96,6 +96,8 @@ export type ListenCardProps = {
   additionalMenuItems?: JSX.Element[];
   // This optional JSX element is for a custom icon
   additionalActions?: JSX.Element;
+  // Hide play button
+  disablePlayback?: boolean;
 };
 
 export default function ListenCard(props: ListenCardProps) {
@@ -113,6 +115,7 @@ export default function ListenCard(props: ListenCardProps) {
     feedbackComponent,
     additionalMenuItems,
     additionalActions,
+    disablePlayback,
     ...otherProps
   } = props;
 
@@ -285,7 +288,8 @@ export default function ListenCard(props: ListenCardProps) {
   const hideActionsMenu = compact || !hasActionOptions;
 
   const renderBrainzplayer =
-    userPreferences?.brainzplayer?.brainzplayerEnabled ?? true;
+    !disablePlayback &&
+    (userPreferences?.brainzplayer?.brainzplayerEnabled ?? true);
 
   const isCurrentUsersListen =
     !!currentUser?.name && displayListen.user_name === currentUser.name;
