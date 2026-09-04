@@ -269,6 +269,32 @@ def get_pin_count_for_user(db_conn, user_id: int) -> int:
     return count
 
 
+def update_recording_mbid_for_msid(db_conn, user_id: int, recording_msid: str, recording_mbid: str) -> int:
+    """ Updates recording_mbid on all pins for the user that match the given recording_msid.
+
+        Args:
+            db_conn: Database connection
+            user_id: the row ID of the user
+            recording_msid: the recording MSID to match
+            recording_mbid: the new recording MBID to set
+
+        Returns:
+            Number of rows updated
+    """
+    result = db_conn.execute(sqlalchemy.text("""
+        UPDATE pinned_recording
+           SET recording_mbid = :recording_mbid
+         WHERE user_id = :user_id
+           AND recording_msid = :recording_msid
+    """), {
+        "user_id": user_id,
+        "recording_msid": recording_msid,
+        "recording_mbid": recording_mbid,
+    })
+    db_conn.commit()
+    return result.rowcount
+
+
 def update_comment(db_conn, row_id: int, blurb_content: str) -> bool:
     """ Updates the comment of the user of the current pinned recording
 
