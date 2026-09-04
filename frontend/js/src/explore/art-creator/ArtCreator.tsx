@@ -9,12 +9,15 @@ import { useSearchParams } from "react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleXmark } from "@fortawesome/free-solid-svg-icons";
 import localforage from "localforage";
+import { Canvg, RenderingContext2D } from "canvg";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import ColorPicker from "./components/ColorPicker";
 import Gallery from "./components/Gallery";
 import IconTray from "./components/IconTray";
 import Preview from "./components/Preview";
+import Switch from "../../components/Switch";
 import { svgToBlob, toPng } from "./utils";
+
 import { ToastMsg } from "../../notifications/Notifications";
 import UserSearch from "../../common/UserSearch";
 import Sidebar from "../../components/Sidebar";
@@ -40,6 +43,10 @@ export interface TemplateOption {
   displayName: string;
   image: string;
   type: "text" | "image" | "grid";
+}
+export interface CoverArtGridOptions {
+  dimension: number;
+  layout: number;
 }
 export interface TextTemplateOption extends TemplateOption {
   type: "text";
@@ -166,18 +173,127 @@ const hardCodedPresets: ColorPreset[] = [
   },
 ];
 
-// enum FontNameEnum {
-//   "Roboto",
-//   "Integer",
-//   "Sans Serif",
-// }
-// const fontOptions = Object.values(FontNameEnum).filter((v) => isNaN(Number(v)));
+// Font options dictionary pending LB-TBD for full font selection support
+const fontOptions: Record<string, string> = {
+  Sintony: "sintony",
+  Inter: "inter",
+  Roboto: "roboto",
+  Oswald: "oswald",
+  "Space Grotesk": "space-grotesk",
+  "Playfair Display": "playfair-display",
+  Lora: "lora",
+  "Bebas Neue": "bebas-neue",
+};
 
 const DEFAULT_IMAGE_SIZE = 750;
 
 const defaultStyleOnLoad = TemplateEnum[
   TemplateNameEnum.designerTop5
 ] as TextTemplateOption;
+
+const DEFAULT_FONT = "Sintony";
+
+function buildFontStyleBlock(fontFamily: string): string {
+  const fontFile =
+    fontOptions[fontFamily] ?? fontFamily.toLowerCase().replace(/\s+/g, "-");
+  const fontUrl = `${window.location.origin}/static/fonts/${fontFile}.woff2`;
+  return `
+      <style>
+        @font-face {
+          font-family: "${fontFamily}";
+          src: url("${fontUrl}") format("woff2");
+          font-weight: normal;
+          font-style: normal;
+        }
+      </style>
+    `;
+}
+
+function getCombinedCaptionBgColor(
+  colorHex: string,
+  opacityPercent: number
+): string {
+  const hex = colorHex.replace("#", "");
+  const alphaByte = Math.min(
+    255,
+    Math.max(0, Math.round((opacityPercent / 100) * 255))
+  );
+  const alphaHex = alphaByte.toString(16).padStart(2, "0");
+  return `#${hex}${alphaHex}`;
+}
+
+function prepareSvgForExport(
+  svgElement: SVGSVGElement,
+  isGrid: boolean,
+  captionOptions: {
+    showCaption: boolean;
+    showRank: boolean;
+    showArtist: boolean;
+    showRelease: boolean;
+    showListenCount: boolean;
+    captionTextColor: string;
+    captionBgColor: string;
+    captionBgOpacity: number;
+  },
+  fontFamily: string
+): string {
+  const clone = svgElement.cloneNode(true) as SVGSVGElement;
+
+  // Strip the preview-only <style> tag injected by Preview.tsx
+  // This removes !important CSS and 8-digit hex colors that Canvg cannot parse.
+  clone.querySelectorAll("style").forEach((styleEl) => styleEl.remove());
+
+  if (isGrid) {
+    if (!captionOptions.showCaption) {
+      clone.querySelectorAll(".caption").forEach((el) => {
+        el.setAttribute("display", "none");
+      });
+    } else {
+      const opacityVal = (captionOptions.captionBgOpacity / 100).toFixed(2);
+      clone.querySelectorAll(".caption rect").forEach((rect) => {
+        rect.setAttribute("fill", captionOptions.captionBgColor);
+        rect.setAttribute("fill-opacity", opacityVal);
+      });
+
+      clone
+        .querySelectorAll(
+          ".caption text tspan, .caption path.caption-listen-count"
+        )
+        .forEach((el) => {
+          el.setAttribute("fill", captionOptions.captionTextColor);
+        });
+
+      if (!captionOptions.showRank) {
+        clone.querySelectorAll(".caption-rank").forEach((el) => {
+          el.setAttribute("display", "none");
+        });
+      }
+      if (!captionOptions.showArtist) {
+        clone.querySelectorAll(".caption-artist").forEach((el) => {
+          el.setAttribute("display", "none");
+        });
+      }
+      if (!captionOptions.showRelease) {
+        clone.querySelectorAll(".caption-release").forEach((el) => {
+          el.setAttribute("display", "none");
+        });
+      }
+      if (!captionOptions.showListenCount) {
+        clone.querySelectorAll(".caption-listen-count").forEach((el) => {
+          el.setAttribute("display", "none");
+        });
+      }
+    }
+  }
+
+  let svgString = clone.outerHTML;
+
+  // Prepend @font-face block after preview style tag has been removed
+  const styleBlock = buildFontStyleBlock(fontFamily);
+  svgString = svgString.replace(/>/, `>${styleBlock}`);
+
+  return svgString;
+}
 
 const defaultTimeRangeOnLoad: keyof typeof TimeRangeOptions = "this_month";
 
@@ -209,10 +325,18 @@ export default function ArtCreator() {
 
   const [gridSize, setGridSize] = useState(4);
   const [gridLayout, setGridLayout] = useState(0);
-  const [showCaption, setShowCaption] = useState(true);
+  const [showRank, setShowRank] = useState(false);
+  const [showArtist, setShowArtist] = useState(true);
+  const [showRelease, setShowRelease] = useState(true);
+  const [showListenCount, setShowListenCount] = useState(false);
+  const [captionTextColor, setCaptionTextColor] = useState("#ffffff");
+  const [captionBgColor, setCaptionBgColor] = useState("#000000");
+  const [captionBgOpacity, setCaptionBgOpacity] = useState(48);
+
+  const showCaption = showRank || showRelease || showArtist || showListenCount;
   const [skipMissing, setSkipMissing] = useState(true);
   const [previewUrl, setPreviewUrl] = useState("");
-  // const [font, setFont] = useState<keyof typeof FontNameEnum>("Roboto");
+  const [fontFamily, setFontFamily] = useState(DEFAULT_FONT);
   const [textColor, setTextColor] = useState<string>(
     defaultStyleOnLoad.defaultColors[0]
   );
@@ -234,7 +358,7 @@ export default function ArtCreator() {
       toast.error(
         <ToastMsg
           title="Could not apply preset"
-          message={error?.message ?? String(error)}
+          message={(error as any)?.message ?? String(error)}
         />,
         { toastId: "apply-preset-error" }
       );
@@ -282,7 +406,7 @@ export default function ArtCreator() {
         toast.error(
           <ToastMsg
             title="Failed to load the preset"
-            message={error?.message ?? String(error)}
+            message={(error as any)?.message ?? String(error)}
           />,
           { toastId: "load-preset-error" }
         );
@@ -329,7 +453,7 @@ export default function ArtCreator() {
       toast.error(
         <ToastMsg
           title="Failed to save the preset"
-          message={error?.message ?? String(error)}
+          message={(error as any)?.message ?? String(error)}
         />,
         { toastId: "save-preset-error" }
       );
@@ -355,7 +479,7 @@ export default function ArtCreator() {
       toast.error(
         <ToastMsg
           title="Failed to delete Preset"
-          message={error?.message ?? String(error)}
+          message={(error as any)?.message ?? String(error)}
         />,
         { toastId: "delete-preset-error" }
       );
@@ -414,21 +538,45 @@ export default function ArtCreator() {
     [setSecondBgColor]
   );
 
+  const updateFontFamilyCallback = useCallback(
+    (event: React.ChangeEvent<HTMLSelectElement>) =>
+      setFontFamily(event.target.value),
+    [setFontFamily]
+  );
+
   const onClickDownload = useCallback(async () => {
     if (!previewSVGRef?.current) {
       return;
     }
     const { current: svgElement } = previewSVGRef;
-    const { outerHTML } = svgElement;
+    const isGrid = style.type === "grid";
+    const svgString = prepareSvgForExport(
+      svgElement,
+      isGrid,
+      {
+        showCaption,
+        showRank,
+        showArtist,
+        showRelease,
+        showListenCount,
+        captionTextColor,
+        captionBgColor,
+        captionBgOpacity,
+      },
+      fontFamily
+    );
+
     try {
       const png = await toPng(
         DEFAULT_IMAGE_SIZE,
         DEFAULT_IMAGE_SIZE,
-        outerHTML
+        svgString
       );
+
       if (!png) {
         return;
       }
+
       saveAs(
         png,
         `ListenBrainz-stats-${userName}-${TimeRangeOptions[timeRange]}.png`
@@ -437,20 +585,50 @@ export default function ArtCreator() {
       toast.error(
         <ToastMsg
           title="Could not save as an image"
-          message={typeof error === "object" ? error.message : error.toString()}
+          message={(error as any)?.message ?? String(error)}
         />,
         { toastId: "download-svg-error" }
       );
     }
-  }, [previewSVGRef, userName, timeRange]);
+  }, [
+    previewSVGRef,
+    userName,
+    timeRange,
+    style,
+    fontFamily,
+    showCaption,
+    showRank,
+    showArtist,
+    showRelease,
+    showListenCount,
+    captionTextColor,
+    captionBgColor,
+    captionBgOpacity,
+  ]);
 
   const onClickCopyImage = useCallback(async () => {
     if (!previewSVGRef?.current) {
       return;
     }
+    const { current: svgElement } = previewSVGRef;
+    const isGrid = style.type === "grid";
+    const svgString = prepareSvgForExport(
+      svgElement,
+      isGrid,
+      {
+        showCaption,
+        showRank,
+        showArtist,
+        showRelease,
+        showListenCount,
+        captionTextColor,
+        captionBgColor,
+        captionBgOpacity,
+      },
+      fontFamily
+    );
+
     try {
-      const { current: svgElement } = previewSVGRef;
-      const { outerHTML } = svgElement;
       if (!navigator.clipboard) {
         throw new Error("No clipboard functionality detected for this browser");
       }
@@ -458,7 +636,7 @@ export default function ArtCreator() {
         const svgBlobPromise = svgToBlob(
           DEFAULT_IMAGE_SIZE,
           DEFAULT_IMAGE_SIZE,
-          outerHTML,
+          svgString,
           "image/png"
         );
         let data: ClipboardItems;
@@ -485,7 +663,7 @@ export default function ArtCreator() {
       }
       if ("writeText" in navigator.clipboard) {
         // We can't copy the image directly, but we can fall back to writing the SVG source string to the clipboard
-        await (navigator.clipboard as Clipboard).writeText(outerHTML);
+        await (navigator.clipboard as Clipboard).writeText(svgString);
         toast.success("Copied image SVG to clipboard");
       }
     } catch (error) {
@@ -497,14 +675,26 @@ export default function ArtCreator() {
               This feature might not be supported in your browser or may be
               behind an experimental setting
               <br />
-              {typeof error === "object" ? error.message : error.toString()}
+              {(error as any)?.message ?? String(error)}
             </>
           }
         />,
         { toastId: "copy-svg-error" }
       );
     }
-  }, [previewSVGRef]);
+  }, [
+    previewSVGRef,
+    style,
+    fontFamily,
+    showCaption,
+    showRank,
+    showArtist,
+    showRelease,
+    showListenCount,
+    captionTextColor,
+    captionBgColor,
+    captionBgOpacity,
+  ]);
 
   const onClickCopyCode = useCallback(async () => {
     if (!previewSVGRef?.current) {
@@ -519,12 +709,12 @@ export default function ArtCreator() {
       toast.error(
         <ToastMsg
           title="Could not copy SVG image source to clipboard"
-          message={typeof error === "object" ? error.message : error.toString()}
+          message={(error as any)?.message ?? String(error)}
         />,
         { toastId: "copy-svg-error" }
       );
     }
-  }, [previewSVGRef]);
+  }, [previewSVGRef, style, fontFamily]);
 
   const onClickCopyURL = useCallback(async () => {
     if (!previewUrl) {
@@ -537,7 +727,7 @@ export default function ArtCreator() {
       toast.error(
         <ToastMsg
           title="Could not copy link to clipboard"
-          message={typeof error === "object" ? error.message : error.toString()}
+          message={(error as any)?.message ?? String(error)}
         />,
         { toastId: "copy-link-error" }
       );
@@ -559,7 +749,7 @@ export default function ArtCreator() {
       toast.error(
         <ToastMsg
           title="Could not copy alt-text to clipboard"
-          message={typeof error === "object" ? error.message : error.toString()}
+          message={(error as any)?.message ?? String(error)}
         />,
         { toastId: "copy-alt-error" }
       );
@@ -592,7 +782,15 @@ export default function ArtCreator() {
         gridSizeArg: number,
         gridLayoutArg: number,
         showCaptionArg: boolean,
-        skipMissingArg: boolean
+        skipMissingArg: boolean,
+        captionTextColorArg: string,
+        captionBgColorArg: string,
+        captionBgOpacityArg: number,
+        fontFamilyArg: string,
+        showRankArg: boolean,
+        showListenCountArg: boolean,
+        showReleaseArg: boolean,
+        showArtistArg: boolean
       ) => {
         if (styleArg.type === "grid") {
           let newPreviewUrl = `${
@@ -607,9 +805,36 @@ export default function ArtCreator() {
           if (!skipMissingArg) {
             queryParams.set("skip-missing", "false");
           }
+          if (captionTextColorArg && captionTextColorArg !== "#ffffff") {
+            queryParams.set("caption-text-color", captionTextColorArg);
+          }
+          const combinedBgColor = getCombinedCaptionBgColor(
+            captionBgColorArg,
+            captionBgOpacityArg
+          );
+          if (combinedBgColor && combinedBgColor !== "#0000007a") {
+            queryParams.set("caption-bg-color", combinedBgColor);
+          }
+          if (showRankArg) {
+            queryParams.set("show-rank", "true");
+          }
+          if (showListenCountArg) {
+            queryParams.set("show-listen-count", "true");
+          }
+          if (!showReleaseArg) {
+            queryParams.set("show-release", "false");
+          }
+          if (!showArtistArg) {
+            queryParams.set("show-artist", "false");
+          }
+          if (fontFamilyArg !== DEFAULT_FONT) {
+            queryParams.set("font-family", fontFamilyArg);
+          }
+
           if (queryParams.size) {
             newPreviewUrl += `?${queryParams.toString()}`;
           }
+
           setPreviewUrl(newPreviewUrl);
         } else {
           setPreviewUrl(
@@ -635,7 +860,15 @@ export default function ArtCreator() {
       gridSize,
       gridLayout,
       showCaption,
-      skipMissing
+      skipMissing,
+      captionTextColor,
+      captionBgColor,
+      captionBgOpacity,
+      fontFamily,
+      showRank,
+      showListenCount,
+      showRelease,
+      showArtist
     );
   }, [
     userName,
@@ -645,8 +878,32 @@ export default function ArtCreator() {
     gridLayout,
     showCaption,
     skipMissing,
+    captionTextColor,
+    captionBgColor,
+    captionBgOpacity,
+    fontFamily,
+    showRank,
+    showListenCount,
     debouncedSetPreviewUrl,
   ]);
+
+  React.useEffect(() => {
+    if (fontFamily !== DEFAULT_FONT) {
+      const fontFile =
+        fontOptions[fontFamily] ??
+        fontFamily.toLowerCase().replace(/\s+/g, "-");
+      const fontUrl = `/static/fonts/${fontFile}.woff2`;
+      const fontFace = new FontFace(fontFamily, `url(${fontUrl})`);
+      fontFace
+        .load()
+        .then((loadedFace) => {
+          document.fonts.add(loadedFace);
+        })
+        .catch((e) => {
+          console.error("Failed to load font for preview", e);
+        });
+    }
+  }, [fontFamily]);
 
   return (
     <div role="main">
@@ -673,7 +930,21 @@ export default function ArtCreator() {
           <Preview
             key={previewUrl}
             url={previewUrl}
+            isGrid={style.type === "grid"}
             showCaption={showCaption}
+            showRank={showRank}
+            showArtist={showArtist}
+            showRelease={showRelease}
+            showListenCount={showListenCount}
+            captionTextColor={
+              style.type === "grid" ? captionTextColor : undefined
+            }
+            captionBgColor={
+              style.type === "grid"
+                ? getCombinedCaptionBgColor(captionBgColor, captionBgOpacity)
+                : undefined
+            }
+            fontFamily={fontFamily !== DEFAULT_FONT ? fontFamily : undefined}
             styles={{
               textColor,
               bgColor1: firstBgColor,
@@ -741,6 +1012,7 @@ export default function ArtCreator() {
                   ))}
                 </select>
               </div>
+              {/* Font selection dropdown hidden pending LB-TBD until font files/approved font list are available */}
             </div>
           </div>
           {(style.type === "text" || style.type === "grid") && (
@@ -749,24 +1021,13 @@ export default function ArtCreator() {
                 <h4>Advanced</h4>
                 {style.type === "grid" && (
                   <>
-                    <label className="form-check-label">
-                      <input
-                        className="form-check-input me-2"
-                        type="checkbox"
-                        checked={showCaption}
-                        onChange={(evt) => setShowCaption(evt.target.checked)}
-                      />{" "}
-                      Show caption
-                    </label>
-                    <label className="form-check-label">
-                      <input
-                        className="form-check-input me-2"
-                        type="checkbox"
-                        checked={skipMissing}
-                        onChange={(evt) => setSkipMissing(evt.target.checked)}
-                      />{" "}
-                      Skip missing covers
-                    </label>
+                    <Switch
+                      id="skip-missing"
+                      value="skip-missing"
+                      switchLabel="Skip missing covers"
+                      checked={skipMissing}
+                      onChange={(e) => setSkipMissing(e.target.checked)}
+                    />
                     <small>Choose a grid layout:</small>
                     <div className="cover-art-grid">
                       {coverArtGridOptions.map((option) => {
@@ -797,6 +1058,104 @@ export default function ArtCreator() {
                           </label>
                         );
                       })}
+                    </div>
+                    <div className="sidenav-content-grid">
+                      <h4>Captions</h4>
+                      <Switch
+                        id="show-rank"
+                        value="show-rank"
+                        switchLabel="Show Rank"
+                        checked={showRank}
+                        onChange={(e) => setShowRank(e.target.checked)}
+                      />
+                      <Switch
+                        id="show-release"
+                        value="show-release"
+                        switchLabel="Show Release Title"
+                        checked={showRelease}
+                        onChange={(e) => setShowRelease(e.target.checked)}
+                      />
+                      <Switch
+                        id="show-artist"
+                        value="show-artist"
+                        switchLabel="Show Artist"
+                        checked={showArtist}
+                        onChange={(e) => setShowArtist(e.target.checked)}
+                      />
+                      <Switch
+                        id="show-listen-count"
+                        value="show-listen-count"
+                        switchLabel="Show Listen Count"
+                        checked={showListenCount}
+                        onChange={(e) => setShowListenCount(e.target.checked)}
+                      />
+                      <div>
+                        <label
+                          className="form-label"
+                          htmlFor="caption-text-color"
+                        >
+                          Caption text color:
+                        </label>
+                        <div className="input-group">
+                          <input
+                            id="caption-text-color"
+                            type="color"
+                            className="form-control form-control-color"
+                            value={captionTextColor}
+                            onChange={(e) =>
+                              setCaptionTextColor(e.target.value)
+                            }
+                          />
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={captionTextColor}
+                            readOnly
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label
+                          className="form-label"
+                          htmlFor="caption-bg-color"
+                        >
+                          Caption background color:
+                        </label>
+                        <div className="input-group">
+                          <input
+                            id="caption-bg-color"
+                            type="color"
+                            className="form-control form-control-color"
+                            value={captionBgColor}
+                            onChange={(e) => setCaptionBgColor(e.target.value)}
+                          />
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={captionBgColor}
+                            readOnly
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label
+                          className="form-label"
+                          htmlFor="caption-bg-opacity"
+                        >
+                          Caption background opacity: {captionBgOpacity}%
+                        </label>
+                        <input
+                          id="caption-bg-opacity"
+                          type="range"
+                          className="form-range"
+                          min="0"
+                          max="100"
+                          value={captionBgOpacity}
+                          onChange={(e) =>
+                            setCaptionBgOpacity(Number(e.target.value))
+                          }
+                        />
+                      </div>
                     </div>
                   </>
                 )}
@@ -941,31 +1300,6 @@ export default function ArtCreator() {
                     className="form-control"
                     onChange={updateGenresCallback}
                   />
-                </div> */}
-                {/* <div>
-                  <ToggleOption onClick={userToggler} buttonName="Users" />
-                  <ToggleOption onClick={dateToggler} buttonName="Date" />
-                  <ToggleOption onClick={rangeToggler} buttonName="Range" />
-                  <ToggleOption onClick={totalToggler} buttonName="Total" />
-                  <ToggleOption onClick={genresToggler} buttonName="Genres" />
-                </div> */}
-                {/* <div>
-                  className="form-label" htmlFor="font-select">Font:</label>
-                  <select
-                    id="font-select"
-                    className="form-select"
-                    value={font}
-                    onChange={updateFontCallback}
-                  >
-                    {fontOptions.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
-                </div> */}
-                {/* <div>
-                  <ToggleOption onClick={vaToggler} buttonName="Ignore VA" />
                 </div> */}
               </div>
             </div>

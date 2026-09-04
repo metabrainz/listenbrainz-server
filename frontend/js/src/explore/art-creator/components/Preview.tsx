@@ -4,7 +4,14 @@ import "external-svg-loader";
 type PreviewProps = React.SVGProps<SVGSVGElement> & {
   size?: number;
   url: string;
+  isGrid?: boolean;
   showCaption?: boolean;
+  showRank?: boolean;
+  showArtist?: boolean;
+  showRelease?: boolean;
+  showListenCount?: boolean;
+  captionTextColor?: string;
+  captionBgColor?: string;
   styles: {
     textColor?: string;
     bgColor1?: string;
@@ -17,7 +24,20 @@ const Preview = React.forwardRef(function PreviewComponent(
   ref: React.ForwardedRef<SVGSVGElement>
 ) {
   const [error, setError] = React.useState<string>();
-  const { url, styles, size = 750, showCaption, ...svgProps } = props;
+  const {
+    url,
+    styles,
+    size = 750,
+    isGrid,
+    showCaption,
+    showRank,
+    showArtist,
+    showRelease,
+    showListenCount,
+    captionTextColor,
+    captionBgColor,
+    ...svgProps
+  } = props;
   const { textColor, bgColor1, bgColor2 } = styles;
 
   React.useEffect(() => {
@@ -70,9 +90,25 @@ const Preview = React.forwardRef(function PreviewComponent(
             stroke: inherit;
           }
         `}
-        {!showCaption
-          ? ` .caption { display: none; } `
-          : `.caption text > tspan { fill: white; }`}
+        {isGrid &&
+          (!showCaption
+            ? ` .caption { display: none; } `
+            : `
+          ${!showRank ? `.caption-rank { display: none; }` : ""}
+          ${!showArtist ? `.caption-artist { display: none; }` : ""}
+          ${!showRelease ? `.caption-release { display: none; }` : ""}
+          ${!showListenCount ? `.caption-listen-count { display: none; }` : ""}
+          ${
+            captionTextColor
+              ? `.caption text tspan { fill: ${captionTextColor} !important; }`
+              : ""
+          }
+          ${
+            captionBgColor
+              ? `.caption rect { fill: ${captionBgColor} !important; }`
+              : ""
+          }
+        `)}
         {textColor
           ? `
           text > tspan,
