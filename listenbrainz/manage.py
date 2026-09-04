@@ -8,6 +8,7 @@ import sqlalchemy
 from listenbrainz import db
 from listenbrainz import webserver
 from listenbrainz.background import export
+from listenbrainz.background.migrate_exports import migrate_exports
 from listenbrainz.db import listens as listens_db, timescale as ts, do_not_recommend
 
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
@@ -463,3 +464,20 @@ def delete_old_user_data_exports():
         app.logger.info("Deleting old and expired user data exports")
         export.cleanup_old_exports(webserver.db_conn)
         app.logger.info("Completed deleting old and expired user data exports")
+
+
+@cli.command(name="migrate_user_data_exports")
+@click.option("--export-dir", required=True, help="Directory the user data export archives are currently stored in.")
+@click.option("--delete-source", is_flag=True, help="Delete the archives from the directory once they are migrated.")
+@click.option("--dry-run", is_flag=True, help="Log what would be migrated without uploading or updating anything.")
+@click.option("--mark-missing-failed", is_flag=True,
+              help="Mark completed exports whose archive cannot be found as failed even if the directory"
+                   " contained no archive of a completed export at all.")
+def migrate_user_data_exports(export_dir, delete_source, dry_run, mark_missing_failed):
+    """ Migrate user data exports from the given directory to garage """
+    app = create_app()
+    with app.app_context():
+        app.logger.info("Migrating user data exports from %s to garage", export_dir)
+        migrate_exports(webserver.db_conn, export_dir=export_dir, delete_source=delete_source, dry_run=dry_run,
+                        mark_missing_failed=mark_missing_failed)
+        app.logger.info("Completed migrating user data exports")

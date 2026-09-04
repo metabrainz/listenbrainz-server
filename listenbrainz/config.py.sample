@@ -240,8 +240,14 @@ REJECT_LISTENS_WITHOUT_USER_EMAIL = False
 # If set to True, do not allow new users without email to register
 REJECT_NEW_USERS_WITHOUT_EMAIL = False
 
-# base directory for user data exports
-USER_DATA_EXPORT_BASE_DIR = "/code/listenbrainz/exports/"
+# Garage object storage, user data exports are stored here.
+# The endpoint must not include a URL scheme.
+GARAGE_ENDPOINT = "garage:3900"
+GARAGE_ACCESS_KEY = "GK1e5b4c3a2d0f9e8b7a6c5d40"
+GARAGE_SECRET_KEY = "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0"
+GARAGE_SECURE = False
+GARAGE_REGION = "garage"
+GARAGE_USER_DATA_EXPORT_BUCKET = "listenbrainz-user-data-exports"
 
 # Service monitoring -- only needed for MetaBrainz production
 SERVICE_MONITOR_TELEGRAM_BOT_TOKEN = ""
