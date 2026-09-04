@@ -120,7 +120,13 @@ def get_stats_timestamp():
     monitored_stats = get_monitored_stats_types()
     missing_stats = [stats_type for stats_type in monitored_stats if stats_type not in timestamps]
     if missing_stats:
-        current_app.logger.error("No generation timestamp found for stats: %s", ", ".join(missing_stats))
+        current_app.logger.error(
+            "No generation timestamp found for %d stats: %s",
+            len(missing_stats),
+            ", ".join(missing_stats)
+        )
+
+    if not timestamps:
         return None
 
     return min(timestamps.values())
