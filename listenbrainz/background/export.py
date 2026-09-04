@@ -61,6 +61,14 @@ def get_time_ranges_for_listens(min_dt: datetime, max_dt: datetime):
 
 def export_query_to_jsonl(conn, file_path, query, **kwargs):
     """ Export the given query's data to the given file path in jsonl format. """
+    # ``yield_per`` uses a PostgreSQL server-side cursor, which requires a
+    # transaction. Per-request connections use AUTOCOMMIT, so borrow a
+    # short-lived transactional connection only for the duration of a streamed
+    # export query.
+    if conn.get_execution_options().get("isolation_level") == "AUTOCOMMIT":
+        with conn.engine.begin() as txn:
+            return export_query_to_jsonl(txn, file_path, query, **kwargs)
+
     rowcount = 0
     with conn.execute(
         text(query).execution_options(yield_per=BATCH_SIZE),
@@ -175,12 +183,7 @@ def export_listens_for_user(export_id, db_conn, ts_conn, tmp_dir: str, user_id: 
             update_export_progress(db_conn, export_id, f"Exporting listens for the period {period_str}")
             file_path = os.path.join(year_dir, f"{period['month']}.jsonl")
 
-            # ``yield_per`` below uses a PostgreSQL server-side cursor, which
-            # requires a real transaction. The request-scoped Timescale
-            # connection is AUTOCOMMIT, so check out a short-lived transactional
-            # connection for each streamed export file.
-            with ts_conn.engine.begin() as txn:
-                rowcount = export_listens_for_time_range(txn, file_path, user_id, period["start"], period["end"])
+            rowcount = export_listens_for_time_range(ts_conn, file_path, user_id, period["start"], period["end"])
             if rowcount > 0:
                 files.append(file_path)
 
