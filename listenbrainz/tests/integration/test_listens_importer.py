@@ -359,9 +359,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         second_file_path = response.json["file_path"]
 
-        # The worker can process and remove an empty import file immediately;
-        # verify the collision protection using the persisted task paths rather
-        # than the transient upload directory contents.
+        # Empty files may be removed by the worker before this assertion.
         self.assertNotEqual(first_file_path, second_file_path)
 
     def test_import_task_auth(self):

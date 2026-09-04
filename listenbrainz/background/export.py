@@ -61,10 +61,7 @@ def get_time_ranges_for_listens(min_dt: datetime, max_dt: datetime):
 
 def export_query_to_jsonl(conn, file_path, query, **kwargs):
     """ Export the given query's data to the given file path in jsonl format. """
-    # ``yield_per`` uses a PostgreSQL server-side cursor, which requires a
-    # transaction. Per-request connections use AUTOCOMMIT, so borrow a
-    # short-lived transactional connection only for the duration of a streamed
-    # export query.
+    # Server-side cursors need a transaction; AUTOCOMMIT connections do not have one.
     if conn.get_execution_options().get("isolation_level") == "AUTOCOMMIT":
         with conn.engine.begin() as txn:
             return export_query_to_jsonl(txn, file_path, query, **kwargs)

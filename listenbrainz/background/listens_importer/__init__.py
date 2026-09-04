@@ -45,8 +45,6 @@ def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
     else:
         msg = f"Unsupported service: {service}"
         update_import_task(db_conn, import_id, status="failed", progress=msg)
-        # This is a terminal error: the worker cannot process the task until a
-        # newer deployment supports the service. Returning lets the task be
-        # removed instead of immediately claiming and retrying it forever.
+        # The task is already marked failed, so do not retry it.
         return
     importer.import_listens(user_id, import_task)
