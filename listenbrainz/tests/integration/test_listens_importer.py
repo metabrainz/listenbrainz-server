@@ -161,7 +161,6 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             content_type="multipart/form-data"
         )
         self.assert200(response)
-        first_file_path = response.json["file_path"]
 
         orig_data = response.json
         response = self.client.get(
@@ -342,6 +341,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             content_type="multipart/form-data"
         )
         self.assert200(response)
+        first_file_path = response.json["file_path"]
 
         user2 = db_user.get_or_create(self.db_conn, 1851, "listens-import2")
         data = {
