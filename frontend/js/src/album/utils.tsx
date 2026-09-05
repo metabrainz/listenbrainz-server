@@ -1,5 +1,6 @@
 import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import {
   faBarcode,
   faCircleNodes,
@@ -10,12 +11,15 @@ import {
   faMusic,
 } from "@fortawesome/free-solid-svg-icons";
 import {
+  faAmazon,
   faApple,
   faBandcamp,
+  faDeezer,
   faFacebook,
   faInstagram,
   faLastfm,
   faSoundcloud,
+  faSpotify,
   faTwitter,
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
@@ -66,15 +70,103 @@ export type ListeningStats = {
   }>;
 };
 
+/** Streaming services recognised by hostname, for links MusicBrainz only
+ * describes as "streaming" or "free streaming".
+ *
+ * The relationship type is all the API gives us, so every one of these links
+ * would otherwise render as an unlabelled music note titled "streaming", and
+ * the reader cannot tell Qobuz from Tidal without following it (LB-1992).
+ *
+ * `icon` is optional on purpose: Font Awesome has no brand icon for Tidal or
+ * Qobuz, and naming the service in the tooltip is what actually answers
+ * "where does this go?". A brand icon is a bonus where one exists.
+ */
+const streamingServices: Array<{
+  pattern: RegExp;
+  name: string;
+  icon?: IconDefinition;
+  color?: string;
+}> = [
+  { pattern: /(^|\.)qobuz\.com$/, name: "Qobuz" },
+  { pattern: /(^|\.)tidal\.com$/, name: "Tidal" },
+  {
+    pattern: /(^|\.)deezer\.com$/,
+    name: "Deezer",
+    icon: faDeezer,
+    color: "#A238FF",
+  },
+  {
+    pattern: /(^|\.)spotify\.com$/,
+    name: "Spotify",
+    icon: faSpotify,
+    color: dataSourcesInfo.spotify.color,
+  },
+  {
+    pattern: /(^|\.)music\.amazon\.[a-z.]+$|(^|\.)amazon\.[a-z.]+$/,
+    name: "Amazon Music",
+    icon: faAmazon,
+    color: "#FF9900",
+  },
+  {
+    pattern: /(^|\.)music\.apple\.com$/,
+    name: "Apple Music",
+    icon: faApple,
+    color: dataSourcesInfo.appleMusic.color,
+  },
+  {
+    pattern: /(^|\.)bandcamp\.com$/,
+    name: "Bandcamp",
+    icon: faBandcamp,
+    color: "#629AA9",
+  },
+  {
+    pattern: /(^|\.)soundcloud\.com$/,
+    name: "SoundCloud",
+    icon: faSoundcloud,
+    color: dataSourcesInfo.soundcloud.color,
+  },
+  { pattern: /(^|\.)jiosaavn\.com$/, name: "JioSaavn" },
+  { pattern: /(^|\.)gaana\.com$/, name: "Gaana" },
+  { pattern: /(^|\.)audiomack\.com$/, name: "Audiomack" },
+  { pattern: /(^|\.)napster\.com$/, name: "Napster" },
+  { pattern: /(^|\.)pandora\.com$/, name: "Pandora" },
+  { pattern: /(^|\.)music\.yandex\.[a-z]+$/, name: "Yandex Music" },
+  { pattern: /(^|\.)boomplay\.com$/, name: "Boomplay" },
+  { pattern: /(^|\.)anghami\.com$/, name: "Anghami" },
+];
+
+/** Identify the streaming service a URL points at, by hostname.
+ *
+ * Matching on the hostname rather than the whole URL keeps a service name in a
+ * path or query string (".../artist/tidal-tribute") from being mistaken for the
+ * host. Returns undefined for anything unrecognised, and for a URL that does
+ * not parse, so callers fall back to the relationship name.
+ */
+export function getStreamingServiceFromURL(url: string) {
+  let hostname;
+  try {
+    ({ hostname } = new URL(url));
+  } catch {
+    return undefined;
+  }
+  return streamingServices.find(({ pattern }) => pattern.test(hostname));
+}
+
 export function getRelIconLink(relName: string, relValue: string) {
   let icon;
   let color;
   let isYoutube = false;
+  // Falls back to the relationship name, which is all we had before.
+  let title = relName;
   switch (relName) {
     case "streaming":
-    case "free streaming":
-      icon = faMusic;
+    case "free streaming": {
+      const service = getStreamingServiceFromURL(relValue);
+      icon = service?.icon ?? faMusic;
+      color = service?.color;
+      title = service?.name ?? relName;
       break;
+    }
     case "lyrics":
       icon = faMicrophone;
       break;
@@ -143,7 +235,7 @@ export function getRelIconLink(relName: string, relValue: string) {
     <a
       key={relName}
       href={relValue}
-      title={relName}
+      title={title}
       className="btn btn-icon btn-link"
       target="_blank"
       rel="noopener noreferrer"
