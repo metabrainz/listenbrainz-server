@@ -25,7 +25,8 @@ def post_telegram_message(msg):
                           data={
                               'chat_id': config.SERVICE_MONITOR_TELEGRAM_CHAT_ID,
                               'text': msg
-                          })
+                          },
+                          timeout=10)
         if r.status_code == 200:
             return
 

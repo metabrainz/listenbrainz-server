@@ -68,7 +68,7 @@ def create_database(database: str):
          database: the database's name
     """
     databases_url = _get_database_url(database)
-    response = requests.put(databases_url)
+    response = requests.put(databases_url, timeout=30)
     response.raise_for_status()
 
 
@@ -83,7 +83,7 @@ def list_databases(stat_prefix: str) -> list[str]:
     starts with the given stat prefix.
     """
     databases_url = f"{get_base_url()}/_all_dbs"
-    response = requests.get(databases_url)
+    response = requests.get(databases_url, timeout=30)
     response.raise_for_status()
     all_databases = response.json()
 
@@ -120,7 +120,7 @@ def delete_database(prefix: str):
         if check_database_lock(database):
             retained.append(database)
         else:
-            response = requests.delete(_get_database_url(database))
+            response = requests.delete(_get_database_url(database), timeout=30)
             response.raise_for_status()
             deleted.append(database)
 
@@ -142,7 +142,7 @@ def fetch_data(prefix: str, user_id: int):
 
     for database in databases:
         document_url = f"{_get_database_url(database)}/{user_id}"
-        response = requests.get(document_url)
+        response = requests.get(document_url, timeout=30)
         if response.status_code == 404:
             continue
         response.raise_for_status()
@@ -158,7 +158,7 @@ def fetch_exact_data(database: str, document_id: str):
          document_id: the document_id to retrieve data for
     """
     document_url = f"{_get_database_url(database)}/{document_id}"
-    response = requests.get(document_url)
+    response = requests.get(document_url, timeout=30)
     if response.status_code == 404:
         return None
     return response.json()
@@ -171,7 +171,7 @@ def insert_data(database: str, data: list[dict]):
 
     with start_span(op="http", name="insert docs in couchdb using api"):
         couchdb_url = f"{_get_database_url(database)}/_bulk_docs"
-        response = requests.post(couchdb_url, data=docs, headers={"Content-Type": "application/json"})
+        response = requests.post(couchdb_url, data=docs, headers={"Content-Type": "application/json"}, timeout=30)
         response.raise_for_status()
 
     with start_span(op="deserializing", name="checking response for conflicts"):
@@ -189,7 +189,8 @@ def insert_data(database: str, data: list[dict]):
         response = requests.post(
             f"{_get_database_url(database)}/_bulk_get",
             data=conflict_docs,
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
+            timeout=30,
         )
         response.raise_for_status()
 
@@ -209,7 +210,7 @@ def insert_data(database: str, data: list[dict]):
         docs_to_update = orjson.dumps({"docs": docs_to_update})
 
     with start_span(op="http", name="retry updating conflicts in database"):
-        response = requests.post(couchdb_url, data=docs_to_update, headers={"Content-Type": "application/json"})
+        response = requests.post(couchdb_url, data=docs_to_update, headers={"Content-Type": "application/json"}, timeout=30)
         response.raise_for_status()
 
 
@@ -234,11 +235,11 @@ def delete_data(database: str, doc_id: int | str):
          doc_id: the id of the document to delete
     """
     document_url = f"{_get_database_url(database)}/{doc_id}"
-    response = requests.head(document_url)
+    response = requests.head(document_url, timeout=30)
     response.raise_for_status()
 
     rev = json.loads(response.headers.get("ETag"))
-    response = requests.delete(document_url, params={"rev": rev})
+    response = requests.delete(document_url, params={"rev": rev}, timeout=30)
     response.raise_for_status()
 
 
@@ -247,7 +248,7 @@ def check_database_lock(database: str):
      DATABASE_LOCK_FILE. A database is usually locked only during dumps.
     """
     url = f"{_get_database_url(database)}/{DATABASE_LOCK_FILE}"
-    response = requests.get(url)
+    response = requests.get(url, timeout=30)
     return response.status_code == 200
 
 
@@ -260,7 +261,7 @@ def lock_database(database: str):
     """
     document_url = f"{_get_database_url(database)}/{DATABASE_LOCK_FILE}"
     # TODO: figure out why PUT works but POST fails with a weird referer header error
-    response = requests.put(document_url, json={})
+    response = requests.put(document_url, json={}, timeout=30)
     response.raise_for_status()
 
 
@@ -312,7 +313,7 @@ def dump_database(prefix: str, fp: BinaryIO):
     try:
         with _get_requests_session() as http:
             database_url = _get_database_url(database)
-            response = http.get(database_url)
+            response = http.get(database_url, timeout=120)
             total_docs = response.json()["doc_count"]
 
             all_docs_url = f"{database_url}/_all_docs"
@@ -327,7 +328,7 @@ def dump_database(prefix: str, fp: BinaryIO):
                 if startkey_docid is not None:
                     params["startkey_docid"] = startkey_docid
                     params["skip"] = 1
-                response = http.get(all_docs_url, params=params)
+                response = http.get(all_docs_url, params=params, timeout=120)
 
                 rows = orjson.loads(response.content)["rows"]
                 for row in rows:
