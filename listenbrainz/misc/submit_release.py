@@ -34,7 +34,8 @@ def submit_listen(url, listen_type, payload, token):
         },
         headers={
             "Authorization": "Token {0}".format(token)
-        }
+        },
+        timeout=10,
     )
     response.raise_for_status()
 
@@ -56,9 +57,10 @@ def submit_release_impl(token, release, url):
     """
 
     resp = requests.get(
-        "https://musicbrainz.org/ws/2/release/%s?inc=recordings+artists&fmt=json" % release)
+        "https://musicbrainz.org/ws/2/release/%s?inc=recordings+artists&fmt=json" % release,
+        timeout=10)
     if resp.status_code != 200:
-        print("Failed to fetch album: %d" % resp.code)
+        print("Failed to fetch album: %d" % resp.status_code)
         sys.exit(-1)
 
     jdata = resp.json()
