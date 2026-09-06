@@ -805,12 +805,16 @@ def add_playlist_collaborators(ts_conn, playlist_id, collaborator_ids):
 
 
 def get_collaborators_names_from_ids(db_conn, collaborator_ids: List[int]):
-    collaborators = []
-    # TODO: Look this up in one query
-    for user_id in collaborator_ids:
-        user = db_user.get(db_conn, user_id)
-        if user:
-            collaborators.append(user["musicbrainz_id"])
+    if not collaborator_ids:
+        return []
+
+    query = text("""
+        SELECT musicbrainz_id
+          FROM "user"
+         WHERE id IN :collaborator_ids
+    """)
+    result = db_conn.execute(query, {"collaborator_ids": tuple(collaborator_ids)})
+    collaborators = [row[0] for row in result.fetchall()]
     collaborators.sort()
     return collaborators
 
