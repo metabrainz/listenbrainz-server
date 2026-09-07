@@ -234,6 +234,7 @@ export default NiceModal.create(() => {
 
   const switchMode = React.useCallback(
     (pastedURL: string) => {
+      const trimmedURL = pastedURL ? pastedURL.trim() : "";
       if (listenOption === SubmitListenType.track) {
         setListenOption(SubmitListenType.album);
       } else if (listenOption === SubmitListenType.album) {
@@ -242,7 +243,7 @@ export default NiceModal.create(() => {
       setTimeout(() => {
         // Trigger search in the inner (grandchild) search input component by modifying the textToSearch prop in child component
         // Give it some time to allow re-render and trigger search in the correct child component
-        setTextToSearch(pastedURL);
+        setTextToSearch(trimmedURL);
       }, 200);
       setTimeout(() => {
         // Reset text trigger
