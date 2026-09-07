@@ -24,6 +24,7 @@ import {
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
 import { dataSourcesInfo } from "../settings/brainzplayer/BrainzPlayerSettings";
+import { faQobuz } from "../common/icons/faQobuz";
 
 export type SimilarArtist = {
   artist_mbid: string;
@@ -73,13 +74,7 @@ export type ListeningStats = {
 /** Streaming services recognised by hostname, for links MusicBrainz only
  * describes as "streaming" or "free streaming".
  *
- * The relationship type is all the API gives us, so every one of these links
- * would otherwise render as an unlabelled music note titled "streaming", and
- * the reader cannot tell Qobuz from Tidal without following it (LB-1992).
- *
- * `icon` is optional on purpose: Font Awesome has no brand icon for Tidal or
- * Qobuz, and naming the service in the tooltip is what actually answers
- * "where does this go?". A brand icon is a bonus where one exists.
+ * `icon` is optional in case there is no Font Awesome brand icon.
  */
 const streamingServices: Array<{
   pattern: RegExp;
@@ -87,7 +82,12 @@ const streamingServices: Array<{
   icon?: IconDefinition;
   color?: string;
 }> = [
-  { pattern: /(^|\.)qobuz\.com$/, name: "Qobuz" },
+  {
+    pattern: /(^|\.)qobuz\.com$/,
+    name: "Qobuz",
+    icon: faQobuz,
+    color: "#0070EF",
+  },
   { pattern: /(^|\.)tidal\.com$/, name: "Tidal" },
   {
     pattern: /(^|\.)deezer\.com$/,
@@ -102,7 +102,9 @@ const streamingServices: Array<{
     color: dataSourcesInfo.spotify.color,
   },
   {
-    pattern: /(^|\.)music\.amazon\.[a-z.]+$|(^|\.)amazon\.[a-z.]+$/,
+    // The TLD is anchored so that a subdomain of someone else's domain --
+    // amazon.evil.com -- cannot match, while the real regional TLDs do.
+    pattern: /(^|\.)(music\.)?amazon\.(com|[a-z]{2,3}(\.[a-z]{2})?)$/,
     name: "Amazon Music",
     icon: faAmazon,
     color: "#FF9900",

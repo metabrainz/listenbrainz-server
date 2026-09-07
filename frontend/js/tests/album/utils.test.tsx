@@ -7,15 +7,17 @@ import {
 } from "../../src/album/utils";
 
 describe("getStreamingServiceFromURL", () => {
-  it("identifies services that have no brand icon", () => {
-    // The case from LB-1992: a Qobuz link showed a bare music note, and Font
-    // Awesome has no Qobuz icon, so the name is the only thing that can help.
+  it("identifies services that have a custom icon", () => {
     const qobuz = getStreamingServiceFromURL(
       "https://open.qobuz.com/artist/12345"
     );
     expect(qobuz?.name).toEqual("Qobuz");
-    expect(qobuz?.icon).toBeUndefined();
+    expect(qobuz?.icon).toBeDefined();
+  });
 
+  it("identifies services that have no icon yet", () => {
+    // Tidal's Font Awesome icon only exists in v7; until the dependency is
+    // bumped, the tooltip name is what tells the reader where the link goes.
     const tidal = getStreamingServiceFromURL(
       "https://tidal.com/browse/artist/678"
     );
@@ -43,6 +45,19 @@ describe("getStreamingServiceFromURL", () => {
     expect(
       getStreamingServiceFromURL("https://evil-qobuz.com/artist/1")
     ).toBeUndefined();
+  });
+
+  it("anchors the TLD so a lookalike parent domain cannot match", () => {
+    // amazon.evil.com is a subdomain of evil.com, not of amazon.
+    expect(
+      getStreamingServiceFromURL("https://amazon.evil.com/artist/1")
+    ).toBeUndefined();
+    expect(
+      getStreamingServiceFromURL("https://music.amazon.co.jp/artist/1")?.name
+    ).toEqual("Amazon Music");
+    expect(
+      getStreamingServiceFromURL("https://www.amazon.de/dp/B000")?.name
+    ).toEqual("Amazon Music");
   });
 
   it("does not match a service name that only appears in the path", () => {
