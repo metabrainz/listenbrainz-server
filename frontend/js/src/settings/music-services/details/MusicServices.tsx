@@ -13,8 +13,13 @@ import {
   setupAppleMusicKit,
 } from "../../../common/brainzplayer/AppleMusicPlayer";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
+import {
+  EmailVerificationRequiredAlert,
+  EmailVerificationRequiredToastMessage,
+} from "../../../utils/emailVerification";
 
 type MusicServicesLoaderData = {
+  user_has_email: boolean;
   current_spotify_permissions: string;
   current_critiquebrainz_permissions: string;
   current_soundcloud_permissions: string;
@@ -50,6 +55,7 @@ export default function MusicServices() {
   } = React.useContext(GlobalAppContext);
 
   const loaderData = useLoaderData() as MusicServicesLoaderData;
+  const userHasEmail = loaderData.user_has_email;
 
   const { appleAuth } = React.useContext(GlobalAppContext);
 
@@ -75,10 +81,27 @@ export default function MusicServices() {
     permissions.navidrome !== "listen"
       ? "btn-default"
       : (navidromeIsEditing && "btn-success") || "btn-warning";
+
+  const showEmailRequiredError = React.useCallback(() => {
+    toast.error(
+      <ToastMsg
+        title="Email verification required"
+        message={
+          <EmailVerificationRequiredToastMessage action="connecting a service" />
+        }
+      />
+    );
+  }, []);
+
   const handlePermissionChange = async (
     serviceName: string,
     newValue: string
   ) => {
+    if (!userHasEmail && newValue !== "disable") {
+      showEmailRequiredError();
+      return;
+    }
+
     try {
       const fetchUrl = `/settings/music-services/${serviceName}/disconnect/`;
       let fetchBody;
@@ -170,6 +193,11 @@ export default function MusicServices() {
     serviceName: string,
     action: string
   ) => {
+    if (!userHasEmail && action !== "disable") {
+      showEmailRequiredError();
+      return;
+    }
+
     try {
       await loadAppleMusicKit();
       const musicKitInstance = await setupAppleMusicKit(
@@ -232,6 +260,11 @@ export default function MusicServices() {
     evt: React.FormEvent<HTMLFormElement>
   ) => {
     evt.preventDefault();
+    if (!userHasEmail) {
+      showEmailRequiredError();
+      return;
+    }
+
     try {
       const formData = new FormData(evt.currentTarget);
       const hostUrl = formData.get("funkwhaleHostUrl") as string;
@@ -293,6 +326,11 @@ export default function MusicServices() {
     evt: React.FormEvent<HTMLFormElement>
   ) => {
     evt.preventDefault();
+    if (!userHasEmail) {
+      showEmailRequiredError();
+      return;
+    }
+
     try {
       const formData = new FormData(evt.currentTarget);
       let hostUrl = formData.get("navidromeHostUrl") as string;
@@ -416,6 +454,8 @@ export default function MusicServices() {
     const funkwhaleSuccess = params.get("success");
     const navidromeError = params.get("navidrome_error");
     const navidromeSuccess = params.get("navidrome_success");
+    const soundcloudError = params.get("soundcloud_error");
+    const serviceError = params.get("service_error");
 
     if (funkwhaleSuccess === "Successfully connected to Funkwhale") {
       toast.success(
@@ -451,12 +491,32 @@ export default function MusicServices() {
       );
     }
 
+    if (soundcloudError) {
+      toast.error(
+        <ToastMsg
+          title="SoundCloud Connection Error"
+          message={decodeURIComponent(soundcloudError)}
+        />
+      );
+    }
+
+    if (serviceError) {
+      toast.error(
+        <ToastMsg
+          title="Connection Error"
+          message={decodeURIComponent(serviceError)}
+        />
+      );
+    }
+
     // Clear the query parameters from the URL for both success and error cases
     if (
       funkwhaleSuccess ||
       funkwhaleError ||
       navidromeSuccess ||
-      navidromeError
+      navidromeError ||
+      soundcloudError ||
+      serviceError
     ) {
       window.history.replaceState(
         {},
@@ -473,6 +533,10 @@ export default function MusicServices() {
       </Helmet>
       <div id="user-profile">
         <h2 className="page-title">Connect third-party music services</h2>
+
+        {!userHasEmail && (
+          <EmailVerificationRequiredAlert action="connecting music services" />
+        )}
 
         <div className="card">
           <div className="card-header">
@@ -504,6 +568,7 @@ export default function MusicServices() {
                   title="Activate both features (recommended)"
                   details="Permanently record your listening history and make it available for others to view and explore. Discover and play songs on ListenBrainz, and import/export playlists to and from Spotify."
                   handlePermissionChange={handlePermissionChange}
+                  disabled={!userHasEmail}
                 />
                 <ServicePermissionButton
                   service="spotify"
@@ -512,6 +577,7 @@ export default function MusicServices() {
                   title="Play music on ListenBrainz"
                   details="Discover and play songs on ListenBrainz, and import/export playlists to and from Spotify."
                   handlePermissionChange={handlePermissionChange}
+                  disabled={!userHasEmail}
                 />
                 <ServicePermissionButton
                   service="spotify"
@@ -520,6 +586,7 @@ export default function MusicServices() {
                   title="Record listening history"
                   details="Record your listening history permanently and make it available for others to view and explore."
                   handlePermissionChange={handlePermissionChange}
+                  disabled={!userHasEmail}
                 />
                 <ServicePermissionButton
                   service="spotify"
@@ -585,6 +652,7 @@ export default function MusicServices() {
                   title="Publish reviews for your listens"
                   details="Publish reviews from ListenBrainz."
                   handlePermissionChange={handlePermissionChange}
+                  disabled={!userHasEmail}
                 />
                 <ServicePermissionButton
                   service="critiquebrainz"
@@ -607,6 +675,7 @@ export default function MusicServices() {
           existingLatestListenedAt={
             loaderData.current_lastfm_settings?.latest_listened_at
           }
+          userHasEmail={userHasEmail}
           canImportFeedback
         />
 
@@ -618,6 +687,7 @@ export default function MusicServices() {
           existingLatestListenedAt={
             loaderData.current_librefm_settings?.latest_listened_at
           }
+          userHasEmail={userHasEmail}
           canImportFeedback
         />
 
@@ -639,6 +709,7 @@ export default function MusicServices() {
                   title="Play music on ListenBrainz"
                   details="Connect to your SoundCloud account to play music using SoundCloud on ListenBrainz."
                   handlePermissionChange={handlePermissionChange}
+                  disabled={!userHasEmail}
                 />
                 <ServicePermissionButton
                   service="soundcloud"
@@ -677,6 +748,7 @@ export default function MusicServices() {
                   title="Play music on ListenBrainz"
                   details="Play music using Apple Music on ListenBrainz."
                   handlePermissionChange={handleAppleMusicPermissionChange}
+                  disabled={!userHasEmail}
                 />
                 <ServicePermissionButton
                   service="appleMusic"
@@ -733,6 +805,7 @@ export default function MusicServices() {
                     }
                     defaultValue={funkwhaleAuth?.instance_url || ""}
                     readOnly={permissions.funkwhale === "listen"}
+                    disabled={!userHasEmail}
                   />
                 </div>
               </div>
@@ -742,7 +815,7 @@ export default function MusicServices() {
                   type="submit"
                   className="music-service-option"
                   style={{ width: "100%" }}
-                  disabled={permissions.funkwhale === "listen"}
+                  disabled={!userHasEmail || permissions.funkwhale === "listen"}
                 >
                   <input
                     readOnly
@@ -828,6 +901,7 @@ export default function MusicServices() {
                     readOnly={
                       !navidromeIsEditing && permissions.navidrome === "listen"
                     }
+                    disabled={!userHasEmail}
                     required={
                       navidromeIsEditing || permissions.navidrome !== "listen"
                     }
@@ -857,6 +931,7 @@ export default function MusicServices() {
                     readOnly={
                       !navidromeIsEditing && permissions.navidrome === "listen"
                     }
+                    disabled={!userHasEmail}
                     required={
                       navidromeIsEditing || permissions.navidrome !== "listen"
                     }
@@ -873,13 +948,16 @@ export default function MusicServices() {
                       id="navidromePassword"
                       name="navidromePassword"
                       placeholder="Navidrome password"
+                      disabled={!userHasEmail}
                       required
                     />
                   </div>
                 )}
                 <div style={{ flex: 0, alignSelf: "end" }}>
                   <button
-                    disabled={permissions.navidrome !== "listen"}
+                    disabled={
+                      !userHasEmail || permissions.navidrome !== "listen"
+                    }
                     type="button"
                     className={`btn ${navidromeEditButtonClass}`}
                     onClick={handleNavidromeEditToggle}
@@ -894,7 +972,7 @@ export default function MusicServices() {
                   type="submit"
                   className="music-service-option"
                   style={{ width: "100%" }}
-                  disabled={permissions.navidrome === "listen"}
+                  disabled={!userHasEmail || permissions.navidrome === "listen"}
                 >
                   <input
                     readOnly

@@ -47,7 +47,6 @@ class AppleService(ExternalService):
 
         Args:
             user_id: A flask auth `current_user.id`
-            token: A dict containing jwt encoded token and its expiry time
         """
         token = self.fetch_access_token()
         access_token = token["access_token"]

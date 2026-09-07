@@ -164,7 +164,7 @@ class BaseListensImporter(ABC):
                 validate_listen(listen, LISTEN_TYPE_IMPORT)
                 validated_listens.append(listen)
             except ListenValidationError as e:
-                current_app.logger.error("Invalid listen: %s", e)
+                current_app.logger.warning("Invalid listen: %s", e)
         
         validation_stats["success_count"] += len(validated_listens)
 

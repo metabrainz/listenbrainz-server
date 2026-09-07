@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 
 import psycopg2
 import orjson
-from brainzutils.musicbrainz_db import engine as mb_engine
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, request, jsonify, current_app
 
@@ -77,7 +76,7 @@ def submit_listen():
     :resheader Content-Type: *application/json*
     """
     user = validate_auth_header(fetch_email=True, scopes=["listenbrainz:submit-listens"])
-    if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
+    if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
         raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
 
     if user['is_paused']:

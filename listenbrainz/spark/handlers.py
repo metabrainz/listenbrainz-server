@@ -11,13 +11,14 @@ from sentry_sdk import start_transaction
 
 import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
+import listenbrainz.db.statistics_generation as db_statistics_generation
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+import listenbrainz.shared.status_cache_helpers as status_cache_helpers
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from listenbrainz.db import year_in_music
 from listenbrainz.db.fresh_releases import insert_fresh_releases
-from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.troi.daily_jams import run_post_recommendation_troi_bot
 from listenbrainz.troi.weekly_playlists import process_weekly_playlists, process_weekly_playlists_end
 from listenbrainz.troi.year_in_music import process_yim_playlists, process_yim_playlists_end
@@ -262,6 +263,11 @@ def handle_fresh_releases(message):
         current_app.logger.error(f"{str(e)}. Response: %s", e.response.json(), exc_info=True)
 
 
+def handle_statistics_generation_complete(message):
+    db_statistics_generation.mark_statistics_generated(db_conn, message["stats_type"])
+    status_cache_helpers.invalidate_stats_timestamps()
+
+
 def notify_mapping_import(data):
     """ Send an email after msid mbid mapping has been successfully imported into the cluster.
     """
@@ -302,32 +308,6 @@ def cf_recording_recommendations_complete(data):
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
-
-
-def handle_similar_users(message):
-    """ Save the similar users data to the DB
-    """
-
-    if current_app.config['TESTING']:
-        return
-
-    user_count, avg_similar_users, error = import_user_similarities(message['data'])
-    if error:
-        send_mail(
-            subject='Similar User data failed to be calculated',
-            text=render_template('emails/similar_users_failed_notification.txt', error=error),
-            recipients=['listenbrainz-observability@metabrainz.org'],
-            from_name='ListenBrainz',
-            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
-        )
-    else:
-        send_mail(
-            subject='Similar User data has been calculated',
-            text=render_template('emails/similar_users_updated_notification.txt', user_count=str(user_count), avg_similar_users="%.1f" % avg_similar_users),
-            recipients=['listenbrainz-observability@metabrainz.org'],
-            from_name='ListenBrainz',
-            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
-        )
 
 
 def handle_yim_similar_users(message):

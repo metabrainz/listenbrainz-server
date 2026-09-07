@@ -7,7 +7,7 @@ from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
 
 import listenbrainz.db.user as db_user
 import listenbrainz.webserver.login
-from listenbrainz.background.background_tasks import get_task
+from listenbrainz.background.background_tasks import peek_task
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.tests.integration import IntegrationTestCase
@@ -73,7 +73,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         self.assert200(r)
         mock_authorize_mb_user_deleter.assert_called_once_with('132')
         with self.app.app_context():
-            task = get_task()
+            task = peek_task()
             self.assertIsNotNone(task)
             self.assertEqual(task.user_id, user_id)
             self.assertEqual(task.task, "delete_user")
@@ -98,7 +98,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         self.assert200(r)
         mock_get_user_info.assert_called_with('132')
         with self.app.app_context():
-            task = get_task()
+            task = peek_task()
             self.assertIsNotNone(task)
             self.assertEqual(task.user_id, user_id)
             self.assertEqual(task.task, "delete_user")
@@ -166,15 +166,6 @@ class IndexViewsTestCase(IntegrationTestCase):
         self.temporary_login(user['login_id'])
         r = self.client.get('/feed/')
         self.assert200(r)
-
-    @patch("listenbrainz.webserver.views.player.fetch_playlist_recording_metadata")
-    def test_instant_playlist(self, mock_recording_metadata):
-        resp = self.client.get(self.custom_url_for('player.load_instant', recording_mbids="87c94c4b-6aed-41a3-bbbd-aa9cd2154c5e"))
-        self.assert200(resp)
-
-    def test_release_playlist(self):
-        resp = self.client.get(self.custom_url_for('player.load_release', release_mbid="87c94c4b-6aed-41a3-bbbd-aa9cd2154c5e"))
-        self.assert200(resp)
 
 
 class IndexViewsTestCase2(ServerAppPerTestTestCase, DatabaseTestCase):

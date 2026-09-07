@@ -22,6 +22,8 @@ from listenbrainz.labs_api.labs.api.spotify.spotify_metadata_lookup import Spoti
 from listenbrainz.labs_api.labs.api.user_listen_sessions import UserListensSessionQuery
 from listenbrainz.labs_api.labs.api.tag_similarity import TagSimilarityQuery
 from listenbrainz.labs_api.labs.api.bulk_tag_lookup import BulkTagLookup
+from sqlalchemy.pool import QueuePool
+
 from listenbrainz.webserver import load_config
 from listenbrainz import db
 from listenbrainz.db import timescale as ts
@@ -48,8 +50,23 @@ register_query(BulkTagLookup())
 app = create_app()
 load_config(app)
 init_sentry(app, "DATASETS_SENTRY_DSN")
-db.init_db_connection(app.config["SQLALCHEMY_DATABASE_URI"])
-ts.init_db_connection(app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"])
+# labs_api uwsgi runs single-threaded workers (no `threads = N`), so each
+# worker only needs one connection at a time per backend. Small pools keep
+# pgbouncer client churn low without holding many idle slots.
+db.init_db_connection(
+    app.config["SQLALCHEMY_DATABASE_URI"],
+    poolclass=QueuePool,
+    pool_size=2,
+    max_overflow=2,
+    pool_pre_ping=True,
+)
+ts.init_db_connection(
+    app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"],
+    poolclass=QueuePool,
+    pool_size=2,
+    max_overflow=2,
+    pool_pre_ping=True,
+)
 cache.init(
     host=app.config["REDIS_HOST"],
     port=app.config["REDIS_PORT"],

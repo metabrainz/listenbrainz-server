@@ -96,10 +96,14 @@ export default class InternetArchivePlayer
     });
   };
 
-  stop = () => {
+  pause = () => {
     if (!this.audioRef?.current?.paused) {
       this.audioRef?.current?.pause();
     }
+  };
+
+  stop = () => {
+    this.pause();
   };
 
   handleAudioEnded = () => {

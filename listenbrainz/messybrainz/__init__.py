@@ -1,6 +1,7 @@
 import uuid
 from typing import Iterable
 
+import psycopg2
 import sqlalchemy
 import sqlalchemy.exc
 from psycopg2.extras import execute_values
@@ -16,8 +17,7 @@ def submit_listens_and_sing_me_a_sweet_song(recordings):
     Args:
         recordings: a list of recordings to be inserted
     Returns:
-        A dict with key 'payload' and value set to a list of dicts containing the
-        recording data for each inserted recording.
+        A list of recording MSIDs in the same order as the given recordings.
     """
     for r in recordings:
         if "artist" not in r or "title" not in r:
@@ -30,7 +30,7 @@ def submit_listens_and_sing_me_a_sweet_song(recordings):
             with timescale.engine.connect() as connection:
                 data = insert_all_in_transaction(connection, recordings)
                 success = True
-        except sqlalchemy.exc.IntegrityError:
+        except (psycopg2.IntegrityError, sqlalchemy.exc.IntegrityError):
             # If we get an IntegrityError then our transaction failed.
             # We should try again
             pass
@@ -50,21 +50,107 @@ def insert_all_in_transaction(ts_conn, submissions: list[dict]):
         ts_conn: timescale database connection
         submissions: a list of recordings to be inserted
     Returns:
-        A list of dicts containing the recording data for each inserted recording
+        A list of recording MSIDs in the same order as the given submissions
     """
-    ret = []
+    if not submissions:
+        return []
+
+    unique_submissions = []
+    key_to_lookup_idx = {}
+    keys = []
     for submission in submissions:
-        result = submit_recording(
-            ts_conn,
+        key = _submission_key(submission)
+        keys.append(key)
+        if key not in key_to_lookup_idx:
+            key_to_lookup_idx[key] = len(unique_submissions)
+            unique_submissions.append(submission)
+
+    existing_msids = _get_msids_for_submissions(ts_conn, unique_submissions)
+    key_to_msid = {}
+    insert_rows = []
+    for key, idx in key_to_lookup_idx.items():
+        msid = existing_msids.get(idx)
+        if msid is None:
+            submission = unique_submissions[idx]
+            msid = str(uuid.uuid4())
+            insert_rows.append((
+                msid,
+                submission["title"],
+                submission["artist"],
+                submission.get("release"),
+                submission.get("track_number"),
+                submission.get("duration")
+            ))
+        key_to_msid[key] = msid
+
+    if insert_rows:
+        query = """
+            INSERT INTO messybrainz.submissions (gid, recording, artist_credit, release, track_number, duration)
+                 VALUES %s
+        """
+        with ts_conn.connection.cursor() as curs:
+            execute_values(curs, query, insert_rows, page_size=len(insert_rows))
+
+    ts_conn.connection.commit()
+    return [key_to_msid[key] for key in keys]
+
+
+def _submission_key(submission: dict) -> tuple:
+    """Return the case-insensitive lookup key used by MessyBrainz submissions.
+
+    also duration is normalized to an int so that the in-batch dedup matches the
+    database lookup.
+    """
+    return (
+        submission["title"].lower(),
+        submission["artist"].lower(),
+        _lower_optional(submission.get("release")),
+        _lower_optional(submission.get("track_number")),
+        _int_optional(submission.get("duration"))
+    )
+
+
+def _lower_optional(value):
+    return value.lower() if value is not None else None
+
+
+def _int_optional(value):
+    return int(value) if value is not None else None
+
+
+def _get_msids_for_submissions(ts_conn, submissions: list[dict]) -> dict[int, str]:
+    """Bulk lookup existing MSIDs for submissions, preserving earliest-submitted duplicates."""
+    if not submissions:
+        return {}
+
+    query = """
+        WITH incoming (idx, recording, artist_credit, release, track_number, duration) AS (VALUES %s)
+        SELECT DISTINCT ON (incoming.idx)
+               incoming.idx
+             , submissions.gid::TEXT AS recording_msid
+          FROM incoming
+          JOIN messybrainz.submissions
+            ON lower(submissions.recording) = lower(incoming.recording::TEXT)
+           AND lower(submissions.artist_credit) = lower(incoming.artist_credit::TEXT)
+           AND lower(submissions.release) IS NOT DISTINCT FROM lower(incoming.release::TEXT)
+           AND lower(submissions.track_number) IS NOT DISTINCT FROM lower(incoming.track_number::TEXT)
+           AND submissions.duration IS NOT DISTINCT FROM incoming.duration::INTEGER
+      ORDER BY incoming.idx, submissions.submitted
+    """
+    values = [
+        (
+            idx,
             submission["title"],
             submission["artist"],
             submission.get("release"),
             submission.get("track_number"),
             submission.get("duration")
         )
-        ret.append(result)
-    ts_conn.commit()
-    return ret
+        for idx, submission in enumerate(submissions)
+    ]
+    with ts_conn.connection.cursor() as curs:
+        rows = execute_values(curs, query, values, fetch=True, page_size=len(values))
+    return {row[0]: row[1] for row in rows}
 
 
 def get_msid(connection, recording, artist, release=None, track_number=None, duration=None):

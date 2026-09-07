@@ -30,6 +30,7 @@ from listenbrainz.db.lastfm_user import User
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 
 
 class APICompatTestCase(ListenAPIIntegrationTestCase):
@@ -282,6 +283,30 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         response = self.wait_for_query_to_have_items(url, num_items=1, query_string={'from_ts': timestamp - 1})
         listens = json.loads(response.data)['payload']['listens']
         self.assertEqual(len(listens), 1)
+
+    def test_record_listen_rejects_unverified_email(self):
+        token = Token.generate(self.db_conn, self.lfm_user.api_key)
+        token.approve(self.db_conn, self.lfm_user.name)
+        session = Session.create(self.db_conn, token)
+
+        old_reject_setting = self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]
+        try:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = True
+            data = {
+                'method': 'track.scrobble',
+                'api_key': self.lfm_user.api_key,
+                'sk': session.sid,
+                'format': 'json',
+                'artist[0]': 'Kishore Kumar',
+                'track[0]': 'Saamne Ye Kaun Aya',
+                'timestamp[0]': int(time.time()),
+            }
+
+            response = self.client.post(self.custom_url_for('api_compat.api_methods'), data=data)
+            self.assert200(response)
+            self.assertEqual(response.json["message"], REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
+        finally:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = old_reject_setting
 
     def test_record_invalid_listen(self):
         """ Tests that error is raised if submited data contains unicode null """

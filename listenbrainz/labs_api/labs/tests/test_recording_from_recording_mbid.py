@@ -241,8 +241,9 @@ class MainTestCase(flask_testing.TestCase):
             'artist_credit_mbids', 'canonical_recording_mbid', 'original_recording_mbid', 'release_name',
             'release_mbid', 'artists', 'tags'])
 
+    @patch('listenbrainz.db.timescale.engine')
     @patch('psycopg2.connect')
-    def test_fetch(self, mock_connect):
+    def test_fetch(self, mock_connect, mock_engine):
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request, RequestSource.json_post)
         self.assertEqual(len(resp), 4)
@@ -251,15 +252,17 @@ class MainTestCase(flask_testing.TestCase):
         self.assertDictEqual(json.loads(resp[2].json()), json_response[2])
         self.assertDictEqual(json.loads(resp[3].json()), json_response[3])
 
+    @patch('listenbrainz.db.timescale.engine')
     @patch('psycopg2.connect')
-    def test_count(self, mock_connect):
+    def test_count(self, mock_connect, mock_engine):
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request, RequestSource.json_post, count=1)
         self.assertEqual(len(resp), 1)
         self.assertDictEqual(json.loads(resp[0].json()), json_response[0])
 
+    @patch('listenbrainz.db.timescale.engine')
     @patch('psycopg2.connect')
-    def test_offset(self, mock_connect):
+    def test_offset(self, mock_connect, mock_engine):
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request, RequestSource.json_post, offset=1)
         self.assertEqual(len(resp), 3)
@@ -267,8 +270,9 @@ class MainTestCase(flask_testing.TestCase):
         self.assertDictEqual(json.loads(resp[1].json()), json_response[2])
         self.assertDictEqual(json.loads(resp[2].json()), json_response[3])
 
+    @patch('listenbrainz.db.timescale.engine')
     @patch('psycopg2.connect')
-    def test_count_and_offset(self, mock_connect):
+    def test_count_and_offset(self, mock_connect, mock_engine):
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request, RequestSource.json_post, count=1, offset=1)
         self.assertEqual(len(resp), 1)

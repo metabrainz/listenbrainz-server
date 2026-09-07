@@ -13,7 +13,6 @@ from listenbrainz.db.background import _with_validation_counts
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed, crossdomain
 from brainzutils.ratelimit import ratelimit
-from brainzutils.musicbrainz_db import engine as mb_engine
 from listenbrainz.db import background
 from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIBadRequest, APIUnauthorized
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
@@ -43,7 +42,7 @@ def create_import_task():
     """ Add a request to upload files and create a background task for the importer """
     user = validate_auth_header(fetch_email=True, scopes=["listenbrainz:submit-listens"])
 
-    if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
+    if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
         raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
 
     if user["is_paused"]:

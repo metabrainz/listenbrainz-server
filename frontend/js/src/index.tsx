@@ -18,7 +18,12 @@ import queryClient from "./utils/QueryClient";
 import ReactQueryDevtool from "./utils/ReactQueryDevTools";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const { domContainer, globalAppContext, sentryProps } = await getPageProps();
+  const {
+    domContainer,
+    globalAppContext,
+    initialAlerts,
+    sentryProps,
+  } = await getPageProps();
   const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
   const { currentUser } = globalAppContext;
 
@@ -46,7 +51,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     globalAppContext?.userPreferences?.brainzplayer?.brainzplayerEnabled ===
     false;
 
-  const routes = getRoutes(currentUser?.name, !brainzPlayerDisabled);
+  const routes = getRoutes(
+    currentUser?.name,
+    !brainzPlayerDisabled,
+    initialAlerts
+  );
   const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouterV7(
     createBrowserRouter
   );
