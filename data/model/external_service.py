@@ -12,6 +12,7 @@ class ExternalServiceType(Enum):
     APPLE = 'apple'
     FUNKWHALE = 'funkwhale'
     NAVIDROME = 'navidrome'
+    TIDAL = 'tidal'
     # these are not MB deployments but LB deployments
     MUSICBRAINZ_PROD = 'musicbrainz-prod'
     MUSICBRAINZ_BETA = 'musicbrainz-beta'

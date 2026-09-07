@@ -10,6 +10,7 @@ export const createBrainzPlayerSettings = (
   internetArchiveEnabled: false,
   navidromeEnabled: false,
   funkwhaleEnabled: false,
+  tidalEnabled: false,
   dataSourcesPriority: [],
   ...overrides,
 });
