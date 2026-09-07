@@ -102,13 +102,11 @@ export default function FlairsSettings() {
   });
   const flairTooltip = (
     <>
-      Every $5 donation unlocks flairs for 1 month,
+      Every $5 donation unlocks flairs for 1 month, with larger donations
+      extending the duration.
       <br />
-      with larger donations extending the duration.
-      <br />
-      Donations stack up, adding more months
-      <br />
-      of unlocked flairs with each contribution.
+      Donations stack up, adding more months of unlocked flairs with each
+      contribution.
     </>
   );
 
