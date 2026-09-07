@@ -68,15 +68,22 @@ class SpotifyListensImporter(ZipBaseListensImporter):
                         self.skipped_short_plays_count += 1
                     continue
 
+                # Skip non-music entries (podcasts, videos, etc.) where
+                # spotify_track_uri is absent or not a track URI.
+                spotify_track_uri = item.get("spotify_track_uri")
+                if not spotify_track_uri or not spotify_track_uri.startswith("spotify:track:"):
+                    continue
+
                 items.append({
                     "artist_name": item.get("master_metadata_album_artist_name"),
                     "track_name": item.get("master_metadata_track_name"),
                     "timestamp": int(item["timestamp"].timestamp()),
-                    "spotify_track_id": item["spotify_track_uri"].split(":")[2],
+                    "spotify_track_id": spotify_track_uri.split(":")[2],
                     "ms_played": item.get("ms_played"),
                     "release_name": item.get("master_metadata_album_name", ""),
                 })
-            except:
+            except Exception:
+                current_app.logger.warning("Failed to parse Spotify listen entry, skipping: %s", item, exc_info=True)
                 continue
 
         if not items:
