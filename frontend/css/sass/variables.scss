@@ -55,7 +55,7 @@ $font-size-base: 1.4rem;
 
 $body-secondary-bg: $gray-light;
 $body-tertiary-bg: #fafafa;
-$body-emphasis-color: $body-color;
+$body-emphasis-color: darken($body-color, 15%);
 
 $success-text-emphasis: #3c763d;
 $success-bg-subtle: #dff0d8;
@@ -162,3 +162,5 @@ $badge-font-size: 1.2rem;
 $grid-gutter-width: 3rem;
 $base-border-radius: 6px;
 $navbar-toggler-border-radius: $base-border-radius;
+
+$tooltip-max-width: 400px;
