@@ -3,6 +3,7 @@ import {
   JSPFTrackToListen,
   MUSICBRAINZ_JSPF_TRACK_EXTENSION,
   getRecordingMBIDFromJSPFTrack,
+  getTrackExtension,
 } from "../playlists/utils";
 
 export default async function enrichJSPFTracks(
@@ -49,10 +50,8 @@ export default async function enrichJSPFTracks(
               join_phrase: a.join_phrase || "",
             })),
           },
-          added_by:
-            track.extension?.[MUSICBRAINZ_JSPF_TRACK_EXTENSION]?.added_by || "",
-          added_at:
-            track.extension?.[MUSICBRAINZ_JSPF_TRACK_EXTENSION]?.added_at || "",
+          added_by: getTrackExtension(track)?.added_by || "",
+          added_at: getTrackExtension(track)?.added_at || "",
         },
       },
     };
