@@ -378,6 +378,7 @@ export default NiceModal.create((props: CBReviewModalProps) => {
           className="CBInfoButton"
           type="button"
           style={{ background: "none", border: 0, padding: 0 }}
+          aria-label="About CritiqueBrainz"
         >
           <FontAwesomeIcon icon={faInfoCircle} style={{ color: "black" }} />
         </button>
