@@ -422,11 +422,14 @@ $youtube-expanded-width: 1280px;
   }
 }
 
-.progress-tooltip .tooltip-inner {
-  background: $primary-color;
-  border-radius: 24px;
-  font-size: 1.2rem;
-  padding: 6px 12px;
+.progress-tooltip {
+  --bs-tooltip-bg: $primary-color;
+  .tooltip-inner {
+    background: $primary-color;
+    border-radius: 24px;
+    font-size: 1.2rem;
+    padding: 6px 12px;
+  }
 }
 
 .volume {
