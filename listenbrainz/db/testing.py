@@ -21,7 +21,7 @@ class DatabaseTestCase(unittest.TestCase):
     def setUp(self):
         db_connect = create_test_database_connect_strings()
         db.init_db_connection(db_connect["DB_CONNECT"])
-        self.db_conn = db.engine.connect()
+        self.db_conn = db.engine.connect().execution_options(isolation_level="AUTOCOMMIT")
 
     def tearDown(self):
         self.db_conn.close()
@@ -62,7 +62,7 @@ class TimescaleTestCase(unittest.TestCase):
         ts_connect = create_test_timescale_connect_strings()
         ts.init_db_connection(ts_connect["DB_CONNECT"])
         self.reset_timescale_db()
-        self.ts_conn = ts.engine.connect()
+        self.ts_conn = ts.engine.connect().execution_options(isolation_level="AUTOCOMMIT")
 
         # listens are dual written, so reset the partitioned database alongside timescale
         listens_connect = create_test_listens_connect_strings()
