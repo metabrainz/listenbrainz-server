@@ -38,6 +38,20 @@ class StatusViewsTestCase(IntegrationTestCase):
         r = self.client.get("/1/status/get-dump-info", query_string={"id": "pqrs"})
         self.assert400(r)
 
+    def test_monitored_stats_types_match_cron_requested_statistics(self):
+        self.assertEqual(
+            set(status_api.get_monitored_stats_types()),
+            {
+                f"{stats_type}_{stats_range}"
+                for stats_range in status_api.ALLOWED_STATISTICS_RANGE
+                for stats_type in (
+                    *status_api.MONITORED_USER_ENTITY_STATS,
+                    *status_api.MONITORED_USER_NON_ENTITY_STATS,
+                    *status_api.MONITORED_ENTITY_LISTENER_STATS,
+                )
+            }
+        )
+
     @patch.object(status_api, "time", return_value=200)
     @patch.object(status_api, "get_global_stats_timestamp", return_value=150)
     @patch.object(status_api, "get_incoming_listens_count", return_value=0)
