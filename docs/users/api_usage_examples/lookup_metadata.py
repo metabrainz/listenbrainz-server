@@ -5,7 +5,7 @@ import requests
 
 # Set DEBUG to True to test local dev server.
 DEBUG = False
-ROOT = 'http://localhost:8100' if DEBUG else 'https://api.listenbrainz.org'
+ROOT = 'http://localhost:8103' if DEBUG else 'https://api.listenbrainz.org'
 
 def lookup_metadata(track_name: str, artist_name: str, incs: str) -> dict:
     """Looks up the metadata for a listen using track name and artist name."""

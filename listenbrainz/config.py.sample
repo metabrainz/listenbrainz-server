@@ -164,7 +164,7 @@ UPLOAD_FOLDER = "/code/listenbrainz/uploads"
 
 # Set to "https://api.listenbrainz.org" if you want to work on frontend for user statistics
 # without going through the process of generating the stats in local environment. Otherwise,
-# set it to "http://localhost:8100"
+# set it to "http://localhost:8103"
 API_URL = 'https://api.listenbrainz.org'
 LASTFM_PROXY_URL = 'http://localhost:8101/'
 SERVER_ROOT_URL = 'http://localhost:8100'

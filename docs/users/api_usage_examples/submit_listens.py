@@ -4,7 +4,7 @@ import requests
 # Set DEBUG to True to test local dev server.
 # API keys for local dev server and the real server are different.
 DEBUG = True
-ROOT = 'http://localhost:8100' if DEBUG else 'https://api.listenbrainz.org'
+ROOT = 'http://localhost:8103' if DEBUG else 'https://api.listenbrainz.org'
 
 def submit_listen(listen_type, payload, token):
     """Submits listens for the track(s) in payload.

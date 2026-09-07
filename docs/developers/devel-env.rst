@@ -279,7 +279,8 @@ different services. We provide a small description of each container here:
 * ``redis``: A redis server to store temporary server data
 * ``timescale``: A PostgreSQL server with the TimescaleDB extension that stores users listens
 * ``rabbitmq``: Used for passing listens between different services
-* ``web``: This is the main ListenBrainz server
+* ``web``: This is the main ListenBrainz web-only server
+* ``api``: The main ListenBrainz API-only server
 * ``api_compat``: A Last.fm-compatible API server
 * ``websockets``: A websocket server used for the user-following and playlist updates on the front-end
 * ``static_builder``: A helper service to build Javascript/Typescript and CSS assets if they are changed

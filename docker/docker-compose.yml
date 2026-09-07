@@ -67,6 +67,22 @@ services:
       - lb_db
       - rabbitmq
       - couchdb
+      - api
+
+  api:
+    image: web
+    environment:
+      FLASK_APP: listenbrainz.webserver:create_api_app()
+    command: flask run -h 0.0.0.0 -p 8103 --debug
+    ports:
+      - "127.0.0.1:8103:8103"
+    volumes:
+      - ..:/code/listenbrainz:z
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
+    depends_on:
+      - redis
+      - lb_db
+      - rabbitmq
 
   api_compat:
     image: web
