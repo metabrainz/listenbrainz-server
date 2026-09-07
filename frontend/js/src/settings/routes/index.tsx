@@ -72,6 +72,17 @@ const getSettingsRoutes = (): RouteObject[] => {
           },
         },
         {
+          path: "notifications/",
+          lazy: {
+            Component: async () => {
+              return (await import("../notifications/Notifications")).default;
+            },
+            loader: async () => {
+              return RouteLoader;
+            },
+          },
+        },
+        {
           path: "select_timezone/",
           lazy: {
             Component: async () => {
