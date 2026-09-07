@@ -9,7 +9,7 @@ type TooltipProps = {
   children: React.ReactElement;
   delay?: OverlayDelay;
   id: string;
-  placement?: "top" | "right" | "bottom" | "left";
+  placement?: "top" | "right" | "bottom" | "left" | "auto";
   tooltip: React.ReactNode;
   trigger?: OverlayTriggerType | OverlayTriggerType[];
 };
@@ -18,7 +18,7 @@ export default function Tooltip({
   children,
   delay,
   id,
-  placement = "top",
+  placement = "auto",
   tooltip,
   trigger = ["hover", "focus"],
 }: TooltipProps) {
