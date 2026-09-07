@@ -1,0 +1,5 @@
+BEGIN;
+
+ALTER TABLE mbid_manual_mapping ADD COLUMN is_unlinked BOOLEAN NOT NULL DEFAULT FALSE;
+
+COMMIT;
