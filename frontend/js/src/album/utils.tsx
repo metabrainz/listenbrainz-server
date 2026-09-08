@@ -20,6 +20,7 @@ import {
   faLastfm,
   faSoundcloud,
   faSpotify,
+  faTidal,
   faTwitter,
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
@@ -88,7 +89,12 @@ const streamingServices: Array<{
     icon: faQobuz,
     color: "#0070EF",
   },
-  { pattern: /(^|\.)tidal\.com$/, name: "Tidal" },
+  {
+    pattern: /(^|\.)tidal\.com$/,
+    name: "Tidal",
+    icon: faTidal,
+    color: "#000000",
+  },
   {
     pattern: /(^|\.)deezer\.com$/,
     name: "Deezer",
