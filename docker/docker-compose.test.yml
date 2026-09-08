@@ -24,6 +24,21 @@ services:
   rabbitmq:
     image: rabbitmq:3.8.16
 
+  garage:
+    build:
+      context: ./garage
+    environment:
+      GARAGE_ACCESS_KEY: GK1e5b4c3a2d0f9e8b7a6c5d40
+      GARAGE_SECRET_KEY: 0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0
+      GARAGE_BUCKETS: listenbrainz-user-data-exports
+    healthcheck:
+      # the S3 api port is open long before the layout is applied and the buckets exist,
+      # the entrypoint only writes this file once provisioning is complete
+      test: ["CMD", "test", "-f", "/tmp/garage-provisioned"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
   listenbrainz:
     build:
       context: ..
@@ -38,9 +53,14 @@ services:
       PYTHON_TESTS_RUNNING: 1
     user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     depends_on:
-      - redis
-      - lb_db
-      - rabbitmq
+      redis:
+        condition: service_started
+      lb_db:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      garage:
+        condition: service_healthy
 
   timescale_writer:
     image: listenbrainz
@@ -57,11 +77,14 @@ services:
     image: listenbrainz
     command: python3 -m "listenbrainz.background.background_tasks"
     depends_on:
-      - redis
-      - lb_db
+      redis:
+        condition: service_started
+      lb_db:
+        condition: service_started
+      garage:
+        condition: service_healthy
     environment:
       PYTHON_TESTS_RUNNING: 1
-    restart: unless-stopped
     user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     volumes:
       - ..:/code/listenbrainz:z
