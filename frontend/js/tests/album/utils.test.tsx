@@ -15,14 +15,12 @@ describe("getStreamingServiceFromURL", () => {
     expect(qobuz?.icon).toBeDefined();
   });
 
-  it("identifies services that have no icon yet", () => {
-    // Tidal's Font Awesome icon only exists in v7; until the dependency is
-    // bumped, the tooltip name is what tells the reader where the link goes.
+  it("returns the Tidal icon now that Font Awesome v7 provides it", () => {
     const tidal = getStreamingServiceFromURL(
       "https://tidal.com/browse/artist/678"
     );
     expect(tidal?.name).toEqual("Tidal");
-    expect(tidal?.icon).toBeUndefined();
+    expect(tidal?.icon).toBeDefined();
   });
 
   it("returns a brand icon and colour where one exists", () => {
