@@ -25,7 +25,7 @@ import {
   sortReleaseGroups,
   typeOrder,
 } from "../artist/ArtistPage";
-import ScrollContainer from "../components/HorizontalScrollContainer";
+import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import ListenCard from "../common/listens/ListenCard";
 
 type Recording = {
@@ -360,15 +360,15 @@ export default function TrackPage(): JSX.Element {
                   <h3 className="header-with-line">{type}</h3>
                   <SortingButtons sort={sort} setSort={setSort} />
                 </div>
-                <ScrollContainer
-                  direction="vertical"
-                  showScrollbar={false}
-                  enableDragScroll={false}
+                <HorizontalScrollContainer
+                  className={`cover-art-container ${
+                    rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT
+                      ? "single-row"
+                      : ""
+                  }`}
                 >
-                  <div className="cover-art-container">
-                    {rgGroup.map(getReleaseCard)}
-                  </div>
-                </ScrollContainer>
+                  {rgGroup.map(getReleaseCard)}
+                </HorizontalScrollContainer>
               </div>
             ))}
             {showFullDiscographyButton && (
