@@ -269,7 +269,7 @@ def get_pin_count_for_user(db_conn, user_id: int) -> int:
     return count
 
 
-def update_recording_mbid_for_msid(db_conn, user_id: int, recording_msid: str, recording_mbid: str) -> int:
+def update_pinned_recording_mbid_for_msid(db_conn, user_id: int, recording_msid: str, recording_mbid: str) -> int:
     """ Updates recording_mbid on all pins for the user that match the given recording_msid.
 
         Args:

@@ -4,7 +4,7 @@ from datasethoster import RequestSource
 from flask import Blueprint, request, jsonify, current_app
 
 from listenbrainz.db.mbid_manual_mapping import create_mbid_manual_mapping, get_mbid_manual_mapping
-from listenbrainz.db.pinned_recording import update_recording_mbid_for_msid
+from listenbrainz.db.pinned_recording import update_pinned_recording_mbid_for_msid
 from listenbrainz.db.metadata import get_metadata_for_recording, get_metadata_for_artist, get_metadata_for_release_group
 from listenbrainz.db.model.mbid_manual_mapping import MbidManualMapping
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery, \
@@ -525,7 +525,7 @@ def submit_manual_mapping():
     )
 
     create_mbid_manual_mapping(ts_conn, mapping)
-    update_recording_mbid_for_msid(db_conn, user["id"], recording_msid, recording_mbid)
+    update_pinned_recording_mbid_for_msid(db_conn, user["id"], recording_msid, recording_mbid)
 
     invalidate_user_listen_caches(user["id"])
 
