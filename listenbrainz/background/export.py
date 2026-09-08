@@ -280,10 +280,6 @@ def export_user(db_conn, ts_conn, user_id: int, metadata):
         current_app.logger.error("No export with export_id: %s, skipping.", metadata["export_id"])
         return
 
-    client = get_garage_client()
-    bucket = get_user_data_export_bucket()
-    ensure_bucket(client, bucket)
-
     export_id = export.id
     try:
         client = get_garage_client()

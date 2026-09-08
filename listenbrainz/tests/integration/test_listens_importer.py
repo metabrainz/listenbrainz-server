@@ -1303,19 +1303,26 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual([], os.listdir(upload_dir))
 
     def test_cleanup_import_files_removes_files_of_imports_that_will_not_run(self):
-        """ An import that is cancelled or has failed leaves its uploaded file behind. """
+        """ An import that has run, been cancelled or failed leaves its uploaded file behind. """
         pending_name = "66666666-6666-6666-6666-666666666666-pending.zip"
         failed_name = "77777777-7777-7777-7777-777777777777-failed.zip"
+        completed_name = "88888888-8888-8888-8888-888888888888-completed.zip"
+        cancelled_name = "99999999-9999-9999-9999-999999999999-cancelled.zip"
         self.create_import_row(pending_name)
         self.create_import_row(failed_name, status="failed", service="listenbrainz")
-        self.put_import_file(pending_name)
-        self.put_import_file(failed_name)
+        self.create_import_row(completed_name, status="completed", service="listenbrainz")
+        self.create_import_row(cancelled_name, status="cancelled", service="listenbrainz")
+        for name in (pending_name, failed_name, completed_name, cancelled_name):
+            self.put_import_file(name)
 
         with self.app.app_context():
             # a file that was only just uploaded may belong to an import that is still being
             # created, it is left alone until it is old enough
             cleanup_import_files(db_conn)
-            self.assertEqual({pending_name, failed_name}, set(self.list_import_files()))
+            self.assertEqual(
+                {pending_name, failed_name, completed_name, cancelled_name},
+                set(self.list_import_files())
+            )
 
             with mock.patch("listenbrainz.background.listens_importer.storage.IMPORT_FILE_MIN_AGE",
                             timedelta(minutes=-1)):

@@ -14,8 +14,9 @@ from sqlalchemy import text
 from listenbrainz.garage import delete_objects, ensure_bucket, get_garage_client, \
     get_user_data_import_bucket, list_objects
 
-# statuses of the imports that have not run yet and whose file is therefore still needed
-PENDING_STATUSES = ("waiting", "in_progress")
+# statuses of the imports that will not run again and whose file is therefore of no further use,
+# an import in any other status may still need its file
+FINISHED_STATUSES = ("completed", "cancelled", "failed")
 # the file is uploaded before the import row it belongs to is committed, a file that has only
 # just been uploaded cannot be told apart from one whose row is still on its way
 IMPORT_FILE_MIN_AGE = timedelta(days=1)
@@ -81,9 +82,9 @@ def cleanup_import_files(db_conn):
     result = db_conn.execute(text("""
         SELECT file_path
           FROM user_data_import
-         WHERE metadata->>'status' = ANY(:statuses)
+         WHERE metadata->>'status' != ALL(:statuses)
            AND file_path IS NOT NULL
-    """), {"statuses": list(PENDING_STATUSES)})
+    """), {"statuses": list(FINISHED_STATUSES)})
     files_to_keep = {object_name_for(row.file_path) for row in result}
 
     client = get_garage_client()

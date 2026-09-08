@@ -6,9 +6,9 @@ in the Garage bucket named by GARAGE_USER_DATA_IMPORT_BUCKET now, with the name 
 generated for the file as the object name.
 
 Only imports that have not run yet still need their file, the importer deletes the file of an
-import as soon as it is done with it. So the files of imports that are waiting or in progress are
-uploaded, everything else in the directory is a leftover that is left alone (or removed with
---delete-source). Imports that are still pending but whose file exists neither in the bucket nor
+import as soon as it is done with it. So the files of imports that have not completed, failed or
+been cancelled are uploaded, everything else in the directory is a leftover that is left alone (or
+removed with --delete-source). Imports that are still pending but whose file exists neither in the bucket nor
 on disk cannot be run, so they are marked as failed and the user is asked to upload the file
 again. Because that is a destructive and irreversible update, it is skipped unless the directory
 actually contained a file of a pending import; pass --mark-missing-failed to do it anyway.
@@ -26,7 +26,7 @@ import click
 from flask import current_app
 from sqlalchemy import text
 
-from listenbrainz.background.listens_importer.storage import PENDING_STATUSES
+from listenbrainz.background.listens_importer.storage import FINISHED_STATUSES
 from listenbrainz.garage import bucket_exists, ensure_bucket, get_garage_client, \
     get_user_data_import_bucket, list_object_names
 
@@ -38,9 +38,9 @@ def get_pending_imports(db_conn) -> dict[str, list[int]]:
     result = db_conn.execute(text("""
         SELECT id, file_path
           FROM user_data_import
-         WHERE metadata->>'status' = ANY(:statuses)
+         WHERE metadata->>'status' != ALL(:statuses)
            AND file_path IS NOT NULL
-    """), {"statuses": list(PENDING_STATUSES)})
+    """), {"statuses": list(FINISHED_STATUSES)})
     imports = defaultdict(list)
     for row in result:
         imports[os.path.basename(row.file_path)].append(row.id)
@@ -137,7 +137,7 @@ def migrate_imports(db_conn, upload_dir: str, delete_source: bool = False, dry_r
                     " Run the migration again to upload it.", path.name
                 )
             else:
-                path.unlink(missing_ok=True)
+                deletable.append(path)
         for path in deletable:
             path.unlink(missing_ok=True)
 

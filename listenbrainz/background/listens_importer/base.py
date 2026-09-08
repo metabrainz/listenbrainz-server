@@ -11,7 +11,8 @@ from flask import current_app
 from sqlalchemy.sql.expression import text
 from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 
-from listenbrainz.background.listens_importer.storage import delete_import_file, download_import_file
+from listenbrainz.background.listens_importer.storage import delete_import_file, download_import_file, \
+    FINISHED_STATUSES
 from listenbrainz.db import user as db_user
 from listenbrainz.domain.external_service import ExternalServiceError
 from listenbrainz.webserver.errors import ImportFailedError, ListenValidationError
@@ -64,7 +65,7 @@ class BaseListensImporter(ABC):
 
         import_id = import_task["id"]
         metadata = import_task["metadata"]
-        if metadata["status"] in {"cancelled", "failed"}:
+        if metadata["status"] in FINISHED_STATUSES:
             # the import is not going to run, its file is of no use to anyone any more
             delete_import_file(import_task["file_path"])
             return
