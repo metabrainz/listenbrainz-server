@@ -55,7 +55,7 @@ $font-size-base: 1.4rem;
 
 $body-secondary-bg: $gray-light;
 $body-tertiary-bg: #fafafa;
-$body-emphasis-color: darken($body-color, 15%);
+$body-emphasis-color: color.adjust($body-color, $lightness: -15%);
 
 $success-text-emphasis: #3c763d;
 $success-bg-subtle: #dff0d8;
