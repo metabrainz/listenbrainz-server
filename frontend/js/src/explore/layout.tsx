@@ -10,6 +10,7 @@ const links: NavbarLink[] = [
   { to: "cover-art-collage/2022/", label: "Cover Art Collage 2022" },
   { to: "cover-art-collage/", label: "Cover Art Collage 2023" },
   { to: "music-neighborhood/", label: "Music Neighborhood" },
+  { to: "genre-explorer/", label: "Genre Explorer" },
   { to: "similar-users/", label: "Similar Users" },
   { to: "lb-radio/", label: "LB Radio" },
   { to: "art-creator/", label: "Art Creator" },
