@@ -1599,4 +1599,243 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assert400(r)
         self.assertIn("navidrome", r.json["error"].lower())
 
+    @mock.patch("listenbrainz.domain.navidrome.NavidromeService.get_user")
+    @mock.patch("listenbrainz.domain.navidrome.MBIDMapper.search")
+    @requests_mock.Mocker()
+    def test_navidrome_feedback_import_uses_navidrome_mbid_directly(
+        self, mock_mapper_search, mock_get_user, mock_requests
+    ):
+        """When Navidrome returns a musicBrainzId on the song object (OpenSubsonic
+        extension), it should be used directly without ever calling MBIDMapper.
+        """
+        INSTANCE_URL = "http://localhost:4533"
+        MBID_1 = "7ac86b1a-d183-40ca-9d41-df2d90681ffd"
+        MBID_2 = "9d0c31ef-257a-41af-9a8c-f28a5cd87467"
+
+        mock_get_user.return_value = {
+            "instance_url": INSTANCE_URL,
+            "md5_auth_token": "abc",
+            "salt": "xyz",
+            "username": "navuser",
+        }
+
+        mock_requests.get(
+            f"{INSTANCE_URL}/rest/getStarred",
+            json={
+                "subsonic-response": {
+                    "status": "ok",
+                    "starred": {
+                        "song": [
+                            {
+                                "id": "1",
+                                "title": "Tagged Track One",
+                                "artist": "Artist One",
+                                "album": "Album One",
+                                "starred": "2024-03-01T08:00:00Z",
+                                "musicBrainzId": MBID_1,
+                            },
+                            {
+                                "id": "2",
+                                "title": "Tagged Track Two",
+                                "artist": "Artist Two",
+                                "album": "Album Two",
+                                "starred": "2024-03-02T09:00:00Z",
+                                "musicBrainzId": MBID_2,
+                            },
+                        ]
+                    },
+                }
+            },
+            status_code=200,
+        )
+
+        r = self.client.post(
+            self.custom_url_for("feedback_api_v1.import_feedback"),
+            data=json.dumps({"service": "navidrome"}),
+            headers={"Authorization": f'Token {self.user["auth_token"]}'},
+            content_type="application/json",
+        )
+        self.assert200(r)
+        data = r.json
+        self.assertEqual(data["total_found"], 2)
+        self.assertEqual(data["total_mapped"], 2)
+        self.assertEqual(data["total_imported"], 2)
+
+        # MBIDMapper should never have been called — the embedded IDs are enough
+        mock_mapper_search.assert_not_called()
+
+        # Verify the correct MBIDs landed in the feedback table
+        feedback_response = self.client.get(
+            self.custom_url_for(
+                "feedback_api_v1.get_feedback_for_user",
+                user_name=self.user["musicbrainz_id"],
+            )
+        )
+        self.assert200(feedback_response)
+        fb_data = feedback_response.json
+        self.assertEqual(fb_data["total_count"], 2)
+        received_mbids = {f["recording_mbid"] for f in fb_data["feedback"]}
+        self.assertIn(MBID_1, received_mbids)
+        self.assertIn(MBID_2, received_mbids)
+
+    @mock.patch("listenbrainz.domain.navidrome.NavidromeService.get_user")
+    @mock.patch("listenbrainz.domain.navidrome.MBIDMapper.search")
+    @requests_mock.Mocker()
+    def test_navidrome_feedback_import_mixed_mbid_and_mapper(
+        self, mock_mapper_search, mock_get_user, mock_requests
+    ):
+        """When some songs have musicBrainzId and others don't, the MBID path is
+        used for tagged tracks and MBIDMapper is called only for untagged ones.
+        """
+        INSTANCE_URL = "http://localhost:4533"
+        DIRECT_MBID = "7ac86b1a-d183-40ca-9d41-df2d90681ffd"   # from Navidrome tag
+        MAPPED_MBID = "9d0c31ef-257a-41af-9a8c-f28a5cd87467"   # from MBIDMapper
+
+        mock_get_user.return_value = {
+            "instance_url": INSTANCE_URL,
+            "md5_auth_token": "abc",
+            "salt": "xyz",
+            "username": "navuser",
+        }
+
+        from listenbrainz.mbid_mapping_writer.mbid_mapper import MATCH_TYPE_HIGH_QUALITY
+        mock_mapper_search.return_value = {
+            "recording_mbid": MAPPED_MBID,
+            "match_type": MATCH_TYPE_HIGH_QUALITY,
+        }
+
+        mock_requests.get(
+            f"{INSTANCE_URL}/rest/getStarred",
+            json={
+                "subsonic-response": {
+                    "status": "ok",
+                    "starred": {
+                        "song": [
+                            {
+                                "id": "1",
+                                "title": "Picard-Tagged Track",
+                                "artist": "Artist One",
+                                "album": "Album One",
+                                "starred": "2024-04-01T10:00:00Z",
+                                "musicBrainzId": DIRECT_MBID,  # tagged
+                            },
+                            {
+                                "id": "2",
+                                "title": "Untagged Track",
+                                "artist": "Artist Two",
+                                "album": "Album Two",
+                                "starred": "2024-04-02T11:00:00Z",
+                                # no musicBrainzId — should fall through to mapper
+                            },
+                        ]
+                    },
+                }
+            },
+            status_code=200,
+        )
+
+        r = self.client.post(
+            self.custom_url_for("feedback_api_v1.import_feedback"),
+            data=json.dumps({"service": "navidrome"}),
+            headers={"Authorization": f'Token {self.user["auth_token"]}'},
+            content_type="application/json",
+        )
+        self.assert200(r)
+        data = r.json
+        self.assertEqual(data["total_found"], 2)
+        self.assertEqual(data["total_mapped"], 2)
+        self.assertEqual(data["total_imported"], 2)
+
+        # Mapper called exactly once — only for the untagged track
+        mock_mapper_search.assert_called_once()
+
+        feedback_response = self.client.get(
+            self.custom_url_for(
+                "feedback_api_v1.get_feedback_for_user",
+                user_name=self.user["musicbrainz_id"],
+            )
+        )
+        self.assert200(feedback_response)
+        fb_data = feedback_response.json
+        received_mbids = {f["recording_mbid"] for f in fb_data["feedback"]}
+        self.assertIn(DIRECT_MBID, received_mbids)
+        self.assertIn(MAPPED_MBID, received_mbids)
+
+    @mock.patch("listenbrainz.domain.navidrome.NavidromeService.get_user")
+    @mock.patch("listenbrainz.domain.navidrome.MBIDMapper.search")
+    @requests_mock.Mocker()
+    def test_navidrome_feedback_import_skips_unmatched_untagged_songs(
+        self, mock_mapper_search, mock_get_user, mock_requests
+    ):
+        """Untagged songs for which MBIDMapper returns no acceptable match should
+        be silently skipped; they must not appear in the feedback table.
+        """
+        INSTANCE_URL = "http://localhost:4533"
+        GOOD_MBID = "7ac86b1a-d183-40ca-9d41-df2d90681ffd"
+
+        mock_get_user.return_value = {
+            "instance_url": INSTANCE_URL,
+            "md5_auth_token": "abc",
+            "salt": "xyz",
+            "username": "navuser",
+        }
+
+        from listenbrainz.mbid_mapping_writer.mbid_mapper import MATCH_TYPE_HIGH_QUALITY
+        # First song: good mapper match.  Second: mapper returns None (no match).
+        mock_mapper_search.side_effect = [
+            {"recording_mbid": GOOD_MBID, "match_type": MATCH_TYPE_HIGH_QUALITY},
+            None,
+        ]
+
+        mock_requests.get(
+            f"{INSTANCE_URL}/rest/getStarred",
+            json={
+                "subsonic-response": {
+                    "status": "ok",
+                    "starred": {
+                        "song": [
+                            {
+                                "id": "1",
+                                "title": "Matchable Track",
+                                "artist": "Artist One",
+                                "album": "Album One",
+                                "starred": "2024-05-01T10:00:00Z",
+                            },
+                            {
+                                "id": "2",
+                                "title": "Obscure Track No One Knows",
+                                "artist": "Unknown Artist",
+                                "album": "Unknown Album",
+                                "starred": "2024-05-02T11:00:00Z",
+                                # mapper will return None for this one
+                            },
+                        ]
+                    },
+                }
+            },
+            status_code=200,
+        )
+
+        r = self.client.post(
+            self.custom_url_for("feedback_api_v1.import_feedback"),
+            data=json.dumps({"service": "navidrome"}),
+            headers={"Authorization": f'Token {self.user["auth_token"]}'},
+            content_type="application/json",
+        )
+        self.assert200(r)
+        data = r.json
+        self.assertEqual(data["total_found"], 2)
+        self.assertEqual(data["total_mapped"], 1)   # only one was matched
+        self.assertEqual(data["total_imported"], 1)
+
+        feedback_response = self.client.get(
+            self.custom_url_for(
+                "feedback_api_v1.get_feedback_for_user",
+                user_name=self.user["musicbrainz_id"],
+            )
+        )
+        self.assert200(feedback_response)
+        fb_data = feedback_response.json
+        self.assertEqual(fb_data["total_count"], 1)
+        self.assertEqual(fb_data["feedback"][0]["recording_mbid"], GOOD_MBID)
 

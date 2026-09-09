@@ -202,30 +202,40 @@ def import_starred_tracks(user_id, navidrome_url, auth_token, salt, username):
         title = song.get("title")
         album = song.get("album")
         starred_date = song.get("starred")
-        
+        # Navidrome (via OpenSubsonic) exposes the recording MBID directly when
+        # the file is properly tagged with Picard. Prefer that over a fuzzy
+        # text-based lookup to avoid false matches.
+        navidrome_mbid = song.get("musicBrainzId")
+
         if not artist or not title:
             continue
-            
-        try:
-            match = mapper.search(artist, title, album)
-        except Exception:
-            current_app.logger.warning(f"MBIDMapper failed for '{artist} - {title}', skipping.")
-            continue
-        
-        if match and match['match_type'] in (MATCH_TYPE_MED_QUALITY, MATCH_TYPE_HIGH_QUALITY, MATCH_TYPE_EXACT_MATCH):
-            recording_mbid = match['recording_mbid']
+
+        if navidrome_mbid:
+            recording_mbid = navidrome_mbid
             total_mapped += 1
-            
+        else:
             try:
-                if starred_date:
-                    dt = datetime.fromisoformat(starred_date.replace("Z", "+00:00"))
-                    timestamp = int(dt.timestamp())
-                else:
-                    timestamp = int(datetime.now().timestamp())
-            except (ValueError, TypeError):
+                match = mapper.search(artist, title, album)
+            except Exception:
+                current_app.logger.warning(f"MBIDMapper failed for '{artist} - {title}', skipping.")
+                continue
+
+            if match and match['match_type'] in (MATCH_TYPE_MED_QUALITY, MATCH_TYPE_HIGH_QUALITY, MATCH_TYPE_EXACT_MATCH):
+                recording_mbid = match['recording_mbid']
+                total_mapped += 1
+            else:
+                continue
+
+        try:
+            if starred_date:
+                dt = datetime.fromisoformat(starred_date.replace("Z", "+00:00"))
+                timestamp = int(dt.timestamp())
+            else:
                 timestamp = int(datetime.now().timestamp())
-                
-            feedback_to_insert.append((timestamp, recording_mbid))
+        except (ValueError, TypeError):
+            timestamp = int(datetime.now().timestamp())
+
+        feedback_to_insert.append((timestamp, recording_mbid))
             
     if feedback_to_insert:
         db_feedback.bulk_insert_loved_tracks(db_conn, user_id, feedback_to_insert)
