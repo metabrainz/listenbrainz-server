@@ -78,20 +78,21 @@ def get_garage_client() -> BaseClient:
     return client
 
 
+def _get_bucket(config_key: str) -> str:
+    bucket = current_app.config.get(config_key)
+    if not bucket:
+        raise GarageConfigurationError(f"Missing Garage configuration: {config_key}")
+    return bucket
+
+
 def get_user_data_export_bucket() -> str:
     """Get the name of the bucket user data exports are stored in."""
-    bucket = current_app.config.get("GARAGE_USER_DATA_EXPORT_BUCKET")
-    if not bucket:
-        raise GarageConfigurationError("Missing Garage configuration: GARAGE_USER_DATA_EXPORT_BUCKET")
-    return bucket
+    return _get_bucket("GARAGE_USER_DATA_EXPORT_BUCKET")
 
 
 def get_user_data_import_bucket() -> str:
     """Get the name of the bucket the files uploaded for user data imports are stored in."""
-    bucket = current_app.config.get("GARAGE_USER_DATA_IMPORT_BUCKET")
-    if not bucket:
-        raise GarageConfigurationError("Missing Garage configuration: GARAGE_USER_DATA_IMPORT_BUCKET")
-    return bucket
+    return _get_bucket("GARAGE_USER_DATA_IMPORT_BUCKET")
 
 
 def bucket_exists(client: BaseClient, bucket: str) -> bool:
@@ -121,12 +122,17 @@ def ensure_bucket(client: BaseClient, bucket: str):
             raise
 
 
+def list_objects(client: BaseClient, bucket: str) -> list[dict]:
+    """List all the objects in the given bucket, with the metadata the listing reports."""
+    objects = []
+    for page in client.get_paginator("list_objects_v2").paginate(Bucket=bucket):
+        objects.extend(page.get("Contents", []))
+    return objects
+
+
 def list_object_names(client: BaseClient, bucket: str) -> list[str]:
     """List the names of all the objects in the given bucket."""
-    names = []
-    for page in client.get_paginator("list_objects_v2").paginate(Bucket=bucket):
-        names.extend(obj["Key"] for obj in page.get("Contents", []))
-    return names
+    return [obj["Key"] for obj in list_objects(client, bucket)]
 
 
 def delete_objects(client: BaseClient, bucket: str, object_names: Iterable[str]) -> list[dict]:

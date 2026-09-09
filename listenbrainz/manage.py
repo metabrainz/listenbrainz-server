@@ -8,7 +8,9 @@ import sqlalchemy
 from listenbrainz import db
 from listenbrainz import webserver
 from listenbrainz.background import export
+from listenbrainz.background.listens_importer.storage import cleanup_import_files
 from listenbrainz.background.migrate_exports import migrate_exports
+from listenbrainz.background.migrate_imports import migrate_imports
 from listenbrainz.db import listens as listens_db, timescale as ts, do_not_recommend
 
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
@@ -466,6 +468,16 @@ def delete_old_user_data_exports():
         app.logger.info("Completed deleting old and expired user data exports")
 
 
+@cli.command()
+def delete_old_user_data_imports():
+    """ Delete the uploaded files of user data imports that are never going to run """
+    app = create_app()
+    with app.app_context():
+        app.logger.info("Deleting leftover user data import files")
+        cleanup_import_files(webserver.db_conn)
+        app.logger.info("Completed deleting leftover user data import files")
+
+
 @cli.command(name="migrate_user_data_exports")
 @click.option("--export-dir", required=True, help="Directory the user data export archives are currently stored in.")
 @click.option("--delete-source", is_flag=True, help="Delete the archives from the directory once they are migrated.")
@@ -481,3 +493,20 @@ def migrate_user_data_exports(export_dir, delete_source, dry_run, mark_missing_f
         migrate_exports(webserver.db_conn, export_dir=export_dir, delete_source=delete_source, dry_run=dry_run,
                         mark_missing_failed=mark_missing_failed)
         app.logger.info("Completed migrating user data exports")
+
+
+@cli.command(name="migrate_user_data_imports")
+@click.option("--upload-dir", required=True, help="Directory the uploaded import files are currently stored in.")
+@click.option("--delete-source", is_flag=True, help="Delete the files from the directory once they are migrated.")
+@click.option("--dry-run", is_flag=True, help="Log what would be migrated without uploading or updating anything.")
+@click.option("--mark-missing-failed", is_flag=True,
+              help="Mark pending imports whose file cannot be found as failed even if the directory"
+                   " contained no file of a pending import at all.")
+def migrate_user_data_imports(upload_dir, delete_source, dry_run, mark_missing_failed):
+    """ Migrate the files uploaded for user data imports from the given directory to garage """
+    app = create_app()
+    with app.app_context():
+        app.logger.info("Migrating user data imports from %s to garage", upload_dir)
+        migrate_imports(webserver.db_conn, upload_dir, delete_source=delete_source, dry_run=dry_run,
+                        mark_missing_failed=mark_missing_failed)
+        app.logger.info("Completed migrating user data imports")

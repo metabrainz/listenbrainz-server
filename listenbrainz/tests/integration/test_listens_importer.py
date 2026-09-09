@@ -2,19 +2,24 @@ import io
 import json
 import os.path
 import shutil
+import tempfile
 import time
 import zipfile
 from datetime import datetime, timezone, timedelta
-from pathlib import Path
 from unittest import mock
 
 from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
+from listenbrainz.background.listens_importer.storage import cleanup_import_files
+from listenbrainz.background.migrate_imports import FILE_MISSING_PROGRESS, migrate_imports
 from listenbrainz.db import background
+from listenbrainz.garage import delete_objects, ensure_bucket, get_garage_client, \
+    get_user_data_import_bucket, list_object_names
 from listenbrainz.metadata_cache.spotify.handler import SpotifyCrawlerHandler
 
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
+from listenbrainz.webserver import db_conn
 
 
 class ImportTestCase(ListenAPIIntegrationTestCase):
@@ -25,8 +30,29 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         db_user.agree_to_gdpr(self.db_conn, self.user["musicbrainz_id"])
 
     def tearDown(self):
-        shutil.rmtree(self.app.config["UPLOAD_FOLDER"], ignore_errors=True)
+        with self.app.app_context():
+            client, bucket = self.get_import_storage()
+            for error in delete_objects(client, bucket, list_object_names(client, bucket)):
+                self.fail(f"Failed to remove import file {error.get('Key')}: {error.get('Message')}")
         super().tearDown()
+
+    def get_import_storage(self):
+        """ Get the garage client and the bucket the uploaded import files are stored in. """
+        client = get_garage_client()
+        bucket = get_user_data_import_bucket()
+        ensure_bucket(client, bucket)
+        return client, bucket
+
+    def put_import_file(self, object_name, contents=b"import file contents"):
+        """ Put a file in the import bucket, as if the webserver had uploaded it. """
+        with self.app.app_context():
+            client, bucket = self.get_import_storage()
+            client.put_object(Bucket=bucket, Key=object_name, Body=contents)
+
+    def list_import_files(self):
+        with self.app.app_context():
+            client, bucket = self.get_import_storage()
+            return list_object_names(client, bucket)
 
     def create_zip(self, name, items: list[tuple[str, str]]) -> io.BytesIO:
         buffer = io.BytesIO()
@@ -194,7 +220,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             headers={"Authorization": f"Token {self.user['auth_token']}"},
         )
         self.assert200(response)
-        self.assertFalse(Path(orig_data["file_path"]).exists())
+        self.assertEqual([], self.list_import_files())
 
         response = self.client.get(
             self.custom_url_for("import_listens_api_v1.list_import_tasks"),
@@ -320,10 +346,11 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             content_type="multipart/form-data"
         )
         self.assert200(response)
-        self.assertTrue(
-            os.path.abspath(response.json["file_path"])
-            .startswith(self.app.config["UPLOAD_FOLDER"])
-        )
+        # the object name must not be able to escape the bucket's top level
+        object_name = response.json["file_path"]
+        self.assertNotIn("/", object_name)
+        self.assertTrue(object_name.endswith("etc_passwd.zip"), object_name)
+        self.assertEqual([object_name], self.list_import_files())
 
     def test_same_name_file_does_not_override(self):
         from_date = datetime(2024, 1, 1, tzinfo=timezone.utc)
@@ -357,10 +384,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         )
         self.assert200(response)
 
-        self.assertEqual(
-            len(list(Path(self.app.config["UPLOAD_FOLDER"]).iterdir())),
-            2
-        )
+        self.assertEqual(2, len(self.list_import_files()))
 
     def test_import_task_auth(self):
         from_date = datetime(2024, 1, 1, tzinfo=timezone.utc)
@@ -1058,7 +1082,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             service="foobar",
             from_date=datetime(2021, 1, 1, tzinfo=timezone.utc),
             to_date=datetime(2022, 1, 1, tzinfo=timezone.utc),
-            save_path="xyz.zip",
+            file_path="xyz.zip",
             filename="xyz.zip",
         )
         self.db_conn.commit()
@@ -1197,3 +1221,131 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertIn("success_count", metadata)
         self.assertEqual(metadata["attempted_count"], 5)
         self.assertEqual(metadata["success_count"], 3)
+
+
+    def create_import_row(self, file_path, status="waiting", service="spotify"):
+        """ Insert a user data import row directly, as if the file had been uploaded to disk. """
+        result = self.db_conn.execute(text("""
+            INSERT INTO user_data_import (user_id, service, from_date, to_date, file_path, metadata)
+                 VALUES (:user_id, :service, :from_date, :to_date, :file_path, :metadata)
+              RETURNING id
+        """), {
+            "user_id": self.user["id"],
+            "service": service,
+            "from_date": datetime(2024, 1, 1, tzinfo=timezone.utc),
+            "to_date": datetime.now(tz=timezone.utc),
+            "file_path": file_path,
+            "metadata": json.dumps({"status": status, "progress": "", "filename": os.path.basename(file_path)}),
+        })
+        self.db_conn.commit()
+        return result.first().id
+
+    def get_import_row(self, import_id):
+        result = self.db_conn.execute(
+            text("SELECT file_path, metadata FROM user_data_import WHERE id = :import_id"),
+            {"import_id": import_id}
+        )
+        return result.first()
+
+    def test_migrate_imports(self):
+        upload_dir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, upload_dir, True)
+
+        pending_name = "11111111-1111-1111-1111-111111111111-pending.zip"
+        finished_name = "22222222-2222-2222-2222-222222222222-finished.zip"
+        orphan_name = "33333333-3333-3333-3333-333333333333-orphan.zip"
+        missing_name = "44444444-4444-4444-4444-444444444444-missing.zip"
+
+        # the paths of imports created before the migration are absolute paths on disk
+        pending_id = self.create_import_row(os.path.join(upload_dir, pending_name))
+        finished_id = self.create_import_row(
+            os.path.join(upload_dir, finished_name), status="completed", service="listenbrainz"
+        )
+        missing_id = self.create_import_row(os.path.join(upload_dir, missing_name), status="waiting", service="librefm")
+
+        for name in (pending_name, finished_name, orphan_name):
+            with open(os.path.join(upload_dir, name), "wb") as f:
+                f.write(b"contents of " + name.encode())
+
+        with self.app.app_context():
+            client, bucket = self.get_import_storage()
+
+            migrate_imports(db_conn, upload_dir, dry_run=True)
+            self.assertEqual([], self.list_import_files())
+            self.assertEqual("waiting", self.get_import_row(missing_id).metadata["status"])
+            self.assertTrue(self.get_import_row(pending_id).file_path.startswith(upload_dir))
+
+            migrate_imports(db_conn, upload_dir)
+
+            # only the file of the import that has not run yet is uploaded
+            self.assertEqual([pending_name], self.list_import_files())
+            uploaded = client.get_object(Bucket=bucket, Key=pending_name)
+            with uploaded["Body"] as body:
+                self.assertEqual(b"contents of " + pending_name.encode(), body.read())
+
+        # the on disk paths are rewritten to the object names
+        self.assertEqual(pending_name, self.get_import_row(pending_id).file_path)
+        self.assertEqual(finished_name, self.get_import_row(finished_id).file_path)
+
+        # the import whose file is nowhere to be found cannot be run
+        missing = self.get_import_row(missing_id)
+        self.assertEqual("failed", missing.metadata["status"])
+        self.assertEqual(FILE_MISSING_PROGRESS, missing.metadata["progress"])
+        self.assertEqual("waiting", self.get_import_row(pending_id).metadata["status"])
+
+        # source files are kept unless asked otherwise
+        self.assertEqual({pending_name, finished_name, orphan_name}, set(os.listdir(upload_dir)))
+
+        with self.app.app_context():
+            # re-running does not upload again and removes the source files when asked to
+            migrate_imports(db_conn, upload_dir, delete_source=True)
+            self.assertEqual([pending_name], self.list_import_files())
+        self.assertEqual([], os.listdir(upload_dir))
+
+    def test_cleanup_import_files_removes_files_of_imports_that_will_not_run(self):
+        """ An import that has run, been cancelled or failed leaves its uploaded file behind. """
+        pending_name = "66666666-6666-6666-6666-666666666666-pending.zip"
+        failed_name = "77777777-7777-7777-7777-777777777777-failed.zip"
+        completed_name = "88888888-8888-8888-8888-888888888888-completed.zip"
+        cancelled_name = "99999999-9999-9999-9999-999999999999-cancelled.zip"
+        self.create_import_row(pending_name)
+        self.create_import_row(failed_name, status="failed", service="listenbrainz")
+        self.create_import_row(completed_name, status="completed", service="listenbrainz")
+        self.create_import_row(cancelled_name, status="cancelled", service="listenbrainz")
+        for name in (pending_name, failed_name, completed_name, cancelled_name):
+            self.put_import_file(name)
+
+        with self.app.app_context():
+            # a file that was only just uploaded may belong to an import that is still being
+            # created, it is left alone until it is old enough
+            cleanup_import_files(db_conn)
+            self.assertEqual(
+                {pending_name, failed_name, completed_name, cancelled_name},
+                set(self.list_import_files())
+            )
+
+            with mock.patch("listenbrainz.background.listens_importer.storage.IMPORT_FILE_MIN_AGE",
+                            timedelta(minutes=-1)):
+                cleanup_import_files(db_conn)
+            self.assertEqual([pending_name], self.list_import_files())
+
+    def test_migrate_imports_does_not_fail_imports_when_no_file_was_found(self):
+        """ Pointing the migration at the wrong directory must not fail every pending import. """
+        upload_dir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, upload_dir, True)
+
+        missing_name = "55555555-5555-5555-5555-555555555555-missing.zip"
+        missing_id = self.create_import_row(os.path.join(upload_dir, missing_name))
+
+        with self.app.app_context():
+            self.get_import_storage()
+
+            migrate_imports(db_conn, upload_dir)
+            self.assertEqual("waiting", self.get_import_row(missing_id).metadata["status"])
+
+            # unless the operator confirms that this is expected
+            migrate_imports(db_conn, upload_dir, mark_missing_failed=True)
+
+        missing = self.get_import_row(missing_id)
+        self.assertEqual("failed", missing.metadata["status"])
+        self.assertEqual(FILE_MISSING_PROGRESS, missing.metadata["progress"])
