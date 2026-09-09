@@ -1,7 +1,7 @@
-{% macro render_lp_image(x, y, width, height, transform, image) %}
-  {% if image.entity_mbid %}
+{%- macro render_lp_image(x, y, width, height, transform, image) -%}
+  {%- if image.entity_mbid -%}
   <a href="https://listenbrainz.org/release/{{ image.entity_mbid }}" target="_blank">
-  {% endif %}
+  {%- endif -%}
     <image
         x="{{ x }}"
         y="{{ y }}"
@@ -11,16 +11,16 @@
         href="{{ image.url }}"
         transform="{{ transform }}"
     >
-        {% if image.title and image.artist %}
+        {%- if image.title and image.artist -%}
         <title>
           {{- image.title|escape ~ " - " ~ image.artist|escape -}}
         </title>
-        {% endif %}
+        {%- endif -%}
     </image>
-  {% if image.entity_mbid %}
+  {%- if image.entity_mbid -%}
   </a>
-  {% endif %}
-{% endmacro %}
+  {%- endif -%}
+{%- endmacro -%}
 <svg version="1.1"
      xmlns="http://www.w3.org/2000/svg"
      role="img"
@@ -39,15 +39,62 @@
             pointer-events: none;
         }
     </style>
-    {{ render_lp_image(89, 318, 195, 195, "rotate(6.1)", images[2]) }}
-    {{ render_lp_image(17, 223, 193, 193, "rotate(-22.4)", images[1]) }}
-    {{ render_lp_image(189, 240, 189, 189, "rotate(-4)", images[0]) }}
-    {{ render_lp_image(404, 480, 198, 198, "rotate(-11.9)", images[4]) }}
-    {{ render_lp_image(385, 488, 202, 203, "rotate(2.2)", images[3]) }}
-    <image x="0"
-           y="0"
-           width="{{ width }}"
-           height="{{ height }}"
-           href="{{ cover_art_on_floor_url }}"
-           class="background-image" />
+    <defs>
+        <filter id="colorizePlayer">
+            <feColorMatrix type="matrix" values="0 0 0 {{ player_color_r }} 0
+                                                 0 0 0 {{ player_color_g }} 0
+                                                 0 0 0 {{ player_color_b }} 0
+                                                 0 0 0 1 0" />
+        </filter>
+    </defs>
+
+    <!-- Layer 1: Album Art -->
+    {% if scene == "close" %}
+        {{ render_lp_image(50, 50, 200, 200, "matrix(-0.28500,-3.65500,-3.67000,0.24500,1070.75000,1024.50000)", images[0]) }}
+        {{ render_lp_image(350, 50, 200, 200, "matrix(-0.12000,-1.27000,-1.04000,0.31500,270.00000,919.75000)", images[1]) }}
+        {{ render_lp_image(650, 50, 200, 200, "matrix(0.65500,-0.33000,-0.34000,-0.68500,-109.75000,284.75000)", images[2]) }}
+        {{ render_lp_image(50, 350, 200, 200, "matrix(0.97500,0.55000,-0.58500,1.04000,142.00000,290.50000)", images[3]) }}
+        {{ render_lp_image(350, 350, 200, 200, "matrix(-1.05500,-0.28500,0.16000,-0.47500,1072.25000,357.00000)", images[4]) }}
+        {{ render_lp_image(650, 350, 200, 200, "matrix(0.65000,0.31000,-0.56000,1.28000,764.50000,87.50000)", images[5]) }}
+        {{ render_lp_image(200, 650, 200, 200, "matrix(-0.43500,-1.34000,-1.18500,0.29500,1852.25000,827.25000)", images[6]) }}
+        {{ render_lp_image(500, 650, 200, 200, "matrix(1.23500,0.18000,-0.24500,1.06000,-94.25000,-760.00000)", images[7]) }}
+    {% elif scene == "vinyl" %}
+        {{ render_lp_image(50, 50, 280, 280, "matrix(0.28378,-1.23739,-1.23047,-0.29836,514.86990,929.79257)", images[0]) }}
+        {{ render_lp_image(650, 0, 300, 300, "matrix(1.10000,0.38333,-0.36667,1.03333,-178.00000,-275.16667)", images[1]) }}
+        {{ render_lp_image(200, 380, 260, 260, "matrix(0.96158,-0.97946,-0.98592,-0.98842,319.49863,1529.31748)", images[2]) }}
+        {{ render_lp_image(600, 350, 280, 280, "matrix(1.13929,-0.50000,0.54286,1.12143,-744.57143,228.50000)", images[3]) }}
+        {{ render_lp_image(300, 680, 270, 270, "matrix(0.98148,0.85556,-0.80000,0.98889,923.55556,-669.11111)", images[4]) }}
+    {% elif scene == "many" %}
+        {{ render_lp_image(50, 50, 180, 180, "matrix(-0.26111,-1.41111,-1.34444,0.26667,297.27778,255.22222)", images[0]) }}
+        {{ render_lp_image(300, 50, 180, 180, "matrix(1.38333,-0.02222,0.10000,1.59444,450.00000,-107.05556)", images[1]) }}
+        {{ render_lp_image(550, 50, 180, 180, "matrix(1.46667,-0.53333,0.61111,1.51111,-166.22222,494.77778)", images[2]) }}
+        {{ render_lp_image(800, 50, 180, 180, "matrix(1.09444,-1.05556,-0.95000,-0.92778,-132.05556,1137.83333)", images[3]) }}
+        {{ render_lp_image(50, 300, 180, 180, "matrix(1.43333,0.93333,-0.71111,1.17778,212.66667,443.00000)", images[4]) }}
+        {{ render_lp_image(300, 300, 180, 180, "matrix(0.74444,-0.92778,-0.95556,-0.78889,1068.33333,1205.00000)", images[5]) }}
+        {{ render_lp_image(550, 300, 180, 180, "matrix(0.92778,0.08889,-0.30000,0.91667,593.72222,315.11111)", images[6]) }}
+        {{ render_lp_image(800, 300, 180, 180, "matrix(-0.45000,-1.52778,-1.06667,0.36667,767.00000,1636.22222)", images[7]) }}
+        {{ render_lp_image(50, 550, 180, 180, "matrix(-0.06667,-1.65556,-1.67222,0.05000,1245.05556,881.27778)", images[8]) }}
+        {{ render_lp_image(300, 550, 180, 180, "matrix(1.58889,-0.33333,0.36111,1.55556,-290.27778,-404.55556)", images[9]) }}
+        {{ render_lp_image(550, 550, 180, 180, "matrix(1.21667,-1.10556,-1.09444,-1.22222,435.77778,2252.27778)", images[10]) }}
+        {{ render_lp_image(800, 550, 180, 180, "matrix(1.59444,0.02778,-0.02778,1.35556,-542.27778,-13.77778)", images[11]) }}
+    {% else %}
+        {# wood — rotate around image center to align with sleeve overlays #}
+        {{ render_lp_image(89, 318, 195, 195, "rotate(6.1,186,415)", images[2]) }}
+        {{ render_lp_image(17, 223, 193, 193, "rotate(-22.4,113,319)", images[1]) }}
+        {{ render_lp_image(189, 240, 189, 189, "rotate(-4,283,334)", images[0]) }}
+        {{ render_lp_image(404, 480, 198, 198, "rotate(-11.9,503,579)", images[4]) }}
+        {{ render_lp_image(385, 488, 202, 203, "rotate(2.2,486,589)", images[3]) }}
+    {% endif %}
+
+    <!-- Layer 2: Scene Background -->
+    <image x="0" y="0" width="1000" height="1000" href="{{ bg_url }}" class="background-image" />
+
+    <!-- Layer 3: Wear & Tear -->
+    {% if worn_url %}
+    <image x="0" y="0" width="1000" height="1000" href="{{ worn_url }}" class="background-image" />
+    {% endif %}
+
+    <!-- Layer 4: Record Player Color Overlay -->
+    <image x="0" y="0" width="1000" height="1000" href="{{ player_color_url }}"
+           filter="url(#colorizePlayer)" style="mix-blend-mode: multiply;" class="background-image" />
 </svg>
