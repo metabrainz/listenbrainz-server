@@ -225,7 +225,7 @@ export default function ArtCreator() {
   const [captionBgColor, setCaptionBgColor] = useState("#000000");
   const [captionBgOpacity, setCaptionBgOpacity] = useState(48);
 
-  const showCaption = showRank || showRelease || showArtist || showListenCount;
+  const [showCaption, setShowCaption] = useState(true);
   const [skipMissing, setSkipMissing] = useState(true);
   const [previewUrl, setPreviewUrl] = useState("");
   const [fontFamily, setFontFamily] = useState(DEFAULT_FONT);
@@ -954,10 +954,18 @@ export default function ArtCreator() {
                     <div className="sidenav-content-grid">
                       <h4>Captions</h4>
                       <Switch
+                        id="show-caption"
+                        value="show-caption"
+                        switchLabel="Show Caption"
+                        checked={showCaption}
+                        onChange={(e) => setShowCaption(e.target.checked)}
+                      />
+                      <Switch
                         id="show-rank"
                         value="show-rank"
                         switchLabel="Show Rank"
                         checked={showRank}
+                        disabled={!showCaption}
                         onChange={(e) => setShowRank(e.target.checked)}
                       />
                       <Switch
@@ -965,6 +973,7 @@ export default function ArtCreator() {
                         value="show-release"
                         switchLabel="Show Release Title"
                         checked={showRelease}
+                        disabled={!showCaption}
                         onChange={(e) => setShowRelease(e.target.checked)}
                       />
                       <Switch
@@ -972,6 +981,7 @@ export default function ArtCreator() {
                         value="show-artist"
                         switchLabel="Show Artist"
                         checked={showArtist}
+                        disabled={!showCaption}
                         onChange={(e) => setShowArtist(e.target.checked)}
                       />
                       <Switch
@@ -979,6 +989,7 @@ export default function ArtCreator() {
                         value="show-listen-count"
                         switchLabel="Show Listen Count"
                         checked={showListenCount}
+                        disabled={!showCaption}
                         onChange={(e) => setShowListenCount(e.target.checked)}
                       />
                       <div>
