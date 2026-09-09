@@ -602,7 +602,7 @@ def ensure_user_token_for_expensive_endpoint():
         like /popularity, /lb-radio, etc.
     """
     try:
-        _ = validate_auth_header()
+        validate_auth_header()
     except APIUnauthorized:
         raise APIUnauthorized("Due to bad actors and AI scrapers causing undue traffic on our sites, "
                               "you need to provide an Auth token for this endpoint. Sorry for this mess.")

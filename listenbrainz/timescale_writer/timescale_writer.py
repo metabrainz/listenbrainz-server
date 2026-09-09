@@ -4,7 +4,9 @@ from datetime import datetime
 from time import monotonic
 
 import psycopg2
+import sqlalchemy.exc
 import orjson
+import sqlalchemy
 from brainzutils import metrics
 from flask import current_app
 from kombu import Exchange, Queue, Consumer, Message
@@ -70,7 +72,7 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
 
             submit = [Listen.from_json(listen) for listen in msb_listens]
             self.insert_to_listenstore(submit)
-        except psycopg2.OperationalError:
+        except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError):
             current_app.logger.error("Error processing listens due to database issues:", exc_info=True)
             time.sleep(self.ERROR_RETRY_DELAY)
             raise
@@ -213,7 +215,18 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
 
 
 if __name__ == "__main__":
-    app = create_app(bypass_pgbouncer=True)
+    # The consul sizes are per uwsgi worker and bypass_pgbouncer makes them direct backends.
+    # This consumer is single threaded and never touches db / meb, so one connection each.
+    app = create_app(
+        bypass_pgbouncer=True,
+        use_pool=True,
+        pool_size_overrides={
+            "db": (1, 1),
+            "ts": (1, 1),
+            "listens": (1, 1),
+            "meb": (1, 1),
+        },
+    )
     with app.app_context():
         rc = TimescaleWriterSubscriber()
         rc.start()

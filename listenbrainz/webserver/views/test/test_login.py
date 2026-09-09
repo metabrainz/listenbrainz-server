@@ -46,6 +46,27 @@ class LoginViewsTestCase(ServerTestCase):
         query = parse_qs(urlparse(response.location).query)
         self.assertNotIn("login_hint", query)
 
+    def test_login_musicbrainz_only_remembers_a_next_url_on_this_server(self):
+        """ Anything else would turn the login endpoint into an open redirect. Browsers
+        normalize backslashes to slashes and collapse leading slashes, so those forms have
+        to be rejected too even though urlparse finds no host in them. """
+        for next_url in ["https://evil.example/", "//evil.example/", "////evil.example/",
+                         "/\\evil.example/", "https://listenbrainz.org@evil.example/",
+                         "javascript:alert(1)"]:
+            with self.subTest(next=next_url):
+                self.client.get(self.custom_url_for('login.musicbrainz', next=next_url))
+                with self.client.session_transaction() as session:
+                    self.assertIsNone(session["next"])
+
+        # flask_login sends us an absolute url, so those have to keep working
+        allowed = ["/settings/music-services/details/", "/",
+                   self.app.config["SERVER_ROOT_URL"] + "/settings/"]
+        for next_url in allowed:
+            with self.subTest(next=next_url):
+                self.client.get(self.custom_url_for('login.musicbrainz', next=next_url))
+                with self.client.session_transaction() as session:
+                    self.assertEqual(session["next"], next_url)
+
 
 class LoginProviderTestCase(IntegrationTestCase):
 

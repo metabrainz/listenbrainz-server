@@ -9,6 +9,7 @@ from listenbrainz.db.playlist import TROI_BOT_USER_ID
 
 from listenbrainz.tests.integration import IntegrationTestCase, TIMESCALE_SQL_DIR
 from listenbrainz.db import timescale
+from listenbrainz.db.exceptions import InvalidUser
 from listenbrainz.db.model.playlist import WritablePlaylist, WritablePlaylistRecording
 
 
@@ -376,3 +377,30 @@ class PlaylistTestCase(IntegrationTestCase):
         )
         self.assertIsNotNone(updated_playlist)
         self.assertNotIn(self.user_1["id"], updated_playlist.collaborator_ids)
+
+    def test_create_playlist_invalid_user(self):
+        """db_playlist.create raises InvalidUser when creator or created_for user does not exist"""
+        playlist_invalid_creator = WritablePlaylist(
+            name="Invalid Creator Playlist",
+            creator_id=9999999,
+            description="Testing invalid creator",
+            collaborator_ids=[],
+            collaborators=[],
+            public=True,
+            additional_metadata={},
+        )
+        with self.assertRaises(InvalidUser):
+            db_playlist.create(self.db_conn, self.ts_conn, playlist_invalid_creator)
+
+        playlist_invalid_created_for = WritablePlaylist(
+            name="Invalid Created For Playlist",
+            creator_id=self.user_1["id"],
+            created_for_id=9999999,
+            description="Testing invalid created_for",
+            collaborator_ids=[],
+            collaborators=[],
+            public=True,
+            additional_metadata={},
+        )
+        with self.assertRaises(InvalidUser):
+            db_playlist.create(self.db_conn, self.ts_conn, playlist_invalid_created_for)

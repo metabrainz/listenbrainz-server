@@ -50,6 +50,6 @@ class SoundCloudService(BaseBrainzService):
         )
 
     def get_user_info(self, token: str):
-        response = requests.get(SOUNDCLOUD_USER_INFO_URL, headers={"Authorization": f"OAuth {token}"})
+        response = requests.get(SOUNDCLOUD_USER_INFO_URL, headers={"Authorization": f"OAuth {token}"}, timeout=10)
         response.raise_for_status()
         return response.json()

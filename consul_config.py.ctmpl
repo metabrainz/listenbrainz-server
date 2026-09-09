@@ -110,14 +110,16 @@ SQLALCHEMY_BINDS = {}
 {{end}}
 
 
-# New listens database (plain postgres, listens partitioned by user_id). Currently only used as the
-# target of listenbrainz/listenstore/migrate_listens.py while listens are migrated away from timescale.
+# New listens database (plain postgres, listens partitioned by user_id). During migration, new
+# listens and deletes are mirrored here while Timescale remains the read store.
 {{if service "listenbrainz-user-listenstore"}}
 {{with index (service "listenbrainz-user-listenstore") 0}}
 SQLALCHEMY_LISTENS_URI = """postgresql://{{template "KEY" "listens_db_user"}}:{{template "KEY" "listens_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listens_db_name"}}"""
+LISTENS_ADMIN_URI = """postgresql://postgres:{{template "KEY" "listens_admin_password"}}@{{.Address}}:{{.Port}}/postgres"""
 {{end}}
 {{else}}
 SQLALCHEMY_LISTENS_URI = "SERVICEDOESNOTEXIST_listenbrainz-user-listenstore"
+LISTENS_ADMIN_URI = "SERVICEDOESNOTEXIST_listenbrainz-user-listenstore"
 {{end}}
 
 
@@ -333,8 +335,13 @@ REJECT_LISTENS_WITHOUT_USER_EMAIL = {{template "KEY_JSON" "reject_listens_withou
 # If set to True, do not allow new users without email to register and warn existing without email
 REJECT_NEW_USERS_WITHOUT_EMAIL = {{template "KEY_JSON" "reject_new_users_without_email"}}
 
-# base directory for user data exports
-USER_DATA_EXPORT_BASE_DIR = '''{{template "KEY" "user_data_export_base_dir"}}'''
+# Garage object storage, user data exports are stored here.
+GARAGE_ENDPOINT = "virtual-garage.service.consul:3900"
+GARAGE_ACCESS_KEY = '''{{template "KEY" "garage/access_key"}}'''
+GARAGE_SECRET_KEY = '''{{template "KEY" "garage/secret_key"}}'''
+GARAGE_SECURE = False
+GARAGE_REGION = "garage"
+GARAGE_USER_DATA_EXPORT_BUCKET = '''{{template "KEY" "garage/user_data_export_bucket"}}'''
 
 # Navidrome configuration
 # Set to a base64 encoded key for encryption/decryption of passwords.

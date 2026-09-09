@@ -1,11 +1,12 @@
 import json
-import os
 
+from botocore.exceptions import ClientError
 from flask import Blueprint, current_app, jsonify, send_file
 from flask_login import current_user
 from psycopg2 import DatabaseError
 from sqlalchemy import text
 
+from listenbrainz.garage import get_error_code, get_garage_client, get_user_data_export_bucket
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIBadRequest
@@ -121,8 +122,27 @@ def download_export_archive(export_id):
     if row is None:
         raise APINotFound("Export not found")
 
-    file_path = os.path.join(current_app.config["USER_DATA_EXPORT_BASE_DIR"], str(row.filename))
-    return send_file(file_path, mimetype="application/zip", as_attachment=True)
+    filename = str(row.filename)
+    try:
+        archive = get_garage_client().get_object(Bucket=get_user_data_export_bucket(), Key=filename)
+    except ClientError as e:
+        if get_error_code(e) in ("NoSuchKey", "NoSuchBucket", "404"):
+            raise APINotFound("Export not found")
+        current_app.logger.error("Error while downloading user data export: %s", filename, exc_info=True)
+        raise APIInternalServerError("Error while downloading export, please try again later.")
+
+    response = send_file(
+        archive["Body"],
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=filename,
+        conditional=False,
+    )
+    content_length = archive.get("ContentLength")
+    if content_length is not None:
+        response.content_length = content_length
+
+    return response
 
 
 
@@ -142,7 +162,7 @@ def delete_export_archive(export_id):
             {"user_id": current_user.id, "export_id": export_id}
         )
         db_conn.commit()
-        # file is deleted from disk by cronjob
+        # archive is deleted from garage by cronjob
         return jsonify({"success": True})
     else:
         raise APINotFound("Export not found")
