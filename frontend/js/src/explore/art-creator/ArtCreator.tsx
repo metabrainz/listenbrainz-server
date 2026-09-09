@@ -700,6 +700,9 @@ export default function ArtCreator() {
           if (captionTextColorArg && captionTextColorArg !== "#ffffff") {
             queryParams.set("caption-text-color", captionTextColorArg);
           }
+          // "#0000007a" is the default caption_bg_color in art_api.py — black background at
+          // ~48% opacity (0x7a / 255). Skip sending the param when the user hasn't changed it
+          // from that default, so we don't append a redundant no-op value to every request.
           const combinedBgColor = getCombinedCaptionBgColor(
             captionBgColorArg,
             captionBgOpacityArg
