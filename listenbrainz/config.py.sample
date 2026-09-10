@@ -158,10 +158,6 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 # Size is in bytes
 MAX_CONTENT_LENGTH = 200 * 1024 * 1024 + 10  # 200MB plus some buffer
 
-# Specify the upload folder where user uploaded files for import will be stored
-# The path must be absolute path
-UPLOAD_FOLDER = "/code/listenbrainz/uploads"
-
 # Set to "https://api.listenbrainz.org" if you want to work on frontend for user statistics
 # without going through the process of generating the stats in local environment. Otherwise,
 # set it to "http://localhost:8100"
@@ -240,8 +236,15 @@ REJECT_LISTENS_WITHOUT_USER_EMAIL = False
 # If set to True, do not allow new users without email to register
 REJECT_NEW_USERS_WITHOUT_EMAIL = False
 
-# base directory for user data exports
-USER_DATA_EXPORT_BASE_DIR = "/code/listenbrainz/exports/"
+# Garage object storage, user data exports are stored here.
+# The endpoint must not include a URL scheme.
+GARAGE_ENDPOINT = "garage:3900"
+GARAGE_ACCESS_KEY = "GK1e5b4c3a2d0f9e8b7a6c5d40"
+GARAGE_SECRET_KEY = "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0"
+GARAGE_SECURE = False
+GARAGE_REGION = "garage"
+GARAGE_USER_DATA_EXPORT_BUCKET = "listenbrainz-user-data-exports"
+GARAGE_USER_DATA_IMPORT_BUCKET = "listenbrainz-user-data-imports"
 
 # Service monitoring -- only needed for MetaBrainz production
 SERVICE_MONITOR_TELEGRAM_BOT_TOKEN = ""
