@@ -65,6 +65,11 @@ class ExportAPIIntegrationTestCase(ListenAPIIntegrationTestCase):
         response = self.client.get('/1/export/999999', headers=self.auth_headers)
         self.assertEqual(response.status_code, 404)
 
+    def test_download_nonexistent_export(self):
+        """ Test downloading a non-existent export """
+        response = self.client.get('/1/export/999999/download', headers=self.auth_headers)
+        self.assertEqual(response.status_code, 404)
+
 
 if __name__ == '__main__':
     unittest.main()
