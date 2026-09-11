@@ -131,7 +131,7 @@ export default function PlaylistCard({
               </div>
               {playlist.annotation && (
                 <div
-                  className="description"
+                  className="description text-summary"
                   // eslint-disable-next-line react/no-danger
                   dangerouslySetInnerHTML={{ __html: playlist.annotation }}
                 />
@@ -236,7 +236,7 @@ export default function PlaylistCard({
         <h4>{playlist.title}</h4>
         {playlist.annotation && (
           <div
-            className="description"
+            className="description text-summary"
             // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
             // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{

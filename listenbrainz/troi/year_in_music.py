@@ -55,7 +55,7 @@ def insert_playlists_in_yim(slug, year, playlists, user_details):
     playlist_jsons = []
 
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-            psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+            psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"]) as ts_conn, \
             mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
             ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
 

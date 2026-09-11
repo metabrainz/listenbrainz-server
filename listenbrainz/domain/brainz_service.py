@@ -1,7 +1,7 @@
 import time
 
 from requests_oauthlib import OAuth2Session
-from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
+from oauthlib.oauth2.rfc6749.errors import InvalidClientIdError, InvalidGrantError
 from listenbrainz.db import external_service_oauth
 
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
@@ -77,7 +77,7 @@ class BaseBrainzService(ExternalService):
                 client_id=self.client_id,
                 refresh_token=refresh_token,
             )
-        except (InvalidGrantError, TypeError) as e:
+        except (InvalidGrantError, InvalidClientIdError, TypeError) as e:
             raise ExternalServiceInvalidGrantError("User revoked access") from e
 
         expires_at = int(time.time()) + token["expires_in"]

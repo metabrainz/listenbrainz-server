@@ -2,87 +2,72 @@ from operator import itemgetter
 import time
 
 import psycopg2
-from psycopg2.errors import OperationalError
-from psycopg2.extras import execute_values
 import orjson
-from flask import current_app
+from brainzutils.mail import send_mail
+from flask import current_app, render_template
+from psycopg2.sql import SQL, Identifier
 from sqlalchemy import text
 
 from listenbrainz import db
+from listenbrainz.spark.spark_dataset import DatabaseDataset
 
 
-ROWS_PER_BATCH = 1000
+class _SimilarUsersDataset(DatabaseDataset):
+    """ Store the similar users data generated in spark into the ListenBrainz database.
 
-
-def import_user_similarities(data):
-    """ Import the user similarities into the DB by inserting the data into a new table
-        and then rotating the table into place atomically.
-
-        Returns a tuple of three values:
-            (user_count, avr_similar_users_per_user, error)
-        If an error occurs rotating the tables in place, error will be a non-empty
-        string and the user count values will be 0. Upon success error will be empty
-        and the user count values will be set accordingly.
+    The dataset is received in chunks: a start message creates a temporary table, multiple data
+    messages insert the user similarities into it and an end message swaps the temporary table into
+    place atomically. See listenbrainz.spark.spark_dataset.DatabaseDataset for details.
     """
 
-    user_count = 0
-    target_user_count = 0
-    # Start by importing the data into an import table
-    conn = db.engine.raw_connection()
-    try:
-        with conn.cursor() as curs:
-            curs.execute(
-                """DROP TABLE IF EXISTS recommendation.similar_user_import""")
-            curs.execute("""CREATE TABLE recommendation.similar_user_import  (
-                                user_id     INTEGER NOT NULL,
-                                similar_users JSONB)""")
-            query = "INSERT INTO recommendation.similar_user_import VALUES %s"
-            values = []
-            for user, similar in data.items():
-                values.append((user, orjson.dumps(similar).decode("utf-8")))
-                user_count += 1
-                target_user_count += len(similar.keys())
-            execute_values(curs, query, values, page_size=ROWS_PER_BATCH, template=None)
+    def __init__(self):
+        super().__init__("similar_users", "similar_user", "recommendation")
+
+    def get_engine(self):
+        # the similar_user table lives in the main ListenBrainz database, not timescale
+        return db.engine
+
+    def get_table(self):
+        return """
+            CREATE TABLE {table} (
+                user_id         INTEGER NOT NULL,
+                similar_users   JSONB,
+                last_updated    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+            )
+        """
+
+    def get_indices(self):
+        return [
+            "CREATE UNIQUE INDEX user_id_ndx_similar_user_{suffix} ON {table} (user_id)"
+        ]
+
+    def get_inserts(self, message):
+        query = "INSERT INTO {table} (user_id, similar_users) VALUES %s"
+        values = [
+            (entry["user_id"], orjson.dumps(entry["similar_users"]).decode("utf-8"))
+            for entry in message["data"]
+        ]
+        return query, None, values
+
+    def run_post_processing(self, cursor, message):
+        # spark may report users that no longer exist in the database (deleted since the run started).
+        # remove them before adding the foreign key so that the constraint can be validated.
+        cursor.execute(
+            SQL('DELETE FROM {table} WHERE user_id NOT IN (SELECT id FROM "user")')
+            .format(table=self._get_table_name())
+        )
+        # give the constraint a unique name so that we don't have to deal with constraint renaming
+        # when the table is rotated into place.
+        constraint = Identifier(f"similar_user_user_id_foreign_key_{int(time.time())}")
+        cursor.execute(
+            SQL("""ALTER TABLE {table}
+                       ADD CONSTRAINT {constraint}
+                        FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE""")
+            .format(table=self._get_table_name(), constraint=constraint)
+        )
 
 
-            # Next lookup user names and insert them into the new similar_users table
-            curs.execute(
-                """DROP TABLE IF EXISTS recommendation.tmp_similar_user""")
-            curs.execute("""CREATE TABLE recommendation.tmp_similar_user
-                                         (LIKE recommendation.similar_user
-                                          EXCLUDING INDEXES
-                                          EXCLUDING CONSTRAINTS
-                                          INCLUDING DEFAULTS)""")
-            curs.execute("""INSERT INTO recommendation.tmp_similar_user
-                                        SELECT id AS user_id, similar_users
-                                          FROM recommendation.similar_user_import
-                                          JOIN "user"
-                                            ON user_id = "user".id""")
-
-            curs.execute("""DROP TABLE recommendation.similar_user_import""")
-
-            # Give each constraint a unique name so that we don't have to deal with PITA constraint renaming
-            curs.execute("""CREATE UNIQUE INDEX user_id_ndx_similar_user_%s
-                                             ON recommendation.tmp_similar_user (user_id)""" % int(time.time()))
-            curs.execute("""ALTER TABLE recommendation.tmp_similar_user
-                         ADD CONSTRAINT similar_user_user_id_foreign_key_%s
-                            FOREIGN KEY (user_id)
-                             REFERENCES "user" (id)
-                              ON DELETE CASCADE""" % int(time.time()))
-
-            curs.execute("""ALTER TABLE recommendation.similar_user
-                              RENAME TO delete_similar_user""")
-            curs.execute("""ALTER TABLE recommendation.tmp_similar_user
-                              RENAME TO similar_user""")
-            curs.execute("""DROP TABLE recommendation.delete_similar_user CASCADE""")
-        conn.commit()
-
-    except psycopg2.errors.OperationalError as err:
-        conn.rollback()
-        current_app.logger.error("Error: Cannot rotate similar users data: %s" % str(err))
-        return 0, 0.0, "Error: Cannot rotate similar users data: %s" % str(err)
-
-    return user_count, target_user_count / user_count, ""
+SimilarUsersDataset = _SimilarUsersDataset()
 
 
 def get_top_similar_users(db_conn, count: int = 200):
@@ -116,7 +101,7 @@ def get_top_similar_users(db_conn, count: int = 200):
                 similar_users[user + other_user] = (user, other_user, similarity)
             else:
                 similar_users[other_user + user] = (other_user, user, similarity)
-    except psycopg2.errors.OperationalError as err:
+    except psycopg2.OperationalError as err:
         current_app.logger.error("Error: Failed to fetch top similar users %s" % str(err))
         return []
 

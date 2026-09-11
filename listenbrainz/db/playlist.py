@@ -9,6 +9,7 @@ from sqlalchemy import text
 
 from listenbrainz.db.model import playlist as model_playlist
 from listenbrainz.db import user as db_user
+from listenbrainz.db.exceptions import InvalidUser
 from listenbrainz.db.model.playlist import Playlist
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.db.year_in_music import LAST_FM_FOUNDING_YEAR, MAX_YEAR_IN_MUSIC_YEAR
@@ -534,8 +535,6 @@ def search_playlist(db_conn, ts_conn, query: str, count: int = 0, offset: int = 
         db_conn: database connection
         ts_conn: timescale database connection
         query: The search query
-        include_private: If True, include all playlists by a user, including private ones. The count of
-                 playlists returned will include private playlists if True
         count: Return this many playlists. If 0, return all playlists
         offset: if set, get playlists from this offset
 
@@ -726,7 +725,7 @@ def create(db_conn, ts_conn, playlist: model_playlist.WritablePlaylist) -> model
     # TODO: These two gets should be done in a single query
     creator = db_user.get(db_conn, playlist.creator_id)
     if creator is None:
-        raise Exception("TODO: Custom exception")
+        raise InvalidUser("Invalid creator user ID")
 
     # TODO: In a way this is less than ideal -- the caller must take the string name and find the ID,
     # and then the name is fetched for verification again. Should we accept created_for here and do
@@ -734,7 +733,7 @@ def create(db_conn, ts_conn, playlist: model_playlist.WritablePlaylist) -> model
     if playlist.created_for_id:
         created_for = db_user.get(db_conn, playlist.created_for_id)
         if created_for is None:
-            raise Exception("TODO: Custom exception")
+            raise InvalidUser("Invalid created_for user ID")
 
     query = text("""
         INSERT INTO playlist.playlist (creator_id
@@ -920,29 +919,52 @@ def insert_recordings(db_conn, ts_conn, playlist_id: int, recordings: List[model
         recordings: a list of recordings to add
         starting_position: The position number to set in the first recording. The first recording in a playlist is position 0
     """
+    if not recordings:
+        return []
+
+    insert_ts = datetime.datetime.now(tz=datetime.timezone.utc)
     for position, recording in enumerate(recordings, starting_position):
         recording.playlist_id = playlist_id
         recording.position = position
+        if not recording.created:
+            recording.created = insert_ts
 
     query = text("""
         INSERT INTO playlist.playlist_recording (playlist_id, position, mbid, added_by_id, created)
-                                         VALUES (:playlist_id, :position, :mbid, :added_by_id, :created)
-                                      RETURNING id, created
+             SELECT *
+               FROM unnest(
+                        :playlist_ids,
+                        :positions,
+                        CAST(:mbids AS uuid[]),
+                        :added_by_ids,
+                        :created_times
+                    )
+          RETURNING id, position
     """)
+
+    playlist_ids, positions, mbids, added_by_ids, created_times = map(
+        list,
+        zip(*(
+            (r.playlist_id, r.position, str(r.mbid), r.added_by_id, r.created)
+            for r in recordings
+        )),
+    )
+    result = ts_conn.execute(query, {
+        'playlist_ids': playlist_ids,
+        'positions': positions,
+        'mbids': mbids,
+        'added_by_ids': added_by_ids,
+        'created_times': created_times,
+    })
+    id_by_position = {row.position: row.id for row in result.fetchall()}
+
+    unique_user_ids = list({r.added_by_id for r in recordings})
+    user_id_map = db_user.get_users_by_id(db_conn, unique_user_ids)
+
     return_recordings = []
-    user_id_map = {}
-    insert_ts = datetime.datetime.now(tz=datetime.timezone.utc)
     for recording in recordings:
-        if not recording.created:
-            recording.created = insert_ts
-        result = ts_conn.execute(query, recording.dict(include={'playlist_id', 'position', 'mbid', 'added_by_id', 'created'}))
-        if recording.added_by_id not in user_id_map:
-            # TODO: Do this lookup in bulk
-            user_id_map[recording.added_by_id] = db_user.get(db_conn, recording.added_by_id)
-        row = result.fetchone()
-        recording.id = row.id
-        recording.created = row.created
-        recording.added_by = user_id_map[recording.added_by_id]["musicbrainz_id"]
+        recording.id = id_by_position[recording.position]
+        recording.added_by = user_id_map.get(recording.added_by_id)
         return_recordings.append(model_playlist.PlaylistRecording.parse_obj(recording.dict()))
     return return_recordings
 

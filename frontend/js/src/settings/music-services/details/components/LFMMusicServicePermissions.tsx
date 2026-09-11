@@ -6,6 +6,7 @@ import ServicePermissionButton from "./ExternalServiceButton";
 import ImportStatus from "./ImportStatus";
 import { ToastMsg } from "../../../../notifications/Notifications";
 import GlobalAppContext from "../../../../utils/GlobalAppContext";
+import { EmailVerificationRequiredToastMessage } from "../../../../utils/emailVerification";
 
 type LFMMusicServicePermissionsProps = {
   serviceName: "lastfm" | "librefm";
@@ -14,6 +15,7 @@ type LFMMusicServicePermissionsProps = {
   externalUserId?: string;
   existingLatestListenedAt?: string;
   canImportFeedback?: boolean;
+  userHasEmail: boolean;
 };
 
 export default function LFMMusicServicePermissions({
@@ -23,6 +25,7 @@ export default function LFMMusicServicePermissions({
   externalUserId,
   existingLatestListenedAt,
   canImportFeedback = false,
+  userHasEmail,
 }: LFMMusicServicePermissionsProps) {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const { auth_token } = currentUser;
@@ -51,6 +54,17 @@ export default function LFMMusicServicePermissions({
   const handleConnectSubmit = async (evt: React.FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
     try {
+      if (!userHasEmail) {
+        toast.error(
+          <ToastMsg
+            title="Email verification required"
+            message={
+              <EmailVerificationRequiredToastMessage action="connecting a service" />
+            }
+          />
+        );
+        return;
+      }
       if (!userId) {
         setUserId(externalUserId);
         setLatestListenedAt(
@@ -248,6 +262,7 @@ export default function LFMMusicServicePermissions({
                   setUserId(e.target.value);
                 }}
                 readOnly={!isEditing && permissions === "import"}
+                disabled={!userHasEmail}
               />
             </div>
             <div>
@@ -265,11 +280,12 @@ export default function LFMMusicServicePermissions({
                 name={`${serviceName}StartDatetime`}
                 title="Date and time to start import at"
                 readOnly={!isEditing && permissions === "import"}
+                disabled={!userHasEmail}
               />
             </div>
             <div style={{ flex: 0, alignSelf: "end" }}>
               <button
-                disabled={permissions !== "import"}
+                disabled={!userHasEmail || permissions !== "import"}
                 type={isEditing ? "button" : "submit"}
                 className={`btn ${editButtonClass}`}
                 onClick={() => {
@@ -286,6 +302,7 @@ export default function LFMMusicServicePermissions({
               type="submit"
               className="music-service-option"
               style={{ width: "100%" }}
+              disabled={!userHasEmail}
             >
               <input
                 readOnly
@@ -311,6 +328,7 @@ export default function LFMMusicServicePermissions({
                 type="button"
                 className="music-service-option"
                 onClick={handleImportFeedback}
+                disabled={!userHasEmail}
               >
                 <input
                   readOnly

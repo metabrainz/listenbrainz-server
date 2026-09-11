@@ -9,7 +9,7 @@ import Card from "../../../components/Card";
 import SimilarityScore from "./SimilarityScore";
 
 export type CompatibilityCardProps = {
-  user: ListenBrainzUser;
+  userName: string;
   similarityScore: number;
   similarArtists: Array<{
     artist_name: string;
@@ -19,7 +19,7 @@ export type CompatibilityCardProps = {
 };
 
 function CompatibilityCard(props: CompatibilityCardProps) {
-  const { user, similarityScore, similarArtists } = props;
+  const { userName, similarityScore, similarArtists } = props;
 
   const firstFiveArtists = similarArtists.slice(0, 5);
   const otherArtists = similarArtists.slice(5, 25);
@@ -85,17 +85,17 @@ function CompatibilityCard(props: CompatibilityCardProps) {
     <Card id="compatibility-card" data-testid="compatibility-card">
       <div className="info-icon" data-tip data-for="info-tooltip">
         <Link
-          to={`/user/${encodeURIComponent(user.name)}/stats/?range=all_time`}
+          to={`/user/${encodeURIComponent(userName)}/stats/?range=all_time`}
           target="_blank"
           rel="noopener noreferrer"
         >
           <FontAwesomeIcon icon={faCircleInfo} />
         </Link>
       </div>
-      <span>Your compatibility with {user.name}:</span>
+      <span>Your compatibility with {userName}:</span>
       <SimilarityScore
         similarityScore={similarityScore}
-        user={user}
+        userName={userName}
         type="compact"
       />
       <hr />

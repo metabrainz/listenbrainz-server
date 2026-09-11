@@ -116,6 +116,11 @@ declare type MusicBrainzRecordingRel = {
   type: string;
 };
 
+declare type MusicBrainzUrlRel = {
+  type: string;
+  url: string;
+};
+
 declare type WikipediaExtract = {
   url: string;
   content: string; // HTML string
@@ -146,6 +151,7 @@ declare type ListenMetadata = {
   recording?: {
     name?: string;
     rels?: Array<MusicBrainzRecordingRel>;
+    url_rels?: Array<MusicBrainzUrlRel>;
     length?: number;
   };
   release?: {

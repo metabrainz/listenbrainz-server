@@ -56,7 +56,7 @@ describe.each([
           default:
             return HttpResponse.json(
               { error: "Failed to fetch data" },
-              { status: 500 }
+              { status: 418 }
             );
         }
       }),
@@ -70,7 +70,7 @@ describe.each([
           default:
             return HttpResponse.json(
               { error: "Failed to fetch data" },
-              { status: 500 }
+              { status: 418 }
             );
         }
       }),

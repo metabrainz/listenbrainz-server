@@ -64,10 +64,16 @@ class NavidromeService:
 
             response = requests.get(ping_url, params=params, timeout=10)
             response.raise_for_status()
-            data = response.json()
+
+            # Try to parse JSON response
+            try:
+                data = response.json()
+            except (ValueError, requests.exceptions.JSONDecodeError) as e:
+                current_app.logger.error(f"Failed to parse Navidrome JSON response. Response text: {response.text[:1000]}")
+                raise ExternalServiceError(f"Could not parse server response as JSON: {str(e)}")
 
             if "subsonic-response" not in data:
-                raise ExternalServiceError("Invalid response from Navidrome server: %s", json.dumps(data))
+                raise ExternalServiceError("Invalid response from Navidrome server: %s" % json.dumps(data))
 
             subsonic_response = data["subsonic-response"]
             if subsonic_response.get("status") != "ok":
@@ -76,10 +82,10 @@ class NavidromeService:
                 raise ExternalServiceError(error_message)
 
             return self._encrypt_password(password)
-        except requests.exceptions.RequestException as e:
-            raise ExternalServiceAPIError(f"Unable to connect to server: {str(e)}")
         except ExternalServiceError:
             raise
+        except requests.exceptions.RequestException as e:
+            raise ExternalServiceAPIError(f"Unable to connect to server: {str(e)}")
         except Exception as e:
             raise ExternalServiceError(f"Authentication error: {str(e)}")
 

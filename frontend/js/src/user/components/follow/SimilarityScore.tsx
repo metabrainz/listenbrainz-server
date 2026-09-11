@@ -3,7 +3,7 @@ import * as React from "react";
 export type SimilarityScoreProps = {
   type: "regular" | "compact";
   similarityScore: number;
-  user?: ListenBrainzUser;
+  userName?: string;
 };
 
 const getclassName = (similarityScore: number): string => {
@@ -19,7 +19,7 @@ const getclassName = (similarityScore: number): string => {
 };
 
 function SimilarityScore(props: SimilarityScoreProps) {
-  const { user, type, similarityScore } = props;
+  const { userName, type, similarityScore } = props;
 
   // We transform the similarity score from a scale 0-1 to 0-100
   const percentage = Number((similarityScore * 100).toFixed());
@@ -48,7 +48,7 @@ function SimilarityScore(props: SimilarityScoreProps) {
       </div>
       {type === "regular" ? (
         <p className="text-muted">
-          Your compatibility with {user?.name} is {percentage}%
+          Your compatibility with {userName} is {percentage}%
         </p>
       ) : (
         <p className="small text-muted">{percentage}%</p>

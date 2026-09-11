@@ -83,3 +83,6 @@ class StatsTestCase(SparkNewTestCase):
 
         self.assertEqual(messages[2]["type"], "couchdb_data_end")
         self.assertTrue(messages[2]["database"].startswith(database_prefix))
+
+        self.assertEqual(messages[3]["type"], "statistics_generation_complete")
+        self.assertEqual(messages[3]["stats_type"], database_prefix)

@@ -40,6 +40,7 @@ class MainTestCase(flask_testing.TestCase):
         app = create_app()
         app.config['MB_DATABASE_URI'] = 'fuss'
         app.config['SQLALCHEMY_TIMESCALE_URI'] = 'mip'
+        app.config['SQLALCHEMY_TIMESCALE_PGBOUNCER_URI'] = 'mip'
         return app
 
     def setUp(self):
@@ -56,9 +57,9 @@ class MainTestCase(flask_testing.TestCase):
         self.assertCountEqual(q.inputs().__fields__.keys(), ['tag'])
         self.assertCountEqual(q.outputs().__fields__.keys(), ['similar_tag', 'count'])
 
-    @patch('psycopg2.connect')
-    def test_fetch(self, mock_connect):
-        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [db_response[0], db_response[1], None]
+    @patch('listenbrainz.db.timescale.engine')
+    def test_fetch(self, mock_engine):
+        mock_engine.raw_connection().cursor().__enter__().fetchone.side_effect = [db_response[0], db_response[1], None]
         q = TagSimilarityQuery()
         resp = q.fetch(json_request, RequestSource.json_post)
         self.assertEqual(len(resp), 2)
