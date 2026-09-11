@@ -25,14 +25,14 @@ METRIC_UPDATE_INTERVAL = 60  # seconds
 
 class ListensImporter(abc.ABC):
 
-    def __init__(self, name, user_friendly_name, service):
+    def __init__(self, name, user_friendly_name, service, exclude_error=True):
         self.name = name
         self.user_friendly_name = user_friendly_name
         self.service = service
+        self.exclude_error = exclude_error
         # number of listens imported since last metric update was submitted
         self._listens_imported_since_last_update = 0
         self._metric_submission_time = time.monotonic() + METRIC_UPDATE_INTERVAL
-        self.exclude_error = True
 
     def notify_error(self, musicbrainz_id: str, error: str):
         """ Notifies specified user via email about error during Spotify import.
@@ -46,9 +46,9 @@ class ListensImporter(abc.ABC):
             return
 
         link = current_app.config['SERVER_ROOT_URL'] + '/settings/music-services/details/'
-        text = render_template('emails/listens_importer_error.txt', error=error, link=link)
+        text = render_template('emails/listens_importer_error.txt', error=error, link=link, service=self.service)
         send_mail(
-            subject=f'ListenBrainz {self.user_friendly_name} Importer Error',
+            subject=f'[Action required] ListenBrainz {self.user_friendly_name} Importer Error',
             text=text,
             recipients=[user_email],
             from_name='ListenBrainz',
@@ -167,7 +167,8 @@ class ListensImporter(abc.ABC):
                 self._listens_imported_since_last_update = 0
 
         current_app.logger.info('Processed %d users successfully!', success)
-        current_app.logger.info('Encountered errors while processing %d users.', failure)
+        if failure > 0:
+            current_app.logger.info('Encountered errors while processing %d users.', failure)
         return success, failure
 
     def main(self):
