@@ -3,60 +3,60 @@ FROM docker.io/metabrainz/python:$PYTHON_BASE_IMAGE_VERSION
 
 ARG PYTHON_BASE_IMAGE_VERSION
 LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-server.git" \
-      org.label-schema.schema-version="1.0.0-rc1" \
-      org.label-schema.vendor="MetaBrainz Foundation" \
-      org.label-schema.name="ListenBrainz Spark" \
-      org.metabrainz.based-on-image="docker.io/metabrainz/python:$PYTHON_BASE_IMAGE_VERSION"
+    org.label-schema.schema-version="1.0.0-rc1" \
+    org.label-schema.vendor="MetaBrainz Foundation" \
+    org.label-schema.name="ListenBrainz Spark" \
+    org.metabrainz.based-on-image="docker.io/metabrainz/python:$PYTHON_BASE_IMAGE_VERSION"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-    wget \
-    net-tools \
-    dnsutils \
-    bsdmainutils \
-    xz-utils \
-    zip \
-    libcurl4-openssl-dev \
+        wget \
+        net-tools \
+        dnsutils \
+        bsdmainutils \
+        xz-utils \
+        zip \
+        libcurl4-openssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
-ENV DOCKERIZE_VERSION v0.6.1
+ENV DOCKERIZE_VERSION=v0.6.1
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
 WORKDIR /usr/local
 
-ENV JAVA_VERSION 11.0.26
-ENV JAVA_MAJOR_VERSION 11
-ENV JAVA_BUILD_VERSION 4
+ENV JAVA_VERSION=11.0.26
+ENV JAVA_MAJOR_VERSION=11
+ENV JAVA_BUILD_VERSION=4
 RUN wget https://github.com/adoptium/temurin${JAVA_MAJOR_VERSION}-binaries/releases/download/jdk-${JAVA_VERSION}%2B${JAVA_BUILD_VERSION}/OpenJDK${JAVA_MAJOR_VERSION}U-jdk_x64_linux_hotspot_${JAVA_VERSION}_${JAVA_BUILD_VERSION}.tar.gz \
     && tar xzf OpenJDK${JAVA_MAJOR_VERSION}U-jdk_x64_linux_hotspot_${JAVA_VERSION}_${JAVA_BUILD_VERSION}.tar.gz \
     && mv jdk-${JAVA_VERSION}+${JAVA_BUILD_VERSION} /usr/local/jdk \
     && rm OpenJDK${JAVA_MAJOR_VERSION}U-jdk_x64_linux_hotspot_${JAVA_VERSION}_${JAVA_BUILD_VERSION}.tar.gz
-ENV JAVA_HOME /usr/local/jdk
-ENV PATH $JAVA_HOME/bin:$PATH
+ENV JAVA_HOME=/usr/local/jdk
+ENV PATH=$JAVA_HOME/bin:$PATH
 
 COPY apache-download.sh /apache-download.sh
 
-ENV HADOOP_VERSION 3.4.1
+ENV HADOOP_VERSION=3.4.1
 RUN /apache-download.sh hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz \
     && tar xzf hadoop-${HADOOP_VERSION}.tar.gz \
     && mv hadoop-${HADOOP_VERSION} /usr/local/hadoop \
     && rm hadoop-${HADOOP_VERSION}.tar.gz
-ENV HADOOP_HOME /usr/local/hadoop
-ENV PATH $HADOOP_HOME/bin:$PATH
+ENV HADOOP_HOME=/usr/local/hadoop
+ENV PATH=$HADOOP_HOME/bin:$PATH
 
 RUN mkdir /hdfs
 
-ENV SPARK_VERSION 3.5.5
+ENV SPARK_VERSION=3.5.5
 RUN /apache-download.sh spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-without-hadoop.tgz \
     && tar xzf spark-${SPARK_VERSION}-bin-without-hadoop.tgz \
     && mv spark-${SPARK_VERSION}-bin-without-hadoop /usr/local/spark \
     && rm spark-${SPARK_VERSION}-bin-without-hadoop.tgz
-ENV SPARK_HOME /usr/local/spark
-ENV PATH $SPARK_HOME/bin:$PATH
-ENV PYTHONPATH $SPARK_HOME/python/lib/py4j-0.10.9.7-src.zip:$SPARK_HOME/python:$PYTHONPATH
+ENV SPARK_HOME=/usr/local/spark
+ENV PATH=$SPARK_HOME/bin:$PATH
+ENV PYTHONPATH=$SPARK_HOME/python/lib/py4j-0.10.9.7-src.zip:$SPARK_HOME/python:$PYTHONPATH
 
-ENV POSTGRESQL_DRIVER_VERSION 42.7.5
+ENV POSTGRESQL_DRIVER_VERSION=42.7.5
 RUN wget -O postgresql-${POSTGRESQL_DRIVER_VERSION}.jar https://jdbc.postgresql.org/download/postgresql-${POSTGRESQL_DRIVER_VERSION}.jar \
     && mv postgresql-${POSTGRESQL_DRIVER_VERSION}.jar ${SPARK_HOME}/jars
