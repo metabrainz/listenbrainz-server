@@ -76,7 +76,7 @@ def process_row(row):
         }
         release_mbid, caa_id = row["release_mbid"], row["caa_id"]
         url = f"https://archive.org/download/mbid-{release_mbid}/mbid-{release_mbid}-{caa_id}_thumb250.jpg"
-        r = requests.get(url, headers=headers)
+        r = requests.get(url, headers=headers, timeout=30)
         if r.status_code == 200:
             filename = "/tmp/release-colors-%s.img" % get_ident()
             with open(filename, 'wb') as f:

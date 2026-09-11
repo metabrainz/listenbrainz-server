@@ -115,6 +115,6 @@ class ListenbrainzDumpLoader(ABC):
     def check_dump_type(self, dump_id: int):
         """ Query ListenBrainz dump info API to check the type of the dump with the given dump ID """
         url = f"{self.get_api_base_url()}/1/status/get-dump-info"
-        response = requests.get(url, params={"id": dump_id})
+        response = requests.get(url, params={"id": dump_id}, timeout=10)
         response.raise_for_status()
         return DumpType(response.json()["dump_type"])
