@@ -52,15 +52,15 @@ def list_export_tasks():
 @web_listenstore_needed
 def download_export_archive(export_id):
     """ Download the requested export if it is complete and belongs to the specified user """
+    archive, filename = user_data_export.get_completed_export_archive(db_conn, current_user.id, export_id)
+    if archive is None:
+        raise APINotFound("Export %s not found" % export_id)
+
     try:
-        archive, filename = user_data_export.get_completed_export_archive(db_conn, current_user.id, export_id)
-        if archive is None:
-            raise APINotFound("Export %s not found" % export_id)
-    except Exception as e:
+        response = _prepare_export_download_response(archive, filename)
+    except Exception:
         current_app.logger.error("Error while downloading user data export: %s", filename, exc_info=True)
         raise APIInternalServerError("Error while downloading export, please try again later.")
-
-    response = _prepare_export_download_response(archive, filename)
 
     return response
 
