@@ -2,6 +2,9 @@ import json
 from typing import Optional, Dict, Any, List
 from sqlalchemy import text
 
+from botocore.exceptions import ClientError
+from listenbrainz.garage import get_error_code, get_garage_client, get_user_data_export_bucket
+
 
 def _row_to_dict(row) -> Dict[str, Any]:
     return {
@@ -97,3 +100,23 @@ def delete_export_task(db_conn, user_id: int, export_id: int) -> bool:
         db_conn.commit()
         return True
     return False
+
+def get_completed_export_archive(db_conn, user_id: int, export_id: int) -> tuple[Any, str]:
+    """ Fetch the file for the requested export if it is complete and belongs to the specified user """
+    result = db_conn.execute(
+        text("SELECT filename FROM user_data_export WHERE user_id = :user_id AND status = 'completed' AND id = :export_id"),
+        {"user_id": user_id, "export_id": export_id}
+    )
+    row = result.first()
+    if row is None:
+        return None, None
+
+    filename = str(row.filename)
+    try:
+        archive = get_garage_client().get_object(Bucket=get_user_data_export_bucket(), Key=filename)
+    except ClientError as e:
+        if get_error_code(e) in ("NoSuchKey", "NoSuchBucket", "404"):
+            return None, None
+        raise e
+
+    return archive, filename
