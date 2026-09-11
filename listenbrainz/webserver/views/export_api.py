@@ -1,5 +1,3 @@
-import os
-
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, current_app, jsonify, send_file
 from psycopg2 import DatabaseError
@@ -11,6 +9,21 @@ from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError,
 from listenbrainz.webserver.views.api_tools import validate_auth_header
 
 export_api_bp = Blueprint("export_api", __name__)
+
+
+def _prepare_export_download_response(archive, filename):
+    """Prepare an HTTP response for a completed export archive."""
+    response = send_file(
+        archive["Body"],
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=filename,
+        conditional=False,
+    )
+    content_length = archive.get("ContentLength")
+    if content_length is not None:
+        response.content_length = content_length
+    return response
 
 
 @export_api_bp.post("/")
@@ -69,16 +82,7 @@ def download_export_archive(export_id):
         current_app.logger.error("Error while downloading user data export: %s", filename, exc_info=True)
         raise APIInternalServerError("Error while downloading export, please try again later.")
 
-    response = send_file(
-        archive["Body"],
-        mimetype="application/zip",
-        as_attachment=True,
-        download_name=filename,
-        conditional=False,
-    )
-    content_length = archive.get("ContentLength")
-    if content_length is not None:
-        response.content_length = content_length
+    response = _prepare_export_download_response(archive, filename)
 
     return response
 
