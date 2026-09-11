@@ -39,7 +39,7 @@ def get_export_task(export_id):
     """ Retrieve the requested export's data if it belongs to the specified user """
     export_data = user_data_export.get_export_task(db_conn, current_user.id, export_id)
     if export_data is None:
-        raise APINotFound("Export not found")
+        raise APINotFound("Export %s not found" % export_id)
     return jsonify(export_data)
 
 
@@ -60,7 +60,7 @@ def download_export_archive(export_id):
     try:
         archive, filename = user_data_export.get_completed_export_archive(db_conn, current_user.id, export_id)
         if archive is None:
-            raise APINotFound("Export not found")
+            raise APINotFound("Export %s not found" % export_id)
     except Exception as e:
         current_app.logger.error("Error while downloading user data export: %s", filename, exc_info=True)
         raise APIInternalServerError("Error while downloading export, please try again later.")
@@ -88,4 +88,4 @@ def delete_export_archive(export_id):
     if result is True:
         return jsonify({"success": True})
     else:
-        raise APINotFound("Export not found")
+        raise APINotFound("Export %s not found" % export_id)
