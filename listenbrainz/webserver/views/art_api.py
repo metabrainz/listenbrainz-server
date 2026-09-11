@@ -215,6 +215,12 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
     """
     show_caption = _parse_bool_arg("caption", True)
     skip_missing = _parse_bool_arg("skip-missing", True)
+    show_rank = _parse_bool_arg("show-rank", False)
+    show_listen_count = _parse_bool_arg("show-listen-count", False)
+    show_release = _parse_bool_arg("show-release", True)
+    show_artist = _parse_bool_arg("show-artist", True)
+    caption_text_color = request.args.get("caption-text-color", "#ffffff")
+    caption_bg_color = request.args.get("caption-bg-color", "#0000007a")
     
     cac = CoverArtGenerator(
         current_app.config["MB_DATABASE_URI"], dimension, image_size, show_caption=show_caption, skip_missing=skip_missing,
@@ -248,7 +254,13 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
                            entity="release",
                            width=image_size,
                            height=image_size,
-                           show_caption=show_caption), 200, {
+                           show_rank=show_rank,
+                           show_listen_count=show_listen_count,
+                           show_release=show_release,
+                           show_artist=show_artist,
+                           show_caption=show_caption,
+                           caption_text_color=caption_text_color,
+                           caption_bg_color=caption_bg_color), 200, {
                                'Content-Type': 'image/svg+xml'
                            }
 
