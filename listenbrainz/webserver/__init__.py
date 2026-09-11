@@ -409,7 +409,7 @@ def create_api_compat_app(debug=None):
         },
     )
 
-    import listenbrainz.webserver.static_manager as static_manager
+    import listenbrainz.webserver.static_manager
     static_manager.read_manifest()
     app.static_folder = '/static'
 
@@ -576,3 +576,6 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.webhook_receiver import webhook_bp
     app.register_blueprint(webhook_bp, url_prefix='/webhooks')
+
+    from listenbrainz.webserver.views.export_api import export_api_bp
+    app.register_blueprint(export_api_bp, url_prefix=API_PREFIX+'/export')
