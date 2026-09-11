@@ -1,12 +1,12 @@
 ARG PYTHON_BASE_IMAGE_VERSION=3.12-20241130
-FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION
+FROM docker.io/metabrainz/python:$PYTHON_BASE_IMAGE_VERSION
 
 ARG PYTHON_BASE_IMAGE_VERSION
 LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-server.git" \
       org.label-schema.schema-version="1.0.0-rc1" \
       org.label-schema.vendor="MetaBrainz Foundation" \
       org.label-schema.name="ListenBrainz Spark" \
-      org.metabrainz.based-on-image="metabrainz/python:$PYTHON_BASE_IMAGE_VERSION"
+      org.metabrainz.based-on-image="docker.io/metabrainz/python:$PYTHON_BASE_IMAGE_VERSION"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \

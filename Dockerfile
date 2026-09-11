@@ -1,6 +1,6 @@
 ARG PYTHON_BASE_IMAGE_VERSION=3.13-20250313
 ARG NODE_VERSION=20-alpine
-FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION AS listenbrainz-base
+FROM docker.io/metabrainz/python:$PYTHON_BASE_IMAGE_VERSION AS listenbrainz-base
 
 ARG PYTHON_BASE_IMAGE_VERSION
 
@@ -9,7 +9,7 @@ LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-serve
       org.label-schema.schema-version="1.0.0-rc1" \
       org.label-schema.vendor="MetaBrainz Foundation" \
       org.label-schema.name="ListenBrainz" \
-      org.metabrainz.based-on-image="metabrainz/python:$PYTHON_BASE_IMAGE_VERSION"
+      org.metabrainz.based-on-image="docker.io/metabrainz/python:$PYTHON_BASE_IMAGE_VERSION"
 
 ENV DOCKERIZE_VERSION=v0.6.1
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
@@ -67,7 +67,7 @@ COPY . /code/listenbrainz
 #####################################################################################################
 # NOTE: The javascript files are continously watched and compiled using this image in developement. #
 #####################################################################################################
-FROM node:$NODE_VERSION AS listenbrainz-frontend-dev
+FROM docker.io/library/node:$NODE_VERSION AS listenbrainz-frontend-dev
 
 ARG NODE_VERSION
 
@@ -75,7 +75,7 @@ LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-serve
       org.label-schema.schema-version="1.0.0-rc1" \
       org.label-schema.vendor="MetaBrainz Foundation" \
       org.label-schema.name="ListenBrainz Static Builder" \
-      org.metabrainz.based-on-image="node:$NODE_VERSION"
+      org.metabrainz.based-on-image="docker.io/node:$NODE_VERSION"
 
 RUN mkdir /code
 WORKDIR /code
