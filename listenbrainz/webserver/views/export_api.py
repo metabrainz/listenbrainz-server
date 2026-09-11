@@ -86,7 +86,7 @@ def download_export_archive(export_id):
 
     return response
 
-@export_api_bp.get("/<int:export_id>/delete")
+@export_api_bp.post("/<int:export_id>/delete")
 @crossdomain
 @api_listenstore_needed
 @ratelimit()

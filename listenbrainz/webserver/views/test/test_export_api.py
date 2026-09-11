@@ -70,6 +70,19 @@ class ExportAPIIntegrationTestCase(ListenAPIIntegrationTestCase):
         response = self.client.get('/1/export/999999/download', headers=self.auth_headers)
         self.assertEqual(response.status_code, 404)
 
+    def test_delete_export(self):
+        """ Test deleting an export """
+        response = self.client.post('/1/export/', headers=self.auth_headers)
+        self.assertEqual(response.status_code, 200)
+        export_id = json.loads(response.data)['export_id']
+
+        response = self.client.post(f'/1/export/{export_id}/delete', headers=self.auth_headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data), {"success": True})
+
+        response = self.client.get(f'/1/export/{export_id}', headers=self.auth_headers)
+        self.assertEqual(response.status_code, 404)
+
 
 if __name__ == '__main__':
     unittest.main()
