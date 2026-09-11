@@ -57,20 +57,11 @@ def list_export_tasks():
 @web_listenstore_needed
 def download_export_archive(export_id):
     """ Download the requested export if it is complete and belongs to the specified user """
-    result = db_conn.execute(
-        text("SELECT filename FROM user_data_export WHERE user_id = :user_id AND status = 'completed' AND id = :export_id"),
-        {"user_id": current_user.id, "export_id": export_id}
-    )
-    row = result.first()
-    if row is None:
-        raise APINotFound("Export not found")
-
-    filename = str(row.filename)
     try:
-        archive = get_garage_client().get_object(Bucket=get_user_data_export_bucket(), Key=filename)
-    except ClientError as e:
-        if get_error_code(e) in ("NoSuchKey", "NoSuchBucket", "404"):
+        archive, filename = user_data_export.get_completed_export_archive(db_conn, current_user.id, export_id)
+        if archive is None:
             raise APINotFound("Export not found")
+    except Exception as e:
         current_app.logger.error("Error while downloading user data export: %s", filename, exc_info=True)
         raise APIInternalServerError("Error while downloading export, please try again later.")
 

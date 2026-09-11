@@ -61,9 +61,24 @@ def list_export_tasks():
 def download_export_archive(export_id):
     """ Download the requested export if it is complete and belongs to the specified user """
     user = validate_auth_header()
-    filename = user_data_export.get_completed_export_filename(db_conn, user["id"], export_id)
-    if filename is None:
-        raise APINotFound("Export not found")
+    try:
+        archive, filename = user_data_export.get_completed_export_archive(db_conn, user["id"], export_id)
+        if archive is None:
+            raise APINotFound("Export not found")
+    except Exception as e:
+        current_app.logger.error("Error while downloading user data export: %s", filename, exc_info=True)
+        raise APIInternalServerError("Error while downloading export, please try again later.")
 
-    file_path = os.path.join(current_app.config["USER_DATA_EXPORT_BASE_DIR"], filename)
-    return send_file(file_path, mimetype="application/zip", as_attachment=True)
+    response = send_file(
+        archive["Body"],
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=filename,
+        conditional=False,
+    )
+    content_length = archive.get("ContentLength")
+    if content_length is not None:
+        response.content_length = content_length
+
+    return response
+
