@@ -82,3 +82,15 @@ def download_export_archive(export_id):
 
     return response
 
+@export_api_bp.get("/<int:export_id>/delete")
+@crossdomain
+@api_listenstore_needed
+@ratelimit()
+def delete_export_archive(export_id):
+    """ Delete the requested export if it belongs to the specified user """
+    user = validate_auth_header()
+    success = user_data_export.delete_export_task(db_conn, user["id"], export_id)
+    if success:
+        return jsonify({"success": True})
+    else:
+        raise APINotFound("Export not found")

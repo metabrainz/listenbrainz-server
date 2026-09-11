@@ -98,6 +98,7 @@ def delete_export_task(db_conn, user_id: int, export_id: int) -> bool:
             {"user_id": user_id, "export_id": export_id}
         )
         db_conn.commit()
+        # archive is deleted from garage by cronjob
         return True
     return False
 

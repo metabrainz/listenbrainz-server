@@ -79,24 +79,13 @@ def download_export_archive(export_id):
     return response
 
 
-
 @export_bp.post("/delete/<export_id>/")
 @api_login_required
 @web_listenstore_needed
 def delete_export_archive(export_id):
     """ Delete the specified export archive """
-    result = db_conn.execute(
-        text("DELETE FROM user_data_export WHERE user_id = :user_id AND id = :export_id RETURNING filename"),
-        {"user_id": current_user.id, "export_id": export_id}
-    )
-    row = result.first()
-    if row is not None:
-        db_conn.execute(
-            text("DELETE FROM background_tasks WHERE user_id = :user_id AND (metadata->'export_id')::int = :export_id"),
-            {"user_id": current_user.id, "export_id": export_id}
-        )
-        db_conn.commit()
-        # archive is deleted from garage by cronjob
+    result = user_data_export.delete_export_task(db_conn, current_user.id, export_id)
+    if result is True:
         return jsonify({"success": True})
     else:
         raise APINotFound("Export not found")
