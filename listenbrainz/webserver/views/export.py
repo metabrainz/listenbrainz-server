@@ -1,13 +1,8 @@
-import json
-import os
-
-from botocore.exceptions import ClientError
-from flask import Blueprint, current_app, jsonify, send_file
+from flask import Blueprint, current_app, jsonify
 from flask_login import current_user
 from psycopg2 import DatabaseError
-from sqlalchemy import text
+from listenbrainz.webserver.views.export_api import _prepare_export_download_response
 
-from listenbrainz.garage import get_error_code, get_garage_client, get_user_data_export_bucket
 from listenbrainz.db import user_data_export
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
@@ -65,16 +60,7 @@ def download_export_archive(export_id):
         current_app.logger.error("Error while downloading user data export: %s", filename, exc_info=True)
         raise APIInternalServerError("Error while downloading export, please try again later.")
 
-    response = send_file(
-        archive["Body"],
-        mimetype="application/zip",
-        as_attachment=True,
-        download_name=filename,
-        conditional=False,
-    )
-    content_length = archive.get("ContentLength")
-    if content_length is not None:
-        response.content_length = content_length
+    response = _prepare_export_download_response(archive, filename)
 
     return response
 
