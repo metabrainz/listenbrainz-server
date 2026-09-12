@@ -121,8 +121,7 @@ def _get_spotify_token(grant_type: str, token: str) -> requests.Response:
         token_key: token,
         'grant_type': grant_type,
     }
-
-    return requests.post(OAUTH_TOKEN_URL, data=payload, headers=headers, verify=True)
+    return requests.post(OAUTH_TOKEN_URL, data=payload, headers=headers, verify=True, timeout=10)
 
 
 class SpotifyService(ImporterService):
@@ -164,15 +163,17 @@ class SpotifyService(ImporterService):
                                           refresh_token_expires=get_refresh_token_expires())
         return True
 
-    def get_authorize_url(self, permissions: Sequence[str]):
+    def get_authorize_url(self, permissions: Sequence[str], state: str | None = None):
         """ Returns a spotipy OAuth instance that can be used to authenticate with spotify.
         Args:
             permissions: List of permissions needed by the OAuth instance
+            state: opaque value used to protect the authorization request, it is returned
+                unchanged by Spotify in the callback
         """
         scope = ' '.join(permissions)
         return SpotifyOAuth(self.client_id, self.client_secret,
                             redirect_uri=self.redirect_url,
-                            scope=scope).get_authorize_url()
+                            scope=scope).get_authorize_url(state=state)
 
     def fetch_access_token(self, code: str):
         """ Get a valid Spotify Access token given the code.

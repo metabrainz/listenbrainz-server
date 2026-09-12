@@ -3,7 +3,7 @@ from flask import Blueprint, request, current_app, jsonify
 
 from listenbrainz.db import popularity
 from listenbrainz.webserver import ts_conn, db_conn
-from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.decorators import cache_public, crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.views.api_tools import is_valid_uuid, MAX_ITEMS_PER_GET, ensure_user_token_for_expensive_endpoint
 
@@ -13,6 +13,7 @@ popularity_api_bp = Blueprint('popularity_api_v1', __name__)
 @popularity_api_bp.get("/top-recordings-for-artist/<artist_mbid>")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=600)
 def top_recordings_for_artist(artist_mbid):
     """ Get the top recordings by listen count for a given artist. The response is of the following format:
 
@@ -60,6 +61,7 @@ def top_recordings_for_artist(artist_mbid):
 @popularity_api_bp.get("/top-release-groups-for-artist/<artist_mbid>")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=600)
 def top_release_groups_for_artist(artist_mbid):
     """ Get the top release groups by listen count for a given artist. The response is of the following format:
 

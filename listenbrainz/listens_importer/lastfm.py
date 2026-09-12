@@ -91,7 +91,15 @@ class BaseLastfmImporter(ListensImporter):
         response = session.get(self.api_base_url, params=params)
         match response.status_code:
             case 200:
-                data = response.json()
+                try:
+                    data = response.json()
+                except requests.exceptions.JSONDecodeError:
+                    raise ExternalServiceAPIError("Error from the API while getting listens: %s" % response.text)
+                if "error" in data:
+                    # Libre.fm: no scrobbles since the given timestamp
+                    if isinstance(data["error"], dict) and str(data["error"].get("code")) == "7":
+                        return {"recenttracks": {"@attr": {"totalPages": "0"}, "track": []}}
+                    raise ExternalServiceAPIError("Error from the API while getting listens: %s" % data.get("message", data["error"]))
                 # Libre.fm returns a single dict instead of a list when there is
                 # only one track; normalize to always be a list.
                 if "recenttracks" in data:
@@ -104,8 +112,10 @@ class BaseLastfmImporter(ListensImporter):
             case 429:
                 raise ExternalServiceError("Encountered a rate limit.")
             case 400 | 403:
-                # Check for error 17 (privacy mode enabled)
-                data = response.json()
+                try:
+                    data = response.json()
+                except requests.exceptions.JSONDecodeError:
+                    raise ExternalServiceAPIError("Error from the API while getting listens: %s" % response.text)
                 if "error" in data and data.get("error") == 17:
                     raise LastfmUserNotRetryableException(
                         "Please disable privacy mode in the settings of your Last.fm account to allow importing listens."

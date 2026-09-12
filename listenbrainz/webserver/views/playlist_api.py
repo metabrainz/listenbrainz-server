@@ -10,10 +10,11 @@ from psycopg2.extras import DictCursor
 
 import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
+from listenbrainz.db.exceptions import InvalidUser
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
 from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.soundcloud import SoundCloudService
-from listenbrainz.troi.export import export_to_spotify, export_to_apple_music, export_to_soundcloud
+from listenbrainz.troi.export import PlaylistExportError, export_to_spotify, export_to_apple_music, export_to_soundcloud
 from listenbrainz.troi.import_ms import import_from_spotify, import_from_apple_music, import_from_soundcloud
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.metadata_cache.apple.client import Apple
@@ -399,6 +400,8 @@ def create_playlist():
 
     try:
         playlist = db_playlist.create(db_conn, ts_conn, playlist)
+    except InvalidUser as e:
+        log_raise_400(str(e))
     except Exception as e:
         current_app.logger.error("Error while creating new playlist: {}".format(e))
         raise APIInternalServerError("Failed to create the playlist. Please try again.")
@@ -851,6 +854,8 @@ def copy_playlist(playlist_mbid):
 
     try:
         new_playlist = db_playlist.copy_playlist(db_conn, ts_conn, playlist, user["id"])
+    except InvalidUser as e:
+        log_raise_400(str(e))
     except Exception as e:
         current_app.logger.error("Error copying playlist: {}".format(e))
         raise APIInternalServerError("Failed to copy the playlist. Please try again.")
@@ -920,6 +925,11 @@ def export_playlist(playlist_mbid, service):
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
+    except PlaylistExportError as exc:
+        raise APIError(str(exc), 502)
+    except Exception as exc:
+        current_app.logger.exception("Failed to export playlist to %s", service)
+        raise APIError(f"Failed to export playlist to {service}: {str(exc)}", 500)
 
 
 @playlist_api_bp.get("/import/<service>")
@@ -1140,3 +1150,8 @@ def export_playlist_jspf(service):
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
+    except PlaylistExportError as exc:
+        raise APIError(str(exc), 502)
+    except Exception as exc:
+        current_app.logger.exception("Failed to export playlist to %s", service)
+        raise APIError(f"Failed to export playlist to {service}: {str(exc)}", 500)

@@ -449,6 +449,7 @@ export default function MusicServices() {
     const navidromeError = params.get("navidrome_error");
     const navidromeSuccess = params.get("navidrome_success");
     const soundcloudError = params.get("soundcloud_error");
+    const serviceError = params.get("service_error");
 
     if (funkwhaleSuccess === "Successfully connected to Funkwhale") {
       toast.success(
@@ -493,13 +494,23 @@ export default function MusicServices() {
       );
     }
 
+    if (serviceError) {
+      toast.error(
+        <ToastMsg
+          title="Connection Error"
+          message={decodeURIComponent(serviceError)}
+        />
+      );
+    }
+
     // Clear the query parameters from the URL for both success and error cases
     if (
       funkwhaleSuccess ||
       funkwhaleError ||
       navidromeSuccess ||
       navidromeError ||
-      soundcloudError
+      soundcloudError ||
+      serviceError
     ) {
       window.history.replaceState(
         {},

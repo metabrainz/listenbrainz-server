@@ -960,7 +960,7 @@ def get_cover_art_custom_stats(user_name):
         return BadRequest(f"Invalid range value: {range}")
 
     try:
-        custom_name = request.args.get("custome_name", "designer-top-5")
+        custom_name = request.args.get("custom_name", "designer-top-5")
         image_size = int(request.args.get("image_size", 750))
     except ValueError:
         return BadRequest("Image size must be an integer.")
