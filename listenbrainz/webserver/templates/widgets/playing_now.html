@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <title>
-      {{user_name|safe}} playing now - ListenBrainz
+      {{user_name}} playing now - ListenBrainz
     </title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta
@@ -106,7 +106,7 @@
     <!-- <div
       ws-send
       hx-trigger="load"
-      hx-vals='{"user":"{{user_name | safe}}"}'
+      hx-vals='{"user":"{{user_name}}"}'
     ></div> -->
 
     <!-- WS+Socket.IO: HTMX does not currently support socket.io. Instead we can load the socket.io-client library instead
@@ -122,7 +122,7 @@
       const socket = io("{{websockets_url}}", { path: "/socket.io/" });
       socket.on("connect", () => {
         console.log("Connected, emitting user_name");
-        socket.emit("json", { user: "{{user_name | safe}}" });
+        socket.emit("json", { user: "{{user_name}}" });
       });
       socket.on("playing_now", async (data) => {
         console.debug(
