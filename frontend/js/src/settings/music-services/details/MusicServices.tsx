@@ -586,7 +586,7 @@ export default function MusicServices() {
                   service="spotify"
                   current={permissions.spotify}
                   value="disable"
-                  title="Disable"
+                  title="Disabled"
                   details="You won't be able to listen to music on ListenBrainz or import listens using Spotify."
                   handlePermissionChange={handlePermissionChange}
                 />
@@ -652,7 +652,7 @@ export default function MusicServices() {
                   service="critiquebrainz"
                   current={permissions.critiquebrainz}
                   value="disable"
-                  title="Disable"
+                  title="Disabled"
                   details="You will not be able to publish reviews from ListenBrainz."
                   handlePermissionChange={handlePermissionChange}
                 />
@@ -709,7 +709,7 @@ export default function MusicServices() {
                   service="soundcloud"
                   current={permissions.soundcloud}
                   value="disable"
-                  title="Disable"
+                  title="Disabled"
                   details="You will not be able to listen to music on ListenBrainz using SoundCloud."
                   handlePermissionChange={handlePermissionChange}
                 />
@@ -748,7 +748,7 @@ export default function MusicServices() {
                   service="appleMusic"
                   current={permissions.appleMusic}
                   value="disable"
-                  title="Disable"
+                  title="Disabled"
                   details="You won't be able to listen to music on ListenBrainz using Apple Music."
                   handlePermissionChange={handleAppleMusicPermissionChange}
                 />
@@ -836,7 +836,7 @@ export default function MusicServices() {
                   service="funkwhale"
                   current={permissions.funkwhale}
                   value="disable"
-                  title="Disable"
+                  title="Disabled"
                   details="You will not be able to listen to music on ListenBrainz using Funkwhale."
                   handlePermissionChange={handlePermissionChange}
                 />
@@ -993,7 +993,7 @@ export default function MusicServices() {
                   service="navidrome"
                   current={permissions.navidrome}
                   value="disable"
-                  title="Disable"
+                  title="Disabled"
                   details="You will not be able to listen to music on ListenBrainz using Navidrome."
                   handlePermissionChange={handlePermissionChange}
                 />
