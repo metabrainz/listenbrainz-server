@@ -139,11 +139,11 @@ export default function LFMMusicServicePermissions({
       toast.success(
         <ToastMsg
           title="Success"
-          message={`${serviceDisplayName} integration has been disabled.`}
+          message={`${serviceDisplayName} integration has been d.`}
         />
       );
 
-      setPermissions("disable");
+      setPermissions("");
     } catch (error) {
       toast.error(
         <ToastMsg
@@ -224,7 +224,7 @@ export default function LFMMusicServicePermissions({
               className="alert alert-warning alert-dismissible fade show"
               role="alert"
             >
-              Before connecting, you must disable the &#34;Hide recent listening
+              Before connecting, you must  the &#34;Hide recent listening
               information&#34; setting in your {serviceDisplayName}{" "}
               <a
                 href={`https://www.${
@@ -352,7 +352,7 @@ export default function LFMMusicServicePermissions({
               service={serviceName}
               current={permissions ?? "disable"}
               value="disable"
-              title="Disable"
+              title="Disabled"
               details={`New scrobbles won't be imported from ${serviceDisplayName}`}
               handlePermissionChange={handleDisconnect}
             />
