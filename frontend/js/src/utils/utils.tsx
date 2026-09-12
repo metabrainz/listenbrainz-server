@@ -481,6 +481,7 @@ const getArtistMBIDs = (listen: Listen): string[] | undefined => {
 };
 
 const getRecordingMSID = (listen: Listen): string =>
+  _.get(listen, "recording_msid") ??
   _.get(listen, "track_metadata.additional_info.recording_msid");
 
 const getRecordingMBID = (listen: Listen): string | undefined =>
@@ -643,23 +644,17 @@ const formatWSMessageToListen = (wsMsg: any): Listen | null => {
       }
     }
     // The websocket message received contains the recording_msid as a top level key.
-    // Therefore, we need to shift it json.track_metadata.additional_info.
-    if (!_.has(json, "track_metadata.additional_info.recording_msid")) {
-      if ("recording_msid" in json) {
-        _.merge(json, {
-          track_metadata: {
-            additional_info: { recording_msid: json.recording_msid },
-          },
-        });
-        delete json.recording_msid;
-      } else {
-        // eslint-disable-next-line no-console
-        console.debug(
-          "Could not find recording_msid in following json: ",
-          json
-        );
-        return null;
-      }
+    // Keep it at the top level; getRecordingMSID will find it there.
+    if (
+      !("recording_msid" in json) &&
+      !_.has(json, "track_metadata.additional_info.recording_msid")
+    ) {
+      // eslint-disable-next-line no-console
+      console.debug(
+        "Could not find recording_msid in following json: ",
+        json
+      );
+      return null;
     }
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -992,11 +987,6 @@ const getListenablePin = (pinnedRecording: PinnedRecording): Listen => {
     listened_at: 0,
     ...pinnedRecording,
   };
-  _.set(
-    pinnedRecListen,
-    "track_metadata.additional_info.recording_msid",
-    pinnedRecording.recording_msid
-  );
   return pinnedRecListen;
 };
 

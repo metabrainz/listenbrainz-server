@@ -16,10 +16,9 @@ import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslin
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
-import { get } from "lodash";
 import RecommendationControl from "../../user/recommendations/components/RecommendationControl";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { getRecordingMBID } from "../../utils/utils";
+import { getRecordingMBID, getRecordingMSID } from "../../utils/utils";
 import { ToastMsg } from "../../notifications/Notifications";
 
 export type RecommendationFeedbackComponentProps = {
@@ -78,10 +77,7 @@ export default class RecommendationFeedbackComponent extends React.Component<
   render() {
     const { currentUser } = this.context;
     const { currentFeedback, listen } = this.props;
-    const recordingMSID = get(
-      listen,
-      "track_metadata.additional_info.recording_msid"
-    );
+    const recordingMSID = getRecordingMSID(listen as Listen);
     if (!currentUser?.auth_token || !recordingMSID) {
       return null;
     }

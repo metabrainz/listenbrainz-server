@@ -64,6 +64,7 @@ declare type MBIDMapping = {
 
 declare type BaseListenFormat = {
   listened_at: number;
+  recording_msid?: string | null;
   user_name?: string | null;
   track_metadata: TrackMetadata;
 };
