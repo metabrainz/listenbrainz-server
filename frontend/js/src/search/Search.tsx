@@ -10,12 +10,15 @@ import TrackSearch from "./TrackSearch";
 import UserSearch from "./UserSearch";
 import AlbumSearch from "./AlbumSearch";
 import PlaylistSearch from "./PlaylistSearch";
+import EventSearch from "./EventSearch";
 
 const invalidSearchTypes = (searchType?: string) => {
   if (!searchType) {
     return true;
   }
-  return !["artist", "album", "track", "playlist", "user"].includes(searchType);
+  return !["artist", "album", "track", "event", "playlist", "user"].includes(
+    searchType
+  );
 };
 
 export default function Search() {
@@ -133,6 +136,16 @@ export default function Search() {
             Tracks
           </Pill>
           <Pill
+            id="search-type-event"
+            onClick={() => {
+              setSearchType("event");
+            }}
+            active={searchType === "event"}
+            type="secondary"
+          >
+            Events
+          </Pill>
+          <Pill
             id="search-type-playlist"
             onClick={() => {
               setSearchType("playlist");
@@ -165,6 +178,9 @@ export default function Search() {
         )}
         {searchType === "track" && searchTermValid && (
           <TrackSearch searchQuery={searchTerm} />
+        )}
+        {searchType === "event" && searchTermValid && (
+          <EventSearch searchQuery={searchTerm} />
         )}
         {searchType === "user" && searchTermValid && (
           <UserSearch searchQuery={searchTerm} />

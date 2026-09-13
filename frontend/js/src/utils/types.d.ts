@@ -707,6 +707,28 @@ type CoverArtArchiveResponse = {
   release: string; // Full MB URL i.e "http://musicbrainz.org/release/76df3287-6cda-33eb-8e9a-044b5e15ffdd"
 };
 
+type EventArtArchiveEntry = {
+  types: string[]; // Array of types i.e ["Front", "Back"]
+  front: boolean;
+  edit: number;
+  image: string; // "http://coverartarchive.org/release/76df3287-6cda-33eb-8e9a-044b5e15ffdd/829521842.jpg",
+  comment: "";
+  approved: true;
+  id: string;
+  thumbnails: {
+    250: string; // Full URL to 250px version "http://coverartarchive.org/release/76df3287-6cda-33eb-8e9a-044b5e15ffdd/829521842-250.jpg",
+    500: string;
+    1200: string;
+    small: string;
+    large: string;
+  };
+};
+
+type EventArtArchiveResponse = {
+  images: EventArtArchiveEntry[];
+  event: string; // Full MB URL i.e "https://musicbrainz.org/event/3a65af9a-3a3b-4df9-adfb-05e8be443c15"
+};
+
 type ColorReleaseItem = {
   artist_name: string;
   color: number[];
