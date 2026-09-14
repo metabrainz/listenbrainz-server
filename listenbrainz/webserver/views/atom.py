@@ -788,6 +788,11 @@ def get_recommendation(user_name):
         
     playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist.mbid, True)
 
+    if playlist is None:
+        return Response(
+            status=204, response="Recommendation for the user haven't been generated."
+        )
+
     fetch_playlist_recording_metadata(playlist)
 
     this_feed_url = f"{_external_url_for('.get_recommendation', user_name=user_name)}/{recommendation_type}"
