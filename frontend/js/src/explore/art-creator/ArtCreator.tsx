@@ -778,6 +778,8 @@ export default function ArtCreator() {
     captionBgOpacity,
     fontFamily,
     showRank,
+    showRelease,
+    showArtist,
     showListenCount,
     debouncedSetPreviewUrl,
   ]);
@@ -960,14 +962,14 @@ export default function ArtCreator() {
                       <Switch
                         id="show-caption"
                         value="show-caption"
-                        switchLabel="Show Caption"
+                        switchLabel="Show captions"
                         checked={showCaption}
                         onChange={(e) => setShowCaption(e.target.checked)}
                       />
                       <Switch
                         id="show-rank"
                         value="show-rank"
-                        switchLabel="Show Rank"
+                        switchLabel="Show rank"
                         checked={showRank}
                         disabled={!showCaption}
                         onChange={(e) => setShowRank(e.target.checked)}
@@ -975,7 +977,7 @@ export default function ArtCreator() {
                       <Switch
                         id="show-release"
                         value="show-release"
-                        switchLabel="Show Release Title"
+                        switchLabel="Show album title"
                         checked={showRelease}
                         disabled={!showCaption}
                         onChange={(e) => setShowRelease(e.target.checked)}
@@ -983,7 +985,7 @@ export default function ArtCreator() {
                       <Switch
                         id="show-artist"
                         value="show-artist"
-                        switchLabel="Show Artist"
+                        switchLabel="Show artist"
                         checked={showArtist}
                         disabled={!showCaption}
                         onChange={(e) => setShowArtist(e.target.checked)}
@@ -991,7 +993,7 @@ export default function ArtCreator() {
                       <Switch
                         id="show-listen-count"
                         value="show-listen-count"
-                        switchLabel="Show Listen Count"
+                        switchLabel="Show listen count"
                         checked={showListenCount}
                         disabled={!showCaption}
                         onChange={(e) => setShowListenCount(e.target.checked)}
