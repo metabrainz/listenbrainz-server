@@ -170,6 +170,21 @@ COUCHDB_USER = "listenbrainz"
 COUCHDB_ADMIN_KEY = '''{{template "KEY" "couchdb_admin_key"}}'''
 COUCHDB_DATABASE_PREFIX = '''{{template "KEY_OPTIONAL" "couchdb_database_prefix"}}'''
 
+# Separate CouchDB instance the ClickHouse result reader writes stats to and the stats API reads
+# them from when asked to. If the service is absent, ClickHouse stats serving is disabled
+# rather than failing every container using this config.
+{{if service "couchdb-clickhouse"}}
+{{with index (service "couchdb-clickhouse") 0}}
+CLICKHOUSE_READER_COUCHDB_HOST = "{{.Address}}"
+CLICKHOUSE_READER_COUCHDB_PORT = {{.Port}}
+{{end}}
+{{else}}
+CLICKHOUSE_READER_COUCHDB_HOST = ""
+CLICKHOUSE_READER_COUCHDB_PORT = 5984
+{{end}}
+CLICKHOUSE_READER_COUCHDB_USER = '''{{template "KEY" "clickhouse_reader_couchdb_user"}}'''
+CLICKHOUSE_READER_COUCHDB_ADMIN_KEY = '''{{template "KEY" "clickhouse_reader_couchdb_admin_key"}}'''
+
 {{if service "listenbrainz-redis"}}
 {{with index (service "listenbrainz-redis") 0}}
 REDIS_HOST = "{{.Address}}"
@@ -212,6 +227,11 @@ SPARK_RESULT_EXCHANGE = '''{{template "KEY" "spark_result_exchange"}}'''
 SPARK_RESULT_QUEUE = '''{{template "KEY" "spark_result_queue"}}'''
 SPARK_REQUEST_EXCHANGE = '''{{template "KEY" "spark_request_exchange"}}'''
 SPARK_REQUEST_QUEUE = '''{{template "KEY" "spark_request_queue"}}'''
+
+CLICKHOUSE_EXCHANGE = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/clickhouse_exchange" (env "DEPLOY_ENV")) "clickhouse" }}'''
+CLICKHOUSE_QUEUE = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/clickhouse_queue" (env "DEPLOY_ENV")) "clickhouse" }}'''
+CLICKHOUSE_RESULT_EXCHANGE = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/clickhouse_result_exchange" (env "DEPLOY_ENV")) "clickhouse_result" }}'''
+CLICKHOUSE_RESULT_QUEUE = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/clickhouse_result_queue" (env "DEPLOY_ENV")) "clickhouse_result" }}'''
 
 REJECTION_EXCHANGE = '''{{template "KEY" "rejection_exchange"}}'''
 REJECTION_QUEUE = '''{{template "KEY" "rejection_queue"}}'''
