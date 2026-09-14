@@ -1,4 +1,5 @@
 import json
+from unittest import mock
 
 import orjson
 import requests
@@ -33,6 +34,12 @@ class StatsAPITestCase(IntegrationTestCase):
         for stat in stats:
             for range_ in ranges:
                 couchdb.create_database(f"{stat}_{range_}_20220718")
+        # stats computed by the clickhouse pipeline live on a separate couchdb instance with the
+        # same database names. in tests, that instance is simulated with a clk_ database prefix
+        # on the regular couchdb (see test_user_entity_stat_from_clickhouse).
+        clickhouse_stats = ["daily_activity", "listening_activity"]
+        for stat in clickhouse_stats:
+            couchdb.create_database(f"clk_{stat}_all_time_20220718")
 
         # we do not clear the couchdb databases after each test. user stats keep working because
         # the user id changes for each test. for sitewide stats this is not the case as the user id
@@ -385,6 +392,74 @@ class StatsAPITestCase(IntegrationTestCase):
                     response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                                query_string={'range': range_})
                     self.assertUserStatEqual(payload, response, entity, range_, total_count_key, payload[0]['count'])
+
+    def test_user_entity_stat_rejects_clickhouse(self):
+        """ Only the activity stats are computed by the ClickHouse pipeline; asking for the
+        ClickHouse version of an entity stat is an error rather than a silent fallback. """
+        for entity in ["artists", "recordings", "release_groups", "releases"]:
+            with self.subTest(f"test api rejects clickhouse param for {entity}", entity=entity):
+                url = self.custom_url_for(self.entity_endpoints[entity]["endpoint"], user_name=self.user['musicbrainz_id'])
+                response = self.client.get(url, query_string={'clickhouse': 'true'})
+                self.assert400(response)
+                self.assertEqual(f"ClickHouse stats are not available for {entity}", response.json['error'])
+
+                # the spark stats are untouched and still served by default
+                total_count_key = self.entity_endpoints[entity]["total_count_key"]
+                response = self.client.get(url)
+                self.assertUserStatEqual(self.entity_endpoints[entity]["payload"], response, entity,
+                                         "all_time", total_count_key, 25)
+                response = self.client.get(url, query_string={'clickhouse': 'false'})
+                self.assertUserStatEqual(self.entity_endpoints[entity]["payload"], response, entity,
+                                         "all_time", total_count_key, 25)
+
+        with self.subTest("test api rejects invalid clickhouse param"):
+            response = self.client.get(
+                self.custom_url_for(self.entity_endpoints["artists"]["endpoint"], user_name=self.user['musicbrainz_id']),
+                query_string={'clickhouse': 'maybe'}
+            )
+            self.assert400(response)
+
+    def test_user_activity_stats_from_clickhouse(self):
+        clickhouse_couchdb = couchdb.CouchDBConnection(
+            self.app.config["COUCHDB_USER"], self.app.config["COUCHDB_ADMIN_KEY"], self.app.config["COUCHDB_HOST"],
+            self.app.config["COUCHDB_PORT"], f"{self.app.config['COUCHDB_DATABASE_PREFIX']}clk_"
+        )
+
+        with mock.patch.object(db_stats, "_clickhouse_couchdb", clickhouse_couchdb):
+            with self.subTest("test api returns 204 when clickhouse activity stats are missing"):
+                response = self.client.get(
+                    self.custom_url_for(
+                        self.non_entity_endpoints["listening_activity"]["endpoint"],
+                        user_name=self.user["musicbrainz_id"],
+                    ),
+                    query_string={"clickhouse": "true", "range": "year"},
+                )
+                self.assertEqual(response.status_code, 204)
+
+            listening_payload = json.loads(json.dumps(self.listening_activity_payload))
+            db_stats.insert("clk_listening_activity_all_time_20220718", 0, 5, listening_payload)
+            response = self.client.get(
+                self.custom_url_for(
+                    self.non_entity_endpoints["listening_activity"]["endpoint"],
+                    user_name=self.user["musicbrainz_id"],
+                ),
+                query_string={"clickhouse": "true"},
+            )
+            self.assertListeningActivityEqual(listening_payload, response)
+
+            daily_payload = json.loads(json.dumps(self.daily_activity_payload))
+            db_stats.insert("clk_daily_activity_all_time_20220718", 0, 5, daily_payload)
+            response = self.client.get(
+                self.custom_url_for(
+                    self.non_entity_endpoints["daily_activity"]["endpoint"],
+                    user_name=self.user["musicbrainz_id"],
+                ),
+                query_string={"clickhouse": "true"},
+            )
+            with open(self.path_to_data_file("user_daily_activity_api_output.json")) as f:
+                expected = json.load(f)["payload"]
+                expected["user_id"] = self.user["id"]
+            self.assertDailyActivityEqual(expected, response)
 
     def test_listening_activity_stat(self):
         endpoint = self.non_entity_endpoints["listening_activity"]["endpoint"]

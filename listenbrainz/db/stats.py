@@ -32,7 +32,7 @@ from sentry_sdk import start_span
 
 from data.model.common_stat import StatApi
 from listenbrainz.db import couchdb
-from listenbrainz.db.couchdb import try_insert_data
+from listenbrainz.db.couchdb import try_insert_data, CouchDBConnection
 from listenbrainz.db.user import get_users_by_id
 
 # sitewide statistics are stored in the user statistics table
@@ -40,6 +40,30 @@ from listenbrainz.db.user import get_users_by_id
 # Note: this is the id from LB's "user" table and *not musicbrainz_row_id*.
 SITEWIDE_STATS_USER_ID = 15753
 SITEWIDE_STATS_DB = "sitewide_stats_current"
+
+# Stats computed by the ClickHouse pipeline are written by the ClickHouse result reader
+# (listenbrainz/clickhouse/clickhouse_reader.py) to a separate CouchDB instance using the
+# same database names as the Spark stats. Configure it via ``init_clickhouse_stats`` so the
+# API can serve those stats on request.
+_clickhouse_couchdb: Optional[CouchDBConnection] = None
+
+
+def init_clickhouse_stats(user, password, host, port, database_prefix):
+    """ Configure the CouchDB instance holding stats computed by the ClickHouse pipeline.
+
+        Args:
+            user: couchdb admin user name
+            password: couchdb admin password
+            host: couchdb service host
+            port: couchdb service port
+            database_prefix: prefix applied to all database names on that instance
+    """
+    global _clickhouse_couchdb
+    _clickhouse_couchdb = CouchDBConnection(user, password, host, port, database_prefix)
+
+
+def is_clickhouse_stats_configured() -> bool:
+    return _clickhouse_couchdb is not None
 
 
 def insert(database: str, from_ts: int, to_ts: int, values: list[dict], key="user_id"):
@@ -63,7 +87,7 @@ def insert(database: str, from_ts: int, to_ts: int, values: list[dict], key="use
     couchdb.insert_data(database, values)
 
 
-def get(user_id, stats_type, stats_range, stats_model) -> Optional[StatApi]:
+def get(user_id, stats_type, stats_range, stats_model, clickhouse: bool = False) -> Optional[StatApi]:
     """ Retrieve stats for the given user, stats range and stats type.
 
         Args:
@@ -71,10 +95,23 @@ def get(user_id, stats_type, stats_range, stats_model) -> Optional[StatApi]:
             stats_range: time period to retrieve stats for
             stats_type: the stat to retrieve
             stats_model: the pydantic model for the stats
+            clickhouse: if True, retrieve the stats computed by the ClickHouse pipeline
+                instead of the Spark ones
     """
+    connection = None
+    if clickhouse:
+        if _clickhouse_couchdb is None:
+            current_app.logger.warning(
+                "ClickHouse stats requested for %s %s but the ClickHouse stats CouchDB is not configured",
+                stats_type, stats_range,
+            )
+            return None
+        connection = _clickhouse_couchdb
+
     prefix = f"{stats_type}_{stats_range}"
+    data = None
     try:
-        data = couchdb.fetch_data(prefix, user_id)
+        data = couchdb.fetch_data(prefix, user_id, connection=connection)
         if data is not None:
             return StatApi[stats_model](
                 user_id=user_id,
