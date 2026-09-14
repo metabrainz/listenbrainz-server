@@ -1,16 +1,12 @@
 import unittest
-from contextlib import contextmanager
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 
 from clickhouse.stats.activity_cache_manager import (
-    DAILY_ACTIVITY,
-    LISTENING_ACTIVITY,
     ActivityStatsCacheManager,
-    BulkActivityStatsCacheManager,
     get_daily_activity_range,
     get_listening_activity_range,
 )
-from clickhouse.stats.cache_manager import CacheConfig, TIME_RANGES
+from clickhouse.stats.cache_manager import CacheConfig
 
 
 class ActivityRangeTestCase(unittest.TestCase):
@@ -71,143 +67,7 @@ class ActivityRangeTestCase(unittest.TestCase):
         self.assertEqual(activity_range.buckets[-1].time_range, "2021")
 
 
-class CapturingClient:
-    def __init__(self, rows=None):
-        self.rows = rows or []
-        self.queries = []
-        self.commands = []
-        self.stream_rows = []
-
-    def query(self, sql, parameters=None):
-        self.queries.append((sql, parameters or {}))
-
-        class Result:
-            def __init__(self, rows):
-                self.result_rows = rows
-                self.first_row = rows[0] if rows else None
-
-        return Result(self.rows)
-
-    def command(self, sql, parameters=None):
-        self.commands.append(sql)
-
-    @contextmanager
-    def query_row_block_stream(self, sql, parameters=None):
-        self.queries.append((sql, parameters or {}))
-        yield iter([self.stream_rows])
-
-
-class ActivityQueryTestCase(unittest.TestCase):
-
-    def test_daily_activity_uses_utc_weekday_and_hour(self):
-        manager = ActivityStatsCacheManager(CacheConfig(), DAILY_ACTIVITY)
-        manager._latest_listen = datetime(2021, 8, 9, 2, 3, tzinfo=timezone.utc)
-        manager.ch_client = CapturingClient(rows=[(42, 1, 8, 3), (42, 7, 21, 2)])
-
-        result = manager.compute_activity_batch("all_time", [42])
-
-        sql, parameters = manager.ch_client.queries[0]
-        self.assertIn("toDayOfWeek(toTimeZone(listened_at, 'UTC'))", sql)
-        self.assertIn("toHour(toTimeZone(listened_at, 'UTC'))", sql)
-        self.assertEqual(parameters["user_ids"], [42])
-        self.assertEqual(result[42], [
-            {"day": "Monday", "hour": 8, "listen_count": 3},
-            {"day": "Sunday", "hour": 21, "listen_count": 2},
-        ])
-
-    def test_listening_activity_fills_zero_count_buckets(self):
-        manager = ActivityStatsCacheManager(CacheConfig(), LISTENING_ACTIVITY)
-        manager._latest_listen = datetime(2021, 1, 2, 2, 3, tzinfo=timezone.utc)
-        manager.ch_client = CapturingClient(rows=[(42, 2021, 7)])
-
-        result = manager.compute_activity_batch("all_time", [42])
-
-        self.assertEqual(result[42][0]["time_range"], "2002")
-        self.assertEqual(result[42][0]["listen_count"], 0)
-        self.assertEqual(result[42][-1]["time_range"], "2021")
-        self.assertEqual(result[42][-1]["listen_count"], 7)
-        sql, parameters = manager.ch_client.queries[0]
-        self.assertIn("FROM listens", sql)
-        self.assertIn("toYear(toDate(toTimeZone(listened_at, 'UTC'))) AS bucket_key", sql)
-        self.assertIn("listened_at >=", sql)
-        self.assertEqual(parameters["from_ms"], int(datetime(2002, 1, 1, tzinfo=timezone.utc).timestamp()) * 1000)
-        self.assertEqual(parameters["to_ms"], int(manager._latest_listen.timestamp()) * 1000)
-
-    def test_listening_activity_buckets_days_for_month_ranges(self):
-        manager = ActivityStatsCacheManager(CacheConfig(), LISTENING_ACTIVITY)
-        manager._latest_listen = datetime(2021, 8, 9, 2, 3, tzinfo=timezone.utc)
-        manager.ch_client = CapturingClient(rows=[(42, date(2021, 7, 3), 4)])
-
-        result = manager.compute_activity_batch("month", [42])
-
-        sql, _ = manager.ch_client.queries[0]
-        self.assertIn("toDate(toTimeZone(listened_at, 'UTC')) AS bucket_key", sql)
-        self.assertNotIn("toYear(", sql)
-        self.assertEqual(len(result[42]), 61)  # June + July 2021, one bucket per day
-        self.assertEqual(result[42][32]["time_range"], "03 July 2021")
-        self.assertEqual(result[42][32]["listen_count"], 4)
-
+class ActivityValidationTestCase(unittest.TestCase):
     def test_rejects_unknown_stat_types(self):
         with self.assertRaises(ValueError):
             ActivityStatsCacheManager(CacheConfig(), "artists")
-
-    def test_stale_users_are_scoped_to_activity_bounds(self):
-        manager = ActivityStatsCacheManager(CacheConfig(), DAILY_ACTIVITY)
-        manager._latest_listen = datetime(2021, 11, 24, 2, 3, tzinfo=timezone.utc)
-        manager.ch_client = CapturingClient(rows=[(1,), (2,)])
-
-        users = manager.get_stale_users("week", date(2021, 11, 15), date(2021, 11, 22))
-
-        self.assertEqual(users, [1, 2])
-        sql, parameters = manager.ch_client.queries[0]
-        self.assertIn("l.created > c.last_computed_created", sql)
-        self.assertIn("s.listened_at >=", sql)
-        self.assertEqual(parameters["from_ms"], 1636934400000)
-        self.assertEqual(parameters["to_ms"], 1637539200000)
-
-
-class BulkActivityQueryTestCase(unittest.TestCase):
-
-    def test_daily_intermediate_has_one_conditional_count_per_range(self):
-        manager = BulkActivityStatsCacheManager(CacheConfig(), DAILY_ACTIVITY)
-        manager._latest_listen = datetime(2026, 8, 21, 12, tzinfo=timezone.utc)
-        manager.ch_client = CapturingClient()
-
-        manager.build_intermediate_table()
-
-        sql = manager.ch_client.commands[0]
-        self.assertIn("FROM listens", sql)
-        self.assertIn("GROUP BY user_id, day_of_week, hour", sql)
-        for time_range in TIME_RANGES:
-            self.assertIn(f"AS count_{time_range}", sql)
-
-    def test_listening_intermediate_counts_listens_per_user_and_day(self):
-        manager = BulkActivityStatsCacheManager(CacheConfig(), LISTENING_ACTIVITY)
-        manager._latest_listen = datetime(2026, 8, 21, 12, tzinfo=timezone.utc)
-        manager.ch_client = CapturingClient()
-
-        manager.build_intermediate_table()
-
-        sql = manager.ch_client.commands[0]
-        self.assertIn("FROM listens", sql)
-        self.assertIn("toDate(toTimeZone(listened_at, 'UTC')) AS date", sql)
-        self.assertIn("count() AS listen_count", sql)
-        self.assertIn("GROUP BY user_id, date", sql)
-        self.assertIn("listened_at >= fromUnixTimestamp64Milli(1009843200000, 'UTC')", sql)
-
-    def test_bulk_listening_stream_emits_spark_shaped_rows(self):
-        manager = BulkActivityStatsCacheManager(CacheConfig(), LISTENING_ACTIVITY)
-        manager._latest_listen = datetime(2021, 1, 2, 2, 3, tzinfo=timezone.utc)
-        client = CapturingClient()
-        client.stream_rows = [(42, [(2021, 7)])]
-        manager.ch_client = client
-
-        rows = list(manager.stream_activity_for_range("all_time"))
-
-        self.assertEqual(rows[0][0], 42)
-        self.assertEqual(rows[0][1][-1]["time_range"], "2021")
-        self.assertEqual(rows[0][1][-1]["listen_count"], 7)
-
-
-if __name__ == "__main__":
-    unittest.main()

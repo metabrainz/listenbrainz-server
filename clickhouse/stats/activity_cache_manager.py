@@ -363,20 +363,15 @@ class ActivityStatsCacheManager(StatsCacheManager):
                 SELECT DISTINCT s.user_id
                 FROM listens s
                 WHERE {_timestamp_predicate('s.listened_at', activity_range)}
-                  AND NOT EXISTS (
-                      SELECT 1 FROM cached_users c WHERE c.user_id = s.user_id
-                  )
+                  AND s.user_id NOT IN (SELECT user_id FROM cached_users)
 
                 UNION ALL
 
-                SELECT c.user_id
-                FROM cached_users c
-                WHERE EXISTS (
-                    SELECT 1 FROM listens l
-                    WHERE l.user_id = c.user_id
-                      AND l.created > c.last_computed_created
-                      AND {_timestamp_predicate('l.listened_at', activity_range)}
-                )
+                SELECT l.user_id
+                FROM listens l
+                INNER JOIN cached_users c ON l.user_id = c.user_id
+                WHERE l.created > c.last_computed_created
+                  AND {_timestamp_predicate('l.listened_at', activity_range)}
             )
         """
         started = time.perf_counter()

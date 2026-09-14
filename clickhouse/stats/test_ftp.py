@@ -1,109 +1,95 @@
+import hashlib
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest import mock
 
-from clickhouse.stats.ftp import DumpNotFoundException, DumpType, FTPDumpDownloader
+from clickhouse.stats.ftp import DumpInvalidException, DumpNotFoundException, DumpType, FTPDumpDownloader
+from clickhouse.tests import TEST_DATA_PATH
 
 
 class FTPDumpDownloaderTestCase(unittest.TestCase):
-
-    def test_get_spark_dump_filename(self):
-        downloader = FTPDumpDownloader()
-
-        self.assertEqual(
-            downloader.get_spark_dump_filename("listenbrainz-dump-17-20190101-000001-full/"),
-            "listenbrainz-spark-dump-17-20190101-000001-full.tar",
-        )
-        self.assertEqual(
-            downloader.get_spark_dump_filename("listenbrainz-dump-17-20190101-000001-incremental"),
-            "listenbrainz-spark-dump-17-20190101-000001-incremental.tar",
-        )
-
-    def test_list_dump_directories_drops_database_dumps(self):
-        downloader = FTPDumpDownloader()
-        downloader.connection = mock.Mock()
-        downloader.list_dir = mock.Mock(return_value=[
-            "listenbrainz-dump-2534-20260524-000003-full/",
-            "listenbrainz-dump-2535-20260525-000001-db/",
-        ])
-
-        self.assertEqual(
-            downloader.list_dump_directories(DumpType.FULL),
-            ["listenbrainz-dump-2534-20260524-000003-full/"],
-        )
-
-    def test_list_dump_ids_sorts_and_skips_unrecognised_names(self):
-        downloader = FTPDumpDownloader()
-        downloader.list_dump_directories = mock.Mock(return_value=[
+    def setUp(self):
+        self.downloader = FTPDumpDownloader()
+        # Only the FTP transport is replaced. Directory parsing, file writes and
+        # checksum validation run normally, using bytes from a real dump fixture.
+        self.downloader.connection = mock.Mock()
+        self.names = [
             "listenbrainz-dump-2536-20260526-000003-incremental",
             "listenbrainz-dump-2534-20260524-000003-incremental",
             "index.html",
-        ])
+            "listenbrainz-dump-invalid-20260524-000003-incremental",
+        ]
+        self.downloader.connection.retrlines.side_effect = self.listing
 
-        self.assertEqual(downloader.list_dump_ids(DumpType.INCREMENTAL), [
+    def listing(self, command, callback):
+        for name in self.names:
+            callback(name)
+
+    def test_list_dump_ids_sorts_and_ignores_invalid_directories(self):
+        self.assertEqual(self.downloader.list_dump_ids(DumpType.INCREMENTAL), [
             (2534, "listenbrainz-dump-2534-20260524-000003-incremental"),
             (2536, "listenbrainz-dump-2536-20260526-000003-incremental"),
         ])
 
-    def test_get_dump_name_defaults_to_latest(self):
-        downloader = FTPDumpDownloader()
-        downloader.list_dump_ids = mock.Mock(return_value=[
-            (2534, "listenbrainz-dump-2534-20260524-000003-incremental"),
-            (2536, "listenbrainz-dump-2536-20260526-000003-incremental"),
-        ])
+    def test_full_dump_listing_excludes_database_dumps(self):
+        self.names = ["listenbrainz-dump-1-20260524-000003-full/", "listenbrainz-dump-2-20260524-000003-db/"]
+        self.assertEqual(self.downloader.list_dump_ids(DumpType.FULL), [(1, self.names[0])])
 
-        self.assertEqual(
-            downloader.get_dump_name(DumpType.INCREMENTAL),
-            ("listenbrainz-dump-2536-20260526-000003-incremental", 2536),
-        )
-
-    def test_get_dump_name_finds_a_specific_dump(self):
-        downloader = FTPDumpDownloader()
-        downloader.list_dump_ids = mock.Mock(return_value=[
-            (2534, "listenbrainz-dump-2534-20260524-000003-incremental"),
-            (2536, "listenbrainz-dump-2536-20260526-000003-incremental"),
-        ])
-
-        self.assertEqual(
-            downloader.get_dump_name(DumpType.INCREMENTAL, 2534),
-            ("listenbrainz-dump-2534-20260524-000003-incremental", 2534),
-        )
+    def test_selects_latest_or_requested_dump(self):
+        self.assertEqual(self.downloader.get_dump_name(DumpType.INCREMENTAL)[1], 2536)
+        self.assertEqual(self.downloader.get_dump_name(DumpType.INCREMENTAL, 2534)[1], 2534)
         with self.assertRaises(DumpNotFoundException):
-            downloader.get_dump_name(DumpType.INCREMENTAL, 2535)
+            self.downloader.get_dump_name(DumpType.INCREMENTAL, 2535)
+        self.names = []
+        with self.assertRaisesRegex(ValueError, "No incremental dumps"):
+            self.downloader.get_dump_name(DumpType.INCREMENTAL)
 
-    def test_download_dump_archive_downloads_spark_archive(self):
-        downloader = FTPDumpDownloader()
-        downloader.connection = mock.Mock()
-        downloader.get_dump_name = mock.Mock(
-            return_value=("listenbrainz-dump-2534-20260524-000003-incremental", 2534)
-        )
-        downloader.download_dump = mock.Mock(return_value="/tmp/listenbrainz-spark-dump.tar")
+    def prepare_download(self, corrupt=False, checksum=True):
+        content = (TEST_DATA_PATH / "incremental-dump-2" / "0.parquet").read_bytes()
+        filename = "listenbrainz-spark-dump-2534-20260524-000003-incremental.tar"
+        files = {filename: content}
+        if checksum:
+            digest = "0" * 64 if corrupt else hashlib.sha256(content).hexdigest()
+            files[filename + ".sha256"] = f"{digest}  {filename}\n".encode()
+        self.downloader.connection.retrlines.side_effect = lambda command, callback: [callback(name) for name in files]
 
-        archive_path, dump_id = downloader.download_dump_archive(DumpType.INCREMENTAL, "/tmp")
+        def download(command, callback):
+            data = files[command.removeprefix("RETR ")]
+            for offset in range(0, len(data), 1024):
+                callback(data[offset:offset + 1024])
 
-        self.assertEqual(archive_path, "/tmp/listenbrainz-spark-dump.tar")
-        self.assertEqual(dump_id, 2534)
-        downloader.get_dump_name.assert_called_once_with(DumpType.INCREMENTAL, None)
-        downloader.connection.cwd.assert_has_calls([
-            mock.call("listenbrainz-dump-2534-20260524-000003-incremental"),
-            mock.call("/"),
-        ])
-        downloader.download_dump.assert_called_once_with(
-            "listenbrainz-spark-dump-2534-20260524-000003-incremental.tar",
-            "/tmp",
-        )
+        self.downloader.connection.retrbinary.side_effect = download
+        return filename, content
 
-    def test_download_dump_archive_passes_the_requested_dump_id(self):
-        downloader = FTPDumpDownloader()
-        downloader.connection = mock.Mock()
-        downloader.get_dump_name = mock.Mock(
-            return_value=("listenbrainz-dump-2534-20260524-000003-incremental", 2534)
-        )
-        downloader.download_dump = mock.Mock(return_value="/tmp/listenbrainz-spark-dump.tar")
+    def test_download_writes_fixture_bytes_and_validates_checksum(self):
+        filename, content = self.prepare_download()
+        with TemporaryDirectory() as tmp:
+            path = self.downloader.download_dump(filename, tmp)
+            self.assertEqual(Path(path).read_bytes(), content)
+            self.assertEqual(list(Path(tmp).iterdir()), [Path(path)])
 
-        downloader.download_dump_archive(DumpType.INCREMENTAL, "/tmp", 2534)
+    def test_invalid_checksum_removes_corrupt_download(self):
+        filename, _ = self.prepare_download(corrupt=True)
+        with TemporaryDirectory() as tmp:
+            with self.assertRaisesRegex(DumpInvalidException, "SHA256 mismatch"):
+                self.downloader.download_dump(filename, tmp)
+            self.assertEqual(list(Path(tmp).iterdir()), [])
 
-        downloader.get_dump_name.assert_called_once_with(DumpType.INCREMENTAL, 2534)
+    def test_missing_checksum_does_not_download(self):
+        filename, _ = self.prepare_download(checksum=False)
+        with TemporaryDirectory() as tmp:
+            with self.assertRaisesRegex(DumpInvalidException, "checksum file not found"):
+                self.downloader.download_dump(filename, tmp)
+            self.assertEqual(list(Path(tmp).iterdir()), [])
 
-
-if __name__ == "__main__":
-    unittest.main()
+    def test_archive_selection_downloads_requested_file(self):
+        filename, content = self.prepare_download()
+        names = self.names
+        listings = iter((names, [filename, filename + ".sha256"]))
+        self.downloader.connection.retrlines.side_effect = lambda command, callback: [callback(name) for name in next(listings)]
+        with TemporaryDirectory() as tmp:
+            path, dump_id = self.downloader.download_dump_archive(DumpType.INCREMENTAL, tmp, 2534)
+            self.assertEqual(dump_id, 2534)
+            self.assertEqual(Path(path).name, filename)
+            self.assertEqual(Path(path).read_bytes(), content)

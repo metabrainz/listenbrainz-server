@@ -8,7 +8,7 @@ on:
     branches: [ '*' ]
     types: [ opened, synchronize, reopened, ready_for_review ]
     paths-ignore:
-      - 'listenbrainz_spark/**'
+      - 'listenbrainz_spark/**/*.py'
       - 'requirements_spark.txt'
       - '**/Dockerfile.spark*'
       - '**.jsx?'
