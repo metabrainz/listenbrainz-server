@@ -77,7 +77,7 @@ class TimescaleListenStore:
             user_id: the user to get listens for
         """
         cached_count = cache.get(REDIS_USER_LISTEN_COUNT + str(user_id))
-        if cached_count:
+        if cached_count is not None:
             return cached_count
 
         query = "SELECT count, created FROM listen_user_metadata WHERE user_id = :user_id"
@@ -140,7 +140,7 @@ class TimescaleListenStore:
             makes a query to the db and caches it in brainzutils cache.
         """
         count = cache.get(REDIS_TOTAL_LISTEN_COUNT)
-        if count:
+        if count is not None:
             return count
 
         query = "SELECT SUM(count) AS value FROM listen_user_metadata"

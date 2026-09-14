@@ -2,6 +2,7 @@ import logging
 import random
 from datetime import datetime, timedelta, timezone
 from time import time
+from unittest import mock
 
 import sqlalchemy
 from brainzutils import cache
@@ -226,6 +227,15 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(count, self.logstore.get_listen_count_for_user(testuser["id"]))
         self.assertEqual(count, cache.get(user_key))
 
+    def test_zero_listen_count_in_cache(self):
+        user_key = REDIS_USER_LISTEN_COUNT + str(self.testuser["id"])
+        cache.set(user_key, 0, expirein=60)
+
+        with mock.patch("listenbrainz.listenstore.timescale_listenstore.ts_conn") as mock_ts_conn:
+            self.assertEqual(self.logstore.get_listen_count_for_user(self.testuser["id"]), 0)
+
+        mock_ts_conn.execute.assert_not_called()
+
     def test_delete_listens(self):
         uid = random.randint(2000, 1 << 31)
         testuser = db_user.get_or_create(self.db_conn, uid, "user_%d" % uid)
@@ -333,6 +343,14 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
 
         total_count = self.logstore.get_total_listen_count()
         self.assertEqual(total_count, count_user_1 + count_user_2)
+
+    def test_zero_total_listen_count_in_cache(self):
+        cache.set(REDIS_TOTAL_LISTEN_COUNT, 0, expirein=60)
+
+        with mock.patch("listenbrainz.listenstore.timescale_listenstore.timescale.engine.connect") as mock_connect:
+            self.assertEqual(self.logstore.get_total_listen_count(), 0)
+
+        mock_connect.assert_not_called()
 
     def test_get_timestamps_for_user(self):
         self._create_test_data(self.testuser["musicbrainz_id"], self.testuser["id"])
