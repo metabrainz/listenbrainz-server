@@ -230,20 +230,15 @@
   max-height: calc(100vh - 8em);
 
   @media (max-width: map.get($grid-breakpoints, "lg")) {
+    height: unset;
+    width: 100%;
     position: fixed;
-    top: 4rem;
-    right: 0;
-    height: calc(100vh - 8em);
-    padding: 4rem 1rem;
+    bottom: 0;
+    top: calc(100vh - 100px);
+    padding: 1rem 2rem 4rem;
     z-index: 50;
-    // Transparent or semitransparent background if needed, but since it overlays content,
-    // we just let it float. The tooltip has a solid background anyway.
-    pointer-events: none; // let clicks pass through the container
-
-    // re-enable pointer events for the actual interactive track
-    .timeline-track {
-      pointer-events: auto;
-    }
+    background-color: $white;
+    padding-right: 120px; // sidebar button on the right
   }
 
   .timeline-track {
@@ -391,36 +386,28 @@
     justify-content: center;
     align-items: center;
 
+    .tooltip-content {
+      transform: rotate(45deg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
     &.vertical {
       width: 151px;
       height: 151px;
       border-radius: 50% 50% 0 50%;
       right: 42px;
       transform: translateY(-50%) rotate(-45deg);
-
-      .tooltip-content {
-        transform: rotate(45deg);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-      }
     }
 
     &.horizontal {
       width: 121px;
       height: 121px;
-      border-radius: 50% 50% 0 50%;
+      border-radius: 50% 50% 50% 0;
       bottom: 75px;
       transform: translateX(-50%) rotate(-135deg);
-
-      .tooltip-content {
-        transform: rotate(135deg);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-      }
     }
 
     .tooltip-day {
