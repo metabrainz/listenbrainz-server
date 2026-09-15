@@ -266,11 +266,32 @@
     }
   }
 
+  .timeline-hit-area {
+    position: absolute;
+    z-index: 1;
+    background: transparent;
+    cursor: pointer;
+
+    &.vertical {
+      top: 0;
+      bottom: 0;
+      left: -16px;
+      width: 34px;
+    }
+
+    &.horizontal {
+      top: -16px;
+      left: 0;
+      right: 0;
+      height: 34px;
+    }
+  }
+
   .timeline-thumb {
     position: absolute;
     background-color: $blue;
     border-radius: 2px;
-    z-index: 2;
+    z-index: 4;
     transition: background-color 0.2s;
 
     &:hover {
@@ -298,6 +319,7 @@
     cursor: pointer;
     display: flex;
     align-items: center;
+    z-index: 3;
 
     &.vertical {
       left: 0;
