@@ -4,9 +4,8 @@ import { countBy, debounce, zipObject } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarCheck } from "@fortawesome/free-solid-svg-icons";
 import { startOfDay, format, closestTo, parseISO } from "date-fns";
-import { formatReleaseDate, useMediaQuery } from "../utils";
+import { useMediaQuery } from "../utils";
 import { SortDirection, SortOption } from "../FreshReleases";
-import { COLOR_LB_BLUE } from "../../../utils/constants";
 
 type ReleaseTimelineProps = {
   releases: Array<FreshReleaseItem>;
@@ -20,36 +19,45 @@ interface MappedMark {
   percent: number;
   shiftedPercent: number;
   label: React.ReactNode;
+  groupKey?: string;
 }
 
-function calculateMapping(
-  marks: Record<number, React.ReactNode>,
-  minGap: number
-) {
-  const sortedPercents = Object.keys(marks)
-    .map(Number)
-    .sort((a, b) => a - b);
+interface TimelineMark {
+  percent: number;
+  label: React.ReactNode;
+  groupKey?: string;
+}
 
-  if (sortedPercents.length === 0) return [];
+function calculateMapping(marks: TimelineMark[], minGap: number) {
+  const marksByPercent = new Map<number, TimelineMark>();
+  marks
+    .slice()
+    .sort((a, b) => a.percent - b.percent)
+    .forEach((mark) => marksByPercent.set(mark.percent, mark));
+
+  const sortedMarks = Array.from(marksByPercent.values()).sort(
+    (a, b) => a.percent - b.percent
+  );
+
+  if (sortedMarks.length === 0) return [];
 
   // Ensure 0 and 100 are in the mapping for better interpolation
-  if (sortedPercents[0] !== 0) sortedPercents.unshift(0);
-  if (sortedPercents[sortedPercents.length - 1] !== 100)
-    sortedPercents.push(100);
-
-  const uniquePercents = Array.from(new Set(sortedPercents)).sort(
-    (a, b) => a - b
-  );
+  if (sortedMarks[0].percent !== 0)
+    sortedMarks.unshift({ percent: 0, label: null });
+  if (sortedMarks[sortedMarks.length - 1].percent !== 100)
+    sortedMarks.push({ percent: 100, label: null });
 
   let lastShiftedPercent = -minGap;
   const mappedMarks: MappedMark[] = [];
 
-  uniquePercents.forEach((percent) => {
+  sortedMarks.forEach((mark) => {
+    const { percent } = mark;
     const shiftedPercent = Math.max(percent, lastShiftedPercent + minGap);
     mappedMarks.push({
       percent,
       shiftedPercent,
-      label: marks[percent] || null,
+      label: mark.label,
+      groupKey: mark.groupKey,
     });
     lastShiftedPercent = shiftedPercent;
   });
@@ -119,6 +127,7 @@ function createMarks(
 ) {
   const dataArr: Array<string | JSX.Element | number> = [];
   let percentArr: Array<number> = [];
+  const groupKeyArr: Array<string | undefined> = [];
 
   if (order === "release_date") {
     let releasesPerDate = countBy(
@@ -159,6 +168,7 @@ function createMarks(
       }
       dataArr.push(label);
       percentArr.push(cummulativeMap.get(date)!);
+      groupKeyArr.push(date);
     });
 
     const dates = Object.keys(releasesPerDate).map((date) => parseISO(date));
@@ -175,6 +185,7 @@ function createMarks(
       </span>
     );
     percentArr.push(cummulativeMap.get(closestDateStr)!);
+    groupKeyArr.push(closestDateStr);
   } else if (order === "artist_credit_name" || order === "release_name") {
     const counts = countBy(releases, (item: FreshReleaseItem) =>
       item[order].charAt(0).toUpperCase()
@@ -186,6 +197,7 @@ function createMarks(
     initials.forEach((initial) => {
       percentArr.push((100 * cummulativeSum) / totalCount);
       dataArr.push(initial);
+      groupKeyArr.push(initial);
       cummulativeSum += counts[initial];
     });
   } else if (order === "confidence") {
@@ -202,12 +214,14 @@ function createMarks(
     confidences.forEach((conf) => {
       percentArr.push((100 * cummulativeSum) / totalCount);
       dataArr.push(`${Math.round(Number(conf))}%`);
+      groupKeyArr.push(conf);
       cummulativeSum += counts[conf];
     });
   }
 
   if (sortDirection === "descend" && order !== "release_date") {
     dataArr.reverse();
+    groupKeyArr.reverse();
     percentArr = percentArr.reverse().map((v) => (v <= 100 ? 100 - v : 0));
   }
   /*
@@ -226,7 +240,11 @@ function createMarks(
     percentArr.pop();
   }
 
-  return zipObject(percentArr, dataArr);
+  return percentArr.map((percent, index) => ({
+    percent,
+    label: dataArr[index],
+    groupKey: groupKeyArr[index],
+  }));
 }
 
 /** Returns the element's stable page-level Y position (scroll-invariant). */
@@ -260,10 +278,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const minGap = screenMd ? 2.5 : 1.5;
 
   React.useEffect(() => {
-    const rawMarks = createMarks(releases, direction, order) as Record<
-      number,
-      React.ReactNode
-    >;
+    const rawMarks = createMarks(releases, direction, order);
     setMappedMarks(calculateMapping(rawMarks, minGap));
   }, [releases, direction, order, minGap]);
 
@@ -323,6 +338,45 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     [releaseCardGridRef]
   );
 
+  const scrollToDate = React.useCallback(
+    (releaseDate: string, behavior: ScrollBehavior = "smooth") => {
+      const container =
+        releaseCardGridRef?.current ||
+        document.getElementById("release-card-grids");
+      if (!container) return false;
+
+      const dateTitle = Array.from(
+        container.querySelectorAll<HTMLElement>(
+          ".release-card-grid-title[data-date]"
+        )
+      ).find((title) => title.dataset.date === releaseDate);
+
+      if (!dateTitle) return false;
+
+      window.scrollTo({
+        top: getAbsoluteTop(dateTitle),
+        behavior,
+      });
+      return true;
+    },
+    [releaseCardGridRef]
+  );
+
+  const activateMark = React.useCallback(
+    (mark: MappedMark, behavior: ScrollBehavior = "smooth") => {
+      setCurrentValue(mark.percent);
+      if (
+        order === "release_date" &&
+        mark.groupKey &&
+        scrollToDate(mark.groupKey, behavior)
+      ) {
+        return;
+      }
+      scrollToPosition(mark.percent, behavior);
+    },
+    [order, scrollToDate, scrollToPosition]
+  );
+
   const handleMove = React.useCallback(
     (e: MouseEvent | TouchEvent) => {
       if (!trackRef.current || !mappedMarks.length) return;
@@ -344,6 +398,16 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const onStart = (e: React.MouseEvent | React.TouchEvent) => {
     setIsDragging(true);
     handleMove(e.nativeEvent as any);
+  };
+
+  const onMarkStart = (
+    e: React.MouseEvent | React.TouchEvent,
+    mark: MappedMark
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    activateMark(mark);
   };
 
   React.useEffect(() => {
@@ -464,9 +528,12 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
         {mappedMarks.map((mark: MappedMark) =>
           mark.label ? (
             <div
-              key={mark.percent}
+              key={`${mark.percent}-${mark.groupKey ?? ""}`}
               className="timeline-mark vertical"
+              role="presentation"
               style={{ top: `${mark.shiftedPercent}%` }}
+              onMouseDown={(event) => onMarkStart(event, mark)}
+              onTouchStart={(event) => onMarkStart(event, mark)}
             >
               <div className="tick-mark" />
               <span className="mark-label">{mark.label}</span>
