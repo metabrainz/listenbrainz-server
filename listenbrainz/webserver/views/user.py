@@ -84,6 +84,7 @@ def profile(user_name):
         "user": {
             "id": user.id,
             "name": user.musicbrainz_id,
+            "created": int(user.created.timestamp()),
         },
         "listens": data["listens"],
         "latestListenTs": data["latest_listen_ts"],

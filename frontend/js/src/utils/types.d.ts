@@ -83,6 +83,7 @@ declare type ListenBrainzUser = {
   id?: number;
   name: string;
   auth_token?: string;
+  created?: number;
 };
 
 declare type ImportService = "lastfm" | "librefm";
