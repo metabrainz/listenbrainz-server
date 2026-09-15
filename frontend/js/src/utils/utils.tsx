@@ -650,10 +650,7 @@ const formatWSMessageToListen = (wsMsg: any): Listen | null => {
       !_.has(json, "track_metadata.additional_info.recording_msid")
     ) {
       // eslint-disable-next-line no-console
-      console.debug(
-        "Could not find recording_msid in following json: ",
-        json
-      );
+      console.debug("Could not find recording_msid in following json: ", json);
       return null;
     }
   } catch (error) {

@@ -1202,7 +1202,7 @@ export default function ArtCreator() {
                 </button>
               </div> */}
 
-              {/* <div>
+          {/* <div>
                 <label className="form-label" htmlFor="genres">
                   Genres: <FontAwesomeIcon icon={faCircleQuestion} />
                 </label>
@@ -1213,14 +1213,14 @@ export default function ArtCreator() {
                   onChange={updateGenresCallback}
                 />
               </div> */}
-              {/* <div>
+          {/* <div>
                 <ToggleOption onChange={() => {}} checked={false} label="Users" />
                 <ToggleOption onChange={() => {}} checked={false} label="Date" />
                 <ToggleOption onChange={() => {}} checked={false} label="Range" />
                 <ToggleOption onChange={() => {}} checked={false} label="Total" />
                 <ToggleOption onChange={() => {}} checked={false} label="Genres" />
               </div> */}
-              {/* <div>
+          {/* <div>
                 className="form-label" htmlFor="font-select">Font:</label>
                 <select
                   id="font-select"
@@ -1235,7 +1235,7 @@ export default function ArtCreator() {
                   ))}
                 </select>
               </div> */}
-              {/* <div>
+          {/* <div>
                 <ToggleOption onChange={() => {}} checked={false} label="Ignore VA" />
               </div> */}
         </Sidebar>
