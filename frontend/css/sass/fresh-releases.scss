@@ -294,7 +294,8 @@
     position: absolute;
     white-space: nowrap;
     color: $asphalt;
-    pointer-events: none;
+    pointer-events: auto;
+    cursor: pointer;
     display: flex;
     align-items: center;
 
@@ -344,6 +345,15 @@
         background: transparent;
         padding: 0;
         line-height: 1.2;
+      }
+    }
+    &:hover {
+      .tick-mark {
+        background-color: color.adjust($asphalt, $lightness: -15%);
+      }
+      .mark-label {
+        color: color.adjust($asphalt, $lightness: -15%);
+        font-weight: 700;
       }
     }
   }
