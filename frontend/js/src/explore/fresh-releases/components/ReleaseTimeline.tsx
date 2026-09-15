@@ -506,6 +506,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
         onMouseDown={onStart}
         onTouchStart={onStart}
       >
+        <div className="timeline-hit-area vertical" />
         <div
           className="timeline-thumb vertical"
           style={{
