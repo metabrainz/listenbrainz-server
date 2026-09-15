@@ -9,7 +9,7 @@ LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-serve
     org.label-schema.schema-version="1.0.0-rc1" \
     org.label-schema.vendor="MetaBrainz Foundation" \
     org.label-schema.name="ListenBrainz" \
-    org.metabrainz.based-on-image="docker.io/metabrainz/python:$PYTHON_BASE_IMAGE_VERSION"
+    org.metabrainz.based-on-image="metabrainz/python:$PYTHON_BASE_IMAGE_VERSION"
 
 ENV DOCKERIZE_VERSION=v0.6.1
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
@@ -75,7 +75,7 @@ LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-serve
     org.label-schema.schema-version="1.0.0-rc1" \
     org.label-schema.vendor="MetaBrainz Foundation" \
     org.label-schema.name="ListenBrainz Static Builder" \
-    org.metabrainz.based-on-image="docker.io/node:$NODE_VERSION"
+    org.metabrainz.based-on-image="node:$NODE_VERSION"
 
 RUN mkdir /code
 WORKDIR /code
