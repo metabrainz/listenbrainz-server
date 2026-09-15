@@ -274,6 +274,8 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   }, [isDragging, onDraggingChange]);
 
   const screenMd = useMediaQuery("(max-width: 992px)");
+  const orientation = screenMd ? "horizontal" : "vertical";
+  const isHorizontal = orientation === "horizontal";
 
   const minGap = screenMd ? 2.5 : 1.5;
 
@@ -381,18 +383,20 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     (e: MouseEvent | TouchEvent) => {
       if (!trackRef.current || !mappedMarks.length) return;
       const rect = trackRef.current.getBoundingClientRect();
-      const y =
-        "touches" in e
-          ? (e as TouchEvent).touches[0].clientY
-          : (e as MouseEvent).clientY;
-      let visualPercent = ((y - rect.top) / rect.height) * 100;
+      const touchOrMouseEvent =
+        "touches" in e ? (e as TouchEvent).touches[0] : (e as MouseEvent);
+      const cursorPosition = isHorizontal
+        ? touchOrMouseEvent.clientX - rect.left
+        : touchOrMouseEvent.clientY - rect.top;
+      const trackSize = isHorizontal ? rect.width : rect.height;
+      let visualPercent = (cursorPosition / trackSize) * 100;
       visualPercent = Math.max(0, Math.min(100, visualPercent));
 
       const linearPercent = unmapVisualToLinear(visualPercent, mappedMarks);
       setCurrentValue(linearPercent);
       scrollToPosition(linearPercent, isDragging ? "auto" : "smooth");
     },
-    [scrollToPosition, isDragging, mappedMarks]
+    [isHorizontal, scrollToPosition, isDragging, mappedMarks]
   );
 
   const onStart = (e: React.MouseEvent | React.TouchEvent) => {
@@ -502,23 +506,23 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
         aria-valuenow={Number(visualPercent.toFixed(0)) || 0}
         aria-valuemin={0}
         aria-valuemax={100}
-        className="timeline-track vertical"
+        className={`timeline-track ${orientation}`}
         onMouseDown={onStart}
         onTouchStart={onStart}
       >
-        <div className="timeline-hit-area vertical" />
+        <div className={`timeline-hit-area ${orientation}`} />
         <div
-          className="timeline-thumb vertical"
+          className={`timeline-thumb ${orientation}`}
           style={{
-            top: `${visualPercent}%`,
-            height: `${thumbSize}px`,
+            [isHorizontal ? "left" : "top"]: `${visualPercent}%`,
+            [isHorizontal ? "width" : "height"]: `${thumbSize}px`,
             transition: isDragging ? "none" : "all 0.1s ease-out",
           }}
         />
         {isDragging && tooltipData && (
           <div
-            className="timeline-tooltip vertical"
-            style={{ top: `${visualPercent}%` }}
+            className={`timeline-tooltip ${orientation}`}
+            style={{ [isHorizontal ? "left" : "top"]: `${visualPercent}%` }}
           >
             <div className="tooltip-content">
               <div className="tooltip-day">{tooltipData.main}</div>
@@ -530,9 +534,12 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
           mark.label ? (
             <div
               key={`${mark.percent}-${mark.groupKey ?? ""}`}
-              className="timeline-mark vertical"
+              className={`timeline-mark ${orientation}`}
               role="presentation"
-              style={{ top: `${mark.shiftedPercent}%` }}
+              data-testid="timeline-mark"
+              style={{
+                [isHorizontal ? "left" : "top"]: `${mark.shiftedPercent}%`,
+              }}
               onMouseDown={(event) => onMarkStart(event, mark)}
               onTouchStart={(event) => onMarkStart(event, mark)}
             >
