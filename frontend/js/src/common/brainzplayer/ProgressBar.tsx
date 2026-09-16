@@ -1,6 +1,7 @@
 import { throttle } from "lodash";
 import * as React from "react";
-import ReactTooltip from "react-tooltip";
+import { Overlay, Tooltip } from "react-bootstrap";
+import type { OverlayInjectedProps } from "react-bootstrap/Overlay";
 import { useAtomValue } from "jotai";
 import { millisecondsToStr } from "../../playlists/utils";
 import { durationMsAtom, progressMsAtom } from "./BrainzPlayerAtoms";
@@ -16,12 +17,15 @@ const KEYBOARD_BIG_STEP_MS: number = 10000;
 
 const EVENT_KEY_ARROWLEFT: string = "ArrowLeft";
 const EVENT_KEY_ARROWRIGHT: string = "ArrowRight";
-const EVENT_TYPE_CLICK: string = "click";
-const EVENT_TYPE_MOUSEMOVE: string = "mousemove";
 const MOUSE_THROTTLE_DELAY: number = 300;
 
 const TOOLTIP_INITIAL_CONTENT: string = "0:00";
-const TOOLTIP_TOP_OFFSET: number = 39;
+
+type ProgressTooltipProps = {
+  overlayProps: OverlayInjectedProps;
+  tipContent: string;
+  tooltipXPosition: number;
+};
 
 // Originally by ford04 - https://stackoverflow.com/a/62017005
 const useThrottle = (callback: any, delay: number | undefined) => {
@@ -36,44 +40,81 @@ const useThrottle = (callback: any, delay: number | undefined) => {
   );
 };
 
+function ProgressTooltip({
+  overlayProps,
+  tipContent,
+  tooltipXPosition,
+}: ProgressTooltipProps) {
+  React.useEffect(() => {
+    overlayProps.popper?.scheduleUpdate?.();
+  }, [overlayProps.popper, tooltipXPosition]);
+
+  return (
+    <Tooltip
+      id="progress-tooltip"
+      {...overlayProps}
+      className={`progress-tooltip ${overlayProps.className ?? ""}`.trim()}
+    >
+      {tipContent}
+    </Tooltip>
+  );
+}
+
 function ProgressBar(props: ProgressBarProps) {
   const progressMs = useAtomValue(progressMsAtom);
   const durationMs = useAtomValue(durationMsAtom);
 
   const { seekToPositionMs, showNumbers } = props;
   const [tipContent, setTipContent] = React.useState(TOOLTIP_INITIAL_CONTENT);
+  const [showTooltip, setShowTooltip] = React.useState(false);
+  const [tooltipXPosition, setTooltipXPosition] = React.useState(0);
   const progressBarRef = React.useRef<HTMLDivElement>(null);
+  const tooltipTargetRef = React.useRef<HTMLSpanElement>(null);
   const progressPercentage = Number(
     ((progressMs * 100) / durationMs).toFixed()
   );
+  const throttledSetTipContent = useThrottle((positionTime: string): void => {
+    setTipContent(positionTime);
+  }, MOUSE_THROTTLE_DELAY);
 
-  const mouseEventHandler = useThrottle(
-    (event: React.MouseEvent<HTMLInputElement>): void => {
-      const progressBarBoundingRect = event.currentTarget.getBoundingClientRect();
-      const progressBarWidth = progressBarBoundingRect.width;
-      const musicPlayerXOffset = progressBarBoundingRect.x;
-      const absoluteClickXPos = event.clientX;
-      const relativeClickXPos = absoluteClickXPos - musicPlayerXOffset;
-      const percentPos = relativeClickXPos / progressBarWidth;
-      const positionMs = Math.round(durationMs * percentPos);
-      const positionTime = millisecondsToStr(positionMs);
+  const getPositionFromMouseEvent = (
+    event: React.MouseEvent<HTMLDivElement>
+  ) => {
+    const progressBarBoundingRect = event.currentTarget.getBoundingClientRect();
+    const progressBarWidth = progressBarBoundingRect.width;
+    const musicPlayerXOffset = progressBarBoundingRect.x;
+    const absoluteClickXPos = event.clientX;
+    const relativeClickXPos = absoluteClickXPos - musicPlayerXOffset;
+    const percentPos = relativeClickXPos / progressBarWidth;
+    const positionMs = Math.round(durationMs * percentPos);
 
-      const isMobile = /Mobi/.test(navigator.userAgent);
+    return {
+      positionMs,
+      positionTime: millisecondsToStr(positionMs),
+      tooltipXPosition: absoluteClickXPos,
+    };
+  };
 
-      if (isMobile) {
-        setTipContent(positionTime);
-        seekToPositionMs(positionMs);
-        return;
-      }
+  const onMouseMoveHandler = (
+    event: React.MouseEvent<HTMLDivElement>
+  ): void => {
+    if (/Mobi/.test(navigator.userAgent)) {
+      setShowTooltip(false);
+      return;
+    }
 
-      if (event.type === EVENT_TYPE_MOUSEMOVE) {
-        setTipContent(positionTime);
-      } else if (event.type === EVENT_TYPE_CLICK) {
-        seekToPositionMs(positionMs);
-      }
-    },
-    MOUSE_THROTTLE_DELAY
-  );
+    const mousePosition = getPositionFromMouseEvent(event);
+    throttledSetTipContent(mousePosition.positionTime);
+    setTooltipXPosition(mousePosition.tooltipXPosition);
+    setShowTooltip(true);
+  };
+
+  const onClickHandler = (event: React.MouseEvent<HTMLDivElement>): void => {
+    const mousePosition = getPositionFromMouseEvent(event);
+    setTipContent(mousePosition.positionTime);
+    setShowTooltip(false);
+    seekToPositionMs(mousePosition.positionMs);
+  };
 
   const onKeyPressHandler = (
     event: React.KeyboardEvent<HTMLInputElement>
@@ -117,8 +158,9 @@ function ProgressBar(props: ProgressBarProps) {
     <div className="progress-bar-wrapper">
       <div
         className="progress"
-        onClick={mouseEventHandler}
-        onMouseMove={mouseEventHandler}
+        onClick={onClickHandler}
+        onMouseMove={onMouseMoveHandler}
+        onMouseLeave={() => setShowTooltip(false)}
         onKeyDown={onKeyPressHandler}
         aria-label="Audio progress control"
         role="progressbar"
@@ -126,24 +168,34 @@ function ProgressBar(props: ProgressBarProps) {
         aria-valuemax={100}
         aria-valuenow={progressPercentage || 0}
         tabIndex={0}
-        data-tip={tipContent}
         ref={progressBarRef}
       >
         <div className="progress-bar bg-info" style={progressBarStyle} />
-        <ReactTooltip
-          className="progress-tooltip"
-          arrowColor="inherit"
-          getContent={() => tipContent}
-          globalEventOff="click"
-          overridePosition={({ left, top }) => {
-            const progressBarBoundingRect = progressBarRef.current?.getBoundingClientRect();
-            if (progressBarBoundingRect) {
-              // eslint-disable-next-line no-param-reassign
-              top = progressBarBoundingRect.top - TOOLTIP_TOP_OFFSET;
-            }
-            return { left, top };
+        <span
+          ref={tooltipTargetRef}
+          style={{
+            position: "fixed",
+            left: tooltipXPosition,
+            top: progressBarRef.current?.getBoundingClientRect().top,
+            width: 1,
+            height: 1,
+            pointerEvents: "none",
           }}
         />
+        <Overlay
+          target={tooltipTargetRef.current}
+          show={showTooltip}
+          placement="top"
+          transition={false}
+        >
+          {(overlayProps) => (
+            <ProgressTooltip
+              overlayProps={overlayProps}
+              tipContent={tipContent}
+              tooltipXPosition={tooltipXPosition}
+            />
+          )}
+        </Overlay>
       </div>
       {showNumbers && (
         <div className="progress-numbers">

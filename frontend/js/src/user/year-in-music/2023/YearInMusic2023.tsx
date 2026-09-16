@@ -6,7 +6,6 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css/bundle";
 /* eslint-enable import/no-unresolved */
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
-import Tooltip from "react-tooltip";
 import { toast } from "react-toastify";
 import {
   get,
@@ -33,6 +32,7 @@ import humanizeDuration from "humanize-duration";
 import { Link, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
+import Tooltip from "../../../components/Tooltip";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 import {
@@ -320,14 +320,13 @@ export default class YearInMusic extends React.Component<
             >
               {topLevelPlaylist.title}{" "}
             </a>
-            <FontAwesomeIcon
-              icon={faQuestionCircle}
-              data-tip
-              data-for={`playlist-${index}-tooltip`}
-              size="xs"
-            />
-            <Tooltip id={`playlist-${index}-tooltip`}>
-              {topLevelPlaylist.annotation}
+            <Tooltip
+              id={`playlist-${index}-tooltip`}
+              tooltip={topLevelPlaylist.annotation}
+            >
+              <span>
+                <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+              </span>
             </Tooltip>
           </h4>
         </div>
@@ -981,15 +980,18 @@ export default class YearInMusic extends React.Component<
                   <div className="" id="calendar">
                     <h3 className="text-center">
                       {capitalize(yourOrUsersName)} listening activity{" "}
-                      <FontAwesomeIcon
-                        icon={faQuestionCircle}
-                        data-tip
-                        data-for="listening-activity"
-                        size="xs"
-                      />
-                      <Tooltip id="listening-activity">
-                        How many tracks did {youOrUsername} listen to each day
-                        of the year?
+                      <Tooltip
+                        id="listening-activity"
+                        tooltip={
+                          <>
+                            How many tracks did {youOrUsername} listen to each
+                            day of the year?
+                          </>
+                        }
+                      >
+                        <span>
+                          <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+                        </span>
                       </Tooltip>
                     </h3>
 
@@ -1033,17 +1035,20 @@ export default class YearInMusic extends React.Component<
                   <div className="" id="most-listened-year">
                     <h3 className="text-center">
                       What year are {yourOrUsersName} favorite songs from?{" "}
-                      <FontAwesomeIcon
-                        icon={faQuestionCircle}
-                        data-tip
-                        data-for="most-listened-year-helptext"
-                        size="xs"
-                      />
-                      <Tooltip id="most-listened-year-helptext">
-                        How much{" "}
-                        {isCurrentUser ? "were you" : `was ${user.name}`} on the
-                        lookout for new music this year? Not that we&apos;re
-                        judging
+                      <Tooltip
+                        id="most-listened-year-helptext"
+                        tooltip={
+                          <>
+                            How much{" "}
+                            {isCurrentUser ? "were you" : `was ${user.name}`} on
+                            the lookout for new music this year? Not that
+                            we&apos;re judging
+                          </>
+                        }
+                      >
+                        <span>
+                          <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+                        </span>
                       </Tooltip>
                     </h3>
                     <div className="graph-container">
@@ -1080,14 +1085,13 @@ export default class YearInMusic extends React.Component<
                     <h3 className="text-center">
                       What countries are {yourOrUsersName} favorite artists
                       from?{" "}
-                      <FontAwesomeIcon
-                        icon={faQuestionCircle}
-                        data-tip
-                        data-for="user-artist-map-helptext"
-                        size="xs"
-                      />
-                      <Tooltip id="user-artist-map-helptext">
-                        Click on a country to see more details
+                      <Tooltip
+                        id="user-artist-map-helptext"
+                        tooltip={<>Click on a country to see more details</>}
+                      >
+                        <span>
+                          <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+                        </span>
                       </Tooltip>
                     </h3>
                     <div className="graph-container">
@@ -1220,17 +1224,23 @@ export default class YearInMusic extends React.Component<
                       />
                       <h4>
                         New albums from {yourOrUsersName} top artists{" "}
-                        <FontAwesomeIcon
-                          icon={faQuestionCircle}
-                          data-tip
-                          data-for="new-albums-helptext"
-                          size="xs"
-                        />
-                        <Tooltip id="new-albums-helptext">
-                          Albums and singles released in 2023 from artists{" "}
-                          {youOrUsername} listened to.
-                          <br />
-                          Missed anything?
+                        <Tooltip
+                          id="new-albums-helptext"
+                          tooltip={
+                            <>
+                              Albums and singles released in 2023 from artists{" "}
+                              {youOrUsername} listened to.
+                              <br />
+                              Missed anything?
+                            </>
+                          }
+                        >
+                          <span>
+                            <FontAwesomeIcon
+                              icon={faQuestionCircle}
+                              size="xs"
+                            />
+                          </span>
                         </Tooltip>
                       </h4>
                     </div>
@@ -1309,17 +1319,23 @@ export default class YearInMusic extends React.Component<
                       />
                       <h4>
                         Music buddies{" "}
-                        <FontAwesomeIcon
-                          icon={faQuestionCircle}
-                          data-tip
-                          data-for="music-buddies-helptext"
-                          size="xs"
-                        />
-                        <Tooltip id="music-buddies-helptext">
-                          Here are the users with the most similar taste to{" "}
-                          {youOrUsername} this year.
-                          <br />
-                          Maybe check them out and follow them?
+                        <Tooltip
+                          id="music-buddies-helptext"
+                          tooltip={
+                            <>
+                              Here are the users with the most similar taste to{" "}
+                              {youOrUsername} this year.
+                              <br />
+                              Maybe check them out and follow them?
+                            </>
+                          }
+                        >
+                          <span>
+                            <FontAwesomeIcon
+                              icon={faQuestionCircle}
+                              size="xs"
+                            />
+                          </span>
                         </Tooltip>
                       </h4>
                     </div>

@@ -2,9 +2,9 @@ import { capitalize, isEmpty } from "lodash";
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
-import Tooltip from "react-tooltip";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import tinycolor from "tinycolor2";
+import Tooltip from "../../../components/Tooltip";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 export type YIMListeningActivityData = Array<{
@@ -63,14 +63,18 @@ export default function YIMListeningActivity({
     <div className="" id="calendar">
       <h3 className="text-center">
         {capitalize(yourOrUsersName)} listening activity{" "}
-        <FontAwesomeIcon
-          icon={faQuestionCircle}
-          data-tip
-          data-for="listening-activity"
-          size="xs"
-        />
-        <Tooltip id="listening-activity">
-          How many tracks did {youOrUsername} listen to each day of the year?
+        <Tooltip
+          id="listening-activity"
+          tooltip={
+            <>
+              How many tracks did {youOrUsername} listen to each day of the
+              year?
+            </>
+          }
+        >
+          <span>
+            <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+          </span>
         </Tooltip>
       </h3>
 
