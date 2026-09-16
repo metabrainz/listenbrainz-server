@@ -229,16 +229,25 @@
   padding: 4rem 1rem;
   max-height: calc(100vh - 8em);
 
-  @media (max-width: map.get($grid-breakpoints, "lg")) {
+  &.horizontal {
     height: unset;
     width: 100%;
     position: fixed;
+    right: 0;
     bottom: 0;
+    left: 0;
     top: calc(100vh - 120px);
     padding: 2.5rem 2rem 4rem;
     z-index: 50;
     background-color: $white;
-    padding-right: 120px; // sidebar button on the right
+    max-height: unset;
+  }
+
+  @media (max-width: map.get($grid-breakpoints, "lg")) {
+    padding: 1rem;
+    &.horizontal {
+      padding-right: 120px; // sidebar button on the right
+    }
   }
 
   .timeline-track {
