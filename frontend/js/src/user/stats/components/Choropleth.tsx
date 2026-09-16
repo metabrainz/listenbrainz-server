@@ -22,6 +22,7 @@ import { COLOR_BLACK } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import enrichJSPFTracks from "../../../utils/Playlist";
 import { ToastMsg } from "../../../notifications/Notifications";
+import buildAuthUrl from "../../../utils/auth";
 
 const {
   useState,
@@ -188,7 +189,8 @@ export default function CustomChoropleth(props: ChoroplethProps) {
             title="Please log in"
             message={
               <>
-                You must be <Link to="/login">logged in</Link> to use LB Radio.
+                You must be <a href={buildAuthUrl("login")}>logged in</a> to use
+                LB Radio.
                 <br />
                 AI scrapers are causing undue traffic on our sites and not
                 playing by the rules, booo!

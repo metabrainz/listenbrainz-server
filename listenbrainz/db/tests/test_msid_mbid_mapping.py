@@ -24,7 +24,7 @@ class MappingTestCase(TimescaleTestCase):
         # test that 2 valid uuids doesn't raise error
         model = MsidMbidModel(recording_msid=str(uuid.uuid4()), recording_mbid=str(uuid.uuid4()))
 
-    def insert_recording_in_mapping(self, recording, match_type):
+    def insert_recording_in_mapping(self, recording, match_type, fixture_id):
         if match_type == "exact_match":
 
             release_data = {"name": recording["release"]}
@@ -41,11 +41,14 @@ class MappingTestCase(TimescaleTestCase):
             self.ts_conn.execute(text("""
                 INSERT INTO mapping.mb_metadata_cache
                         (recording_mbid, recording_id, artist_mbids, artist_ids, release_mbid, release_id, recording_data, artist_data, tag_data, release_data, dirty)
-                 VALUES (:recording_mbid ::UUID, 1, :artist_mbids ::UUID[], '{1}'::INTEGER[], :release_mbid ::UUID, 1, :recording_data, :artist_data, :tag_data, :release_data, 'f')
+                 VALUES (:recording_mbid ::UUID, :recording_id, :artist_mbids ::UUID[], :artist_ids ::INTEGER[], :release_mbid ::UUID, :release_id, :recording_data, :artist_data, :tag_data, :release_data, 'f')
             """), {
                 "recording_mbid": recording["recording_mbid"],
+                "recording_id": fixture_id,
                 "artist_mbids": recording["artist_mbids"],
+                "artist_ids": [fixture_id],
                 "release_mbid": recording["release_mbid"],
+                "release_id": fixture_id,
                 "recording_data": json.dumps({"name": recording["title"]}),
                 "artist_data": json.dumps(artist_data),
                 "release_data": json.dumps(release_data),
@@ -152,7 +155,7 @@ class MappingTestCase(TimescaleTestCase):
                 match_type = "no_match"
             else:
                 match_type = "exact_match"
-            self.insert_recording_in_mapping(recordings[idx], match_type)
+            self.insert_recording_in_mapping(recordings[idx], match_type, idx + 1)
         return recordings
 
     def test_load_recordings_from_mapping(self):

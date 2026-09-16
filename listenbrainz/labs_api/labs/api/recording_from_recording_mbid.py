@@ -1,11 +1,14 @@
+from contextlib import closing
 from typing import Optional
 from uuid import UUID
 
+import psycopg2
 import psycopg2.extras
 from datasethoster import Query
 from flask import current_app
 from pydantic import BaseModel
 
+from listenbrainz.db import timescale
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 
 
@@ -17,6 +20,12 @@ class RecordingFromRecordingMBIDArtist(BaseModel):
     artist_credit_name: str
     artist_mbid: UUID
     join_phrase: str
+
+
+class RecordingFromRecordingMBIDTag(BaseModel):
+    tag: str
+    count: int
+    genre_mbid: Optional[UUID] = None
 
 
 class RecordingFromRecordingMBIDOutput(BaseModel):
@@ -31,7 +40,7 @@ class RecordingFromRecordingMBIDOutput(BaseModel):
     release_name: Optional[str]
     release_mbid: Optional[UUID]
     artists: list[RecordingFromRecordingMBIDArtist]
-    tags: list[str]
+    tags: Optional[list[RecordingFromRecordingMBIDTag]] = []
 
 
 class RecordingFromRecordingMBIDQuery(Query):
@@ -53,9 +62,17 @@ class RecordingFromRecordingMBIDQuery(Query):
         if not current_app.config["MB_DATABASE_URI"]:
             return []
 
-        mbids = [p.recording_mbid for p in params]
+        mbids = []
+        for p in params:
+            try:
+                UUID(p.recording_mbid)
+                mbids.append(p.recording_mbid)
+            except (ValueError, AttributeError):
+                pass
+        if not mbids:
+            return []
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-                psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+                closing(timescale.engine.raw_connection()) as ts_conn, \
                 mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
                 ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
             output = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids)

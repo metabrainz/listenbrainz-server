@@ -7,6 +7,10 @@ import click
 
 
 CRON_LOGS_DIR = "/logs"
+CRON_CONTAINER_NAMES = {
+    "listenbrainz-cron-prod",
+    "listenbrainz-full-dumps-cron-prod",
+}
 
 
 def sanity_check():
@@ -22,7 +26,7 @@ def sanity_check():
         print("cron logs dir does not exist. Is this code running in the container?")
         sys.exit(-1)
 
-    if "CONTAINER_NAME" not in os.environ or os.environ["CONTAINER_NAME"] != "listenbrainz-cron-prod":
+    if os.environ.get("CONTAINER_NAME") not in CRON_CONTAINER_NAMES:
         print("we do not seem to be running inside the cron prod container.")
         sys.exit(-1)
 

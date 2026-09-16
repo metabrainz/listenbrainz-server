@@ -10,6 +10,7 @@ from listenbrainz.domain.spotify import OAUTH_TOKEN_URL
 from listenbrainz.tests.integration import IntegrationTestCase
 import listenbrainz.db.user as db_user
 import listenbrainz.db.external_service_oauth as db_oauth
+from listenbrainz.db.exceptions import InvalidUser
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from listenbrainz.webserver.views import playlist_api
 from listenbrainz.webserver.views.playlist_api import PLAYLIST_TRACK_URI_PREFIX, PLAYLIST_URI_PREFIX, PLAYLIST_EXTENSION_URI
@@ -204,6 +205,20 @@ class PlaylistAPITestCase(IntegrationTestCase):
 
         # Make sure the return playlist id is valid
         UUID(response.json["playlist_mbid"])
+
+    @mock.patch("listenbrainz.db.playlist.create")
+    def test_playlist_create_invalid_user(self, mock_create):
+        """ Test to ensure InvalidUser exception in playlist creation returns 400 """
+        mock_create.side_effect = InvalidUser("Invalid creator user ID")
+        playlist = get_test_data()
+
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Invalid creator user ID")
 
     def test_playlist_xspf_additional_metadata(self):
         """ Test for checking that additional meta data field is properly constructed and not causing a crash """
@@ -534,6 +549,63 @@ class PlaylistAPITestCase(IntegrationTestCase):
             json=add_recording
         )
         self.assert400(response)
+
+    def test_playlist_recording_add_multiple(self):
+        """Test adding multiple recordings in one API call"""
+        playlist = get_test_data()
+
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        playlist_mbid = response.json["playlist_mbid"]
+
+        mbids = [
+            "4a77a078-e91a-4522-a409-3b58aa7de3ae",
+            "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a",
+            "97e69767-5d34-4c97-b36a-f3b2b1ef9dae",
+        ]
+        add_recording = {
+            "playlist": {
+                "track": [
+                    {"identifier": [PLAYLIST_TRACK_URI_PREFIX + mbid]}
+                    for mbid in mbids
+                ],
+                "extension": {
+                    PLAYLIST_EXTENSION_URI: {
+                        "public": True
+                    }
+                },
+            }
+        }
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            json=add_recording
+        )
+        self.assert200(response)
+
+        response = self.client.get(
+            self.custom_url_for("playlist_api_v1.get_playlist", playlist_mbid=playlist_mbid, fetch_metadata="false"),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        tracks = response.json["playlist"]["track"]
+        self.assertEqual(len(tracks), 4)
+        self.assertEqual(
+            tracks[1]["identifier"],
+            [PLAYLIST_TRACK_URI_PREFIX + mbids[0]],
+        )
+        self.assertEqual(
+            tracks[2]["identifier"],
+            [PLAYLIST_TRACK_URI_PREFIX + mbids[1]],
+        )
+        self.assertEqual(
+            tracks[3]["identifier"],
+            [PLAYLIST_TRACK_URI_PREFIX + mbids[2]],
+        )
 
     def test_playlist_recording_move(self):
 
@@ -1186,7 +1258,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual(
             response.json["error"],
-            "Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
+            "Missing scopes playlist-modify-public, playlist-modify-private to export playlists."
             " Please relink your spotify account from ListenBrainz settings with appropriate scopes"
             " to use this feature."
         )
@@ -1248,3 +1320,16 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert200(response)
         self.assertEqual(response.json, {"external_url": "apple_music_url"})
+
+        mock_export_to_apple_music.side_effect = playlist_api.PlaylistExportError(
+            "Apple Music did not return an exported playlist URL."
+        )
+        response = self.client.post(
+            self.custom_url_for(
+                "playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="apple_music"
+            ),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+        )
+        self.assertStatus(response, 502)
+        self.assertEqual(response.json["error"], "Apple Music did not return an exported playlist URL.")

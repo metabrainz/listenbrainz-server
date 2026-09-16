@@ -62,6 +62,8 @@ class UserStatsTestCase(StatsTestCase):
 
         self.assertEqual(messages[2]["type"], "couchdb_data_end")
         self.assertTrue(messages[2]["database"].startswith(database_prefix))
+        self.assertEqual(messages[3]["type"], "statistics_generation_complete")
+        self.assertEqual(messages[3]["stats_type"], database_prefix)
 
 
         time_range_expected = itertools.product(calendar.day_name, range(0, 24))
@@ -102,6 +104,8 @@ class UserStatsTestCase(StatsTestCase):
         
         self.assertEqual(messages[2]["type"], "couchdb_data_end")
         self.assertTrue(messages[2]["database"].startswith(database_prefix))
+        self.assertEqual(messages[3]["type"], "statistics_generation_complete")
+        self.assertEqual(messages[3]["stats_type"], database_prefix)
 
     def test_get_genre_activity(self):
         messages = list(get_genre_activity("all_time"))
@@ -139,6 +143,8 @@ class UserStatsTestCase(StatsTestCase):
 
         self.assertEqual(messages[2]["type"], "couchdb_data_end")
         self.assertTrue(messages[2]["database"].startswith(database_prefix))
+        self.assertEqual(messages[3]["type"], "statistics_generation_complete")
+        self.assertEqual(messages[3]["stats_type"], database_prefix)
 
 
         time_range_expected = itertools.product(calendar.day_name, range(0, 24))
@@ -190,3 +196,5 @@ class UserStatsTestCase(StatsTestCase):
         self.assertTrue(messages[1]["database"].startswith(database_prefix))
         self.assertEqual(messages[2]["type"], "couchdb_data_end")
         self.assertTrue(messages[2]["database"].startswith(database_prefix))
+        self.assertEqual(messages[3]["type"], "statistics_generation_complete")
+        self.assertEqual(messages[3]["stats_type"], database_prefix)

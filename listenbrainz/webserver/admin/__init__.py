@@ -18,7 +18,7 @@ class AuthMixin:
     def _handle_view(self, name, **kwargs):
         if not self.is_accessible():
             flash.error('You are not authorized to view the admin page.')
-            return redirect(url_for('login.index'))
+            return redirect(url_for('login.musicbrainz'))
 
 
 class AdminBaseView(AuthMixin, BaseView): pass

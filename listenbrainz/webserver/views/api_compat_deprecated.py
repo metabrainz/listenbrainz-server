@@ -24,7 +24,6 @@
 
 import json
 import listenbrainz.db.user as db_user
-from brainzutils.musicbrainz_db import engine as mb_engine
 
 from hashlib import md5
 
@@ -58,7 +57,7 @@ def handshake():
     if user is None:
         return 'BADAUTH\n', 401
 
-    if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and user["email"] is None:
+    if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and user["email"] is None:
         return 'BADAUTH ' + REJECT_LISTENS_WITHOUT_EMAIL_ERROR + '\n', 401
 
     auth_token = request.args.get('a', '')

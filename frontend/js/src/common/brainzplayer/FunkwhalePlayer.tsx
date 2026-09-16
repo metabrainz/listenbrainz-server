@@ -122,8 +122,12 @@ export default class FunkwhalePlayer
     }
   }
 
-  stop = () => {
+  pause = () => {
     this.pauseAudio();
+  };
+
+  stop = () => {
+    this.pause();
   };
 
   setupAudioListeners = (): void => {
@@ -280,7 +284,10 @@ export default class FunkwhalePlayer
     );
   };
 
-  playListen = async (listen: Listen | JSPFTrack): Promise<void> => {
+  playListen = async (
+    listen: Listen | JSPFTrack,
+    streamingUrl?: string
+  ): Promise<void> => {
     const listenFromFunkwhale = FunkwhalePlayer.isListenFromThisService(listen);
 
     if (listenFromFunkwhale) {

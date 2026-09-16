@@ -30,9 +30,8 @@ export default function MusicNeighborhood() {
   );
   const { algorithm: DEFAULT_ALGORITHM, artist_mbid: DEFAULT_ARTIST_MBID } =
     data || {};
-  const BASE_URL = `https://labs.api.listenbrainz.org/similar-artists/json?algorithm=${DEFAULT_ALGORITHM}&artist_mbids=`;
 
-  const { APIService } = React.useContext(GlobalAppContext);
+  const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const [similarArtistsLimit, setSimilarArtistsLimit] = React.useState(
     SIMILAR_ARTISTS_LIMIT_VALUE
   );
@@ -106,9 +105,22 @@ export default function MusicNeighborhood() {
 
   const fetchArtistSimilarityInfo = React.useCallback(
     async (artistMBID: string) => {
+      if (!currentUser?.auth_token) {
+        toast.info(
+          <ToastMsg
+            title="Please log in to see similar artists"
+            message="This feature is now only available to logged-in users."
+          />,
+          { toastId: "login-info" }
+        );
+        return;
+      }
       try {
-        const response = await fetch(BASE_URL + artistMBID);
-        const artistSimilarityData = await response.json();
+        const artistSimilarityData = await APIService.getSimilarArtists(
+          currentUser?.auth_token,
+          artistMBID,
+          DEFAULT_ALGORITHM
+        );
 
         if (!artistSimilarityData || !artistSimilarityData.length) {
           throw new Error("No Similar Artists Found");
@@ -127,14 +139,19 @@ export default function MusicNeighborhood() {
         setSimilarArtistsList([]);
         toast.error(
           <ToastMsg
-            title="Search Error"
+            title="Error fetching artist similarity"
             message={typeof error === "object" ? error.message : error}
           />,
-          { toastId: "error" }
+          { toastId: "similarity-error" }
         );
       }
     },
-    [similarArtistsLimit, BASE_URL]
+    [
+      similarArtistsLimit,
+      DEFAULT_ALGORITHM,
+      currentUser?.auth_token,
+      APIService,
+    ]
   );
 
   const updateSimilarArtistsLimit = (limit: number) => {
@@ -145,21 +162,31 @@ export default function MusicNeighborhood() {
   const fetchArtistInfo = React.useCallback(
     async (artistMBID: string): Promise<ArtistInfoType> => {
       const [
-        artistInformation,
-        wikipediaData,
-        topRecordingsForArtist,
-        topAlbumsForArtist,
-      ]: [
-        Array<MusicBrainzArtist>,
-        string,
-        Array<RecordingType>,
-        Array<ReleaseGroupType>
-      ] = await Promise.all([
+        artistInformationResult,
+        wikipediaDataResult,
+        topRecordingsResult,
+        topAlbumsResult,
+      ] = await Promise.allSettled([
         APIService.lookupMBArtist(artistMBID, ""),
         APIService.getArtistWikipediaExtract(artistMBID),
         APIService.getTopRecordingsForArtist(artistMBID),
         APIService.getTopReleaseGroupsForArtist(artistMBID),
       ]);
+
+      const artistInformation =
+        artistInformationResult.status === "fulfilled"
+          ? artistInformationResult.value
+          : [];
+      const wikipediaData =
+        wikipediaDataResult.status === "fulfilled"
+          ? wikipediaDataResult.value
+          : "";
+      const topRecordingsForArtist =
+        topRecordingsResult.status === "fulfilled"
+          ? topRecordingsResult.value
+          : [];
+      const topAlbumsForArtist =
+        topAlbumsResult.status === "fulfilled" ? topAlbumsResult.value : [];
 
       const birthAreaData = {
         born: artistInformation[0]?.begin_year || "Unknown",

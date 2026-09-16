@@ -3,7 +3,7 @@ import * as _ from "lodash";
 import { isFinite, isUndefined, deburr, escapeRegExp } from "lodash";
 import * as timeago from "time-ago";
 import { Rating } from "react-simple-star-rating";
-import { toast } from "react-toastify";
+import { toast, TypeOptions } from "react-toastify";
 import { Link } from "react-router";
 import ReactMarkdown from "react-markdown";
 import { formatDuration, intervalToDuration } from "date-fns";
@@ -481,6 +481,7 @@ const getArtistMBIDs = (listen: Listen): string[] | undefined => {
 };
 
 const getRecordingMSID = (listen: Listen): string =>
+  _.get(listen, "recording_msid") ??
   _.get(listen, "track_metadata.additional_info.recording_msid");
 
 const getRecordingMBID = (listen: Listen): string | undefined =>
@@ -643,23 +644,14 @@ const formatWSMessageToListen = (wsMsg: any): Listen | null => {
       }
     }
     // The websocket message received contains the recording_msid as a top level key.
-    // Therefore, we need to shift it json.track_metadata.additional_info.
-    if (!_.has(json, "track_metadata.additional_info.recording_msid")) {
-      if ("recording_msid" in json) {
-        _.merge(json, {
-          track_metadata: {
-            additional_info: { recording_msid: json.recording_msid },
-          },
-        });
-        delete json.recording_msid;
-      } else {
-        // eslint-disable-next-line no-console
-        console.debug(
-          "Could not find recording_msid in following json: ",
-          json
-        );
-        return null;
-      }
+    // Keep it at the top level; getRecordingMSID will find it there.
+    if (
+      !("recording_msid" in json) &&
+      !_.has(json, "track_metadata.additional_info.recording_msid")
+    ) {
+      // eslint-disable-next-line no-console
+      console.debug("Could not find recording_msid in following json: ", json);
+      return null;
     }
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -847,20 +839,28 @@ type GlobalAppProps = {
   flair?: Flair;
 };
 type GlobalProps = GlobalAppProps & SentryProps;
+export type ServerAlert = {
+  id: string;
+  level: TypeOptions;
+  message: string;
+};
 
 const getPageProps = async (): Promise<{
   domContainer: HTMLElement;
   reactProps: Record<string, any>;
   sentryProps: SentryProps;
   globalAppContext: GlobalAppContextT;
+  initialAlerts: ServerAlert[];
 }> => {
   let domContainer = document.getElementById("react-container");
   const propsElement = document.getElementById("page-react-props");
   const globalPropsElement = document.getElementById("global-react-props");
+  const initialAlertsElement = document.getElementById("initial-alerts-props");
   let reactProps = {};
   let globalReactProps = {} as GlobalProps;
   let sentryProps = {} as SentryProps;
   let globalAppContext = {} as GlobalAppContextT;
+  let initialAlerts: ServerAlert[] = [];
   if (!domContainer) {
     // Ensure there is a container for React rendering
     // We should always have on on the page already, but displaying errors to the user relies on there being one
@@ -879,6 +879,9 @@ const getPageProps = async (): Promise<{
     // Page props can be empty
     if (propsElement?.innerHTML) {
       reactProps = JSON.parse(propsElement!.innerHTML);
+    }
+    if (initialAlertsElement?.innerHTML) {
+      initialAlerts = JSON.parse(initialAlertsElement.innerHTML);
     }
 
     const {
@@ -972,6 +975,7 @@ const getPageProps = async (): Promise<{
     reactProps,
     sentryProps,
     globalAppContext,
+    initialAlerts,
   };
 };
 
@@ -980,11 +984,6 @@ const getListenablePin = (pinnedRecording: PinnedRecording): Listen => {
     listened_at: 0,
     ...pinnedRecording,
   };
-  _.set(
-    pinnedRecListen,
-    "track_metadata.additional_info.recording_msid",
-    pinnedRecording.recording_msid
-  );
   return pinnedRecListen;
 };
 
@@ -1245,10 +1244,11 @@ const getAlbumArtFromListenMetadataKey = (
     listen.track_metadata?.additional_info?.release_mbid;
   const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
   const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
+  const releaseGroupMbid = getReleaseGroupMBID(listen);
 
-  return `ca:${userSubmittedReleaseMBID ?? ""}:${caaId ?? ""}:${
-    caaReleaseMbid ?? ""
-  }`;
+  return `ca:${userSubmittedReleaseMBID ?? releaseGroupMbid ?? ""}:${
+    caaId ?? ""
+  }:${caaReleaseMbid ?? releaseGroupMbid ?? ""}`;
 };
 
 const getAlbumArtFromListenMetadata = async (
@@ -1282,6 +1282,8 @@ const getAlbumArtFromListenMetadata = async (
     listen.track_metadata?.additional_info?.release_group_mbid;
   const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
   const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
+  const mappingReleaseGroupMbid =
+    listen.track_metadata?.mbid_mapping?.release_group_mbid;
   if (userSubmittedReleaseMBID || userSubmittedReleaseGroupMBID) {
     // try getting the cover art using user submitted release mbid. if user submitted release mbid
     // does not have a cover art and the mapper matched to a different release, try to fallback to
@@ -1299,6 +1301,15 @@ const getAlbumArtFromListenMetadata = async (
   // user submitted release mbids not found, check if there is a match from mbid mapper.
   if (caaId && caaReleaseMbid) {
     return generateAlbumArtThumbnailLink(caaId, caaReleaseMbid);
+  }
+  // Fallback: use the release group MBID from the automatic mapping, if available
+  if (mappingReleaseGroupMbid) {
+    const releaseGroupAlbumArt = await getAlbumArtFromReleaseGroupMBID(
+      mappingReleaseGroupMbid
+    );
+    if (releaseGroupAlbumArt) {
+      return releaseGroupAlbumArt;
+    }
   }
   /* We are putting Youtube thumbnails as last resort fallback as the quality
   and format is usually not very good, user preferring proper cover art. */

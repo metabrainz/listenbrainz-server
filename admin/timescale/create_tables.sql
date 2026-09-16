@@ -110,6 +110,7 @@ CREATE TABLE mapping.mb_metadata_cache (
     artist_ids          INTEGER[] NOT NULL,
     release_mbid        UUID,
     release_id          INTEGER,
+    release_group_id    INTEGER,
     recording_data      JSONB NOT NULL,
     artist_data         JSONB NOT NULL,
     tag_data            JSONB NOT NULL,
@@ -135,6 +136,10 @@ CREATE TABLE mapping.mb_release_group_cache (
     recording_data          JSONB NOT NULL
 );
 
+ALTER TABLE mapping.mb_release_group_cache
+        ADD CONSTRAINT mb_release_group_cache_artist_mbids_check
+        CHECK ( array_ndims(artist_mbids) = 1 );
+
 CREATE TABLE mapping.mb_artist_metadata_cache (
     dirty                   BOOLEAN DEFAULT FALSE,
     last_updated            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -142,6 +147,76 @@ CREATE TABLE mapping.mb_artist_metadata_cache (
     artist_data             JSONB NOT NULL,
     tag_data                JSONB NOT NULL,
     release_group_data      JSONB NOT NULL
+);
+
+-- The following mapping tables are defined in listenbrainz/mbid_mapping/mapping and created in production
+-- there. These definitions are only for tests and local development. Remember to keep both in sync.
+CREATE TABLE mapping.canonical_musicbrainz_data (
+    id                  SERIAL,
+    artist_credit_id    INT NOT NULL,
+    artist_mbids        UUID[] NOT NULL,
+    artist_credit_name  TEXT NOT NULL,
+    release_mbid        UUID NOT NULL,
+    release_name        TEXT NOT NULL,
+    recording_mbid      UUID NOT NULL,
+    recording_name      TEXT NOT NULL,
+    combined_lookup     TEXT NOT NULL,
+    score               INTEGER NOT NULL
+);
+
+CREATE TABLE mapping.canonical_musicbrainz_data_release_support (
+    id                  SERIAL,
+    artist_credit_id    INT NOT NULL,
+    artist_mbids        UUID[] NOT NULL,
+    artist_credit_name  TEXT NOT NULL,
+    release_mbid        UUID NOT NULL,
+    release_name        TEXT NOT NULL,
+    recording_mbid      UUID NOT NULL,
+    recording_name      TEXT NOT NULL,
+    combined_lookup     TEXT NOT NULL,
+    score               INTEGER NOT NULL
+);
+
+CREATE TABLE mapping.canonical_recording_redirect (
+    id                          SERIAL,
+    recording_mbid              UUID NOT NULL,
+    canonical_recording_mbid    UUID NOT NULL,
+    canonical_release_mbid      UUID NOT NULL
+);
+
+CREATE TABLE mapping.canonical_release_redirect (
+    id                          SERIAL,
+    release_mbid                UUID NOT NULL,
+    canonical_release_mbid      UUID NOT NULL,
+    release_group_mbid          UUID NOT NULL
+);
+
+CREATE TABLE mapping.spotify_metadata_index (
+    id                              SERIAL,
+    artist_ids                      TEXT NOT NULL,
+    album_id                        TEXT NOT NULL,
+    track_id                        TEXT NOT NULL,
+    combined_lookup_all             TEXT NOT NULL,
+    combined_lookup_without_album   TEXT NOT NULL,
+    score                           INTEGER NOT NULL
+);
+
+CREATE TABLE mapping.apple_metadata_index (
+    id                              SERIAL,
+    artist_ids                      TEXT NOT NULL,
+    album_id                        TEXT NOT NULL,
+    track_id                        TEXT NOT NULL,
+    combined_lookup_all             TEXT NOT NULL,
+    combined_lookup_without_album   TEXT NOT NULL,
+    score                           INTEGER NOT NULL
+);
+
+CREATE TABLE mapping.soundcloud_metadata_index (
+    id                              SERIAL,
+    artist_id                       TEXT NOT NULL,
+    track_id                        TEXT NOT NULL,
+    combined_lookup_without_album   TEXT NOT NULL,
+    score                           INTEGER NOT NULL
 );
 
 -- the various mapping columns should only be null if the match_type is no_match, otherwise the columns should be

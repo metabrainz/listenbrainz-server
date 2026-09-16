@@ -37,7 +37,7 @@ def insert_user_missing_musicbrainz_data(db_conn, user_id: int,
         Args:
             db_conn: database connection
             user_id : row id of the user.
-            data : Data that is submitted to ListenBrainz by the users
+            missing_musicbrainz_data : Data that is submitted to ListenBrainz by the users
                    but is not submitted to MusicBrainz.
             source : Source of generation of missing MusicBrainz data.
     """

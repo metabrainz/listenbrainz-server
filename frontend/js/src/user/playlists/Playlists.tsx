@@ -345,101 +345,123 @@ export default class UserPlaylists extends React.Component<
                 <option value={SortOption.RANDOM}>Random</option>
               </select>
             </div>
+
             {this.isCurrentUserPage() && (
-              <div className="dropdown">
+              <div
+                className="d-flex align-items-center"
+                style={{ gap: "10px" }}
+              >
                 <button
-                  className="btn btn-info dropdown-toggle"
+                  className="btn btn-info"
                   type="button"
-                  id="ImportPlaylistDropdown"
-                  data-bs-toggle="dropdown"
-                  aria-haspopup="true"
+                  style={{ borderRadius: "5px" }}
+                  onClick={() => {
+                    NiceModal.show<JSPFPlaylist, any>(
+                      CreateOrEditPlaylistModal
+                    ).then((playlist) => {
+                      this.onPlaylistCreated(playlist);
+                    });
+                  }}
                 >
-                  <FontAwesomeIcon icon={faPlusCircle} title="Import" />
-                  &nbsp;Import&nbsp;
+                  <FontAwesomeIcon icon={faPlusCircle} />
+                  &nbsp;Create Playlist
                 </button>
-                <ul
-                  className="dropdown-menu dropdown-menu-right"
-                  aria-labelledby="ImportPlaylistDropdown"
-                >
+                <div className="dropdown">
                   <button
+                    className="btn btn-info dropdown-toggle"
                     type="button"
-                    onClick={() => {
-                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
-                        ImportSpotifyPlaylistModal
-                      ).then((playlist) => {
-                        if (Array.isArray(playlist)) {
-                          playlist.forEach((p: JSPFPlaylist) => {
-                            this.onPlaylistCreated(p);
-                          });
-                        } else {
-                          this.onPlaylistCreated(playlist);
-                        }
-                      });
-                    }}
-                    className="dropdown-item"
+                    id="ImportPlaylistDropdown"
+                    data-bs-toggle="dropdown"
+                    aria-haspopup="true"
                   >
-                    <FontAwesomeIcon icon={faSpotify} />
-                    &nbsp;Spotify
+                    <FontAwesomeIcon icon={faPlusCircle} title="Import" />
+                    &nbsp;Import&nbsp;
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
-                        ImportAppleMusicPlaylistModal
-                      ).then((playlist) => {
-                        if (Array.isArray(playlist)) {
-                          playlist.forEach((p: JSPFPlaylist) => {
-                            this.onPlaylistCreated(p);
-                          });
-                        } else {
-                          this.onPlaylistCreated(playlist);
-                        }
-                      });
-                    }}
-                    className="dropdown-item"
+                  <ul
+                    className="dropdown-menu dropdown-menu-right"
+                    aria-labelledby="ImportPlaylistDropdown"
                   >
-                    <FontAwesomeIcon icon={faItunesNote} />
-                    &nbsp;Apple Music
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      NiceModal.show<JSPFPlaylist[], any>(
-                        ImportSoundCloudPlaylistModal
-                      ).then((newPlaylists) => {
-                        newPlaylists.forEach(this.onPlaylistCreated);
-                      });
-                    }}
-                    className="dropdown-item"
-                  >
-                    <FontAwesomeIcon icon={faSoundcloud} />
-                    &nbsp;SoundCloud
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
-                        ImportPlaylistModal
-                      ).then((playlist) => {
-                        if (Array.isArray(playlist)) {
-                          playlist.forEach((p: JSPFPlaylist) => {
-                            this.onPlaylistCreated(p);
-                          });
-                        } else {
-                          this.onPlaylistCreated(playlist);
-                        }
-                      });
-                    }}
-                    className="dropdown-item"
-                  >
-                    <FontAwesomeIcon icon={faFileImport} />
-                    &nbsp;Upload JSPF file
-                  </button>
-                </ul>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                          ImportSpotifyPlaylistModal
+                        ).then((playlist) => {
+                          if (Array.isArray(playlist)) {
+                            playlist.forEach((p: JSPFPlaylist) => {
+                              this.onPlaylistCreated(p);
+                            });
+                          } else {
+                            this.onPlaylistCreated(playlist);
+                          }
+                        });
+                      }}
+                      className="dropdown-item"
+                    >
+                      <FontAwesomeIcon icon={faSpotify} />
+                      &nbsp;Spotify
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                          ImportAppleMusicPlaylistModal
+                        ).then((playlist) => {
+                          if (Array.isArray(playlist)) {
+                            playlist.forEach((p: JSPFPlaylist) => {
+                              this.onPlaylistCreated(p);
+                            });
+                          } else {
+                            this.onPlaylistCreated(playlist);
+                          }
+                        });
+                      }}
+                      className="dropdown-item"
+                    >
+                      <FontAwesomeIcon icon={faItunesNote} />
+                      &nbsp;Apple Music
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        NiceModal.show<JSPFPlaylist[], any>(
+                          ImportSoundCloudPlaylistModal
+                        ).then((newPlaylists) => {
+                          newPlaylists.forEach(this.onPlaylistCreated);
+                        });
+                      }}
+                      className="dropdown-item"
+                    >
+                      <FontAwesomeIcon icon={faSoundcloud} />
+                      &nbsp;SoundCloud
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                          ImportPlaylistModal
+                        ).then((playlist) => {
+                          if (Array.isArray(playlist)) {
+                            playlist.forEach((p: JSPFPlaylist) => {
+                              this.onPlaylistCreated(p);
+                            });
+                          } else {
+                            this.onPlaylistCreated(playlist);
+                          }
+                        });
+                      }}
+                      className="dropdown-item"
+                    >
+                      <FontAwesomeIcon icon={faFileImport} />
+                      &nbsp;Upload JSPF file
+                    </button>
+                  </ul>
+                </div>
               </div>
             )}
           </div>
         </div>
+
         <PlaylistsList
           onCopiedPlaylist={this.onCopiedPlaylist}
           playlists={playlists}

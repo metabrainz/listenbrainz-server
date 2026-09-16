@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Helmet } from "react-helmet";
 import { isRouteErrorResponse, Link, useRouteError } from "react-router";
+import * as Sentry from "@sentry/react";
 
 const ErrorStatusMessage: { [key: number]: string } = {
   400: "Invalid request",
@@ -24,6 +25,12 @@ export function ErrorBoundary() {
   const errorStatusMessage = ErrorStatusMessage[errorStatus] || "Error";
 
   const errorMessage = error.data?.error || error.message || errorStatusMessage;
+
+  React.useEffect(() => {
+    if (!isRouteErrorResponse(error) || errorStatus >= 500) {
+      Sentry.captureException(error);
+    }
+  }, [error]);
 
   return isRouteErrorResponse(error) ? (
     <>

@@ -8,7 +8,8 @@ class ListenbrainzLocalDumpLoader(ListenbrainzDumpLoader):
 
     def list_dump_directories(self, dump_type: DumpType):
         files = os.listdir('listenbrainz-export')
-        return list(filter(lambda x: x.startswith(f'listenbrainz-dump-'), files))
+        # database dumps share the dump directory naming but have no listens in them
+        return [x for x in files if x.startswith('listenbrainz-dump-') and not x.endswith('-db')]
 
     def load_listens(self, directory, listens_dump_id=None, dump_type: DumpType = DumpType.FULL) -> tuple[str, str, int]:
         dump_directories = self.list_dump_directories(dump_type)

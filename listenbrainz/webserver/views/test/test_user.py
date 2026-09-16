@@ -49,7 +49,7 @@ class UserViewsTestCase(IntegrationTestCase):
         my_listens_url = self.custom_url_for("redirect.index", path="")
         # Not logged in
         response = self.client.get(my_listens_url)
-        self.assertRedirects(response, self.custom_url_for("login.index", next=my_listens_url))
+        self.assertRedirects(response, self.custom_url_for("login.musicbrainz", next=my_listens_url))
 
     def test_user_redirects(self):
         response = self.client.get('/user/iliekcomputers/')
