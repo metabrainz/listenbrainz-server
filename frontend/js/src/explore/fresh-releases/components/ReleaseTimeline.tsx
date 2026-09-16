@@ -4,7 +4,6 @@ import { countBy, debounce, zipObject } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarCheck } from "@fortawesome/free-solid-svg-icons";
 import { startOfDay, format, closestTo, parseISO } from "date-fns";
-import { useMediaQuery } from "../utils";
 import { SortDirection, SortOption } from "../FreshReleases";
 
 type ReleaseTimelineProps = {
@@ -29,6 +28,11 @@ interface TimelineMark {
 }
 
 const HORIZONTAL_DATE_MARK_WIDTH_PX = 25;
+const HORIZONTAL_BREAKPOINT_PX = 992; // equivalent to the Bootstrap "lg" breakpoint
+const COMPACT_HORIZONTAL_RATIO = 0.45;
+const LANDSCAPE_HORIZONTAL_RATIO = 1.4;
+
+type TimelineOrientation = "horizontal" | "vertical";
 
 function getHorizontalDateMarkCapacity() {
   if (typeof window === "undefined") return 1;
@@ -36,6 +40,17 @@ function getHorizontalDateMarkCapacity() {
     1,
     Math.floor(window.innerWidth / HORIZONTAL_DATE_MARK_WIDTH_PX)
   );
+}
+
+function getTimelineOrientation(): TimelineOrientation {
+  if (typeof window === "undefined") return "vertical";
+  const { innerWidth, innerHeight } = window;
+  const viewportRatio = innerWidth / innerHeight;
+  return (innerWidth < HORIZONTAL_BREAKPOINT_PX &&
+    viewportRatio > COMPACT_HORIZONTAL_RATIO) ||
+    viewportRatio > LANDSCAPE_HORIZONTAL_RATIO
+    ? "horizontal"
+    : "vertical";
 }
 
 function isMonthNameDateMark(mark: TimelineMark) {
@@ -319,6 +334,9 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     horizontalDateMarkCapacity,
     setHorizontalDateMarkCapacity,
   ] = React.useState(getHorizontalDateMarkCapacity);
+  const [orientation, setOrientation] = React.useState<TimelineOrientation>(
+    getTimelineOrientation
+  );
   const trackRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -327,24 +345,9 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     }
   }, [isDragging, onDraggingChange]);
 
-  const screenMd = useMediaQuery("(max-width: 992px)");
-  const orientation = screenMd ? "horizontal" : "vertical";
   const isHorizontal = orientation === "horizontal";
 
-  const minGap = screenMd ? 2.5 : 1.5;
-
-  React.useEffect(() => {
-    if (!isHorizontal) return undefined;
-
-    const updateHorizontalDateMarkCapacity = () => {
-      setHorizontalDateMarkCapacity(getHorizontalDateMarkCapacity());
-    };
-
-    updateHorizontalDateMarkCapacity();
-    window.addEventListener("resize", updateHorizontalDateMarkCapacity);
-    return () =>
-      window.removeEventListener("resize", updateHorizontalDateMarkCapacity);
-  }, [isHorizontal]);
+  const minGap = isHorizontal ? 2.5 : 1.5;
 
   React.useEffect(() => {
     const rawMarks = createMarks(releases, direction, order);
@@ -365,12 +368,19 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   ]);
 
   React.useEffect(() => {
-    const updateThumbSize = () => {
+    const updateTimelineLayout = () => {
+      const nextOrientation = getTimelineOrientation();
+      setOrientation(nextOrientation);
+      const nextIsHorizontal = nextOrientation === "horizontal";
+      if (nextIsHorizontal) {
+        setHorizontalDateMarkCapacity(getHorizontalDateMarkCapacity());
+      }
+
       const container =
         releaseCardGridRef?.current ||
         document.getElementById("release-card-grids");
       if (!container || !trackRef.current) return;
-      const trackLength = screenMd
+      const trackLength = nextIsHorizontal
         ? trackRef.current.offsetWidth
         : trackRef.current.offsetHeight;
       const containerTop = getAbsoluteTop(container);
@@ -383,10 +393,15 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       const size = Math.max(20, ratio * trackLength);
       setThumbSize(size);
     };
-    updateThumbSize();
-    window.addEventListener("resize", updateThumbSize);
-    return () => window.removeEventListener("resize", updateThumbSize);
-  }, [releases, screenMd, releaseCardGridRef]);
+    const debouncedUpdateTimelineLayout = debounce(updateTimelineLayout, 100);
+
+    updateTimelineLayout();
+    window.addEventListener("resize", debouncedUpdateTimelineLayout);
+    return () => {
+      debouncedUpdateTimelineLayout.cancel();
+      window.removeEventListener("resize", debouncedUpdateTimelineLayout);
+    };
+  }, [releases, releaseCardGridRef]);
 
   React.useEffect(() => {
     if (isDragging) {
@@ -586,7 +601,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   };
 
   return (
-    <div className="releases-timeline">
+    <div className={`releases-timeline ${orientation}`}>
       <div
         ref={trackRef}
         role="slider"
