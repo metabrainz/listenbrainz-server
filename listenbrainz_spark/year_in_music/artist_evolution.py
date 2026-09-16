@@ -27,7 +27,7 @@ def _get_artist_evolution_query():
     return """
         WITH artist_listens AS (
             SELECT l.user_id
-                 , date_format(l.listened_at, 'MMMM') AS time_unit
+                 , month(l.listened_at) AS time_unit
                  , artist_element.artist_mbid AS artist_mbid
                  , artist_element.artist_credit_name AS artist_name
                  , COUNT(*) AS listen_count
@@ -35,7 +35,7 @@ def _get_artist_evolution_query():
               JOIN recording_artist ra ON l.recording_mbid = ra.recording_mbid
             LATERAL VIEW explode(ra.artists) AS artist_element
           GROUP BY l.user_id
-                 , date_format(l.listened_at, 'MMMM')
+                 , month(l.listened_at)
                  , artist_element.artist_mbid
                  , artist_element.artist_credit_name
         )
