@@ -11,6 +11,7 @@ from listenbrainz_spark.stats.incremental.user.entity import UserEntityStatsQuer
 from listenbrainz_spark.stats.incremental.user.recording import RecordingUserEntity
 from listenbrainz_spark.stats.incremental.user.release import ReleaseUserEntity
 from listenbrainz_spark.stats.incremental.user.release_group import ReleaseGroupUserEntity
+from listenbrainz_spark.stats.incremental.user.writer import WriterUserEntity
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ incremental_entity_map: Dict[str, Type[UserEntityStatsQueryProvider]] = {
     "releases": ReleaseUserEntity,
     "recordings": RecordingUserEntity,
     "release_groups": ReleaseGroupUserEntity,
+    "writers": WriterUserEntity,
 }
 
 NUMBER_OF_TOP_ENTITIES = 1000  # number of top entities to retain for user stats
