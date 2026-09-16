@@ -128,7 +128,7 @@ def init_listens_db(force, create_db, partitions):
     """
     import psycopg2
     from listenbrainz import config
-    from listenbrainz.listenstore.migrate_listens import PARTITION_COUNT, create_indexes, create_schema
+    from listenbrainz.db.listens_schema import PARTITION_COUNT, create_indexes, create_schema
 
     testing = "PYTHON_TESTS_RUNNING" in os.environ
     if testing:
