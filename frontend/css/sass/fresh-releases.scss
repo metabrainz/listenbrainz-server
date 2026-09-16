@@ -234,8 +234,8 @@
     width: 100%;
     position: fixed;
     bottom: 0;
-    top: calc(100vh - 100px);
-    padding: 1rem 2rem 4rem;
+    top: calc(100vh - 120px);
+    padding: 2.5rem 2rem 4rem;
     z-index: 50;
     background-color: $white;
     padding-right: 120px; // sidebar button on the right
@@ -363,7 +363,19 @@
         padding: 0;
         line-height: 1.2;
       }
+
+      &.full-date {
+        top: auto;
+        bottom: 0;
+        flex-direction: column-reverse;
+
+        .mark-label {
+          margin-top: 0;
+          margin-bottom: 4px;
+        }
+      }
     }
+
     &:hover {
       .tick-mark {
         background-color: color.adjust($asphalt, $lightness: -15%);
@@ -407,7 +419,7 @@
       height: 121px;
       border-radius: 50% 50% 50% 0;
       bottom: 75px;
-      transform: translateX(-50%) rotate(-135deg);
+      transform: translateX(-50%) rotate(-45deg);
     }
 
     .tooltip-day {
@@ -441,7 +453,7 @@
   padding: 0.3em 0;
   position: sticky;
   top: 0;
-  z-index: 90;
+  z-index: 50;
   background: $white;
   display: flex;
   align-items: center;

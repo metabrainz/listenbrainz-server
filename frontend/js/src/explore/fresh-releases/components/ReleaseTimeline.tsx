@@ -28,6 +28,20 @@ interface TimelineMark {
   groupKey?: string;
 }
 
+const HORIZONTAL_DATE_MARK_WIDTH_PX = 25;
+
+function getHorizontalDateMarkCapacity() {
+  if (typeof window === "undefined") return 1;
+  return Math.max(
+    1,
+    Math.floor(window.innerWidth / HORIZONTAL_DATE_MARK_WIDTH_PX)
+  );
+}
+
+function isMonthNameDateMark(mark: TimelineMark) {
+  return typeof mark.label === "string" && mark.label.includes(" ");
+}
+
 function calculateMapping(marks: TimelineMark[], minGap: number) {
   const marksByPercent = new Map<number, TimelineMark>();
   marks
@@ -247,6 +261,42 @@ function createMarks(
   }));
 }
 
+function filterHorizontalDateMarks(
+  marks: TimelineMark[],
+  isHorizontal: boolean,
+  order: SortOption,
+  maxVisibleDateMarks: number
+) {
+  if (
+    !isHorizontal ||
+    order !== "release_date" ||
+    marks.length <= maxVisibleDateMarks
+  ) {
+    return marks;
+  }
+
+  const dateMarks = marks.filter((mark) => !React.isValidElement(mark.label));
+  const visibleDateGroupKeys = new Set<string | undefined>();
+  const step = Math.ceil(dateMarks.length / maxVisibleDateMarks);
+
+  dateMarks.forEach((mark, index) => {
+    if (
+      index === 0 ||
+      index === dateMarks.length - 1 ||
+      index % step === 0 ||
+      isMonthNameDateMark(mark)
+    ) {
+      visibleDateGroupKeys.add(mark.groupKey);
+    }
+  });
+
+  return marks.filter(
+    (mark) =>
+      React.isValidElement(mark.label) ||
+      visibleDateGroupKeys.has(mark.groupKey)
+  );
+}
+
 /** Returns the element's stable page-level Y position (scroll-invariant). */
 function getAbsoluteTop(el: HTMLElement): number {
   return el.getBoundingClientRect().top + window.scrollY;
@@ -265,6 +315,10 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const [currentValue, setCurrentValue] = React.useState<number>(0);
   const [mappedMarks, setMappedMarks] = React.useState<MappedMark[]>([]);
   const [isDragging, setIsDragging] = React.useState(false);
+  const [
+    horizontalDateMarkCapacity,
+    setHorizontalDateMarkCapacity,
+  ] = React.useState(getHorizontalDateMarkCapacity);
   const trackRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -280,9 +334,35 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const minGap = screenMd ? 2.5 : 1.5;
 
   React.useEffect(() => {
+    if (!isHorizontal) return undefined;
+
+    const updateHorizontalDateMarkCapacity = () => {
+      setHorizontalDateMarkCapacity(getHorizontalDateMarkCapacity());
+    };
+
+    updateHorizontalDateMarkCapacity();
+    window.addEventListener("resize", updateHorizontalDateMarkCapacity);
+    return () =>
+      window.removeEventListener("resize", updateHorizontalDateMarkCapacity);
+  }, [isHorizontal]);
+
+  React.useEffect(() => {
     const rawMarks = createMarks(releases, direction, order);
-    setMappedMarks(calculateMapping(rawMarks, minGap));
-  }, [releases, direction, order, minGap]);
+    const visibleMarks = filterHorizontalDateMarks(
+      rawMarks,
+      isHorizontal,
+      order,
+      horizontalDateMarkCapacity
+    );
+    setMappedMarks(calculateMapping(visibleMarks, minGap));
+  }, [
+    releases,
+    direction,
+    order,
+    isHorizontal,
+    horizontalDateMarkCapacity,
+    minGap,
+  ]);
 
   React.useEffect(() => {
     const updateThumbSize = () => {
@@ -496,6 +576,14 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
 
   const tooltipData = getTooltipData();
   const visualPercent = mapLinearToVisual(currentValue, mappedMarks);
+  const isProminentHorizontalMark = (mark: MappedMark) =>
+    isHorizontal &&
+    (React.isValidElement(mark.label) || isMonthNameDateMark(mark));
+  const getMarkClassName = (mark: MappedMark) => {
+    return `timeline-mark ${orientation}${
+      isProminentHorizontalMark(mark) ? " full-date" : ""
+    }`;
+  };
 
   return (
     <div className="releases-timeline">
@@ -534,7 +622,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
           mark.label ? (
             <div
               key={`${mark.percent}-${mark.groupKey ?? ""}`}
-              className={`timeline-mark ${orientation}`}
+              className={getMarkClassName(mark)}
               role="presentation"
               data-testid="timeline-mark"
               style={{
@@ -544,7 +632,13 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
               onTouchStart={(event) => onMarkStart(event, mark)}
             >
               <div className="tick-mark" />
-              <span className="mark-label">{mark.label}</span>
+              <span
+                className={`mark-label${
+                  isProminentHorizontalMark(mark) ? " full-date" : ""
+                }`}
+              >
+                {mark.label}
+              </span>
             </div>
           ) : null
         )}
