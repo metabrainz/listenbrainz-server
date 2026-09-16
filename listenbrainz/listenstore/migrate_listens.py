@@ -25,6 +25,7 @@ import os
 import re
 import time
 from datetime import datetime, timedelta, timezone
+from collections import defaultdict
 
 import click
 import psycopg2
@@ -45,8 +46,6 @@ DEFAULT_BATCH_SIZE = 10000
 DEFAULT_WINDOW = timedelta(days=30)
 # number of ids subtracted from the logged delete checkpoints, see the module docstring
 DELETE_ID_OVERLAP = 1000
-# comparing a range that has not been copied yet mismatches on every user, cap the per-window detail
-MAX_LOGGED_DISCREPANCIES_PER_WINDOW = 20
 UNIQUE_INDEX_NAME = "user_id_listened_at_recording_msid_ndx_listen"
 
 CREATE_PARTITION_SQL = """
@@ -105,21 +104,18 @@ TARGET_INTEGRITY_SQL = """
            ) listens_by_key
 """
 
-# Keep listened_at as a simple range predicate so TimescaleDB can exclude chunks. The created
-# predicate makes the compared data immutable with respect to new writes, while ordering the
-# already-aggregated rows lets the caller compare both databases without retaining every user's
-# count in memory. Aggregating one window at a time keeps each query and its sort bounded, asking
-# either database for a single aggregate over the whole listen range would stall it. The target has
-# no index covering listened_at (see admin/listens/create_indexes.sql), so each window costs a scan
-# of it: compare a range no wider than the migration actually needs verified.
-LISTEN_COUNTS_BY_USER_SQL = """
-    SELECT user_id, count(*)::bigint AS listen_count
+# Yearly ranges let TimescaleDB exclude chunks; Gizzard needs only one full-table aggregate.
+TIMESCALE_COUNTS_BY_USER_SQL = """
+    SELECT user_id, count(*) AS listen_count
       FROM listen
      WHERE listened_at >= %s
        AND listened_at < %s
-       AND created < %s
   GROUP BY user_id
-  ORDER BY user_id
+"""
+GIZZARD_COUNTS_BY_USER_SQL = """
+    SELECT user_id, count(*) AS listen_count
+      FROM listen
+  GROUP BY user_id
 """
 
 
@@ -411,150 +407,85 @@ def check_integrity():
     )
 
 
-def _merge_user_counts(source_rows, target_rows):
-    """Yield (user_id, source_count, target_count) for the union of two user count streams.
-
-    Both inputs must be ordered by user_id. A user missing from one side is assigned a count of
-    zero so that listens existing in only one database are also reported.
-    """
-    source_iter = iter(source_rows)
-    target_iter = iter(target_rows)
-    source_row = next(source_iter, None)
-    target_row = next(target_iter, None)
-
-    while source_row is not None or target_row is not None:
-        if target_row is None or (source_row is not None and source_row[0] < target_row[0]):
-            yield source_row[0], source_row[1], 0
-            source_row = next(source_iter, None)
-        elif source_row is None or target_row[0] < source_row[0]:
-            yield target_row[0], 0, target_row[1]
-            target_row = next(target_iter, None)
-        else:
-            yield source_row[0], source_row[1], target_row[1]
-            source_row = next(source_iter, None)
-            target_row = next(target_iter, None)
-
-
-def _iter_window_user_counts(source_conn, target_conn, start, end, created_before, batch_size, window_number):
-    """Stream merged per-user counts for one listened_at window from both databases."""
-    params = (start, end, created_before)
-    try:
-        with source_conn.cursor(name=f"compare_listen_counts_source_{window_number}") as source_cur, \
-                target_conn.cursor(name=f"compare_listen_counts_target_{window_number}") as target_cur:
-            source_cur.itersize = batch_size
-            target_cur.itersize = batch_size
-            source_cur.execute(LISTEN_COUNTS_BY_USER_SQL, params)
-            target_cur.execute(LISTEN_COUNTS_BY_USER_SQL, params)
-            yield from _merge_user_counts(source_cur, target_cur)
-    finally:
-        # Named cursors hold a transaction open. End both snapshots after each window instead of
-        # retaining long-running transactions for the duration of the full comparison.
-        source_conn.rollback()
-        target_conn.rollback()
-
-
-def _comparison_range(source_conn, start, end):
-    """ Resolve the listened_at range to compare, defaulting to the entire range of the source. """
-    min_ts, max_ts = _fetch_one(source_conn, "SELECT min(listened_at), max(listened_at) FROM listen")
-    if min_ts is None:
-        raise click.ClickException("no listens found in the source, there is nothing to compare")
-    start = start or min_ts
-    end = end or (max_ts + timedelta(seconds=1))
-    if start >= end:
-        raise click.UsageError("--start must be earlier than --end")
-    if start > min_ts or end <= max_ts:
-        # a range narrower than the source silently leaves listens (and any spurious target rows)
-        # outside it unchecked, say so instead of reporting a pass over part of the data
-        current_app.logger.warning(
-            "the compared range [%s, %s) does not cover every listen in the source ([%s, %s]), "
-            "listens outside it are not compared in either database",
-            start.isoformat(), end.isoformat(), min_ts.isoformat(), max_ts.isoformat()
-        )
-    return start, end
-
-
-def compare_listen_counts(start, end, window, created_before, batch_size):
-    """Compare per-user listen counts in TimescaleDB and the partitioned listens database."""
-    if window <= timedelta(0):
-        raise click.UsageError("comparison window must be greater than zero")
-
+def compare_listen_counts(batch_size):
+    """Sum yearly TimescaleDB counts per user and compare with one Gizzard aggregate."""
     logger = current_app.logger
+    overall_t0 = time.monotonic()
+    logger.info("connecting to TimescaleDB")
     source_conn = connect_source()
-    target_conn = connect_target()
+    target_conn = None
     try:
+        logger.info("connecting to Gizzard")
+        target_conn = connect_target()
         source_conn.set_session(readonly=True)
         target_conn.set_session(readonly=True)
-        start, end = _comparison_range(source_conn, start, end)
+        source_counts = defaultdict(int)
+        logger.info("querying TimescaleDB listened_at bounds")
+        t0 = time.monotonic()
+        min_ts, max_ts = _fetch_one(source_conn, "SELECT min(listened_at), max(listened_at) FROM listen")
+        logger.info("TimescaleDB listened_at bounds: min=%s, max=%s (%.1fs)",
+                    min_ts, max_ts, time.monotonic() - t0)
+        if min_ts is not None:
+            first_year = min_ts.astimezone(timezone.utc).year
+            last_year = max_ts.astimezone(timezone.utc).year
+            for year in range(first_year, last_year + 1):
+                start = datetime(year, 1, 1, tzinfo=timezone.utc)
+                end = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+                logger.info("querying TimescaleDB per-user counts for %d [%s, %s)",
+                            year, start.isoformat(), end.isoformat())
+                t0 = time.monotonic()
+                year_users = year_listens = 0
+                with source_conn.cursor(name=f"compare_listen_counts_{year}") as cursor:
+                    cursor.itersize = batch_size
+                    cursor.execute(TIMESCALE_COUNTS_BY_USER_SQL, (start, end))
+                    for user_id, count in cursor:
+                        source_counts[user_id] += count
+                        year_users += 1
+                        year_listens += count
+                source_conn.rollback()
+                logger.info("counted TimescaleDB listens for %d: %d users, %d listens (%.1fs)",
+                            year, year_users, year_listens, time.monotonic() - t0)
 
-        total_users = total_source_listens = total_target_listens = 0
-        total_discrepancies = windows_checked = 0
-        window_start = start
-        overall_t0 = time.monotonic()
+        total_source = sum(source_counts.values())
+        logger.info("summed TimescaleDB yearly counts: %d users, %d listens (%.1fs elapsed)",
+                    len(source_counts), total_source, time.monotonic() - overall_t0)
+        total_target = discrepancies = 0
 
-        while window_start < end:
-            window_end = min(window_start + window, end)
-            window_users = window_source_listens = window_target_listens = 0
-            window_discrepancies = 0
-            t0 = time.monotonic()
+        def compare(user_id, source_count, target_count):
+            if source_count == target_count:
+                return 0
+            logger.error("listen count mismatch: user_id=%d, timescale=%d, gizzard=%d, delta=%+d",
+                         user_id, source_count, target_count, target_count - source_count)
+            return 1
 
-            for user_id, source_count, target_count in _iter_window_user_counts(
-                    source_conn, target_conn, window_start, window_end, created_before,
-                    batch_size, windows_checked):
-                window_users += 1
-                window_source_listens += source_count
-                window_target_listens += target_count
-                if source_count != target_count:
-                    window_discrepancies += 1
-                    # comparing a window that has not been copied yet mismatches on every user in
-                    # it, log the first few and leave the rest to the counts below
-                    if window_discrepancies <= MAX_LOGGED_DISCREPANCIES_PER_WINDOW:
-                        logger.error(
-                            "listen count mismatch: window [%s, %s), user_id=%d, "
-                            "timescale=%d, listens=%d, delta=%+d",
-                            window_start.isoformat(), window_end.isoformat(), user_id,
-                            source_count, target_count, target_count - source_count,
-                        )
-                    elif window_discrepancies == MAX_LOGGED_DISCREPANCIES_PER_WINDOW + 1:
-                        logger.error("more than %d users mismatch in window [%s, %s), logging only "
-                                     "the count for the rest of it", MAX_LOGGED_DISCREPANCIES_PER_WINDOW,
-                                     window_start.isoformat(), window_end.isoformat())
+        logger.info("querying Gizzard per-user counts across all listens and comparing with TimescaleDB")
+        t0 = time.monotonic()
+        target_users = 0
+        with target_conn.cursor(name="compare_listen_counts_gizzard") as cursor:
+            cursor.itersize = batch_size
+            cursor.execute(GIZZARD_COUNTS_BY_USER_SQL)
+            for user_id, target_count in cursor:
+                target_users += 1
+                total_target += target_count
+                discrepancies += compare(user_id, source_counts.pop(user_id, 0), target_count)
+                if target_users % batch_size == 0:
+                    logger.info("compared %d Gizzard users, %d listens, %d discrepancies (%.1fs)",
+                                target_users, total_target, discrepancies, time.monotonic() - t0)
+        target_conn.rollback()
+        logger.info("finished Gizzard counts and comparison: %d users, %d listens (%.1fs)",
+                    target_users, total_target, time.monotonic() - t0)
+        logger.info("checking %d users present only in TimescaleDB", len(source_counts))
+        for user_id, source_count in source_counts.items():
+            discrepancies += compare(user_id, source_count, 0)
 
-            windows_checked += 1
-            total_users += window_users
-            total_source_listens += window_source_listens
-            total_target_listens += window_target_listens
-            total_discrepancies += window_discrepancies
-            logger.info(
-                "checked window [%s, %s) at created < %s: %d users, "
-                "%d TimescaleDB listens, %d listens DB listens, %d discrepancies (%.1fs)",
-                window_start.isoformat(), window_end.isoformat(), created_before.isoformat(),
-                window_users, window_source_listens, window_target_listens,
-                window_discrepancies, time.monotonic() - t0,
-            )
-            window_start = window_end
-
-        if not total_users:
-            raise click.ClickException(
-                f"listen count comparison compared nothing: no listens in "
-                f"[{start.isoformat()}, {end.isoformat()}) with created < {created_before.isoformat()} "
-                f"in either database, check --start / --end / --created-before"
-            )
-        if total_discrepancies:
-            raise click.ClickException(
-                f"listen count comparison failed: {total_discrepancies} user-window discrepancies "
-                f"across {windows_checked} windows (TimescaleDB={total_source_listens}, "
-                f"listens DB={total_target_listens})"
-            )
-
-        logger.info(
-            "listen count comparison passed: %d user-window counts and %d listens matched "
-            "across %d windows in [%s, %s) in %.1fs (created < %s)",
-            total_users, total_source_listens, windows_checked, start.isoformat(), end.isoformat(),
-            time.monotonic() - overall_t0, created_before.isoformat(),
-        )
+        logger.info("listen count comparison: TimescaleDB=%d, Gizzard=%d, %d discrepancies (%.1fs total)",
+                    total_source, total_target, discrepancies, time.monotonic() - overall_t0)
+        if discrepancies:
+            raise click.ClickException(f"listen count comparison failed: {discrepancies} user discrepancies")
     finally:
         source_conn.close()
-        target_conn.close()
+        if target_conn is not None:
+            target_conn.close()
 
 
 batch_size_option = click.option("--batch-size", type=click.IntRange(min=1), default=DEFAULT_BATCH_SIZE,
@@ -609,33 +540,14 @@ def check_integrity_command():
 
 @cli.command(name="compare-counts")
 @batch_size_option
-@click.option("--start", default=None,
-              help="compare listens with listened_at >= this timestamp (ISO 8601), defaults to the oldest listen")
-@click.option("--end", default=None,
-              help="compare listens with listened_at < this timestamp (ISO 8601), defaults to just past the newest listen")
-@click.option("--created-before", required=True,
-              help="compare only rows with created < this fixed timestamp (ISO 8601)")
-@click.option("--window-days", type=click.IntRange(min=1), default=DEFAULT_WINDOW.days, show_default=True,
-              help="size of each listened_at window; 30 days aligns with the TimescaleDB chunk interval")
-def compare_counts_command(batch_size, start, end, created_before, window_days):
-    """Compare windowed per-user counts between TimescaleDB and the listens database.
+def compare_counts_command(batch_size):
+    """Compare all per-user listen counts in TimescaleDB and Gizzard.
 
-    CREATED_BEFORE must be a stable cutoff before active writes: it hides rows inserted after it
-    from both databases, but nothing hides a delete, so let the delete cron drain and replay its
-    deletes first. A delete landing while the comparison runs is reported as a mismatch.
-
-    --start / --end default to the full listened_at range of the source; narrowing them leaves
-    every listen outside the range unchecked in both databases.
-
-    A mismatch is logged with its user ID and listened_at window (at most 20 users per window) and
-    makes the command exit unsuccessfully after the whole range has been checked. Comparing no
-    listens at all is a failure too, not a pass.
+    Sum TimescaleDB counts across calendar years, then count Gizzard once.
+    Print every differing user ID and both totals; exit unsuccessfully on mismatches.
     """
     with create_app().app_context():
-        compare_listen_counts(
-            _parse_ts(start), _parse_ts(end), timedelta(days=window_days),
-            _parse_ts(created_before), batch_size,
-        )
+        compare_listen_counts(batch_size)
 
 
 @cli.command(name="full")
