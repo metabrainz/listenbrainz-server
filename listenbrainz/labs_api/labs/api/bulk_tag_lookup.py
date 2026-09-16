@@ -6,13 +6,13 @@ from werkzeug.exceptions import BadRequest
 import psycopg2
 import psycopg2.extras
 
-from datasethoster import Query
+from datasethoster import Query, RequestSource
 
 from listenbrainz.db import timescale
 
 
 class BulkTagLookupInput(BaseModel):
-    recording_mbid: str
+    recording_mbid: UUID
 
 
 class BulkTagLookupOutput(BaseModel):
@@ -40,15 +40,15 @@ class BulkTagLookup(Query):
     def outputs(self):
         return BulkTagLookupOutput
 
-    def fetch(self, params, source, offset=-1, count=-1):
+    def fetch(
+        self,
+        params: list[BulkTagLookupInput],
+        source: RequestSource,
+        offset: int = -1,
+        count: int = -1,
+    ) -> list[BulkTagLookupOutput]:
 
-        mbids = []
-        for p in params:
-            for mbid in p.recording_mbid.split(","):
-                mbid = mbid.strip()
-                if mbid:
-                    mbids.append(mbid)
-
+        mbids = tuple(p.recording_mbid for p in params)
         if len(mbids) > 1000:
             raise BadRequest("Cannot lookup more than 1,000 recordings at a time.")
 
