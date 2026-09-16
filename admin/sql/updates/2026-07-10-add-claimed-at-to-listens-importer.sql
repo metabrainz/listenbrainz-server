@@ -1,0 +1,5 @@
+BEGIN;
+
+ALTER TABLE listens_importer ADD COLUMN claimed_at TIMESTAMPTZ;
+
+COMMIT;
