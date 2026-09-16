@@ -47,3 +47,36 @@ def load_artists_from_mbids_with_redirects(mb_curs, mbids: Iterable[str]) -> lis
         output.append(item)
 
     return output
+
+
+def get_appears_on_release_groups(mb_curs, artist_mbid: str):
+    """
+    Find release groups where the artist appears on a track but is NOT the primary album artist.
+    """
+    query = """
+        SELECT DISTINCT
+            rg.gid::text as mbid,
+            rg.name,
+            rt.name as type,
+            rg_meta.first_release_date_year as year,
+            'Various Artists' as artist_credit_name
+        FROM musicbrainz.artist a
+        JOIN musicbrainz.artist_credit_name acn ON acn.artist = a.id
+        JOIN musicbrainz.track t ON t.artist_credit = acn.artist_credit
+        JOIN musicbrainz.release r ON t.release = r.id
+        JOIN musicbrainz.release_group rg ON r.release_group = rg.id
+        LEFT JOIN musicbrainz.release_group_primary_type rt ON rg.type = rt.id
+        LEFT JOIN musicbrainz.release_group_meta rg_meta ON rg.id = rg_meta.id
+        WHERE a.gid = %s
+        AND NOT EXISTS (
+            SELECT 1
+            FROM musicbrainz.artist_credit_name acn_rg
+            WHERE acn_rg.artist_credit = rg.artist_credit
+            AND acn_rg.artist = a.id
+        )
+        AND (rt.name IS NULL OR rt.name != 'Audiobook')
+        ORDER BY rg_meta.first_release_date_year DESC NULLS LAST
+        LIMIT 50
+    """
+    mb_curs.execute(query, (artist_mbid,))
+    return mb_curs.fetchall()
