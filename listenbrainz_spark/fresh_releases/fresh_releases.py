@@ -18,7 +18,7 @@ FRESH_RELEASES_ENDPOINT = "https://api.listenbrainz.org/1/explore/fresh-releases
 
 
 def load_all_releases():
-    response = requests.get(FRESH_RELEASES_ENDPOINT)
+    response = requests.get(FRESH_RELEASES_ENDPOINT, timeout=10)
     data = response.json()
 
     releases = []

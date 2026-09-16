@@ -550,7 +550,8 @@ def validate_auth_header(*, optional: bool = False, fetch_email: bool = False, s
                     "client_secret": current_app.config["OAUTH_CLIENT_SECRET"],
                     "token": auth_token,
                     "token_type_hint": "access_token",
-                }
+                },
+                timeout=10,
             )
             token = response.json()
         except requests.exceptions.RequestException:
