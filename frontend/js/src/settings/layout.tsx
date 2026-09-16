@@ -31,6 +31,7 @@ const sections: Section[] = [
       { to: "troi/", label: "Playlist preferences" },
       { to: "export/", label: "Export data" },
       { to: "delete-listens/", label: "Delete listens" },
+      { to: "submission-filters/", label: "Submission filters" },
       { to: "delete/", label: "Delete account" },
     ],
   },

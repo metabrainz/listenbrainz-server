@@ -161,3 +161,56 @@ def update_brainzplayer_prefs():
 
     db_usersetting.update_brainzplayer_prefs(db_conn, user["id"], orjson.dumps(new_preferences).decode())
     return jsonify({"status": "ok"})
+
+
+submission_filters_schema = {
+    "type": "object"
+}
+
+@user_settings_api_bp.get('/submission-filters')
+@crossdomain
+@ratelimit()
+def get_submission_filters():
+    """
+    Get submission filters for the user. A user token
+    must be provided in the Authorization header!
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: Returns submission filters
+    :statuscode 401: invalid authorization.
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+    filters = db_usersetting.get_submission_filters(db_conn, user["id"])
+    if filters and filters.get("submission_filters") is not None:
+        return jsonify(filters["submission_filters"])
+    return jsonify({})
+
+
+@user_settings_api_bp.post('/submission-filters')
+@crossdomain
+@ratelimit()
+def update_submission_filters():
+    """
+    Update submission filters for the user. A user token
+    must be provided in the Authorization header!
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: submission filters updated.
+    :statuscode 400: Bad request.
+    :statuscode 401: invalid authorization.
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+    try:
+        new_filters = orjson.loads(request.get_data())
+    except (ValueError, KeyError) as e:
+        raise APIBadRequest(f"Invalid JSON: {str(e)}")
+        
+    try:
+        validate(instance=new_filters, schema=submission_filters_schema)
+    except exceptions.ValidationError as err:
+        raise APIBadRequest(f"Invalid filter format: {err.message}")
+
+    db_usersetting.update_submission_filters(db_conn, user["id"], orjson.dumps(new_filters).decode())
+    return jsonify({"status": "ok"})
