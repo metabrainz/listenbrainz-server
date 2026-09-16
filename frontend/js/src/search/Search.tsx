@@ -10,12 +10,15 @@ import TrackSearch from "./TrackSearch";
 import UserSearch from "./UserSearch";
 import AlbumSearch from "./AlbumSearch";
 import PlaylistSearch from "./PlaylistSearch";
+import GenreSearch from "./GenreSearch";
 
 const invalidSearchTypes = (searchType?: string) => {
   if (!searchType) {
     return true;
   }
-  return !["artist", "album", "track", "playlist", "user"].includes(searchType);
+  return !["artist", "album", "track", "playlist", "user", "genre"].includes(
+    searchType
+  );
 };
 
 export default function Search() {
@@ -152,6 +155,16 @@ export default function Search() {
           >
             Users
           </Pill>
+          <Pill
+            id="search-type-genre"
+            onClick={() => {
+              setSearchType("genre");
+            }}
+            active={searchType === "genre"}
+            type="secondary"
+          >
+            Genres
+          </Pill>
         </div>
 
         {!searchTermValid && (
@@ -174,6 +187,9 @@ export default function Search() {
         )}
         {searchType === "playlist" && searchTermValid && (
           <PlaylistSearch searchQuery={searchTerm} />
+        )}
+        {searchType === "genre" && searchTermValid && (
+          <GenreSearch searchQuery={searchTerm} />
         )}
       </div>
     </>
