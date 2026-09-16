@@ -1,5 +1,5 @@
--- Listens are hash-partitioned by user_id. Partitions are created by `manage.py migrate_listens
--- create-schema`, indexes by `manage.py migrate_listens create-indexes` (see create_indexes.sql).
+-- Listens are hash-partitioned by user_id. The table, partitions and indexes are created
+-- by `manage.py init_listens_db` (see also create_indexes.sql).
 BEGIN;
 
 CREATE TABLE listen (
