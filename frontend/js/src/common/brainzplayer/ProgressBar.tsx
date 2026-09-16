@@ -253,7 +253,9 @@ function ProgressBar(props: ProgressBarProps) {
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuenow={durationMs > 0 ? Math.round((progressMs * 100) / durationMs) : 0}
+        aria-valuenow={
+          durationMs > 0 ? Math.round((progressMs * 100) / durationMs) : 0
+        }
         tabIndex={0}
         data-tip={tipContent}
         ref={progressBarRef}
