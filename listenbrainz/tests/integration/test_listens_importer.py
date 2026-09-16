@@ -455,7 +455,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["track_name"], "Monsters (feat. Demi Lovato and blackbear)")
         self.assertEqual(track_metadata["release_name"], "Monsters (feat. Demi Lovato and blackbear)")
         additional_info = track_metadata["additional_info"]
-        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(additional_info["submission_client"], "Spotify Extended Streaming History Importer")
         self.assertEqual(additional_info["origin_url"], "https://open.spotify.com/track/50DMJJpAeQv4fIpxZvQz2e")
         self.assertEqual(additional_info["music_service"], "spotify.com")
         self.assertEqual(additional_info["spotify_album_id"], "https://open.spotify.com/album/1EGlv1JGCUPolWU4qv7bsK")
@@ -574,7 +574,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["track_name"], "Wonderwall")
         self.assertEqual(track_metadata["release_name"], "(What's the Story) Morning Glory?")
         additional_info = track_metadata["additional_info"]
-        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(additional_info["submission_client"], "Libre.fm Archive Importer")
 
         self.assertEqual(listens[1]["listened_at"], 1690348225)
         track_metadata = listens[1]["track_metadata"]
@@ -582,7 +582,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["track_name"], "Altered State")
         self.assertNotIn("release_name", track_metadata)
         additional_info = track_metadata["additional_info"]
-        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(additional_info["submission_client"], "Libre.fm Archive Importer")
 
         self.assertEqual(listens[2]["listened_at"], 1690347960)
         track_metadata = listens[2]["track_metadata"]
@@ -590,7 +590,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["track_name"], "New Ice Age")
         self.assertEqual(track_metadata["release_name"], "Primary Colours")
         additional_info = track_metadata["additional_info"]
-        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(additional_info["submission_client"], "Libre.fm Archive Importer")
 
         response = self.client.get(
             self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
@@ -628,7 +628,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["artist_name"], "Rick Astley")
         self.assertEqual(track_metadata["track_name"], "Never Gonna Give You Up")
         self.assertNotIn("release_name", track_metadata)
-        self.assertEqual(track_metadata["additional_info"]["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(track_metadata["additional_info"]["submission_client"], "Libre.fm Archive Importer")
 
         second_listen = listens[1]
         self.assertEqual(second_listen["listened_at"], 1609459200)
@@ -636,7 +636,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["artist_name"], "Nina Simone")
         self.assertEqual(track_metadata["track_name"], "Feeling Good")
         self.assertNotIn("release_name", track_metadata)
-        self.assertEqual(track_metadata["additional_info"]["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(track_metadata["additional_info"]["submission_client"], "Libre.fm Archive Importer")
 
         response = self.client.get(
             self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
@@ -675,7 +675,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["track_name"], "Altered State")
         self.assertNotIn("release_name", track_metadata)
         additional_info = track_metadata["additional_info"]
-        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(additional_info["submission_client"], "Libre.fm Archive Importer")
 
         second_listen = listens[1]
         self.assertEqual(second_listen["listened_at"], 1690347960)
@@ -684,7 +684,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["track_name"], "New Ice Age")
         self.assertEqual(track_metadata["release_name"], "Primary Colours")
         additional_info = track_metadata["additional_info"]
-        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(additional_info["submission_client"], "Libre.fm Archive Importer")
 
         response = self.client.get(
             self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
@@ -721,7 +721,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["track_name"], "Old Friend; The Sea")
         self.assertEqual(track_metadata["release_name"], "Sierra Tracks")
         additional_info = track_metadata["additional_info"]
-        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(additional_info["submission_client"], "Libre.fm Archive Importer")
 
         second_listen = listens[1]
         self.assertEqual(second_listen["listened_at"], 1690348225)
@@ -730,7 +730,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["track_name"], "Altered State")
         self.assertNotIn("release_name", track_metadata)
         additional_info = track_metadata["additional_info"]
-        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(additional_info["submission_client"], "Libre.fm Archive Importer")
 
         third_listen = listens[2]
         self.assertEqual(third_listen["listened_at"], 1690347960)
@@ -739,7 +739,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["track_name"], "New Ice Age")
         self.assertEqual(track_metadata["release_name"], "Primary Colours")
         additional_info = track_metadata["additional_info"]
-        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(additional_info["submission_client"], "Libre.fm Archive Importer")
     
         response = self.client.get(
             self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
@@ -805,7 +805,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["track_name"], "Old Friend; The Sea")
         self.assertEqual(track_metadata["release_name"], "Sierra Tracks")
         additional_info = track_metadata["additional_info"]
-        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(additional_info["submission_client"], "Libre.fm Archive Importer")
 
         second_listen = listens[1]
         self.assertEqual(second_listen["listened_at"], 1690348225)
@@ -814,7 +814,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["track_name"], "Altered State")
         self.assertNotIn("release_name", track_metadata)
         additional_info = track_metadata["additional_info"]
-        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(additional_info["submission_client"], "Libre.fm Archive Importer")
 
         third_listen = listens[2]
         self.assertEqual(third_listen["listened_at"], 1690347960)
@@ -823,7 +823,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["track_name"], "New Ice Age")
         self.assertEqual(track_metadata["release_name"], "Primary Colours")
         additional_info = track_metadata["additional_info"]
-        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(additional_info["submission_client"], "Libre.fm Archive Importer")
 
         response = self.client.get(
             self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
