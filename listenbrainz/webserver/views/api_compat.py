@@ -90,19 +90,20 @@ def api_methods():
 
 
 def session_info(data):
+    output_format = data.get('format', 'xml')
     try:
         sk = data['sk']
         api_key = data['api_key']
-        output_format = data.get('format', 'xml')
         username = data['username']
     except KeyError:
         raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)        # Missing Required Params
 
     session = Session.load(db_conn, sk)
-    if (not session) or User.load_by_name(db_conn, username).id != session.user.id:
+    user = User.load_by_name(db_conn, username)
+    if not session or not user or user.id != session.user.id:
         raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)       # Invalid Session KEY
 
-    print("SESSION INFO for session %s, user %s" % (session.id, session.user.name))
+    current_app.logger.debug("SESSION INFO for session %s, user %s", session.id, session.user.name)
 
     doc, tag, text = Doc().tagtext()
     with tag('lfm', status='ok'):
@@ -247,7 +248,7 @@ def record_listens(data):
     for key, value in data.items():
         if key in ["sk", "token", "api_key", "method", "api_sig", "format"]:
             continue
-        matches = re.match('(.*)\[(\d+)\]', key)
+        matches = re.match(r'(.*)\[(\d+)\]', key)
         if matches:
             key = matches.group(1)
             number = matches.group(2)
