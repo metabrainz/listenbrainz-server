@@ -7,6 +7,11 @@ $color-selector-size: 24px;
   margin-right: -15px;
   margin-top: -$nav-bottom-padding;
 
+  @media (max-width: map.get($grid-breakpoints, "sm")) {
+    display: block;
+    max-width: 100%;
+  }
+
   .artwork-container {
     margin: auto;
     padding: 15px 0;
@@ -299,21 +304,29 @@ $color-selector-size: 24px;
     margin-top: 1em;
     margin-bottom: 1em;
 
-    .profile,
-    .share-buttons {
+    .profile {
       flex: 1;
       flex-basis: 300px;
-      justify-content: center;
+      justify-content: left;
+      text-align: left;
 
       > .btn-link > span {
         margin-right: 0.2em;
         font-size: 14px;
       }
     }
+
     .share-buttons {
+      flex: 1;
+      flex-basis: 300px;
       display: flex;
       align-items: center;
       justify-content: center;
+
+      > .btn-link > span {
+        margin-right: 0.2em;
+        font-size: 14px;
+      }
 
       @media (max-width: map.get($grid-breakpoints, "sm")) {
         flex-wrap: wrap;
@@ -321,21 +334,11 @@ $color-selector-size: 24px;
       }
     }
 
-    .profile {
-      text-align: left;
-    }
-
     .link-container {
       min-width: 150px;
       height: 3em;
       margin-left: 0.6em;
       margin-right: auto;
-
-      @media (max-width: map.get($grid-breakpoints, "sm")) {
-        min-width: 0;
-        flex: 1 1 auto;
-        max-width: 100%;
-      }
 
       > input {
         text-overflow: ellipsis;
