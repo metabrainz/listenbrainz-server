@@ -7,7 +7,6 @@ import yattag
 from flask import Blueprint, request, render_template, current_app, Response, jsonify
 from flask_login import login_required, current_user
 from brainzutils.ratelimit import ratelimit
-from brainzutils.musicbrainz_db import engine as mb_engine
 from listenbrainz.webserver.errors import InvalidAPIUsage, CompatError, ListenValidationError, LastFMError, APIUnauthorized
 import xmltodict
 
@@ -240,7 +239,7 @@ def record_listens(data):
         raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)   # Invalid Session KEY
 
     user = db_user.get(db_conn, session.user_id, fetch_email=True)
-    if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and user["email"] is None:
+    if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and user["email"] is None:
         raise InvalidAPIUsage(CompatError.NO_EMAIL, output_format=output_format)  # No email available for user in LB
     if user['is_paused']:
         raise InvalidAPIUsage(REJECT_LISTENS_FROM_PAUSED_USER_ERROR)

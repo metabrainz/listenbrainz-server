@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Username from "../common/Username";
+import buildAuthUrl from "../utils/auth";
 
 function Navbar() {
   const { currentUser } = React.useContext(GlobalAppContext);
@@ -137,12 +138,10 @@ function Navbar() {
               </>
             ) : (
               <>
-                <Link to="/login/" onClick={toggleSidebar}>
+                <a href={buildAuthUrl("login")} onClick={toggleSidebar}>
                   Sign in
-                </Link>
-                <a
-                  href={`https://musicbrainz.org/register?returnto=${window.document.location.href}`}
-                >
+                </a>
+                <a href={buildAuthUrl("register")} onClick={toggleSidebar}>
                   Create Account
                 </a>
               </>

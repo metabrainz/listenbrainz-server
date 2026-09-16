@@ -112,6 +112,28 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
         response = self.client.get(stats_url, query_string={"count": "-1"})
         self.assert400(response)
 
+    def test_get_cover_art_custom_stats_custom_name(self):
+        """
+        custom_name selects the artwork. It used to be read under a
+        misspelled key, so every request silently fell back to the default
+        and an unknown name was never rejected.
+        """
+        url = self.custom_url_for(
+            "atom.get_cover_art_custom_stats", user_name=self.user["musicbrainz_id"]
+        )
+
+        response = self.client.get(url, query_string={"custom_name": "not-a-style"})
+        self.assert400(response)
+
+        response = self.client.get(
+            url, query_string={"custom_name": "lps-on-the-floor"}
+        )
+        self.assertNotEqual(400, response.status_code)
+        if response.status_code == 200:
+            body = response.get_data(as_text=True)
+            self.assertIn("lps-on-the-floor", body)
+            self.assertNotIn("designer-top-5", body)
+
     def test_get_listens_feed_elements(self):
         """
         Check server sends valid listens feed.

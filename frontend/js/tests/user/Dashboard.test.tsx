@@ -271,7 +271,7 @@ describe("Dashboard page", () => {
   it("doesn't call removeListenFromListenList or update state if status code is not 200", async () => {
     server.use(
       http.post("/1/delete-listen", async (path) => {
-        return HttpResponse.json({}, { status: 500 });
+        return HttpResponse.json({}, { status: 418 });
       })
     );
     renderWithProviders(

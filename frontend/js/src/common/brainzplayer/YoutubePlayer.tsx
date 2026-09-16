@@ -188,6 +188,10 @@ export default class YoutubePlayer
     this.youtubePlayer?.cueVideoById("");
   };
 
+  pause = () => {
+    this.youtubePlayer?.pauseVideo();
+  };
+
   onReady = (event: YT.PlayerEvent): void => {
     this.youtubePlayer = event.target;
   };

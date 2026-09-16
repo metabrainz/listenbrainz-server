@@ -9,6 +9,7 @@ System                                          Update schedule
 Receiving listens, updating listen counts		Immediate [#f1]_
 Deleting listens					                  Removed at the top of the next hour (UTC)
 Updating statistics for new listens			    Daily [#f2]_
+Updating statistics for older listens/imports   1st and 15th of each month
 Artist/album stats				                  Daily
 Removing deleted listens from stats			    On the 2nd and 16th of each month
 Full dumps						                      1st and 15th of each month
@@ -64,6 +65,11 @@ import a new full data dump on the 2nd and 16th day of the month.
 
 For example: If you delete a listen on the 5th day of the month, you can expect that the statistics generated
 on the 17th will reflect the current stats of your listens as of the end of the 14th day of the month.
+
+Imported and backdated listens are a special case. The daily update only recalculates statistics for listens
+played recently, so an imported history — whose listens are dated months or years ago — is skipped until the next
+full dump rebuilds all statistics from scratch. After a large import, allow up to two weeks for it to appear in
+your statistics; your listen counts update immediately.
 
 We recognize that this is less than ideal – we’re considering how to improve this and to make the ingestion
 of listens and the deletion of listens both happen in real time.

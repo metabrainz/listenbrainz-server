@@ -4,17 +4,19 @@ from datetime import datetime
 from time import monotonic
 
 import psycopg2
+import sqlalchemy.exc
 import orjson
+import sqlalchemy
 from brainzutils import metrics
 from flask import current_app
-from kombu import Exchange, Queue, Consumer, Message, Connection
+from kombu import Exchange, Queue, Consumer, Message
 from kombu.entity import PERSISTENT_DELIVERY_MODE
 from kombu.mixins import ConsumerProducerMixin
 from more_itertools import chunked
 
 from listenbrainz import messybrainz
 from listenbrainz.listen import Listen
-from listenbrainz.utils import get_fallback_connection_name
+from listenbrainz.rabbitmq import create_rabbitmq_connection, get_incoming_exchange, get_incoming_queue
 from listenbrainz.webserver import create_app, redis_connection, timescale_connection
 from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 from listenbrainz.webserver.views.api_tools import MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
@@ -27,9 +29,9 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
     def __init__(self):
         self.connection = None
 
-        self.incoming_exchange = Exchange(current_app.config["INCOMING_EXCHANGE"], "fanout", durable=False)
-        self.incoming_queue = Queue(current_app.config["INCOMING_QUEUE"], exchange=self.incoming_exchange, durable=True)
-        self.unique_exchange = Exchange(current_app.config["UNIQUE_EXCHANGE"], "fanout", durable=False)
+        self.incoming_exchange = get_incoming_exchange(current_app.config)
+        self.incoming_queue = get_incoming_queue(current_app.config)
+        self.unique_exchange = Exchange(current_app.config["UNIQUE_EXCHANGE"], "fanout", durable=True)
         self.unique_queue = Queue(current_app.config["UNIQUE_QUEUE"], exchange=self.unique_exchange, durable=True)
         self.rejection_exchange = Exchange(current_app.config["REJECTION_EXCHANGE"], "fanout", durable=True)
         self.rejection_queue = Queue(current_app.config["REJECTION_QUEUE"], exchange=self.rejection_exchange, durable=True)
@@ -70,7 +72,7 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
 
             submit = [Listen.from_json(listen) for listen in msb_listens]
             self.insert_to_listenstore(submit)
-        except psycopg2.OperationalError:
+        except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError):
             current_app.logger.error("Error processing listens due to database issues:", exc_info=True)
             time.sleep(self.ERROR_RETRY_DELAY)
             raise
@@ -111,7 +113,7 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
                 data['duration'] = duration * 1000  # convert into ms
             else:  # try duration_ms field next
                 duration_ms = listen['track_metadata']['additional_info'].get('duration_ms')
-                if duration:
+                if duration_ms:
                     data['duration'] = duration_ms
 
             msb_listens.append(data)
@@ -181,7 +183,8 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
             exchange=self.unique_exchange,
             routing_key="",
             body=orjson.dumps([listen.to_json() for listen in unique]).decode("utf-8"),
-            delivery_mode=PERSISTENT_DELIVERY_MODE
+            delivery_mode=PERSISTENT_DELIVERY_MODE,
+            declare=[self.unique_exchange, self.unique_queue]
         )
 
         if monotonic() > self.metric_submission_time:
@@ -193,14 +196,7 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
         return len(data)
 
     def init_rabbitmq_connection(self):
-        self.connection = Connection(
-            hostname=current_app.config["RABBITMQ_HOST"],
-            userid=current_app.config["RABBITMQ_USERNAME"],
-            port=current_app.config["RABBITMQ_PORT"],
-            password=current_app.config["RABBITMQ_PASSWORD"],
-            virtual_host=current_app.config["RABBITMQ_VHOST"],
-            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
-        )
+        self.connection = create_rabbitmq_connection(current_app.config)
 
     def start(self):
         while True:
@@ -219,7 +215,18 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
 
 
 if __name__ == "__main__":
-    app = create_app()
+    # The consul sizes are per uwsgi worker and bypass_pgbouncer makes them direct backends.
+    # This consumer is single threaded and never touches db / meb, so one connection each.
+    app = create_app(
+        bypass_pgbouncer=True,
+        use_pool=True,
+        pool_size_overrides={
+            "db": (1, 1),
+            "ts": (1, 1),
+            "listens": (1, 1),
+            "meb": (1, 1),
+        },
+    )
     with app.app_context():
         rc = TimescaleWriterSubscriber()
         rc.start()

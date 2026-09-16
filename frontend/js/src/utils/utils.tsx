@@ -3,7 +3,7 @@ import * as _ from "lodash";
 import { isFinite, isUndefined, deburr, escapeRegExp } from "lodash";
 import * as timeago from "time-ago";
 import { Rating } from "react-simple-star-rating";
-import { toast } from "react-toastify";
+import { toast, TypeOptions } from "react-toastify";
 import { Link } from "react-router";
 import ReactMarkdown from "react-markdown";
 import { formatDuration, intervalToDuration } from "date-fns";
@@ -481,6 +481,7 @@ const getArtistMBIDs = (listen: Listen): string[] | undefined => {
 };
 
 const getRecordingMSID = (listen: Listen): string =>
+  _.get(listen, "recording_msid") ??
   _.get(listen, "track_metadata.additional_info.recording_msid");
 
 const getRecordingMBID = (listen: Listen): string | undefined =>
@@ -643,23 +644,14 @@ const formatWSMessageToListen = (wsMsg: any): Listen | null => {
       }
     }
     // The websocket message received contains the recording_msid as a top level key.
-    // Therefore, we need to shift it json.track_metadata.additional_info.
-    if (!_.has(json, "track_metadata.additional_info.recording_msid")) {
-      if ("recording_msid" in json) {
-        _.merge(json, {
-          track_metadata: {
-            additional_info: { recording_msid: json.recording_msid },
-          },
-        });
-        delete json.recording_msid;
-      } else {
-        // eslint-disable-next-line no-console
-        console.debug(
-          "Could not find recording_msid in following json: ",
-          json
-        );
-        return null;
-      }
+    // Keep it at the top level; getRecordingMSID will find it there.
+    if (
+      !("recording_msid" in json) &&
+      !_.has(json, "track_metadata.additional_info.recording_msid")
+    ) {
+      // eslint-disable-next-line no-console
+      console.debug("Could not find recording_msid in following json: ", json);
+      return null;
     }
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -847,20 +839,28 @@ type GlobalAppProps = {
   flair?: Flair;
 };
 type GlobalProps = GlobalAppProps & SentryProps;
+export type ServerAlert = {
+  id: string;
+  level: TypeOptions;
+  message: string;
+};
 
 const getPageProps = async (): Promise<{
   domContainer: HTMLElement;
   reactProps: Record<string, any>;
   sentryProps: SentryProps;
   globalAppContext: GlobalAppContextT;
+  initialAlerts: ServerAlert[];
 }> => {
   let domContainer = document.getElementById("react-container");
   const propsElement = document.getElementById("page-react-props");
   const globalPropsElement = document.getElementById("global-react-props");
+  const initialAlertsElement = document.getElementById("initial-alerts-props");
   let reactProps = {};
   let globalReactProps = {} as GlobalProps;
   let sentryProps = {} as SentryProps;
   let globalAppContext = {} as GlobalAppContextT;
+  let initialAlerts: ServerAlert[] = [];
   if (!domContainer) {
     // Ensure there is a container for React rendering
     // We should always have on on the page already, but displaying errors to the user relies on there being one
@@ -879,6 +879,9 @@ const getPageProps = async (): Promise<{
     // Page props can be empty
     if (propsElement?.innerHTML) {
       reactProps = JSON.parse(propsElement!.innerHTML);
+    }
+    if (initialAlertsElement?.innerHTML) {
+      initialAlerts = JSON.parse(initialAlertsElement.innerHTML);
     }
 
     const {
@@ -972,6 +975,7 @@ const getPageProps = async (): Promise<{
     reactProps,
     sentryProps,
     globalAppContext,
+    initialAlerts,
   };
 };
 
@@ -980,11 +984,6 @@ const getListenablePin = (pinnedRecording: PinnedRecording): Listen => {
     listened_at: 0,
     ...pinnedRecording,
   };
-  _.set(
-    pinnedRecListen,
-    "track_metadata.additional_info.recording_msid",
-    pinnedRecording.recording_msid
-  );
   return pinnedRecListen;
 };
 

@@ -1,10 +1,8 @@
 import logging
-from collections import defaultdict
-from operator import itemgetter
-import math
 from typing import Iterable
 from pyspark.sql import DataFrame, Window
 
+from more_itertools import chunked
 from pyspark.mllib.linalg.distributed import CoordinateMatrix, MatrixEntry, RowMatrix
 from pyspark.sql.functions import struct, collect_list, col, row_number
 
@@ -13,36 +11,52 @@ from listenbrainz_spark.utils import read_files_from_HDFS
 
 logger = logging.getLogger(__name__)
 
+USERS_PER_MESSAGE = 10000
+
 
 def create_messages(similar_users_df: DataFrame) -> Iterable[dict]:
     """
-    Iterate over the similar_users_df to create a message of the following format for sending using the request consumer
+    Iterate over the similar_users_df to create messages for sending using the request consumer.
+
+    The dataset is too big to fit in one message so it is split into multiple messages: a start message,
+    multiple data messages and an end message. The start message lets the consumer set up a temporary
+    table, the data messages carry the actual similar users data in chunks and the end message tells the
+    consumer to swap the temporary table into place.
+
+    Each data message has the following format:
 
         {
             "type": "similar_users",
             "data": [
-                "user_1": {
-                    "user_2": 0.5,
-                    "user_3": 0.7,
+                {
+                    "user_id": 1,
+                    "similar_users": {"2": 0.5, "3": 0.7}
                 },
-                "user_2": {
-                    "user_1": 0.5
-                }
+                {
+                    "user_id": 2,
+                    "similar_users": {"1": 0.5}
+                },
                 ...
             ]
         }
     """
+    yield {"type": "similar_users_start"}
+
     itr = similar_users_df.toLocalIterator()
-    message = {}
-    for row in itr:
-        message[row.user_id] = {
-            user.other_user_id: user.similarity
-            for user in row.similar_users
-        }
-    yield {
-        "type": "similar_users",
-        "data": message
-    }
+    for rows in chunked(itr, USERS_PER_MESSAGE):
+        data = [
+            {
+                "user_id": row.user_id,
+                "similar_users": {
+                    user.other_user_id: user.similarity
+                    for user in row.similar_users
+                }
+            }
+            for row in rows
+        ]
+        yield {"type": "similar_users", "data": data}
+
+    yield {"type": "similar_users_end"}
 
 
 def process_similarities(matrix: CoordinateMatrix, max_num_users: int) -> DataFrame:

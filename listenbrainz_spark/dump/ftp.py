@@ -56,7 +56,11 @@ class ListenBrainzFtpDumpLoader(ListenbrainzDumpLoader):
             dump_dir = os.path.join(config.FTP_LISTENS_DIR, 'sample/')
 
         self.connection.cwd(dump_dir)
-        return self.list_dir()
+        directories = self.list_dir()
+        if dump_type == DumpType.FULL:
+            # the fullexport dir also contains the database dumps which have no listens in them
+            directories = [x for x in directories if not x.replace('/', '').endswith('-db')]
+        return directories
 
     def download_file_binary(self, src, dest):
         """ Download file `src` from the FTP server to `dest`

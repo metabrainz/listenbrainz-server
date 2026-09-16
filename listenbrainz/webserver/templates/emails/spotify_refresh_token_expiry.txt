@@ -1,0 +1,12 @@
+Hi {{ username }}!
+
+Spotify <a href="https://developer.spotify.com/blog/2026-06-18-refresh-token-expiration">requires you</a> to reconnect ListenBrainz every six months.
+<b>Your current Spotify connection will stop working within the next month.</b>
+
+
+Please disconnect and reconnect Spotify to keep your listening history imports running without interrumption:
+{{ link }}
+
+
+Best,
+The ListenBrainz Team

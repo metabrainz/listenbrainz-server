@@ -30,6 +30,7 @@ from listenbrainz.db.lastfm_session import Session
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.tests.integration import APICompatIntegrationTestCase
 from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 from listenbrainz.webserver.views.api_compat_deprecated import _get_audioscrobbler_auth_token, _get_session, \
     _to_native_api
 
@@ -110,6 +111,19 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
         r = self.handshake(self.user['musicbrainz_id'], '', int(time.time()))
         self.assert401(r)
+
+    def test_handshake_rejects_unverified_email(self):
+        timestamp = int(time.time())
+        audioscrobbler_auth_token = _get_audioscrobbler_auth_token(self.user['auth_token'], timestamp)
+
+        old_reject_setting = self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]
+        try:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = True
+            response = self.handshake(self.user['musicbrainz_id'], audioscrobbler_auth_token, timestamp)
+            self.assert401(response)
+            self.assertIn(REJECT_LISTENS_WITHOUT_EMAIL_ERROR, response.data.decode('utf-8'))
+        finally:
+            self.app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] = old_reject_setting
 
     def test_submit_listen(self):
         """ Sends a valid listen after handshaking and checks if it is present in the

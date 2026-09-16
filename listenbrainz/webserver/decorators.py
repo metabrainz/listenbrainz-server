@@ -5,6 +5,29 @@ from flask import request, current_app, make_response, redirect, url_for
 from listenbrainz.webserver import timescale_connection
 
 
+def cache_public(s_maxage):
+    """Mark a public API GET as cacheable by shared caches for ``s_maxage`` seconds.
+
+    Sets ``Cache-Control: public, max-age=0, s-maxage=<s_maxage>`` on 200s.
+    ``add_cache_header`` leaves that in place and only defaults other
+    responses to private. Place below ``@crossdomain`` and ``@ratelimit``
+    so OPTIONS/429s never reach this wrapper.
+    """
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            resp = make_response(f(*args, **kwargs))
+            if resp.status_code == 200:
+                resp.cache_control.private = False
+                resp.cache_control.no_store = False
+                resp.cache_control.public = True
+                resp.cache_control.max_age = 0
+                resp.cache_control.s_maxage = s_maxage
+            return resp
+        return wrapper
+    return decorator
+
+
 def crossdomain(f):
     """ Decorator to add CORS headers to flask endpoints.
 

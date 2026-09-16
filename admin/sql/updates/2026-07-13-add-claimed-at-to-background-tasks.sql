@@ -1,0 +1,5 @@
+BEGIN;
+
+ALTER TABLE background_tasks ADD COLUMN claimed_at TIMESTAMPTZ;
+
+COMMIT;

@@ -19,7 +19,7 @@ from data.model.user_artist_evolution_activity import ArtistEvolutionActivityRec
 from listenbrainz.db import year_in_music as db_year_in_music
 from listenbrainz.db.year_in_music import LAST_FM_FOUNDING_YEAR, MAX_YEAR_IN_MUSIC_YEAR
 from listenbrainz.webserver import db_conn, ts_conn
-from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.decorators import cache_public, crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APINoContent, APINotFound)
 from listenbrainz.webserver.models import ArtistActivityArtistEntry, ArtistActivityReleaseGroupData
@@ -926,6 +926,7 @@ def get_artist_map(user_name: str):
 @stats_api_bp.get("/artist/<artist_mbid>/listeners")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_artist_listeners(artist_mbid):
     """ Get top listeners for artist ``artist_mbid``. This includes the total listen count for the entity
     and top N listeners with their individual listen count for that artist in a given time range. A sample
@@ -987,6 +988,7 @@ def get_artist_listeners(artist_mbid):
 @stats_api_bp.get("/release-group/<release_group_mbid>/listeners")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_release_group_listeners(release_group_mbid):
     """ Get top listeners for release group ``release_group_mbid``. This includes the total listen count
     for the entity and top N listeners with their individual listen count for that release group in a
@@ -1093,6 +1095,7 @@ def _get_entity_listeners(entity, mbid):
 @stats_api_bp.get("/sitewide/artists")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_sitewide_artist():
     """
     Get sitewide top artists.
@@ -1151,6 +1154,7 @@ def get_sitewide_artist():
 @stats_api_bp.get("/sitewide/releases")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_sitewide_release():
     """
     Get sitewide top releases.
@@ -1219,6 +1223,7 @@ def get_sitewide_release():
 @stats_api_bp.get("/sitewide/release-groups")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_sitewide_release_group():
     """
     Get sitewide top release groups.
@@ -1289,6 +1294,7 @@ def get_sitewide_release_group():
 @stats_api_bp.get("/sitewide/recordings")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_sitewide_recording():
     """
     Get sitewide top recordings.
@@ -1389,6 +1395,7 @@ def _get_sitewide_stats(entity: str, count_key: str, entire_range: bool = False)
 @stats_api_bp.get("/sitewide/listening-activity")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_sitewide_listening_activity():
     """
     Get the listening activity for entire site. The listening activity shows the number of listens
@@ -1462,6 +1469,7 @@ def get_sitewide_listening_activity():
 @stats_api_bp.get("/sitewide/artist-activity")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_sitewide_artist_activity():
     """
     Get the sitewide artist activity. The artist activity shows the total number of listens
@@ -1561,6 +1569,7 @@ def get_sitewide_artist_activity():
 @stats_api_bp.get("/sitewide/era-activity")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_sitewide_era_activity():
     """
     Get sitewide release-year activity. Each entry represents the number of listens across all users
@@ -1621,6 +1630,7 @@ def get_sitewide_era_activity():
 @stats_api_bp.get("/sitewide/artist-evolution-activity")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_sitewide_artist_evolution_activity():
     """
     Get the sitewide artist evolution activity. Over the selected time range, this returns raw rows
@@ -1686,6 +1696,7 @@ def get_sitewide_artist_evolution_activity():
 @stats_api_bp.get("/sitewide/artist-map")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_sitewide_artist_map():
     """
     Get the sitewide artist map. The artist map shows the number of artists listened to by users

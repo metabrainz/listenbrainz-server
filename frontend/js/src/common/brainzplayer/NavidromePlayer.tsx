@@ -88,10 +88,14 @@ export default class NavidromePlayer
     }
   }
 
-  stop = () => {
+  pause = () => {
     if (!this.audioRef?.current?.paused) {
       this.audioRef?.current?.pause();
     }
+  };
+
+  stop = () => {
+    this.pause();
   };
 
   setupAudioListeners = (): void => {

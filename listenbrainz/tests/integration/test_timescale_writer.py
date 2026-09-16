@@ -6,12 +6,13 @@ from random import randint
 import amqp
 import orjson
 from flask import current_app
-from kombu import Connection, Queue, Exchange
+from kombu import Queue, Exchange
 from kombu.entity import PERSISTENT_DELIVERY_MODE
 
 import listenbrainz.db.user as db_user
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
+from listenbrainz.rabbitmq import create_rabbitmq_connection
 from listenbrainz.tests.integration import NonAPIIntegrationTestCase
 from listenbrainz.webserver import redis_connection, timescale_connection
 
@@ -141,13 +142,7 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         """ Test that listens are published to rejection queue when processing fails """
         user = db_user.get_or_create(self.db_conn, 1, 'difftracksametsuser')
 
-        connection = Connection(
-            hostname=current_app.config["RABBITMQ_HOST"],
-            userid=current_app.config["RABBITMQ_USERNAME"],
-            port=current_app.config["RABBITMQ_PORT"],
-            password=current_app.config["RABBITMQ_PASSWORD"],
-            virtual_host=current_app.config["RABBITMQ_VHOST"],
-        )
+        connection = create_rabbitmq_connection(current_app.config)
 
         with connection:
             ts = int(time.time())

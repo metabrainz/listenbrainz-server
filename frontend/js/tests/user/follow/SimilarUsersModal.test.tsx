@@ -10,7 +10,7 @@ import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManage
 import { ReactQueryWrapper } from "../../test-react-query";
 
 const props = {
-  user: { name: "shivam-kapila" },
+  userName: "shivam-kapila",
   similarUsersList: [{ name: "mr_monkey", similarityScore: 0.567 }],
   loggedInUserFollowsUser: () => true,
   updateFollowingList: () => {},
