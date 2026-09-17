@@ -349,23 +349,23 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
 
   const minGap = isHorizontal ? 2.5 : 1.5;
 
+  const allMarks = React.useMemo(
+    () =>
+      createMarks(releases, direction, order).sort(
+        (a, b) => a.percent - b.percent
+      ),
+    [releases, direction, order]
+  );
+
   React.useEffect(() => {
-    const rawMarks = createMarks(releases, direction, order);
     const visibleMarks = filterHorizontalDateMarks(
-      rawMarks,
+      allMarks,
       isHorizontal,
       order,
       horizontalDateMarkCapacity
     );
     setMappedMarks(calculateMapping(visibleMarks, minGap));
-  }, [
-    releases,
-    direction,
-    order,
-    isHorizontal,
-    horizontalDateMarkCapacity,
-    minGap,
-  ]);
+  }, [allMarks, order, isHorizontal, horizontalDateMarkCapacity, minGap]);
 
   React.useEffect(() => {
     const updateTimelineLayout = () => {
@@ -553,44 +553,36 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     };
   }, [isDragging, releaseCardGridRef]);
 
+  const visualPercent = mapLinearToVisual(currentValue, mappedMarks);
+
   const getTooltipData = () => {
     if (!releases.length) return null;
-    let index = Math.floor((currentValue / 100) * (releases.length - 1));
 
-    if (
-      (order !== "confidence" && direction === "descend") ||
-      (order === "confidence" && direction === "ascend")
-    ) {
-      index = releases.length - 1 - index;
-    }
+    const activeMark = allMarks.reduce<TimelineMark | undefined>(
+      (active, mark) => {
+        if (!mark.label || mark.groupKey === undefined) return active;
+        if (!active || mark.percent <= currentValue) return mark;
+        return active;
+      },
+      undefined
+    );
 
-    const item = releases[Math.max(0, Math.min(releases.length - 1, index))];
-    if (!item) return null;
+    if (!activeMark || activeMark.groupKey === undefined) return null;
 
     if (order === "release_date") {
-      const date = parseISO(item.release_date);
+      const date = parseISO(activeMark.groupKey);
       return {
         main: format(date, "d"),
         sub: format(date, "MMMM"),
       };
     }
-    if (order === "artist_credit_name" || order === "release_name") {
-      return {
-        main: item[order].charAt(0).toUpperCase(),
-        sub: "",
-      };
-    }
-    if (order === "confidence") {
-      return {
-        main: `${Math.round(item.confidence ?? 0)}%`,
-        sub: "",
-      };
-    }
-    return null;
+    return {
+      main: activeMark.label,
+      sub: "",
+    };
   };
 
   const tooltipData = getTooltipData();
-  const visualPercent = mapLinearToVisual(currentValue, mappedMarks);
   const isProminentHorizontalMark = (mark: MappedMark) =>
     isHorizontal &&
     (React.isValidElement(mark.label) || isMonthNameDateMark(mark));
