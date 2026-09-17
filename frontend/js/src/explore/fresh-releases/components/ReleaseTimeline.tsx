@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarCheck } from "@fortawesome/free-solid-svg-icons";
 import { startOfDay, format, closestTo, parseISO } from "date-fns";
 import { SortDirection, SortOption } from "../FreshReleases";
+import { getKeyForOrder } from "../utils";
 
 type ReleaseTimelineProps = {
   releases: Array<FreshReleaseItem>;
@@ -159,9 +160,8 @@ function createMarks(
   const groupKeyArr: Array<string | undefined> = [];
 
   if (order === "release_date") {
-    let releasesPerDate = countBy(
-      releases,
-      (item: FreshReleaseItem) => item.release_date
+    let releasesPerDate = countBy(releases, (item: FreshReleaseItem) =>
+      getKeyForOrder(order, item)
     );
 
     if (sortDirection === "descend") {
@@ -217,7 +217,7 @@ function createMarks(
     groupKeyArr.push(closestDateStr);
   } else if (order === "artist_credit_name" || order === "release_name") {
     const counts = countBy(releases, (item: FreshReleaseItem) =>
-      item[order].charAt(0).toUpperCase()
+      getKeyForOrder(order, item)
     );
     const initials = Object.keys(counts).sort();
     const totalCount = releases.length;
@@ -230,9 +230,8 @@ function createMarks(
       cummulativeSum += counts[initial];
     });
   } else if (order === "confidence") {
-    const counts = countBy(
-      releases,
-      (item: FreshReleaseItem) => item?.confidence
+    const counts = countBy(releases, (item: FreshReleaseItem) =>
+      getKeyForOrder(order, item)
     );
     const confidences = Object.keys(counts).sort(
       (a, b) => Number(a) - Number(b)
@@ -435,23 +434,23 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     [releaseCardGridRef]
   );
 
-  const scrollToDate = React.useCallback(
-    (releaseDate: string, behavior: ScrollBehavior = "smooth") => {
+  const scrollToGroup = React.useCallback(
+    (groupKey: string, behavior: ScrollBehavior = "smooth") => {
       const container =
         releaseCardGridRef?.current ||
         document.getElementById("release-card-grids");
       if (!container) return false;
 
-      const dateAnchor = Array.from(
+      const groupAnchor = Array.from(
         container.querySelectorAll<HTMLElement>(
-          ".release-card-grid-anchor[data-date]"
+          ".release-card-grid-anchor[data-group-key]"
         )
-      ).find((anchor) => anchor.dataset.date === releaseDate);
+      ).find((anchor) => anchor.dataset.groupKey === groupKey);
 
-      if (!dateAnchor) return false;
+      if (!groupAnchor) return false;
 
       window.scrollTo({
-        top: getAbsoluteTop(dateAnchor),
+        top: getAbsoluteTop(groupAnchor),
         behavior,
       });
       return true;
@@ -463,15 +462,14 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
     (mark: MappedMark, behavior: ScrollBehavior = "smooth") => {
       setCurrentValue(mark.percent);
       if (
-        order === "release_date" &&
-        mark.groupKey &&
-        scrollToDate(mark.groupKey, behavior)
+        mark.groupKey !== undefined &&
+        scrollToGroup(mark.groupKey, behavior)
       ) {
         return;
       }
       scrollToPosition(mark.percent, behavior);
     },
-    [order, scrollToDate, scrollToPosition]
+    [scrollToGroup, scrollToPosition]
   );
 
   const handleMove = React.useCallback(
