@@ -312,7 +312,7 @@ function filterHorizontalDateMarks(
   );
 }
 
-/** Returns the element's stable page-level Y position (scroll-invariant). */
+/** Returns the page-level Y position; use non-sticky elements as scroll targets. */
 function getAbsoluteTop(el: HTMLElement): number {
   return el.getBoundingClientRect().top + window.scrollY;
 }
@@ -442,16 +442,16 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
         document.getElementById("release-card-grids");
       if (!container) return false;
 
-      const dateTitle = Array.from(
+      const dateAnchor = Array.from(
         container.querySelectorAll<HTMLElement>(
-          ".release-card-grid-title[data-date]"
+          ".release-card-grid-anchor[data-date]"
         )
-      ).find((title) => title.dataset.date === releaseDate);
+      ).find((anchor) => anchor.dataset.date === releaseDate);
 
-      if (!dateTitle) return false;
+      if (!dateAnchor) return false;
 
       window.scrollTo({
-        top: getAbsoluteTop(dateTitle),
+        top: getAbsoluteTop(dateAnchor),
         behavior,
       });
       return true;

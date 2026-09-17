@@ -82,12 +82,15 @@ export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
     <>
       {mappedEntries.map(([releaseKey, releases]) => (
         <React.Fragment key={`${releaseKey}-container`}>
-          <div
-            className="release-card-grid-title"
-            key={`${releaseKey}-title`}
-            // data-date stores the ISO date for the timeline thumb to read
-            data-date={order === "release_date" ? releaseKey : undefined}
-          >
+          {order === "release_date" && (
+            // Keep the scroll target in normal flow when the title becomes sticky.
+            <div
+              className="release-card-grid-anchor"
+              data-date={releaseKey}
+              aria-hidden="true"
+            />
+          )}
+          <div className="release-card-grid-title" key={`${releaseKey}-title`}>
             {getReleaseCardGridTitle(releaseKey, order)}
           </div>
           <div key={releaseKey} className="release-cards-grid">
