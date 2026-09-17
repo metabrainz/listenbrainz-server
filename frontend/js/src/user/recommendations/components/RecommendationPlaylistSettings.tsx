@@ -11,6 +11,7 @@ import {
 import DOMPurify from "dompurify";
 import NiceModal from "@ebay/nice-modal-react";
 import { Link, useLoaderData } from "react-router";
+import { Dropdown } from "react-bootstrap";
 import { getPlaylistExtension, getPlaylistId } from "../../../playlists/utils";
 import { getBaseUrl, preciseTimestamp } from "../../../utils/utils";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
@@ -125,19 +126,16 @@ export default function RecommendationPlaylistSettings({
               fixedWidth
             />
           </button>
-          <span className="dropdown" style={{ marginLeft: 0 }}>
-            <button
-              className="dropdown-toggle btn btn-icon btn-info"
-              type="button"
+          <Dropdown as="span" style={{ marginLeft: 0 }}>
+            <Dropdown.Toggle
+              as="button"
+              className="btn btn-icon btn-info"
               id="playlistOptionsDropdown"
-              data-bs-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
             >
               <FontAwesomeIcon icon={faCog} title="More options" fixedWidth />
-            </button>
+            </Dropdown.Toggle>
             <PlaylistMenu playlist={playlist} />
-          </span>
+          </Dropdown>
           {sourcePatch &&
             ["weekly-jams", "weekly-exploration", "daily-jams"].includes(
               sourcePatch
