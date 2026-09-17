@@ -79,12 +79,19 @@ def get_time_ranges_for_listens(min_dt: datetime, max_dt: datetime):
 
 
 def export_query_to_jsonl(conn, file_path, query, **kwargs):
-    """ Export the given query's data to the given file path in jsonl format. """
+    """ Export the given query's data to the given file path in jsonl format.
+
+    Args:
+        conn: database connection
+        file_path: path to write the JSONL file
+        query: SQL query whose rows must have a text `line` column
+        **kwargs: bind parameters forwarded to conn.execute
+    """
     rowcount = 0
     with conn.execute(
         text(query).execution_options(yield_per=BATCH_SIZE),
         kwargs
-    ) as result, open(file_path, "w") as file:
+    ) as result, open(file_path, "w", encoding="utf-8") as file:
         for partition in result.partitions():
             for row in partition:
                 file.write(row.line)
@@ -114,14 +121,16 @@ def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: 
                    AND listened_at <= :end_time
                    AND l.user_id = :user_id
           )
-                SELECT jsonb_build_object(
-                            'listened_at'
+                SELECT json_build_object(
+                            'inserted_at'
+                          , extract(epoch from inserted_at)::integer
+                          , 'listened_at'
                           ,  extract(epoch from listened_at)
-                          , 'inserted_at'
-                          ,  extract(epoch from inserted_at)
+                          , 'recording_msid'
+                          , recording_msid::text
                           , 'track_metadata'
                           , jsonb_set(
-                                jsonb_set(data, '{recording_msid}'::text[], to_jsonb(recording_msid::text)),
+                                data,
                                     '{mbid_mapping}'::text[]
                                   , CASE
                                     WHEN mbc.recording_mbid IS NULL
@@ -176,7 +185,8 @@ def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: 
                      , release_data->>'caa_release_mbid'
               ORDER BY listened_at
     """
-    return export_query_to_jsonl(ts_conn, file_path, query, user_id=user_id, start_time=start_time, end_time=end_time)
+    return export_query_to_jsonl(ts_conn, file_path, query, user_id=user_id,
+                                 start_time=start_time, end_time=end_time)
 
 
 def export_listens_for_user(export_id, db_conn, ts_conn, tmp_dir: str, user_id: int) -> list[str]:

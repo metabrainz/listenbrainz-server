@@ -1,6 +1,6 @@
 import * as React from "react";
 import ReleaseCard from "./ReleaseCard";
-import { formatReleaseDate } from "../utils";
+import { formatReleaseDate, getKeyForOrder } from "../utils";
 import type { DisplaySettings, SortDirection } from "../FreshReleases";
 
 type ReleaseCardReleaseProps = {
@@ -10,23 +10,6 @@ type ReleaseCardReleaseProps = {
   direction: SortDirection;
 };
 
-const getKeyForOrder = (
-  releaseOrder: string,
-  release: FreshReleaseItem
-): string | number => {
-  switch (releaseOrder) {
-    case "release_date":
-      return formatReleaseDate(release.release_date);
-    case "artist_credit_name":
-    case "release_name":
-      return release[releaseOrder].charAt(0).toUpperCase();
-    case "confidence":
-      return release[releaseOrder]!;
-    default:
-      return "";
-  }
-};
-
 const getMapping = (
   releaseOrder: string,
   filteredList: Array<FreshReleaseItem>
@@ -34,12 +17,12 @@ const getMapping = (
   return filteredList.reduce((acc, release) => {
     const key = getKeyForOrder(releaseOrder, release);
     if (acc.has(key)) {
-      acc.get(key).push(release);
+      acc.get(key)!.push(release);
     } else {
       acc.set(key, [release]);
     }
     return acc;
-  }, new Map());
+  }, new Map<string, Array<FreshReleaseItem>>());
 };
 
 export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
@@ -60,6 +43,10 @@ export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
     ) {
       return releaseKey.charAt(0).toUpperCase();
     }
+    if (release_order === "release_date") {
+      // releaseKey is an ISO date string like "2025-01-17"
+      return formatReleaseDate(releaseKey);
+    }
     return releaseKey;
   };
 
@@ -75,6 +62,12 @@ export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
     <>
       {mappedEntries.map(([releaseKey, releases]) => (
         <React.Fragment key={`${releaseKey}-container`}>
+          {/* Keep the scroll target in normal flow when the title becomes sticky. */}
+          <div
+            className="release-card-grid-anchor"
+            data-group-key={releaseKey}
+            aria-hidden="true"
+          />
           <div className="release-card-grid-title" key={`${releaseKey}-title`}>
             {getReleaseCardGridTitle(releaseKey, order)}
           </div>

@@ -1,7 +1,7 @@
-FROM metabrainz/python:3.13-20250313 as mbid-mapping-base
+FROM docker.io/metabrainz/python:3.13-20250313 AS mbid-mapping-base
 
-RUN apt-get update && apt-get install -y ca-certificates python3-pip netpbm git && \
-        pip install --upgrade pip
+RUN apt-get update && apt-get install -y ca-certificates python3-pip netpbm git \
+    && pip install --upgrade pip
 
 RUN groupadd --gid 901 listenbrainz
 RUN useradd --create-home --shell /bin/bash --uid 901 --gid 901 listenbrainz
@@ -15,7 +15,7 @@ COPY . /code/mapper
 
 
 # Section for PROD specific setup
-FROM mbid-mapping-base as mbid-mapping-prod
+FROM mbid-mapping-base AS mbid-mapping-prod
 
 # service start up scripts
 COPY ./docker/consul-template.conf /etc/consul-template-mbid-mapping.conf

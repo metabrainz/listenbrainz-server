@@ -167,14 +167,18 @@ class TimescaleListenStore:
             return []
 
         submit = []
+        created = datetime.now(tz=timezone.utc)
         for listen in listens:
-            submit.append(listen.to_timescale())
+            listened_at, user_id, recording_msid, data = listen.to_timescale()
+            submit.append((listened_at, created, user_id, recording_msid, data))
 
-        # Only newly inserted rows are mirrored. A duplicate was already mirrored by the insert
-        # that first put it in timescale, so fetching and re-upserting it would be pure overhead.
+        # Write the incoming batch before touching Timescale. Both stores ignore duplicates,
+        # so a retry after a Timescale failure preserves the first successful insert.
+        listens_db.insert(submit)
+
         query = """
             WITH inserted_listens AS (
-                INSERT INTO listen (listened_at, user_id, recording_msid, data)
+                INSERT INTO listen (listened_at, created, user_id, recording_msid, data)
                      VALUES %s
                 ON CONFLICT (listened_at, user_id, recording_msid)
                  DO NOTHING
@@ -199,14 +203,14 @@ class TimescaleListenStore:
         conn = timescale.engine.raw_connection()
         try:
             # this handler drops the batch instead of retrying it, only acceptable for an
-            # encoding error from timescale itself, so keep it off the partitioned write below
+            # encoding error from timescale itself, so keep it off the partitioned write above
             try:
                 with conn.cursor() as curs:
                     results = execute_values(
                         curs,
                         query,
                         submit,
-                        template="(%s::timestamptz, %s::integer, %s::uuid, %s::jsonb)",
+                        template="(%s::timestamptz, %s::timestamptz, %s::integer, %s::uuid, %s::jsonb)",
                         fetch=True,
                     )
             except UntranslatableCharacter:
@@ -217,13 +221,8 @@ class TimescaleListenStore:
                 listened_at = result[0]
                 user_id = result[2]
                 recording_msid = result[3]
-                # keyed so the partitioned upsert can never affect a row twice
                 source_rows[(listened_at, user_id, recording_msid)] = result
 
-            # If this raises an OperationalError, the Timescale transaction is rolled back and
-            # RabbitMQ requeues the batch. Both writes are idempotent, so retrying also handles the
-            # case where this commit fails after the partitioned transaction committed.
-            listens_db.insert(list(source_rows.values()))
             conn.commit()
         except Exception:
             conn.rollback()
@@ -736,9 +735,8 @@ class TimescaleListenStore:
             user_id: the listenbrainz row id of the user
             created: delete listens created before this timestamp
 
-        Raises: Exception if either store rejects the delete. Callers do not retry, so a
-            timescale commit that fails after the partitioned delete committed leaves the listens
-            in timescale only, which the incremental migration copies back.
+        Raises: Exception if either store rejects the delete. Background tasks retry using
+            the same cutoff if Timescale fails after the partitioned delete has committed.
         """
         if created is None:
             created = datetime.now(tz=timezone.utc)
@@ -752,12 +750,10 @@ class TimescaleListenStore:
         query2 = """DELETE FROM listen WHERE user_id = :user_id AND created <= :created"""
         query3 = """INSERT INTO deleted_user_listen_history (user_id, max_created) VALUES (:user_id, :created)"""
         try:
+            listens_db.delete_user(user_id, created)
             ts_conn.execute(sqlalchemy.text(query1), {"user_id": user_id})
             ts_conn.execute(sqlalchemy.text(query2), {"user_id": user_id, "created": created})
             ts_conn.execute(sqlalchemy.text(query3), {"user_id": user_id, "created": created})
-            # As with inserts, do not commit the authoritative Timescale mutation until the
-            # partitioned store has accepted the matching delete. Retrying either delete is safe.
-            listens_db.delete_user(user_id, created)
             ts_conn.commit()
         except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError) as e:
             ts_conn.rollback()

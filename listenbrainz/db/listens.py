@@ -20,10 +20,7 @@ INSERT_LISTENS_QUERY = """
     INSERT INTO listen (listened_at, created, user_id, recording_msid, data)
          VALUES %s
     ON CONFLICT (user_id, listened_at, recording_msid)
-      DO UPDATE
-            SET created = excluded.created
-              , data = excluded.data
-          WHERE excluded.created > listen.created
+      DO NOTHING
 """
 
 DELETE_LISTENS_QUERY = """
@@ -82,7 +79,7 @@ def init_db_connection(connect_str, poolclass=NullPool, **engine_kwargs):
 
 
 def insert(rows: Sequence[tuple]):
-    """Idempotently mirror Timescale listen rows into the partitioned database."""
+    """Insert incoming listen rows into the partitioned database, ignoring duplicates."""
     if not rows or engine is None:
         return
 
