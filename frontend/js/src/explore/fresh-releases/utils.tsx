@@ -1,6 +1,26 @@
 import { isValid } from "date-fns";
 import { useEffect, useState } from "react";
 
+export function getKeyForOrder(
+  releaseOrder: string,
+  release: FreshReleaseItem
+): string {
+  switch (releaseOrder) {
+    case "release_date":
+      // Use the raw date string as the key (locale-independent, always consistent)
+      return release.release_date ?? "-";
+    case "artist_credit_name":
+    case "release_name":
+      // Always uppercase first character to avoid case-split duplicates
+      return (release[releaseOrder] ?? "").charAt(0).toUpperCase();
+    case "confidence":
+      // Round to 1 dp — raw floats (0.50001 vs 0.5) create spurious duplicate groups
+      return String(Math.round((release[releaseOrder] ?? 0) * 10) / 10);
+    default:
+      return "";
+  }
+}
+
 export function formatReleaseDate(
   releaseDate: string,
   formatOptions: Intl.DateTimeFormatOptions = {

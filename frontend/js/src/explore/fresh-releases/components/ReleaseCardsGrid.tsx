@@ -1,6 +1,6 @@
 import * as React from "react";
 import ReleaseCard from "./ReleaseCard";
-import { formatReleaseDate } from "../utils";
+import { formatReleaseDate, getKeyForOrder } from "../utils";
 import type { DisplaySettings, SortDirection } from "../FreshReleases";
 
 type ReleaseCardReleaseProps = {
@@ -8,26 +8,6 @@ type ReleaseCardReleaseProps = {
   displaySettings: DisplaySettings;
   order: string;
   direction: SortDirection;
-};
-
-const getKeyForOrder = (
-  releaseOrder: string,
-  release: FreshReleaseItem
-): string => {
-  switch (releaseOrder) {
-    case "release_date":
-      // Use the raw date string as the key (locale-independent, always consistent)
-      return release.release_date ?? "-";
-    case "artist_credit_name":
-    case "release_name":
-      // Always uppercase first character to avoid case-split duplicates
-      return (release[releaseOrder] ?? "").charAt(0).toUpperCase();
-    case "confidence":
-      // Round to 1 dp — raw floats (0.50001 vs 0.5) create spurious duplicate groups
-      return String(Math.round((release[releaseOrder] ?? 0) * 10) / 10);
-    default:
-      return "";
-  }
 };
 
 const getMapping = (
@@ -82,14 +62,12 @@ export default function ReleaseCardsGrid(props: ReleaseCardReleaseProps) {
     <>
       {mappedEntries.map(([releaseKey, releases]) => (
         <React.Fragment key={`${releaseKey}-container`}>
-          {order === "release_date" && (
-            // Keep the scroll target in normal flow when the title becomes sticky.
-            <div
-              className="release-card-grid-anchor"
-              data-date={releaseKey}
-              aria-hidden="true"
-            />
-          )}
+          {/* Keep the scroll target in normal flow when the title becomes sticky. */}
+          <div
+            className="release-card-grid-anchor"
+            data-group-key={releaseKey}
+            aria-hidden="true"
+          />
           <div className="release-card-grid-title" key={`${releaseKey}-title`}>
             {getReleaseCardGridTitle(releaseKey, order)}
           </div>
