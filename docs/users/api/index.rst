@@ -20,6 +20,7 @@ Reference
    :maxdepth: 1
 
    core
+   export
    playlist
    player
    recordings
@@ -64,8 +65,7 @@ To format the header correctly, you can use the following piece of code:
 
   .. code-block:: python3
 
-    # The following token must be valid, but it doesn't have to be the token of the user you're
-    # trying to get the listen history of.
+    # Use the account owner's token for exports and other account-specific operations.
     TOKEN = 'YOUR_TOKEN_HERE'
     AUTH_HEADER = {
       "Authorization": "Token {0}".format(TOKEN)
@@ -157,4 +157,3 @@ OpenAPI specification
 Contributor `rain0r <https://github.com/rain0r>`_ went through the trouble of making
 an OpenAPI 3 specification for the ListenBrainz API. Many thanks! Check it out here:
 `<https://github.com/rain0r/listenbrainz-openapi>`_
-
