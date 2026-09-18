@@ -132,8 +132,11 @@ export default function PlaylistCard({
               {playlist.annotation && (
                 <div
                   className="description text-summary"
+                  // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
                   // eslint-disable-next-line react/no-danger
-                  dangerouslySetInnerHTML={{ __html: playlist.annotation }}
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(playlist.annotation),
+                  }}
                 />
               )}
             </div>
