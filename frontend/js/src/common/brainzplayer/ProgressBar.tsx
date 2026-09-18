@@ -1,4 +1,4 @@
-import { throttle } from "lodash";
+import { debounce, throttle } from "lodash";
 import * as React from "react";
 import ReactTooltip from "react-tooltip";
 import { useAtomValue } from "jotai";
@@ -146,11 +146,15 @@ function ProgressBar(props: ProgressBarProps) {
     if (progressBarRef.current) {
       rectCacheRef.current = progressBarRef.current.getBoundingClientRect();
     }
-    const onResize = () => {
-      if (progressBarRef.current) {
-        rectCacheRef.current = progressBarRef.current.getBoundingClientRect();
-      }
-    };
+    const onResize = debounce(
+      () => {
+        if (progressBarRef.current) {
+          rectCacheRef.current = progressBarRef.current.getBoundingClientRect();
+        }
+      },
+      800,
+      { leading: false, trailing: true }
+    );
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -260,19 +264,8 @@ function ProgressBar(props: ProgressBarProps) {
         data-tip={tipContent}
         ref={progressBarRef}
       >
-        <div
-          className="progress-bar bg-info"
-          ref={progressBarInnerRef}
-          style={{ transform: "scaleX(0)", transformOrigin: "left" }}
-        />
-        <div
-          ref={handleRef}
-          className="progress-handle"
-          style={{
-            transform: "translate(-50%, -50%) scaleX(0)",
-            left: "var(--handle-x, 0px)",
-          }}
-        />
+        <div className="progress-bar bg-info" ref={progressBarInnerRef} />
+        <div ref={handleRef} className="progress-handle" />
         <ReactTooltip
           className="progress-tooltip"
           arrowColor="inherit"

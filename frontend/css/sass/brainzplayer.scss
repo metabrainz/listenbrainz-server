@@ -412,15 +412,15 @@ $youtube-expanded-width: 1280px;
     width: 100%;
     height: 100%;
     background-color: $primary-color;
+    transform: scaleX(0);
+    transform-origin: left;
   }
-  &:hover {
-    height: $progress-bar-hover-height;
-    top: -$progress-bar-hover-height;
-  }
-
+  &:hover,
   &.dragging {
     height: $progress-bar-hover-height;
     top: -$progress-bar-hover-height;
+  }
+  &.dragging {
     cursor: grabbing;
   }
 
