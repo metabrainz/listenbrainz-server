@@ -127,7 +127,7 @@ def connect(service_name: str):
         musicbrainz_id=user["musicbrainz_id"],
         service_label=connectable.label,
         permission_description=connectable.describe_permission(connect_request.permission),
-        hide_navbar_user_menu=True,
+        logo_url=url_for("static", filename=f"img/third-parties/{connect_request.client_name}.svg")
     )
 
 
