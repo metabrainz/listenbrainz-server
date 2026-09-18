@@ -35,6 +35,10 @@ class MessageCreator(abc.ABC):
         """ Chunk the query results data into multiple messages for storage in LB server. """
         raise NotImplementedError()
 
+    def create_completion_message(self) -> Optional[Dict]:
+        """Generate an optional message marking successful data generation."""
+        return None
+
 
 class StatsMessageCreator(MessageCreator, abc.ABC):
 
