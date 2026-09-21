@@ -42,10 +42,10 @@ export function alignMonths(data: Count[], months: string[]) {
   });
 }
 
-const monthLabel = (month: string) =>
+const monthLabel = (month: string, year: "numeric" | "2-digit" = "numeric") =>
   new Date(`${month}-01T00:00:00Z`).toLocaleDateString(undefined, {
     month: "short",
-    year: "numeric",
+    year,
     timeZone: "UTC",
   });
 const compactNumber = new Intl.NumberFormat(undefined, {
@@ -196,7 +196,7 @@ export default function CountEvolutionChart({
     </g>
   );
 
-  const tickEvery = Math.max(1, Math.ceil(months.length / (isMobile ? 4 : 10)));
+  const tickEvery = isMobile ? 6 : 3;
   return (
     <>
       <div className="d-flex gap-3 justify-content-center">
@@ -211,6 +211,8 @@ export default function CountEvolutionChart({
         <ResponsiveLine
           data={series.map((s) => ({
             id: s.id,
+            fill: s.color,
+            areaOpacity: s.id === "Users" ? 0.2 : 0.05,
             data: months.map((month, i) => ({
               x: month,
               y: s.values[i] === null ? null : s.scale(s.values[i]!.total),
@@ -223,7 +225,7 @@ export default function CountEvolutionChart({
           margin={{
             top: 20,
             right: isMobile ? 65 : 80,
-            bottom: 65,
+            bottom: 75,
             left: isMobile ? 65 : 80,
           }}
           xScale={{ type: "point" }}
@@ -231,14 +233,19 @@ export default function CountEvolutionChart({
           axisLeft={null}
           axisRight={null}
           axisBottom={{
-            format: monthLabel,
+            format: (month) => monthLabel(month, "2-digit"),
+            legend: "Time Period",
+            legendOffset: 55,
+            legendPosition: "middle",
             tickValues: months.filter((_, i) => i % tickEvery === 0),
             tickRotation: -45,
+            tickPadding: 10,
           }}
           enableGridX={false}
           gridYValues={[0, 0.2, 0.4, 0.6, 0.8, 1]}
           layers={[
             "grid",
+            "areas",
             "axes",
             axes,
             "lines",
@@ -247,6 +254,8 @@ export default function CountEvolutionChart({
             "slices",
           ]}
           pointSize={3}
+          enableArea
+          areaOpacity={0.2}
           curve="monotoneX"
           enableSlices="x"
           sliceTooltip={GrowthTooltip}
