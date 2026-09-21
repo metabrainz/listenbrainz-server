@@ -4,7 +4,7 @@ description of the whole flow.
 """
 
 import requests
-from flask import Blueprint, current_app, jsonify, redirect, render_template, request
+from flask import Blueprint, current_app, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user
 from werkzeug.exceptions import BadRequest
 
