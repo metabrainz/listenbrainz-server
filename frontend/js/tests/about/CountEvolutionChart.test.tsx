@@ -109,7 +109,7 @@ it("shows compact counts for both histories in a shared monthly tooltip", () => 
   expect(screen.getByText("20")).toBeInTheDocument();
   expect(screen.getByText("3B")).toBeInTheDocument();
   expect(screen.getByText("New users: 10")).toBeInTheDocument();
-  expect(screen.getByText("Listens submitted: 2B")).toBeInTheDocument();
+  expect(screen.getByText("New listens: 2B")).toBeInTheDocument();
 });
 
 it("keeps the user graph usable when listen history is unavailable", () => {
