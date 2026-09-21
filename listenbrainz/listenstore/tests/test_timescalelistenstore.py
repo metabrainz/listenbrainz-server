@@ -2,6 +2,7 @@ import logging
 import random
 from datetime import datetime, timedelta, timezone
 from time import time
+from unittest.mock import patch
 
 import sqlalchemy
 from brainzutils import cache
@@ -12,7 +13,7 @@ from listenbrainz.db import timescale as ts, timescale
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, \
-    TimescaleListenStore, REDIS_TOTAL_LISTEN_COUNT
+    TimescaleListenStore, REDIS_TOTAL_LISTEN_COUNT, REDIS_LISTEN_COUNT_EVOLUTION
 from listenbrainz.listenstore.timescale_utils import delete_listens_and_update_user_listen_data,\
     recalculate_all_user_data, add_missing_to_listen_users_metadata, update_user_listen_data
 from listenbrainz.webserver import create_app
@@ -333,6 +334,85 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
 
         total_count = self.logstore.get_total_listen_count()
         self.assertEqual(total_count, count_user_1 + count_user_2)
+
+    @patch("listenbrainz.listenstore.timescale_listenstore.datetime", wraps=datetime)
+    def test_listen_count_evolution(self, clock):
+        clock.now.return_value = datetime(2025, 3, 15, tzinfo=timezone.utc)
+        self.assertEqual(self.logstore.refresh_listen_count_evolution(), [])
+        count = self._create_test_data(self.testuser_name, self.testuser_id)
+        with ts.engine.begin() as connection:
+            connection.execute(text("UPDATE listen SET created = '2025-01-15'::timestamptz"))
+            connection.execute(text("""
+                UPDATE listen SET created = '2025-03-01 00:30:00+00'::timestamptz
+                 WHERE (listened_at, user_id, recording_msid) = (
+                     SELECT listened_at, user_id, recording_msid FROM listen LIMIT 1
+                 )
+            """))
+
+        expected = [
+            {"period": "2025-01-01", "new_listens": count - 1, "total_listens": count - 1},
+            {"period": "2025-02-01", "new_listens": 0, "total_listens": count - 1},
+            {"period": "2025-03-01", "new_listens": 1, "total_listens": count},
+        ]
+        self.assertEqual(self.logstore.refresh_listen_count_evolution(full=True), expected)
+        with patch.object(ts.engine, 'connect', side_effect=AssertionError('Unexpected database query')):
+            self.assertEqual(self.logstore.get_listen_count_evolution(), expected)
+            cache.delete(REDIS_LISTEN_COUNT_EVOLUTION)
+            self.assertEqual(self.logstore.get_listen_count_evolution(), [])
+
+        # Rebuilding must reflect deletions rather than retaining obsolete monthly counts.
+        with ts.engine.begin() as connection:
+            connection.execute(text("DELETE FROM listen WHERE created >= '2025-03-01'::timestamptz"))
+        self.assertEqual(self.logstore.refresh_listen_count_evolution(full=True), [
+            expected[0], expected[1],
+            {"period": "2025-03-01", "new_listens": 0, "total_listens": count - 1},
+        ])
+
+    @patch("listenbrainz.listenstore.timescale_listenstore.datetime", wraps=datetime)
+    def test_listen_evolution_retains_history_and_catches_up(self, clock):
+        clock.now.return_value = datetime(2025, 3, 15, tzinfo=timezone.utc)
+        january = {"period": "2025-01-01", "new_listens": 100, "total_listens": 100}
+        february = {"period": "2025-02-01", "new_listens": 20, "total_listens": 120}
+        cache.set(REDIS_LISTEN_COUNT_EVOLUTION, [january, february], expirein=0)
+        count = self._create_test_data(self.testuser_name, self.testuser_id)
+        with ts.engine.begin() as connection:
+            connection.execute(text("UPDATE listen SET created = '2025-03-15'::timestamptz"))
+
+        expected = [january,
+                    {"period": "2025-02-01", "new_listens": 0, "total_listens": 100},
+                    {"period": "2025-03-01", "new_listens": count, "total_listens": 100 + count}]
+        with patch('listenbrainz.listenstore.timescale_listenstore.cache.set', wraps=cache.set) as cache_set:
+            self.assertEqual(self.logstore.refresh_listen_count_evolution(), expected)
+            cache_set.assert_called_once_with(REDIS_LISTEN_COUNT_EVOLUTION, expected, expirein=0)
+
+        # February was finalized above. A second March refresh must not recount it,
+        # even if its underlying data has changed since finalization.
+        with ts.engine.begin() as connection:
+            connection.execute(text("UPDATE listen SET created = '2025-02-15'::timestamptz"))
+        clock.now.return_value = datetime(2025, 3, 16, tzinfo=timezone.utc)
+        self.assertEqual(self.logstore.refresh_listen_count_evolution(), [
+            january, expected[1],
+            {"period": "2025-03-01", "new_listens": 0, "total_listens": 100},
+        ])
+
+        # An outage across multiple months must not drop submissions in the gap.
+        with ts.engine.begin() as connection:
+            connection.execute(text("UPDATE listen SET created = '2025-04-15'::timestamptz"))
+        clock.now.return_value = datetime(2025, 7, 15, tzinfo=timezone.utc)
+        refreshed = self.logstore.refresh_listen_count_evolution()
+        self.assertEqual(refreshed[0], january)
+        self.assertEqual(refreshed[2]["new_listens"], 0)
+        self.assertEqual(refreshed[3]["new_listens"], count)
+        self.assertEqual(refreshed[-1],
+                         {"period": "2025-07-01", "new_listens": 0, "total_listens": 100 + count})
+        with patch.object(ts.engine, 'connect', side_effect=RuntimeError('Database unavailable')):
+            with self.assertRaises(RuntimeError):
+                self.logstore.refresh_listen_count_evolution()
+        self.assertEqual(self.logstore.get_listen_count_evolution(), refreshed)
+        # Only an explicit full rebuild reconciles the historical January count.
+        rebuilt = self.logstore.refresh_listen_count_evolution(full=True)
+        self.assertEqual(rebuilt[0]["period"], "2025-04-01")
+        self.assertEqual(rebuilt[-1]["total_listens"], count)
 
     def test_get_timestamps_for_user(self):
         self._create_test_data(self.testuser["musicbrainz_id"], self.testuser["id"])

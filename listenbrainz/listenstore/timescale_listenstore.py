@@ -9,6 +9,7 @@ import psycopg2
 import psycopg2.sql
 import sqlalchemy
 from brainzutils import cache
+from dateutil.relativedelta import relativedelta
 from psycopg2.errors import UntranslatableCharacter
 from psycopg2.extras import execute_values
 from sqlalchemy import text
@@ -26,6 +27,7 @@ from listenbrainz.webserver.listens_cache import get_listens_from_cache, set_lis
 REDIS_USER_LISTEN_COUNT = "lc."
 REDIS_USER_TIMESTAMPS = "ts."
 REDIS_TOTAL_LISTEN_COUNT = "lc-total"
+REDIS_LISTEN_COUNT_EVOLUTION = "listenbrainz.stats.listen_count_evolution"
 # cache listen counts for 5 minutes only, so that listen counts are always up-to-date in 5 minutes.
 REDIS_USER_LISTEN_COUNT_EXPIRY = 300
 
@@ -156,6 +158,62 @@ class TimescaleListenStore:
 
         cache.set(REDIS_TOTAL_LISTEN_COUNT, count, expirein=REDIS_USER_LISTEN_COUNT_EXPIRY)
         return count
+
+    def get_listen_count_evolution(self):
+        """Return cached monthly submission counts without scanning listens on a web request.
+
+        The refresh_listen_count_evolution management command populates this cache.
+        """
+        return cache.get(REDIS_LISTEN_COUNT_EVOLUTION) or []
+
+    def refresh_listen_count_evolution(self, full=False):
+        """Refresh recent submission months, retaining historical counts indefinitely.
+
+        Only bootstrap and explicit full rebuilds scan all listens. Normal refreshes
+        recount from the last cached month, finalizing it once after rollover.
+        Subsequent refreshes recount only the current month. Missed refreshes catch
+        up all unfinalized months. Older deletions require a full rebuild.
+        """
+        cached = None if full else cache.get(REDIS_LISTEN_COUNT_EVOLUTION)
+        current_month = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        refresh_from = current_month
+        if cached:
+            last_month = datetime.fromisoformat(cached[-1]["period"]).replace(tzinfo=timezone.utc)
+            refresh_from = min(refresh_from, last_month)
+        historical = [row for row in (cached or []) if row["period"] < refresh_from.date().isoformat()]
+        # Filter directly on created to use its index, including old listening
+        # dates imported recently. A cache miss or --full rebuild has no lower bound.
+        where = "WHERE created >= :refresh_from" if cached else ""
+        query = f"""
+            SELECT date_trunc('month', created AT TIME ZONE 'UTC') AS period,
+                   count(*) AS new_listens
+              FROM listen
+              {where}
+             GROUP BY 1
+             ORDER BY 1
+        """
+        with timescale.engine.connect() as connection:
+            result = connection.execute(text(query), {"refresh_from": refresh_from})
+            monthly = {row.period.date().isoformat(): int(row.new_listens) for row in result}
+
+        evolution = list(historical)
+        total = historical[-1]["total_listens"] if historical else 0
+        if historical:
+            month = datetime.fromisoformat(historical[-1]["period"]).replace(tzinfo=timezone.utc) + relativedelta(months=1)
+        elif monthly:
+            month = datetime.fromisoformat(min(monthly)).replace(tzinfo=timezone.utc)
+        else:
+            month = current_month + relativedelta(months=1)
+        while month <= current_month:
+            period = month.date().isoformat()
+            new_listens = monthly.get(period, 0)
+            total += new_listens
+            evolution.append({"period": period, "new_listens": new_listens, "total_listens": total})
+            month += relativedelta(months=1)
+
+        # No TTL: a failed refresh must not discard expensive historical counts.
+        cache.set(REDIS_LISTEN_COUNT_EVOLUTION, evolution, expirein=0)
+        return evolution
 
     def insert(self, listens):
         """
