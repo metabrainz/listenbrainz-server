@@ -126,7 +126,7 @@ def current_status():
            for period, total_users, new_users in _get_user_count_evolution()
        ]
     except DatabaseException as e:
-        user_count_evolution = {}
+        user_count_evolution = []
 
     listen_counts_per_day: List[dict] = []
     for delta in range(2):
@@ -147,6 +147,7 @@ def current_status():
         "listenCount": format(int(listen_count), ",d") if listen_count else "0",
         "userCount": user_count,
         "userCountEvolution": user_count_evolution,
+        "listenCountEvolution": _ts.get_listen_count_evolution(),
         "listenCountsPerDay": listen_counts_per_day,
     }
 
@@ -319,8 +320,7 @@ def _get_user_count():
 def _get_user_count_evolution():
     user_count_evolution_key = "{}.{}".format(STATS_PREFIX, 'user_count_evolution')
     user_count_evolution = cache.get(user_count_evolution_key, decode=True)
-    user_count_evolution = None
-    if user_count_evolution:
+    if user_count_evolution is not None:
         return user_count_evolution
     else:
         user_count_evolution = db_user.get_user_count_evolution(db_conn)
