@@ -85,7 +85,7 @@ it("plots both histories on independent scales and matches each axis to its line
   expect(right).toHaveTextContent("3B");
 });
 
-it("shows raw counts for both histories in a shared monthly tooltip", () => {
+it("shows compact counts for both histories in a shared monthly tooltip", () => {
   render(
     <CountEvolutionChart
       userCountEvolution={users}
@@ -107,11 +107,9 @@ it("shows raw counts for both histories in a shared monthly tooltip", () => {
     })
   );
   expect(screen.getByText("20")).toBeInTheDocument();
-  expect(screen.getByText("3,000,000,000")).toBeInTheDocument();
+  expect(screen.getByText("3B")).toBeInTheDocument();
   expect(screen.getByText("New users: 10")).toBeInTheDocument();
-  expect(
-    screen.getByText("Listens submitted: 2,000,000,000")
-  ).toBeInTheDocument();
+  expect(screen.getByText("Listens submitted: 2B")).toBeInTheDocument();
 });
 
 it("keeps the user graph usable when listen history is unavailable", () => {

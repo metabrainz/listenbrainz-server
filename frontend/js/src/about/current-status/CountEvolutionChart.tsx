@@ -53,6 +53,11 @@ const compactNumber = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 1,
 });
 
+const tooltipNumber = new Intl.NumberFormat("en", {
+  notation: "compact",
+  maximumSignificantDigits: 4,
+});
+
 function GrowthTooltip({ slice }: SliceTooltipProps) {
   return (
     <div
@@ -72,9 +77,9 @@ function GrowthTooltip({ slice }: SliceTooltipProps) {
         };
         return (
           <div key={point.serieId} style={{ color: point.serieColor }}>
-            {point.serieId}: <strong>{data.total.toLocaleString()}</strong>
+            {point.serieId}: <strong>{tooltipNumber.format(data.total)}</strong>
             <div>
-              {data.monthlyLabel}: {data.newCount.toLocaleString()}
+              {data.monthlyLabel}: {tooltipNumber.format(data.newCount)}
             </div>
           </div>
         );
@@ -121,7 +126,7 @@ export default function CountEvolutionChart({
       id: "Listens",
       color: COLOR_LB_BLUE,
       side: "right",
-      monthlyLabel: "Listens submitted",
+      monthlyLabel: "New listens",
       values: alignMonths(
         listenCountEvolution.map(({ period, total_listens, new_listens }) => ({
           period,
