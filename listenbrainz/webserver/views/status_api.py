@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from time import time
 
 from brainzutils import cache
@@ -17,6 +17,8 @@ from listenbrainz.db.playlist import get_recommendation_playlists_for_user
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound
+from listenbrainz.webserver.redis_connection import _redis
+from listenbrainz.webserver.timescale_connection import _ts
 
 CACHE_TIME = 60 * 60  # time in seconds we cache the fetched data
 DUMP_CACHE_TIME = 24 * 60 * 60  # time in seconds we cache the dump check
@@ -230,6 +232,32 @@ def get_dump_timestamp():
     return dump_timestamp
 
 
+def get_listen_counts():
+    """Return total stored listens and listens submitted today and yesterday."""
+    try:
+        listen_count = int(_ts.get_total_listen_count() or 0)
+    except Exception:
+        current_app.logger.error("Could not get total listen count", exc_info=True)
+        listen_count = None
+
+    listen_counts_per_day = []
+    today = datetime.today()
+    for delta in range(2):
+        day = today - timedelta(days=delta)
+        try:
+            day_listen_count = _redis.get_listen_count_for_day(day) or 0
+        except Exception:
+            current_app.logger.error("Could not get %s listen count from redis", day.strftime('%Y-%m-%d'), exc_info=True)
+            day_listen_count = None
+        listen_counts_per_day.append({
+            "date": day.strftime('%Y-%m-%d'),
+            "listen_count": day_listen_count,
+            "label": "today" if delta == 0 else "yesterday",
+        })
+
+    return {"listen_count": listen_count, "listen_counts_per_day": listen_counts_per_day}
+
+
 def get_service_status():
     """ Fetch the age of the last output of various services and return a dict:
 
@@ -282,7 +310,8 @@ def get_service_status():
         "stats_age": stats_age,
         "stats": get_stats_status(current_ts),
         "sitewide_stats_age": global_stats_age,
-        "incoming_listen_count": listen_count
+        "incoming_listen_count": listen_count,
+        **get_listen_counts(),
     }
 
 
@@ -326,13 +355,21 @@ def get_playlist_status():
 @ratelimit()
 def service_status():
     """ Fetch the recently updated metrics for age of stats, dumps and the number of items in the incoming
-    queue. This function returns JSON:
+    queue, total stored listens, and listens submitted today and yesterday.
+    Counts are numbers, with null indicating a failed lookup. A missing daily
+    counter is reported as zero. Daily dates use the server's local date, as on
+    the current-status page. This function returns JSON:
 
     .. code-block:: json
 
         {
             "dump_age": 60309,
             "incoming_listen_count": 0,
+            "listen_count": 1234567890,
+            "listen_counts_per_day": [
+                {"date": "2024-12-12", "label": "today", "listen_count": 12345},
+                {"date": "2024-12-11", "label": "yesterday", "listen_count": 67890}
+            ],
             "stats": [
                 {
                     "age": 38715,

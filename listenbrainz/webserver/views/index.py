@@ -1,11 +1,8 @@
 import locale
 import os
 import time
-from datetime import datetime
-from typing import List
 
 from brainzutils import cache
-from dateutil.relativedelta import relativedelta
 from flask import Blueprint, render_template, current_app, request, jsonify, Response, send_from_directory
 from flask_login import current_user, login_required
 from requests.exceptions import HTTPError
@@ -111,7 +108,7 @@ def index():
 @web_listenstore_needed
 def current_status():
     service_status = get_service_status()
-    listen_count = _ts.get_total_listen_count()
+    listen_count = service_status["listen_count"]
     try:
         user_count = format(int(_get_user_count()), ',d')
     except DatabaseException as e:
@@ -128,19 +125,14 @@ def current_status():
     except DatabaseException as e:
         user_count_evolution = {}
 
-    listen_counts_per_day: List[dict] = []
-    for delta in range(2):
-        day = datetime.today() - relativedelta(days=delta)
-        try:
-            day_listen_count = _redis.get_listen_count_for_day(day)
-        except Exception:
-            current_app.logger.error("Could not get %s listen count from redis", day.strftime('%Y-%m-%d'), exc_info=True)
-            day_listen_count = None
-        listen_counts_per_day.append({
-            "date": day.strftime('%Y-%m-%d'),
-            "listenCount": format(day_listen_count, ',d') if day_listen_count else "0",
-            "label": "today" if delta == 0 else "yesterday",
-        })
+    listen_counts_per_day = [
+        {
+            "date": day["date"],
+            "listenCount": format(day["listen_count"] or 0, ',d'),
+            "label": day["label"],
+        }
+        for day in service_status["listen_counts_per_day"]
+    ]
 
     data = {
         "serviceStatus": service_status,
