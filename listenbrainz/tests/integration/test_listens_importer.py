@@ -1015,6 +1015,37 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(metadata["attempted_count"], 1)
         self.assertEqual(metadata["success_count"], 1)
 
+    def test_youtube_music_preserves_api_title(self):
+        importer = YouTubeMusicListensImporter(self.db_conn, self.ts_conn)
+        item = {
+            "titleUrl": "https://www.youtube.com/watch?v=2o9aoL0NWpw",
+            "time": "2021-12-18T10:33:36Z",
+        }
+        takeout_item = {
+            **item,
+            "title": "Watched Watched You Fall",
+            "subtitles": [{"name": "Test Artist - Topic"}],
+        }
+        metadata = {
+            "2o9aoL0NWpw": {
+                "snippet": {
+                    "title": "Watched You Fall",
+                    "channelTitle": "Test Artist - Topic",
+                },
+            },
+        }
+
+        with self.app.app_context(), \
+                mock.patch.dict(self.app.config, {"YOUTUBE_API_KEY": "test-key"}), \
+                mock.patch.object(importer, "_fetch_videos_metadata", return_value=metadata) as fetch:
+            listens = importer.parse_listen_batch([takeout_item, item])
+
+        fetch.assert_called_once_with(["2o9aoL0NWpw"])
+        self.assertEqual(len(listens), 2)
+        for listen in listens:
+            self.assertEqual(listen["track_metadata"]["track_name"], "Watched You Fall")
+            self.assertEqual(listen["track_metadata"]["artist_name"], "Test Artist")
+
     def test_youtube_music_video_id_formats(self):
         extract_video_id = YouTubeMusicListensImporter._extract_video_id
 

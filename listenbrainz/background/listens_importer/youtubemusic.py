@@ -109,21 +109,22 @@ class YouTubeMusicListensImporter(BaseListensImporter):
                                 "title": title,
                                 "subtitles": [{"name": channel_name}],
                             }
-                            converted_listen = self._convert_item_to_listen(enriched_item)
+                            converted_listen = self._convert_item_to_listen(enriched_item, from_takeout=False)
                             if converted_listen:
                                 listens.append(converted_listen)
 
         return listens
 
-    def _convert_item_to_listen(self, item: YouTubeHistoryItem) -> dict[str, Any] | None:
+    def _convert_item_to_listen(self, item: YouTubeHistoryItem, *, from_takeout: bool = True) -> dict[str, Any] | None:
         """Attempt to convert a single history item into a ListenBrainz listen.
 
         Returns the listen dict on success or None if required metadata is
-        missing (title or channel).
+        missing (title or channel). Only Takeout titles contain an activity prefix;
+        titles recovered from the API must be preserved as returned.
         """
         try:
             title = item.get("title", "")
-            if title.startswith("Watched "):
+            if from_takeout and title.startswith("Watched "):
                 title = title.removeprefix("Watched ")
 
             if not title:
