@@ -6,7 +6,7 @@ import tempfile
 import time
 import zipfile
 from datetime import datetime, timezone, timedelta
-from unittest import mock
+from unittest import expectedFailure, mock
 
 from sqlalchemy import text
 
@@ -1045,6 +1045,26 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         for listen in listens:
             self.assertEqual(listen["track_metadata"]["track_name"], "Watched You Fall")
             self.assertEqual(listen["track_metadata"]["artist_name"], "Test Artist")
+
+    @expectedFailure
+    def test_youtube_music_spanish_activity_title(self):
+        # Takeout export languages other than English are not currently supported.
+        # Spanish activity text should not become part of the imported track name.
+        # Hence the @expectedFailure decorator for this test
+        importer = YouTubeMusicListensImporter(self.db_conn, self.ts_conn)
+        item = {
+            "header": "YouTube Music",
+            "title": "Has visto Killing In the Name",
+            "titleUrl": "https://www.youtube.com/watch?v=2o9aoL0NWpw",
+            "subtitles": [{"name": "Rage Against the Machine - Topic"}],
+            "time": "2021-12-18T09:13:36.211Z",
+        }
+
+        with self.app.app_context(), mock.patch.dict(self.app.config, {"YOUTUBE_API_KEY": None}):
+            listens = importer.parse_listen_batch([item])
+
+        self.assertEqual(len(listens), 1)
+        self.assertEqual(listens[0]["track_metadata"]["track_name"], "Killing In the Name")
 
     def test_youtube_music_video_id_formats(self):
         extract_video_id = YouTubeMusicListensImporter._extract_video_id
