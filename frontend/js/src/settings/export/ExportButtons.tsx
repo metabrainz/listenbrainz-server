@@ -2,7 +2,13 @@ import * as React from "react";
 
 import { toast } from "react-toastify";
 import { startCase } from "lodash";
-import { endOfDay, format, getUnixTime, parseISO } from "date-fns";
+import {
+  endOfDay,
+  format,
+  fromUnixTime,
+  getUnixTime,
+  parseISO,
+} from "date-fns";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowRightLong,
@@ -32,6 +38,8 @@ type Export = {
   progress: string;
   filename: string | null;
   status: ExportStatus;
+  start_time: number | null;
+  end_time: number | null;
 };
 
 function renderExport(
@@ -57,6 +65,18 @@ function renderExport(
           <dd className="col-8">{startCase(ex.type)}</dd>
           <dt className="col-4">Requested on</dt>
           <dd className="col-8">{format(ex.created, "PPp")}</dd>
+          <dt className="col-4">Start date</dt>
+          <dd className="col-8">
+            {ex.start_time != null
+              ? format(fromUnixTime(ex.start_time), "PPp")
+              : "Earliest listen"}
+          </dd>
+          <dt className="col-4">End date</dt>
+          <dd className="col-8">
+            {ex.end_time != null
+              ? format(fromUnixTime(ex.end_time), "PPp")
+              : "Latest listen"}
+          </dd>
           <dt className="col-4">Export #</dt>
           <dd className="col-8">{ex.export_id}</dd>
         </dl>
