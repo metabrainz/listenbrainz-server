@@ -312,6 +312,7 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
 
     def test_export_listen_time_range(self):
         """Requested bounds survive the queue and filter the archive inclusively."""
+        self.temporary_login(self.user['login_id'])
         self.assert200(self.send_listens())
         url = self.custom_url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
         self.assert200(self.wait_for_query_to_have_items(url, 3, attempts=20, query_string={'count': '3'}))
@@ -334,8 +335,11 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
                 response = self.client.post('/1/export/', headers=headers, json=bounds)
                 self.assert200(response)
                 export_id = response.json['export_id']
+                self.assertEqual(response.json['start_time'], bounds.get('start_time'))
+                self.assertEqual(response.json['end_time'], bounds.get('end_time'))
                 for _ in range(60):
-                    response = self.client.get(f'/1/export/{export_id}/download', headers=headers)
+                    # Poll via the web route so waiting for the worker does not consume API rate limits.
+                    response = self.client.post(self.custom_url_for('export.download_export_archive', export_id=export_id))
                     if response.status_code != 404:
                         break
                     time.sleep(1)
@@ -347,6 +351,16 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
                     self.assertEqual(sorted(listens), expected)
                     self.assertIn('feedback.jsonl', archive.namelist())
                     self.assertIn('pinned_recording.jsonl', archive.namelist())
+                response = self.client.get(f'/1/export/{export_id}', headers=headers)
+                self.assert200(response)
+                self.assertEqual(response.json['status'], 'completed')
+                self.assertEqual(response.json['start_time'], bounds.get('start_time'))
+                self.assertEqual(response.json['end_time'], bounds.get('end_time'))
+                response = self.client.get('/1/export/list', headers=headers)
+                self.assert200(response)
+                completed = next(item for item in response.json if item['export_id'] == export_id)
+                self.assertEqual(completed['start_time'], bounds.get('start_time'))
+                self.assertEqual(completed['end_time'], bounds.get('end_time'))
                 self.assert200(self.client.post(f'/1/export/{export_id}/delete', headers=headers))
 
     def create_export_row(self, filename, status="completed", available_until=None, user=None):
