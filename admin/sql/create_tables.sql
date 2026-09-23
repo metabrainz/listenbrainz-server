@@ -235,6 +235,8 @@ CREATE TABLE user_data_export (
     status              user_data_export_status_type NOT NULL,
     progress            TEXT,
     filename            TEXT,
+    start_time          BIGINT,
+    end_time            BIGINT,
     available_until     TIMESTAMPTZ,
     created             TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
