@@ -1,13 +1,30 @@
 User history exports
 ====================
 
-Use this API to retrieve a user's **entire listening history**, for example when
-initializing a third-party application, doing local analysis, or importing data
-into an MCP server. Request one export and download its ZIP archive instead of
-scraping or repeatedly paginating through ``/1/user/{user_name}/listens``. This
-reduces API traffic and avoids a separate API request for every page of history.
-Use the listens endpoint for recent listens, bounded queries, and incremental
-updates after the initial import.
+Use this API to retrieve a user's listening history, either in full or within an
+optional time range, for example when initializing a third-party application,
+doing local analysis, or importing data into an MCP server. For large histories,
+request one export and download its ZIP archive instead of scraping or repeatedly
+paginating through ``/1/user/{user_name}/listens``. This reduces API traffic and
+avoids a separate API request for every page of history. Use the listens endpoint
+for recent listens, small bounded queries, and incremental updates after the
+initial import.
+
+Choosing between an export and the listens endpoint
+--------------------------------------------------
+
+Use ``GET /1/user/{user_name}/listens`` with ``min_ts`` and ``max_ts`` for a few
+days or a couple of weeks of history and for incremental updates. Consider an export
+for several months, years, or a full-history import. If you already know the
+approximate volume, prefer the listens endpoint for roughly ten pages or fewer:
+up to about 10,000 listens with ``count=1000`` (the maximum page size).
+These are recommendations, not enforced limits or a measured performance
+crossover.
+
+Every export queues background work, generates and uploads an archive, and
+requires polling and downloading;
+it also exports all feedback and pinned recordings even for a short listen range.
+That overhead is usually unnecessary for a small request.
 
 Authentication
 --------------
@@ -28,7 +45,8 @@ Request, poll, download
 1. Call ``GET /1/export/list``. Reuse a completed, unexpired export if it is fresh
    enough for the user's task, or resume polling an existing ``waiting`` or
    ``in_progress`` export.
-2. If no suitable export exists, call ``POST /1/export/`` with no request body.
+2. If no suitable export exists, call ``POST /1/export/`` with no request body
+   for the full history, or with the optional time bounds described below.
    Save the returned ``export_id`` so that retries and later sessions reuse it.
 3. Poll ``GET /1/export/{export_id}`` at large intervals until its status is
    ``completed``. Start with a delay of at least 30 seconds and increase it,
@@ -50,6 +68,34 @@ contact details):
      -A 'MyMusicApp/1.0 ( me@example.com )' \
      -X POST https://api.listenbrainz.org/1/export/
 
+To limit the listening history, send a JSON object with ``start_time`` and/or
+``end_time`` as integer UNIX timestamps in seconds (UTC). Both bounds are
+inclusive, and ``start_time`` must be less than or equal to ``end_time``. Each
+omitted bound is calculated from the user's earliest or latest listen.
+An empty body or ``{}`` exports the full history. Null values,
+strings, fractional timestamps, and timestamps outside the supported datetime
+range are rejected.
+
+For example, to export listens from January 2026:
+
+.. code-block:: sh
+
+   curl --fail-with-body \
+     -H "Authorization: Token ${LB_TOKEN}" \
+     -H 'Content-Type: application/json' \
+     -A 'MyMusicApp/1.0 ( me@example.com )' \
+     -d '{"start_time":1767225600,"end_time":1769903999}' \
+     https://api.listenbrainz.org/1/export/
+
+The range filters listens only. Feedback, pinned recordings, and account
+information are exported in full, even if there are no listens in the range.
+Only one export per user can be pending at a time, regardless of its range.
+The creation, status, and list responses include the requested ``start_time``
+and ``end_time`` in UNIX seconds, including after completion. A ``null`` bound
+means it was omitted and determined automatically when the worker ran; these
+fields do not report the calculated bounds. Exports created before bounds were
+stored also have ``null`` values.
+
 The response, also used by the status endpoint, has this shape:
 
 .. code-block:: json
@@ -61,7 +107,9 @@ The response, also used by the status endpoint, has this shape:
      "created": "2026-09-17T12:00:00+00:00",
      "progress": "Your data export will start soon.",
      "status": "waiting",
-     "filename": null
+     "filename": null,
+     "start_time": null,
+     "end_time": null
    }
 
 Poll the returned ID; after ``status`` becomes ``completed``, download it:
@@ -94,8 +142,11 @@ Endpoint reference
    Queue an export for the authenticated user. No request body is required.
 
    :reqheader Authorization: Token <user token>
+   :reqheader Content-Type: application/json (when sending a body)
+   :<json int start_time: Optional inclusive start of the listen range, in UNIX seconds.
+   :<json int end_time: Optional inclusive end of the listen range, in UNIX seconds.
    :statuscode 200: Export queued; returns the export object above.
-   :statuscode 400: An export is already pending. List exports and reuse it.
+   :statuscode 400: Invalid time bounds or request body, or an export is already pending.
 
 .. http:get:: /1/export/list
 
