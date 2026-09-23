@@ -49,6 +49,8 @@ def mark_export_failed(db_conn, export_id):
 
 def get_time_ranges_for_listens(min_dt: datetime, max_dt: datetime):
     """ Get year-month sub periods for a given time range. """
+    if min_dt > max_dt:
+        return []
     years = []
     for year in range(min_dt.year, max_dt.year + 1):
         if year == min_dt.year:
@@ -67,8 +69,8 @@ def get_time_ranges_for_listens(min_dt: datetime, max_dt: datetime):
             end_date = start_date + relativedelta(months=1, days=-1)
             months.append({
                 "month": month,
-                "start": datetime.combine(start_date, time.min, tzinfo=timezone.utc),
-                "end": datetime.combine(end_date, time.max, tzinfo=timezone.utc),
+                "start": max(min_dt, datetime.combine(start_date, time.min, tzinfo=timezone.utc)),
+                "end": min(max_dt, datetime.combine(end_date, time.max, tzinfo=timezone.utc)),
             })
         years.append({
             "year": year,
@@ -189,11 +191,18 @@ def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: 
                                  start_time=start_time, end_time=end_time)
 
 
-def export_listens_for_user(export_id, db_conn, ts_conn, tmp_dir: str, user_id: int) -> list[str]:
+def export_listens_for_user(export_id, db_conn, ts_conn, tmp_dir: str, user_id: int,
+                            start_time: datetime | None = None, end_time: datetime | None = None) -> list[str]:
     """ Export user's listens to files organized by year and month in jsonl format. """
     update_export_progress(db_conn, export_id, "Exporting user listens")
     files = []
-    min_ts, max_ts = timescale_connection._ts.get_timestamps_for_user(user_id)
+    min_ts, max_ts = start_time, end_time
+    if min_ts is None or max_ts is None:
+        first_listen, last_listen = timescale_connection._ts.get_timestamps_for_user(user_id)
+        if min_ts is None:
+            min_ts = first_listen
+        if max_ts is None:
+            max_ts = last_listen
     time_ranges = get_time_ranges_for_listens(min_ts, max_ts)
 
     for time_range in time_ranges:
@@ -320,7 +329,13 @@ def export_user(db_conn, ts_conn, user_id: int, metadata):
                 user_file = export_info_for_user(export_id, db_conn, tmp_dir, user)
                 all_files.append(user_file)
 
-                listen_files = export_listens_for_user(export_id, db_conn, ts_conn, tmp_dir, user_id)
+                start_time = metadata.get("start_time")
+                end_time = metadata.get("end_time")
+                listen_files = export_listens_for_user(
+                    export_id, db_conn, ts_conn, tmp_dir, user_id,
+                    start_time=datetime.fromtimestamp(start_time, timezone.utc) if start_time is not None else None,
+                    end_time=datetime.fromtimestamp(end_time, timezone.utc) if end_time is not None else None,
+                )
                 all_files.extend(listen_files)
 
                 feedback_file = export_feedback_for_user(export_id, db_conn, tmp_dir, user_id)
