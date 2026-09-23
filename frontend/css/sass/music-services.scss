@@ -110,11 +110,11 @@ $checkbox-size: 40px;
     input[type="radio"] {
       display: none;
 
-      &:not(:disabled)~label {
+      &:not(:disabled) ~ label {
         cursor: pointer;
       }
 
-      &:disabled~label {
+      &:disabled ~ label {
         color: $gray-400;
         border-color: $gray-400;
         cursor: not-allowed;
@@ -136,7 +136,7 @@ $checkbox-size: 40px;
       font-weight: normal;
       position: relative;
 
-      >.title {
+      > .title {
         flex: 1;
         flex-basis: 120px;
         padding: 0 0.4em;
@@ -147,18 +147,18 @@ $checkbox-size: 40px;
         line-height: $headings-line-height;
       }
 
-      >.details {
+      > .details {
         flex: 2;
         text-align: justify;
         flex-basis: 200px;
       }
     }
 
-    input[type="radio"]:checked+label {
+    input[type="radio"]:checked + label {
       background: $green;
       color: $white;
 
-      >.details {
+      > .details {
         font-weight: bold;
       }
 
@@ -189,7 +189,7 @@ $checkbox-size: 40px;
         border-color: $border-color;
       }
 
-      input[type="radio"]:checked+label {
+      input[type="radio"]:checked + label {
         background: $gray-500;
       }
     }
