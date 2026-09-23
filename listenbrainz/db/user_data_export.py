@@ -18,7 +18,8 @@ def _row_to_dict(row) -> Dict[str, Any]:
     }
 
 
-def request_user_data_export(db_conn, user_id: int) -> Optional[Dict[str, Any]]:
+def request_user_data_export(db_conn, user_id: int, start_time: int | None = None,
+                             end_time: int | None = None) -> Optional[Dict[str, Any]]:
     """ Add a request to export the user data to an archive in background. """
     query = """
         INSERT INTO user_data_export (user_id, type, status, progress)
@@ -36,11 +37,16 @@ def request_user_data_export(db_conn, user_id: int) -> Optional[Dict[str, Any]]:
     export = result.first()
 
     if export is not None:
+        metadata = {"export_id": export.id}
+        if start_time is not None:
+            metadata["start_time"] = start_time
+        if end_time is not None:
+            metadata["end_time"] = end_time
         query = "INSERT INTO background_tasks (user_id, task, metadata) VALUES (:user_id, :task, :metadata) ON CONFLICT DO NOTHING RETURNING id"
         result = db_conn.execute(text(query), {
             "user_id": user_id,
             "task": "export_all_user_data",
-            "metadata": json.dumps({"export_id": export.id})
+            "metadata": json.dumps(metadata)
         })
         task = result.first()
         if task is not None:
