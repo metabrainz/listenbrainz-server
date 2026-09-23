@@ -3,43 +3,55 @@ from typing import List
 import sqlalchemy
 
 
-def watch_event(db_conn, user_id: int, event_mbid: str) -> None:
+def watch_event(db_conn, user_id: int, event_mbid: str) -> bool:
     """
     Mark an event as watched by the user.
     Uses ON CONFLICT DO NOTHING for idempotent inserts.
+
+    Returns True if a new watch was created, False if the user was already
+    watching the event.
     """
-    db_conn.execute(
+    result = db_conn.execute(
         sqlalchemy.text("""
         INSERT INTO event_interaction (user_id, event_mbid, interaction_type)
         VALUES (:user_id, :event_mbid, 'watch')
         ON CONFLICT (user_id, event_mbid, interaction_type) DO NOTHING
+        RETURNING 1
     """),
         {
             "user_id": user_id,
             "event_mbid": event_mbid,
         },
     )
+    row = result.fetchone()
     db_conn.commit()
+    return row is not None
 
 
-def unwatch_event(db_conn, user_id: int, event_mbid: str) -> None:
+def unwatch_event(db_conn, user_id: int, event_mbid: str) -> bool:
     """
     Remove a watch interaction for the user on the given event.
+
+    Returns True if a watch was removed, False if the user was not watching
+    the event.
     """
-    db_conn.execute(
+    result = db_conn.execute(
         sqlalchemy.text("""
         DELETE
         FROM event_interaction
         WHERE user_id = :user_id
           AND event_mbid = :event_mbid
           AND interaction_type = 'watch'
+        RETURNING 1
     """),
         {
             "user_id": user_id,
             "event_mbid": event_mbid,
         },
     )
+    row = result.fetchone()
     db_conn.commit()
+    return row is not None
 
 
 def is_watching_event(db_conn, user_id: int, event_mbid: str) -> bool:

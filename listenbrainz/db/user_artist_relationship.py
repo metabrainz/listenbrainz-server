@@ -5,21 +5,24 @@ import sqlalchemy
 VALID_RELATIONSHIP_TYPES = ("follow",)
 
 
-def insert(db_conn, user_id: int, artist_mbid: str, relationship_type: str) -> None:
+def insert(db_conn, user_id: int, artist_mbid: str, relationship_type: str) -> bool:
     """
     Insert a user artist relationship like follow.
     Uses ON CONFLICT DO NOTHING for idempotent inserts.
+
+    Returns True if a new relationship was created, False if it already existed.
     """
 
     if relationship_type not in VALID_RELATIONSHIP_TYPES:
         raise ValueError(f"Invalid relationship type: {relationship_type}")
 
-    db_conn.execute(
+    result = db_conn.execute(
         sqlalchemy.text("""
         INSERT INTO user_artist_relationship (user_id, artist_mbid, relationship_type)
              VALUES (:user_id, :artist_mbid, :relationship_type)
         ON CONFLICT (user_id, artist_mbid, relationship_type)
          DO NOTHING
+          RETURNING 1
     """),
         {
             "user_id": user_id,
@@ -27,24 +30,29 @@ def insert(db_conn, user_id: int, artist_mbid: str, relationship_type: str) -> N
             "relationship_type": relationship_type,
         },
     )
+    row = result.fetchone()
     db_conn.commit()
+    return row is not None
 
 
-def delete(db_conn, user_id: int, artist_mbid: str, relationship_type: str) -> None:
+def delete(db_conn, user_id: int, artist_mbid: str, relationship_type: str) -> bool:
     """
     Delete a user artist relationship.
+
+    Returns True if a relationship was removed, False if none existed.
     """
 
     if relationship_type not in VALID_RELATIONSHIP_TYPES:
         raise ValueError(f"Invalid relationship type: {relationship_type}")
 
-    db_conn.execute(
+    result = db_conn.execute(
         sqlalchemy.text("""
         DELETE
         FROM user_artist_relationship
         WHERE user_id = :user_id
           AND artist_mbid = :artist_mbid
           AND relationship_type = :relationship_type
+          RETURNING 1
     """),
         {
             "user_id": user_id,
@@ -52,7 +60,9 @@ def delete(db_conn, user_id: int, artist_mbid: str, relationship_type: str) -> N
             "relationship_type": relationship_type,
         },
     )
+    row = result.fetchone()
     db_conn.commit()
+    return row is not None
 
 
 def is_following_artist(db_conn, user_id: int, artist_mbid: str) -> bool:
