@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
-from unittest import TestCase
+from tempfile import TemporaryDirectory
+from unittest import TestCase, mock
 
-from listenbrainz.background.export import get_time_ranges_for_listens
+from listenbrainz.background.export import export_listens_for_user, get_time_ranges_for_listens
 
 
 class ExportTimeRangesTestCase(TestCase):
@@ -21,3 +22,38 @@ class ExportTimeRangesTestCase(TestCase):
             datetime(2024, 1, 20, tzinfo=timezone.utc),
             datetime(2024, 1, 10, tzinfo=timezone.utc),
         ), [])
+
+    @mock.patch('listenbrainz.background.export.update_export_progress')
+    @mock.patch('listenbrainz.background.export.timescale_connection._ts')
+    @mock.patch('listenbrainz.background.export.export_listens_for_time_range', return_value=1)
+    def test_export_clamps_queries_to_user_history(self, export_range, store, update_progress):
+        first = datetime(2022, 1, 15, tzinfo=timezone.utc)
+        last = datetime(2022, 2, 10, tzinfo=timezone.utc)
+        store.get_timestamps_for_user.return_value = (first, last)
+        with TemporaryDirectory() as tmp_dir:
+            files = export_listens_for_user(
+                1, mock.Mock(), mock.Mock(), tmp_dir, 2,
+                datetime(2000, 1, 1, tzinfo=timezone.utc),
+                datetime(2030, 1, 1, tzinfo=timezone.utc),
+            )
+        self.assertEqual(len(files), 2)
+        self.assertEqual(export_range.call_count, 2)
+        self.assertEqual(export_range.call_args_list[0].args[3], first)
+        self.assertEqual(export_range.call_args_list[-1].args[4], last)
+
+    @mock.patch('listenbrainz.background.export.update_export_progress')
+    @mock.patch('listenbrainz.background.export.timescale_connection._ts')
+    @mock.patch('listenbrainz.background.export.export_listens_for_time_range')
+    def test_export_skips_queries_when_range_does_not_overlap(self, export_range, store, update_progress):
+        store.get_timestamps_for_user.return_value = (
+            datetime(2022, 1, 15, tzinfo=timezone.utc),
+            datetime(2022, 2, 10, tzinfo=timezone.utc),
+        )
+        with TemporaryDirectory() as tmp_dir:
+            files = export_listens_for_user(
+                1, mock.Mock(), mock.Mock(), tmp_dir, 2,
+                datetime(2000, 1, 1, tzinfo=timezone.utc),
+                datetime(2001, 1, 1, tzinfo=timezone.utc),
+            )
+        self.assertEqual(files, [])
+        export_range.assert_not_called()

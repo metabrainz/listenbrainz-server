@@ -196,13 +196,9 @@ def export_listens_for_user(export_id, db_conn, ts_conn, tmp_dir: str, user_id: 
     """ Export user's listens to files organized by year and month in jsonl format. """
     update_export_progress(db_conn, export_id, "Exporting user listens")
     files = []
-    min_ts, max_ts = start_time, end_time
-    if min_ts is None or max_ts is None:
-        first_listen, last_listen = timescale_connection._ts.get_timestamps_for_user(user_id)
-        if min_ts is None:
-            min_ts = first_listen
-        if max_ts is None:
-            max_ts = last_listen
+    first_listen, last_listen = timescale_connection._ts.get_timestamps_for_user(user_id)
+    min_ts = max(start_time, first_listen) if start_time is not None else first_listen
+    max_ts = min(end_time, last_listen) if end_time is not None else last_listen
     time_ranges = get_time_ranges_for_listens(min_ts, max_ts)
 
     for time_range in time_ranges:
