@@ -1,7 +1,7 @@
 from flask import Blueprint, current_app, jsonify
 from flask_login import current_user
 from psycopg2 import DatabaseError
-from listenbrainz.webserver.views.export_api import _prepare_export_download_response
+from listenbrainz.webserver.views.export_api import _parse_export_time_range, _prepare_export_download_response
 
 from listenbrainz.db import user_data_export
 from listenbrainz.webserver import db_conn
@@ -17,8 +17,9 @@ export_bp = Blueprint("export", __name__)
 @web_listenstore_needed
 def create_export_task():
     """ Add a request to export the user data to an archive in background. """
+    start_time, end_time = _parse_export_time_range()
     try:
-        export_data = user_data_export.request_user_data_export(db_conn, current_user.id)
+        export_data = user_data_export.request_user_data_export(db_conn, current_user.id, start_time, end_time)
         if export_data is not None:
             return jsonify(export_data)
         raise APIBadRequest(message="Data export already requested.")

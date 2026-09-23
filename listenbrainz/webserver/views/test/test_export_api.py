@@ -1,4 +1,5 @@
 import unittest
+from unittest import mock
 from flask import json
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.db.user import get_or_create
@@ -58,6 +59,38 @@ class ExportAPIIntegrationTestCase(ListenAPIIntegrationTestCase):
         
         response = self.client.get('/1/export/list')
         self.assertEqual(response.status_code, 401)
+
+    def test_create_export_time_bounds(self):
+        self.temporary_login(self.user['login_id'])
+        bounds = [{}, {"start_time": 0}, {"end_time": 1600000000},
+                  {"start_time": 1500000000, "end_time": 1600000000},
+                  {"start_time": 1600000000, "end_time": 1600000000}]
+        for url in ('/1/export/', '/export/'):
+            for body in bounds:
+                with self.subTest(url=url, body=body), mock.patch(
+                    'listenbrainz.db.user_data_export.request_user_data_export', return_value={"export_id": 123}
+                ) as create:
+                    response = self.client.post(url, headers=self.auth_headers, json=body)
+                    self.assertEqual(response.status_code, 200)
+                    self.assertEqual(create.call_args.args[1:],
+                                     (self.user['id'], body.get('start_time'), body.get('end_time')))
+
+    def test_invalid_export_time_bounds(self):
+        self.temporary_login(self.user['login_id'])
+        bodies = [[], "invalid", {"start_time": None}, {"start_time": True},
+                  {"start_time": "1600000000"}, {"end_time": 1.5},
+                  {"start_time": 10, "end_time": 0}, {"end_time": 10 ** 100},
+                  {"start_time": -10 ** 100}]
+        for url in ('/1/export/', '/export/'):
+            for body in bodies:
+                with self.subTest(url=url, body=body), mock.patch(
+                    'listenbrainz.db.user_data_export.request_user_data_export'
+                ) as create:
+                    response = self.client.post(url, headers=self.auth_headers, json=body)
+                    self.assertEqual(response.status_code, 400)
+                    create.assert_not_called()
+            response = self.client.post(url, headers=self.auth_headers, data='{', content_type='application/json')
+            self.assertEqual(response.status_code, 400)
 
     def test_get_nonexistent_export(self):
         """ Test getting a non-existent export """
