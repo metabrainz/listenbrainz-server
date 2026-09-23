@@ -4,6 +4,8 @@ from datetime import datetime
 from typing import List, Set
 import uuid
 
+import traceback
+
 import psycopg2
 import psycopg2.extras
 from psycopg2.extras import execute_values
@@ -227,7 +229,7 @@ def create_metadata_cache(cache_cls, cache_key, required_tables, use_lb_conn: bo
                 cache.run()
                 success = True
             except Exception:
-                log(format_exc())
+                log(traceback.format_exc())
 
     except psycopg2.OperationalError:
         if not success:

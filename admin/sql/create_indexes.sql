@@ -35,6 +35,13 @@ CREATE UNIQUE INDEX user_id_entity_ndx_do_not_recommend ON recommendation.do_not
 CREATE INDEX user_0_user_relationship_ndx ON user_relationship (user_0);
 CREATE INDEX user_1_user_relationship_ndx ON user_relationship (user_1);
 
+-- No index on user_id for the two tables below: it is the leading column of each
+-- table's composite primary key, so the PK index already serves user_id lookups
+-- and the cascading delete from "user".
+CREATE INDEX artist_mbid_user_artist_relationship_ndx ON user_artist_relationship (artist_mbid);
+
+CREATE INDEX event_mbid_event_interaction_ndx ON event_interaction (event_mbid);
+
 CREATE UNIQUE INDEX user_id_rec_mbid_ndx_feedback ON recommendation_feedback (user_id, recording_mbid);
 
 CREATE INDEX rating_recommendation_feedback ON recommendation_feedback (rating);

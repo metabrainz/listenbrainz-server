@@ -115,6 +115,18 @@ ALTER TABLE user_relationship
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+ALTER TABLE user_artist_relationship
+    ADD CONSTRAINT user_artist_relationship_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE event_interaction
+    ADD CONSTRAINT event_interaction_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 ALTER TABLE recommendation_feedback
     ADD CONSTRAINT recommendation_feedback_user_id_foreign_key
     FOREIGN KEY (user_id)
