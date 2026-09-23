@@ -112,6 +112,27 @@ def get_followed_artist_mbids(
     return result.mappings().all()
 
 
+def get_all_followed_artist_mbids(db_conn, user_id: int) -> List[dict]:
+    """
+    Returns a list of dicts containing the artist_mbid for every artist the user
+    follows, ordered by most recently followed first.
+    """
+
+    result = db_conn.execute(
+        sqlalchemy.text("""
+        SELECT artist_mbid::TEXT
+        FROM user_artist_relationship
+        WHERE user_id = :user_id
+          AND relationship_type = 'follow'
+        ORDER BY created DESC
+    """),
+        {
+            "user_id": user_id,
+        },
+    )
+    return result.mappings().all()
+
+
 def get_users_following_artist(db_conn, artist_mbid: str) -> List[dict]:
     """
     Returns a list of user IDs who follow the specified artist.
