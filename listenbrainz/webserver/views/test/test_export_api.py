@@ -24,6 +24,8 @@ class ExportAPIIntegrationTestCase(ListenAPIIntegrationTestCase):
         self.assertIn('export_id', data)
         self.assertEqual(data['status'], 'waiting')
         self.assertEqual(data['type'], 'export_all_user_data')
+        self.assertIsNone(data['start_time'])
+        self.assertIsNone(data['end_time'])
         
         export_id = data['export_id']
         

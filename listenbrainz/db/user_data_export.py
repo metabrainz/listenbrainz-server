@@ -15,6 +15,8 @@ def _row_to_dict(row) -> Dict[str, Any]:
         "progress": row.progress,
         "status": row.status,
         "filename": row.filename,
+        "start_time": row.start_time,
+        "end_time": row.end_time,
     }
 
 
@@ -22,16 +24,18 @@ def request_user_data_export(db_conn, user_id: int, start_time: int | None = Non
                              end_time: int | None = None) -> Optional[Dict[str, Any]]:
     """ Add a request to export the user data to an archive in background. """
     query = """
-        INSERT INTO user_data_export (user_id, type, status, progress)
-             VALUES (:user_id, :type, 'waiting', :progress)
+        INSERT INTO user_data_export (user_id, type, status, progress, start_time, end_time)
+             VALUES (:user_id, :type, 'waiting', :progress, :start_time, :end_time)
         ON CONFLICT (user_id, type)
               WHERE status = 'waiting' OR status = 'in_progress'
          DO NOTHING
-          RETURNING id, type, available_until, created, progress, status, filename
+          RETURNING id, type, available_until, created, progress, status, filename, start_time, end_time
     """
     result = db_conn.execute(text(query), {
         "user_id": user_id,
         "type": "export_all_user_data",
+        "start_time": start_time,
+        "end_time": end_time,
         "progress": "Your data export will start soon."
     })
     export = result.first()
