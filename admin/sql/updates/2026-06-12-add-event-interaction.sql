@@ -19,7 +19,6 @@ ALTER TABLE event_interaction
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
-CREATE INDEX user_id_event_interaction_ndx ON event_interaction (user_id);
 CREATE INDEX event_mbid_event_interaction_ndx ON event_interaction (event_mbid);
 
 COMMIT;

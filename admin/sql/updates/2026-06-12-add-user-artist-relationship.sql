@@ -19,7 +19,8 @@ ALTER TABLE user_artist_relationship
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
-CREATE INDEX user_id_user_artist_relationship_ndx ON user_artist_relationship (user_id);
+-- No index on user_id: it is the leading column of the composite primary key
+-- above, so the PK index already serves user_id lookups and the cascading delete.
 CREATE INDEX artist_mbid_user_artist_relationship_ndx ON user_artist_relationship (artist_mbid);
 
 COMMIT;
