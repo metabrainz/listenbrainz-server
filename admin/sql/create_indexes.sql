@@ -32,6 +32,13 @@ CREATE INDEX user_id_mbid_ndx_rec_feedback ON recording_feedback (user_id, recor
 CREATE UNIQUE INDEX user_id_ndx_similar_user ON recommendation.similar_user (user_id);
 CREATE UNIQUE INDEX user_id_entity_ndx_do_not_recommend ON recommendation.do_not_recommend (user_id, entity, entity_mbid);
 
+CREATE UNIQUE INDEX user_src_tgt_ndx_entity_recommendation
+    ON recommendation.entity_recommendation (user_id, source_entity_type, source_entity_mbid, target_entity_type, target_entity_mbid);
+CREATE INDEX src_entity_ndx_entity_recommendation
+    ON recommendation.entity_recommendation (source_entity_type, source_entity_mbid);
+CREATE INDEX specificity_score_ndx_entity_recommendation
+    ON recommendation.entity_recommendation (specificity_score DESC);
+
 CREATE INDEX user_0_user_relationship_ndx ON user_relationship (user_0);
 CREATE INDEX user_1_user_relationship_ndx ON user_relationship (user_1);
 
