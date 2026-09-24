@@ -228,7 +228,6 @@ export default function LFMMusicServicePermissions({
             }
             alt={`${serviceDisplayName} logo`}
             className="service-icon"
-            width="32"
             height="32"
           />
         </span>
