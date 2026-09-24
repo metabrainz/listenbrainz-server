@@ -15,11 +15,11 @@
       {% if no_playing_now %}
       <div class="text-muted">
         <a
-          title="{{ user_name | safe }}"
-          href="https://listenbrainz.org/user/{{  user_name  | safe }}/"
+          title="{{ user_name }}"
+          href="https://listenbrainz.org/user/{{  user_name  }}/"
           target="_blank"
           rel="noopener noreferrer"
-          >{{ user_name | safe }}</a
+          >{{ user_name }}</a
         >&nbsp;is not playing anything at the moment
       </div>
       {% else %}
@@ -58,7 +58,7 @@
     {% if no_playing_now %}
     <a
       class="profile-link"
-      href="https://listenbrainz.org/user/{{  user_name  | safe }}/"
+      href="https://listenbrainz.org/user/{{  user_name  }}/"
       target="_blank"
       rel="noopener noreferrer"
       >See profile on ListenBrainz
@@ -67,11 +67,11 @@
     <div class="right-section">
       <div class="username-and-timestamp">
         <a
-          title="{{ user_name | safe }}"
-          href="https://listenbrainz.org/user/{{  user_name  | safe }}/"
+          title="{{ user_name }}"
+          href="https://listenbrainz.org/user/{{  user_name  }}/"
           target="_blank"
           rel="noopener noreferrer"
-          >{{ user_name | safe }}</a
+          >{{ user_name }}</a
         >
         <span class="listen-time">on ListenBrainz</span>
       </div>
