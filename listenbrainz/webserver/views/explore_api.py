@@ -232,6 +232,8 @@ def get_events():
         }
 
     Each event has the same fields as the values returned by ``GET /1/metadata/event/`` without any ``inc``.
+    An event counts as upcoming until its end date, or its begin date if it has no end date, has passed.
+    A missing month or day counts as the first of the year or month, and events with no date are left out.
 
     :param count: The number of events to return, at most 1000. Default 25.
     :param offset: The number of events to skip from the beginning. Default 0.
