@@ -1020,7 +1020,6 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
     def test_youtube_music_preserves_api_title(self):
         importer = YouTubeMusicListensImporter(self.db_conn, self.ts_conn)
         item = {
-            "title": "Watched https://www.youtube.com/watch?v=2o9aoL0NWpw",
             "titleUrl": "https://www.youtube.com/watch?v=2o9aoL0NWpw",
             "time": "2021-12-18T10:33:36Z",
         }
