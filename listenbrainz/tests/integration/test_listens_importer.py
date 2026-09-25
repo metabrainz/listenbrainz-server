@@ -17,6 +17,8 @@ from listenbrainz.db import background
 from listenbrainz.garage import delete_objects, ensure_bucket, get_garage_client, \
     get_user_data_import_bucket, list_object_names
 from listenbrainz.metadata_cache.spotify.handler import SpotifyCrawlerHandler
+from listenbrainz.metadata_cache.youtube.handler import YouTubeCacheHandler
+from listenbrainz.metadata_cache.youtube.models import YouTubeVideo
 from listenbrainz.background.listens_importer.youtubemusic import YouTubeMusicListensImporter
 
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
@@ -1027,29 +1029,30 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
     def test_youtube_music_preserves_api_title(self):
         importer = YouTubeMusicListensImporter(self.db_conn, self.ts_conn)
         item = {
+            "title": "Watched https://www.youtube.com/watch?v=2o9aoL0NWpw",
             "titleUrl": "https://www.youtube.com/watch?v=2o9aoL0NWpw",
             "time": "2021-12-18T10:33:36Z",
         }
         takeout_item = {
             **item,
+            # The title in the takeout export shuold have the "Watched" prefix removed
             "title": "Watched Watched You Fall",
             "subtitles": [{"name": "Test Artist - Topic"}],
         }
         metadata = {
-            "2o9aoL0NWpw": {
-                "snippet": {
-                    "title": "Watched You Fall",
-                    "channelTitle": "Test Artist - Topic",
-                },
-            },
+            "2o9aoL0NWpw": YouTubeVideo(
+                video_id="2o9aoL0NWpw",
+                # The "Watched" prefix here should not be removed from the title returned by the YouTube API
+                title="Watched You Fall",
+                channel_name="Test Artist - Topic",
+            ),
         }
 
         with self.app.app_context(), \
-                mock.patch.dict(self.app.config, {"YOUTUBE_API_KEY": "test-key"}), \
-                mock.patch.object(importer, "_fetch_videos_metadata", return_value=metadata) as fetch:
+                mock.patch.object(YouTubeCacheHandler, "lookup", return_value=metadata) as lookup:
             listens = importer.parse_listen_batch([takeout_item, item])
 
-        fetch.assert_called_once_with(["2o9aoL0NWpw"])
+        lookup.assert_called_once_with(["2o9aoL0NWpw"])
         self.assertEqual(len(listens), 2)
         for listen in listens:
             self.assertEqual(listen["track_metadata"]["track_name"], "Watched You Fall")
@@ -1466,6 +1469,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         missing = self.get_import_row(missing_id)
         self.assertEqual("failed", missing.metadata["status"])
         self.assertEqual(FILE_MISSING_PROGRESS, missing.metadata["progress"])
+
     def insert_sample_youtube_cache_data(self, video_id, title, channel_name):
         """Pre-seed the YouTube metadata cache with a known entry."""
         
