@@ -1,4 +1,7 @@
+import json
 import unittest
+from datetime import datetime, timezone
+from io import BytesIO
 from unittest import mock
 
 from flask import Flask
@@ -23,6 +26,28 @@ class YouTubeMusicImporterTestCase(unittest.TestCase):
                 channel_name="Test Artist - Topic",
             ),
         }
+
+    def test_process_import_file_yields_before_reading_entire_export(self):
+        self.importer.batch_size = 2
+        task = {
+            "file_path": "history.json",
+            "from_date": datetime(2021, 12, 18, tzinfo=timezone.utc),
+            "to_date": datetime(2021, 12, 19, tzinfo=timezone.utc),
+        }
+        music_item = {**self.item, "header": "YouTube Music"}
+        # The discarded history must exceed the parser's read-ahead buffer.
+        entries = [music_item] * 2 + [{**self.item, "header": "YouTube"}] * 10000 + [music_item]
+        contents = json.dumps(entries).encode("utf-8")
+        infile = BytesIO(contents)
+        with mock.patch(
+            "listenbrainz.background.listens_importer.youtubemusic.open", return_value=infile
+        ):
+            batches = self.importer.process_import_file(task)
+            self.addCleanup(batches.close)
+            self.assertEqual(next(batches), [music_item, music_item])
+            self.assertLess(infile.tell(), len(contents))
+            self.assertEqual(list(batches), [[music_item]])
+        self.assertTrue(infile.closed)
 
     def test_recovers_unusable_titles_with_or_without_channel(self):
         titles = [
