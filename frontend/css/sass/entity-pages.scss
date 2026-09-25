@@ -32,6 +32,7 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
     }
   }
   .artist-info,
+  .genre-info,
   .playlist-info {
     flex-grow: 1.5;
     display: flex;
