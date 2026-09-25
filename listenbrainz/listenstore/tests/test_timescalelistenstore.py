@@ -2,19 +2,20 @@ import logging
 import random
 from datetime import datetime, timedelta, timezone
 from time import time
+from unittest.mock import patch
 
 import sqlalchemy
 from brainzutils import cache
 from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
-from listenbrainz.db import timescale as ts, timescale
+from listenbrainz.db import listens as listens_db, timescale as ts, timescale
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, \
     TimescaleListenStore, REDIS_TOTAL_LISTEN_COUNT
-from listenbrainz.listenstore.timescale_utils import delete_listens_and_update_user_listen_data,\
-    recalculate_all_user_data, add_missing_to_listen_users_metadata, update_user_listen_data
+from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data, add_missing_to_listen_users_metadata, \
+    update_user_listen_data, delete_listens
 from listenbrainz.webserver import create_app
 
 
@@ -227,75 +228,102 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(count, cache.get(user_key))
 
     def test_delete_listens(self):
-        uid = random.randint(2000, 1 << 31)
-        testuser = db_user.get_or_create(self.db_conn, uid, "user_%d" % uid)
-        testuser_name = testuser['musicbrainz_id']
-        self._create_test_data(testuser_name, testuser["id"])
+        self._create_test_data(self.testuser_name, self.testuser_id)
+        before = self._get_count_and_timestamps(self.testuser_id)
+        with patch.object(timescale.engine, "connect", side_effect=AssertionError("Timescale delete")):
+            self.logstore.delete(self.testuser_id)
 
-        to_ts = datetime.fromtimestamp(1400000300, timezone.utc)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user=testuser, to_ts=to_ts)
-        self.assertEqual(len(listens), 5)
-        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
-        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
-        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
-        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
-        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
-
-        self.logstore.delete(testuser["id"])
-
-        to_ts = datetime.fromtimestamp(1400000300, timezone.utc)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user=testuser, to_ts=to_ts)
-        self.assertEqual(len(listens), 0)
+        with listens_db.engine.connect() as connection:
+            self.assertEqual(connection.execute(text("SELECT count(*) FROM listen")).scalar(), 0)
+            self.assertEqual(connection.execute(text(
+                "SELECT count(*) FROM deleted_user_listen_history WHERE user_id = :user_id"
+            ), {"user_id": self.testuser_id}).scalar(), 1)
+        self.assertEqual(self._get_count_and_timestamps(self.testuser_id), before)
+        with timescale.engine.connect() as connection:
+            self.assertEqual(connection.execute(text("SELECT count(*) FROM listen")).scalar(), 5)
 
     def test_delete_single_listen(self):
-        uid = random.randint(2000, 1 << 31)
-        testuser = db_user.get_or_create(self.db_conn, uid, "user_%d" % uid)
-        testuser_name = testuser['musicbrainz_id']
-        self._create_test_data(testuser_name, testuser["id"])
-
-        to_ts = datetime.fromtimestamp(1400000300, timezone.utc)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user=testuser, to_ts=to_ts)
-        self.assertEqual(len(listens), 5)
-        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
-        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
-        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
-        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
-        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
-
-        self.logstore.delete_listen(datetime.fromtimestamp(1400000050, timezone.utc), testuser["id"], "c7a41965-9f1e-456c-8b1d-27c0f0dde280")
-
-        pending = self._get_pending_deletes()
-        self.assertEqual(len(pending), 1)
-        self.assertEqual(pending[0]["listened_at"], datetime.fromtimestamp(1400000050, timezone.utc))
-        self.assertEqual(pending[0]["user_id"], testuser["id"])
-        self.assertEqual(str(pending[0]["recording_msid"]), "c7a41965-9f1e-456c-8b1d-27c0f0dde280")
-
-        delete_listens_and_update_user_listen_data()
-
-        # clear cache entry so that count is fetched from db again
-        cache.delete(REDIS_USER_LISTEN_COUNT + str(testuser["id"]))
-
-        to_ts = datetime.fromtimestamp(1400000300, timezone.utc)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user=testuser, to_ts=to_ts)
-        self.assertEqual(len(listens), 4)
-        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
-        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
-        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
-        self.assertEqual(listens[3].ts_since_epoch, 1400000000)
-
-        self.assertEqual(self.logstore.get_listen_count_for_user(testuser["id"]), 4)
-        min_ts, max_ts = self.logstore.get_timestamps_for_user(testuser["id"])
-        self.assertEqual(min_ts, datetime.fromtimestamp(1400000000, timezone.utc))
-        self.assertEqual(max_ts, datetime.fromtimestamp(1400000200, timezone.utc))
-
-    def _get_pending_deletes(self):
+        self._create_test_data(self.testuser_name, self.testuser_id)
+        before = self._get_count_and_timestamps(self.testuser_id)
+        listened_at = datetime.fromtimestamp(1400000050, timezone.utc)
+        recording_msid = "c7a41965-9f1e-456c-8b1d-27c0f0dde280"
+        with listens_db.engine.connect() as connection:
+            # Ingestion populated both stores before deletion.
+            self.assertEqual(connection.execute(text("SELECT count(*) FROM listen")).scalar(), 5)
+            created = connection.execute(text(
+                "SELECT created FROM listen WHERE user_id = :user_id AND listened_at = :listened_at"
+            ), {"user_id": self.testuser_id, "listened_at": listened_at}).scalar()
+        with patch.object(timescale.engine, "begin", side_effect=AssertionError("Timescale delete")):
+            self.logstore.delete_listen(listened_at, self.testuser_id, recording_msid)
+            delete_listens()
+            delete_listens()
+        with listens_db.engine.connect() as connection:
+            self.assertEqual(connection.execute(text("SELECT count(*) FROM listen")).scalar(), 4)
+            row = connection.execute(text("SELECT * FROM listen_delete_metadata")).one()
+            self.assertEqual(row.status, "complete")
+            self.assertEqual(row.listen_created, created)
+            self.assertEqual(row.listened_at, listened_at)
+            self.assertEqual(row.user_id, self.testuser_id)
+            self.assertEqual(str(row.recording_msid), recording_msid)
+        self.assertEqual(self._get_count_and_timestamps(self.testuser_id), before)
         with timescale.engine.connect() as connection:
-            result = connection.execute(text("SELECT * FROM listen_delete_metadata"))
-            return [{
-                "user_id": row.user_id,
-                "recording_msid": row.recording_msid,
-                "listened_at": row.listened_at
-            } for row in result.fetchall()]
+            self.assertEqual(connection.execute(text("SELECT count(*) FROM listen")).scalar(), 5)
+
+    def test_delete_missing_listen_is_invalid(self):
+        self.logstore.delete_listen(
+            datetime.fromtimestamp(1400000050, timezone.utc), self.testuser_id,
+            "c7a41965-9f1e-456c-8b1d-27c0f0dde280",
+        )
+        delete_listens()
+        delete_listens()
+        with listens_db.engine.connect() as connection:
+            row = connection.execute(text("SELECT status, listen_created FROM listen_delete_metadata")).one()
+            self.assertEqual(row.status, "invalid")
+            self.assertIsNone(row.listen_created)
+
+    def test_deletion_histories_survive_repeated_processing_and_history_delete(self):
+        self._create_test_data(self.testuser_name, self.testuser_id)
+        for _ in range(2):
+            self.logstore.delete_listen(
+                datetime.fromtimestamp(1400000050, timezone.utc), self.testuser_id,
+                "c7a41965-9f1e-456c-8b1d-27c0f0dde280",
+            )
+        delete_listens()
+        self.logstore.delete(self.testuser_id)
+        with listens_db.engine.connect() as connection:
+            records = connection.execute(text("SELECT * FROM listen_delete_metadata ORDER BY id")).all()
+            history = connection.execute(text("SELECT * FROM deleted_user_listen_history ORDER BY id")).all()
+        self.assertEqual(len(records), 2)
+        self.assertTrue(all(row.status == "complete" for row in records))
+        self.assertEqual(len(history), 1)
+        delete_listens()
+        with listens_db.engine.connect() as connection:
+            self.assertEqual(connection.execute(text("SELECT * FROM listen_delete_metadata ORDER BY id")).all(), records)
+            self.assertEqual(connection.execute(text("SELECT * FROM deleted_user_listen_history ORDER BY id")).all(), history)
+
+    def test_delete_failure_rolls_back_listens_and_history(self):
+        self._create_test_data(self.testuser_name, self.testuser_id)
+        self.logstore.delete_listen(
+            datetime.fromtimestamp(1400000050, timezone.utc), self.testuser_id,
+            "c7a41965-9f1e-456c-8b1d-27c0f0dde280",
+        )
+
+        def fail_commit(connection):
+            raise RuntimeError("Commit failed")
+
+        sqlalchemy.event.listen(listens_db.engine, "commit", fail_commit)
+        try:
+            with self.assertRaisesRegex(RuntimeError, "Commit failed"):
+                delete_listens()
+        finally:
+            sqlalchemy.event.remove(listens_db.engine, "commit", fail_commit)
+        with listens_db.engine.connect() as connection:
+            self.assertEqual(connection.execute(text("SELECT count(*) FROM listen")).scalar(), 5)
+            self.assertEqual(connection.execute(text("SELECT status FROM listen_delete_metadata")).scalar(), "pending")
+        delete_listens()
+        with listens_db.engine.connect() as connection:
+            self.assertEqual(connection.execute(text("SELECT count(*) FROM listen")).scalar(), 4)
+            self.assertEqual(connection.execute(text("SELECT status FROM listen_delete_metadata")).scalar(), "complete")
 
     def _get_count_and_timestamps(self, user_id):
         with timescale.engine.connect() as connection:

@@ -12,7 +12,7 @@ import sqlalchemy
 from psycopg2.extras import execute_values
 from sqlalchemy import text
 
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db, timescale
 from listenbrainz.db.user import get_all_usernames
 from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.dumps.exporter import zstd_dump, uncompressed_dump
@@ -502,10 +502,9 @@ class DumpListenStore:
         return archive_path
 
     def cleanup_listen_delete_metadata(self):
-        """ Cleanup listen delete metadata after spark full dump is complete """
+        """Clean up deletion records in the listens DB after a Spark full dump."""
         self.log.info("Cleaning up listen_delete_metadata")
-        with timescale.engine.connect() as connection:
+        with listens_db.engine.begin() as connection:
             connection.execute(text("DELETE FROM listen_delete_metadata WHERE status != 'pending'"))
             connection.execute(text("DELETE FROM deleted_user_listen_history"))
-            connection.commit()
         self.log.info("Cleaning up listen_delete_metadata done!")

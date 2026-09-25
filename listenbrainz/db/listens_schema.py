@@ -14,6 +14,12 @@ ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", 
 CREATE_TABLES_SQL_FILE = os.path.join(ADMIN_SQL_DIR, "create_tables.sql")
 
 
+CREATE_TYPES_SQL_FILE = os.path.join(ADMIN_SQL_DIR, "create_types.sql")
+
+
+CREATE_PRIMARY_KEYS_SQL_FILE = os.path.join(ADMIN_SQL_DIR, "create_primary_keys.sql")
+
+
 CREATE_INDEXES_SQL_FILE = os.path.join(ADMIN_SQL_DIR, "create_indexes.sql")
 
 
@@ -74,10 +80,16 @@ def create_schema(partition_count):
     with connect_target() as conn, conn.cursor() as cur:
         cur.execute("SELECT to_regclass('listen')")
         if cur.fetchone()[0] is None:
+            cur.execute(_read_sql(CREATE_TYPES_SQL_FILE))
             cur.execute(_read_sql(CREATE_TABLES_SQL_FILE))
+            cur.execute(_read_sql(CREATE_PRIMARY_KEYS_SQL_FILE))
             logger.info("created listen table")
         else:
             logger.info("listen table already exists")
+
+        cur.execute("SELECT to_regclass('listen_delete_metadata')")
+        if cur.fetchone()[0] is None:
+            cur.execute(_read_sql(os.path.join(ADMIN_SQL_DIR, "updates", "2026-09-16-add-deletion-tables.sql")))
 
         modulus, existing = _existing_partitions(cur)
         if existing and modulus != partition_count:
