@@ -1460,19 +1460,20 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual("failed", missing.metadata["status"])
         self.assertEqual(FILE_MISSING_PROGRESS, missing.metadata["progress"])
 
-    def insert_sample_youtube_cache_data(self, video_id, title, channel_name):
+    def insert_sample_youtube_cache_data(self, video_id, title, channel_name, duration_ms=None):
         """Pre-seed the YouTube metadata cache with a known entry."""
         
         from sqlalchemy import text
         self.ts_conn.execute(
             text("""
-                INSERT INTO youtube_cache.video (video_id, title, channel_name)
-                     VALUES (:video_id, :title, :channel_name)
+                INSERT INTO youtube_cache.video (video_id, title, channel_name, duration_ms)
+                     VALUES (:video_id, :title, :channel_name, :duration_ms)
                 ON CONFLICT (video_id)
                   DO UPDATE SET title = EXCLUDED.title
                               , channel_name = EXCLUDED.channel_name
+                              , duration_ms = EXCLUDED.duration_ms
             """),
-            {"video_id": video_id, "title": title, "channel_name": channel_name},
+            {"video_id": video_id, "title": title, "channel_name": channel_name, "duration_ms": duration_ms},
         )
         self.ts_conn.commit()
 
@@ -1482,6 +1483,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             video_id="dQw4w9WgXcQ",
             title="Never Gonna Give You Up",
             channel_name="Rick Astley",
+            duration_ms=213000,
         )
 
         data = {
@@ -1518,6 +1520,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(additional_info["submission_client"], "YouTube Music History Importer")
         self.assertEqual(additional_info["music_service"], "music.youtube.com")
         self.assertEqual(additional_info["youtube_id"], "dQw4w9WgXcQ")
+        self.assertEqual(additional_info["duration_ms"], 213000)
         self.assertEqual(
             additional_info["origin_url"],
             "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
