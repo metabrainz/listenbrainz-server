@@ -85,7 +85,7 @@ declare type ListenBrainzUser = {
   auth_token?: string;
 };
 
-declare type ImportService = "lastfm" | "librefm";
+declare type ImportService = "lastfm" | "librefm" | "spotify";
 
 declare type ListenType = "single" | "playing_now" | "import";
 
