@@ -66,6 +66,10 @@ RABBITMQ_PASSWORD = "guest"
 RABBITMQ_VHOST = "/"
 MAXIMUM_RABBITMQ_CONNECTIONS = 20
 
+# Synapse notification service (leave empty to disable)
+SYNAPSE_API_URL = ""
+SYNAPSE_RABBITMQ_VHOST = "/synapse"
+
 # RabbitMQ exchanges and queues
 INCOMING_EXCHANGE = "incoming"
 INCOMING_QUEUE = "incoming"
