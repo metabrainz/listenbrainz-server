@@ -80,7 +80,6 @@ class EventMetadata(BaseModel):
             "end_date_day": self.end_date_day,
             "event_time": self.event_time.astimezone(timezone.utc).replace(tzinfo=None).isoformat() if self.event_time else None,
             "cancelled": self.cancelled,
-            "ended": self.ended,
             "event_art_presence": self.event_art_presence,
             "rating": self.rating,
             "rating_count": self.rating_count,

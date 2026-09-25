@@ -652,7 +652,6 @@ def metadata_event():
                 "end_date_day": 4,
                 "end_date_month": 11,
                 "end_date_year": 2026,
-                "ended": true,
                 "event_art_presence": "absent",
                 "event_mbid": "280a991d-33ba-4ec7-ab13-59ae418d165f",
                 "event_name": "Alienation Tour",
