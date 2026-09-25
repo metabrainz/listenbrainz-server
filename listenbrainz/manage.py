@@ -343,6 +343,16 @@ def update_user_listen_data():
         ts_update_user_listen_data()
 
 
+@cli.command(name="refresh_listen_count_evolution")
+@click.option("--full", is_flag=True, help="Recount all history, including older deletions (scans all listens).")
+def refresh_listen_count_evolution(full):
+    """Refresh recent months in the cached listen growth graph; retain older counts."""
+    application = webserver.create_app()
+    from listenbrainz.webserver.timescale_connection import _ts
+    with application.app_context():
+        _ts.refresh_listen_count_evolution(full=full)
+
+
 @cli.command(name="delete_pending_listens")
 def delete_pending_listens():
     """ Complete all pending listen deletes since last cron run """

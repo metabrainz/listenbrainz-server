@@ -13,7 +13,7 @@ from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver import create_web_app
 from listenbrainz.webserver.testing import ServerAppPerTestTestCase
-from listenbrainz.webserver.views.index import ROBOTS_TXT_CONTENT
+from listenbrainz.webserver.views.index import ROBOTS_TXT_CONTENT, _get_user_count_evolution
 
 
 class IndexViewsTestCase(IntegrationTestCase):
@@ -72,6 +72,23 @@ class IndexViewsTestCase(IntegrationTestCase):
     def test_current_status(self):
         resp = self.client.get(self.custom_url_for('index.current_status'))
         self.assert200(resp)
+
+    @patch('listenbrainz.webserver.views.index._ts')
+    def test_current_status_listen_evolution(self, listenstore):
+        evolution = [{"period": "2025-01-01", "total_listens": 1234, "new_listens": 1234}]
+        listenstore.get_total_listen_count.return_value = 1234
+        listenstore.get_listen_count_evolution.return_value = evolution
+        resp = self.client.post(self.custom_url_for('index.current_status'))
+        self.assert200(resp)
+        self.assertEqual(resp.json['listenCountEvolution'], evolution)
+
+    @patch('listenbrainz.webserver.views.index.db_user.get_user_count_evolution')
+    @patch('listenbrainz.webserver.views.index.cache.get')
+    def test_user_evolution_uses_cache(self, cache_get, get_evolution):
+        for cached in ([], [["2025-01-01", 10, 10]]):
+            cache_get.return_value = cached
+            self.assertEqual(_get_user_count_evolution(), cached)
+        get_evolution.assert_not_called()
 
     @mock.patch('listenbrainz.db.user.get')
     def test_menu_not_logged_in(self, mock_user_get):
