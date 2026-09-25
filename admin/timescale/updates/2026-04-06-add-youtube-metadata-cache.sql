@@ -7,6 +7,7 @@ CREATE TABLE youtube_cache.video (
     video_id      TEXT UNIQUE NOT NULL,
     title         TEXT NOT NULL,
     channel_name  TEXT NOT NULL,
+    duration_ms   INTEGER,
     last_updated  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

@@ -87,6 +87,22 @@ class YouTubeMusicImporterTestCase(unittest.TestCase):
         lookup.assert_not_called()
         self.assertEqual(listens[0]["track_metadata"]["track_name"], "Watched You Fall")
 
+    def test_enriched_listen_includes_duration_when_available(self):
+        for duration_ms in (213000, 0, None):
+            with self.subTest(duration_ms=duration_ms):
+                self.metadata["2o9aoL0NWpw"].duration_ms = duration_ms
+                with self.app.app_context(), mock.patch.object(
+                    YouTubeCacheHandler, "lookup", return_value=self.metadata
+                ):
+                    listens = self.importer.parse_listen_batch([self.item])
+
+                self.assertEqual(len(listens), 1)
+                additional_info = listens[0]["track_metadata"]["additional_info"]
+                if duration_ms is None:
+                    self.assertNotIn("duration_ms", additional_info)
+                else:
+                    self.assertEqual(additional_info["duration_ms"], duration_ms)
+
     def test_invalid_video_id_does_not_call_cache(self):
         invalid_fields = [
             {"titleUrl": ""},
