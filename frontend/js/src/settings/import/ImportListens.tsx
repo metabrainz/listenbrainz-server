@@ -13,7 +13,11 @@ import {
 import { format, isValid } from "date-fns";
 import { useMemo } from "react";
 import { initial, last, partition } from "lodash";
-import { faLastfmSquare, faSpotify } from "@fortawesome/free-brands-svg-icons";
+import {
+  faLastfmSquare,
+  faSpotify,
+  faYoutube,
+} from "@fortawesome/free-brands-svg-icons";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import Loader from "../../components/Loader";
@@ -41,6 +45,7 @@ enum Services {
   maloja = "Maloja",
   audioscrobbler = "Audioscrobbler/Rockbox",
   spinitron = "Spinitron",
+  youtubemusic = "Youtube Music",
 }
 const acceptedFileTypes = {
   [Services.spotify]: ".zip",
@@ -51,6 +56,7 @@ const acceptedFileTypes = {
   [Services.maloja]: ".json",
   [Services.audioscrobbler]: ".log",
   [Services.spinitron]: ".csv",
+  [Services.youtubemusic]: ".json",
 };
 type ImportMetadata = {
   filename: string;
@@ -521,6 +527,73 @@ export default function ImportListens() {
         If you have historical backup files or LFM-style exports from other
         service, you can import them below.
       </p>
+      <div className="alert alert-info">
+        <p>
+          <FontAwesomeIcon icon={faYoutube} className="me-2" />
+          <strong>YouTube Music</strong> users: follow these instructions to
+          export your listening history, then upload it below.
+        </p>
+        <details>
+          <summary>
+            <FontAwesomeIcon
+              icon={faChevronCircleRight}
+              size="sm"
+              className="summary-indicator"
+            />
+            Expand instructions.
+          </summary>
+          <p className="alert alert-warning" role="alert">
+            <strong>Before exporting:</strong> for best results, change your{" "}
+            <a
+              href="https://myaccount.google.com/language"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              account language
+            </a>{" "}
+            to <strong>English</strong>, otherwise imported track titles will
+            all start with &quot;Watched&quot; (in your language).
+          </p>
+          <ol className="mt-3 mb-0">
+            <li>
+              Open{" "}
+              <a
+                href="https://takeout.google.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Google Takeout
+              </a>{" "}
+              and sign in to the account you use for YouTube Music.
+            </li>
+            <li>
+              Choose <strong>Deselect all</strong>, then scroll down and select{" "}
+              <strong>YouTube and YouTube Music</strong>.
+            </li>
+            <li>
+              Open <strong>Multiple formats</strong>, scroll down and set the{" "}
+              <i>history</i> to <strong>JSON</strong>.
+            </li>
+            <li>
+              Open <strong>All YouTube data included</strong> deselect all and
+              select only <strong>history</strong>.
+            </li>
+            <li>
+              Choose <strong>Next step</strong>, select a one-time export as a{" "}
+              <strong>.zip</strong> file, then click{" "}
+              <strong>Create export</strong>.
+            </li>
+            <li>
+              When the export is ready (check your email!), download and extract
+              it.
+              <br />
+              Find <code>watch-history.json</code> in the{" "}
+              <code>Takeout/YouTube and YouTube Music/history/</code> folder and
+              import it below.
+            </li>
+          </ol>
+        </details>
+      </div>
       <p>
         We currently support history export files from:{" "}
         <b>{humanReadableServices}</b>.
