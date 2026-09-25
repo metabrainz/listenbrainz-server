@@ -13,6 +13,7 @@ from listenbrainz.metadata_cache.youtube.handler import YouTubeCacheHandler
 
 class YouTubeSubtitle(TypedDict, total=False):
     name: str
+    url: str
 
 
 class YouTubeHistoryItem(TypedDict, total=False):
