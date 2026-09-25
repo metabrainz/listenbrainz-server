@@ -110,8 +110,8 @@ SQLALCHEMY_BINDS = {}
 {{end}}
 
 
-# New listens database (plain postgres, listens partitioned by user_id). During migration, new
-# listens and deletes are mirrored here while Timescale remains the read store.
+# Listens database (plain postgres, listens partitioned by user_id). Writes go here first;
+# deletions and permanent deletion history live here only. Timescale retains its listens.
 {{if service "listenbrainz-user-listenstore"}}
 {{with index (service "listenbrainz-user-listenstore") 0}}
 SQLALCHEMY_LISTENS_URI = """postgresql://{{template "KEY" "listens_db_user"}}:{{template "KEY" "listens_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listens_db_name"}}"""

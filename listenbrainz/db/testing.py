@@ -89,5 +89,7 @@ class TimescaleTestCase(unittest.TestCase):
                     f"Refusing to reset listens database {actual_db_name!r}; "
                     f"expected {expected_db_name!r}"
                 )
-            connection.execute(sqlalchemy.text("TRUNCATE TABLE listen"))
+            connection.execute(sqlalchemy.text(
+                "TRUNCATE TABLE listen, listen_delete_metadata, deleted_user_listen_history"
+            ))
             connection.commit()
