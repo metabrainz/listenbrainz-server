@@ -1,11 +1,10 @@
-import json
 import re
 from datetime import datetime
 from typing import Any, Iterator, TypedDict
 from urllib.parse import parse_qs, urlparse
 
+import ijson
 from flask import current_app
-from more_itertools import chunked
 
 from listenbrainz.background.listens_importer.base import BaseListensImporter
 from listenbrainz.metadata_cache.youtube.handler import YouTubeCacheHandler
@@ -36,28 +35,27 @@ class YouTubeMusicListensImporter(BaseListensImporter):
         from_date = import_task["from_date"]
         to_date = import_task["to_date"]
 
-        with open(import_task["file_path"], mode="r", encoding="utf-8") as infile:
-            data = json.load(infile)
+        with open(import_task["file_path"], mode="rb") as infile:
+            batch: list[dict[str, Any]] = []
+            for item in ijson.items(infile, "item"):
+                if item.get("header") != "YouTube Music":
+                    continue
 
-        youtube_music_items: list[dict[str, Any]] = []
-        for item in data:
-            if item.get("header") != "YouTube Music":
-                continue
+                try:
+                    time_str = item.get("time", "")
+                    timestamp = datetime.fromisoformat(time_str.replace('Z', '+00:00'))
+                except (TypeError, ValueError):
+                    current_app.logger.error("Invalid YouTube timestamp in item: %s", item, exc_info=True)
+                    continue
 
-            try:
-                time_str = item.get("time", "")
-                timestamp = datetime.fromisoformat(time_str.replace('Z', '+00:00'))
-            except (TypeError, ValueError):
-                current_app.logger.error("Invalid YouTube timestamp in item: %s", item, exc_info=True)
-                continue
+                if from_date <= timestamp <= to_date:
+                    batch.append(item)
+                    if len(batch) >= self.batch_size:
+                        yield batch
+                        batch = []
 
-            if from_date <= timestamp <= to_date:
-                youtube_music_items.append(item)
-
-        if not youtube_music_items:
-            return iter(())
-
-        return chunked(youtube_music_items, self.batch_size)
+            if batch:
+                yield batch
 
     def parse_listen_batch(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Convert a batch of YouTube Music items into ListenBrainz listens.
