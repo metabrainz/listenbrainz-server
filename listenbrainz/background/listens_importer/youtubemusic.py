@@ -105,6 +105,8 @@ class YouTubeMusicListensImporter(BaseListensImporter):
             }
             converted = self._convert_item_to_listen(enriched_item, from_takeout=False)
             if converted:
+                if meta.duration_ms is not None:
+                    converted["track_metadata"]["additional_info"]["duration_ms"] = meta.duration_ms
                 listens.append(converted)
 
         return listens

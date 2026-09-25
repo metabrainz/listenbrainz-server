@@ -4,6 +4,7 @@ import requests
 from datetime import datetime, timezone
 from more_itertools import chunked
 from psycopg2.extras import execute_values
+from pydantic.datetime_parse import parse_duration
 from sqlalchemy import text
 
 from listenbrainz.db import timescale
@@ -66,7 +67,7 @@ class YouTubeCacheHandler(BaseHandler):
         with timescale.engine.connect() as conn:
             result = conn.execute(
                 text("""
-                    SELECT video_id, title, channel_name
+                    SELECT video_id, title, channel_name, duration_ms
                       FROM youtube_cache.video
                      WHERE video_id = ANY(:video_ids)
                 """),
@@ -75,17 +76,17 @@ class YouTubeCacheHandler(BaseHandler):
             rows = result.fetchall()
 
         return {
-            row[0]: YouTubeVideo(video_id=row[0], title=row[1], channel_name=row[2])
+            row[0]: YouTubeVideo(video_id=row[0], title=row[1], channel_name=row[2], duration_ms=row[3])
             for row in rows
         }
 
     def _fetch_from_api(self, video_ids: list[str], api_key: str) -> list[YouTubeVideo]:
-        #Fetch video snippet data from the YouTube Data API
+        """Fetch video metadata and duration from the YouTube Data API."""
         
         results = []
         for id_chunk in chunked(video_ids, 50):
             params = {
-                "part": "snippet",
+                "part": "snippet,contentDetails",
                 "id": ",".join(id_chunk),
                 "key": api_key,
             }
@@ -102,22 +103,35 @@ class YouTubeCacheHandler(BaseHandler):
                 title = snippet.get("title", "")
                 channel_name = snippet.get("channelTitle", "")
                 if video_id and title and channel_name:
-                    results.append(YouTubeVideo(video_id=video_id, title=title, channel_name=channel_name))
+                    duration_ms = None
+                    duration = item.get("contentDetails", {}).get("duration")
+                    if duration:
+                        try:
+                            duration_ms = int(parse_duration(duration).total_seconds() * 1000)
+                        except (ValueError, TypeError, OverflowError):
+                            logger.warning("Invalid YouTube duration for video %s: %r", video_id, duration)
+                    results.append(YouTubeVideo(
+                        video_id=video_id,
+                        title=title,
+                        channel_name=channel_name,
+                        duration_ms=duration_ms,
+                    ))
 
         return results
 
     def _upsert(self, videos: list[YouTubeVideo]):
         """Bulk-insert (or update) a list of YouTubeVideo entries in the cache table."""
         query = """
-            INSERT INTO youtube_cache.video (video_id, title, channel_name, last_updated)
+            INSERT INTO youtube_cache.video (video_id, title, channel_name, duration_ms, last_updated)
                  VALUES %s
             ON CONFLICT (video_id)
               DO UPDATE
                     SET title = EXCLUDED.title
                       , channel_name = EXCLUDED.channel_name
+                      , duration_ms = EXCLUDED.duration_ms
                       , last_updated = EXCLUDED.last_updated
         """
-        values = [(v.video_id, v.title, v.channel_name, datetime.now(timezone.utc)) for v in videos]
+        values = [(v.video_id, v.title, v.channel_name, v.duration_ms, datetime.now(timezone.utc)) for v in videos]
 
         conn = timescale.engine.raw_connection()
         try:
