@@ -4,6 +4,15 @@ import psycopg2.extras
 from listenbrainz.db.model.event import EventMetadata
 from typing import List, Tuple
 
+# an event is upcoming while the later of its begin and end dates is today or later, so festivals in progress
+# stay in and a missing month or day is read as the earliest it could be, and an event with no date is ignored
+UPCOMING_EVENT_CONDITION = """
+    GREATEST(
+        make_date(ec.end_date_year, COALESCE(ec.end_date_month, 1), COALESCE(ec.end_date_day, 1)),
+        make_date(ec.begin_date_year, COALESCE(ec.begin_date_month, 1), COALESCE(ec.begin_date_day, 1))
+    ) >= CURRENT_DATE
+"""
+
 
 def get_upcoming_events_for_artists(
     ts_conn,
@@ -31,14 +40,14 @@ def get_upcoming_events_for_artists(
             ON ec.event_id = eac.event_id
          WHERE eac.artist_mbid = ANY(%s::uuid[])
            AND ec.cancelled = false
-           AND ec.ended = false
+           AND {upcoming}
       ORDER BY ec.begin_date_year  NULLS LAST
              , ec.begin_date_month NULLS LAST
              , ec.begin_date_day   NULLS LAST
              , ec.event_time       NULLS LAST
          LIMIT %s
         OFFSET %s
-    """
+    """.format(upcoming=UPCOMING_EVENT_CONDITION)
 
     with ts_conn.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
         curs.execute(query, (artist_mbids, limit, offset))
@@ -61,23 +70,23 @@ def get_upcoming_events_global(
 
     count_query = """
         SELECT COUNT(*)
-          FROM mapping.mb_event_cache
-         WHERE cancelled = false
-           AND ended = false
-    """
+          FROM mapping.mb_event_cache ec
+         WHERE ec.cancelled = false
+           AND {upcoming}
+    """.format(upcoming=UPCOMING_EVENT_CONDITION)
 
     data_query = """
         SELECT *
-          FROM mapping.mb_event_cache
-         WHERE cancelled = false
-           AND ended = false
-      ORDER BY begin_date_year  NULLS LAST
-             , begin_date_month NULLS LAST
-             , begin_date_day   NULLS LAST
-             , event_time       NULLS LAST
+          FROM mapping.mb_event_cache ec
+         WHERE ec.cancelled = false
+           AND {upcoming}
+      ORDER BY ec.begin_date_year  NULLS LAST
+             , ec.begin_date_month NULLS LAST
+             , ec.begin_date_day   NULLS LAST
+             , ec.event_time       NULLS LAST
          LIMIT %s
         OFFSET %s
-    """
+    """.format(upcoming=UPCOMING_EVENT_CONDITION)
 
     with ts_conn.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
         curs.execute(count_query)
