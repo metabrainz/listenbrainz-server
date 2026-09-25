@@ -62,8 +62,8 @@ class YouTubeMusicListensImporter(BaseListensImporter):
     def parse_listen_batch(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Convert a batch of YouTube Music items into ListenBrainz listens.
 
-        Items that already carry channel/subtitle information are converted
-        directly. Items that only have a URL (no channel name) are collected
+        Items with usable titles and channel information are converted directly.
+        Items with missing metadata or URL-placeholder titles are collected
         and resolved via the YouTube metadata cache in a post-processing step.
         The cache checks its database first and only calls the YouTube Data
         API for entries that are not stored yet.
@@ -72,14 +72,11 @@ class YouTubeMusicListensImporter(BaseListensImporter):
         missing: list[tuple[dict[str, Any], str]] = []
 
         for item in batch:
-            converted = self._convert_item_to_listen(item, from_takeout=True)
-            if converted:
-                listens.append(converted)
-                continue
-
-            # Only send entries for enrichment when valid
-            # and missing channel metadata.
+            # Only send entries for enrichment when they have invalid or missing metadata
             if not self._needs_metadata_enrichment(item):
+                converted = self._convert_item_to_listen(item, from_takeout=True)
+                if converted:
+                    listens.append(converted)
                 continue
 
             video_url = item.get("titleUrl", "")
@@ -121,6 +118,8 @@ class YouTubeMusicListensImporter(BaseListensImporter):
         """
         try:
             title = item.get("title", "")
+            if not isinstance(title, str):
+                return None
             if from_takeout and title.startswith("Watched "):
                 title = title.removeprefix("Watched ")
 
@@ -168,28 +167,24 @@ class YouTubeMusicListensImporter(BaseListensImporter):
             return None
 
     def _needs_metadata_enrichment(self, item: dict[str, Any]) -> bool:
-        """Return True when an item is valid except for missing channel info."""
+        """Return True when the title or channel metadata is missing or unusable."""
         title = item.get("title", "")
-        if title.startswith("Watched "):
-            title = title[8:]
-        if not title:
-            return False
+        if not isinstance(title, str):
+            return True
 
-        # Batch filtering already validates timestamp, but keeping this as a guard
-        # so we don't enrich malformed entries if this method is reused later.
-        time_str = item.get("time", "")
-        try:
-            datetime.fromisoformat(time_str.replace('Z', '+00:00'))
-        except (TypeError, ValueError):
-            return False
+        title = title.removeprefix("Watched ").strip()
+        if not title or title.lower().startswith(("https://", "http://")):
+            return True
 
         subtitles = item.get("subtitles", [])
+        if not subtitles:
+            return True
         if subtitles and isinstance(subtitles, list):
             channel_name = subtitles[0].get("name", "")
-            if channel_name:
-                return False
+            if not isinstance(channel_name, str) or not channel_name.strip():
+                return True
 
-        return True
+        return False
 
     @staticmethod
     def _extract_video_id(video_url: str) -> str | None:
