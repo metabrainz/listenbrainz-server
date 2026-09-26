@@ -88,7 +88,7 @@
     svg {
       width: 6rem;
       height: 6rem;
-      color: $gray-300;
+      color: $gray-500;
       filter: none;
       transition: filter 0.3s ease-out;
     }
@@ -155,12 +155,27 @@
 
   .event-artist {
     width: 12em;
+    min-height: 1.5em;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
 
     a {
       font-weight: 500;
+    }
+  }
+
+  .event-location {
+    width: 12em;
+    min-height: 1.5em;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: smaller;
+    color: $gray-600;
+
+    svg {
+      margin-right: 0.4em;
     }
   }
 }
