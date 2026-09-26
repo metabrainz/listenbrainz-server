@@ -1,6 +1,6 @@
 import * as React from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import { faCalendarDay, faHourglass } from "@fortawesome/free-solid-svg-icons";
+import { faLocationDot, faTicket } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { isString, isUndefined } from "lodash";
 import { Link } from "react-router";
@@ -25,9 +25,6 @@ type EventCardProps = {
   showArtist?: boolean;
   showInformation?: boolean;
   dateFormatOptions?: Intl.DateTimeFormatOptions;
-  onClick?:
-    | React.MouseEventHandler<HTMLElement>
-    | React.KeyboardEventHandler<HTMLElement>;
 };
 
 export default function EventCard(props: EventCardProps) {
@@ -40,7 +37,6 @@ export default function EventCard(props: EventCardProps) {
     placeName,
     areaName,
     dateFormatOptions,
-    onClick,
     showEventTitle,
     showArtist,
     showInformation,
@@ -53,21 +49,17 @@ export default function EventCard(props: EventCardProps) {
     isString(eventDate) &&
     Boolean(eventDate.length) &&
     isValid(new Date(eventDate));
-  const upcomingEvent = hasEventDate && new Date(eventDate) > new Date();
   const EVENT_TYPE_UNKNOWN = "Event";
 
   const [eventArtSrc, setEventArtSrc] = React.useState<string>();
 
-  // fallback to area if venue is not available
-  const locationName = placeName ?? areaName;
+  const locationName = [placeName, areaName].filter(Boolean).join(", ");
   const performerNames = performers?.map((performer) => performer.name) ?? [];
   const subtitle = [performerNames.join(", "), locationName]
     .filter(Boolean)
     .join(" - ");
 
-  const eventArtIcon = (
-    <FontAwesomeIcon icon={upcomingEvent ? faHourglass : faCalendarDay} />
-  );
+  const eventArtIcon = <FontAwesomeIcon icon={faTicket} />;
   const eventArtPlaceholder = (
     <div
       className={`event-art-placeholder event-art ${
@@ -134,21 +126,9 @@ export default function EventCard(props: EventCardProps) {
             </div>
           )}
         </div>
-        {onClick ? (
-          <div
-            className="event-art-container"
-            onClick={onClick as React.MouseEventHandler}
-            onKeyDown={onClick as React.KeyboardEventHandler}
-            role="button"
-            tabIndex={0}
-          >
-            {eventArtElement}
-          </div>
-        ) : (
-          <Link to={linkToEntity} className="event-art-container">
-            {eventArtElement}
-          </Link>
-        )}
+        <Link to={linkToEntity} className="event-art-container">
+          {eventArtElement}
+        </Link>
       </div>
       {showEventTitle && (
         <div className="name-type-container">
@@ -157,17 +137,25 @@ export default function EventCard(props: EventCardProps) {
           </div>
         </div>
       )}
-      {showArtist && Boolean(subtitle) && (
-        <div className="event-artist" title={subtitle}>
-          {performers?.map((performer, index) => (
-            <span key={performer.id}>
-              <Link to={`/artist/${performer.id}/`}>{performer.name}</Link>
-              {index < performers.length - 1 && ", "}
-            </span>
-          ))}
-          {Boolean(performerNames.length) && locationName && " - "}
-          {locationName}
-        </div>
+      {showArtist && (
+        <>
+          <div className="event-artist" title={performerNames.join(", ")}>
+            {performers?.map((performer, index) => (
+              <span key={performer.id}>
+                <Link to={`/artist/${performer.id}/`}>{performer.name}</Link>
+                {index < performers.length - 1 && ", "}
+              </span>
+            ))}
+          </div>
+          <div className="event-location" title={locationName || undefined}>
+            {Boolean(locationName) && (
+              <>
+                <FontAwesomeIcon icon={faLocationDot} />
+                {locationName}
+              </>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
