@@ -43,7 +43,7 @@ def parse_incs(incs):
 
 
 def parse_event_incs(incs):
-    allowed_incs = ("artist", "tag", "place", "series", "rels", "setlist")
+    allowed_incs = ("artist", "tag", "place", "series", "parts", "part_of", "rels", "setlist")
 
     if not incs:
         return []
@@ -631,6 +631,7 @@ def metadata_event():
                 "event_mbid": "280a991d-33ba-4ec7-ab13-59ae418d165f",
                 "event_name": "Alienation Tour",
                 "event_time": "2026-11-04T19:00:00",
+                "event_type": "Concert",
                 "event_type_gid": "ef55e8d7-3d00-394a-8012-f5506a29ff0b",
                 "place_mbid": "543c253c-6557-43a3-bed3-aaf6d2425e5b",
                 "place_name": "Gainbridge Fieldhouse",
@@ -641,8 +642,8 @@ def metadata_event():
 
     :param event_mbids: A comma separated list of event_mbids
     :type event_mbids: ``str``
-    :param inc: A space separated list of "artist", "tag", "place", "series", "rels" and/or
-                "setlist" to indicate which portions of metadata you're interested in fetching.
+    :param inc: A space separated list of "artist", "tag", "place", "series", "parts", "part_of",
+                "rels" and/or "setlist" to indicate which portions of metadata you're interested in fetching.
                 We encourage users to only fetch the data they plan to consume.
     :type inc: ``str``
     :statuscode 200: you have data!
@@ -685,6 +686,10 @@ def metadata_event():
             }
         if "series" in incs:
             item["series"] = entry.event_data.get("series", [])
+        if "parts" in incs:
+            item["parts"] = entry.event_data.get("parts", [])
+        if "part_of" in incs:
+            item["part_of"] = entry.event_data.get("part_of", [])
         if "rels" in incs:
             item["rels"] = entry.event_data.get("rels", {})
         if "setlist" in incs:
