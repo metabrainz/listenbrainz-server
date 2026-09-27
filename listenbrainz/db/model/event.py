@@ -66,8 +66,8 @@ class EventMetadata(BaseModel):
 
     def to_api(self) -> dict:
         """
-        Returns an API serialisable dict.
-        API layer handles event data unpacking based on which inc options were requested.
+        Returns an API serialisable dict. The small fields in event_data are included here,
+        the API layer adds the rest based on which inc options were requested.
         """
         result = {
             "event_mbid": str(self.event_mbid),
@@ -91,4 +91,10 @@ class EventMetadata(BaseModel):
             result["place_name"] = self.place_name
         if self.area_mbid:
             result["area_mbid"] = str(self.area_mbid)
+        if self.event_data.get("type"):
+            result["event_type"] = self.event_data["type"]
+        if self.event_data.get("disambiguation"):
+            result["disambiguation"] = self.event_data["disambiguation"]
+        if self.event_data.get("event_art_id"):
+            result["event_art_id"] = self.event_data["event_art_id"]
         return result
