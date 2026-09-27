@@ -31,7 +31,7 @@ const searchResults = {
         {
           type: "held at",
           "type-id": "e2c6f697-07dc-38b1-be0b-83d740165532",
-          direction: "forward",
+          direction: "backward",
           place: {
             id: "4d43b0d4-5f4a-4b2e-9f0e-1d2c3b4a5e6f",
             name: "Worthy Farm",
@@ -40,7 +40,7 @@ const searchResults = {
         {
           type: "held in",
           "type-id": "542f8484-8bc7-3ce5-a022-747850b2b928",
-          direction: "forward",
+          direction: "backward",
           area: {
             id: "6b7c8d9e-0f1a-2b3c-4d5e-6f7a8b9c0d1e",
             name: "Somerset",
@@ -56,7 +56,7 @@ const searchResults = {
         {
           type: "held in",
           "type-id": "542f8484-8bc7-3ce5-a022-747850b2b928",
-          direction: "forward",
+          direction: "backward",
           area: {
             id: "8a4b2c1d-3e4f-5a6b-7c8d-9e0f1a2b3c4d",
             name: "Reading",
