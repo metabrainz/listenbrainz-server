@@ -1,13 +1,16 @@
-from flask import Blueprint, current_app, jsonify
+from flask import Blueprint, current_app, jsonify, request
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
-from listenbrainz.webserver import db_conn
+import listenbrainz.db.user_artist_relationship as db_user_artist_relationship
+import listenbrainz.db.event_feed as db_event_feed
+from listenbrainz.webserver import db_conn, ts_conn
 
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APINotFound, APIInternalServerError, APIBadRequest
 from brainzutils.ratelimit import ratelimit
-from listenbrainz.webserver.views.api_tools import validate_auth_header
+from listenbrainz.webserver.views.api_tools import validate_auth_header, is_valid_uuid, log_raise_400, \
+    get_non_negative_param, DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET
 
 social_api_bp = Blueprint('social_api_v1', __name__)
 
@@ -141,3 +144,184 @@ def unfollow_user(user_name: str):
         raise APIInternalServerError("Something went wrong, please try again later")
 
     return jsonify({"status": "ok"})
+
+
+@social_api_bp.post("/followed-artists/add")
+@crossdomain
+@ratelimit()
+def follow_artist():
+    """
+    Follow the artist with the given ``artist_mbid``, sent in the request body as
+    ``{"artist_mbid": "<artist_mbid>"}``. A user token (found on  https://listenbrainz.org/settings/ )
+    must be provided in the Authorization header!
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Successfully followed the artist.
+    :statuscode 400:
+                    - Missing or invalid artist_mbid.
+                    - Already following the artist.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
+    current_user = validate_auth_header()
+
+    data = request.json
+
+    if "artist_mbid" not in data:
+        log_raise_400("JSON document must contain artist_mbid", data)
+
+    if not is_valid_uuid(data["artist_mbid"]):
+        log_raise_400("artist_mbid %s is not valid" % data["artist_mbid"], data)
+
+    if db_user_artist_relationship.is_following_artist(db_conn, current_user["id"], data["artist_mbid"]):
+        raise APIBadRequest("%s is already following artist %s" % (current_user["musicbrainz_id"], data["artist_mbid"]))
+
+    try:
+        db_user_artist_relationship.insert(db_conn, current_user["id"], data["artist_mbid"], "follow")
+    except Exception as e:
+        current_app.logger.error("Error while trying to insert an artist relationship: %s", str(e))
+        raise APIInternalServerError("Something went wrong, please try again later")
+
+    return jsonify({"status": "ok"})
+
+
+@social_api_bp.post("/followed-artists/remove")
+@crossdomain
+@ratelimit()
+def unfollow_artist():
+    """
+    Unfollow the artist with the given ``artist_mbid``, sent in the request body as
+    ``{"artist_mbid": "<artist_mbid>"}``. A user token (found on  https://listenbrainz.org/settings/ )
+    must be provided in the Authorization header! Unfollowing an artist that is not followed does nothing.
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Successfully unfollowed the artist.
+    :statuscode 400: Missing or invalid artist_mbid.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
+    current_user = validate_auth_header()
+
+    data = request.json
+
+    if "artist_mbid" not in data:
+        log_raise_400("JSON document must contain artist_mbid", data)
+
+    if not is_valid_uuid(data["artist_mbid"]):
+        log_raise_400("artist_mbid %s is not valid" % data["artist_mbid"], data)
+
+    try:
+        db_user_artist_relationship.delete(db_conn, current_user["id"], data["artist_mbid"], "follow")
+    except Exception as e:
+        current_app.logger.error("Error while trying to delete an artist relationship: %s", str(e))
+        raise APIInternalServerError("Something went wrong, please try again later")
+
+    return jsonify({"status": "ok"})
+
+
+@social_api_bp.get("/user/<mb_username:user_name>/followed-artists")
+@crossdomain
+@ratelimit()
+def get_followed_artists(user_name: str):
+    """
+    Fetch the list of artists followed by the user ``user_name``, most recently followed first. Returns a JSON like:
+
+    .. code-block:: json
+
+        {
+            "followed_artists": ["<artist_mbid>", "..."],
+            "user": "user_name",
+            "count": 5,
+            "offset": 0
+        }
+
+    :param count: The number of artists to return, at most 1000. Default 25.
+    :param offset: The number of artists to skip from the beginning. Default 0.
+    :statuscode 200: Yay, you have data!
+    :statuscode 400: invalid count or offset passed.
+    :statuscode 404: User not found
+    """
+    user = db_user.get_by_mb_id(db_conn, user_name)
+
+    if not user:
+        raise APINotFound("User %s not found" % user_name)
+
+    count = get_non_negative_param("count", DEFAULT_ITEMS_PER_GET)
+    count = min(count, MAX_ITEMS_PER_GET)
+
+    offset = get_non_negative_param("offset", 0)
+
+    try:
+        artists = db_user_artist_relationship.get_followed_artist_mbids(db_conn, user["id"], count, offset)
+    except Exception as e:
+        current_app.logger.error("Error while trying to fetch followed artists: %s", str(e))
+        raise APIInternalServerError("Something went wrong, please try again later")
+
+    return jsonify({
+        "followed_artists": [artist["artist_mbid"] for artist in artists],
+        "user": user["musicbrainz_id"],
+        "count": len(artists),
+        "offset": offset,
+    })
+
+
+@social_api_bp.get("/user/<mb_username:user_name>/events/followed-artists")
+@crossdomain
+@ratelimit()
+def get_events_for_followed_artists(user_name: str):
+    """
+    Fetch upcoming events for all artists followed by the user ``user_name``, ordered
+    chronologically. Returns a JSON like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "events": ["..."],
+                "count": 10,
+                "offset": 0,
+                "user": "shivam-kapila"
+            }
+        }
+
+    The events list is empty if the user follows no artists, or if none of the artists
+    they follow have upcoming events.
+
+    Each event has the same fields as the values returned by ``GET /1/metadata/event/`` without any ``inc``.
+    An event counts as upcoming until its end date, or its begin date if it has no end date, has passed.
+    A missing month or day counts as the first of the year or month, and events with no date are left out.
+
+    :param count: The number of events to return, at most 1000. Default 25.
+    :param offset: The number of events to skip from the beginning. Default 0.
+    :statuscode 200: Yay, you have data!
+    :statuscode 400: invalid count or offset passed.
+    :statuscode 404: User not found
+    """
+    user = db_user.get_by_mb_id(db_conn, user_name)
+
+    if not user:
+        raise APINotFound("User %s not found" % user_name)
+
+    count = get_non_negative_param("count", DEFAULT_ITEMS_PER_GET)
+    count = min(count, MAX_ITEMS_PER_GET)
+
+    offset = get_non_negative_param("offset", 0)
+
+    try:
+        artists = db_user_artist_relationship.get_all_followed_artist_mbids(db_conn, user["id"])
+        artist_mbids = [artist["artist_mbid"] for artist in artists]
+        events = db_event_feed.get_upcoming_events_for_artists(ts_conn, artist_mbids, count, offset)
+    except Exception as e:
+        current_app.logger.error("Error while trying to fetch events for followed artists: %s", str(e))
+        raise APIInternalServerError("Something went wrong, please try again later")
+
+    return jsonify({
+        "payload": {
+            "events": [event.to_api() for event in events],
+            "count": len(events),
+            "offset": offset,
+            "user": user["musicbrainz_id"],
+        }
+    })

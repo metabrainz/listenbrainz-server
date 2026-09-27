@@ -4,10 +4,12 @@ from flask import Blueprint, jsonify, request, current_app
 from brainzutils.ratelimit import ratelimit
 from brainzutils import cache
 import listenbrainz.db.fresh_releases
+import listenbrainz.db.event_feed as db_event_feed
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized
-from listenbrainz.webserver.views.api_tools import _parse_int_arg, _parse_bool_arg, validate_auth_header
+from listenbrainz.webserver.views.api_tools import _parse_int_arg, _parse_bool_arg, validate_auth_header, \
+    get_non_negative_param, MAX_ITEMS_PER_GET
 from listenbrainz.db.color import get_releases_for_color
 from troi.patches.lb_radio import LBRadioPatch
 from troi.patch import Patch
@@ -17,6 +19,7 @@ MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 90
 DEFAULT_NUMBER_OF_RELEASES = 25  # 5x5 grid
 DEFAULT_CACHE_EXPIRE_TIME = 3600 * 24  # 1 day
 HUESOUND_PAGE_CACHE_KEY = "huesound.%s.%d"
+DEFAULT_NUMBER_OF_EVENTS = 25
 
 explore_api_bp = Blueprint('explore_api_v1', __name__)
 
@@ -210,3 +213,49 @@ def lb_radio():
     feedback = patch.user_feedback()
 
     return jsonify({"payload": {"jspf": jspf, "feedback": feedback}})
+
+
+@explore_api_bp.get("/events")
+@crossdomain
+@ratelimit()
+def get_events():
+    """
+    Fetch upcoming events sitewide, ordered chronologically. Returns a JSON like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "events": ["..."],
+                "total_count": 142
+            }
+        }
+
+    Each event has the same fields as the values returned by ``GET /1/metadata/event/`` without any ``inc``.
+    An event counts as upcoming until its end date, or its begin date if it has no end date, has passed.
+    A missing month or day counts as the first of the year or month, and events with no date are left out.
+
+    :param count: The number of events to return, at most 1000. Default 25.
+    :param offset: The number of events to skip from the beginning. Default 0.
+    :statuscode 200: fetch succeeded
+    :statuscode 400: invalid count or offset passed.
+    :resheader Content-Type: *application/json*
+    """
+
+    count = get_non_negative_param("count", DEFAULT_NUMBER_OF_EVENTS)
+    count = min(count, MAX_ITEMS_PER_GET)
+
+    offset = get_non_negative_param("offset", 0)
+
+    try:
+        events, total_count = db_event_feed.get_upcoming_events_global(ts_conn, count, offset)
+    except Exception as e:
+        current_app.logger.error("Server failed to get upcoming events: {}".format(e), exc_info=True)
+        raise APIInternalServerError("Server failed to get upcoming events")
+
+    return jsonify({
+        "payload": {
+            "events": [e.to_api() for e in events],
+            "total_count": total_count,
+        }
+    })

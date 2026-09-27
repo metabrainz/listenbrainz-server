@@ -176,6 +176,20 @@ CREATE TABLE user_relationship (
     created             TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE user_artist_relationship (
+    user_id              INTEGER NOT NULL, -- FK to "user".id
+    artist_mbid          UUID NOT NULL,
+    relationship_type    user_artist_relationship_enum NOT NULL,
+    created              TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE event_interaction (
+    user_id              INTEGER NOT NULL, -- FK to "user".id
+    event_mbid           UUID NOT NULL,
+    interaction_type     event_interaction_enum NOT NULL,
+    created              TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE pinned_recording (
     id                      SERIAL, -- PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id

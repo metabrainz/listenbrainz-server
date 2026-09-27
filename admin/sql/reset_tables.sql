@@ -25,6 +25,8 @@ DELETE FROM listens_importer               CASCADE;
 DELETE FROM recording_feedback             CASCADE;
 DELETE FROM recommendation_feedback        CASCADE;
 DELETE FROM user_relationship              CASCADE;
+DELETE FROM user_artist_relationship       CASCADE;
+DELETE FROM event_interaction              CASCADE;
 DELETE FROM release_color                  CASCADE;
 DELETE FROM pinned_recording               CASCADE;
 DELETE FROM user_setting                   CASCADE;
