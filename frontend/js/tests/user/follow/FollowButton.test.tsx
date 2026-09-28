@@ -277,4 +277,97 @@ describe("<FollowButton />", () => {
       expect(screen.getByText("Follow")).toBeInTheDocument();
     });
   });
+
+  describe("following an artist", () => {
+    const artistMBID = "a74b1b7f-71a5-4011-9441-d0b5e4122711";
+
+    it("follows the artist instead of a user", async () => {
+      const updateFollowedArtists = jest.fn();
+      render(
+        <GlobalAppContext.Provider value={globalContext}>
+          <FollowButton
+            type="block"
+            artistMBID={artistMBID}
+            loggedInUserFollowsUser={false}
+            updateFollowedArtists={updateFollowedArtists}
+          />
+        </GlobalAppContext.Provider>
+      );
+      const followArtistSpy = jest
+        .spyOn(globalContext.APIService, "followArtist")
+        .mockResolvedValue({ status: 200 });
+      const followUserSpy = jest.spyOn(globalContext.APIService, "followUser");
+
+      await userEvent.click(screen.getByRole("button", { name: "Follow" }));
+
+      await waitFor(() => {
+        expect(followArtistSpy).toHaveBeenCalledWith(artistMBID, "FNORD");
+      });
+      expect(followUserSpy).not.toHaveBeenCalled();
+      expect(updateFollowedArtists).toHaveBeenCalledWith(artistMBID, "follow");
+      expect(
+        screen.getByRole("button", { name: "Following" })
+      ).toBeInTheDocument();
+    });
+
+    it("unfollows the artist instead of a user", async () => {
+      const updateFollowedArtists = jest.fn();
+      render(
+        <GlobalAppContext.Provider value={globalContext}>
+          <FollowButton
+            type="block"
+            artistMBID={artistMBID}
+            loggedInUserFollowsUser
+            updateFollowedArtists={updateFollowedArtists}
+          />
+        </GlobalAppContext.Provider>
+      );
+      const unfollowArtistSpy = jest
+        .spyOn(globalContext.APIService, "unfollowArtist")
+        .mockResolvedValue({ status: 200 });
+      const unfollowUserSpy = jest.spyOn(
+        globalContext.APIService,
+        "unfollowUser"
+      );
+
+      await userEvent.hover(screen.getByRole("button", { name: "Following" }));
+      await userEvent.click(screen.getByRole("button", { name: "Unfollow" }));
+
+      await waitFor(() => {
+        expect(unfollowArtistSpy).toHaveBeenCalledWith(artistMBID, "FNORD");
+      });
+      expect(unfollowUserSpy).not.toHaveBeenCalled();
+      expect(updateFollowedArtists).toHaveBeenCalledWith(
+        artistMBID,
+        "unfollow"
+      );
+      expect(
+        screen.getByRole("button", { name: "Follow" })
+      ).toBeInTheDocument();
+    });
+
+    it("shows error state if following the artist fails", async () => {
+      const updateFollowedArtists = jest.fn();
+      render(
+        <GlobalAppContext.Provider value={globalContext}>
+          <FollowButton
+            type="block"
+            artistMBID={artistMBID}
+            loggedInUserFollowsUser={false}
+            updateFollowedArtists={updateFollowedArtists}
+          />
+        </GlobalAppContext.Provider>
+      );
+      jest
+        .spyOn(globalContext.APIService, "followArtist")
+        .mockResolvedValue({ status: 400 });
+
+      await userEvent.click(screen.getByRole("button", { name: "Follow" }));
+
+      expect(
+        await screen.findByRole("button", { name: "Error!!" })
+      ).toBeInTheDocument();
+      expect(updateFollowedArtists).not.toHaveBeenCalled();
+    });
+  });
 });
