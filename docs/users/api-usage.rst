@@ -46,6 +46,12 @@ and you should see a recent listen of "Never Gonna Give You Up" when you visit
 Getting Listen History
 ----------------------
 
+For a user's **entire listening history**, use the :doc:`export API <api/export>`.
+It provides an asynchronous ZIP download for bulk imports, including those made
+by third-party applications and MCP servers. Do not retrieve a complete history
+by repeatedly paginating or scraping the listens API. The example below is for
+fetching a limited set of listens.
+
 See :ref:`json-doc` for details on the format of the Track dictionaries.
 
 If there's nothing in the listen history of your user, you can run

@@ -20,6 +20,7 @@ class SpotifyListensImporter(ZipBaseListensImporter):
 
     def __init__(self, db_conn, ts_conn):
         super().__init__(db_conn, ts_conn)
+        self.importer_name = "Spotify Extended Streaming History Importer"
         self.skipped_incognito_count = 0
         self.skipped_short_plays_count = 0
 
