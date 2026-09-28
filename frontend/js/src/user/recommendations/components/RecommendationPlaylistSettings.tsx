@@ -29,6 +29,7 @@ export default function RecommendationPlaylistSettings({
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const playlistId = getPlaylistId(playlist);
   const extension = getPlaylistExtension(playlist);
+  const expiryDate = extension?.additional_metadata?.expires_at;
   const { track } = playlist;
   const [firstListen, ...otherListens] = track;
   const { copyPlaylist } = APIService;
@@ -77,11 +78,12 @@ export default function RecommendationPlaylistSettings({
         <div className="title">{playlist.title}</div>
         <div>
           {track.length} tracks | Updated {preciseTimestamp(playlist.date)}
-          {extension?.additional_metadata?.expires_at &&
-            ` | Deleted in ${preciseTimestamp(
-              extension?.additional_metadata?.expires_at,
-              "timeAgo"
-            )}`}
+          {expiryDate &&
+            ` | ${
+              new Date(expiryDate).getTime() <= Date.now()
+                ? "Deletion pending"
+                : `Deleted in ${preciseTimestamp(expiryDate, "timeAgo")}`
+            }`}
         </div>
       </div>
       <div>

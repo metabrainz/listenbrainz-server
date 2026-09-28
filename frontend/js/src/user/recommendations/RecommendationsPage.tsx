@@ -266,12 +266,16 @@ export default function RecommendationsPage() {
         role="button"
         tabIndex={0}
       >
-        {!isUndefined(percentElapsed) && (
+        {!isUndefined(percentElapsed) && !isUndefined(expiryDate) && (
           <div
             className={`playlist-timer ${
               percentElapsed > 75 ? "pressing" : ""
             }`}
-            title={`Deleted in ${preciseTimestamp(expiryDate!, "timeAgo")}`}
+            title={
+              new Date(expiryDate).getTime() <= Date.now()
+                ? "Deletion pending"
+                : `Deleted in ${preciseTimestamp(expiryDate, "timeAgo")}`
+            }
             style={{
               ["--degrees-progress" as any]: `${
                 (percentElapsed / 100) * 360
