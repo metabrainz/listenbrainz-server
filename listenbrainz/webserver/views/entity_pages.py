@@ -4,7 +4,7 @@ from flask import Blueprint, render_template, current_app, jsonify
 from werkzeug.exceptions import BadRequest
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
-from listenbrainz.db import popularity, similarity
+from listenbrainz.db import event_feed, popularity, similarity
 from listenbrainz.db.stats import get_entity_listener
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects, load_release_groups_for_recordings
 from listenbrainz.webserver import db_conn, ts_conn
@@ -220,6 +220,14 @@ def artist_entity(artist_mbid: str):
         current_app.logger.error("Error generating cover art for artist:", exc_info=True)
         cover_art = None
 
+    try:
+        upcoming_events = event_feed.get_upcoming_events_for_artists(ts_conn, [artist_mbid])
+        past_events = event_feed.get_past_events_for_artists(ts_conn, [artist_mbid])
+    except Exception:
+        current_app.logger.error("Error loading events for artist:", exc_info=True)
+        upcoming_events = []
+        past_events = []
+
     data = {
         "artist": artist,
         "popularRecordings": popular_recordings,
@@ -230,6 +238,8 @@ def artist_entity(artist_mbid: str):
         },
         "listeningStats": listening_stats,
         "releaseGroups": release_groups,
+        "upcomingEvents": [event.to_api() for event in upcoming_events],
+        "pastEvents": [event.to_api() for event in past_events],
         "coverArt": cover_art
     }
 
