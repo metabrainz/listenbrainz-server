@@ -13,7 +13,7 @@ from listenbrainz.db.lb_radio_artist import lb_radio_artist
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import listens_importer, tags
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
+from listenbrainz.listenstore.timescale_listenstore import ListenStoreException
 from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.webserver.decorators import crossdomain
@@ -586,7 +586,7 @@ def delete_listen():
         timescale_connection._ts.delete_listen(listened_at=listened_at,
                                                recording_msid=recording_msid, user_id=user["id"])
         invalidate_user_listen_caches(user["id"])
-    except TimescaleListenStoreException as e:
+    except ListenStoreException as e:
         current_app.logger.error("Cannot delete listen for user: %s" % str(e))
         raise APIServiceUnavailable(
             "We couldn't delete the listen. Please try again later.")

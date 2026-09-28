@@ -17,6 +17,8 @@ SECONDS_IN_A_YEAR = 31536000
 
 def delete_listens():
     """Process pending deletions in the listens database, retaining their history."""
+    # Timescale keeps the listens, so its counts and min/max bounds must remain intact.
+    # update_user_listen_data still maintains those values for newly ingested listens.
     listens_db.delete_pending_listens()
 
 

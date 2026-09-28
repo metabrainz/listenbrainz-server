@@ -10,6 +10,7 @@ import requests_mock
 from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
+from listenbrainz.db import listens as listens_db
 import listenbrainz.db.user_relationship as db_user_relationship
 from data.model.external_service import ExternalServiceType
 from listenbrainz.listenstore.timescale_utils import delete_listens
@@ -1604,9 +1605,20 @@ class ListenAPICachingTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(cache.get(listens_key), None)
 
         delete_listens()
+        with listens_db.engine.connect() as connection:
+            self.assertEqual(connection.execute(text(
+                "SELECT count(*) FROM listen WHERE user_id = :user_id"
+            ), {"user_id": self.user["id"]}).scalar(), 0)
+            self.assertEqual(connection.execute(text(
+                "SELECT status FROM listen_delete_metadata WHERE user_id = :user_id"
+            ), {"user_id": self.user["id"]}).scalar(), "complete")
+        self.mock_fetch_listens.reset_mock()
         response = self.client.get(url)
         self.assert200(response)
-        self.assertEqual(response.json["payload"]["listens"], [])
+        # Cache invalidation forces a fresh fetch, but reads still use Timescale,
+        # which retains the listen during the migration to the listens DB.
+        self.mock_fetch_listens.assert_called_once()
+        self.assertEqual(response.json["payload"]["listens"], [listen])
 
     def test_get_listens_caching_manual_mapping(self):
         response = self.client.post(

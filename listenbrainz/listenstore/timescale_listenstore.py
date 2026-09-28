@@ -730,6 +730,8 @@ class TimescaleListenStore:
 
     def delete(self, user_id, created=None):
         """Delete history only in the listens DB, retaining Timescale listens and metadata."""
+        # Keep the existing listenstore interface during migration; deletion now uses the
+        # listens DB while reads and ingestion still use Timescale.
         if created is None:
             created = datetime.now(tz=timezone.utc)
         listens_db.delete_user(user_id, created)
@@ -747,7 +749,7 @@ class TimescaleListenStore:
             listened_at: The timestamp of the listen
             user_id: the listenbrainz row id of the user
             recording_msid: the MessyBrainz ID of the recording
-        Raises: TimescaleListenStoreException if unable to delete the listen
+        Raises: ListenStoreException if unable to queue the deletion in the listens DB
         """
         query = """
             INSERT INTO listen_delete_metadata(user_id, listened_at, recording_msid) 
@@ -761,8 +763,8 @@ class TimescaleListenStore:
                 )
         except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError) as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
-            raise TimescaleListenStoreException()
+            raise ListenStoreException("Cannot queue listen deletion in the listens database") from e
 
 
-class TimescaleListenStoreException(Exception):
+class ListenStoreException(Exception):
     pass

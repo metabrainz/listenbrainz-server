@@ -505,6 +505,8 @@ class DumpListenStore:
         """Clean up deletion records in the listens DB after a Spark full dump."""
         self.log.info("Cleaning up listen_delete_metadata")
         with listens_db.engine.begin() as connection:
+            # Invalid requests matched no listen and need no retry, so clean them up
+            # together with completed requests. Pending requests must still be processed.
             connection.execute(text("DELETE FROM listen_delete_metadata WHERE status != 'pending'"))
             connection.execute(text("DELETE FROM deleted_user_listen_history"))
         self.log.info("Cleaning up listen_delete_metadata done!")

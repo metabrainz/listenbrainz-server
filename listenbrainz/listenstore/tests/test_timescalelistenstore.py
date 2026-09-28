@@ -13,7 +13,7 @@ from listenbrainz.db import listens as listens_db, timescale as ts, timescale
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT, \
-    TimescaleListenStore, REDIS_TOTAL_LISTEN_COUNT
+    TimescaleListenStore, REDIS_TOTAL_LISTEN_COUNT, ListenStoreException
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data, add_missing_to_listen_users_metadata, \
     update_user_listen_data, delete_listens
 from listenbrainz.webserver import create_app
@@ -240,6 +240,8 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
             ), {"user_id": self.testuser_id}).scalar(), 1)
         self.assertEqual(self._get_count_and_timestamps(self.testuser_id), before)
         with timescale.engine.connect() as connection:
+            # Deletion affects only the listens DB; Timescale retains all five listens
+            # and its count and timestamp bounds while it still serves reads.
             self.assertEqual(connection.execute(text("SELECT count(*) FROM listen")).scalar(), 5)
 
     def test_delete_single_listen(self):
