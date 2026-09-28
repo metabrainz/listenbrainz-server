@@ -250,7 +250,8 @@ export default function RecommendationsPage() {
 
       const elapsed = Math.abs(today - start);
       const total = Math.abs(end - start);
-      percentElapsed = Math.round((elapsed / total) * 100);
+      // Clamp at 100% in case the playlist generation is late
+      percentElapsed = Math.min(100, Math.round((elapsed / total) * 100));
     }
     return (
       <div
