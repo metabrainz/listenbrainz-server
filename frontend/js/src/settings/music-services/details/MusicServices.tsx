@@ -91,9 +91,9 @@ export default function MusicServices() {
     const permission = permissions[service];
     return Boolean(
       permission &&
-      permission !== "disabled" &&
-      permission !== "disable" &&
-      permission.trim() !== ""
+        permission !== "disabled" &&
+        permission !== "disable" &&
+        permission.trim() !== ""
     );
   };
 
@@ -376,16 +376,13 @@ export default function MusicServices() {
       // If already connected, disconnect first to avoid duplicates
       if (permissions.navidrome === "listen") {
         try {
-          await fetch(
-            `/settings/music-services/navidrome/disconnect/`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Token ${currentUser?.auth_token}`,
-              },
-            }
-          );
+          await fetch(`/settings/music-services/navidrome/disconnect/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Token ${currentUser?.auth_token}`,
+            },
+          });
         } catch (disconnectError) {
           // eslint-disable-next-line no-console
           console.warn(
