@@ -12,6 +12,11 @@ $event-card-width: 12em;
     height: $event-card-width;
   }
 
+  .event-art-container {
+    display: flex;
+    flex-direction: column;
+  }
+
   .event-information {
     display: flex;
     flex-direction: column;

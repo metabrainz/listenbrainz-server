@@ -224,6 +224,17 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
         }
       }
     }
+    .events {
+      width: 100%;
+      .event-cards {
+        display: grid;
+        grid-gap: 1.5em;
+        grid-auto-flow: column;
+        justify-items: center;
+        grid-template-columns: repeat(auto-fill, minmax(190px, max-content));
+        grid-template-rows: repeat(1, 1fr);
+      }
+    }
   }
   .listen-card .main-content .listen-controls {
     // with the badges at the end of the listencard we need to align it to the right;

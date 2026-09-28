@@ -101,6 +101,7 @@ export default function EventSearch(props: EventSearchProps) {
         showInformation
         showEventTitle
         showArtist
+        showLocation
       />
     );
   };
