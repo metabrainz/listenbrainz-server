@@ -6,7 +6,7 @@ import UserListModalEntry from "./UserListModalEntry";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 export type FollowerFollowingCardsProps = {
-  user: ListenBrainzUser;
+  userName: string;
   followerList: Array<string>;
   followingList: Array<string>;
   loggedInUserFollowsUser: (user: ListenBrainzUser | SimilarUser) => boolean;
@@ -44,7 +44,7 @@ export default class FollowerFollowingCards extends React.Component<
       updateFollowingList,
       followerList,
       followingList,
-      user,
+      userName,
     } = this.props;
     const { activeMode } = this.state;
     const { currentUser } = this.context;
@@ -59,9 +59,9 @@ export default class FollowerFollowingCards extends React.Component<
             <>
               <hr />
               <div className="follower-following-empty text-center text-muted">
-                {user.name === currentUser?.name
+                {userName === currentUser?.name
                   ? "You don't"
-                  : `${user.name} doesn't`}{" "}
+                  : `${userName} doesn't`}{" "}
                 have any followers.
               </div>
             </>
@@ -71,9 +71,9 @@ export default class FollowerFollowingCards extends React.Component<
           <>
             <hr />
             <div className="follower-following-empty text-center text-muted">
-              {user.name === currentUser?.name
+              {userName === currentUser?.name
                 ? "You aren't"
-                : `${user.name} isn't`}{" "}
+                : `${userName} isn't`}{" "}
               following anyone.
             </div>
           </>

@@ -143,7 +143,8 @@ def insert_sitewide_stats(stats_type: str, stats_range: str, from_ts: int, to_ts
     """ Insert sitewide stats in couchdb.
 
         Args:
-            database: the name of the database to insert the stat in
+            stats_type: the type of the stat to insert
+            stats_range: the time range of the stat to insert
             from_ts: the start of the time period for which the stat is
             to_ts: the end of the time period for which the stat is
             data: sitewide stat to insert

@@ -21,14 +21,6 @@ const getIndexRoutes = (): RouteObject[] => {
           },
         },
         {
-          path: "login/",
-          lazy: {
-            Component: async () => {
-              return (await import("../login/Login")).default;
-            },
-          },
-        },
-        {
           path: "agree-to-terms/",
           lazy: {
             Component: async () => {

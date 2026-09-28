@@ -1,0 +1,5 @@
+BEGIN;
+
+ALTER TYPE data_dump_type_type ADD VALUE IF NOT EXISTS 'db';
+
+COMMIT;

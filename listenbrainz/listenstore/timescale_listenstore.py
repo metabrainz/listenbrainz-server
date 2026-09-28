@@ -13,7 +13,7 @@ from psycopg2.errors import UntranslatableCharacter
 from psycopg2.extras import execute_values
 from sqlalchemy import text
 
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db, timescale
 from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.dumps.exceptions import SchemaMismatchException
 from listenbrainz.listen import Listen
@@ -54,8 +54,13 @@ class TimescaleListenStore:
 
     def set_empty_values_for_user(self, user_id: int):
         """When a user is created, set the timestamp keys and insert an entry in the listen count
-         table so that we can avoid the expensive lookup for a brand new user."""
-        query = """INSERT INTO listen_user_metadata VALUES (:user_id, 0, NULL, NULL, NOW())"""
+         table so that we can avoid the expensive lookup for a brand new user. If the user already
+         has an entry, leave it unchanged."""
+        query = """
+            INSERT INTO listen_user_metadata (user_id, count, min_listened_at, max_listened_at, created)
+                 VALUES (:user_id, 0, NULL, NULL, NOW())
+            ON CONFLICT (user_id) DO NOTHING
+        """
         ts_conn.execute(sqlalchemy.text(query), {"user_id": user_id})
         ts_conn.commit()
 
@@ -154,21 +159,30 @@ class TimescaleListenStore:
 
     def insert(self, listens):
         """
-            Insert a batch of listens. Returns a list of (listened_at, track_name, user_name, user_id) that indicates
-            which rows were inserted into the DB. If the row is not listed in the return values, it was a duplicate.
+            Insert a batch of listens. Returns a list of (listened_at, user_id, recording_msid)
+            identifying rows inserted into Timescale. Rows absent from the result were duplicates.
         """
 
+        if not listens:
+            return []
+
         submit = []
+        created = datetime.now(tz=timezone.utc)
         for listen in listens:
-            submit.append(listen.to_timescale())
+            listened_at, user_id, recording_msid, data = listen.to_timescale()
+            submit.append((listened_at, created, user_id, recording_msid, data))
+
+        # Write the incoming batch before touching Timescale. Both stores ignore duplicates,
+        # so a retry after a Timescale failure preserves the first successful insert.
+        listens_db.insert(submit)
 
         query = """
             WITH inserted_listens AS (
-                INSERT INTO listen (listened_at, user_id, recording_msid, data)
+                INSERT INTO listen (listened_at, created, user_id, recording_msid, data)
                      VALUES %s
                 ON CONFLICT (listened_at, user_id, recording_msid)
                  DO NOTHING
-                  RETURNING listened_at, user_id, recording_msid
+                  RETURNING listened_at, created, user_id, recording_msid, data
             ), metadata AS (
                 INSERT INTO listen_user_metadata AS lum (user_id, count, min_listened_at, max_listened_at, created)
                      SELECT user_id, count(*), min(listened_at), max(listened_at), NOW()
@@ -180,26 +194,44 @@ class TimescaleListenStore:
                           , min_listened_at = least(lum.min_listened_at, excluded.min_listened_at)
                           , max_listened_at = greatest(lum.max_listened_at, excluded.max_listened_at)
                           , created = excluded.created
-            ) SELECT * FROM inserted_listens
+            )
+            SELECT listened_at, created, user_id, recording_msid, data::text
+              FROM inserted_listens
         """
 
-        inserted_rows = []
+        source_rows = {}
         conn = timescale.engine.raw_connection()
-        with conn.cursor() as curs:
+        try:
+            # this handler drops the batch instead of retrying it, only acceptable for an
+            # encoding error from timescale itself, so keep it off the partitioned write above
             try:
-                execute_values(curs, query, submit, template=None)
-                while True:
-                    result = curs.fetchone()
-                    if not result:
-                        break
-                    inserted_rows.append((result[0], result[1], result[2]))
+                with conn.cursor() as curs:
+                    results = execute_values(
+                        curs,
+                        query,
+                        submit,
+                        template="(%s::timestamptz, %s::timestamptz, %s::integer, %s::uuid, %s::jsonb)",
+                        fetch=True,
+                    )
             except UntranslatableCharacter:
                 conn.rollback()
                 return
 
-        conn.commit()
+            for result in results:
+                listened_at = result[0]
+                user_id = result[2]
+                recording_msid = result[3]
+                source_rows[(listened_at, user_id, recording_msid)] = result
 
-        return inserted_rows
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+
+        return [(listened_at, user_id, recording_msid)
+                for listened_at, _, user_id, recording_msid, _ in source_rows.values()]
 
     def fetch_listens(self, user: Dict, from_ts: datetime = None, to_ts: datetime = None, limit: int = DEFAULT_LISTENS_PER_FETCH):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
@@ -259,6 +291,7 @@ class TimescaleListenStore:
                         , sl.recording_mbid
                         , mbc.recording_data->>'name' AS recording_name
                         , mbc.release_mbid
+                        , mbc.release_data->>'release_group_mbid' AS release_group_mbid
                         , mbc.artist_mbids::TEXT[]
                         , (mbc.release_data->>'caa_id')::bigint AS caa_id
                         , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
@@ -278,6 +311,7 @@ class TimescaleListenStore:
                         , sl.recording_mbid
                         , recording_data->>'name'
                         , release_mbid
+                        , release_data->>'release_group_mbid'
                         , artist_mbids
                         , artist_data->>'name'
                         , recording_data->>'name'
@@ -353,6 +387,7 @@ class TimescaleListenStore:
                     recording_mbid=result.recording_mbid,
                     recording_name=result.recording_name,
                     release_mbid=result.release_mbid,
+                    release_group_mbid=result.release_group_mbid,
                     artist_mbids=result.artist_mbids,
                     ac_names=result.ac_names,
                     ac_join_phrases=result.ac_join_phrases,
@@ -431,6 +466,7 @@ class TimescaleListenStore:
                          , l.recording_mbid
                          , mbc.recording_data->>'name' AS recording_name
                          , mbc.release_mbid
+                         , mbc.release_data->>'release_group_mbid' AS release_group_mbid
                          , mbc.artist_mbids::TEXT[]
                          , (mbc.release_data->>'caa_id')::bigint AS caa_id
                          , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
@@ -450,6 +486,7 @@ class TimescaleListenStore:
                          , l.recording_mbid
                          , mbc.recording_data->>'name'
                          , mbc.release_mbid
+                         , mbc.release_data->>'release_group_mbid'
                          , mbc.artist_mbids
                          , mbc.release_data->>'caa_id'
                          , mbc.release_data->>'caa_release_mbid'
@@ -475,6 +512,7 @@ class TimescaleListenStore:
                 recording_mbid=result.recording_mbid,
                 recording_name=result.recording_name,
                 release_mbid=result.release_mbid,
+                release_group_mbid=result.release_group_mbid,
                 artist_mbids=result.artist_mbids,
                 ac_names=result.ac_names,
                 ac_join_phrases=result.ac_join_phrases,
@@ -533,6 +571,7 @@ class TimescaleListenStore:
                          , l.recording_mbid
                          , mbc.recording_data->>'name' AS recording_name
                          , mbc.release_mbid
+                         , mbc.release_data->>'release_group_mbid' AS release_group_mbid
                          , mbc.artist_mbids::TEXT[]
                          , (mbc.release_data->>'caa_id')::bigint AS caa_id
                          , mbc.release_data->>'caa_release_mbid' AS caa_release_mbid
@@ -552,6 +591,7 @@ class TimescaleListenStore:
                          , l.recording_mbid
                          , mbc.recording_data->>'name'
                          , mbc.release_mbid
+                         , mbc.release_data->>'release_group_mbid'
                          , mbc.artist_mbids
                          , mbc.release_data->>'caa_id'
                          , mbc.release_data->>'caa_release_mbid'
@@ -577,6 +617,7 @@ class TimescaleListenStore:
                 recording_mbid=result.recording_mbid,
                 recording_name=result.recording_name,
                 release_mbid=result.release_mbid,
+                release_group_mbid=result.release_group_mbid,
                 artist_mbids=result.artist_mbids,
                 ac_names=result.ac_names,
                 ac_join_phrases=result.ac_join_phrases,
@@ -690,14 +731,12 @@ class TimescaleListenStore:
     def delete(self, user_id, created=None):
         """ Delete all listens for user with specified user ID.
 
-        Note: this method tries to delete the user 5 times before giving up.
-
         Args:
-            musicbrainz_id: the MusicBrainz ID of the user
             user_id: the listenbrainz row id of the user
             created: delete listens created before this timestamp
 
-        Raises: Exception if unable to delete the user in 5 retries
+        Raises: Exception if either store rejects the delete. Background tasks retry using
+            the same cutoff if Timescale fails after the partitioned delete has committed.
         """
         if created is None:
             created = datetime.now(tz=timezone.utc)
@@ -711,12 +750,17 @@ class TimescaleListenStore:
         query2 = """DELETE FROM listen WHERE user_id = :user_id AND created <= :created"""
         query3 = """INSERT INTO deleted_user_listen_history (user_id, max_created) VALUES (:user_id, :created)"""
         try:
+            listens_db.delete_user(user_id, created)
             ts_conn.execute(sqlalchemy.text(query1), {"user_id": user_id})
             ts_conn.execute(sqlalchemy.text(query2), {"user_id": user_id, "created": created})
             ts_conn.execute(sqlalchemy.text(query3), {"user_id": user_id, "created": created})
             ts_conn.commit()
-        except psycopg2.OperationalError as e:
+        except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError) as e:
+            ts_conn.rollback()
             self.log.error("Cannot delete listens for user: %s" % str(e))
+            raise
+        except Exception:
+            ts_conn.rollback()
             raise
 
     def delete_listen(self, listened_at: datetime, user_id: int, recording_msid: str):

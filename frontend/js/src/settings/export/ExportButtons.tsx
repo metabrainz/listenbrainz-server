@@ -2,7 +2,13 @@ import * as React from "react";
 
 import { toast } from "react-toastify";
 import { startCase } from "lodash";
-import { format } from "date-fns";
+import {
+  endOfDay,
+  format,
+  fromUnixTime,
+  getUnixTime,
+  parseISO,
+} from "date-fns";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowRightLong,
@@ -32,6 +38,8 @@ type Export = {
   progress: string;
   filename: string | null;
   status: ExportStatus;
+  start_time: number | null;
+  end_time: number | null;
 };
 
 function renderExport(
@@ -57,6 +65,18 @@ function renderExport(
           <dd className="col-8">{startCase(ex.type)}</dd>
           <dt className="col-4">Requested on</dt>
           <dd className="col-8">{format(ex.created, "PPp")}</dd>
+          <dt className="col-4">Start date</dt>
+          <dd className="col-8">
+            {ex.start_time != null
+              ? format(fromUnixTime(ex.start_time), "PPp")
+              : "Earliest listen"}
+          </dd>
+          <dt className="col-4">End date</dt>
+          <dd className="col-8">
+            {ex.end_time != null
+              ? format(fromUnixTime(ex.end_time), "PPp")
+              : "Latest listen"}
+          </dd>
           <dt className="col-4">Export #</dt>
           <dd className="col-8">{ex.export_id}</dd>
         </dl>
@@ -174,6 +194,9 @@ function renderExport(
 export default function ExportButtons({ listens = true, feedback = false }) {
   const [loading, setLoading] = React.useState(false);
   const [exports, setExports] = React.useState<Array<Export>>([]);
+  const [startDate, setStartDate] = React.useState("");
+  const [endDate, setEndDate] = React.useState("");
+  const invalidDateRange = Boolean(startDate && endDate && startDate > endDate);
 
   React.useEffect(() => {
     // Fetch the list of exports in progress in background tasks or finished
@@ -250,18 +273,30 @@ export default function ExportButtons({ listens = true, feedback = false }) {
     exports.findIndex(
       (exp) =>
         exp.type === ExportType.allUserData &&
-        exp.status !== ExportStatus.complete
+        exp.status !== ExportStatus.complete &&
+        exp.status !== ExportStatus.failed
     ) !== -1;
 
   const createExport = React.useCallback(
     async (event: React.SyntheticEvent) => {
       event.preventDefault();
+      if (invalidDateRange) {
+        return;
+      }
       try {
         const response = await fetch("/export/", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
+          body: JSON.stringify({
+            start_time: startDate
+              ? getUnixTime(parseISO(startDate))
+              : undefined,
+            end_time: endDate
+              ? getUnixTime(endOfDay(parseISO(endDate)))
+              : undefined,
+          }),
         });
 
         if (!response.ok) {
@@ -281,7 +316,7 @@ export default function ExportButtons({ listens = true, feedback = false }) {
         );
       }
     },
-    []
+    [startDate, endDate, invalidDateRange]
   );
 
   const deleteExport = React.useCallback(
@@ -332,10 +367,51 @@ export default function ExportButtons({ listens = true, feedback = false }) {
             (love/hate) in JSON format:
           </p>
           <form onSubmit={createExport}>
+            <p id="export-date-help">
+              Optionally limit listens by date, in your local timezone. Both
+              dates are included. Leave either blank to use your earliest or
+              latest listen. Feedback and pinned recordings are always exported
+              in full.
+            </p>
+            <div className="row mb-3">
+              <div className="col-sm-6">
+                <label htmlFor="export-start-date" className="form-label">
+                  Start date (optional)
+                </label>
+                <input
+                  id="export-start-date"
+                  type="date"
+                  className="form-control"
+                  value={startDate}
+                  max={endDate || undefined}
+                  onChange={(event) => setStartDate(event.target.value)}
+                  aria-describedby="export-date-help"
+                />
+              </div>
+              <div className="col-sm-6">
+                <label htmlFor="export-end-date" className="form-label">
+                  End date (optional)
+                </label>
+                <input
+                  id="export-end-date"
+                  type="date"
+                  className="form-control"
+                  value={endDate}
+                  min={startDate || undefined}
+                  onChange={(event) => setEndDate(event.target.value)}
+                  aria-describedby="export-date-help"
+                />
+              </div>
+            </div>
+            {invalidDateRange && (
+              <p className="text-danger" role="alert">
+                Start date must be on or before end date.
+              </p>
+            )}
             <button
               className="btn btn-warning btn-lg"
               type="submit"
-              disabled={hasAnExportInProgress}
+              disabled={hasAnExportInProgress || invalidDateRange}
             >
               Export listens
             </button>

@@ -12,6 +12,9 @@ class DumpType(Enum):
     INCREMENTAL = "incremental"
     FULL = "full"
     SAMPLE = "sample"
+    # database dumps do not contain listens, they are never imported into the spark cluster but their ids
+    # are interleaved with the listen dump ids in the data_dump table
+    DB = "db"
 
 
 class ListensDump(NamedTuple):
@@ -110,8 +113,8 @@ class ListenbrainzDumpLoader(ABC):
         pass
 
     def check_dump_type(self, dump_id: int):
-        """ Query ListenBrainz dump info API to check whether the given dump ID is an incremental or full dump """
+        """ Query ListenBrainz dump info API to check the type of the dump with the given dump ID """
         url = f"{self.get_api_base_url()}/1/status/get-dump-info"
         response = requests.get(url, params={"id": dump_id})
         response.raise_for_status()
-        return DumpType.FULL if response.json()["dump_type"] == "full" else DumpType.INCREMENTAL
+        return DumpType(response.json()["dump_type"])

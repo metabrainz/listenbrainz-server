@@ -509,7 +509,7 @@ export default function Listen() {
             />
           )}
           {user && <ListenCountCard user={user} listenCount={listenCount} />}
-          {user && <UserSocialNetwork user={user} />}
+          {user && <UserSocialNetwork userName={user.name} />}
         </div>
         <div className="col-lg-8 order-lg-1">
           {!listens.length && (

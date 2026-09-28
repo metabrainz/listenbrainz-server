@@ -1,15 +1,15 @@
 ARG PYTHON_BASE_IMAGE_VERSION=3.13-20250313
 ARG NODE_VERSION=20-alpine
-FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION AS listenbrainz-base
+FROM docker.io/metabrainz/python:$PYTHON_BASE_IMAGE_VERSION AS listenbrainz-base
 
 ARG PYTHON_BASE_IMAGE_VERSION
 
 LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-server.git" \
-      org.label-schema.vcs-ref="" \
-      org.label-schema.schema-version="1.0.0-rc1" \
-      org.label-schema.vendor="MetaBrainz Foundation" \
-      org.label-schema.name="ListenBrainz" \
-      org.metabrainz.based-on-image="metabrainz/python:$PYTHON_BASE_IMAGE_VERSION"
+    org.label-schema.vcs-ref="" \
+    org.label-schema.schema-version="1.0.0-rc1" \
+    org.label-schema.vendor="MetaBrainz Foundation" \
+    org.label-schema.name="ListenBrainz" \
+    org.metabrainz.based-on-image="metabrainz/python:$PYTHON_BASE_IMAGE_VERSION"
 
 ENV DOCKERIZE_VERSION=v0.6.1
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
@@ -23,22 +23,22 @@ ENV SENTRY_SERVICE_ERROR_ENVIRONMENT=listenbrainz
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-                       build-essential \
-                       git \
-                       libffi-dev \
-                       libpq-dev \
-                       libssl-dev \
-                       xz-utils \
-                       redis-tools \
-                       rsync \
-                       uuid \
-                       zstd \
+        build-essential \
+        git \
+        libffi-dev \
+        libpq-dev \
+        libssl-dev \
+        xz-utils \
+        redis-tools \
+        rsync \
+        uuid \
+        zstd \
     && rm -rf /var/lib/apt/lists/*
 
 # PostgreSQL client
 RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 ENV PG_MAJOR=14
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" $PG_MAJOR > /etc/apt/sources.list.d/pgdg.list
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" $PG_MAJOR >/etc/apt/sources.list.d/pgdg.list
 RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-$PG_MAJOR \
     && rm -rf /var/lib/apt/lists/*
@@ -67,15 +67,15 @@ COPY . /code/listenbrainz
 #####################################################################################################
 # NOTE: The javascript files are continously watched and compiled using this image in developement. #
 #####################################################################################################
-FROM node:$NODE_VERSION AS listenbrainz-frontend-dev
+FROM docker.io/library/node:$NODE_VERSION AS listenbrainz-frontend-dev
 
 ARG NODE_VERSION
 
 LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-server.git" \
-      org.label-schema.schema-version="1.0.0-rc1" \
-      org.label-schema.vendor="MetaBrainz Foundation" \
-      org.label-schema.name="ListenBrainz Static Builder" \
-      org.metabrainz.based-on-image="node:$NODE_VERSION"
+    org.label-schema.schema-version="1.0.0-rc1" \
+    org.label-schema.vendor="MetaBrainz Foundation" \
+    org.label-schema.name="ListenBrainz Static Builder" \
+    org.metabrainz.based-on-image="node:$NODE_VERSION"
 
 RUN mkdir /code
 WORKDIR /code
@@ -103,8 +103,8 @@ FROM listenbrainz-base AS listenbrainz-prod
 
 # Create directories for cron logs and dumps
 # /mnt/dumps: Temporary working space for dumps
-# /mnt/backup: All dumps
-# /mnt/ftp: Subset of all dumps that are uploaded to
+# /mnt/backup: Non-full public dump backups
+# /mnt/ftp: Temporary dump staging and small FTP-retention markers
 RUN mkdir /logs /mnt/dumps /mnt/backup /mnt/ftp
 
 COPY ./docker/run-lb-command /usr/local/bin
@@ -216,9 +216,11 @@ RUN touch /etc/service/uwsgi/down
 
 COPY ./docker/rc.local /etc/rc.local
 
-# crontab
-COPY ./docker/services/cron/crontab /etc/cron.d/crontab
-RUN chmod 0644 /etc/cron.d/crontab
+# crontabs
+RUN mkdir -p /etc/listenbrainz-crontabs
+COPY ./docker/services/cron/crontab /etc/listenbrainz-crontabs/crontab
+COPY ./docker/services/cron/full-dumps-crontab /etc/listenbrainz-crontabs/full-dumps-crontab
+RUN chmod 0644 /etc/listenbrainz-crontabs/*
 
 # copy the compiled js files and statis assets from image to prod
 COPY --from=listenbrainz-frontend-prod /code/frontend/robots.txt /static/
@@ -240,4 +242,4 @@ RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbra
 
 ARG GIT_COMMIT_SHA
 LABEL org.label-schema.vcs-ref=$GIT_COMMIT_SHA
-ENV GIT_SHA ${GIT_COMMIT_SHA}
+ENV GIT_SHA=${GIT_COMMIT_SHA}

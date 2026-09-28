@@ -1,0 +1,71 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+  <h2>Flash messages</h2>
+
+  <form method="post" action="{{ get_url('.add') }}" class="form-horizontal">
+    <div class="form-group">
+      <label for="level" class="col-sm-2 control-label">Level</label>
+      <div class="col-sm-4">
+        <select class="form-control" id="level" name="level">
+          {% for level in levels %}
+            <option value="{{ level }}">{{ level }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="message" class="col-sm-2 control-label">Message</label>
+      <div class="col-sm-8">
+        <textarea class="form-control" id="message" name="message" rows="3" required></textarea>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-8">
+        <button type="submit" class="btn btn-primary">Add message</button>
+      </div>
+    </div>
+  </form>
+
+  <hr>
+
+  {% if messages %}
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Level</th>
+          <th>Message</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for message in messages %}
+          <tr>
+            <td>
+              <form method="post" action="{{ get_url('.edit', message_id=message.id) }}" id="edit-{{ message.id }}">
+                <select class="form-control" name="level">
+                  {% for level in levels %}
+                    <option value="{{ level }}"{% if level == message.level %} selected{% endif %}>{{ level }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+            </td>
+            <td>
+              <textarea class="form-control" name="message" rows="2" required form="edit-{{ message.id }}">{{ message.message }}</textarea>
+            </td>
+            <td>{{ message.created }}</td>
+            <td>
+              <button type="submit" class="btn btn-primary btn-sm" form="edit-{{ message.id }}">Save</button>
+              <form method="post" action="{{ get_url('.delete', message_id=message.id) }}">
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No flash messages configured.</p>
+  {% endif %}
+{% endblock %}

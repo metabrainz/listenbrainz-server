@@ -80,6 +80,7 @@ export type DataSourceType = {
   playListen: (listen: Listen | JSPFTrack, streamingUrl?: string) => void;
   togglePlay: () => void;
   stop: () => void;
+  pause: () => void;
   seekToPositionMs: (msTimecode: number) => void;
   canSearchAndPlayTracks: () => boolean;
   datasourceRecordsListens: () => boolean;
@@ -461,7 +462,7 @@ export default function BrainzPlayer() {
   const pauseCurrentPlayback = async (): Promise<void> => {
     try {
       const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
-      dataSource?.stop();
+      dataSource?.pause();
     } catch (error) {
       handleError(error, "Could not pause playback");
     }

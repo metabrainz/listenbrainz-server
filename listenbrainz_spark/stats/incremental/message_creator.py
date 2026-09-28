@@ -62,6 +62,12 @@ class StatsMessageCreator(MessageCreator, abc.ABC):
     def create_end_message(self):
         return {"type": "couchdb_data_end", "database": self.get_database()}
 
+    def create_completion_message(self):
+        return {
+            "type": "statistics_generation_complete",
+            "stats_type": self.default_database_prefix,
+        }
+
     def parse_row(self, row):
         return row
 
@@ -76,4 +82,7 @@ class SitewideStatsMessageCreator(StatsMessageCreator, ABC):
         return None
 
     def create_end_message(self):
+        return None
+
+    def create_completion_message(self):
         return None
