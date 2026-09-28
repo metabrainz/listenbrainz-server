@@ -11,6 +11,11 @@
     aspect-ratio: 1;
   }
 
+  .event-art-container {
+    display: flex;
+    flex-direction: column;
+  }
+
   .event-information {
     display: flex;
     flex-direction: column;

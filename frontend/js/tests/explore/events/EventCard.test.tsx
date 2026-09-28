@@ -17,6 +17,7 @@ const props = {
   areaName: "Pilton",
   showEventTitle: true,
   showArtist: true,
+  showLocation: true,
   showInformation: true,
   dateFormatOptions: { year: "numeric", month: "short" } as const,
 };
@@ -52,6 +53,14 @@ describe("<EventCard />", () => {
   it("shows the venue and the area on their own line", () => {
     renderWithProviders(<EventCard {...props} />);
     expect(screen.getByTitle("Worthy Farm, Pilton")).toBeInTheDocument();
+  });
+
+  it("shows the location without the performers when only showLocation is set", () => {
+    renderWithProviders(<EventCard {...props} showArtist={false} />);
+    expect(screen.getByTitle("Worthy Farm, Pilton")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Radiohead" })
+    ).not.toBeInTheDocument();
   });
 
   it("falls back to the area name when the event has no place", () => {

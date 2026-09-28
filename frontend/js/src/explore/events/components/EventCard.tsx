@@ -27,6 +27,7 @@ type EventCardProps = {
   eventArtID?: number;
   showEventTitle?: boolean;
   showArtist?: boolean;
+  showLocation?: boolean;
   showInformation?: boolean;
   dateFormatOptions?: Intl.DateTimeFormatOptions;
 };
@@ -44,6 +45,7 @@ export default function EventCard(props: EventCardProps) {
     dateFormatOptions,
     showEventTitle,
     showArtist,
+    showLocation,
     showInformation,
   } = props;
 
@@ -147,24 +149,24 @@ export default function EventCard(props: EventCardProps) {
         </div>
       )}
       {showArtist && (
-        <>
-          <div className="event-artist" title={performerNames.join(", ")}>
-            {performers?.map((performer, index) => (
-              <span key={performer.id}>
-                <Link to={`/artist/${performer.id}/`}>{performer.name}</Link>
-                {index < performers.length - 1 && ", "}
-              </span>
-            ))}
-          </div>
-          <div className="event-location" title={locationName || undefined}>
-            {Boolean(locationName) && (
-              <>
-                <FontAwesomeIcon icon={faLocationDot} />
-                {locationName}
-              </>
-            )}
-          </div>
-        </>
+        <div className="event-artist" title={performerNames.join(", ")}>
+          {performers?.map((performer, index) => (
+            <span key={performer.id}>
+              <Link to={`/artist/${performer.id}/`}>{performer.name}</Link>
+              {index < performers.length - 1 && ", "}
+            </span>
+          ))}
+        </div>
+      )}
+      {showLocation && (
+        <div className="event-location" title={locationName || undefined}>
+          {Boolean(locationName) && (
+            <>
+              <FontAwesomeIcon icon={faLocationDot} />
+              {locationName}
+            </>
+          )}
+        </div>
       )}
     </div>
   );

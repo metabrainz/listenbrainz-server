@@ -43,6 +43,7 @@ import type {
   SimilarArtist,
 } from "../album/utils";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
+import EventCard from "../explore/events/components/EventCard";
 import { RouteQuery } from "../utils/Loader";
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
 import Pill from "../components/Pill";
@@ -98,6 +99,8 @@ export type ArtistPageProps = {
     topRecordingColor: ReleaseColor | undefined;
   };
   listeningStats: ListeningStats;
+  upcomingEvents: MusicBrainzEvent[];
+  pastEvents: MusicBrainzEvent[];
   coverArt?: string;
 };
 
@@ -153,6 +156,60 @@ export const getReleaseCard = (rg: ReleaseGroup) => {
   );
 };
 
+const getEventDate = (event: MusicBrainzEvent): string | undefined => {
+  const {
+    begin_date_year: year,
+    begin_date_month: month,
+    begin_date_day: day,
+  } = event;
+  if (isNil(year)) {
+    return undefined;
+  }
+  let date = String(year);
+  if (!isNil(month)) {
+    date += `-${String(month).padStart(2, "0")}`;
+    if (!isNil(day)) {
+      date += `-${String(day).padStart(2, "0")}`;
+    }
+  }
+  return date;
+};
+
+const getEventCard = (event: MusicBrainzEvent) => {
+  return (
+    <EventCard
+      key={event.event_mbid}
+      eventMBID={event.event_mbid}
+      eventName={event.event_name}
+      eventType={event.event_type}
+      eventDate={getEventDate(event)}
+      dateFormatOptions={{ year: "numeric", month: "short" }}
+      placeName={event.place_name}
+      areaName={event.area_name}
+      eventArtID={event.event_art_id}
+      showInformation
+      showEventTitle
+      showLocation
+    />
+  );
+};
+
+const getEventsRow = (heading: string, events?: MusicBrainzEvent[]) => {
+  if (!events?.length) {
+    return null;
+  }
+  return (
+    <div className="events">
+      <div className="listen-header">
+        <h3 className="header-with-line">{heading}</h3>
+      </div>
+      <HorizontalScrollContainer className="event-cards">
+        {events.map(getEventCard)}
+      </HorizontalScrollContainer>
+    </div>
+  );
+};
+
 export default function ArtistPage(): JSX.Element {
   const _ = useLoaderData();
   const location = useLocation();
@@ -167,6 +224,8 @@ export default function ArtistPage(): JSX.Element {
     releaseGroups,
     similarArtists,
     listeningStats,
+    upcomingEvents,
+    pastEvents,
     coverArt: coverArtSVG,
   } = data || {};
 
@@ -618,6 +677,8 @@ export default function ArtistPage(): JSX.Element {
             </div>
           )}
         </div>
+        {getEventsRow("Upcoming events", upcomingEvents)}
+        {getEventsRow("Past events", pastEvents)}
       </div>
 
       <h3 className="header-with-line">Similar Artists</h3>
