@@ -91,6 +91,8 @@ class EventMetadata(BaseModel):
             result["place_name"] = self.place_name
         if self.area_mbid:
             result["area_mbid"] = str(self.area_mbid)
+        if self.event_data.get("area_name"):
+            result["area_name"] = self.event_data["area_name"]
         if self.event_data.get("type"):
             result["event_type"] = self.event_data["type"]
         if self.event_data.get("disambiguation"):
