@@ -31,13 +31,27 @@ import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 type FollowButtonProps = {
   type: "icon-only" | "block" | string;
-  user: ListenBrainzUser;
   loggedInUserFollowsUser: boolean;
-  updateFollowingList?: (
-    user: ListenBrainzUser,
-    action: "follow" | "unfollow"
-  ) => void;
-};
+} & (
+  | {
+      user: ListenBrainzUser;
+      updateFollowingList?: (
+        user: ListenBrainzUser,
+        action: "follow" | "unfollow"
+      ) => void;
+      artistMBID?: never;
+      updateFollowedArtists?: never;
+    }
+  | {
+      artistMBID: string;
+      updateFollowedArtists?: (
+        artistMBID: string,
+        action: "follow" | "unfollow"
+      ) => void;
+      user?: never;
+      updateFollowingList?: never;
+    }
+);
 
 type FollowButtonState = {
   loggedInUserFollowsUser: boolean;
@@ -85,14 +99,24 @@ class FollowButton extends React.Component<
   };
 
   followUser = () => {
-    const { user, updateFollowingList } = this.props;
+    const {
+      user,
+      artistMBID,
+      updateFollowingList,
+      updateFollowedArtists,
+    } = this.props;
     const { APIService, currentUser } = this.context;
-    const { followUser } = APIService;
+    const { followUser, followArtist } = APIService;
 
-    followUser(user.name, currentUser?.auth_token!).then(({ status }) => {
+    const followRequest = artistMBID
+      ? followArtist(artistMBID, currentUser?.auth_token!)
+      : followUser(user!.name, currentUser?.auth_token!);
+    followRequest.then(({ status }) => {
       if (status === 200) {
         this.setState({ loggedInUserFollowsUser: true, justFollowed: true });
-        if (updateFollowingList) {
+        if (artistMBID && updateFollowedArtists) {
+          updateFollowedArtists(artistMBID, "follow");
+        } else if (user && updateFollowingList) {
           updateFollowingList(user, "follow");
         }
       } else {
@@ -102,17 +126,27 @@ class FollowButton extends React.Component<
   };
 
   unfollowUser = () => {
-    const { user, updateFollowingList } = this.props;
+    const {
+      user,
+      artistMBID,
+      updateFollowingList,
+      updateFollowedArtists,
+    } = this.props;
     const { APIService, currentUser } = this.context;
-    const { unfollowUser } = APIService;
+    const { unfollowUser, unfollowArtist } = APIService;
 
-    unfollowUser(user.name, currentUser?.auth_token!).then(({ status }) => {
+    const unfollowRequest = artistMBID
+      ? unfollowArtist(artistMBID, currentUser?.auth_token!)
+      : unfollowUser(user!.name, currentUser?.auth_token!);
+    unfollowRequest.then(({ status }) => {
       if (status === 200) {
         this.setState({
           loggedInUserFollowsUser: false,
           justFollowed: false,
         });
-        if (updateFollowingList) {
+        if (artistMBID && updateFollowedArtists) {
+          updateFollowedArtists(artistMBID, "unfollow");
+        } else if (user && updateFollowingList) {
           updateFollowingList(user, "unfollow");
         }
       } else {

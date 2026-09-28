@@ -442,6 +442,48 @@ export default class APIService {
     return { status: response.status };
   };
 
+  followArtist = async (
+    artistMBID: string,
+    userToken: string
+  ): Promise<{ status: number }> => {
+    if (!artistMBID) {
+      throw new SyntaxError("Artist MBID missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const response = await fetch(`${this.APIBaseURI}/followed-artists/add`, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ artist_mbid: artistMBID }),
+    });
+    return { status: response.status };
+  };
+
+  unfollowArtist = async (
+    artistMBID: string,
+    userToken: string
+  ): Promise<{ status: number }> => {
+    if (!artistMBID) {
+      throw new SyntaxError("Artist MBID missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const response = await fetch(`${this.APIBaseURI}/followed-artists/remove`, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ artist_mbid: artistMBID }),
+    });
+    return { status: response.status };
+  };
+
   searchUsers = async (
     userName: string
   ): Promise<{ users: Array<SearchUser> }> => {
