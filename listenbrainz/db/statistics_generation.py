@@ -23,7 +23,7 @@ def get_statistics_generation_timestamps(db_conn, stats_types=None):
     filters = []
     params = {}
     if stats_types is not None:
-        filters.append("stats_type = ANY(:stats_types)")
+        filters.append("stats_type IN :stats_types")
         params["stats_types"] = stats_types
 
     where_clause = ""
@@ -36,6 +36,8 @@ def get_statistics_generation_timestamps(db_conn, stats_types=None):
           FROM statistics_generation
           """ + where_clause + """
     """)
+    if stats_types is not None:
+        query = query.bindparams(sqlalchemy.bindparam("stats_types", expanding=True))
 
     result = db_conn.execute(query, params)
     return {row["stats_type"]: row["last_updated"] for row in result.mappings()}
