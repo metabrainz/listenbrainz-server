@@ -90,6 +90,7 @@ class MetadataEventTestCase(IntegrationTestCase, TimescaleTestCase):
             area_mbid=area_mbid,
             rating=80,
             rating_count=3,
+            event_data={"area_name": "Midtown Manhattan"},
         )
         resp = self.client.get(
             self.custom_url_for("metadata.metadata_event", event_mbids=self.event_mbid)
@@ -109,6 +110,7 @@ class MetadataEventTestCase(IntegrationTestCase, TimescaleTestCase):
         self.assertEqual(entry["place_mbid"], place_mbid)
         self.assertEqual(entry["place_name"], "Carnegie Hall")
         self.assertEqual(entry["area_mbid"], area_mbid)
+        self.assertEqual(entry["area_name"], "Midtown Manhattan")
         self.assertNotIn("artist", entry)
         self.assertNotIn("tag", entry)
 
@@ -123,6 +125,7 @@ class MetadataEventTestCase(IntegrationTestCase, TimescaleTestCase):
         self.assertNotIn("place_mbid", entry)
         self.assertNotIn("place_name", entry)
         self.assertNotIn("area_mbid", entry)
+        self.assertNotIn("area_name", entry)
         self.assertIsNone(entry["rating"])
 
     def test_event_metadata_unknown_mbid(self):

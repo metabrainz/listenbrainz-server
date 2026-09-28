@@ -620,6 +620,7 @@ def metadata_event():
         {
             "280a991d-33ba-4ec7-ab13-59ae418d165f": {
                 "area_mbid": "3bb238a4-c2a4-44e5-9843-a63e71b17e83",
+                "area_name": "Indianapolis",
                 "begin_date_day": 4,
                 "begin_date_month": 11,
                 "begin_date_year": 2026,
