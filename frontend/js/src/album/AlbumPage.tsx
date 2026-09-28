@@ -97,6 +97,9 @@ export default function AlbumPage(): JSX.Element {
   const { tag, release_group: album, artist, release } = (metadata ||
     {}) as ReleaseGroupMetadataLookup;
   const releaseGroupTags = tag?.release_group;
+  const releaseTypes = [type, ...(album?.secondary_types ?? [])]
+    .filter(Boolean)
+    .join(" + ");
 
   /** Album art and album color related */
   const [coverArtSrc, setCoverArtSrc] = React.useState(
@@ -332,8 +335,8 @@ export default function AlbumPage(): JSX.Element {
             )}
 
             <small className="form-text">
-              {type}
-              {type && album?.date ? " - " : ""}
+              {releaseTypes}
+              {releaseTypes && album?.date ? " - " : ""}
               {album?.date}
             </small>
           </div>
