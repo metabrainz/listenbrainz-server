@@ -320,7 +320,7 @@ export default function LFMMusicServicePermissions({
                   type="datetime-local"
                   className="form-control"
                   id={`${serviceName}Datetime`}
-                  max={new Date().toISOString().slice(0, 16)}
+                  max={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
                   value={latestListenedAt}
                   onChange={(e) => {
                     setLatestListenedAt(e.target.value);
