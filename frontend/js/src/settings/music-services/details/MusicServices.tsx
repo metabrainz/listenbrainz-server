@@ -5,12 +5,6 @@ import { useLoaderData } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faSpotify,
-  faApple,
-  faSoundcloud,
-  faYoutube,
-} from "@fortawesome/free-brands-svg-icons";
 import { ToastMsg } from "../../../notifications/Notifications";
 import ServicePermissionButton from "./components/ExternalServiceButton";
 import LFMMusicServicePermissions from "./components/LFMMusicServicePermissions";
@@ -26,9 +20,6 @@ import {
   EmailVerificationRequiredAlert,
   EmailVerificationRequiredToastMessage,
 } from "../../../utils/emailVerification";
-import faInternetArchive from "../../../common/icons/faInternetArchive";
-import faFunkwhale from "../../../common/icons/faFunkwhale";
-import { faNavidrome } from "../../../common/icons/faNavidrome";
 import { dataSourcesInfo } from "../../brainzplayer/BrainzPlayerSettings";
 
 type MusicServicesLoaderData = {
@@ -562,9 +553,9 @@ export default function MusicServices() {
           serviceId="spotify"
           icon={
             <FontAwesomeIcon
-              icon={faSpotify}
+              icon={dataSourcesInfo.spotify.icon}
               className="service-icon"
-              color="#1DB954"
+              color={dataSourcesInfo.spotify.color}
             />
           }
           title="Spotify"
@@ -734,9 +725,9 @@ export default function MusicServices() {
           serviceId="soundcloud"
           icon={
             <FontAwesomeIcon
-              icon={faSoundcloud}
+              icon={dataSourcesInfo.soundcloud.icon}
               className="service-icon"
-              color="#FF8800"
+              color={dataSourcesInfo.soundcloud.color}
             />
           }
           title="SoundCloud"
@@ -775,9 +766,9 @@ export default function MusicServices() {
           serviceId="appleMusic"
           icon={
             <FontAwesomeIcon
-              icon={faApple}
+              icon={dataSourcesInfo.appleMusic.icon}
               className="service-icon"
-              color="#000000"
+              color={dataSourcesInfo.appleMusic.color}
             />
           }
           title="Apple Music"
@@ -820,7 +811,13 @@ export default function MusicServices() {
 
         <MusicServiceCard
           serviceId="funkwhale"
-          icon={<FontAwesomeIcon icon={faFunkwhale} className="service-icon" />}
+          icon={
+            <FontAwesomeIcon
+              icon={dataSourcesInfo.funkwhale.icon}
+              color={dataSourcesInfo.funkwhale.color}
+              className="service-icon"
+            />
+          }
           title="Funkwhale"
           isConnected={isConnected("funkwhale")}
           isOpen={openPanel === "funkwhale"}
@@ -908,7 +905,13 @@ export default function MusicServices() {
 
         <MusicServiceCard
           serviceId="navidrome"
-          icon={<FontAwesomeIcon icon={faNavidrome} className="service-icon" />}
+          icon={
+            <FontAwesomeIcon
+              icon={dataSourcesInfo.navidrome.icon}
+              color={dataSourcesInfo.navidrome.color}
+              className="service-icon"
+            />
+          }
           title="Navidrome"
           isConnected={isConnected("navidrome")}
           isOpen={openPanel === "navidrome"}
@@ -1064,9 +1067,9 @@ export default function MusicServices() {
           serviceId="youtube"
           icon={
             <FontAwesomeIcon
-              icon={faYoutube}
+              icon={dataSourcesInfo.youtube.icon}
               className="service-icon"
-              color="#FF0000"
+              color={dataSourcesInfo.youtube.color}
             />
           }
           title="YouTube"
@@ -1085,9 +1088,9 @@ export default function MusicServices() {
           serviceId="internetarchive"
           icon={
             <FontAwesomeIcon
-              icon={faInternetArchive}
+              icon={dataSourcesInfo.internetArchive.icon}
               className="service-icon"
-              color="#6c757d"
+              color={dataSourcesInfo.internetArchive.color}
             />
           }
           title="Internet Archive"
