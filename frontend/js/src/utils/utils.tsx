@@ -1548,4 +1548,5 @@ export {
   getAdditionalContent,
   generateAlbumArtThumbnailLink,
   getEventArtFromEventMBID,
+  generateEventArtThumbnailLink,
 };

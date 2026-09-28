@@ -6,7 +6,10 @@ import { isString, isUndefined } from "lodash";
 import { Link } from "react-router";
 import { isValid } from "date-fns";
 import { formatEventDate } from "../utils";
-import { getEventArtFromEventMBID } from "../../../utils/utils";
+import {
+  generateEventArtThumbnailLink,
+  getEventArtFromEventMBID,
+} from "../../../utils/utils";
 
 export type EventPerformer = {
   id: string;
@@ -21,6 +24,7 @@ type EventCardProps = {
   performers?: Array<EventPerformer>;
   placeName?: string;
   areaName?: string;
+  eventArtID?: number;
   showEventTitle?: boolean;
   showArtist?: boolean;
   showInformation?: boolean;
@@ -36,6 +40,7 @@ export default function EventCard(props: EventCardProps) {
     performers,
     placeName,
     areaName,
+    eventArtID,
     dateFormatOptions,
     showEventTitle,
     showArtist,
@@ -82,8 +87,12 @@ export default function EventCard(props: EventCardProps) {
       }
     }
 
-    getEventArt();
-  }, [eventMBID, setEventArtSrc]);
+    if (eventArtID) {
+      setEventArtSrc(generateEventArtThumbnailLink(eventArtID, eventMBID));
+    } else {
+      getEventArt();
+    }
+  }, [eventMBID, eventArtID, setEventArtSrc]);
 
   const linkToEntity = `/event/${eventMBID}/`;
 

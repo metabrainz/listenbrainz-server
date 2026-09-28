@@ -79,6 +79,19 @@ describe("<EventCard />", () => {
     expect(image).toHaveAttribute("src", "https://example.org/event-art.jpg");
   });
 
+  it("builds the event art from the event art id without looking it up", async () => {
+    renderWithProviders(<EventCard {...props} eventArtID={39248095288} />);
+
+    const image = await screen.findByAltText(
+      "Glastonbury Festival 2026 - Radiohead, Portishead - Worthy Farm, Pilton"
+    );
+    expect(image).toHaveAttribute(
+      "src",
+      "https://archive.org/download/mbid-3a65af9a-3a3b-4df9-adfb-05e8be443c15/mbid-3a65af9a-3a3b-4df9-adfb-05e8be443c15-39248095288_thumb250.jpg"
+    );
+    expect(getEventArtSpy).not.toHaveBeenCalled();
+  });
+
   it("shows a placeholder when the event has no art", () => {
     renderWithProviders(<EventCard {...props} />);
     expect(getEventArtSpy).toHaveBeenCalledWith(props.eventMBID);
