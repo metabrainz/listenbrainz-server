@@ -57,10 +57,13 @@ class EventFeedDBTestCase(TimescaleTestCase):
             1: later date than 2, so ordering is by date and not by event_id; a one day event next year
             2: started last week and ends next week, so in progress; linked twice to artist 1 and once to
                artist 2, so must appear only once
-            3: no date at all, excluded
+            3: no date at all, excluded from both upcoming and past events
             4: cancelled, excluded
-            5: ended last year, excluded
+            5: ended last year, so a past event and not an upcoming one; linked twice to artist 1, so must
+               appear only once
             6: only artist 2, so must not appear in artist 1's feed; partial date (no day)
+            7: ended later last year than 5 despite its higher event_id, so past events are ordered by date
+            8: cancelled last year, later than 5, so must not appear in the past events either
         """
         today = date.today()
         started = today - timedelta(days=7)
@@ -77,9 +80,13 @@ class EventFeedDBTestCase(TimescaleTestCase):
             3: self.insert_event(3, [self.artist_mbid_1]),
             4: self.insert_event(4, [self.artist_mbid_1], begin_date_year=next_year, begin_date_month=2, begin_date_day=1,
                                  cancelled=True),
-            5: self.insert_event(5, [self.artist_mbid_1], begin_date_year=last_year, begin_date_month=3, begin_date_day=1,
-                                 end_date_year=last_year, end_date_month=3, end_date_day=1, ended=True),
+            5: self.insert_event(5, [self.artist_mbid_1, self.artist_mbid_1], begin_date_year=last_year, begin_date_month=3,
+                                 begin_date_day=1, end_date_year=last_year, end_date_month=3, end_date_day=1, ended=True),
             6: self.insert_event(6, [self.artist_mbid_2], begin_date_year=next_year, begin_date_month=6),
+            7: self.insert_event(7, [self.artist_mbid_1], begin_date_year=last_year, begin_date_month=11, begin_date_day=1,
+                                 end_date_year=last_year, end_date_month=11, end_date_day=1, ended=True),
+            8: self.insert_event(8, [self.artist_mbid_1], begin_date_year=last_year, begin_date_month=6, begin_date_day=1,
+                                 end_date_year=last_year, end_date_month=6, end_date_day=1, ended=True, cancelled=True),
         }
 
     def test_get_upcoming_events_for_artists(self):
@@ -102,6 +109,22 @@ class EventFeedDBTestCase(TimescaleTestCase):
         self.assertEqual([1, 6], [e.event_id for e in events])
 
         self.assertEqual([], db_event_feed.get_upcoming_events_for_artists(self.ts_conn, [str(uuid.uuid4())]))
+
+    def test_get_past_events_for_artists(self):
+        self.assertEqual([], db_event_feed.get_past_events_for_artists(self.ts_conn, []))
+
+        self.insert_events()
+
+        events = db_event_feed.get_past_events_for_artists(self.ts_conn, [self.artist_mbid_1])
+        self.assertEqual([7, 5], [e.event_id for e in events])
+
+        events = db_event_feed.get_past_events_for_artists(self.ts_conn, [self.artist_mbid_1], limit=1)
+        self.assertEqual([7], [e.event_id for e in events])
+
+        events = db_event_feed.get_past_events_for_artists(self.ts_conn, [self.artist_mbid_1], limit=25, offset=1)
+        self.assertEqual([5], [e.event_id for e in events])
+
+        self.assertEqual([], db_event_feed.get_past_events_for_artists(self.ts_conn, [self.artist_mbid_2]))
 
     def test_get_upcoming_events_global(self):
         events, total_count = db_event_feed.get_upcoming_events_global(self.ts_conn)
