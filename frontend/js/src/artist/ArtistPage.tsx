@@ -7,7 +7,15 @@ import {
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, isEmpty, isUndefined, orderBy, groupBy, sortBy } from "lodash";
+import {
+  chain,
+  isEmpty,
+  isNil,
+  isUndefined,
+  orderBy,
+  groupBy,
+  sortBy,
+} from "lodash";
 import DOMPurify from "dompurify";
 import {
   Link,
@@ -42,6 +50,8 @@ import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import Username from "../common/Username";
 import CBReview from "../cb-review/CBReview";
 import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import FollowButton from "../user/components/follow/FollowButton";
 
 export function SortingButtons({
   sort,
@@ -169,6 +179,42 @@ export default function ArtistPage(): JSX.Element {
   } = listeningStats || {};
 
   const queryClient = useQueryClient();
+  const { APIService, currentUser } = React.useContext(GlobalAppContext);
+  const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
+
+  const followStatusQueryKey = [
+    "artist-follow-status",
+    currentUser?.name,
+    artist?.artist_mbid,
+  ];
+  const {
+    data: followStatusData,
+    isSuccess: hasFollowStatus,
+    isError: followStatusError,
+  } = useQuery({
+    queryKey: followStatusQueryKey,
+    queryFn: () =>
+      APIService.getArtistFollowStatus(currentUser.name, artist!.artist_mbid),
+    enabled: isUserLoggedIn && Boolean(artist),
+  });
+  const loggedInUserFollowsArtist = Boolean(followStatusData?.following);
+
+  const updateFollowedArtists = (
+    followedArtistMBID: string,
+    action: "follow" | "unfollow"
+  ) => {
+    queryClient.setQueryData<{ following: boolean }>(
+      ["artist-follow-status", currentUser?.name, followedArtistMBID],
+      (oldData) => ({ ...oldData, following: action === "follow" })
+    );
+  };
+
+  React.useEffect(() => {
+    if (followStatusError) {
+      toast.error("Failed to load whether you follow this artist");
+    }
+  }, [followStatusError]);
+
   const [wikipediaExtract, setWikipediaExtract] = React.useState<
     WikipediaExtract
   >();
@@ -326,12 +372,25 @@ export default function ArtistPage(): JSX.Element {
         <div className="artist-info">
           <h1>{artist?.name}</h1>
           <div className="details">
-            <small className="form-text">
-              {artist?.begin_year}
-              {Boolean(artist?.end_year) && ` — ${artist?.end_year}`}
-              <br />
-              {artist?.area}
-            </small>
+            {Boolean(
+              artist?.begin_year || artist?.end_year || artist?.area
+            ) && (
+              <small className="form-text">
+                {artist?.begin_year}
+                {Boolean(artist?.end_year) && ` — ${artist?.end_year}`}
+                <br />
+                {artist?.area}
+              </small>
+            )}
+            {isUserLoggedIn && artist && hasFollowStatus && (
+              <FollowButton
+                key={artist.artist_mbid}
+                type="icon-only"
+                artistMBID={artist.artist_mbid}
+                loggedInUserFollowsUser={loggedInUserFollowsArtist}
+                updateFollowedArtists={updateFollowedArtists}
+              />
+            )}
           </div>
           {wikipediaExtract && (
             <div className="wikipedia-extract">
