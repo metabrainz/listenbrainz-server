@@ -729,39 +729,12 @@ class TimescaleListenStore:
         return data
 
     def delete(self, user_id, created=None):
-        """ Delete all listens for user with specified user ID.
-
-        Args:
-            user_id: the listenbrainz row id of the user
-            created: delete listens created before this timestamp
-
-        Raises: Exception if either store rejects the delete. Background tasks retry using
-            the same cutoff if Timescale fails after the partitioned delete has committed.
-        """
+        """Delete history only in the listens DB, retaining Timescale listens and metadata."""
+        # Keep the existing listenstore interface during migration; deletion now uses the
+        # listens DB while reads and ingestion still use Timescale.
         if created is None:
             created = datetime.now(tz=timezone.utc)
-        query1 = """
-            UPDATE listen_user_metadata 
-               SET count = 0
-                 , min_listened_at = NULL
-                 , max_listened_at = NULL
-             WHERE user_id = :user_id
-        """
-        query2 = """DELETE FROM listen WHERE user_id = :user_id AND created <= :created"""
-        query3 = """INSERT INTO deleted_user_listen_history (user_id, max_created) VALUES (:user_id, :created)"""
-        try:
-            listens_db.delete_user(user_id, created)
-            ts_conn.execute(sqlalchemy.text(query1), {"user_id": user_id})
-            ts_conn.execute(sqlalchemy.text(query2), {"user_id": user_id, "created": created})
-            ts_conn.execute(sqlalchemy.text(query3), {"user_id": user_id, "created": created})
-            ts_conn.commit()
-        except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError) as e:
-            ts_conn.rollback()
-            self.log.error("Cannot delete listens for user: %s" % str(e))
-            raise
-        except Exception:
-            ts_conn.rollback()
-            raise
+        listens_db.delete_user(user_id, created)
 
     def delete_listen(self, listened_at: datetime, user_id: int, recording_msid: str):
         """ Delete a particular listen for user with specified MusicBrainz ID.
@@ -770,28 +743,28 @@ class TimescaleListenStore:
 
             These details are stored in a separate table for some time because the listen is not deleted
             immediately. Every hour a cron job runs and uses these details to delete the actual listens.
-            After the listens are deleted, these details are also removed from storage.
+            The request and its result are retained in the listens database until dump cleanup.
 
         Args:
             listened_at: The timestamp of the listen
             user_id: the listenbrainz row id of the user
             recording_msid: the MessyBrainz ID of the recording
-        Raises: TimescaleListenStoreException if unable to delete the listen
+        Raises: ListenStoreException if unable to queue the deletion in the listens DB
         """
         query = """
             INSERT INTO listen_delete_metadata(user_id, listened_at, recording_msid) 
                  VALUES (:user_id, :listened_at, :recording_msid)
         """
         try:
-            ts_conn.execute(
-                sqlalchemy.text(query),
-                {"listened_at": listened_at, "user_id": user_id, "recording_msid": recording_msid}
-            )
-            ts_conn.commit()
-        except psycopg2.OperationalError as e:
+            with listens_db.engine.begin() as connection:
+                connection.execute(
+                    sqlalchemy.text(query),
+                    {"listened_at": listened_at, "user_id": user_id, "recording_msid": recording_msid}
+                )
+        except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError) as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
-            raise TimescaleListenStoreException()
+            raise ListenStoreException("Cannot queue listen deletion in the listens database") from e
 
 
-class TimescaleListenStoreException(Exception):
+class ListenStoreException(Exception):
     pass

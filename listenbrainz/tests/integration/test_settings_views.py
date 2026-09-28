@@ -2,8 +2,10 @@ import json
 import time
 
 from brainzutils import cache
+from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
+from listenbrainz.db import listens as listens_db
 from listenbrainz.background.background_tasks import peek_task
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
@@ -90,23 +92,30 @@ class SettingsViewsTestCase(IntegrationTestCase):
             self.assertEqual(task.user_id, self.user["id"])
             self.assertEqual(task.task, "delete_listens")
 
-        # wait for background tasks to be processed -- max 30s allowed for the test to pass
+        # Wait for the listens DB history deletion; Timescale keeps its rows and count.
 
         start_time = time.time()
         timeout = 5  # 5 seconds timeout
         while time.time() - start_time < timeout:
             time.sleep(1)
 
-            # check that listens have been successfully deleted
-            resp = self.client.get(self.custom_url_for(
-                'api_v1.get_listen_count',
-                user_name=self.user['musicbrainz_id']
-            ))
-            self.assert200(resp)
-            if json.loads(resp.data)['payload']['count'] == 0:
+            with listens_db.engine.connect() as connection:
+                remaining = connection.execute(text(
+                    "SELECT count(*) FROM listen WHERE user_id = :user_id"
+                ), {"user_id": self.user["id"]}).scalar()
+                history_count = connection.execute(text(
+                    "SELECT count(*) FROM deleted_user_listen_history WHERE user_id = :user_id"
+                ), {"user_id": self.user["id"]}).scalar()
+            if remaining == 0 and history_count > 0:
                 break
 
-        self.assertEqual(json.loads(resp.data)['payload']['count'], 0)
+        self.assertEqual(remaining, 0)
+        self.assertGreater(history_count, 0)
+        resp = self.client.get(self.custom_url_for(
+            'api_v1.get_listen_count', user_name=self.user['musicbrainz_id']
+        ))
+        self.assert200(resp)
+        self.assertEqual(json.loads(resp.data)['payload']['count'], 3)
 
         # check that the latest_import timestamp has been reset too
         resp = self.client.get(self.custom_url_for('api_v1.latest_import', user_name=self.user['musicbrainz_id']))
