@@ -535,6 +535,25 @@ export default class APIService {
     return response.json();
   };
 
+  getArtistFollowStatus = async (
+    userName: string,
+    artistMBID: string
+  ): Promise<{ artist_mbid: string; following: boolean; user: string }> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!artistMBID) {
+      throw new SyntaxError("Artist MBID missing");
+    }
+
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/followed-artists/${artistMBID}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   getPlayingNowForUser = async (
     userName: string
   ): Promise<Listen | undefined> => {
