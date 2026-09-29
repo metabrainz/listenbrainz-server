@@ -12,7 +12,7 @@ import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSetting
 import { currentDataSourceNameAtom, store } from "./BrainzPlayerAtoms";
 import faTidal from "../icons/faTidal";
 
-const TIDAL_SEARCH_API = "https://openapi.tidal.com/v2/search";
+const TIDAL_SEARCH_API = "https://openapi.tidal.com/v2/searchResults";
 
 export type TidalPlayerState = {};
 
@@ -127,6 +127,16 @@ export default class TidalPlayer
           ],
         }),
       });
+      //       : this.access_token ?? "",
+      //     clientId: tidalAuth?.client_id ?? "",
+      //     requestedScopes: [
+      //       "playback",
+      //       "entitlements.read",
+      //       "search.read",
+      //       "user.read",
+      //     ],
+      //   }),
+      // });
 
       this.bindEvent("playback-state-change", this.onPlaybackStateChange);
       this.bindEvent("media-product-transition", this.onMediaProductTransition);
@@ -242,16 +252,19 @@ export default class TidalPlayer
 
     try {
       const query = [artistName, trackName].filter(Boolean).join(" ");
-      const response = await fetch(
-        `${TIDAL_SEARCH_API}?q=${encodeURIComponent(
-          query
-        )}&type=TRACKS&countryCode=US&limit=1`,
-        {
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-        }
-      );
+      const params = new URLSearchParams({
+        "filter[query]": encodeURIComponent(query),
+        include: "tracks",
+        explicitFilter: "INCLUDE",
+        deviceType: "BROWSER",
+        systemType: "WEB",
+      });
+      const url = `${TIDAL_SEARCH_API}?${params.toString()}`;
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+        },
+      });
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -265,8 +278,10 @@ export default class TidalPlayer
         return;
       }
 
-      const data: TidalSearchResult = await response.json();
-      const trackId = data?.data?.[0]?.resource?.id;
+      const jsonResponse: TidalSearchResult = await response.json();
+      const trackId =
+        jsonResponse?.data?.[0]?.relationships?.tracks?.data?.[0]?.id;
+      // Here we could comprare the track name in jsonResponse.included items to see if there is a good enough match
       if (trackId) {
         await this.playByTidalId(String(trackId));
       } else {

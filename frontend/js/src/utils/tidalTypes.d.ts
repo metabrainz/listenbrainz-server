@@ -13,6 +13,13 @@ declare type TidalTrack = {
 
 declare type TidalSearchResult = {
   data: Array<{
-    resource: TidalTrack;
+    relationships: { tracks: { data: Array<{ id: string; type: "tracks" }> } };
+    type: "searchResults";
+    id: string;
+    attributes: {
+      query: string;
+      trackingId: string;
+    };
   }>;
+  included: Array<TidalTrack>;
 };
