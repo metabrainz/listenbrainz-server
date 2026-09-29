@@ -34,7 +34,6 @@
   "homepage": "https://listenbrainz.org",
   "dependencies": {
     "@babel/runtime": "^7.20.6",
-    "@tidal-music/player": "^0.2.0",
     "@braintree/sanitize-url": "^6.0.1",
     "@cospired/i18n-iso-languages": "^3.0.0",
     "@ebay/nice-modal-react": "^1.2.9",
@@ -60,6 +59,7 @@
     "@sentry/react": "^8.55.2",
     "@tanstack/react-query": "^5.28.4",
     "@tanstack/react-query-devtools": "^5.28.6",
+    "@tidal-music/player": "^0.20.1",
     "@types/react-datetime-picker": "^3.4.1",
     "@zumer/snapdom": "^1.9.6",
     "blobs": "^2.3.0-beta.2",
