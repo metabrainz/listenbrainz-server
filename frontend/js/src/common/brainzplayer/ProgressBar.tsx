@@ -83,6 +83,8 @@ function ProgressBar(props: ProgressBarProps) {
   const pendingSeekMsRef = React.useRef<number>(-1);
   const draggingElementRef = React.useRef<Element | null>(null);
 
+  const isMobileDevice = /Mobi/.test(navigator.userAgent);
+
   React.useEffect(() => {
     let rafId: number;
     const tick = () => {
@@ -210,7 +212,7 @@ function ProgressBar(props: ProgressBarProps) {
   const onMouseMoveHandler = (
     event: React.MouseEvent<HTMLDivElement>
   ): void => {
-    if (/Mobi/.test(navigator.userAgent)) {
+    if (isMobileDevice) {
       setShowTooltip(false);
       return;
     }
@@ -226,6 +228,21 @@ function ProgressBar(props: ProgressBarProps) {
     setTipContent(mousePosition.positionTime);
     setShowTooltip(false);
     seekToPositionMs(mousePosition.positionMs);
+  };
+
+  const onMouseDownHandler = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    isDraggingRef.current = true;
+    document.body.style.cursor = "grabbing";
+    rectCacheRef.current = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+    if (handleRef.current) {
+      handleRef.current.style.transform = "translate(-50%, -50%) scaleX(1)";
+    }
+    (e.currentTarget as HTMLDivElement).classList.add("dragging");
+    draggingElementRef.current = e.currentTarget as HTMLDivElement;
+    const msPos = getMsFromClientX(e.clientX);
+    flushVisuals(msPos);
+    setShowTooltip(true);
   };
 
   const onKeyPressHandler = (
@@ -267,22 +284,8 @@ function ProgressBar(props: ProgressBarProps) {
         className="progress"
         onClick={onClickHandler}
         onMouseMove={onMouseMoveHandler}
-        onMouseLeave={() => setShowTooltip(false)}
         onKeyDown={onKeyPressHandler}
-        onMouseDown={(e: React.MouseEvent<HTMLDivElement>) => {
-          e.preventDefault();
-          isDraggingRef.current = true;
-          document.body.style.cursor = "grabbing";
-          rectCacheRef.current = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-          if (handleRef.current) {
-            handleRef.current.style.transform =
-              "translate(-50%, -50%) scaleX(1)";
-          }
-          (e.currentTarget as HTMLDivElement).classList.add("dragging");
-          draggingElementRef.current = e.currentTarget as HTMLDivElement;
-          const msPos = getMsFromClientX(e.clientX);
-          flushVisuals(msPos);
-        }}
+        onMouseDown={onMouseDownHandler}
         onMouseEnter={() => {
           if (handleRef.current) {
             handleRef.current.style.transform =
@@ -293,6 +296,9 @@ function ProgressBar(props: ProgressBarProps) {
           if (handleRef.current) {
             handleRef.current.style.transform =
               "translate(-50%, -50%) scaleX(0)";
+          }
+          if (!isDraggingRef.current) {
+            setShowTooltip(false);
           }
         }}
         aria-label="Audio progress control"
