@@ -17,6 +17,7 @@ import {
   EmailVerificationRequiredAlert,
   EmailVerificationRequiredToastMessage,
 } from "../../../utils/emailVerification";
+import ImportStatus from "./components/ImportStatus";
 
 type MusicServicesLoaderData = {
   user_has_email: boolean;
@@ -553,6 +554,9 @@ export default function MusicServices() {
               </small>
             </p>
             <br />
+            {["both", "import"].includes(permissions.spotify) && (
+              <ImportStatus serviceName="spotify" />
+            )}
             <div className="music-service-selection">
               <form onSubmit={(e) => e.preventDefault}>
                 <ServicePermissionButton
