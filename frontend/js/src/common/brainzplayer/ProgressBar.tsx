@@ -76,6 +76,12 @@ function ProgressBar(props: ProgressBarProps) {
   const [showTooltip, setShowTooltip] = React.useState(false);
   const [tooltipXPosition, setTooltipXPosition] = React.useState(0);
   const progressBarRef = React.useRef<HTMLDivElement>(null);
+
+  const tooltipTargetRef = React.useRef<HTMLSpanElement>(null);
+  const throttledSetTipContent = useThrottle((positionTime: string): void => {
+    setTipContent(positionTime);
+  }, MOUSE_THROTTLE_DELAY);
+
   const progressBarInnerRef = React.useRef<HTMLDivElement>(null);
   const handleRef = React.useRef<HTMLDivElement>(null);
   const isDraggingRef = React.useRef<boolean>(false);
@@ -119,7 +125,7 @@ function ProgressBar(props: ProgressBarProps) {
 
   // Synchronously writes progress bar transform and handle position to the DOM during drag
   const flushVisuals = (msPosition: number): void => {
-    setTipContent(millisecondsToStr(msPosition));
+    throttledSetTipContent(millisecondsToStr(msPosition));
     const ratio = Math.min(msPosition / durationMs, 1) || 0;
     const barWidth = rectCacheRef.current?.width ?? 0;
     const handleX = ratio * barWidth;
@@ -137,6 +143,8 @@ function ProgressBar(props: ProgressBarProps) {
       if (!isDraggingRef.current) return;
       const msPos = getMsFromClientX(e.clientX);
       flushVisuals(msPos);
+      setShowTooltip(true);
+      setTooltipXPosition(e.clientX);
     };
 
     // On drag release: fire the actual seek and let pendingSeekMsRef hold the optimistic position
@@ -149,6 +157,7 @@ function ProgressBar(props: ProgressBarProps) {
       seekToPositionMs(msPos);
       draggingElementRef.current?.classList.remove("dragging");
       draggingElementRef.current = null;
+      setShowTooltip(false);
     };
 
     document.addEventListener("pointermove", onPointerMove);
@@ -186,15 +195,13 @@ function ProgressBar(props: ProgressBarProps) {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
-  const tooltipTargetRef = React.useRef<HTMLSpanElement>(null);
-  const throttledSetTipContent = useThrottle((positionTime: string): void => {
-    setTipContent(positionTime);
-  }, MOUSE_THROTTLE_DELAY);
 
   const getPositionFromMouseEvent = (
     event: React.MouseEvent<HTMLDivElement>
   ) => {
-    const progressBarBoundingRect = event.currentTarget.getBoundingClientRect();
+    const progressBarBoundingRect =
+      progressBarRef.current?.getBoundingClientRect() ??
+      event.currentTarget.getBoundingClientRect();
     const progressBarWidth = progressBarBoundingRect.width;
     const musicPlayerXOffset = progressBarBoundingRect.x;
     const absoluteClickXPos = event.clientX;
@@ -225,9 +232,9 @@ function ProgressBar(props: ProgressBarProps) {
 
   const onClickHandler = (event: React.MouseEvent<HTMLDivElement>): void => {
     const mousePosition = getPositionFromMouseEvent(event);
-    setTipContent(mousePosition.positionTime);
-    setShowTooltip(false);
+    throttledSetTipContent(mousePosition.positionTime);
     seekToPositionMs(mousePosition.positionMs);
+    setTooltipXPosition(mousePosition.tooltipXPosition);
   };
 
   const onMouseDownHandler = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -284,14 +291,6 @@ function ProgressBar(props: ProgressBarProps) {
         className="progress"
         onClick={onClickHandler}
         onMouseMove={onMouseMoveHandler}
-        onKeyDown={onKeyPressHandler}
-        onMouseDown={onMouseDownHandler}
-        onMouseEnter={() => {
-          if (handleRef.current) {
-            handleRef.current.style.transform =
-              "translate(-50%, -50%) scaleX(1)";
-          }
-        }}
         onMouseLeave={() => {
           if (handleRef.current) {
             handleRef.current.style.transform =
@@ -299,6 +298,15 @@ function ProgressBar(props: ProgressBarProps) {
           }
           if (!isDraggingRef.current) {
             setShowTooltip(false);
+          }
+        }}
+        onKeyDown={onKeyPressHandler}
+        onMouseDown={onMouseDownHandler}
+        onMouseEnter={() => {
+          setShowTooltip(true);
+          if (handleRef.current) {
+            handleRef.current.style.transform =
+              "translate(-50%, -50%) scaleX(1)";
           }
         }}
         aria-label="Audio progress control"
