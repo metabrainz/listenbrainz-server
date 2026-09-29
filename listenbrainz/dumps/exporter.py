@@ -40,7 +40,7 @@ from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT, SCHEMA_VERSION_CORE
 from listenbrainz.dumps.models import DumpTablesCollection
 from listenbrainz.dumps.sample import dump_sample_data
 from listenbrainz.dumps.tables import PUBLIC_TABLES_TIMESCALE_DUMP, PUBLIC_TABLES_DUMP, \
-    PRIVATE_TABLES_TIMESCALE, PRIVATE_TABLES
+    PRIVATE_TABLES
 from listenbrainz.utils import create_path
 
 
@@ -65,7 +65,6 @@ def dump_database(db_name, locations, dump_time=datetime.today(), threads=DUMP_D
         dump_type_suffix = ""
     elif db_name == "timescale":
         tables_dict = {
-            "private": PRIVATE_TABLES_TIMESCALE,
             "public": PUBLIC_TABLES_TIMESCALE_DUMP,
         }
         schema_version = SCHEMA_VERSION_TIMESCALE
@@ -76,7 +75,7 @@ def dump_database(db_name, locations, dump_time=datetime.today(), threads=DUMP_D
     current_app.logger.info(f"Beginning dump of {db_name} database...")
 
     dump_locations = {}
-    for dump_type in ["private", "public"]:
+    for dump_type in tables_dict:
         current_app.logger.info(f"Creating dump of {dump_type} data...")
         tables_collection = tables_dict[dump_type]
         location = locations[dump_type]

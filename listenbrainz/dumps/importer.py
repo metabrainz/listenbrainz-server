@@ -10,7 +10,7 @@ from listenbrainz.db import timescale
 from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT, SCHEMA_VERSION_CORE
 from listenbrainz.dumps.exceptions import SchemaMismatchException
 from listenbrainz.dumps.models import DumpTablesCollection
-from listenbrainz.dumps.tables import PRIVATE_TABLES, PRIVATE_TABLES_TIMESCALE, PUBLIC_TABLES_IMPORT, \
+from listenbrainz.dumps.tables import PRIVATE_TABLES, PUBLIC_TABLES_IMPORT, \
     PUBLIC_TABLES_TIMESCALE_DUMP
 
 
@@ -111,14 +111,13 @@ def _update_sequences():
     _update_sequence(db.engine, 'data_dump_id_seq', 'data_dump')
 
     current_app.logger.info('Updating playlist.playlist_id_seq...')
-    _update_sequence(timescale.engine, 'playlist.playlist_id_seq', 'playlist.playlist')
+    _update_sequence(db.engine, 'playlist.playlist_id_seq', 'playlist.playlist')
 
     current_app.logger.info('Updating playlist.playlist_recording_id_seq...')
-    _update_sequence(timescale.engine, 'playlist.playlist_recording_id_seq', 'playlist.playlist_recording')
+    _update_sequence(db.engine, 'playlist.playlist_recording_id_seq', 'playlist.playlist_recording')
 
 
 def import_postgres_dump(private_dump_archive_path=None,
-                         private_timescale_dump_archive_path=None,
                          public_dump_archive_path=None,
                          public_timescale_dump_archive_path=None,
                          threads=DUMP_DEFAULT_THREAD_COUNT):
@@ -126,7 +125,6 @@ def import_postgres_dump(private_dump_archive_path=None,
 
         Arguments:
             private_dump_archive_path: Location of the private dump file
-            private_timescale_dump_archive_path: Location of the private timescale dump file
             public_dump_archive_path: Location of the public dump file
             public_timescale_dump_archive_path: Location of the public timescale dump file
             threads: the number of threads to use while decompressing the archives, defaults to
@@ -137,12 +135,6 @@ def import_postgres_dump(private_dump_archive_path=None,
         current_app.logger.info('Importing private dump %s...', private_dump_archive_path)
         _import_dump(private_dump_archive_path, db.engine, PRIVATE_TABLES, SCHEMA_VERSION_CORE, threads)
         current_app.logger.info('Import of private dump %s done!', private_dump_archive_path)
-
-    if private_timescale_dump_archive_path:
-        current_app.logger.info('Importing private timescale dump %s...', private_timescale_dump_archive_path)
-        _import_dump(private_timescale_dump_archive_path, timescale.engine, PRIVATE_TABLES_TIMESCALE,
-                     timescale.SCHEMA_VERSION_TIMESCALE, threads)
-        current_app.logger.info('Import of private timescale dump %s done!', private_timescale_dump_archive_path)
 
     if public_dump_archive_path:
         current_app.logger.info('Importing public dump %s...', public_dump_archive_path)

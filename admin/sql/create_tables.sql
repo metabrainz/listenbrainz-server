@@ -289,4 +289,31 @@ CREATE TABLE navidrome_tokens (
 -- you will need to execute the following GRANT in order to complete your DB setup.
 --GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
 
+CREATE TABLE playlist.playlist (
+    id serial,
+    mbid uuid not null default gen_random_uuid(),
+    creator_id int not null, -- user.id; validated by the application
+    name text not null,
+    description text,
+    public boolean not null,
+    created timestamp with time zone default now() not null,
+    last_updated timestamp with time zone default now() not null,
+    copied_from_id int, -- id of another playlist
+    created_for_id int,
+    additional_metadata jsonb
+);
+CREATE TABLE playlist.playlist_recording (
+    id serial,
+    playlist_id int not null,  --FK playlist.id
+    position int not null,
+    mbid uuid not null,
+    added_by_id int not null,  -- user.id; validated by the application
+    created timestamp with time zone default now() not null,
+    additional_metadata jsonb
+);
+CREATE TABLE playlist.playlist_collaborator (
+    playlist_id int not null,  -- FK playlist.id
+    collaborator_id int not null  -- link to user.id in main database
+);
+
 COMMIT;

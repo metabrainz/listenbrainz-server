@@ -6,13 +6,12 @@ from listenbrainz.db.model.user_timeline_event import UserTimelineEventType
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from brainzutils.ratelimit import ratelimit
 import listenbrainz.db.user as db_user
-from listenbrainz.webserver import db_conn, timescale_connection
+from listenbrainz.webserver import db_conn, ts_conn, timescale_connection, API_PREFIX
 from listenbrainz.webserver.views.api_tools import (
     _parse_int_arg,
     get_non_negative_param,
     is_valid_uuid,
 )
-from listenbrainz.webserver import db_conn, ts_conn, API_PREFIX
 from listenbrainz.db.fresh_releases import get_sitewide_fresh_releases
 from listenbrainz.db.fresh_releases import get_fresh_releases as db_get_fresh_releases
 from data.model.common_stat import StatisticsRange
@@ -684,7 +683,7 @@ def get_playlist_recordings(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         return BadRequest("Invalid playlist MBID")
 
-    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
+    playlist = db_playlist.get_by_mbid(db_conn, playlist_mbid, True)
 
     if playlist is None:
         return NotFound("Playlist not found")
@@ -766,7 +765,7 @@ def get_recommendation(user_name):
         return BadRequest("Invalid type")
 
     playlists = db_playlist.get_recommendation_playlists_for_user(
-        db_conn, ts_conn, user["id"]
+        db_conn, user["id"]
     )
 
     playlist = next(
@@ -786,7 +785,7 @@ def get_recommendation(user_name):
             status=204, response="Recommedation for the user haven't been generated."
         )
         
-    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist.mbid, True)
+    playlist = db_playlist.get_by_mbid(db_conn, playlist.mbid, True)
 
     fetch_playlist_recording_metadata(playlist)
 
