@@ -1,4 +1,3 @@
-import os
 import uuid
 
 from sqlalchemy import text
@@ -7,8 +6,7 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.playlist as db_playlist
 from listenbrainz.db.playlist import TROI_BOT_USER_ID
 
-from listenbrainz.tests.integration import IntegrationTestCase, TIMESCALE_SQL_DIR
-from listenbrainz.db import timescale
+from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.db.exceptions import InvalidUser
 from listenbrainz.db.model.playlist import WritablePlaylist, WritablePlaylistRecording
 
@@ -29,15 +27,9 @@ class PlaylistTestCase(IntegrationTestCase):
         super(PlaylistTestCase, self).setUp()
         self.user_1 = db_user.get_or_create(self.db_conn, 1, 'ansh')
         self.user_2 = db_user.get_or_create(self.db_conn, 2, 'ansh_2')
-        self.ts_conn = timescale.engine.connect()
-
-    def tearDown(self):
-        super(PlaylistTestCase, self).tearDown()
-        self.ts_conn.close()
-        timescale.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'reset_tables.sql'))
 
     def _create_empty_playlist(self):
-        return db_playlist.create(self.db_conn, self.ts_conn, WritablePlaylist(
+        return db_playlist.create(self.db_conn, WritablePlaylist(
             name="test playlist",
             creator_id=self.user_1['id'],
             description="for insert_recordings tests",
@@ -58,12 +50,12 @@ class PlaylistTestCase(IntegrationTestCase):
         playlist = self._create_empty_playlist()
 
         result = db_playlist.insert_recordings(
-            self.db_conn, self.ts_conn, playlist.id, [], 0
+            self.db_conn, playlist.id, [], 0
         )
 
         self.assertEqual(result, [])
         self.assertEqual(
-            db_playlist.get_recordings_count_for_playlist(self.ts_conn, playlist.id), 0
+            db_playlist.get_recordings_count_for_playlist(self.db_conn, playlist.id), 0
         )
 
     def test_insert_recordings_bulk(self):
@@ -73,9 +65,9 @@ class PlaylistTestCase(IntegrationTestCase):
         recordings = self._make_recordings(mbids, self.user_1['id'])
 
         inserted = db_playlist.insert_recordings(
-            self.db_conn, self.ts_conn, playlist.id, recordings, 0
+            self.db_conn, playlist.id, recordings, 0
         )
-        self.ts_conn.commit()
+        self.db_conn.commit()
 
         self.assertEqual(len(inserted), len(mbids))
         for i, recording in enumerate(inserted):
@@ -85,14 +77,14 @@ class PlaylistTestCase(IntegrationTestCase):
             self.assertEqual(str(recording.mbid), mbids[i])
             self.assertEqual(recording.added_by, self.user_1['musicbrainz_id'])
 
-        stored = db_playlist.get_by_mbid(self.db_conn, self.ts_conn, playlist.mbid)
+        stored = db_playlist.get_by_mbid(self.db_conn, playlist.mbid)
         self.assertEqual(len(stored.recordings), len(mbids))
         self.assertEqual(
             [str(r.mbid) for r in stored.recordings],
             mbids,
         )
         self.assertEqual(
-            db_playlist.get_recordings_count_for_playlist(self.ts_conn, playlist.id),
+            db_playlist.get_recordings_count_for_playlist(self.db_conn, playlist.id),
             len(mbids),
         )
 
@@ -103,9 +95,9 @@ class PlaylistTestCase(IntegrationTestCase):
         recordings += self._make_recordings(RECORDING_MBIDS[3:], self.user_2['id'])
 
         inserted = db_playlist.insert_recordings(
-            self.db_conn, self.ts_conn, playlist.id, recordings, 0
+            self.db_conn, playlist.id, recordings, 0
         )
-        self.ts_conn.commit()
+        self.db_conn.commit()
 
         self.assertEqual(len(inserted), len(RECORDING_MBIDS))
         self.assertEqual(
@@ -121,16 +113,16 @@ class PlaylistTestCase(IntegrationTestCase):
         """add_recordings_to_playlist inserts a batch at a non-zero position"""
         playlist = self._create_empty_playlist()
         initial = self._make_recordings(RECORDING_MBIDS[:2], self.user_1['id'])
-        db_playlist.insert_recordings(self.db_conn, self.ts_conn, playlist.id, initial, 0)
-        self.ts_conn.commit()
+        db_playlist.insert_recordings(self.db_conn, playlist.id, initial, 0)
+        self.db_conn.commit()
 
-        playlist = db_playlist.get_by_mbid(self.db_conn, self.ts_conn, playlist.mbid)
+        playlist = db_playlist.get_by_mbid(self.db_conn, playlist.mbid)
         to_insert = self._make_recordings(RECORDING_MBIDS[2:5], self.user_1['id'])
         db_playlist.add_recordings_to_playlist(
-            self.db_conn, self.ts_conn, playlist, to_insert, position=1
+            self.db_conn, playlist, to_insert, position=1
         )
 
-        stored = db_playlist.get_by_mbid(self.db_conn, self.ts_conn, playlist.mbid)
+        stored = db_playlist.get_by_mbid(self.db_conn, playlist.mbid)
         self.assertEqual(len(stored.recordings), 5)
         # Inserting at position 1 shifts the recording previously at 1 to position 4.
         expected_mbids = [
@@ -153,9 +145,9 @@ class PlaylistTestCase(IntegrationTestCase):
             public=False,
             additional_metadata={}
         )
-        new_playlist = db_playlist.create(self.db_conn, self.ts_conn, playlist_1)
+        new_playlist = db_playlist.create(self.db_conn, playlist_1)
 
-        playlist = db_playlist.get_by_mbid(self.db_conn, self.ts_conn, new_playlist.mbid)
+        playlist = db_playlist.get_by_mbid(self.db_conn, new_playlist.mbid)
         self.assertEqual(playlist.name, playlist_1.name)
         self.assertEqual(playlist.creator_id, playlist_1.creator_id)
         self.assertEqual(playlist.description, playlist_1.description)
@@ -183,10 +175,10 @@ class PlaylistTestCase(IntegrationTestCase):
 
         # Since the playlist playlist_2 is public, it should be returned in the search results
 
-        new_playlist_1 = db_playlist.create(self.db_conn, self.ts_conn, playlist_1)
-        new_playlist_2 = db_playlist.create(self.db_conn, self.ts_conn, playlist_2)
+        new_playlist_1 = db_playlist.create(self.db_conn, playlist_1)
+        new_playlist_2 = db_playlist.create(self.db_conn, playlist_2)
 
-        playlists, count = db_playlist.search_playlist(self.db_conn, self.ts_conn, "playlist")
+        playlists, count = db_playlist.search_playlist(self.db_conn, "playlist")
 
         self.assertEqual(len(playlists), 1)
         self.assertEqual(count, 1)
@@ -233,13 +225,13 @@ class PlaylistTestCase(IntegrationTestCase):
             additional_metadata={}
         )
 
-        new_playlist_1 = db_playlist.create(self.db_conn, self.ts_conn, playlist_1)
-        new_playlist_2 = db_playlist.create(self.db_conn, self.ts_conn, playlist_2)
-        new_playlist_3 = db_playlist.create(self.db_conn, self.ts_conn, playlist_3)
-        new_playlist_4 = db_playlist.create(self.db_conn, self.ts_conn, playlist_4)
+        new_playlist_1 = db_playlist.create(self.db_conn, playlist_1)
+        new_playlist_2 = db_playlist.create(self.db_conn, playlist_2)
+        new_playlist_3 = db_playlist.create(self.db_conn, playlist_3)
+        new_playlist_4 = db_playlist.create(self.db_conn, playlist_4)
 
         playlists, count = db_playlist.search_playlists_for_user(
-            self.db_conn, self.ts_conn, self.user_1['id'], "testing", viewer_id=self.user_1['id']
+            self.db_conn, self.user_1['id'], "testing", viewer_id=self.user_1['id']
         )
 
         # Since playlist_2 is private, and user_1 does not have access to it, it will not
@@ -250,7 +242,7 @@ class PlaylistTestCase(IntegrationTestCase):
         self.assertEqual(playlists[1].name, playlist_1.name)
 
         playlists, count = db_playlist.search_playlists_for_user(
-            self.db_conn, self.ts_conn, self.user_2['id'], "test", viewer_id=self.user_2['id']
+            self.db_conn, self.user_2['id'], "test", viewer_id=self.user_2['id']
         )
 
         # Only playlists associated with user_2 should be searched.
@@ -261,7 +253,7 @@ class PlaylistTestCase(IntegrationTestCase):
         self.assertEqual({p.name for p in playlists}, {playlist_1.name, playlist_2.name})
 
         playlists, count = db_playlist.search_playlists_for_user(
-            self.db_conn, self.ts_conn, self.user_1['id'], "testing", viewer_id=None
+            self.db_conn, self.user_1['id'], "testing", viewer_id=None
         )
 
         # Anonymous viewer should only see public playlists associated with user_1.
@@ -272,7 +264,7 @@ class PlaylistTestCase(IntegrationTestCase):
         self.assertEqual(playlists[0].name, playlist_3.name)
 
         playlists, count = db_playlist.search_playlists_for_user(
-            self.db_conn, self.ts_conn, self.user_2['id'], "test", viewer_id=self.user_2['id'],
+            self.db_conn, self.user_2['id'], "test", viewer_id=self.user_2['id'],
             include_global=True
         )
 
@@ -302,7 +294,7 @@ class PlaylistTestCase(IntegrationTestCase):
             public=True,
             additional_metadata={}
         )
-        created_playlist_1 = db_playlist.create(self.db_conn, self.ts_conn, playlist_1)
+        created_playlist_1 = db_playlist.create(self.db_conn, playlist_1)
 
         playlist_2 = WritablePlaylist(
             name="Another Playlist",
@@ -313,7 +305,7 @@ class PlaylistTestCase(IntegrationTestCase):
             public=False,
             additional_metadata={}
         )
-        created_playlist_2 = db_playlist.create(self.db_conn, self.ts_conn, playlist_2)
+        created_playlist_2 = db_playlist.create(self.db_conn, playlist_2)
 
         playlist_3 = WritablePlaylist(
             name="Recommendations",
@@ -327,7 +319,7 @@ class PlaylistTestCase(IntegrationTestCase):
                 "algorithm_metadata": {"source_patch": "weekly-jams"},
             }
         )
-        created_playlist_3 = db_playlist.create(self.db_conn, self.ts_conn, playlist_3)
+        created_playlist_3 = db_playlist.create(self.db_conn, playlist_3)
 
         playlist_4 = WritablePlaylist(
             name="Collaborative Playlist",
@@ -338,42 +330,42 @@ class PlaylistTestCase(IntegrationTestCase):
             public=True,
             additional_metadata={}
         )
-        created_playlist_4 = db_playlist.create(self.db_conn, self.ts_conn, playlist_4)
+        created_playlist_4 = db_playlist.create(self.db_conn, playlist_4)
 
         playlists, _ = db_playlist.get_playlists_for_user(
-            self.db_conn, self.ts_conn, self.user_1['id'], include_private=True
+            self.db_conn, self.user_1['id'], include_private=True
         )
         self.assertEqual(len(playlists), 2)
         playlists, _ = db_playlist.get_playlists_created_for_user(
-            self.db_conn, self.ts_conn, self.user_1['id']
+            self.db_conn, self.user_1['id']
         )
         self.assertEqual(len(playlists), 1)
         playlists = db_playlist.get_recommendation_playlists_for_user(
-            self.db_conn, self.ts_conn, self.user_1['id']
+            self.db_conn, self.user_1['id']
         )
         self.assertEqual(len(playlists), 1)
 
-        db_playlist.delete_playlists_by_user_id(self.ts_conn, self.user_1['id'])
+        db_playlist.delete_playlists_by_user_id(self.db_conn, self.user_1['id'])
         db_user.delete(self.db_conn, self.user_1['id'])
         self.db_conn.commit()
 
         user = db_user.get(self.db_conn, self.user_1['id'])
         self.assertIsNone(user)
         playlists, _ = db_playlist.get_playlists_for_user(
-            self.db_conn, self.ts_conn, self.user_1['id'], include_private=True
+            self.db_conn, self.user_1['id'], include_private=True
         )
         self.assertEqual(len(playlists), 0)
         playlists, _ = db_playlist.get_playlists_created_for_user(
-            self.db_conn, self.ts_conn, self.user_1['id']
+            self.db_conn, self.user_1['id']
         )
         self.assertEqual(len(playlists), 0)
         playlists = db_playlist.get_recommendation_playlists_for_user(
-            self.db_conn, self.ts_conn, self.user_1['id']
+            self.db_conn, self.user_1['id']
         )
         self.assertEqual(len(playlists), 0)
 
         updated_playlist = db_playlist.get_by_mbid(
-            self.db_conn, self.ts_conn, created_playlist_4.mbid
+            self.db_conn, created_playlist_4.mbid
         )
         self.assertIsNotNone(updated_playlist)
         self.assertNotIn(self.user_1["id"], updated_playlist.collaborator_ids)
@@ -390,7 +382,7 @@ class PlaylistTestCase(IntegrationTestCase):
             additional_metadata={},
         )
         with self.assertRaises(InvalidUser):
-            db_playlist.create(self.db_conn, self.ts_conn, playlist_invalid_creator)
+            db_playlist.create(self.db_conn, playlist_invalid_creator)
 
         playlist_invalid_created_for = WritablePlaylist(
             name="Invalid Created For Playlist",
@@ -403,7 +395,7 @@ class PlaylistTestCase(IntegrationTestCase):
             additional_metadata={},
         )
         with self.assertRaises(InvalidUser):
-            db_playlist.create(self.db_conn, self.ts_conn, playlist_invalid_created_for)
+            db_playlist.create(self.db_conn, playlist_invalid_created_for)
 
     def test_get_collaborators_names_from_ids(self):
         """get_collaborators_names_from_ids returns sorted names of existing users and skips missing ids"""

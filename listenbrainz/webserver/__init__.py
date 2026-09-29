@@ -343,12 +343,8 @@ def init_admin(app):
     admin.add_view(ListensImporterAdminView(ListensImporterModel, model.db.session, endpoint='listens_importer_model'))
     admin.add_view(ReportedUserAdminView(ReportedUsersModel, model.db.session, endpoint='reported_users_model'))
     admin.add_view(AdminFlashMessagesView(name='Flash messages', endpoint='flash_messages'))
-
-    # can be empty incase timescale listenstore is down
-    if app.config['SQLALCHEMY_TIMESCALE_PGBOUNCER_URI']:
-        # playlist admin views require timescale database, only register if listenstore is available
-        admin.add_view(PlaylistAdminView(PlaylistModel, model.db.session, endpoint='playlist_model'))
-        admin.add_view(PlaylistRecordingAdminView(PlaylistRecordingModel, model.db.session, endpoint='playlist_recording_model'))
+    admin.add_view(PlaylistAdminView(PlaylistModel, model.db.session, endpoint='playlist_model'))
+    admin.add_view(PlaylistRecordingAdminView(PlaylistRecordingModel, model.db.session, endpoint='playlist_recording_model'))
 
 
 def create_web_app(debug=None):

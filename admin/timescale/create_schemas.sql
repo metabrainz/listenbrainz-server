@@ -1,4 +1,3 @@
-CREATE SCHEMA playlist;
 CREATE SCHEMA messybrainz;
 CREATE SCHEMA spotify_cache;
 CREATE SCHEMA apple_cache;

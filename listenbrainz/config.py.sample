@@ -49,10 +49,7 @@ IS_MUSICBRAINZ_UP = True  # if set to False, login page will be blocked
 MBID_MAPPING_DATABASE_URI = ""
 MB_DATABASE_URI = ""
 
-# for use in playlists admin view
-SQLALCHEMY_BINDS = {
-   'timescale': SQLALCHEMY_TIMESCALE_PGBOUNCER_URI
-}
+SQLALCHEMY_BINDS = {}
 
 # Redis
 REDIS_HOST = "redis"

@@ -142,7 +142,6 @@ def stats(user_name: str):
 
 
 @user_bp.post("/<mb_username:user_name>/playlists/")
-@web_listenstore_needed
 def playlists(user_name: str):
     """ Show user playlists """
 
@@ -165,12 +164,12 @@ def playlists(user_name: str):
 
     if type == "collaborative":
         user_playlists, playlist_count = get_playlists_collaborated_on(
-            db_conn, ts_conn, user.id, include_private=include_private,
+            db_conn, user.id, include_private=include_private,
             load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=offset
         )
     else:
         user_playlists, playlist_count = get_playlists_for_user(
-            db_conn, ts_conn, user.id, include_private=include_private,
+            db_conn, user.id, include_private=include_private,
             load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=offset
         )
     for playlist in user_playlists:
@@ -188,7 +187,6 @@ def playlists(user_name: str):
 
 
 @user_bp.post("/<mb_username:user_name>/recommendations/")
-@web_listenstore_needed
 def recommendation_playlists(user_name: str):
     """ Show playlists created for user """
 
@@ -215,7 +213,7 @@ def recommendation_playlists(user_name: str):
     }
 
     playlists = []
-    user_playlists = get_recommendation_playlists_for_user(db_conn, ts_conn, user.id)
+    user_playlists = get_recommendation_playlists_for_user(db_conn, user.id)
     for playlist in user_playlists:
         playlists.append(playlist.serialize_jspf())
 
