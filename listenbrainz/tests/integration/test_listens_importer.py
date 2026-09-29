@@ -1234,6 +1234,66 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(metadata["attempted_count"], 5)
         self.assertEqual(metadata["success_count"], 3)
 
+    def test_import_tidal(self):
+        data = {
+            "service": "tidal",
+            "file": open(self.path_to_data_file("tidal_streaming.csv"), "rb"),
+            "from_date": datetime(2022, 3, 9, 0, 0, tzinfo=timezone.utc),
+            "to_date": datetime(2022, 3, 9, 1, 0, tzinfo=timezone.utc),
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert200(response)
+        import_id = response.json["import_id"]
+
+        url = self.custom_url_for(
+            "api_v1.get_listens", user_name=self.user["musicbrainz_id"])
+        response = self.wait_for_query_to_have_items(
+            url, num_items=11, attempts=20)
+        listens = response.json["payload"]["listens"]
+        self.assertEqual(len(listens), 11)
+        track_names = [listen["track_metadata"]["track_name"]
+                       for listen in listens]
+        self.assertNotIn("Invalid Timestamp Track", track_names)
+
+        first_listen = listens[0]
+        self.assertEqual(first_listen["listened_at"], 1646785860)
+        track_metadata = first_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "Marc E. Bassy")
+        self.assertEqual(
+            track_metadata["track_name"], "Lock It Up (feat. Kehlani)")
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(
+            additional_info["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(additional_info["music_service"], "tidal.com")
+        self.assertEqual(additional_info["duration_played"], 226)
+
+        # The "Null Timezone" and "Invalid Timezone" rows are only imported if their timestamps are interpreted as UTC
+        #  otherwise they would fall outside the from_date/to_date import window
+        invalid_timezone_listen = listens[8]
+        self.assertEqual(
+            invalid_timezone_listen["track_metadata"]["track_name"], "Invalid Timezone Track")
+        self.assertEqual(invalid_timezone_listen["listened_at"], 1646784120)
+        null_timezone_listen = listens[10]
+        self.assertEqual(
+            null_timezone_listen["track_metadata"]["track_name"], "Null Timezone Track")
+        self.assertEqual(null_timezone_listen["listened_at"], 1646784000)
+
+        response = self.client.get(
+            self.custom_url_for(
+                "import_listens_api_v1.get_import_task", import_id=import_id),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+        )
+        self.assert200(response)
+        metadata = response.json["metadata"]
+        self.assertIn("attempted_count", metadata)
+        self.assertIn("success_count", metadata)
+        self.assertEqual(metadata["attempted_count"], 11)
+        self.assertEqual(metadata["success_count"], 11)
 
     def create_import_row(self, file_path, status="waiting", service="spotify"):
         """ Insert a user data import row directly, as if the file had been uploaded to disk. """
@@ -1361,55 +1421,4 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         missing = self.get_import_row(missing_id)
         self.assertEqual("failed", missing.metadata["status"])
         self.assertEqual(FILE_MISSING_PROGRESS, missing.metadata["progress"])
-    def test_import_tidal(self):
-        data = {
-            "service": "tidal",
-            "file": open(self.path_to_data_file("tidal_streaming.csv"), "rb"),
-            "from_date": datetime(2022, 3, 9, 0, 0, tzinfo=timezone.utc),
-            "to_date": datetime(2022, 3, 9, 1, 0, tzinfo=timezone.utc),
-        }
-        response = self.client.post(
-            self.custom_url_for("import_listens_api_v1.create_import_task"),
-            data=data,
-            headers={"Authorization": f"Token {self.user['auth_token']}"},
-            content_type="multipart/form-data"
-        )
-        self.assert200(response)
-        import_id = response.json["import_id"]
 
-        url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
-        response = self.wait_for_query_to_have_items(url, num_items=11, attempts=20)
-        listens = response.json["payload"]["listens"]
-        self.assertEqual(len(listens), 11)
-        track_names = [listen["track_metadata"]["track_name"] for listen in listens]
-        self.assertNotIn("Invalid Timestamp Track", track_names)
-
-        first_listen = listens[0]
-        self.assertEqual(first_listen["listened_at"], 1646785860)
-        track_metadata = first_listen["track_metadata"]
-        self.assertEqual(track_metadata["artist_name"], "Marc E. Bassy")
-        self.assertEqual(track_metadata["track_name"], "Lock It Up (feat. Kehlani)")
-        additional_info = track_metadata["additional_info"]
-        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
-        self.assertEqual(additional_info["music_service"], "tidal.com")
-        self.assertEqual(additional_info["duration_played"], 226)
-
-        # The "Null Timezone" and "Invalid Timezone" rows are only imported if their timestamps are interpreted as UTC
-        #  otherwise they would fall outside the from_date/to_date import window
-        invalid_timezone_listen = listens[8]
-        self.assertEqual(invalid_timezone_listen["track_metadata"]["track_name"], "Invalid Timezone Track")
-        self.assertEqual(invalid_timezone_listen["listened_at"], 1646784120)
-        null_timezone_listen = listens[10]
-        self.assertEqual(null_timezone_listen["track_metadata"]["track_name"], "Null Timezone Track")
-        self.assertEqual(null_timezone_listen["listened_at"], 1646784000)
-
-        response = self.client.get(
-            self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
-            headers={"Authorization": f"Token {self.user['auth_token']}"},
-        )
-        self.assert200(response)
-        metadata = response.json["metadata"]
-        self.assertIn("attempted_count", metadata)
-        self.assertIn("success_count", metadata)
-        self.assertEqual(metadata["attempted_count"], 11)
-        self.assertEqual(metadata["success_count"], 11)
