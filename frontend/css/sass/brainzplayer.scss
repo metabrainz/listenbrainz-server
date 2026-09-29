@@ -712,8 +712,9 @@ $youtube-expanded-width: 1280px;
   .progress-bar-wrapper {
     margin-top: 1em;
     .progress {
-      position: inherit;
+      position: relative;
       height: 10px;
+      top: 0;
       border-radius: 10px;
       background-color: rgba(255, 255, 255, 0.3);
 
