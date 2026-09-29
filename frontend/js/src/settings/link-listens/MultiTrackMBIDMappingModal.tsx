@@ -397,7 +397,7 @@ export default NiceModal.create(
               >
                 Preserve special characters{" "}
                 <Tooltip
-                  id="escapeSpecialCharactersHepl"
+                  id="escapeSpecialCharactersHelp"
                   tooltip={
                     <>
                       Escape special characters such as{" "}
