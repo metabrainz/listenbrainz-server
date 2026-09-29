@@ -22,7 +22,8 @@ export type TidalPlayerProps = DataSourceProps & {
 
 export default class TidalPlayer
   extends React.Component<TidalPlayerProps, TidalPlayerState>
-  implements DataSourceType {
+  implements DataSourceType
+{
   static contextType = GlobalAppContext;
 
   static hasPermissions = (tidalUser?: TidalUser) => {
@@ -332,8 +333,12 @@ export default class TidalPlayer
     }
   };
 
-  stop = (): void => {
+  pause = (): void => {
     this.playerModule?.pause();
+  };
+
+  stop = (): void => {
+    this.playerModule?.reset();
   };
 
   seekToPositionMs = (msTimecode: number): void => {
