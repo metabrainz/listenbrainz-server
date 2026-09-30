@@ -2,9 +2,11 @@ from datetime import datetime
 import json
 import time
 from uuid import UUID
+from unittest import mock
 from listenbrainz.db import couchdb
 from listenbrainz.db.model.playlist import PLAYLIST_EXTENSION_URI, PLAYLIST_URI_PREFIX
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
+from listenbrainz.webserver.views.atom import RECOMMENDATION_TYPES
 from lxml import etree
 from listenbrainz.db import fresh_releases as db_fresh
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
@@ -392,3 +394,34 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
         if feedId is None:
             self.fail("No id element found in feed")
         self.assertEqual(feedId.text, _path)
+
+
+    def test_get_recommendation_reloaded_playlist_none_204(self):
+        """
+        If the recommendation playlist disappears between the initial lookup and
+        the reload via get_by_mbid (e.g. deleted mid-request), the endpoint must
+        return 204 instead of crashing on a None playlist.
+        """
+        fake_playlist = mock.Mock()
+        fake_playlist.mbid = "d1ff1c17-0000-0000-0000-000000000000"
+        fake_playlist.additional_metadata = {
+            "algorithm_metadata": {"source_patch": RECOMMENDATION_TYPES[0]}
+        }
+
+        with mock.patch(
+            "listenbrainz.webserver.views.atom.db_playlist"
+            ".get_recommendation_playlists_for_user",
+            return_value=[fake_playlist],
+        ), mock.patch(
+            "listenbrainz.webserver.views.atom.db_playlist.get_by_mbid",
+            return_value=None,
+        ):
+            response = self.client.get(
+                self.custom_url_for(
+                    "atom.get_recommendation",
+                    user_name=self.user["musicbrainz_id"],
+                ),
+                query_string={"recommendation_type": RECOMMENDATION_TYPES[0]},
+            )
+
+        self.assertEqual(204, response.status_code)
