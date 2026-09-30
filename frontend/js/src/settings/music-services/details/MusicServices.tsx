@@ -576,7 +576,7 @@ export default function MusicServices() {
             private information and your birthdate, to determine if you are a
             premium user.
             <br />
-            <b>ListenBrainz will never read these pieces of data</b>. You can
+            <b>ListenBrainz will never read these pieces of data</b>. You can{" "}
             <a
               href="https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/listens_importer/spotify.py"
               target="_blank"
@@ -585,6 +585,12 @@ export default function MusicServices() {
               inspect our source code
             </a>{" "}
             at any time!
+            <button
+              type="button"
+              className="btn-close"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+            />
           </div>
 
           <div className="music-service-selection">
@@ -761,6 +767,12 @@ export default function MusicServices() {
           >
             Apple Music requires you to repeat the sign-in process every 6
             months.
+            <button
+              type="button"
+              className="btn-close"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+            />
           </div>
           <div className="music-service-selection">
             <form>
