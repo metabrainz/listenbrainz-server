@@ -694,8 +694,6 @@ export default function MusicServices() {
           }
           userHasEmail={userHasEmail}
           canImportFeedback
-          isOpen={openPanel === "lastfm"}
-          onToggle={() => togglePanel("lastfm")}
         />
 
         <LFMMusicServicePermissions
@@ -708,8 +706,6 @@ export default function MusicServices() {
           }
           userHasEmail={userHasEmail}
           canImportFeedback
-          isOpen={openPanel === "librefm"}
-          onToggle={() => togglePanel("librefm")}
         />
 
         <MusicServiceCard
