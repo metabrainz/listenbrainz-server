@@ -12,6 +12,18 @@ function ListenCountCard(props: ListenCountCardProps) {
   const { listenCount, user } = props;
   const isCurrentUser = currentUser?.name === user?.name;
 
+  const joinDateString = React.useMemo(() => {
+    if (!user?.created) {
+      return null;
+    }
+    const date = new Date(user.created * 1000);
+    return date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }, [user?.created]);
+
   let content;
 
   if (listenCount) {
@@ -22,6 +34,12 @@ function ListenCountCard(props: ListenCountCardProps) {
         {listenCount.toLocaleString()}
         <br />
         <small className="text-muted">songs so far</small>
+        {joinDateString && (
+          <>
+            <br />
+            <small className="text-muted">since {joinDateString}</small>
+          </>
+        )}
       </div>
     );
   } else {
@@ -35,6 +53,14 @@ function ListenCountCard(props: ListenCountCardProps) {
           {isCurrentUser ? "You haven't" : `${user.name} hasn't`} listened to
           any songs yet.
         </div>
+        {joinDateString && (
+          <div
+            style={{ fontSize: "12px", marginTop: "8px" }}
+            className="text-muted"
+          >
+            Member since {joinDateString}
+          </div>
+        )}
       </>
     );
   }

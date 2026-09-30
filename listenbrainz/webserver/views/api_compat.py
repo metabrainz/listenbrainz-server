@@ -247,7 +247,7 @@ def record_listens(data):
     for key, value in data.items():
         if key in ["sk", "token", "api_key", "method", "api_sig", "format"]:
             continue
-        matches = re.match('(.*)\[(\d+)\]', key)
+        matches = re.match(r'(.*)\[(\d+)\]', key)
         if matches:
             key = matches.group(1)
             number = matches.group(2)
