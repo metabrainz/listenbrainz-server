@@ -43,4 +43,5 @@ def run_websockets(app, host='0.0.0.0', port=7082, debug=True):
     socketio.init_app(app)
     dispatcher = ListensDispatcher(app, socketio)
     socketio.start_background_task(dispatcher.start)
+    socketio.start_background_task(dispatcher.flush_listens_periodically)
     socketio.run(app, debug=debug, host=host, port=port)
