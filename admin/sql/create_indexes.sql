@@ -73,4 +73,19 @@ CREATE INDEX user_id_ndx_navidrome_tokens ON navidrome_tokens (user_id);
 CREATE INDEX server_id_ndx_navidrome_tokens ON navidrome_tokens (navidrome_server_id);
 CREATE UNIQUE INDEX unique_user_server_navidrome_tokens ON navidrome_tokens (user_id, navidrome_server_id);
 
+CREATE UNIQUE INDEX mbid_playlist ON playlist.playlist (mbid);
+CREATE INDEX creator_id_playlist ON playlist.playlist (creator_id);
+CREATE INDEX copied_from_id_playlist ON playlist.playlist (copied_from_id);
+CREATE INDEX created_for_id_playlist ON playlist.playlist (created_for_id);
+CREATE INDEX playlist_id_playlist_recording ON playlist.playlist_recording (playlist_id);
+CREATE INDEX mbid_playlist_recording ON playlist.playlist_recording (mbid);
+CREATE INDEX added_by_id_playlist_recording ON playlist.playlist_recording (added_by_id);
+CREATE INDEX playlist_id_playlist_collaborator ON playlist.playlist_collaborator (playlist_id);
+CREATE INDEX collaborator_id_playlist_collaborator ON playlist.playlist_collaborator (collaborator_id);
+CREATE INDEX playlist_id_collaborator_id_playlist_collaborator
+    ON playlist.playlist_collaborator (playlist_id, collaborator_id);
+CREATE INDEX public_playlist_idx ON playlist.playlist (creator_id, created_for_id) WHERE public = true;
+CREATE INDEX playlist_name_trgm_gin ON playlist.playlist USING GIN (name gin_trgm_ops);
+CREATE INDEX playlist_description_trgm_gin ON playlist.playlist USING GIN (description gin_trgm_ops);
+
 COMMIT;
