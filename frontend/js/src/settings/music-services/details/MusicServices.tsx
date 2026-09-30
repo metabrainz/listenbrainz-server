@@ -4,6 +4,7 @@ import { capitalize } from "lodash";
 import { useLoaderData } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import { Accordion } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ToastMsg } from "../../../notifications/Notifications";
 import ServicePermissionButton from "./components/ExternalServiceButton";
@@ -60,12 +61,6 @@ export default function MusicServices() {
   const userHasEmail = loaderData.user_has_email;
 
   const { appleAuth } = React.useContext(GlobalAppContext);
-
-  const [openPanel, setOpenPanel] = React.useState<string | null>(null);
-
-  const togglePanel = (service: string) => {
-    setOpenPanel((prev) => (prev === service ? null : service));
-  };
 
   const [permissions, setPermissions] = React.useState({
     spotify: loaderData.current_spotify_permissions,
@@ -548,7 +543,7 @@ export default function MusicServices() {
         <EmailVerificationRequiredAlert action="connecting music services" />
       )}
 
-      <div className="services-grid">
+      <Accordion className="services-grid">
         <MusicServiceCard
           serviceId="spotify"
           icon={
@@ -560,8 +555,6 @@ export default function MusicServices() {
           }
           title="Spotify"
           isConnected={isConnected("spotify")}
-          isOpen={openPanel === "spotify"}
-          onToggle={() => togglePanel("spotify")}
         >
           <p>
             Connect to your Spotify account to read your listening history, play
@@ -660,8 +653,6 @@ export default function MusicServices() {
           }
           title="CritiqueBrainz"
           isConnected={isConnected("critiquebrainz")}
-          isOpen={openPanel === "critiquebrainz"}
-          onToggle={() => togglePanel("critiquebrainz")}
         >
           <p>
             Connect to your CritiqueBrainz account to publish reviews directly
@@ -732,8 +723,6 @@ export default function MusicServices() {
           }
           title="SoundCloud"
           isConnected={isConnected("soundcloud")}
-          isOpen={openPanel === "soundcloud"}
-          onToggle={() => togglePanel("soundcloud")}
         >
           <p>
             Connect to your SoundCloud account to play music on ListenBrainz.
@@ -773,8 +762,6 @@ export default function MusicServices() {
           }
           title="Apple Music"
           isConnected={isConnected("appleMusic")}
-          isOpen={openPanel === "appleMusic"}
-          onToggle={() => togglePanel("appleMusic")}
         >
           <p>
             Connect to your Apple Music account to play music on ListenBrainz.
@@ -820,8 +807,6 @@ export default function MusicServices() {
           }
           title="Funkwhale"
           isConnected={isConnected("funkwhale")}
-          isOpen={openPanel === "funkwhale"}
-          onToggle={() => togglePanel("funkwhale")}
         >
           <p>Connect to your Funkwhale server to play music on ListenBrainz.</p>
           {permissions.funkwhale !== "listen" && (
@@ -914,8 +899,6 @@ export default function MusicServices() {
           }
           title="Navidrome"
           isConnected={isConnected("navidrome")}
-          isOpen={openPanel === "navidrome"}
-          onToggle={() => togglePanel("navidrome")}
         >
           <p>Connect to your Navidrome server to play music on ListenBrainz.</p>
           {permissions.navidrome !== "listen" && (
@@ -1075,7 +1058,6 @@ export default function MusicServices() {
           title="YouTube"
           isConnected
           collapsible={false}
-          showStatusIndicator
           statusLabel="Active"
         >
           <p>
@@ -1096,7 +1078,6 @@ export default function MusicServices() {
           title="Internet Archive"
           isConnected
           collapsible={false}
-          showStatusIndicator
           statusLabel="Active"
         >
           <p>
@@ -1104,7 +1085,7 @@ export default function MusicServices() {
             an account to be connected.
           </p>
         </MusicServiceCard>
-      </div>
+      </Accordion>
     </>
   );
 }

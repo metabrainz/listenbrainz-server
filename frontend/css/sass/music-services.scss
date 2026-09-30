@@ -31,18 +31,29 @@ $checkbox-size: 40px;
       transform: translateY(-2px);
     }
 
-    .card-header {
+    .accordion-header {
+      background-color: var(--bs-card-cap-bg)
+    }
+
+    .accordion-button {
+      border-radius: inherit;
       display: flex;
       padding: 1.5rem 1.5rem;
       flex-direction: row;
       align-items: center;
       gap: 1rem;
-      transition: background-color 0.3s ease;
+      color: inherit;
+      background-color: transparent;
       min-height: 100px;
 
-      &[role="button"]:hover {
-        background-color: rgba(0, 0, 0, 0.02);
+      &:hover {
         cursor: pointer;
+        .service-logo {
+          transform: scale(1.1);
+        }
+        .status-dot {
+          transform: scale(1.2);
+        }
       }
 
       .service-logo {
@@ -51,10 +62,6 @@ $checkbox-size: 40px;
         justify-content: center;
         min-width: 40px;
         transition: transform 0.3s ease;
-      }
-
-      &:hover .service-logo {
-        transform: scale(1.1);
       }
 
       .service-icon {
@@ -89,10 +96,6 @@ $checkbox-size: 40px;
             background-color: #dc3545;
           }
         }
-      }
-
-      &:hover .status-dot {
-        transform: scale(1.2);
       }
     }
   }
