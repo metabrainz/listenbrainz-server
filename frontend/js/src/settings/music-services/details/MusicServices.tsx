@@ -538,6 +538,14 @@ export default function MusicServices() {
       <div id="user-profile">
         <h2 className="page-title">Connect third-party music services</h2>
       </div>
+      <p>
+        To play music on ListenBrainz, your browser must allow media autoplay
+        for this site.
+        <br />
+        If you encounter issues with any service, try disconnecting and
+        reconnecting it.
+      </p>
+      <br />
 
       {!userHasEmail && (
         <EmailVerificationRequiredAlert action="connecting music services" />
@@ -559,19 +567,25 @@ export default function MusicServices() {
           <p>
             Connect to your Spotify account to read your listening history, play
             music on ListenBrainz (requires Spotify Premium), or both.
-            <br />
-            <small>
-              Full length playback requires Spotify Premium.
-              <br />
-              To play music, your browser must allow autoplaying media on
-              listenbrainz.org.
-              <br />
-              If you encounter issues, try disconnecting and reconnecting your
-              Spotify account and select the permissions to &apos;record listens
-              and play music&apos; or &apos;play music only&apos;.
-            </small>
           </p>
-          <br />
+          <div
+            className="alert alert-secondary alert-dismissible fade show"
+            role="alert"
+          >
+            Spotify will ask for permission to read your email address, your
+            private information and your birthdate, to determine if you are a
+            premium user.
+            <br />
+            <b>ListenBrainz will never read these pieces of data</b>. You can
+            <a
+              href="https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/listens_importer/spotify.py"
+              target="_blank"
+              rel="noreferrer"
+            >
+              inspect our source code
+            </a>{" "}
+            at any time!
+          </div>
 
           <div className="music-service-selection">
             <form onSubmit={(e) => e.preventDefault}>
@@ -612,32 +626,6 @@ export default function MusicServices() {
               />
             </form>
           </div>
-          <h3>A note about Spotify permissions</h3>
-          <p>
-            To record your listens you will need to grant permission to view
-            your recent listens and your current listen.
-          </p>
-          <p>
-            To play music on the ListenBrainz pages you will need to grant the
-            permission to play streams from your account and create playlists.
-            Spotify also requires permission to read your email address, your
-            private information and your birthdate, to determine if you are a
-            premium user -{" "}
-            <b>ListenBrainz will never read these pieces of data</b>. Please
-            feel free to{" "}
-            <a
-              href="https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/listens_importer/spotify.py"
-              target="_blank"
-              rel="noreferrer"
-            >
-              inspect our source code
-            </a>{" "}
-            any time!
-          </p>
-          <p>
-            Revoke these permissions any time by disabling your Spotify
-            connection.
-          </p>
         </MusicServiceCard>
 
         <MusicServiceCard
@@ -657,7 +645,9 @@ export default function MusicServices() {
           <p>
             Connect to your CritiqueBrainz account to publish reviews directly
             from ListenBrainz. Reviews are public on ListenBrainz and
-            CritiqueBrainz. To view or delete your reviews, visit your
+            CritiqueBrainz.
+            <br />
+            To view or delete your reviews, visit your{" "}
             <a href="https://critiquebrainz.org/">CritiqueBrainz profile.</a>
           </p>
           <br />
@@ -762,13 +752,16 @@ export default function MusicServices() {
           <p>
             Connect to your Apple Music account to play music on ListenBrainz.
             <br />
-            <small>
-              Full length track playback requires a Apple Music subscription.
-              <br />
-              You will need to repeat the sign-in process every 6 months.
-            </small>
+            Full length track playback requires a Apple Music subscription.
+            <br />
           </p>
-          <br />
+          <div
+            className="alert alert-info alert-dismissible fade show"
+            role="alert"
+          >
+            Apple Music requires you to repeat the sign-in process every 6
+            months.
+          </div>
           <div className="music-service-selection">
             <form>
               <ServicePermissionButton
