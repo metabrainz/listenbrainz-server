@@ -452,14 +452,17 @@ export default class APIService {
     if (!userToken) {
       throw new SyntaxError("User token missing");
     }
-    const response = await fetch(`${this.APIBaseURI}/followed-artists/add`, {
-      method: "POST",
-      headers: {
-        Authorization: `Token ${userToken}`,
-        "Content-Type": "application/json;charset=UTF-8",
-      },
-      body: JSON.stringify({ artist_mbid: artistMBID }),
-    });
+    const response = await this.fetchWithRetry(
+      `${this.APIBaseURI}/followed-artists/add`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({ artist_mbid: artistMBID }),
+      }
+    );
     return { status: response.status };
   };
 
@@ -473,14 +476,17 @@ export default class APIService {
     if (!userToken) {
       throw new SyntaxError("User token missing");
     }
-    const response = await fetch(`${this.APIBaseURI}/followed-artists/remove`, {
-      method: "POST",
-      headers: {
-        Authorization: `Token ${userToken}`,
-        "Content-Type": "application/json;charset=UTF-8",
-      },
-      body: JSON.stringify({ artist_mbid: artistMBID }),
-    });
+    const response = await this.fetchWithRetry(
+      `${this.APIBaseURI}/followed-artists/remove`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({ artist_mbid: artistMBID }),
+      }
+    );
     return { status: response.status };
   };
 
@@ -549,7 +555,7 @@ export default class APIService {
     const url = `${this.APIBaseURI}/user/${encodeURIComponent(
       userName
     )}/followed-artists/${artistMBID}`;
-    const response = await fetch(url);
+    const response = await this.fetchWithRetry(url);
     await this.checkStatus(response);
     return response.json();
   };
