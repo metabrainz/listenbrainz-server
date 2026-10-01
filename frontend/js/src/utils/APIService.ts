@@ -2225,7 +2225,7 @@ export default class APIService {
     }
     url += `?${queryParams.join("&")}`;
 
-    const response = await fetch(url);
+    const response = await this.fetchWithRetry(url);
     await this.checkStatus(response);
     return response.json();
   };
@@ -2261,7 +2261,7 @@ export default class APIService {
     }
     url += `?${queryParams.join("&")}`;
 
-    const response = await fetch(url);
+    const response = await this.fetchWithRetry(url);
     await this.checkStatus(response);
     return response.json();
   };
@@ -2297,7 +2297,7 @@ export default class APIService {
     }
     url += `?${queryParams.join("&")}`;
 
-    const response = await fetch(url);
+    const response = await this.fetchWithRetry(url);
     await this.checkStatus(response);
     return response.json();
   };
