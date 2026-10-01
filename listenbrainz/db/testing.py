@@ -90,6 +90,6 @@ class TimescaleTestCase(unittest.TestCase):
                     f"expected {expected_db_name!r}"
                 )
             connection.execute(sqlalchemy.text(
-                "TRUNCATE TABLE listen, listen_delete_metadata, deleted_user_listen_history"
+                "TRUNCATE TABLE listen, listen_user_metadata, listen_delete_metadata, deleted_user_listen_history"
             ))
             connection.commit()
