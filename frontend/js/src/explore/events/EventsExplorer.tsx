@@ -158,7 +158,8 @@ export default function EventsExplorer() {
     setHasSelectedSortDirection,
   ] = React.useState(false);
 
-  const eventCardGridRef = React.useRef(null);
+  const eventCardGridRef = React.useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = React.useState(false);
 
   const availableSortOptions =
     pageType === PAGE_TYPE_SITEWIDE
@@ -443,7 +444,11 @@ export default function EventsExplorer() {
               </div>
             </div>
           ) : (
-            <div id="events-explorer-grids" ref={eventCardGridRef}>
+            <div
+              id="events-explorer-grids"
+              ref={eventCardGridRef}
+              className={isDragging ? "is-dragging" : ""}
+            >
               {sortedList.length === 0 ? (
                 <div className="no-events">
                   <img
@@ -466,7 +471,8 @@ export default function EventsExplorer() {
           <EventTimeline
             events={sortedList}
             order={sort}
-            direction={sortDirection}
+            eventCardGridRef={eventCardGridRef}
+            onDraggingChange={setIsDragging}
           />
         )}
         <EventFilters

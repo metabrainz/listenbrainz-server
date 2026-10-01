@@ -1,6 +1,5 @@
 import { isNil, orderBy } from "lodash";
 import { isValid } from "date-fns";
-import { useEffect, useState } from "react";
 
 export const getEventDate = (event: MusicBrainzEvent): string | undefined => {
   const {
@@ -50,33 +49,6 @@ export function formatEventListenCount(listenCount: number) {
   return listenCount;
 }
 
-// Originally from https://usehooks-ts.com/react-hook/use-media-query
-export function useMediaQuery(queryStr: string) {
-  const getMatches = (query: string): boolean => {
-    if (typeof window !== "undefined") {
-      return window.matchMedia(query).matches;
-    }
-    return false;
-  };
-
-  const [matches, setMatches] = useState<boolean>(getMatches(queryStr));
-
-  useEffect(() => {
-    function handleChange() {
-      setMatches(getMatches(queryStr));
-    }
-
-    const matchMedia = window.matchMedia(queryStr);
-    handleChange();
-    matchMedia.addEventListener("change", handleChange);
-    return () => {
-      matchMedia.removeEventListener("change", handleChange);
-    };
-  }, [queryStr]);
-
-  return matches;
-}
-
 // a date with a missing day or month is shown as the month or year, rather than as the 1st
 export const getEventDateFormatOptions = (
   event: MusicBrainzEvent
@@ -88,21 +60,6 @@ export const getEventDateFormatOptions = (
     return { year: "numeric", month: "short" };
   }
   return undefined;
-};
-
-// reads a missing month or day as the 1st, as UPCOMING_EVENT_CONDITION does on the server
-export const getEventLastDay = (event: MusicBrainzEvent): Date | undefined => {
-  const year = event.end_date_year ?? event.begin_date_year;
-  if (isNil(year)) {
-    return undefined;
-  }
-  const month = isNil(event.end_date_year)
-    ? event.begin_date_month
-    : event.end_date_month;
-  const day = isNil(event.end_date_year)
-    ? event.begin_date_day
-    : event.end_date_day;
-  return new Date(year, (month ?? 1) - 1, day ?? 1);
 };
 
 const getHeadlinerName = (event: ExplorerEventItem): string | null =>
@@ -128,21 +85,9 @@ export const getEventGroupKey = (
   event: ExplorerEventItem
 ): string => {
   switch (order) {
-    case "date": {
-      const date = getEventDate(event);
-      if (!date) {
-        return "Unknown date";
-      }
-      const formatOptions = getEventDateFormatOptions(event) ?? {
-        month: "short",
-        day: "numeric",
-        // a date in another year shows its year, so the same day a year apart is not one group
-        ...(event.begin_date_year !== new Date().getFullYear() && {
-          year: "numeric",
-        }),
-      };
-      return formatEventDate(date, formatOptions);
-    }
+    case "date":
+      // the date as stored, so the timeline can parse it; getEventGroupTitle formats it for the heading
+      return getEventDate(event) ?? "";
     case "artist":
       return (
         getHeadlinerName(event)?.charAt(0).toUpperCase() ?? "Unknown artist"
@@ -159,6 +104,29 @@ export const getEventGroupKey = (
     default:
       return "";
   }
+};
+
+export const getEventGroupTitle = (order: string, groupKey: string): string => {
+  if (order !== "date") {
+    return groupKey;
+  }
+  if (!groupKey) {
+    return "Unknown date";
+  }
+  if (groupKey.length === 4) {
+    return groupKey;
+  }
+  if (groupKey.length === 7) {
+    return formatEventDate(groupKey, { year: "numeric", month: "short" });
+  }
+  return formatEventDate(groupKey, {
+    month: "short",
+    day: "numeric",
+    // a date in another year shows its year, so it is not read as this year's
+    ...(groupKey.slice(0, 4) !== String(new Date().getFullYear()) && {
+      year: "numeric",
+    }),
+  });
 };
 
 const getSortValue = (

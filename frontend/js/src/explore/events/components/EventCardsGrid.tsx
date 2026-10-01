@@ -4,6 +4,7 @@ import {
   getEventDate,
   getEventDateFormatOptions,
   getEventGroupKey,
+  getEventGroupTitle,
 } from "../utils";
 import type { DisplaySettings } from "../EventsExplorer";
 
@@ -20,12 +21,12 @@ const getMapping = (
   return sortedList.reduce((acc, event) => {
     const key = getEventGroupKey(eventOrder, event);
     if (acc.has(key)) {
-      acc.get(key).push(event);
+      acc.get(key)!.push(event);
     } else {
       acc.set(key, [event]);
     }
     return acc;
-  }, new Map());
+  }, new Map<string, Array<ExplorerEventItem>>());
 };
 
 export default function EventCardsGrid(props: EventCardsGridProps) {
@@ -42,8 +43,14 @@ export default function EventCardsGrid(props: EventCardsGridProps) {
     <>
       {mappedEntries.map(([eventKey, events]) => (
         <React.Fragment key={`${eventKey}-container`}>
+          {/* Keep the scroll target in normal flow when the title becomes sticky. */}
+          <div
+            className="events-explorer-grid-anchor"
+            data-group-key={eventKey}
+            aria-hidden="true"
+          />
           <div className="events-explorer-grid-title" key={`${eventKey}-title`}>
-            {eventKey}
+            {getEventGroupTitle(order, eventKey)}
           </div>
           <div key={eventKey} className="events-explorer-cards-grid">
             {events?.map((event) => (
