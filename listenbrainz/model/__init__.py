@@ -11,3 +11,4 @@ from listenbrainz.model.listens_import import ListensImporter
 from listenbrainz.model.reported_users import ReportedUsers
 from listenbrainz.model.playlist import Playlist
 from listenbrainz.model.playlist_recording import PlaylistRecording
+from listenbrainz.model.background_tasks import BackgroundTask

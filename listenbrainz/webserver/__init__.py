@@ -318,17 +318,22 @@ def init_admin(app):
     from listenbrainz.model import ReportedUsers as ReportedUsersModel
     from listenbrainz.model import Playlist as PlaylistModel
     from listenbrainz.model import PlaylistRecording as PlaylistRecordingModel
+    from listenbrainz.model import BackgroundTask as BackgroundTaskModel
     from listenbrainz.model.external_service_oauth import ExternalServiceAdminView
     from listenbrainz.model.user import UserAdminView
     from listenbrainz.model.listens_import import ListensImporterAdminView
     from listenbrainz.model.reported_users import ReportedUserAdminView
     from listenbrainz.model.playlist import PlaylistAdminView
     from listenbrainz.model.playlist_recording import PlaylistRecordingAdminView
+    from listenbrainz.model.background_tasks import BackgroundTasksAdminView
     admin.add_view(UserAdminView(UserModel, model.db.session, endpoint='user_model'))
     admin.add_view(ExternalServiceAdminView(ExternalServiceModel, model.db.session, endpoint='external_service_model'))
     admin.add_view(ListensImporterAdminView(ListensImporterModel, model.db.session, endpoint='listens_importer_model'))
     admin.add_view(ReportedUserAdminView(ReportedUsersModel, model.db.session, endpoint='reported_users_model'))
     admin.add_view(AdminFlashMessagesView(name='Flash messages', endpoint='flash_messages'))
+    admin.add_view(BackgroundTasksAdminView(
+        BackgroundTaskModel, model.db.session, name='Background tasks', endpoint='background_tasks_model',
+    ))
 
     # can be empty incase timescale listenstore is down
     if app.config['SQLALCHEMY_TIMESCALE_PGBOUNCER_URI']:
