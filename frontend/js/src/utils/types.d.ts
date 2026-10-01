@@ -770,6 +770,30 @@ type FreshReleaseItem = {
   listen_count: number;
 };
 
+type ExplorerEventPerformer = {
+  artist_mbid: string;
+  artist_name: string | null;
+  link_type_name: string;
+};
+
+type ExplorerEventItem = MusicBrainzEvent & {
+  performers: Array<ExplorerEventPerformer>;
+  genres: Array<string>;
+  listen_count: number;
+  user_listen_count?: number;
+  followed?: boolean;
+};
+
+type ExplorerEventsResponse = {
+  payload: {
+    events: Array<ExplorerEventItem>;
+    total_count?: number;
+    count?: number;
+    offset?: number;
+    user?: string;
+  };
+};
+
 type UserFreshReleasesResponse = {
   payload: {
     releases: Array<FreshReleaseItem>;

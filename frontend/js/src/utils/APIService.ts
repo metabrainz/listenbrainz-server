@@ -2199,6 +2199,108 @@ export default class APIService {
     await this.checkStatus(response);
     return response.json();
   };
+
+  fetchSitewideEvents = async (
+    count: number,
+    offset: number,
+    days?: number,
+    past?: boolean,
+    future?: boolean,
+    cancelled?: boolean
+  ): Promise<ExplorerEventsResponse> => {
+    let url = `${this.APIBaseURI}/explore/events`;
+
+    const queryParams: Array<string> = [`count=${count}`, `offset=${offset}`];
+    if (days) {
+      queryParams.push(`days=${days}`);
+    }
+    if (past === true) {
+      queryParams.push(`past=${past}`);
+    }
+    if (future === false) {
+      queryParams.push(`future=${future}`);
+    }
+    if (cancelled === true) {
+      queryParams.push(`cancelled=${cancelled}`);
+    }
+    url += `?${queryParams.join("&")}`;
+
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  fetchUserFollowedArtistsEvents = async (
+    userName: string,
+    count: number,
+    offset: number,
+    days?: number,
+    past?: boolean,
+    future?: boolean,
+    cancelled?: boolean
+  ): Promise<ExplorerEventsResponse> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    let url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/events/followed-artists`;
+
+    const queryParams: Array<string> = [`count=${count}`, `offset=${offset}`];
+    if (days) {
+      queryParams.push(`days=${days}`);
+    }
+    if (past === true) {
+      queryParams.push(`past=${past}`);
+    }
+    if (future === false) {
+      queryParams.push(`future=${future}`);
+    }
+    if (cancelled === true) {
+      queryParams.push(`cancelled=${cancelled}`);
+    }
+    url += `?${queryParams.join("&")}`;
+
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  fetchUserListenedArtistsEvents = async (
+    userName: string,
+    count: number,
+    offset: number,
+    days?: number,
+    past?: boolean,
+    future?: boolean,
+    cancelled?: boolean
+  ): Promise<ExplorerEventsResponse> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    let url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/events/listened-artists`;
+
+    const queryParams: Array<string> = [`count=${count}`, `offset=${offset}`];
+    if (days) {
+      queryParams.push(`days=${days}`);
+    }
+    if (past === true) {
+      queryParams.push(`past=${past}`);
+    }
+    if (future === false) {
+      queryParams.push(`future=${future}`);
+    }
+    if (cancelled === true) {
+      queryParams.push(`cancelled=${cancelled}`);
+    }
+    url += `?${queryParams.join("&")}`;
+
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
   /** MusicBrainz */
 
   submitTagToMusicBrainz = async (

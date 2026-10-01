@@ -1,5 +1,6 @@
-import { isNil } from "lodash";
+import { isNil, orderBy } from "lodash";
 import { isValid } from "date-fns";
+import { useEffect, useState } from "react";
 
 export const getEventDate = (event: MusicBrainzEvent): string | undefined => {
   const {
@@ -48,3 +49,164 @@ export function formatEventListenCount(listenCount: number) {
 
   return listenCount;
 }
+
+// Originally from https://usehooks-ts.com/react-hook/use-media-query
+export function useMediaQuery(queryStr: string) {
+  const getMatches = (query: string): boolean => {
+    if (typeof window !== "undefined") {
+      return window.matchMedia(query).matches;
+    }
+    return false;
+  };
+
+  const [matches, setMatches] = useState<boolean>(getMatches(queryStr));
+
+  useEffect(() => {
+    function handleChange() {
+      setMatches(getMatches(queryStr));
+    }
+
+    const matchMedia = window.matchMedia(queryStr);
+    handleChange();
+    matchMedia.addEventListener("change", handleChange);
+    return () => {
+      matchMedia.removeEventListener("change", handleChange);
+    };
+  }, [queryStr]);
+
+  return matches;
+}
+
+// a date with a missing day or month is shown as the month or year, rather than as the 1st
+export const getEventDateFormatOptions = (
+  event: MusicBrainzEvent
+): Intl.DateTimeFormatOptions | undefined => {
+  if (isNil(event.begin_date_month)) {
+    return { year: "numeric" };
+  }
+  if (isNil(event.begin_date_day)) {
+    return { year: "numeric", month: "short" };
+  }
+  return undefined;
+};
+
+// reads a missing month or day as the 1st, as UPCOMING_EVENT_CONDITION does on the server
+export const getEventLastDay = (event: MusicBrainzEvent): Date | undefined => {
+  const year = event.end_date_year ?? event.begin_date_year;
+  if (isNil(year)) {
+    return undefined;
+  }
+  const month = isNil(event.end_date_year)
+    ? event.begin_date_month
+    : event.end_date_month;
+  const day = isNil(event.end_date_year)
+    ? event.begin_date_day
+    : event.end_date_day;
+  return new Date(year, (month ?? 1) - 1, day ?? 1);
+};
+
+const getHeadlinerName = (event: ExplorerEventItem): string | null =>
+  event.performers.find((performer) => performer.artist_name)?.artist_name ??
+  null;
+
+const POPULARITY_BUCKETS = [1e6, 1e5, 1e4, 1e3];
+const USER_LISTENS_BUCKETS = [1e3, 1e2, 10, 1];
+
+const getListenCountBucket = (count: number, buckets: Array<number>) => {
+  const bucket = buckets.find((threshold) => count >= threshold);
+  if (bucket) {
+    return `${formatEventListenCount(bucket)}+ listens`;
+  }
+  const lowest = buckets[buckets.length - 1];
+  return lowest > 1
+    ? `Under ${formatEventListenCount(lowest)} listens`
+    : "No listens";
+};
+
+export const getEventGroupKey = (
+  order: string,
+  event: ExplorerEventItem
+): string => {
+  switch (order) {
+    case "date": {
+      const date = getEventDate(event);
+      if (!date) {
+        return "Unknown date";
+      }
+      const formatOptions = getEventDateFormatOptions(event) ?? {
+        month: "short",
+        day: "numeric",
+        // a date in another year shows its year, so the same day a year apart is not one group
+        ...(event.begin_date_year !== new Date().getFullYear() && {
+          year: "numeric",
+        }),
+      };
+      return formatEventDate(date, formatOptions);
+    }
+    case "artist":
+      return (
+        getHeadlinerName(event)?.charAt(0).toUpperCase() ?? "Unknown artist"
+      );
+    case "event_name":
+      return event.event_name.charAt(0).toUpperCase();
+    case "listen_count":
+      return getListenCountBucket(event.listen_count, POPULARITY_BUCKETS);
+    case "user_listen_count":
+      return getListenCountBucket(
+        event.user_listen_count ?? 0,
+        USER_LISTENS_BUCKETS
+      );
+    default:
+      return "";
+  }
+};
+
+const getSortValue = (
+  order: string,
+  event: ExplorerEventItem
+): string | number | null => {
+  switch (order) {
+    case "artist":
+      return getHeadlinerName(event)?.toLowerCase() ?? null;
+    case "event_name":
+      return event.event_name.toLowerCase();
+    case "listen_count":
+      return event.listen_count;
+    case "user_listen_count":
+      return event.user_listen_count ?? 0;
+    default:
+      return null;
+  }
+};
+
+// events without a value for the chosen order go last in either direction, and ties keep date order
+export const sortEvents = (
+  events: Array<ExplorerEventItem>,
+  order: string,
+  direction: "ascend" | "descend"
+): Array<ExplorerEventItem> => {
+  const lodashDirection = direction === "ascend" ? "asc" : "desc";
+  const dateKeys = [
+    (event: ExplorerEventItem) => event.begin_date_year ?? Infinity,
+    (event: ExplorerEventItem) => event.begin_date_month ?? Infinity,
+    (event: ExplorerEventItem) => event.begin_date_day ?? Infinity,
+    (event: ExplorerEventItem) => event.event_time ?? "",
+    (event: ExplorerEventItem) => event.event_mbid,
+  ];
+  if (order === "date") {
+    return orderBy(
+      events,
+      dateKeys,
+      Array(dateKeys.length).fill(lodashDirection)
+    );
+  }
+  return orderBy(
+    events,
+    [
+      (event) => getSortValue(order, event) === null,
+      (event) => getSortValue(order, event),
+      ...dateKeys,
+    ],
+    ["asc", lodashDirection, ...Array(dateKeys.length).fill("asc")]
+  );
+};

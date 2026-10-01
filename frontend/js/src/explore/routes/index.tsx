@@ -74,6 +74,14 @@ const getExploreRoutes = (): RouteObject[] => {
           },
         },
         {
+          path: "events/",
+          lazy: {
+            Component: async () => {
+              return (await import("../events/EventsExplorer")).default;
+            },
+          },
+        },
+        {
           path: "huesound/:colorURLParam?",
           lazy: {
             Component: async () => {
