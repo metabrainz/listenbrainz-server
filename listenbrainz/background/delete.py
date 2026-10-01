@@ -15,7 +15,7 @@ def delete_user(db_conn, ts_conn, user_id: int, created: datetime):
         user_id: the LB row ID of the user
         created: listens created before this timestamp are deleted
     """
-    listens_db.delete_user(user_id, created)
+    listens_db.delete_user(user_id, created, delete_metadata=True)
     db_playlist.delete_playlists_by_user_id(ts_conn, user_id)
 
     db_user.delete(db_conn, user_id)

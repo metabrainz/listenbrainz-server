@@ -14,9 +14,9 @@ from listenbrainz.background.migrate_imports import migrate_imports
 from listenbrainz.db import listens as listens_db, timescale as ts, do_not_recommend
 
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
-    update_user_listen_data as ts_update_user_listen_data, \
     add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata,\
-    refresh_top_manual_mappings as ts_refresh_top_manual_mappings
+    refresh_top_manual_mappings as ts_refresh_top_manual_mappings, \
+    delete_listens as ts_delete_listens
 from listenbrainz.messybrainz import update_msids_from_mapping
 from listenbrainz.metadata_cache.seeder import submit_new_releases_to_cache
 from listenbrainz.troi.daily_jams import run_daily_jams_troi_bot
@@ -324,22 +324,13 @@ def set_rate_limits(per_token_limit, per_ip_limit, window_size):
 
 @cli.command(name="recalculate_all_user_data")
 def recalculate_all_user_data():
-    """ Recalculate all user timestamps and listen counts.
+    """ Recalculate all user listen counts in the listens database.
 
-    .. note::
-        **ONLY USE THIS WHEN YOU KNOW WHAT YOU ARE DOING!**
+    Safe to run while listens are being ingested or deleted, only stale users are locked while they are recounted.
     """
     application = webserver.create_app()
     with application.app_context():
         ts_recalculate_all_user_data()
-
-
-@cli.command(name="update_user_listen_data")
-def update_user_listen_data():
-    """ Scans listen table and update listen metadata for all users """
-    application = webserver.create_app()
-    with application.app_context():
-        ts_update_user_listen_data()
 
 
 @cli.command(name="delete_pending_listens")
@@ -347,7 +338,7 @@ def delete_pending_listens():
     """ Complete all pending listen deletes since last cron run """
     application = webserver.create_app()
     with application.app_context():
-        listens_db.delete_pending_listens()
+        ts_delete_listens()
 
 
 @cli.command(name="delete_listens")
@@ -355,7 +346,7 @@ def complete_delete_listens():
     """Complete pending listens DB deletions and retain their history."""
     application = webserver.create_app()
     with application.app_context():
-        listens_db.delete_pending_listens()
+        ts_delete_listens()
 
 
 @cli.command(name="add_missing_to_listen_users_metadata")

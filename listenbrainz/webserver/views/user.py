@@ -8,7 +8,7 @@ import listenbrainz.db.user_relationship as db_user_relationship
 
 from flask import Blueprint, render_template, request, url_for, jsonify, current_app
 from flask_login import current_user, login_required
-import psycopg2
+import sqlalchemy
 from psycopg2.extras import DictCursor
 
 from listenbrainz import webserver
@@ -19,6 +19,7 @@ from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_f
 from listenbrainz.db import year_in_music as db_year_in_music
 from listenbrainz.db.genre import get_tag_hierarchy_data
 from listenbrainz.db.year_in_music import LAST_FM_FOUNDING_YEAR, MAX_YEAR_IN_MUSIC_YEAR
+from listenbrainz.listenstore.timescale_listenstore import ListenStoreException
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.errors import APIBadRequest
@@ -677,8 +678,8 @@ def index(user_name, path):
         listen_count = None
         try:
             listen_count = timescale_connection._ts.get_listen_count_for_user(user.id)
-        except psycopg2.OperationalError as err:
-            current_app.logger.error("cannot fetch user listen count: ", str(err))
+        except (sqlalchemy.exc.OperationalError, ListenStoreException) as err:
+            current_app.logger.error("cannot fetch user listen count: %s", str(err))
         og_meta_tags = {
             "title": f"{user_name} on ListenBrainz",
             "description": f'User{f" — {number_readable(listen_count)} listens" if listen_count else ""} — ListenBrainz',
