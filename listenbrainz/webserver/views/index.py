@@ -66,6 +66,7 @@ Disallow: /release-group/
 Disallow: /recording/
 Disallow: /track/
 Allow: /explore/fresh-releases/
+Allow: /explore/events/
 Allow: /explore/huesound/
 Allow: /explore/cover-art-collage/
 Allow: /explore/art-creator/
