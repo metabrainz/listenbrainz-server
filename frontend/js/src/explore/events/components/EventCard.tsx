@@ -1,11 +1,16 @@
 import * as React from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import { faLocationDot, faTicket } from "@fortawesome/free-solid-svg-icons";
+import {
+  faLocationDot,
+  faPlay,
+  faTicket,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { isString, isUndefined } from "lodash";
 import { Link } from "react-router";
 import { isValid } from "date-fns";
-import { formatEventDate } from "../utils";
+import { formatEventDate, formatEventListenCount } from "../utils";
+import Pill from "../../../components/Pill";
 import {
   generateEventArtThumbnailLink,
   getEventArtFromEventMBID,
@@ -25,10 +30,15 @@ type EventCardProps = {
   placeName?: string;
   areaName?: string;
   eventArtID?: number;
+  genres?: Array<string>;
+  listenCount?: number;
+  cancelled?: boolean;
   showEventTitle?: boolean;
   showArtist?: boolean;
   showLocation?: boolean;
   showInformation?: boolean;
+  showGenres?: boolean;
+  showListens?: boolean;
   dateFormatOptions?: Intl.DateTimeFormatOptions;
 };
 
@@ -42,11 +52,16 @@ export default function EventCard(props: EventCardProps) {
     placeName,
     areaName,
     eventArtID,
+    genres,
+    listenCount,
+    cancelled,
     dateFormatOptions,
     showEventTitle,
     showArtist,
     showLocation,
     showInformation,
+    showGenres,
+    showListens,
   } = props;
 
   const [imageLoaded, setImageLoaded] = React.useState(false);
@@ -116,7 +131,31 @@ export default function EventCard(props: EventCardProps) {
   return (
     <div className="event-card-container" key={eventMBID}>
       <div className="event-item">
+        {showListens && listenCount ? (
+          <div className="listen-count">
+            <Pill title="Listens" type="secondary" active>
+              <>
+                <FontAwesomeIcon icon={faPlay} />
+                <span className="listen-count-number">
+                  {formatEventListenCount(listenCount)}
+                </span>
+              </>
+            </Pill>
+          </div>
+        ) : null}
+        {cancelled && <div className="event-cancelled-chip">Cancelled</div>}
         <div className="event-information">
+          {showGenres && genres && genres.length ? (
+            <div className="event-art-info">
+              {genres.join(", ").length > 26 ? (
+                <div className="genres" title={genres.join(", ")}>
+                  {genres.join(", ").substring(0, 23)}...
+                </div>
+              ) : (
+                <div className="genres">{genres.join(", ")}</div>
+              )}
+            </div>
+          ) : null}
           {showInformation && (
             <div className="event-art-info">
               <div className="event-type-chip" title={eventType ?? ""}>

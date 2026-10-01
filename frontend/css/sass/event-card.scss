@@ -26,6 +26,36 @@ $event-card-width: 12em;
     width: 100%;
   }
 
+  .genres {
+    font-size: smaller;
+  }
+
+  .listen-count {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .listen-count-number {
+    margin-left: 5px;
+  }
+
+  .event-cancelled-chip {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0.25rem 0.5rem;
+    border-top-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    background-color: $red;
+    color: $white;
+    font-size: smaller;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+
   .event-art-info {
     width: 100%;
     background-color: color.scale($blue, $alpha: -10%);

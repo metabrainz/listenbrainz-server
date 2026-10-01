@@ -108,4 +108,32 @@ describe("<EventCard />", () => {
       screen.queryByAltText(/Glastonbury Festival 2026/)
     ).not.toBeInTheDocument();
   });
+
+  it("shows the genres only when showGenres is set", () => {
+    const { rerender } = renderWithProviders(
+      <EventCard {...props} genres={["rock", "trip hop"]} />
+    );
+    expect(screen.queryByText("rock, trip hop")).not.toBeInTheDocument();
+
+    rerender(<EventCard {...props} genres={["rock", "trip hop"]} showGenres />);
+    expect(screen.getByText("rock, trip hop")).toBeInTheDocument();
+  });
+
+  it("shows the listen count only when showListens is set", () => {
+    const { rerender } = renderWithProviders(
+      <EventCard {...props} listenCount={12500} />
+    );
+    expect(screen.queryByText("12.5K")).not.toBeInTheDocument();
+
+    rerender(<EventCard {...props} listenCount={12500} showListens />);
+    expect(screen.getByText("12.5K")).toBeInTheDocument();
+  });
+
+  it("marks a cancelled event", () => {
+    const { rerender } = renderWithProviders(<EventCard {...props} />);
+    expect(screen.queryByText("Cancelled")).not.toBeInTheDocument();
+
+    rerender(<EventCard {...props} cancelled />);
+    expect(screen.getByText("Cancelled")).toBeInTheDocument();
+  });
 });
