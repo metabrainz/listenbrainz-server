@@ -2266,7 +2266,7 @@ export default class APIService {
     const url = `${this.MBBaseURI}/event?query=${encodeURIComponent(
       searchQuery
     )}&fmt=json&offset=${offset}&limit=${count}`;
-    const response = await fetch(url);
+    const response = await this.fetchWithRetry(url);
     await this.checkStatus(response);
     return response.json();
   };
