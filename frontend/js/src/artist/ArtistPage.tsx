@@ -44,6 +44,7 @@ import type {
 } from "../album/utils";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import EventCard from "../explore/events/components/EventCard";
+import { getEventDate } from "../explore/events/utils";
 import { RouteQuery } from "../utils/Loader";
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
 import Pill from "../components/Pill";
@@ -154,25 +155,6 @@ export const getReleaseCard = (rg: ReleaseGroup) => {
       showListens
     />
   );
-};
-
-const getEventDate = (event: MusicBrainzEvent): string | undefined => {
-  const {
-    begin_date_year: year,
-    begin_date_month: month,
-    begin_date_day: day,
-  } = event;
-  if (isNil(year)) {
-    return undefined;
-  }
-  let date = String(year);
-  if (!isNil(month)) {
-    date += `-${String(month).padStart(2, "0")}`;
-    if (!isNil(day)) {
-      date += `-${String(day).padStart(2, "0")}`;
-    }
-  }
-  return date;
 };
 
 const getEventCard = (event: MusicBrainzEvent) => {
