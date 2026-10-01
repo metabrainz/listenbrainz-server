@@ -1,4 +1,5 @@
 @use "sass:color";
+$event-card-width: 12em;
 
 .event-card-container {
   display: flex;
@@ -6,9 +7,9 @@
 
   .event-item {
     position: relative;
-    width: fit-content;
-    height: fit-content;
-    aspect-ratio: 1;
+    // Reserve the event art space while the lazy image replaces its placeholder.
+    width: $event-card-width;
+    height: $event-card-width;
   }
 
   .event-information {
@@ -109,8 +110,8 @@
   }
 
   .event-art {
-    width: 12em;
-    height: 12em;
+    width: $event-card-width;
+    height: $event-card-width;
     border-radius: 8px;
     user-select: none;
     aspect-ratio: 1;
@@ -125,7 +126,7 @@
 
   .name-type-container {
     margin-top: 0.5rem;
-    width: 12em;
+    width: $event-card-width;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -150,7 +151,7 @@
   }
 
   .event-artist {
-    width: 12em;
+    width: $event-card-width;
     min-height: 1.5em;
     overflow: hidden;
     white-space: nowrap;
@@ -162,7 +163,7 @@
   }
 
   .event-location {
-    width: 12em;
+    width: $event-card-width;
     min-height: 1.5em;
     overflow: hidden;
     white-space: nowrap;
