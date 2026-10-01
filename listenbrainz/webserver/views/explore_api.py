@@ -29,6 +29,8 @@ DEFAULT_NUMBER_OF_RELEASES = 25  # 5x5 grid
 DEFAULT_CACHE_EXPIRE_TIME = 3600 * 24  # 1 day
 HUESOUND_PAGE_CACHE_KEY = "huesound.%s.%d"
 DEFAULT_NUMBER_OF_EVENTS = 25
+MAX_NUMBER_OF_EVENT_DAYS = 365
+MAX_NUMBER_OF_PAST_EVENT_DAYS = 90
 
 explore_api_bp = Blueprint('explore_api_v1', __name__)
 
@@ -234,13 +236,29 @@ def lb_radio():
     return jsonify({"payload": {"jspf": jspf, "feedback": feedback}})
 
 
+def _parse_event_window_args():
+    """ Parse and validate the days, past, future and cancelled arguments of the event feed endpoints. """
+    days = _parse_int_arg("days")
+    past = _parse_bool_arg("past", False)
+    future = _parse_bool_arg("future", True)
+    cancelled = _parse_bool_arg("cancelled", False)
+
+    if days is not None and (days < 1 or days > MAX_NUMBER_OF_EVENT_DAYS):
+        raise APIBadRequest(f"days must be between 1 and {MAX_NUMBER_OF_EVENT_DAYS}.")
+    if past and (days is None or days > MAX_NUMBER_OF_PAST_EVENT_DAYS):
+        raise APIBadRequest(f"days must be between 1 and {MAX_NUMBER_OF_PAST_EVENT_DAYS} when past is true.")
+
+    return days, past, future, cancelled
+
+
 @explore_api_bp.get("/events")
 @crossdomain
 @ratelimit()
 @cache_public(s_maxage=300)
 def get_events():
     """
-    Fetch upcoming events sitewide, ordered chronologically. Returns a JSON like:
+    Fetch events sitewide, ordered chronologically. By default these are the upcoming events, and the
+    ``days``, ``past`` and ``future`` parameters choose other dates. Returns a JSON like:
 
     .. code-block:: json
 
@@ -255,10 +273,19 @@ def get_events():
     An event counts as upcoming until its end date, or its begin date if it has no end date, has passed.
     A missing month or day counts as the first of the year or month, and events with no date are left out.
 
+    The ``days``, ``past`` and ``future`` parameters set a window around today, as in
+    ``GET /1/explore/fresh-releases/`` but with different defaults. An event is included if any of its days
+    fall inside the window.
+
     :param count: The number of events to return, at most 1000. Default 25.
     :param offset: The number of events to skip from the beginning. Default 0.
+    :param days: The number of days the window reaches in each direction, at most 365, or at most 90 when
+                 ``past`` is true. Default no limit.
+    :param past: Whether to show events in the past. Needs ``days``. Default False.
+    :param future: Whether to show events in the future. Default True.
+    :param cancelled: Whether to show cancelled events. Default False.
     :statuscode 200: fetch succeeded
-    :statuscode 400: invalid count or offset passed.
+    :statuscode 400: invalid count, offset, days, past, future or cancelled passed.
     :resheader Content-Type: *application/json*
     """
 
@@ -267,8 +294,12 @@ def get_events():
 
     offset = get_non_negative_param("offset", 0)
 
+    days, past, future, cancelled = _parse_event_window_args()
+
     try:
-        events, total_count = db_event_feed.get_upcoming_events_global(ts_conn, count, offset)
+        events, total_count = db_event_feed.get_upcoming_events_global(
+            ts_conn, count, offset, days=days, past=past, future=future, cancelled=cancelled
+        )
     except Exception as e:
         current_app.logger.error("Server failed to get upcoming events: {}".format(e), exc_info=True)
         raise APIInternalServerError("Server failed to get upcoming events")

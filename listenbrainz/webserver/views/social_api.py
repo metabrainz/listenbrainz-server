@@ -11,6 +11,7 @@ from listenbrainz.webserver.errors import APINotFound, APIInternalServerError, A
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import validate_auth_header, is_valid_uuid, log_raise_400, \
     get_non_negative_param, DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET
+from listenbrainz.webserver.views.explore_api import _parse_event_window_args
 
 social_api_bp = Blueprint('social_api_v1', __name__)
 
@@ -312,8 +313,9 @@ def get_artist_follow_status(user_name: str, artist_mbid: str):
 @ratelimit()
 def get_events_for_followed_artists(user_name: str):
     """
-    Fetch upcoming events for all artists followed by the user ``user_name``, ordered
-    chronologically. Returns a JSON like:
+    Fetch events for all artists followed by the user ``user_name``, ordered chronologically. By default
+    these are the upcoming events, and the ``days``, ``past`` and ``future`` parameters choose other
+    dates. Returns a JSON like:
 
     .. code-block:: json
 
@@ -327,7 +329,7 @@ def get_events_for_followed_artists(user_name: str):
         }
 
     The events list is empty if the user follows no artists, or if none of the artists
-    they follow have upcoming events.
+    they follow have events in the chosen dates.
 
     Each event has the same fields as the values returned by ``GET /1/metadata/event/`` without any ``inc``.
     An event counts as upcoming until its end date, or its begin date if it has no end date, has passed.
@@ -335,8 +337,13 @@ def get_events_for_followed_artists(user_name: str):
 
     :param count: The number of events to return, at most 1000. Default 25.
     :param offset: The number of events to skip from the beginning. Default 0.
+    :param days: The number of days the window reaches in each direction, at most 365, or at most 90 when
+                 ``past`` is true. Default no limit.
+    :param past: Whether to show events in the past. Needs ``days``. Default False.
+    :param future: Whether to show events in the future. Default True.
+    :param cancelled: Whether to show cancelled events. Default False.
     :statuscode 200: Yay, you have data!
-    :statuscode 400: invalid count or offset passed.
+    :statuscode 400: invalid count, offset, days, past, future or cancelled passed.
     :statuscode 404: User not found
     """
     user = db_user.get_by_mb_id(db_conn, user_name)
@@ -349,10 +356,14 @@ def get_events_for_followed_artists(user_name: str):
 
     offset = get_non_negative_param("offset", 0)
 
+    days, past, future, cancelled = _parse_event_window_args()
+
     try:
         artists = db_user_artist_relationship.get_all_followed_artist_mbids(db_conn, user["id"])
         artist_mbids = [artist["artist_mbid"] for artist in artists]
-        events = db_event_feed.get_upcoming_events_for_artists(ts_conn, artist_mbids, count, offset)
+        events = db_event_feed.get_upcoming_events_for_artists(
+            ts_conn, artist_mbids, count, offset, days=days, past=past, future=future, cancelled=cancelled
+        )
     except Exception as e:
         current_app.logger.error("Error while trying to fetch events for followed artists: %s", str(e))
         raise APIInternalServerError("Something went wrong, please try again later")
