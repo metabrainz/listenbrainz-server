@@ -117,7 +117,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         # send a listen
         ts = int(time.time())
         payload['payload'][0]['listened_at'] = ts
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, wait_for_writer=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -213,7 +213,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         user = db_user.get_or_create(self.db_conn, 1, 'test_order')
         for i in range(3):
             payload['payload'][0]['listened_at'] = ts + (100 * i)
-            response = self.send_data(payload, user, recalculate=True)
+            response = self.send_data(payload, user, wait_for_writer=True)
             self.assert200(response)
             self.assertEqual(response.json['status'], 'ok')
 
@@ -570,7 +570,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         payload['payload'][0]['track_metadata']['release_name'] = '   '
         ts = int(time.time())
         payload['payload'][0]['listened_at'] = ts
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, wait_for_writer=True)
         self.assert200(response)
 
         url = self.custom_url_for('api_v1.get_listens',
@@ -754,7 +754,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
             payload = json.load(f)
         payload["payload"][0]["track_metadata"]["additional_info"]["duration_ms"] = "300000"
 
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, wait_for_writer=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -780,7 +780,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
             payload = json.load(f)
 
         payload['payload'][0]['listened_at'] = 1280258690
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, wait_for_writer=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -830,7 +830,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """ Test mbid fields with [], "", null values are dropped without error """
         with open(self.path_to_data_file('invalid_mbid_listens.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, wait_for_writer=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -1615,10 +1615,9 @@ class ListenAPICachingTestCase(ListenAPIIntegrationTestCase):
         self.mock_fetch_listens.reset_mock()
         response = self.client.get(url)
         self.assert200(response)
-        # Cache invalidation forces a fresh fetch, but reads still use Timescale,
-        # which retains the listen during the migration to the listens DB.
+        # Cache invalidation forces a fresh fetch from the listens DB, where the listen is deleted.
         self.mock_fetch_listens.assert_called_once()
-        self.assertEqual(response.json["payload"]["listens"], [listen])
+        self.assertEqual(response.json["payload"]["listens"], [])
 
     def test_get_listens_caching_manual_mapping(self):
         response = self.client.post(
