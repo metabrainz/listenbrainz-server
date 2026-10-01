@@ -4,6 +4,8 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_artist_relationship as db_user_artist_relationship
 import listenbrainz.db.event_feed as db_event_feed
+import listenbrainz.db.stats as db_stats
+from data.model.user_entity import EntityRecord
 from listenbrainz.webserver import db_conn, ts_conn
 
 from listenbrainz.webserver.decorators import crossdomain
@@ -368,6 +370,87 @@ def get_events_for_followed_artists(user_name: str):
         events = db_event_feed.add_performers_to_events(ts_conn, events)
     except Exception as e:
         current_app.logger.error("Error while trying to fetch events for followed artists: %s", str(e))
+        raise APIInternalServerError("Something went wrong, please try again later")
+
+    return jsonify({
+        "payload": {
+            "events": events,
+            "count": len(events),
+            "offset": offset,
+            "user": user["musicbrainz_id"],
+        }
+    })
+
+
+@social_api_bp.get("/user/<mb_username:user_name>/events/listened-artists")
+@crossdomain
+@ratelimit()
+def get_events_for_listened_artists(user_name: str):
+    """
+    Fetch events for the artists the user ``user_name`` has listened to the most, going by their all time
+    top artists statistics, ordered chronologically. By default these are the upcoming events, and the
+    ``days``, ``past`` and ``future`` parameters choose other dates. Returns a JSON like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "events": ["..."],
+                "count": 10,
+                "offset": 0,
+                "user": "shivam-kapila"
+            }
+        }
+
+    The events list is empty if the user's statistics haven't been calculated yet, or if none of their top
+    artists have events in the chosen dates.
+
+    Each event has the same fields as the values returned by ``GET /1/explore/events``, and also
+    ``user_listen_count``, the highest number of times the user has listened to any of its performers.
+    An event counts as upcoming until its end date, or its begin date if it has no end date, has passed.
+    A missing month or day counts as the first of the year or month, and events with no date are left out.
+
+    :param count: The number of events to return, at most 1000. Default 25.
+    :param offset: The number of events to skip from the beginning. Default 0.
+    :param days: The number of days the window reaches in each direction, at most 365, or at most 90 when
+                 ``past`` is true. Default no limit.
+    :param past: Whether to show events in the past. Needs ``days``. Default False.
+    :param future: Whether to show events in the future. Default True.
+    :param cancelled: Whether to show cancelled events. Default False.
+    :statuscode 200: Yay, you have data!
+    :statuscode 400: invalid count, offset, days, past, future or cancelled passed.
+    :statuscode 404: User not found
+    """
+    user = db_user.get_by_mb_id(db_conn, user_name)
+
+    if not user:
+        raise APINotFound("User %s not found" % user_name)
+
+    count = get_non_negative_param("count", DEFAULT_ITEMS_PER_GET)
+    count = min(count, MAX_ITEMS_PER_GET)
+
+    offset = get_non_negative_param("offset", 0)
+
+    days, past, future, cancelled = _parse_event_window_args()
+
+    try:
+        stats = db_stats.get(user["id"], "artists", "all_time", EntityRecord)
+        listen_counts = {}
+        if stats is not None:
+            for artist in stats.data:
+                if artist.artist_mbid:
+                    listen_counts[artist.artist_mbid] = artist.listen_count
+
+        events = db_event_feed.get_upcoming_events_for_artists(
+            ts_conn, list(listen_counts), count, offset, days=days, past=past, future=future, cancelled=cancelled
+        )
+        events = db_event_feed.add_performers_to_events(ts_conn, events)
+        for event in events:
+            event["user_listen_count"] = max(
+                (listen_counts.get(p["artist_mbid"], 0) for p in event["performers"]), default=0
+            )
+    except Exception as e:
+        current_app.logger.error("Error while trying to fetch events for listened artists: %s", str(e))
         raise APIInternalServerError("Something went wrong, please try again later")
 
     return jsonify({
