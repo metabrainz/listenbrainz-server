@@ -331,7 +331,8 @@ def get_events_for_followed_artists(user_name: str):
     The events list is empty if the user follows no artists, or if none of the artists
     they follow have events in the chosen dates.
 
-    Each event has the same fields as the values returned by ``GET /1/metadata/event/`` without any ``inc``.
+    Each event has the same fields as the values returned by ``GET /1/explore/events``, including ``performers``,
+    ``genres`` and ``listen_count``.
     An event counts as upcoming until its end date, or its begin date if it has no end date, has passed.
     A missing month or day counts as the first of the year or month, and events with no date are left out.
 
@@ -364,13 +365,14 @@ def get_events_for_followed_artists(user_name: str):
         events = db_event_feed.get_upcoming_events_for_artists(
             ts_conn, artist_mbids, count, offset, days=days, past=past, future=future, cancelled=cancelled
         )
+        events = db_event_feed.add_performers_to_events(ts_conn, events)
     except Exception as e:
         current_app.logger.error("Error while trying to fetch events for followed artists: %s", str(e))
         raise APIInternalServerError("Something went wrong, please try again later")
 
     return jsonify({
         "payload": {
-            "events": [event.to_api() for event in events],
+            "events": events,
             "count": len(events),
             "offset": offset,
             "user": user["musicbrainz_id"],

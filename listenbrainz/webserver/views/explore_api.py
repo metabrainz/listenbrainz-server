@@ -273,6 +273,12 @@ def get_events():
     An event counts as upcoming until its end date, or its begin date if it has no end date, has passed.
     A missing month or day counts as the first of the year or month, and events with no date are left out.
 
+    Each event also has ``performers``, a list of its artists with ``artist_mbid``, ``artist_name`` and
+    ``link_type_name``, main performers first and then alphabetically. ``artist_name`` is the name the
+    artist is credited with for the event, or else their own name. Each event also has ``genres``, the
+    genres of its main performers, and ``listen_count``, the most ListenBrainz listens of any of its main
+    performers. An event with no main performer uses all its performers for these.
+
     The ``days``, ``past`` and ``future`` parameters set a window around today, as in
     ``GET /1/explore/fresh-releases/`` but with different defaults. An event is included if any of its days
     fall inside the window.
@@ -300,13 +306,14 @@ def get_events():
         events, total_count = db_event_feed.get_upcoming_events_global(
             ts_conn, count, offset, days=days, past=past, future=future, cancelled=cancelled
         )
+        events = db_event_feed.add_performers_to_events(ts_conn, events)
     except Exception as e:
         current_app.logger.error("Server failed to get upcoming events: {}".format(e), exc_info=True)
         raise APIInternalServerError("Server failed to get upcoming events")
 
     return jsonify({
         "payload": {
-            "events": [e.to_api() for e in events],
+            "events": events,
             "total_count": total_count,
         }
     })

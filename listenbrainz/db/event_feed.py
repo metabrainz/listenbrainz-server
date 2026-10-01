@@ -1,8 +1,9 @@
 import psycopg2
 import psycopg2.extras
 
+import listenbrainz.db.event as db_event
 from listenbrainz.db.model.event import EventMetadata
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 # LEAST and GREATEST skip a missing date, so an event with only one of its dates uses it as both its first and last day
 EVENT_FIRST_DAY = """
@@ -205,3 +206,86 @@ def get_upcoming_events_global(
         events = [EventMetadata(**dict(row)) for row in curs.fetchall()]
 
     return events, total_count
+
+
+def get_genres_and_listen_counts_for_artists(ts_conn, artist_mbids: List[str]) -> Dict[str, dict]:
+    """
+    Fetch the genres of the given artists from mapping.mb_artist_metadata_cache, most tagged first,
+    and their sitewide listen counts from popularity.artist. Returns a dict keyed by artist MBID.
+
+    Arguments:
+        ts_conn: timescale database connection
+        artist_mbids: list of artist MBIDs to fetch genres and listen counts for
+    """
+    if not artist_mbids:
+        return {}
+
+    query = """
+        SELECT a.artist_mbid::TEXT
+             , amc.tag_data->'artist' AS artist_tags
+             , COALESCE(pa.total_listen_count, 0) AS listen_count
+          FROM unnest(%s::uuid[]) AS a(artist_mbid)
+     LEFT JOIN mapping.mb_artist_metadata_cache amc
+            ON amc.artist_mbid = a.artist_mbid
+     LEFT JOIN popularity.artist pa
+            ON pa.artist_mbid = a.artist_mbid
+    """
+
+    result = {}
+    with ts_conn.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+        curs.execute(query, (artist_mbids,))
+        for row in curs.fetchall():
+            genres = [tag for tag in row["artist_tags"] or [] if tag.get("genre_mbid")]
+            result[row["artist_mbid"]] = {
+                "genres": [tag["tag"] for tag in sorted(genres, key=lambda t: t["count"], reverse=True)],
+                "listen_count": row["listen_count"],
+            }
+    return result
+
+
+def add_performers_to_events(ts_conn, events: List[EventMetadata]) -> List[dict]:
+    """
+    Serialise the events for the API with their performers added, plus the genres and the highest sitewide
+    listen count of their main performers. An event with no main performer uses all its performers instead.
+
+    Arguments:
+        ts_conn: timescale database connection
+        events: the events to serialise
+    """
+    artists = db_event.get_artists_for_events(ts_conn, [event.event_id for event in events])
+    artist_mbids = list({artist["artist_mbid"] for rows in artists.values() for artist in rows})
+    artist_metadata = get_genres_and_listen_counts_for_artists(ts_conn, artist_mbids)
+
+    items = []
+    for event in events:
+        rows = [
+            {
+                "artist_mbid": row["artist_mbid"],
+                "artist_name": row["relationship_data"].get("credited_as") or row["artist_name"],
+                "link_type_name": row["link_type_name"],
+            }
+            for row in artists.get(event.event_id, [])
+        ]
+        # MB gives artist and event relationships no order of their own, so after the main performers
+        # the order is alphabetical. An artist linked to the event more than once is listed once.
+        rows.sort(key=lambda p: (p["link_type_name"] != "main performer", (p["artist_name"] or "").lower()))
+        performers = []
+        for row in rows:
+            if not any(p["artist_mbid"] == row["artist_mbid"] for p in performers):
+                performers.append(row)
+        headliners = [p for p in performers if p["link_type_name"] == "main performer"] or performers
+
+        genres = []
+        for performer in headliners:
+            for genre in artist_metadata.get(performer["artist_mbid"], {}).get("genres", []):
+                if genre not in genres:
+                    genres.append(genre)
+
+        item = event.to_api()
+        item["performers"] = performers
+        item["genres"] = genres
+        item["listen_count"] = max(
+            (artist_metadata.get(p["artist_mbid"], {}).get("listen_count", 0) for p in headliners), default=0
+        )
+        items.append(item)
+    return items
