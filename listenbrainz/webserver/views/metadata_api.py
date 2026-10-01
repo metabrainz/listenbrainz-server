@@ -633,6 +633,7 @@ def metadata_artist():
 @metadata_bp.get("/event/")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=120)
 def metadata_event():
     """
     This endpoint takes in a list of event_mbids and returns an object, keyed by event_mbid, of

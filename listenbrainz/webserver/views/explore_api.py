@@ -237,6 +237,7 @@ def lb_radio():
 @explore_api_bp.get("/events")
 @crossdomain
 @ratelimit()
+@cache_public(s_maxage=300)
 def get_events():
     """
     Fetch upcoming events sitewide, ordered chronologically. Returns a JSON like:
