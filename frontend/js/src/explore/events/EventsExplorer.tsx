@@ -3,8 +3,8 @@ import Spinner from "react-loader-spinner";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import buildAuthUrl from "../../utils/auth";
 import { ToastMsg } from "../../notifications/Notifications";
 import EventFilters from "./components/EventFilters";
 import EventTimeline from "./components/EventTimeline";
@@ -133,7 +133,6 @@ const fetchAllEvents = async (
 
 export default function EventsExplorer() {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
-  const navigate = useNavigate();
 
   const isLoggedIn: boolean = Object.keys(currentUser).length !== 0;
 
@@ -334,7 +333,7 @@ export default function EventsExplorer() {
       { toastId: "login-error" }
     );
 
-    navigate("/login");
+    window.location.href = buildAuthUrl("login");
   };
 
   const handleSortChange = (newSort: SortOption) => {
