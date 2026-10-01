@@ -388,7 +388,7 @@ body {
   flex-wrap: wrap;
   .tertiary-nav-vertical {
     flex: 0;
-    flex-basis: 250px;
+    flex-basis: $tertiary-nav-vertical-width;
   }
 }
 .profile-on-mb {

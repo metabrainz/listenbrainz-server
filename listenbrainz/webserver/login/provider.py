@@ -1,6 +1,5 @@
-from flask import request, session, current_app
-from brainzutils.musicbrainz_db import engine as mb_engine
-from brainzutils.musicbrainz_db import editor as mb_editor
+from flask import current_app, request, session
+import requests
 
 from listenbrainz.domain.musicbrainz import MusicBrainzService, MUSICBRAINZ_SCOPES
 from listenbrainz.webserver import db_conn
@@ -9,15 +8,11 @@ from listenbrainz.webserver.timescale_connection import _ts as ts
 import listenbrainz.db.user as db_user
 
 _session_key = "musicbrainz"
+LOGIN_HINTS = {"login", "register"}
 
 
 class MusicBrainzAuthSessionError(Exception):
     """Raised when there is an error parsing the oauth response from MusicBrainz"""
-    pass
-
-
-class MusicBrainzAuthNoEmailError(Exception):
-    """Raised when a user has no email address on MusicBrainz"""
     pass
 
 
@@ -28,31 +23,25 @@ def get_user():
         code = _fetch_data("code")
         token = service.fetch_access_token(code)
         info = service.get_user_info(token["access_token"])
-        musicbrainz_id = info["sub"]
-        musicbrainz_row_id = info["metabrainz_user_id"]
-    except KeyError:
+        musicbrainz_id = info["username"]
+        musicbrainz_row_id = info["sub"]
+    except KeyError as e:
         # get_auth_session raises a KeyError if it was unable to get the required data from `code`
+        current_app.logger.error("Error occurred while validating MetaBrainz user introspection: %s", str(e))
         raise MusicBrainzAuthSessionError()
 
-    user = db_user.get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id)
-    user_email = None
-    if mb_engine:
-        user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)["email"]
+    user = db_user.get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id, fetch_email=True)
 
-    if user is None:  # a new user is trying to sign up
-        if current_app.config["REJECT_NEW_USERS_WITHOUT_EMAIL"] and user_email is None:
-            # if flag is set to True and the user does not have an email do not allow to sign up
-            raise MusicBrainzAuthNoEmailError()
-        db_user.create(db_conn, musicbrainz_row_id, musicbrainz_id, email=user_email)
+    if user is None:
+        email = _get_new_user_email(service, token["access_token"], musicbrainz_row_id)
+        db_user.create(
+            db_conn,
+            musicbrainz_row_id,
+            musicbrainz_id,
+            email=email,
+        )
         user = db_user.get_by_mb_id(db_conn, musicbrainz_id, fetch_email=True)
         ts.set_empty_values_for_user(user["id"])
-    else:  # an existing user is trying to log in
-        # Other option is to change the return type of get_by_mb_row_id to a dict
-        # but its used so widely that we would modify huge number of tests
-        user = dict(user)
-        user["email"] = user_email
-        # every time a user logs in, update the email in LB.
-        db_user.update_user_details(db_conn, user["id"], musicbrainz_id, user_email)
 
     # save user's MB OAuth token, this check cannot be merged with the previous signup/login check because
     # we have a different service user row for each LB deployment but a common user row for all three
@@ -64,11 +53,33 @@ def get_user():
     return user
 
 
-def get_authentication_uri():
+def _get_new_user_email(service: MusicBrainzService, token: str, musicbrainz_row_id: int):
+    """Return a new user's verified email from OAuth UserInfo."""
+    try:
+        info = service.get_user_profile(token)
+    except requests.RequestException as error:
+        current_app.logger.error("Unable to fetch email from MetaBrainz OAuth UserInfo", exc_info=True)
+        raise MusicBrainzAuthSessionError() from error
+
+    has_email = "email" in info
+    has_email_verified = "email_verified" in info
+    if not has_email and not has_email_verified:
+        return None
+
+    return info["email"] if info["email_verified"] is True else None
+
+
+def get_authentication_uri(login_hint=None):
     """Prepare and return URL to authentication service login form."""
     csrf = generate_string(20)
     _persist_data(csrf=csrf)
-    return MusicBrainzService().get_authorize_url(MUSICBRAINZ_SCOPES, state=csrf, access_type="offline")
+    kwargs = {
+        "state": csrf,
+        "access_type": "offline",
+    }
+    if login_hint in LOGIN_HINTS:
+        kwargs["login_hint"] = login_hint
+    return MusicBrainzService().get_authorize_url(MUSICBRAINZ_SCOPES, **kwargs)
 
 
 def validate_post_login():

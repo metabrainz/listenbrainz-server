@@ -1,8 +1,8 @@
-FROM metabrainz/listenbrainz-spark-base:latest
+FROM docker.io/metabrainz/listenbrainz-spark-base:latest
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-                       zstd \
+        zstd \
     && rm -rf /var/lib/apt/lists/*
 
 COPY docker/spark-cluster-config/test/core-site.xml $HADOOP_HOME/etc/hadoop/core-site.xml

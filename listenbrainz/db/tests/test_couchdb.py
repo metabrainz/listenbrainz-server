@@ -14,7 +14,10 @@ from listenbrainz.db.tests.utils import delete_all_couch_databases
 class CouchdbTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
-        couchdb.init(config.COUCHDB_USER, config.COUCHDB_ADMIN_KEY, config.COUCHDB_HOST, config.COUCHDB_PORT)
+        couchdb.init(
+            config.COUCHDB_USER, config.COUCHDB_ADMIN_KEY, config.COUCHDB_HOST,
+            config.COUCHDB_PORT, config.COUCHDB_DATABASE_PREFIX
+        )
 
     def tearDown(self) -> None:
         delete_all_couch_databases()

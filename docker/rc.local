@@ -5,6 +5,15 @@ function log() {
    echo $@
 }
 
+function enable_cron() {
+    local crontab=$1
+
+    cp "$crontab" /etc/cron.d/crontab
+    chmod 0644 /etc/cron.d/crontab
+    rm -f /etc/service/cron/down
+    rm -f /etc/service/cron-config/down
+}
+
 log "Hello, this is rc.local. CONTAINER_NAME is $CONTAINER_NAME, and DEPLOY_ENV is $DEPLOY_ENV"
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-web-${DEPLOY_ENV}" ]
@@ -70,8 +79,13 @@ fi
 if [ "${CONTAINER_NAME}" = "listenbrainz-cron-prod" ]
 then
     log Enabling cron
-    rm -f /etc/service/cron/down
-    rm -f /etc/service/cron-config/down
+    enable_cron /etc/listenbrainz-crontabs/crontab
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-full-dumps-cron-prod" ]
+then
+    log Enabling full dumps cron
+    enable_cron /etc/listenbrainz-crontabs/full-dumps-crontab
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-mbid-mapping-writer-${DEPLOY_ENV}" ]
@@ -99,4 +113,3 @@ if [ "${CONTAINER_NAME}" = "listenbrainz-soundcloud-metadata-cache-${DEPLOY_ENV}
 then
     rm -f /etc/service/soundcloud_metadata_cache/down
 fi
-

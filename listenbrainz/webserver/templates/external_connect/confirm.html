@@ -1,0 +1,100 @@
+{% extends "stripped-out-base.html" %}
+{% block title %}Connect {{ service_label }} - ListenBrainz
+{% endblock %}
+{% block head %}
+  {{ super() }}
+  <style>
+    /* this page is a single dialog rather than a page of content, so centre it in the
+        viewport instead of letting it sit in the top left of the grid */
+    .connect-confirm {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 70vh;
+      padding: 2rem 1rem;
+    }
+    .connect-confirm .card {
+      width: 100%;
+      max-width: 35rem;
+    }
+    .connect-confirm .card-title {
+      margin: 0;
+    }
+    .connect-confirm .connect-actions {
+      display: flex;
+      justify-content: space-evenly;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .lb-logo {
+      position:relative;
+    }
+    .lb-logo .powered-by {
+      left: 47px;
+      position: absolute;
+      top: -7px;
+    }
+  </style>
+{% endblock %}
+{% block content %}
+<div class="connect-confirm">
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Connect {{ service_label }}</h3>
+    </div>
+    <div class="card-body">
+      <p class="d-flex justify-content-center my-3">
+        <img width="100"src="{{ logo_url }}" alt="{{ connect_request.client_name }}"></img>
+      </p>
+      <p>
+        Next, {{ service_label }} will ask you to let ListenBrainz read and save
+        your listening history on behalf of
+        <strong>{{ connect_request.client_name }}</strong>.
+      </p>
+      <p>
+        Your listening history will be public on ListenBrainz under the name
+        <strong>{{ musicbrainz_id }}</strong>. Nothing will be posted to your {{
+        service_label }} account.
+      </p>
+      <p>
+        After you approve, you’ll return to {{ connect_request.describe_client()
+        }}.
+      </p>
+      <hr/>
+      <form
+        method="post"
+        class="connect-actions"
+        action="{{ url_for('external_connect.confirm', service_name=connect_request.service) }}"
+      >
+        <input type="hidden" name="ticket" value="{{ ticket }}" />
+        <input type="hidden" name="nonce" value="{{ nonce }}" />
+        <button
+          type="submit"
+          name="action"
+          value="continue"
+          class="btn btn-success"
+        >
+          Continue to {{ service_label }}
+        </button>
+        <button
+          type="submit"
+          name="action"
+          value="cancel"
+          class="btn btn-outline-secondary"
+        >
+          Cancel
+        </button>
+      </form>
+    </div>
+  </div>
+  <div class="lb-logo">
+    <span class="powered-by">Powered by</span>
+    <img
+      src="{{ url_for('static', filename='img/listenbrainz-logo.svg') }}"
+      width="180"
+      alt="ListenBrainz"
+    />
+  </div>
+</div>
+{% endblock %}

@@ -7,15 +7,17 @@ DUMP_THREADS="{{template "KEY" "dump_threads"}}"
 DUMP_BASE_DIR="{{template "KEY" "base_dir"}}"
 PRIVATE_DUMP_BASE_DIR="{{template "KEY" "private_base_dir"}}"
 
-# Where to back things up to, who should own the backup files, and what mode
-# those files should have.
-# The backups include a full database export
+# Where to back up non-full public dumps, who should own the backup files, and
+# what mode those files should have. Public full dumps are uploaded to the
+# remote FTP host and then removed locally.
 BACKUP_DIR="{{template "KEY" "backup_dir"}}"
 BACKUP_USER="{{template "KEY" "user"}}"
 BACKUP_GROUP="{{template "KEY" "group"}}"
 BACKUP_DIR_MODE=700
 BACKUP_FILE_MODE=600
 
+# Private full database dumps are never uploaded to FTP and remain on this
+# private backup volume.
 PRIVATE_BACKUP_DIR="{{template "KEY" "private_backup_dir"}}"
 
 # Same but for the files that need to copied to the FTP server,
@@ -42,5 +44,5 @@ RSYNC_SAMPLE_KEY='{{template "KEY" "user_home"}}/.ssh/rsync-listenbrainz-dumps-s
 
 # Check to make sure that this container is the prod cron container, otherwise never rsync anything!
 # these variables may also be read by the dump command in python so export to ensure availability
-export PROD="{{ (env "DEPLOY_ENV") }}"
+export DEPLOY_ENV="{{ (env "DEPLOY_ENV") }}"
 export CONTAINER_NAME="{{ (env "CONTAINER_NAME") }}"

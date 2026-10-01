@@ -122,8 +122,12 @@ export default class FunkwhalePlayer
     }
   }
 
-  stop = () => {
+  pause = () => {
     this.pauseAudio();
+  };
+
+  stop = () => {
+    this.pause();
   };
 
   setupAudioListeners = (): void => {

@@ -8,6 +8,7 @@ DELETE FROM api_compat.session             CASCADE;
 DELETE FROM api_compat.token               CASCADE;
 
 DELETE FROM data_dump                      CASCADE;
+DELETE FROM statistics_generation          CASCADE;
 DELETE FROM missing_musicbrainz_data       CASCADE;
 
 DELETE FROM recommendation.cf_recording    CASCADE;

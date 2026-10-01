@@ -4,8 +4,8 @@ import time
 from kombu import Connection, Message, Consumer, Exchange, Queue
 from kombu.mixins import ConsumerMixin
 
+from listenbrainz.rabbitmq import create_rabbitmq_connection
 from listenbrainz.spark.background import BackgroundJobProcessor
-from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app
 
 PREFETCH_COUNT = 1000
@@ -16,7 +16,7 @@ class SparkReader(ConsumerMixin):
     def __init__(self, app):
         self.app = app
         self.connection: Connection | None = None
-        self.spark_result_exchange = Exchange(app.config["SPARK_RESULT_EXCHANGE"], "fanout", durable=False)
+        self.spark_result_exchange = Exchange(app.config["SPARK_RESULT_EXCHANGE"], "fanout", durable=True)
         self.spark_result_queue = Queue(app.config["SPARK_RESULT_QUEUE"], exchange=self.spark_result_exchange,
                                         durable=True)
         self.response_handlers = {}
@@ -42,14 +42,7 @@ class SparkReader(ConsumerMixin):
         )]
 
     def init_rabbitmq_connection(self):
-        self.connection = Connection(
-            hostname=self.app.config["RABBITMQ_HOST"],
-            userid=self.app.config["RABBITMQ_USERNAME"],
-            port=self.app.config["RABBITMQ_PORT"],
-            password=self.app.config["RABBITMQ_PASSWORD"],
-            virtual_host=self.app.config["RABBITMQ_VHOST"],
-            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
-        )
+        self.connection = create_rabbitmq_connection(self.app.config)
 
     def start(self):
         """ initiates RabbitMQ connection and starts consuming from the queue """

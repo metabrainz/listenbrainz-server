@@ -80,6 +80,7 @@ $h6-font-size: $font-size-base * 0.85;
 // Height of the BrainzPlayer component (fixed at the bottom of the page)
 $brainzplayer-height: 60px;
 $sidenav-width: 190px;
+$tertiary-nav-vertical-width: 250px;
 $offscreen-sidenav-breakpoint: map.get($grid-breakpoints, "lg");
 $very-wide-screen-breakpoint: 1950px;
 $navbar-height: 72px;

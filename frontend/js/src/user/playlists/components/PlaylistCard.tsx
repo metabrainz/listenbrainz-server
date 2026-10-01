@@ -15,6 +15,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import DOMPurify from "dompurify";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router";
+import { Dropdown } from "react-bootstrap";
 import Card from "../../../components/Card";
 import { ToastMsg } from "../../../notifications/Notifications";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
@@ -47,6 +48,7 @@ export default function PlaylistCard({
   const navigate = useNavigate();
 
   const playlistId = getPlaylistId(playlist);
+  const dropdownToggleId = React.useId();
   const customFields = getPlaylistExtension(playlist);
 
   const onCopyPlaylist = React.useCallback(async (): Promise<void> => {
@@ -154,16 +156,14 @@ export default function PlaylistCard({
             </div>
           </div>
         </div>
-        <div className="playlist-actions dropdown playlist-card-action-dropdown">
-          <FontAwesomeIcon
-            icon={faEllipsisVertical}
-            fixedWidth
-            id="playlistOptionsDropdown"
-            data-bs-toggle="dropdown"
-            aria-haspopup="true"
-            aria-expanded="false"
-            type="button"
-          />
+        <Dropdown className="playlist-actions playlist-card-action-dropdown">
+          <Dropdown.Toggle
+            as="span"
+            id={dropdownToggleId}
+            style={{ cursor: "pointer" }}
+          >
+            <FontAwesomeIcon icon={faEllipsisVertical} fixedWidth />
+          </Dropdown.Toggle>
           {showOptions ? (
             <PlaylistMenu
               playlist={playlist}
@@ -172,10 +172,7 @@ export default function PlaylistCard({
               onPlaylistCopied={onSuccessfulCopy}
             />
           ) : (
-            <ul
-              className="dropdown-menu dropdown-menu-right"
-              aria-labelledby="playlistOptionsDropdown"
-            >
+            <Dropdown.Menu renderOnMount={false} align="end">
               <button
                 className="dropdown-item"
                 onClick={onCopyPlaylist}
@@ -187,9 +184,9 @@ export default function PlaylistCard({
                 />
                 &nbsp;Save
               </button>
-            </ul>
+            </Dropdown.Menu>
           )}
-        </div>
+        </Dropdown>
       </div>
     );
   }
@@ -209,25 +206,22 @@ export default function PlaylistCard({
           &nbsp;Save
         </button>
       ) : (
-        <div className="dropup playlist-card-action-dropdown">
-          <button
-            className="dropdown-toggle playlist-card-action-button"
-            type="button"
-            id="playlistOptionsDropdown"
-            data-bs-toggle="dropdown"
-            aria-haspopup="true"
-            aria-expanded="false"
+        <Dropdown drop="up" className="playlist-card-action-dropdown">
+          <Dropdown.Toggle
+            as="button"
+            className="playlist-card-action-button"
+            id={dropdownToggleId}
           >
             <FontAwesomeIcon icon={faCog as IconProp} title="More options" />
             &nbsp;Options
-          </button>
+          </Dropdown.Toggle>
           <PlaylistMenu
             playlist={playlist}
             onPlaylistSaved={onPlaylistEdited}
             onPlaylistDeleted={onPlaylistDeleted}
             onPlaylistCopied={onSuccessfulCopy}
           />
-        </div>
+        </Dropdown>
       )}
       <Link
         className="info"

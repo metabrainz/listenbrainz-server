@@ -183,12 +183,11 @@ def get_listens(user_name):
     if user is None:
         return NotFound("User not found")
 
-    minutes = request.args.get("minutes", DEFAULT_MINUTES_OF_LISTENS)
-    if minutes:
-        try:
-            minutes = int(minutes)
-        except ValueError:
-            return BadRequest("Invalid value for minutes")
+    minutes = request.args.get("minutes") or DEFAULT_MINUTES_OF_LISTENS
+    try:
+        minutes = int(minutes)
+    except ValueError:
+        return BadRequest("Invalid value for minutes")
     if minutes < 1 or minutes > MAX_MINUTES_OF_LISTENS:
         return BadRequest("Value of minutes is out of range")
 
@@ -961,7 +960,7 @@ def get_cover_art_custom_stats(user_name):
         return BadRequest(f"Invalid range value: {range}")
 
     try:
-        custom_name = request.args.get("custome_name", "designer-top-5")
+        custom_name = request.args.get("custom_name", "designer-top-5")
         image_size = int(request.args.get("image_size", 750))
     except ValueError:
         return BadRequest("Image size must be an integer.")

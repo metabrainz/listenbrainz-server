@@ -1,83 +1,74 @@
 import * as React from "react";
 
 import { HttpResponse, http } from "msw";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { SetupServerApi, setupServer } from "msw/node";
-import { screen, waitFor } from "@testing-library/react";
-import { RouterProvider, createMemoryRouter } from "react-router";
+import { screen, waitFor, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
 import userEvent from "@testing-library/user-event";
 import * as missingDataProps from "../../__mocks__/missingMBDataProps.json";
 import {
   renderWithProviders,
   textContentMatcher,
 } from "../../test-utils/rtl-test-utils";
-import getSettingsRoutes from "../../../src/settings/routes";
+import LinkListensPage from "../../../src/settings/link-listens/LinkListens";
+import queryClient from "../../../src/utils/QueryClient";
 
 jest.unmock("react-toastify");
 
 const user = userEvent.setup();
-const routes = getSettingsRoutes();
 
 const pageData = {
   unlinked_listens: missingDataProps.missingData,
 };
-// React-Query setup
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-    },
-  },
-});
 const queryKey = ["link-listens"];
 
 const reactQueryWrapper = ({ children }: any) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
+function renderLinkListensPage(initialEntry = "/settings/link-listens/") {
+  return renderWithProviders(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <LinkListensPage />
+    </MemoryRouter>,
+    {
+      currentUser: missingDataProps.user,
+    },
+    {
+      wrapper: reactQueryWrapper,
+    },
+    false
+  );
+}
+
 describe("LinkListensPage", () => {
   let server: SetupServerApi;
-  let router: ReturnType<typeof createMemoryRouter>;
   beforeAll(async () => {
     window.scrollTo = jest.fn();
     window.HTMLElement.prototype.scrollIntoView = jest.fn();
-    // Mock the server responses
     const handlers = [
-      http.post("/settings/link-listens/", ({ request }) => {
+      http.post("/settings/link-listens/", () => {
         return HttpResponse.json(pageData);
       }),
     ];
     server = setupServer(...handlers);
     server.listen();
-    // Create the router *after* MSW mock server is set up
-    // See https://github.com/mswjs/msw/issues/1653#issuecomment-1781867559
-    router = createMemoryRouter(routes, {
-      initialEntries: ["/settings/link-listens/"],
-    });
   });
   beforeEach(async () => {
     await queryClient.ensureQueryData({
       queryKey,
       queryFn: () => Promise.resolve(pageData),
-      initialData: pageData,
     });
   });
 
   afterAll(() => {
+    queryClient.clear();
     server.close();
   });
 
   it("renders the missing musicbrainz data page correctly", async () => {
-    renderWithProviders(
-      <RouterProvider router={router} />,
-      {
-        currentUser: missingDataProps.user,
-      },
-      {
-        wrapper: reactQueryWrapper,
-      },
-      false
-    );
+    renderLinkListensPage();
     await screen.findByText(textContentMatcher("Link with MusicBrainz"));
     const albumGroups = await screen.findAllByRole("heading", { level: 3 });
     // 25 groups per page
@@ -92,16 +83,7 @@ describe("LinkListensPage", () => {
   });
 
   it("has working navigation", async () => {
-    renderWithProviders(
-      <RouterProvider router={router} />,
-      {
-        currentUser: missingDataProps.user,
-      },
-      {
-        wrapper: reactQueryWrapper,
-      },
-      false
-    );
+    renderLinkListensPage();
     await screen.findByText("Paharda (Remixes)", { exact: false });
     // Check that items from bigger groups get sorted and displayed
     // on the first page despite being at the bottom of the data array
@@ -112,24 +94,29 @@ describe("LinkListensPage", () => {
       screen.queryByText("Broadchurch (Music From The Original TV Series)")
     ).toBeNull();
 
-    const nextButton = screen.getByText("Next →", { exact: false });
+    const navButtons = screen.getByRole("navigation", { name: "Pagination" });
+    const nextButton = within(navButtons).getByText("Next", { exact: false });
     await user.click(nextButton);
-    expect(
-      screen.queryByText(textContentMatcher("Paharda (Remixes)"), {
-        exact: false,
-      })
-    ).toBeNull();
-    await waitFor(async () => {
-      await screen.findByText(
-        "Broadchurch (Music From The Original TV Series)"
-      );
+    await waitFor(() => {
+      expect(
+        screen.queryByText(textContentMatcher("Paharda (Remixes)"))
+      ).toBeNull();
+      expect(
+        screen.getByText("Broadchurch (Music From The Original TV Series)")
+      ).toBeInTheDocument();
     });
 
-    const prevButton = screen.getByText("Previous", { exact: false });
+    const prevButton = within(navButtons).getByText("Previous", {
+      exact: false,
+    });
     await user.click(prevButton);
-    await screen.findByText("Paharda (Remixes)", { exact: false });
-    expect(
-      screen.queryByText("Broadchurch (Music From The Original TV Series)")
-    ).toBeNull();
+    await waitFor(() => {
+      expect(
+        screen.getByText("Paharda (Remixes)", { exact: false })
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText("Broadchurch (Music From The Original TV Series)")
+      ).toBeNull();
+    });
   });
 });
