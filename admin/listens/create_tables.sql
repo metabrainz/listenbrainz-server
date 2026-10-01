@@ -19,6 +19,13 @@ CREATE TABLE listen_delete_metadata (
     listen_created      TIMESTAMP WITH TIME ZONE
 );
 
+CREATE TABLE listen_user_metadata (
+    user_id             INTEGER                     NOT NULL,
+    count               BIGINT                      NOT NULL,
+    min_listened_at     TIMESTAMP WITH TIME ZONE,
+    max_listened_at     TIMESTAMP WITH TIME ZONE
+);
+
 CREATE TABLE deleted_user_listen_history (
     id                          INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
     user_id                     INTEGER NOT NULL,

@@ -9,9 +9,10 @@ from dateutil.relativedelta import relativedelta
 from flask import current_app, render_template
 from sqlalchemy import text
 
-from listenbrainz.db import user as db_user
+from listenbrainz.db import listens as listens_db, user as db_user
 from listenbrainz.garage import delete_objects, ensure_bucket, get_garage_client, \
     get_user_data_export_bucket, list_object_names
+from listenbrainz.listenstore.timescale_listenstore import LISTEN_COLUMNS_QUERY
 from listenbrainz.webserver import timescale_connection
 
 BATCH_SIZE = 1000
@@ -102,93 +103,64 @@ def export_query_to_jsonl(conn, file_path, query, **kwargs):
     return rowcount
 
 
+def _mbid_mapping_for_export(meta):
+    """ Build the exported mbid_mapping of a listen, None if its recording is not in the metadata cache. """
+    if meta is None or not meta.has_metadata:
+        return None
+    artist_mbids = meta.artist_mbids or []
+    return {
+        "recording_name": meta.recording_name,
+        "recording_mbid": str(meta.recording_mbid),
+        "release_mbid": str(meta.release_mbid) if meta.release_mbid else None,
+        "artist_mbids": artist_mbids,
+        "caa_id": meta.caa_id,
+        "caa_release_mbid": meta.caa_release_mbid,
+        "artists": [
+            {
+                "artist_credit_name": name,
+                "join_phrase": join_phrase,
+                "artist_mbid": artist_mbids[idx] if idx < len(artist_mbids) else None,
+            }
+            for idx, (name, join_phrase) in enumerate(zip(meta.ac_names, meta.ac_join_phrases))
+            if name is not None
+        ],
+    }
+
+
 def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: datetime, end_time: datetime):
-    """ Export user's listens for a given time period. """
-    query = """
-          WITH selected_listens AS (
-                SELECT l.listened_at
-                     , l.created as inserted_at
-                     , l.data
-                     , l.recording_msid
-                     , COALESCE((data->'additional_info'->>'recording_mbid')::uuid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
-                  FROM listen l
-             LEFT JOIN mbid_mapping mm
-                    ON l.recording_msid = mm.recording_msid
-             LEFT JOIN mbid_manual_mapping user_mm
-                    ON l.recording_msid = user_mm.recording_msid
-                   AND user_mm.user_id = l.user_id 
-             LEFT JOIN mbid_manual_mapping_top other_mm
-                    ON l.recording_msid = other_mm.recording_msid
-                 WHERE listened_at >= :start_time
-                   AND listened_at <= :end_time
-                   AND l.user_id = :user_id
-          )
-                SELECT json_build_object(
-                            'inserted_at'
-                          , extract(epoch from inserted_at)::integer
-                          , 'listened_at'
-                          ,  extract(epoch from listened_at)
-                          , 'recording_msid'
-                          , recording_msid::text
-                          , 'track_metadata'
-                          , jsonb_set(
-                                data,
-                                    '{mbid_mapping}'::text[]
-                                  , CASE
-                                    WHEN mbc.recording_mbid IS NULL
-                                    THEN 'null'::jsonb
-                                    ELSE 
-                                       jsonb_build_object(
-                                          'recording_name'
-                                        , mbc.recording_data->>'name'
-                                        , 'recording_mbid'
-                                        , mbc.recording_mbid::text
-                                        , 'release_mbid'
-                                        , mbc.release_mbid::text
-                                        , 'artist_mbids'
-                                        , mbc.artist_mbids::TEXT[]
-                                        , 'caa_id'
-                                        , (mbc.release_data->>'caa_id')::bigint
-                                        , 'caa_release_mbid'
-                                        , (mbc.release_data->>'caa_release_mbid')::text
-                                        , 'artists'
-                                        , jsonb_agg(
-                                            jsonb_build_object(
-                                                'artist_credit_name'
-                                              , artist->>'name'
-                                              , 'join_phrase'
-                                              , artist->>'join_phrase'
-                                              , 'artist_mbid'
-                                              , mbc.artist_mbids[position]
-                                            )
-                                            ORDER BY position
-                                          )
-                                        )
-                                    END
-                            )
-                       )::text as line
-                  FROM selected_listens sl
-             LEFT JOIN mapping.mb_metadata_cache mbc
-                    ON sl.recording_mbid = mbc.recording_mbid
-     LEFT JOIN LATERAL jsonb_array_elements(artist_data->'artists') WITH ORDINALITY artists(artist, position)
-                    ON TRUE
-              GROUP BY sl.listened_at
-                     , sl.inserted_at
-                     , sl.recording_msid
-                     , sl.data
-                     , mbc.recording_mbid
-                     , recording_data->>'name'
-                     , release_mbid
-                     , artist_mbids
-                     , artist_data->>'name'
-                     , recording_data->>'name'
-                     , release_data->>'name'
-                     , release_data->>'caa_id'
-                     , release_data->>'caa_release_mbid'
-              ORDER BY listened_at
+    """ Export user's listens for a given time period.
+
+    Listens are read from the listens DB, which serves all listen reads and is where deletions
+    happen. The mapping tables and metadata cache live in timescale, so mapping metadata is
+    resolved there for each batch of listens.
     """
-    return export_query_to_jsonl(ts_conn, file_path, query, user_id=user_id,
-                                 start_time=start_time, end_time=end_time)
+    query = LISTEN_COLUMNS_QUERY + """
+          FROM listen
+         WHERE user_id = :user_id
+           AND listened_at >= :start_time
+           AND listened_at <= :end_time
+      ORDER BY listened_at
+    """
+    rowcount = 0
+    with listens_db.engine.connect() as connection, connection.execute(
+        text(query).execution_options(yield_per=BATCH_SIZE),
+        {"user_id": user_id, "start_time": start_time, "end_time": end_time}
+    ) as result, open(file_path, "wb") as file:
+        for partition in result.partitions():
+            metadata = timescale_connection._ts._fetch_mapping_metadata(partition, conn=ts_conn)
+            for row in partition:
+                meta = metadata.get((row.user_id, row.recording_msid, row.submitted_mbid))
+                track_metadata = row.data
+                track_metadata["mbid_mapping"] = _mbid_mapping_for_export(meta)
+                file.write(orjson.dumps({
+                    "inserted_at": round(row.created.timestamp()),
+                    "listened_at": row.listened_at.timestamp(),
+                    "recording_msid": row.recording_msid,
+                    "track_metadata": track_metadata,
+                }))
+                file.write(b"\n")
+                rowcount += 1
+    return rowcount
 
 
 def export_listens_for_user(export_id, db_conn, ts_conn, tmp_dir: str, user_id: int,

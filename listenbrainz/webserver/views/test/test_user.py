@@ -12,7 +12,6 @@ import listenbrainz.db.user as db_user
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import external_service_oauth as db_oauth, timescale
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
-from listenbrainz.listenstore.timescale_listenstore import EPOCH
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.login import User
@@ -175,7 +174,7 @@ class UserViewsTestCase(IntegrationTestCase):
     def test_ts_filters(self, timescale):
         """Check that max_ts and min_ts are passed to timescale """
         user = self.user.to_dict()
-        timescale.return_value = ([], EPOCH, EPOCH)
+        timescale.return_value = []
 
         self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'))
         req_call = mock.call(user, None, None, 25)
