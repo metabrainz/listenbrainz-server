@@ -215,3 +215,118 @@ export function formatEventTime(eventTime: string): string {
     timeZone: "UTC",
   }).format(new Date(`${eventTime}Z`));
 }
+
+type SetlistPart = {
+  text: string;
+  mbid?: string;
+};
+
+type SetlistLine = {
+  id: number;
+  type: "work" | "comment";
+  parts: Array<SetlistPart>;
+  position?: number;
+};
+
+type SetlistSection = {
+  id: number;
+  artist?: Array<SetlistPart>;
+  lines: Array<SetlistLine>;
+};
+
+const setlistLinkRegExp = /^\[([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:\|([^\]]+))?\]/i;
+
+// MusicBrainz's formatSetlist only decodes the HTML entities for [, ] and &
+const decodeSetlistEntities = (content: string) =>
+  content
+    .replace(/&#91;|&#x5b;|&lsqb;|&lbrack;/gi, "[")
+    .replace(/&#93;|&#x5d;|&rsqb;|&rbrack;/gi, "]")
+    .replace(/&#38;|&#x26;|&amp;/gi, "&");
+
+const parseSetlistLine = (
+  line: string,
+  entityType: "artist" | "work"
+): Array<SetlistPart> => {
+  const parts: Array<SetlistPart> = [];
+  let text = "";
+  let index = 0;
+  while (index < line.length) {
+    const linkMatch =
+      line[index] === "[" ? line.slice(index).match(setlistLinkRegExp) : null;
+    if (linkMatch) {
+      const [linkText, mbid, content] = linkMatch;
+      if (text) {
+        parts.push({ text: decodeSetlistEntities(text) });
+        text = "";
+      }
+      parts.push({
+        text: content
+          ? decodeSetlistEntities(content)
+          : `${entityType}:${mbid.toLowerCase()}`,
+        mbid: mbid.toLowerCase(),
+      });
+      index += linkText.length;
+    } else {
+      text += line[index];
+      index += 1;
+    }
+  }
+  if (text) {
+    parts.push({ text: decodeSetlistEntities(text) });
+  }
+  return parts;
+};
+
+/**
+ * Parse a setlist written in MusicBrainz's setlist syntax, the same way MusicBrainz's own formatSetlist does:
+ * "@ " starts an artist, "* " is a work and "# " is a comment, and any other line is ignored. Artists and works
+ * can be linked with [mbid|name]. Each artist line starts a new section, numbering its works from 1.
+ */
+export function parseSetlist(setlist: string): Array<SetlistSection> {
+  const sections: Array<SetlistSection> = [];
+  let currentSection: SetlistSection | undefined;
+  let position = 0;
+  setlist.split(/(?:\r\n|\n\r|\r|\n)/).forEach((rawLine, id) => {
+    const symbol = rawLine.substring(0, 2);
+    const line = rawLine.substring(2);
+    if (symbol === "@ ") {
+      currentSection = {
+        id,
+        artist: parseSetlistLine(line, "artist"),
+        lines: [],
+      };
+      sections.push(currentSection);
+      position = 0;
+      return;
+    }
+    if (symbol !== "* " && symbol !== "# ") {
+      return;
+    }
+    if (!currentSection) {
+      currentSection = { id, lines: [] };
+      sections.push(currentSection);
+    }
+    if (symbol === "* ") {
+      position += 1;
+      currentSection.lines.push({
+        id,
+        type: "work",
+        parts: parseSetlistLine(line, "work"),
+        position,
+      });
+    } else {
+      currentSection.lines.push({
+        id,
+        type: "comment",
+        parts: [{ text: decodeSetlistEntities(line) }],
+      });
+    }
+  });
+  return sections;
+}
+
+export const getSetlistPartsText = (parts: Array<SetlistPart>) =>
+  parts.map((part) => part.text).join("");
+
+export const getSetlistPartsMBIDs = (parts: Array<SetlistPart>) =>
+  parts.filter((part) => part.mbid).map((part) => part.mbid!);

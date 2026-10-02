@@ -23,6 +23,8 @@ import {
 import { Vibrant } from "node-vibrant/browser";
 import { Helmet } from "react-helmet";
 import { Link, useLocation, useParams } from "react-router";
+import { useSetAtom } from "jotai";
+import ListenCard from "../common/listens/ListenCard";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import TagsComponent from "../tags/TagsComponent";
@@ -36,10 +38,14 @@ import {
   generateEventArtThumbnailLink,
   getEventArtFromEventMBID,
 } from "../utils/utils";
+import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
 import {
   formatEventDates,
   formatEventTime,
   getEventRelIconLink,
+  getSetlistPartsMBIDs,
+  getSetlistPartsText,
+  parseSetlist,
 } from "./utils";
 
 type EventPagePerformer = {
@@ -222,6 +228,49 @@ export default function EventPage(): JSX.Element {
     headliners.length > HEADLINERS_SHOWN + 1
       ? headliners.slice(0, HEADLINERS_SHOWN)
       : headliners;
+
+  const setlistSections = React.useMemo(
+    () => (event?.setlist ? parseSetlist(event.setlist) : []),
+    [event?.setlist]
+  );
+  const setlistListens = React.useMemo(() => {
+    const listens = new Map<number, Listen>();
+    setlistSections.forEach((section) => {
+      const artistName = section.artist
+        ? getSetlistPartsText(section.artist)
+        : headliners
+            .map((performer) => performer.artist_name)
+            .filter(Boolean)
+            .join(", ");
+      const artistMBIDs = section.artist
+        ? getSetlistPartsMBIDs(section.artist)
+        : headliners.map((performer) => performer.artist_mbid);
+      section.lines.forEach((line) => {
+        if (line.type !== "work") {
+          return;
+        }
+        listens.set(line.id, {
+          listened_at: 0,
+          track_metadata: {
+            artist_name: artistName,
+            track_name: getSetlistPartsText(line.parts),
+            additional_info: {
+              // a name made of several artists would otherwise link to the first one only
+              artist_mbids: artistMBIDs.length === 1 ? artistMBIDs : [],
+              work_mbids: getSetlistPartsMBIDs(line.parts),
+            },
+          },
+        });
+      });
+    });
+    return listens;
+  }, [setlistSections, headliners]);
+
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
+
+  React.useEffect(() => {
+    setAmbientQueue(Array.from(setlistListens.values()));
+  }, [setlistListens, setAmbientQueue]);
 
   const filteredTags = chain(event?.tag).sortBy("count").value().reverse();
   const radioTags = filteredTags.length
@@ -509,6 +558,70 @@ export default function EventPage(): JSX.Element {
                   ))}
                 </div>
               </div>
+            ))}
+          </div>
+        )}
+        {Boolean(setlistSections.length) && (
+          <div className="setlist">
+            <div className="header">
+              <h3 className="header-with-line">
+                Setlist
+                {Boolean(setlistListens.size) && (
+                  <button
+                    type="button"
+                    className="btn btn-info btn-rounded play-tracks-button"
+                    title="Play setlist"
+                    onClick={() => {
+                      window.postMessage(
+                        {
+                          brainzplayer_event: "play-ambient-queue",
+                          payload: Array.from(setlistListens.values()),
+                        },
+                        window.location.origin
+                      );
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faPlayCircle} fixedWidth /> Play
+                    setlist
+                  </button>
+                )}
+              </h3>
+            </div>
+            {setlistSections.map((section) => (
+              <React.Fragment key={section.id}>
+                {section.artist && (
+                  <h4 className="header-with-line">
+                    {section.artist.map((part, index) =>
+                      part.mbid ? (
+                        // eslint-disable-next-line react/no-array-index-key
+                        <Link key={index} to={`/artist/${part.mbid}/`}>
+                          {part.text}
+                        </Link>
+                      ) : (
+                        // eslint-disable-next-line react/no-array-index-key
+                        <React.Fragment key={index}>{part.text}</React.Fragment>
+                      )
+                    )}
+                  </h4>
+                )}
+                {section.lines.map((line) =>
+                  line.type === "work" ? (
+                    <ListenCard
+                      key={line.id}
+                      customThumbnail={
+                        <div className="setlist-position">{line.position}.</div>
+                      }
+                      listen={setlistListens.get(line.id)!}
+                      showTimestamp={false}
+                      showUsername={false}
+                    />
+                  ) : (
+                    <p key={line.id} className="setlist-comment">
+                      {getSetlistPartsText(line.parts)}
+                    </p>
+                  )
+                )}
+              </React.Fragment>
             ))}
           </div>
         )}
