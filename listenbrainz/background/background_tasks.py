@@ -10,6 +10,7 @@ from listenbrainz.webserver import create_app, db_conn, ts_conn
 from listenbrainz.background.listens_importer import import_listens
 
 CLAIM_TIMEOUT_HOURS = 6
+MAX_TASK_RETRIES = 3
 
 
 def add_task(user_id, task):
@@ -34,13 +35,15 @@ def claim_task():
     The lock is only held for the duration of the UPDATE — once committed,
     the claim survives any intermediate commits during processing.
     Crashed workers' tasks are auto-reclaimed after CLAIM_TIMEOUT_HOURS.
+    Tasks that have exceeded MAX_TASK_RETRIES are excluded so they do not starve the queue.
     """
     result = db_conn.execute(text(f"""
         WITH claimable AS (
             SELECT id
               FROM background_tasks
-             WHERE claimed_at IS NULL
-                OR claimed_at < now() - interval '{CLAIM_TIMEOUT_HOURS} hours'
+             WHERE (claimed_at IS NULL
+                OR claimed_at < now() - interval '{CLAIM_TIMEOUT_HOURS} hours')
+               AND retries < :max_retries
           ORDER BY created
              LIMIT 1
                FOR UPDATE SKIP LOCKED
@@ -49,17 +52,26 @@ def claim_task():
            SET claimed_at = now()
          WHERE id = (SELECT id FROM claimable)
      RETURNING *
-    """))
+    """), {"max_retries": MAX_TASK_RETRIES})
     task = result.first()
     db_conn.commit()
     return task
 
 
-def release_task(task):
-    """ Release a claimed task so it can be retried by another worker. """
+def release_task(task, error=None):
+    """ Release a claimed task so it can be retried by another worker.
+
+    Increments the retry counter and records the error message if provided.
+    If MAX_TASK_RETRIES is reached, the task will not be re-claimed.
+    """
+    params = {"id": task.id, "last_error": str(error) if error else None}
     db_conn.execute(text("""
-        UPDATE background_tasks SET claimed_at = NULL WHERE id = :id
-    """), {"id": task.id})
+        UPDATE background_tasks
+           SET claimed_at = NULL,
+               retries = retries + 1,
+               last_error = COALESCE(:last_error, last_error)
+         WHERE id = :id
+    """), params)
     db_conn.commit()
 
 
@@ -92,7 +104,11 @@ class BackgroundTasks:
         """ Best-effort release of the current task on SIGTERM (docker stop, deploys). """
         if self._current_task:
             try:
-                release_task(self._current_task)
+                # Do not increment retries or mark error on graceful container shutdown
+                db_conn.execute(text("""
+                    UPDATE background_tasks SET claimed_at = NULL WHERE id = :id
+                """), {"id": self._current_task.id})
+                db_conn.commit()
                 current_app.logger.info("Released task %s on shutdown.", self._current_task.id)
             except Exception:
                 current_app.logger.error("Failed to release task %s on shutdown:", self._current_task.id, exc_info=True)
@@ -111,9 +127,9 @@ class BackgroundTasks:
                 try:
                     self.process_task(task)
                     remove_task(task)
-                except Exception:
+                except Exception as err:
                     current_app.logger.error("Error processing task:", exc_info=True)
-                    release_task(task)
+                    release_task(task, error=err)
                 finally:
                     self._current_task = None
             except KeyboardInterrupt:
