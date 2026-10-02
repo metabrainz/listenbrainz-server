@@ -4,6 +4,7 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_artist_relationship as db_user_artist_relationship
 import listenbrainz.db.event_feed as db_event_feed
+import listenbrainz.db.event_interaction as db_event_interaction
 import listenbrainz.db.stats as db_stats
 from data.model.user_entity import EntityRecord
 from listenbrainz.webserver import db_conn, ts_conn
@@ -460,4 +461,165 @@ def get_events_for_listened_artists(user_name: str):
             "offset": offset,
             "user": user["musicbrainz_id"],
         }
+    })
+
+
+@social_api_bp.post("/watched-events/add")
+@crossdomain
+@ratelimit()
+def watch_event():
+    """
+    Watch the event with the given ``event_mbid``, sent in the request body as
+    ``{"event_mbid": "<event_mbid>"}``. A user token (found on  https://listenbrainz.org/settings/ )
+    must be provided in the Authorization header!
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Successfully watched the event.
+    :statuscode 400:
+                    - Missing or invalid event_mbid.
+                    - Already watching the event.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
+    current_user = validate_auth_header()
+
+    data = request.json
+
+    if "event_mbid" not in data:
+        log_raise_400("JSON document must contain event_mbid", data)
+
+    if not is_valid_uuid(data["event_mbid"]):
+        log_raise_400("event_mbid %s is not valid" % data["event_mbid"], data)
+
+    if db_event_interaction.is_watching_event(db_conn, current_user["id"], data["event_mbid"]):
+        raise APIBadRequest("%s is already watching event %s" % (current_user["musicbrainz_id"], data["event_mbid"]))
+
+    try:
+        db_event_interaction.watch_event(db_conn, current_user["id"], data["event_mbid"])
+    except Exception as e:
+        current_app.logger.error("Error while trying to watch an event: %s", str(e))
+        raise APIInternalServerError("Something went wrong, please try again later")
+
+    return jsonify({"status": "ok"})
+
+
+@social_api_bp.post("/watched-events/remove")
+@crossdomain
+@ratelimit()
+def unwatch_event():
+    """
+    Stop watching the event with the given ``event_mbid``, sent in the request body as
+    ``{"event_mbid": "<event_mbid>"}``. A user token (found on  https://listenbrainz.org/settings/ )
+    must be provided in the Authorization header! Unwatching an event that is not watched does nothing.
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Successfully stopped watching the event.
+    :statuscode 400: Missing or invalid event_mbid.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
+    current_user = validate_auth_header()
+
+    data = request.json
+
+    if "event_mbid" not in data:
+        log_raise_400("JSON document must contain event_mbid", data)
+
+    if not is_valid_uuid(data["event_mbid"]):
+        log_raise_400("event_mbid %s is not valid" % data["event_mbid"], data)
+
+    try:
+        db_event_interaction.unwatch_event(db_conn, current_user["id"], data["event_mbid"])
+    except Exception as e:
+        current_app.logger.error("Error while trying to unwatch an event: %s", str(e))
+        raise APIInternalServerError("Something went wrong, please try again later")
+
+    return jsonify({"status": "ok"})
+
+
+@social_api_bp.get("/user/<mb_username:user_name>/watched-events")
+@crossdomain
+@ratelimit()
+def get_watched_events(user_name: str):
+    """
+    Fetch the list of events watched by the user ``user_name``, most recently watched first. Returns a JSON like:
+
+    .. code-block:: json
+
+        {
+            "watched_events": ["<event_mbid>", "..."],
+            "user": "user_name",
+            "count": 5,
+            "offset": 0
+        }
+
+    :param count: The number of events to return, at most 1000. Default 25.
+    :param offset: The number of events to skip from the beginning. Default 0.
+    :statuscode 200: Yay, you have data!
+    :statuscode 400: invalid count or offset passed.
+    :statuscode 404: User not found
+    """
+    user = db_user.get_by_mb_id(db_conn, user_name)
+
+    if not user:
+        raise APINotFound("User %s not found" % user_name)
+
+    count = get_non_negative_param("count", DEFAULT_ITEMS_PER_GET)
+    count = min(count, MAX_ITEMS_PER_GET)
+
+    offset = get_non_negative_param("offset", 0)
+
+    try:
+        events = db_event_interaction.get_watched_events(db_conn, user["id"], count, offset)
+    except Exception as e:
+        current_app.logger.error("Error while trying to fetch watched events: %s", str(e))
+        raise APIInternalServerError("Something went wrong, please try again later")
+
+    return jsonify({
+        "watched_events": [event["event_mbid"] for event in events],
+        "user": user["musicbrainz_id"],
+        "count": len(events),
+        "offset": offset,
+    })
+
+
+@social_api_bp.get("/user/<mb_username:user_name>/watched-events/<event_mbid>")
+@crossdomain
+@ratelimit()
+def get_event_watch_status(user_name: str, event_mbid: str):
+    """
+    Check whether the user ``user_name`` is watching the event with the given ``event_mbid``. Returns a JSON like:
+
+    .. code-block:: json
+
+        {
+            "event_mbid": "<event_mbid>",
+            "watching": true,
+            "user": "user_name"
+        }
+
+    :statuscode 200: Yay, you have data!
+    :statuscode 400: invalid event_mbid passed.
+    :statuscode 404: User not found
+    """
+    user = db_user.get_by_mb_id(db_conn, user_name)
+
+    if not user:
+        raise APINotFound("User %s not found" % user_name)
+
+    if not is_valid_uuid(event_mbid):
+        log_raise_400("event_mbid %s is not valid" % event_mbid)
+
+    try:
+        watching = db_event_interaction.is_watching_event(db_conn, user["id"], event_mbid)
+    except Exception as e:
+        current_app.logger.error("Error while trying to check an event watch: %s", str(e))
+        raise APIInternalServerError("Something went wrong, please try again later")
+
+    return jsonify({
+        "event_mbid": event_mbid,
+        "watching": watching,
+        "user": user["musicbrainz_id"],
     })
