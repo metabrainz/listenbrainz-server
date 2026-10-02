@@ -50,6 +50,7 @@ Allow: /release/
 Allow: /release-group/
 Allow: /recording/
 Allow: /playlist/
+Allow: /event/
 
 User-agent: *
 Disallow: /admin/
@@ -65,6 +66,7 @@ Disallow: /release/
 Disallow: /release-group/
 Disallow: /recording/
 Disallow: /track/
+Disallow: /event/
 Allow: /explore/fresh-releases/
 Allow: /explore/events/
 Allow: /explore/huesound/

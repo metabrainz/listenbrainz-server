@@ -5,6 +5,8 @@ from werkzeug.exceptions import BadRequest
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.db import event_feed, popularity, similarity
+import listenbrainz.db.event as db_event
+import listenbrainz.db.event_interaction as db_event_interaction
 from listenbrainz.db.stats import get_entity_listener
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects, load_release_groups_for_recordings
 from listenbrainz.webserver import db_conn, ts_conn
@@ -22,6 +24,7 @@ release_bp = Blueprint("release", __name__)
 release_group_bp = Blueprint("release-group", __name__)
 track_bp = Blueprint("track", __name__)
 recording_bp = Blueprint("recording", __name__)
+event_bp = Blueprint("event", __name__)
 
 
 def get_release_group_sort_key(release_group):
@@ -84,6 +87,14 @@ def get_cover_art_for_artist(release_groups):
         height=400,
         show_caption=False
     )
+
+
+def get_events_with_performers(event_mbids):
+    """ Get events with their performers, genres and listen counts, in the same format as the event feeds """
+    if not event_mbids:
+        return []
+    events = db_event.get_metadata_for_event(ts_conn, event_mbids)
+    return event_feed.add_performers_to_events(ts_conn, events)
 
 
 @release_bp.get('/<path:path>/')
@@ -451,6 +462,93 @@ def recording_entity(recording_mbid: str):
         "track": recording_data,
         "similarTracks": similar_recordings_data,
         "releaseGroups": release_groups,
+    }
+
+    return jsonify(data)
+
+
+@event_bp.get("/<event_mbid>/")
+def event_page(event_mbid: str):
+    og_meta_tags = None
+    if is_valid_uuid(event_mbid):
+        event_data = db_event.get_metadata_for_event(ts_conn, [event_mbid])
+        if len(event_data) == 0:
+            pass
+        else:
+            event = event_data[0]
+            event_date = []
+            for date_part in (event.begin_date_year, event.begin_date_month, event.begin_date_day):
+                if date_part is None:
+                    break
+                event_date.append(f"{date_part:02d}")
+            location = ", ".join(filter(None, [event.place_name, event.event_data.get("area_name")]))
+            description = filter(None, [event.event_data.get("type", "Event"), "-".join(event_date), location])
+
+            og_meta_tags = {
+                "title": event.event_name,
+                "description": f'{" — ".join(description)} — ListenBrainz',
+                "url": f'{current_app.config["SERVER_ROOT_URL"]}/event/{event.event_mbid}',
+            }
+            if event.event_data.get("event_art_id"):
+                og_meta_tags["image"] = f"https://eventartarchive.org/event/{event.event_mbid}/front-500"
+                og_meta_tags["image:width"] = "500"
+                og_meta_tags["image:alt"] = f"Event art for {event.event_name}"
+
+    return render_template("index.html", og_meta_tags=og_meta_tags)
+
+
+@event_bp.post("/<event_mbid>/")
+@web_listenstore_needed
+@cache_public(s_maxage=120)
+def event_entity(event_mbid: str):
+    """ Show an event page with all its relevant information """
+
+    if not is_valid_uuid(event_mbid):
+        return jsonify({"error": "Provided event mbid is invalid: %s" % event_mbid}), 400
+
+    event_data = db_event.get_metadata_for_event(ts_conn, [event_mbid])
+    if len(event_data) == 0:
+        return jsonify({"error": f"Event {event_mbid} not found in the metadata cache"}), 404
+    event = event_data[0]
+
+    artists = db_event.get_artists_for_events(ts_conn, [event.event_id]).get(event.event_id, [])
+    artist_metadata = event_feed.get_genres_and_listen_counts_for_artists(
+        ts_conn, list({artist["artist_mbid"] for artist in artists})
+    )
+    performers = []
+    for artist in artists:
+        metadata = artist_metadata.get(artist["artist_mbid"], {})
+        performers.append({
+            "artist_mbid": artist["artist_mbid"],
+            "artist_name": artist["relationship_data"].get("credited_as") or artist["artist_name"],
+            "link_type_name": artist["link_type_name"],
+            "genres": metadata.get("genres", []),
+            "listen_count": metadata.get("listen_count", 0),
+        })
+
+    parts = get_events_with_performers([part["mbid"] for part in event.event_data.get("parts", [])])
+
+    other_parts = {}
+    parent_mbids = [parent["mbid"] for parent in event.event_data.get("part_of", [])]
+    if parent_mbids:
+        for parent in db_event.get_metadata_for_event(ts_conn, parent_mbids):
+            other_parts[str(parent.event_mbid)] = get_events_with_performers([
+                part["mbid"] for part in parent.event_data.get("parts", []) if part["mbid"] != str(event.event_mbid)
+            ])
+
+    data = {
+        "event": {
+            **event.to_api(),
+            "tag": event.event_data.get("tags", []),
+            "rels": event.event_data.get("rels", {}),
+            "setlist": event.event_data.get("setlist"),
+            "series": event.event_data.get("series", []),
+            "part_of": event.event_data.get("part_of", []),
+        },
+        "performers": performers,
+        "parts": parts,
+        "otherParts": other_parts,
+        "watchersCount": db_event_interaction.get_watchers_count(db_conn, str(event.event_mbid)),
     }
 
     return jsonify(data)
