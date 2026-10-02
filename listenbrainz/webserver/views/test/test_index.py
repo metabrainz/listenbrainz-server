@@ -33,7 +33,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         self.assertIn('User-agent: meta-externalagent', resp.text)
         self.assertIn('User-agent: meta-externalfetcher', resp.text)
         allowed_paths = (
-            '/artist/', '/album/', '/release/', '/release-group/', '/recording/', '/playlist/', '/track/'
+            '/artist/', '/album/', '/release/', '/release-group/', '/recording/', '/playlist/', '/track/', '/event/'
         )
         for path in allowed_paths:
             self.assertIn(f'Allow: {path}', resp.text)
