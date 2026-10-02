@@ -589,6 +589,28 @@ export default class APIService {
     return response.json();
   };
 
+  getFollowedArtists = async (
+    userName: string,
+    count: number,
+    offset: number = 0
+  ): Promise<{
+    followed_artists: Array<string>;
+    user: string;
+    count: number;
+    offset: number;
+  }> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/followed-artists?count=${count}&offset=${offset}`;
+    const response = await this.fetchWithRetry(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   getArtistFollowStatus = async (
     userName: string,
     artistMBID: string

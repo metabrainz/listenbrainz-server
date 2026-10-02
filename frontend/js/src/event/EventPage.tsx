@@ -42,6 +42,7 @@ import {
   getEventArtFromEventMBID,
 } from "../utils/utils";
 import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
+import FollowButton from "../user/components/follow/FollowButton";
 import WatchButton from "./WatchButton";
 import {
   formatEventDates,
@@ -102,6 +103,9 @@ const EVENT_ART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
 
 // the header names this many headliners and links to the lineup for the rest, unless only one is left over
 const HEADLINERS_SHOWN = 3;
+
+// the most artists GET /1/user/<user_name>/followed-artists returns at once
+const FOLLOWED_ARTISTS_COUNT = 1000;
 
 const sortEventsByDate = (events: Array<ExplorerEventItem>) =>
   orderBy(events, [
@@ -215,6 +219,46 @@ export default function EventPage(): JSX.Element {
       toast.error("Failed to load whether you are watching this event");
     }
   }, [watchStatusError]);
+
+  const {
+    data: followedArtistsData,
+    isSuccess: hasFollowedArtists,
+    isError: followedArtistsError,
+  } = useQuery({
+    queryKey: ["followed-artists", currentUser?.name],
+    queryFn: () =>
+      APIService.getFollowedArtists(currentUser.name, FOLLOWED_ARTISTS_COUNT),
+    enabled: isUserLoggedIn && performers.length > 0,
+  });
+  const followedArtistMBIDs = new Set(followedArtistsData?.followed_artists);
+
+  const updateFollowedArtists = (
+    followedArtistMBID: string,
+    action: "follow" | "unfollow"
+  ) => {
+    queryClient.setQueryData<{ followed_artists: Array<string> }>(
+      ["followed-artists", currentUser?.name],
+      (oldData) =>
+        oldData && {
+          ...oldData,
+          followed_artists:
+            action === "follow"
+              ? [followedArtistMBID, ...oldData.followed_artists]
+              : oldData.followed_artists.filter(
+                  (artistMBID) => artistMBID !== followedArtistMBID
+                ),
+        }
+    );
+    queryClient.invalidateQueries({
+      queryKey: ["artist-follow-status", currentUser?.name, followedArtistMBID],
+    });
+  };
+
+  React.useEffect(() => {
+    if (followedArtistsError) {
+      toast.error("Failed to load which of these artists you follow");
+    }
+  }, [followedArtistsError]);
 
   const [fetchedEventArtSrc, setFetchedEventArtSrc] = React.useState<string>();
   React.useEffect(() => {
@@ -635,6 +679,16 @@ export default function EventPage(): JSX.Element {
                             &nbsp;
                             <FontAwesomeIcon icon={faHeadphones} />
                           </span>
+                        )}
+                        {isUserLoggedIn && hasFollowedArtists && (
+                          <FollowButton
+                            type="icon-only"
+                            artistMBID={performer.artist_mbid}
+                            loggedInUserFollowsUser={followedArtistMBIDs.has(
+                              performer.artist_mbid
+                            )}
+                            updateFollowedArtists={updateFollowedArtists}
+                          />
                         )}
                       </div>
                     </div>
