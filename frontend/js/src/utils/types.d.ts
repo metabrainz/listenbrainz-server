@@ -250,7 +250,12 @@ declare type UserEntityDatum = {
 
 declare type UserEntityData = Array<UserEntityDatum>;
 
-declare type Entity = "artist" | "release" | "recording" | "release-group";
+declare type Entity =
+  | "artist"
+  | "release"
+  | "recording"
+  | "release-group"
+  | "event";
 
 declare type UserListeningActivityResponse = {
   payload: {

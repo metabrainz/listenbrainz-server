@@ -1,0 +1,36 @@
+#entity-page.event-page {
+  .entity-page-header {
+    .cover-art img {
+      object-fit: contain;
+    }
+  }
+
+  .entity-page-content {
+    .lineup {
+      width: 100%;
+    }
+    .lineup-role:not(:last-child) {
+      margin-bottom: 1em;
+    }
+    .lineup-artist {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5em;
+      padding: 0.5em 0;
+
+      &:not(:first-child) {
+        border-top: 1px solid $hr-border-color;
+      }
+    }
+    .lineup-artist-details {
+      min-width: 0;
+    }
+    .lineup-artist-actions {
+      display: flex;
+      flex-shrink: 0;
+      align-items: center;
+      gap: 0.5em;
+    }
+  }
+}
