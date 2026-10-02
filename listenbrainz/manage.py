@@ -16,7 +16,6 @@ from listenbrainz.db import listens as listens_db, timescale as ts, do_not_recom
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
     update_user_listen_data as ts_update_user_listen_data, \
     add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata,\
-    delete_listens as ts_delete_listens, \
     refresh_top_manual_mappings as ts_refresh_top_manual_mappings
 from listenbrainz.messybrainz import update_msids_from_mapping
 from listenbrainz.metadata_cache.seeder import submit_new_releases_to_cache
@@ -348,16 +347,15 @@ def delete_pending_listens():
     """ Complete all pending listen deletes since last cron run """
     application = webserver.create_app()
     with application.app_context():
-        ts_delete_listens()
+        listens_db.delete_pending_listens()
 
 
 @cli.command(name="delete_listens")
 def complete_delete_listens():
-    """ Complete all pending listen deletes and also run update script for
-    updating listen metadata since last cron run """
+    """Complete pending listens DB deletions and retain their history."""
     application = webserver.create_app()
     with application.app_context():
-        ts_delete_listens()
+        listens_db.delete_pending_listens()
 
 
 @cli.command(name="add_missing_to_listen_users_metadata")

@@ -438,18 +438,18 @@ $youtube-expanded-width: 1280px;
     left: var(--handle-x, 0px);
   }
 
-  .progress-tooltip {
+  & > ::after {
+    border-color: transparent;
+  }
+}
+
+.progress-tooltip {
+  --bs-tooltip-bg: $primary-color;
+  .tooltip-inner {
     background: $primary-color;
-    margin-top: -4px;
     border-radius: 24px;
     font-size: 1.2rem;
     padding: 6px 12px;
-    &::before {
-      display: none;
-    }
-  }
-  & > ::after {
-    border-color: transparent;
   }
 }
 
@@ -712,8 +712,9 @@ $youtube-expanded-width: 1280px;
   .progress-bar-wrapper {
     margin-top: 1em;
     .progress {
-      position: inherit;
+      position: relative;
       height: 10px;
+      top: 0;
       border-radius: 10px;
       background-color: rgba(255, 255, 255, 0.3);
 
