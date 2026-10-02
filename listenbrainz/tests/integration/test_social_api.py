@@ -5,6 +5,7 @@ from unittest.mock import ANY, patch
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_artist_relationship as db_user_artist_relationship
+import listenbrainz.db.event_interaction as db_event_interaction
 from listenbrainz.tests.integration import IntegrationTestCase
 
 
@@ -15,6 +16,7 @@ class SocialAPITestCase(IntegrationTestCase):
         self.user = db_user.get_or_create(self.db_conn, 1, "testuserpleaseignore")
         db_user.agree_to_gdpr(self.db_conn, self.user["musicbrainz_id"])
         self.artist_mbid = str(uuid.uuid4())
+        self.event_mbid = str(uuid.uuid4())
 
     def _follow(self, mbid, token):
         return self.client.post(
@@ -245,5 +247,142 @@ class SocialAPITestCase(IntegrationTestCase):
     def test_get_events_for_listened_artists_user_not_found(self):
         resp = self.client.get(
             self.custom_url_for("social_api_v1.get_events_for_listened_artists", user_name="doesnotexist_xyz")
+        )
+        self.assert404(resp)
+
+    def _watch(self, mbid, token):
+        return self.client.post(
+            self.custom_url_for("social_api_v1.watch_event"),
+            data=json.dumps({"event_mbid": mbid}),
+            headers={"Authorization": "Token %s" % token},
+            content_type="application/json",
+        )
+
+    def _unwatch(self, mbid, token):
+        return self.client.post(
+            self.custom_url_for("social_api_v1.unwatch_event"),
+            data=json.dumps({"event_mbid": mbid}),
+            headers={"Authorization": "Token %s" % token},
+            content_type="application/json",
+        )
+
+    def test_watch_event(self):
+        resp = self._watch(self.event_mbid, self.user["auth_token"])
+        self.assert200(resp)
+        self.assertEqual(resp.json, {"status": "ok"})
+        self.assertTrue(db_event_interaction.is_watching_event(self.db_conn, self.user["id"], self.event_mbid))
+
+    def test_watch_event_invalid_mbid(self):
+        resp = self._watch("not-a-uuid", self.user["auth_token"])
+        self.assert400(resp)
+
+    def test_watch_event_no_body(self):
+        resp = self.client.post(
+            self.custom_url_for("social_api_v1.watch_event"),
+            headers={"Authorization": "Token %s" % self.user["auth_token"]},
+            content_type="application/json",
+        )
+        self.assert400(resp)
+
+    def test_watch_event_unauthorized(self):
+        resp = self.client.post(
+            self.custom_url_for("social_api_v1.watch_event"),
+            data=json.dumps({"event_mbid": self.event_mbid}),
+            content_type="application/json",
+        )
+        self.assert401(resp)
+
+    def test_watch_event_twice_leads_to_error(self):
+        resp1 = self._watch(self.event_mbid, self.user["auth_token"])
+        self.assert200(resp1)
+        resp2 = self._watch(self.event_mbid, self.user["auth_token"])
+        self.assert400(resp2)
+
+        rows = db_event_interaction.get_watched_events(self.db_conn, self.user["id"])
+        self.assertEqual(len(rows), 1)
+
+    def test_unwatch_event(self):
+        self._watch(self.event_mbid, self.user["auth_token"])
+        resp = self._unwatch(self.event_mbid, self.user["auth_token"])
+        self.assert200(resp)
+        self.assertEqual(resp.json, {"status": "ok"})
+        rows = db_event_interaction.get_watched_events(self.db_conn, self.user["id"])
+        self.assertEqual(len(rows), 0)
+
+    def test_unwatch_event_not_watching(self):
+        resp = self._unwatch(self.event_mbid, self.user["auth_token"])
+        self.assert200(resp)
+        self.assertEqual(resp.json, {"status": "ok"})
+
+    def test_unwatch_event_invalid_mbid(self):
+        resp = self._unwatch("not-a-uuid", self.user["auth_token"])
+        self.assert400(resp)
+
+    def test_get_watched_events_empty(self):
+        resp = self.client.get(
+            self.custom_url_for("social_api_v1.get_watched_events", user_name=self.user["musicbrainz_id"])
+        )
+        self.assert200(resp)
+        data = resp.json
+        self.assertEqual(data["watched_events"], [])
+        self.assertEqual(data["count"], 0)
+        self.assertEqual(data["user"], self.user["musicbrainz_id"])
+
+    def test_get_watched_events(self):
+        self._watch(self.event_mbid, self.user["auth_token"])
+        resp = self.client.get(
+            self.custom_url_for("social_api_v1.get_watched_events", user_name=self.user["musicbrainz_id"])
+        )
+        self.assert200(resp)
+        data = resp.json
+        self.assertEqual(data["watched_events"], [self.event_mbid])
+        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["offset"], 0)
+
+    def test_get_watched_events_user_not_found(self):
+        resp = self.client.get(
+            self.custom_url_for("social_api_v1.get_watched_events", user_name="doesnotexist_xyz")
+        )
+        self.assert404(resp)
+
+    def test_get_watched_events_large_count(self):
+        resp = self.client.get(
+            self.custom_url_for("social_api_v1.get_watched_events",
+                                user_name=self.user["musicbrainz_id"], count=9999)
+        )
+        self.assert200(resp)
+
+    def test_get_event_watch_status(self):
+        self._watch(self.event_mbid, self.user["auth_token"])
+        resp = self.client.get(
+            self.custom_url_for("social_api_v1.get_event_watch_status",
+                                user_name=self.user["musicbrainz_id"], event_mbid=self.event_mbid)
+        )
+        self.assert200(resp)
+        self.assertEqual(resp.json, {
+            "event_mbid": self.event_mbid,
+            "watching": True,
+            "user": self.user["musicbrainz_id"],
+        })
+
+    def test_get_event_watch_status_not_watching(self):
+        resp = self.client.get(
+            self.custom_url_for("social_api_v1.get_event_watch_status",
+                                user_name=self.user["musicbrainz_id"], event_mbid=self.event_mbid)
+        )
+        self.assert200(resp)
+        self.assertFalse(resp.json["watching"])
+
+    def test_get_event_watch_status_invalid_mbid(self):
+        resp = self.client.get(
+            self.custom_url_for("social_api_v1.get_event_watch_status",
+                                user_name=self.user["musicbrainz_id"], event_mbid="not-a-uuid")
+        )
+        self.assert400(resp)
+
+    def test_get_event_watch_status_user_not_found(self):
+        resp = self.client.get(
+            self.custom_url_for("social_api_v1.get_event_watch_status",
+                                user_name="doesnotexist_xyz", event_mbid=self.event_mbid)
         )
         self.assert404(resp)
