@@ -7,13 +7,14 @@ import {
   faPlayCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Palette } from "@vibrant/color";
 import {
   chain,
   flatMap,
   groupBy,
   isEmpty,
+  isNil,
   orderBy,
   sortBy,
   uniq,
@@ -23,6 +24,7 @@ import {
 import { Vibrant } from "node-vibrant/browser";
 import { Helmet } from "react-helmet";
 import { Link, useLocation, useParams } from "react-router";
+import { toast } from "react-toastify";
 import { useSetAtom } from "jotai";
 import ListenCard from "../common/listens/ListenCard";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
@@ -33,15 +35,18 @@ import {
   getEventDate,
   getEventDateFormatOptions,
 } from "../explore/events/utils";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import { RouteQuery } from "../utils/Loader";
 import {
   generateEventArtThumbnailLink,
   getEventArtFromEventMBID,
 } from "../utils/utils";
 import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
+import WatchButton from "./WatchButton";
 import {
   formatEventDates,
   formatEventTime,
+  getEventLastDay,
   getEventRelIconLink,
   getSetlistPartsMBIDs,
   getSetlistPartsText,
@@ -149,6 +154,7 @@ const getEventsRow = (heading: string, events?: Array<ExplorerEventItem>) => {
 };
 
 export default function EventPage(): JSX.Element {
+  const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const location = useLocation();
   const params = useParams() as { eventMBID: string };
   const { eventMBID } = params;
@@ -158,7 +164,57 @@ export default function EventPage(): JSX.Element {
     // as RouteLoaderURL throws one, with the status in init
     throwOnError: (response) => response?.init?.status !== 404,
   });
-  const { event, performers = [], parts = [], otherParts = {} } = data || {};
+  const {
+    event,
+    performers = [],
+    parts = [],
+    otherParts = {},
+    watchersCount = 0,
+  } = data || {};
+
+  const queryClient = useQueryClient();
+  const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
+
+  const watchStatusQueryKey = [
+    "event-watch-status",
+    currentUser?.name,
+    event?.event_mbid,
+  ];
+  const {
+    data: watchStatusData,
+    isSuccess: hasWatchStatus,
+    isError: watchStatusError,
+  } = useQuery({
+    queryKey: watchStatusQueryKey,
+    queryFn: () =>
+      APIService.getEventWatchStatus(currentUser.name, event!.event_mbid),
+    enabled: isUserLoggedIn && Boolean(event),
+  });
+  const loggedInUserWatchesEvent = Boolean(watchStatusData?.watching);
+
+  const updateWatchedEvents = (
+    watchedEventMBID: string,
+    action: "watch" | "unwatch"
+  ) => {
+    queryClient.setQueryData<{ watching: boolean }>(
+      ["event-watch-status", currentUser?.name, watchedEventMBID],
+      (oldData) => ({ ...oldData, watching: action === "watch" })
+    );
+    queryClient.setQueryData<EventPageProps>(
+      ["event", params],
+      (oldData) =>
+        oldData && {
+          ...oldData,
+          watchersCount: oldData.watchersCount + (action === "watch" ? 1 : -1),
+        }
+    );
+  };
+
+  React.useEffect(() => {
+    if (watchStatusError) {
+      toast.error("Failed to load whether you are watching this event");
+    }
+  }, [watchStatusError]);
 
   const [fetchedEventArtSrc, setFetchedEventArtSrc] = React.useState<string>();
   React.useEffect(() => {
@@ -289,6 +345,15 @@ export default function EventPage(): JSX.Element {
   });
 
   const eventDates = event ? formatEventDates(event) : undefined;
+  const lastDay = event ? getEventLastDay(event) : undefined;
+  const isPastEvent = Boolean(
+    lastDay && lastDay < new Date(new Date().setHours(0, 0, 0, 0))
+  );
+  const showWatchButton =
+    isUserLoggedIn &&
+    Boolean(event) &&
+    hasWatchStatus &&
+    (loggedInUserWatchesEvent || !(isPastEvent || event?.cancelled));
 
   if (isError) {
     return (
@@ -452,6 +517,24 @@ export default function EventPage(): JSX.Element {
               </small>
             ))}
           </div>
+
+          {(showWatchButton || watchersCount > 0) && (
+            <div className="event-watch">
+              {showWatchButton && (
+                <WatchButton
+                  key={event!.event_mbid}
+                  eventMBID={event!.event_mbid}
+                  loggedInUserWatchesEvent={loggedInUserWatchesEvent}
+                  updateWatchedEvents={updateWatchedEvents}
+                />
+              )}
+              {watchersCount > 0 && (
+                <span className="text-muted">
+                  {bigNumberFormatter.format(watchersCount)} watching
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="right-side gap-1">

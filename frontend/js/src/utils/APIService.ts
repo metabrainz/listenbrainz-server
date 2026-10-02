@@ -490,6 +490,54 @@ export default class APIService {
     return { status: response.status };
   };
 
+  watchEvent = async (
+    eventMBID: string,
+    userToken: string
+  ): Promise<{ status: number }> => {
+    if (!eventMBID) {
+      throw new SyntaxError("Event MBID missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const response = await this.fetchWithRetry(
+      `${this.APIBaseURI}/watched-events/add`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({ event_mbid: eventMBID }),
+      }
+    );
+    return { status: response.status };
+  };
+
+  unwatchEvent = async (
+    eventMBID: string,
+    userToken: string
+  ): Promise<{ status: number }> => {
+    if (!eventMBID) {
+      throw new SyntaxError("Event MBID missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const response = await this.fetchWithRetry(
+      `${this.APIBaseURI}/watched-events/remove`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({ event_mbid: eventMBID }),
+      }
+    );
+    return { status: response.status };
+  };
+
   searchUsers = async (
     userName: string
   ): Promise<{ users: Array<SearchUser> }> => {
@@ -555,6 +603,25 @@ export default class APIService {
     const url = `${this.APIBaseURI}/user/${encodeURIComponent(
       userName
     )}/followed-artists/${artistMBID}`;
+    const response = await this.fetchWithRetry(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getEventWatchStatus = async (
+    userName: string,
+    eventMBID: string
+  ): Promise<{ event_mbid: string; watching: boolean; user: string }> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!eventMBID) {
+      throw new SyntaxError("Event MBID missing");
+    }
+
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/watched-events/${eventMBID}`;
     const response = await this.fetchWithRetry(url);
     await this.checkStatus(response);
     return response.json();

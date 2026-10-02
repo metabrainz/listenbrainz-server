@@ -216,6 +216,21 @@ export function formatEventTime(eventTime: string): string {
   }).format(new Date(`${eventTime}Z`));
 }
 
+// reads a missing month or day as the 1st, as UPCOMING_EVENT_CONDITION does on the server
+export const getEventLastDay = (event: MusicBrainzEvent): Date | undefined => {
+  const year = event.end_date_year ?? event.begin_date_year;
+  if (isNil(year)) {
+    return undefined;
+  }
+  const month = isNil(event.end_date_year)
+    ? event.begin_date_month
+    : event.end_date_month;
+  const day = isNil(event.end_date_year)
+    ? event.begin_date_day
+    : event.end_date_day;
+  return new Date(year, (month ?? 1) - 1, day ?? 1);
+};
+
 type SetlistPart = {
   text: string;
   mbid?: string;

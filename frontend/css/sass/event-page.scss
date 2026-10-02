@@ -3,6 +3,15 @@
     .cover-art img {
       object-fit: contain;
     }
+    .event-watch {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: auto;
+      .lb-watch-button {
+        font-size: 1.3em;
+      }
+    }
   }
 
   .entity-page-content {
