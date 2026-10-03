@@ -13,7 +13,7 @@ class TopRecordingsCacheTest(unittest.TestCase):
         mock_cache.get.return_value = RECORDINGS
         from listenbrainz.db.popularity import get_top_recordings_for_artist
 
-        result = get_top_recordings_for_artist(MagicMock(), MagicMock(), ARTIST_MBID)
+        result = get_top_recordings_for_artist(MagicMock(), MagicMock(), MagicMock(), ARTIST_MBID)
 
         self.assertEqual(result, RECORDINGS)
         mock_cache.get.assert_called_once_with(
@@ -27,7 +27,7 @@ class TopRecordingsCacheTest(unittest.TestCase):
         mock_cache.get.return_value = []
         from listenbrainz.db.popularity import get_top_recordings_for_artist
 
-        result = get_top_recordings_for_artist(MagicMock(), MagicMock(), ARTIST_MBID)
+        result = get_top_recordings_for_artist(MagicMock(), MagicMock(), MagicMock(), ARTIST_MBID)
 
         self.assertEqual(result, [])
         mock_cache.set.assert_not_called()
@@ -49,7 +49,7 @@ class TopRecordingsCacheTest(unittest.TestCase):
 
         from listenbrainz.db.popularity import get_top_recordings_for_artist
 
-        result = get_top_recordings_for_artist(MagicMock(), mock_ts_conn, ARTIST_MBID)
+        result = get_top_recordings_for_artist(MagicMock(), mock_ts_conn, MagicMock(), ARTIST_MBID)
 
         self.assertEqual(result, [])
         mock_cache.get.assert_called_once()
@@ -66,8 +66,8 @@ class TopRecordingsCacheTest(unittest.TestCase):
         mock_cache.get.return_value = RECORDINGS
         from listenbrainz.db.popularity import get_top_recordings_for_artist
 
-        get_top_recordings_for_artist(MagicMock(), MagicMock(), ARTIST_MBID, count=10)
-        get_top_recordings_for_artist(MagicMock(), MagicMock(), ARTIST_MBID, count=None)
+        get_top_recordings_for_artist(MagicMock(), MagicMock(), MagicMock(), ARTIST_MBID, count=10)
+        get_top_recordings_for_artist(MagicMock(), MagicMock(), MagicMock(), ARTIST_MBID, count=None)
 
         keys = [c.args[0] for c in mock_cache.get.call_args_list]
         self.assertNotEqual(keys[0], keys[1])

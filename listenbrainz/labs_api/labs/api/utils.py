@@ -10,7 +10,7 @@ from unidecode import unidecode
 from psycopg2.extras import execute_values
 from psycopg2.sql import SQL, Identifier
 
-from listenbrainz.db import timescale, listens as listens_db
+from listenbrainz.db import listens as listens_db
 from listenbrainz.db.recording import resolve_redirect_mbids, resolve_canonical_mbids
 
 
@@ -155,7 +155,7 @@ def lookup_recording_canonical_metadata(mbids: list[str]):
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn, conn.cursor() as curs:
         redirected_mbids, redirect_index, _ = resolve_redirect_mbids(curs, "recording", mbids)
 
-    with closing(timescale.engine.raw_connection()) as ts_conn, ts_conn.cursor() as curs:
+    with closing(listens_db.engine.raw_connection()) as listens_conn, listens_conn.cursor() as curs:
         canonical_mbids, canonical_index, _ = resolve_canonical_mbids(curs, redirected_mbids)
         query = """
               WITH mbids(gid) AS (VALUES %s)

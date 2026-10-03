@@ -5,11 +5,14 @@ import tarfile
 import tempfile
 from datetime import datetime, timezone, timedelta
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
+import pyarrow.parquet as pq
 from psycopg2.extras import execute_values
+from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
-from listenbrainz.db import timescale
+from listenbrainz.db import timescale, listens as listens_db
 from listenbrainz.dumps.exceptions import SchemaMismatchException
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION, LISTEN_MINIMUM_DATE
 from listenbrainz.listenstore.dump_listenstore import DumpListenStore
@@ -66,6 +69,74 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         )
         self.assertTrue(os.path.isfile(dump))
         shutil.rmtree(temp_dir)
+
+    @patch("listenbrainz.listenstore.dump_listenstore.SPARK_DUMP_MAPPING_BATCH_SIZE", 2)
+    def test_spark_dump_with_mapping(self):
+        """ Test that the spark dump uses the mapping from the listens db, preferring the user's manual mapping """
+        base = 1500000000
+        listens = generate_data(self.testuser_id, self.testuser_name, base, 3, base)
+        self._insert_with_created(listens)
+
+        mapped_mbid = "2f3d422f-8890-41a1-9762-fbe16f107c31"
+        manual_mbid = "2cfad207-3f55-4aec-8120-86cf66e34d59"
+        with listens_db.engine.begin() as connection:
+            for recording_id, (mbid, name) in enumerate([(mapped_mbid, "Strangers"), (manual_mbid, "Immigrant Song")]):
+                connection.execute(text("""
+                    INSERT INTO mapping.mb_metadata_cache
+                               (recording_mbid, recording_id, artist_mbids, artist_ids, release_mbid, release_id,
+                                recording_data, artist_data, tag_data, release_data, dirty)
+                        VALUES (:mbid, :id, '{8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11}'::UUID[], '{1}'::INTEGER[],
+                                '76df3287-6cda-33eb-8e9a-044b5e15ffdd', 1, :recording_data,
+                                '{"name": "Portishead", "artist_credit_id": 204, "artists": []}',
+                                '{"artist": [], "recording": [], "release_group": []}',
+                                '{"mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd", "name": "Dummy"}', 'f')
+                """), {"mbid": mbid, "id": recording_id, "recording_data": f'{{"name": "{name}"}}'})
+            connection.execute(text("""
+                INSERT INTO mapping.mbid_mapping (recording_msid, recording_mbid, match_type)
+                     VALUES (:msid_0, :mapped_mbid, 'exact_match'), (:msid_1, :mapped_mbid, 'exact_match')
+            """), {"msid_0": listens[0].recording_msid, "msid_1": listens[1].recording_msid, "mapped_mbid": mapped_mbid})
+            connection.execute(text("""
+                INSERT INTO mapping.mbid_manual_mapping (recording_msid, recording_mbid, user_id)
+                     VALUES (:msid, :mbid, :user_id)
+            """), {"msid": listens[1].recording_msid, "mbid": manual_mbid, "user_id": self.testuser_id})
+
+        with TemporaryDirectory() as temp_dir:
+            archive_path = self.dumpstore.dump_listens_for_spark(
+                location=temp_dir,
+                dump_id=1,
+                dump_type="full",
+                start_time=datetime.fromtimestamp(base - 1, timezone.utc),
+                end_time=datetime.fromtimestamp(base + 10, timezone.utc),
+            )
+            with tarfile.open(archive_path) as tar:
+                tar.extractall(temp_dir, filter="data")
+            parquet_files = [
+                os.path.join(root, name)
+                for root, _, names in os.walk(temp_dir)
+                for name in names if name.endswith(".parquet")
+            ]
+            rows = [row for file in sorted(parquet_files) for row in pq.read_table(file).to_pylist()]
+
+        rows = {row["recording_msid"]: row for row in rows}
+        self.assertEqual(len(rows), 3)
+
+        mapped = rows[listens[0].recording_msid]
+        self.assertEqual(mapped["recording_mbid"], mapped_mbid)
+        self.assertEqual(mapped["recording_name"], "Strangers")
+        self.assertEqual(mapped["artist_name"], "Portishead")
+        self.assertEqual(mapped["artist_credit_id"], 204)
+        self.assertEqual(mapped["release_name"], "Dummy")
+        self.assertEqual(mapped["artist_credit_mbids"], ["8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"])
+
+        manual = rows[listens[1].recording_msid]
+        self.assertEqual(manual["recording_mbid"], manual_mbid)
+        self.assertEqual(manual["recording_name"], "Immigrant Song")
+
+        unmapped = rows[listens[2].recording_msid]
+        self.assertIsNone(unmapped["recording_mbid"])
+        self.assertIsNone(unmapped["artist_credit_id"])
+        self.assertEqual(unmapped["recording_name"], "Crack Rock")
+        self.assertEqual(unmapped["artist_name"], "Frank Ocean")
 
     def test_incremental_dump(self):
         base = 1500000000

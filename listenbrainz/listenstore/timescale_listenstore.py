@@ -19,7 +19,6 @@ from listenbrainz.dumps.exceptions import SchemaMismatchException
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, ORDER_DESC, DEFAULT_LISTENS_PER_FETCH
-from listenbrainz.webserver import ts_conn
 from listenbrainz.webserver.listens_cache import get_listens_from_cache, set_listens_in_cache
 
 # Append the user name for both of these keys
@@ -210,14 +209,13 @@ class TimescaleListenStore:
 
         return listens_db.insert(submit)
 
-    def _fetch_mapping_metadata(self, rows, conn=None) -> dict:
+    def _fetch_mapping_metadata(self, rows, conn) -> dict:
         """ Resolve the recording mbid and its MusicBrainz metadata for the given listens database rows.
 
-            The mapping tables and the metadata cache live in timescale, so they cannot be joined
-            with listens in the same query. Returns a dict keyed on (user_id, recording_msid, submitted_mbid).
-            has_metadata is false for listens whose recording is not in the metadata cache.
+            Returns a dict keyed on (user_id, recording_msid, submitted_mbid). has_metadata is false
+            for listens whose recording is not in the metadata cache.
 
-            conn: timescale connection, defaults to the request's connection
+            conn: listens database connection
         """
         if not rows:
             return {}
@@ -236,12 +234,12 @@ class TimescaleListenStore:
                          -- prefer to use user submitted mbid, then user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
                          , COALESCE(l.submitted_mbid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
                       FROM listens l
-                 LEFT JOIN mbid_mapping mm
+                 LEFT JOIN mapping.mbid_mapping mm
                         ON l.recording_msid = mm.recording_msid
-                 LEFT JOIN mbid_manual_mapping user_mm
+                 LEFT JOIN mapping.mbid_manual_mapping user_mm
                         ON l.recording_msid = user_mm.recording_msid
                        AND user_mm.user_id = l.user_id
-                 LEFT JOIN mbid_manual_mapping_top other_mm
+                 LEFT JOIN mapping.mbid_manual_mapping_top other_mm
                         ON l.recording_msid = other_mm.recording_msid
               )     SELECT sl.user_id
                          , sl.recording_msid::TEXT
@@ -274,16 +272,16 @@ class TimescaleListenStore:
                          , mbc.release_data->>'caa_release_mbid'
                          , mbc.recording_data->'url_rels'
         """
-        result = (conn if conn is not None else ts_conn).execute(sqlalchemy.text(query), {
+        result = conn.execute(sqlalchemy.text(query), {
             "user_ids": list(user_ids),
             "recording_msids": list(recording_msids),
             "submitted_mbids": list(submitted_mbids),
         })
         return {(row.user_id, row.recording_msid, row.submitted_mbid): row for row in result}
 
-    def _listens_from_rows(self, rows, user_id_map: Dict[int, str]):
+    def _listens_from_rows(self, connection, rows, user_id_map: Dict[int, str]):
         """ Convert rows fetched from the listens database into Listen objects, adding mapping metadata """
-        metadata = self._fetch_mapping_metadata(rows)
+        metadata = self._fetch_mapping_metadata(rows, connection)
         listens = []
         for row in rows:
             meta = metadata.get((row.user_id, row.recording_msid, row.submitted_mbid))
@@ -344,8 +342,7 @@ class TimescaleListenStore:
                 sqlalchemy.text(query),
                 {"user_id": user["id"], "from_ts": from_ts, "to_ts": to_ts, "limit": limit}
             ).fetchall()
-
-        listens = self._listens_from_rows(rows, {user["id"]: user["musicbrainz_id"]})
+            listens = self._listens_from_rows(connection, rows, {user["id"]: user["musicbrainz_id"]})
 
         fetch_listens_time = time.monotonic() - t0
 
@@ -397,7 +394,7 @@ class TimescaleListenStore:
 
         with _listens_engine().connect() as connection:
             rows = connection.execute(sqlalchemy.text(query), args).fetchall()
-        return self._listens_from_rows(rows, user_id_map)
+            return self._listens_from_rows(connection, rows, user_id_map)
 
     def fetch_all_recent_listens_for_users(self, users, min_ts: datetime, max_ts: datetime, limit=25):
         """ Fetch recent listens for a list of users.
@@ -427,7 +424,7 @@ class TimescaleListenStore:
 
         with _listens_engine().connect() as connection:
             rows = connection.execute(sqlalchemy.text(query), args).fetchall()
-        return self._listens_from_rows(rows, user_id_map)
+            return self._listens_from_rows(connection, rows, user_id_map)
 
     def import_listens_dump(self, archive_path: str, threads: int = DUMP_DEFAULT_THREAD_COUNT):
         """ Imports listens into TimescaleDB from a ListenBrainz listens dump .tar.zst archive.

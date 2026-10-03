@@ -16,7 +16,7 @@ from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.troi.export import PlaylistExportError, export_to_spotify, export_to_apple_music, export_to_soundcloud
 from listenbrainz.troi.import_ms import import_from_spotify, import_from_apple_music, import_from_soundcloud
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn, ts_conn, listens_conn
 from listenbrainz.metadata_cache.apple.client import Apple
 from listenbrainz.metadata_cache.soundcloud.client import SoundCloud
 from listenbrainz.webserver.utils import parse_boolean_arg
@@ -276,8 +276,8 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
     try:
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
                 mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
-                ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
-            db_playlist.get_playlist_recordings_metadata(mb_curs, ts_curs, playlist)
+                listens_conn.connection.cursor(cursor_factory=DictCursor) as listens_curs:
+            db_playlist.get_playlist_recordings_metadata(mb_curs, listens_curs, playlist)
     except Exception:
         current_app.logger.error("Error while fetching metadata for a playlist: ", exc_info=True)
         raise APIInternalServerError("Failed to fetch metadata for a playlist. Please try again.")

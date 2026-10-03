@@ -5,7 +5,7 @@ import uuid
 from psycopg2.extras import DictCursor
 from psycopg2.sql import SQL, Literal
 
-from listenbrainz.webserver import ts_conn
+from listenbrainz.webserver import ts_conn, listens_conn
 
 
 def lb_radio_artist(mode: str, seed_artist: str, max_similar_artists: int, num_recordings_per_artist: int, pop_begin: float,
@@ -103,11 +103,8 @@ def lb_radio_artist(mode: str, seed_artist: str, max_similar_artists: int, num_r
         )
            SELECT similar_artist_mbid::TEXT
                 , recording_mbid::TEXT
-                , artist_data->'name' AS similar_artist_name
                 , total_listen_count
              FROM randomize
-             JOIN mapping.mb_artist_metadata_cache
-               ON artist_mbid = similar_artist_mbid
             WHERE rownum <= {num_recordings_per_artist}
     """).format(
         seed_artist_mbid=Literal(uuid.UUID(seed_artist)),
@@ -140,9 +137,29 @@ def lb_radio_artist(mode: str, seed_artist: str, max_similar_artists: int, num_r
     # Pass the calculated args above to postgres and run the query
     with ts_conn.connection.cursor(cursor_factory=DictCursor) as curs:
         curs.execute(query, (tuple(artist_indexes),))
+        rows = curs.fetchall()
 
-        artists = defaultdict(list)
-        for row in curs.fetchall():
-            artists[row["similar_artist_mbid"]].append(dict(row))
+    # the artist metadata cache lives in the listens database, so look up the artist names separately.
+    # recordings of artists missing from the cache are skipped.
+    artist_mbids = list({row["similar_artist_mbid"] for row in rows})
+    with listens_conn.connection.cursor(cursor_factory=DictCursor) as curs:
+        curs.execute("""
+            SELECT artist_mbid::TEXT
+                 , artist_data->'name' AS name
+              FROM mapping.mb_artist_metadata_cache
+             WHERE artist_mbid = ANY(%s::UUID[])
+        """, (artist_mbids,))
+        artist_names = {row["artist_mbid"]: row["name"] for row in curs.fetchall()}
+
+    artists = defaultdict(list)
+    for row in rows:
+        if row["similar_artist_mbid"] not in artist_names:
+            continue
+        artists[row["similar_artist_mbid"]].append({
+            "similar_artist_mbid": row["similar_artist_mbid"],
+            "recording_mbid": row["recording_mbid"],
+            "similar_artist_name": artist_names[row["similar_artist_mbid"]],
+            "total_listen_count": row["total_listen_count"],
+        })
 
     return artists

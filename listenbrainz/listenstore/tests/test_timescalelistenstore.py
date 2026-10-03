@@ -79,11 +79,11 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
                       , 'f' )
         """
 
-        join_query = """INSERT INTO mbid_mapping
+        join_query = """INSERT INTO mapping.mbid_mapping
                                (recording_msid, recording_mbid, match_type)
                         VALUES ('%s', '%s', 'exact_match')""" % (msid, '2f3d422f-8890-41a1-9762-fbe16f107c31')
 
-        with ts.engine.begin() as connection:
+        with listens_db.engine.begin() as connection:
             connection.execute(sqlalchemy.text(query))
             connection.execute(sqlalchemy.text(join_query))
 

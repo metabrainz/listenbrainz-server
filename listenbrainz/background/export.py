@@ -127,12 +127,12 @@ def _mbid_mapping_for_export(meta):
     }
 
 
-def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: datetime, end_time: datetime):
+def export_listens_for_time_range(listens_conn, file_path, user_id: int, start_time: datetime, end_time: datetime):
     """ Export user's listens for a given time period.
 
-    Listens are read from the listens DB, which serves all listen reads and is where deletions
-    happen. The mapping tables and metadata cache live in timescale, so mapping metadata is
-    resolved there for each batch of listens.
+    Listens are streamed from the listens DB, which serves all listen reads and is where deletions
+    happen. Mapping metadata is resolved for each batch of listens on listens_conn, a second
+    connection to the listens DB, because the streaming connection is busy with the listens query.
     """
     query = LISTEN_COLUMNS_QUERY + """
           FROM listen
@@ -147,7 +147,7 @@ def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: 
         {"user_id": user_id, "start_time": start_time, "end_time": end_time}
     ) as result, open(file_path, "wb") as file:
         for partition in result.partitions():
-            metadata = timescale_connection._ts._fetch_mapping_metadata(partition, conn=ts_conn)
+            metadata = timescale_connection._ts._fetch_mapping_metadata(partition, listens_conn)
             for row in partition:
                 meta = metadata.get((row.user_id, row.recording_msid, row.submitted_mbid))
                 track_metadata = row.data
@@ -163,7 +163,7 @@ def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: 
     return rowcount
 
 
-def export_listens_for_user(export_id, db_conn, ts_conn, tmp_dir: str, user_id: int,
+def export_listens_for_user(export_id, db_conn, listens_conn, tmp_dir: str, user_id: int,
                             start_time: datetime | None = None, end_time: datetime | None = None) -> list[str]:
     """ Export user's listens to files organized by year and month in jsonl format. """
     update_export_progress(db_conn, export_id, "Exporting user listens")
@@ -181,7 +181,7 @@ def export_listens_for_user(export_id, db_conn, ts_conn, tmp_dir: str, user_id: 
             update_export_progress(db_conn, export_id, f"Exporting listens for the period {period_str}")
             file_path = os.path.join(year_dir, f"{period['month']}.jsonl")
 
-            rowcount = export_listens_for_time_range(ts_conn, file_path, user_id, period["start"], period["end"])
+            rowcount = export_listens_for_time_range(listens_conn, file_path, user_id, period["start"], period["end"])
             if rowcount > 0:
                 files.append(file_path)
 
@@ -250,7 +250,7 @@ def export_info_for_user(export_id, db_conn, tmp_dir, user):
     return file_path
 
 
-def export_user(db_conn, ts_conn, user_id: int, metadata):
+def export_user(db_conn, listens_conn, user_id: int, metadata):
     """ Export all data for the given user in a zip archive """
     user = db_user.get(db_conn, user_id)
     if user is None:
@@ -300,7 +300,7 @@ def export_user(db_conn, ts_conn, user_id: int, metadata):
                 start_time = metadata.get("start_time")
                 end_time = metadata.get("end_time")
                 listen_files = export_listens_for_user(
-                    export_id, db_conn, ts_conn, tmp_dir, user_id,
+                    export_id, db_conn, listens_conn, tmp_dir, user_id,
                     start_time=datetime.fromtimestamp(start_time, timezone.utc) if start_time is not None else None,
                     end_time=datetime.fromtimestamp(end_time, timezone.utc) if end_time is not None else None,
                 )
