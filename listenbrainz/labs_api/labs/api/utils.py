@@ -10,7 +10,7 @@ from unidecode import unidecode
 from psycopg2.extras import execute_values
 from psycopg2.sql import SQL, Identifier
 
-from listenbrainz.db import timescale
+from listenbrainz.db import timescale, listens as listens_db
 from listenbrainz.db.recording import resolve_redirect_mbids, resolve_canonical_mbids
 
 
@@ -48,7 +48,7 @@ def query_combined_lookup(column: LookupType, lookups: list[tuple], service):
       GROUP BY {column}, idx      
     """).format(column=Identifier(column.value), table=SQL(table))
 
-    with closing(timescale.engine.raw_connection()) as conn, conn.cursor() as curs:
+    with closing(listens_db.engine.raw_connection()) as conn, conn.cursor() as curs:
         execute_values(curs, query, lookups, page_size=len(lookups))
         result = curs.fetchall()
         return {row[0]: row[1] for row in result}
