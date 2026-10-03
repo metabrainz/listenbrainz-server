@@ -62,7 +62,7 @@ def unlock_cron():
 
 def refresh_top_manual_mappings():
     """ Refresh top manual msid-mbid mappings view """
-    with timescale.engine.connect() as ts_conn:
+    with timescale.engine.begin() as ts_conn:
         ts_conn.execute(text("REFRESH MATERIALIZED VIEW mbid_manual_mapping_top"))
 
 

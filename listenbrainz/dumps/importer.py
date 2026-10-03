@@ -9,20 +9,19 @@ from listenbrainz import db
 from listenbrainz.db import timescale
 from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT, SCHEMA_VERSION_CORE
 from listenbrainz.dumps.exceptions import SchemaMismatchException
-from listenbrainz.dumps.models import DumpTablesCollection
+from listenbrainz.dumps.models import DumpTablesCollection, get_engine
 from listenbrainz.dumps.tables import PRIVATE_TABLES, PRIVATE_TABLES_TIMESCALE, PUBLIC_TABLES_IMPORT, \
     PUBLIC_TABLES_TIMESCALE_DUMP
 
 
-def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
-                 tables_collection: DumpTablesCollection, schema_version: int, threads=DUMP_DEFAULT_THREAD_COUNT):
+def _import_dump(archive_path, tables_collection: DumpTablesCollection, schema_version: int,
+                 threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Import dump present in passed archive path into postgres db.
 
         Arguments:
             archive_path: path to the .tar.zst archive to be imported
-            db_engine: an sqlalchemy Engine instance for making a connection
-            tables_collection: dict of tables present in the archive with table name as key and
-                    columns to import as values
+            tables_collection: the tables present in the archive and the database engines to
+                    import them into
             schema_version: the current schema version, to compare against the dumped file
             threads (int): the number of threads to use while decompressing, defaults to
                             db.DUMP_DEFAULT_THREAD_COUNT
@@ -34,9 +33,9 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
     zstd_command = ['zstd', '--decompress', '--stdout', archive_path, f'-T{threads}']
     zstd = subprocess.Popen(zstd_command, stdout=subprocess.PIPE)
 
-    connection = db_engine.raw_connection()
+    # a dump can contain tables of multiple databases, connect to each lazily
+    connections = {}
     try:
-        cursor = connection.cursor()
         with tarfile.open(fileobj=zstd.stdout, mode='r|') as tar:
             for member in tar:
                 file_name = member.name.split('/')[-1]
@@ -56,7 +55,12 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
                         current_app.logger.info('Importing data from %s...', file_name)
                         try:
                             table = file_table_mapping[file_name]
-                            table._import(cursor, tar.extractfile(member))
+                            engine_name = tables_collection.get_table_engine_name(table)
+                            if engine_name not in connections:
+                                connections[engine_name] = get_engine(engine_name).raw_connection()
+                            connection = connections[engine_name]
+                            with connection.cursor() as cursor:
+                                table._import(cursor, tar.extractfile(member))
                             connection.commit()
                         except Exception:
                             current_app.logger.critical('Exception while importing %s: ', file_name,
@@ -65,7 +69,8 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
 
                         current_app.logger.info('Imported table %s', file_name)
     finally:
-        connection.close()
+        for connection in connections.values():
+            connection.close()
         zstd.stdout.close()
 
 
@@ -135,12 +140,12 @@ def import_postgres_dump(private_dump_archive_path=None,
 
     if private_dump_archive_path:
         current_app.logger.info('Importing private dump %s...', private_dump_archive_path)
-        _import_dump(private_dump_archive_path, db.engine, PRIVATE_TABLES, SCHEMA_VERSION_CORE, threads)
+        _import_dump(private_dump_archive_path, PRIVATE_TABLES, SCHEMA_VERSION_CORE, threads)
         current_app.logger.info('Import of private dump %s done!', private_dump_archive_path)
 
     if private_timescale_dump_archive_path:
         current_app.logger.info('Importing private timescale dump %s...', private_timescale_dump_archive_path)
-        _import_dump(private_timescale_dump_archive_path, timescale.engine, PRIVATE_TABLES_TIMESCALE,
+        _import_dump(private_timescale_dump_archive_path, PRIVATE_TABLES_TIMESCALE,
                      timescale.SCHEMA_VERSION_TIMESCALE, threads)
         current_app.logger.info('Import of private timescale dump %s done!', private_timescale_dump_archive_path)
 
@@ -157,12 +162,12 @@ def import_postgres_dump(private_dump_archive_path=None,
                 if t.table_name != Identifier("user")
             ]
 
-        _import_dump(public_dump_archive_path, db.engine, tables_to_import, SCHEMA_VERSION_CORE, threads)
+        _import_dump(public_dump_archive_path, tables_to_import, SCHEMA_VERSION_CORE, threads)
         current_app.logger.info('Import of Public dump %s done!', public_dump_archive_path)
 
     if public_timescale_dump_archive_path:
         current_app.logger.info('Importing public timescale dump %s...', public_timescale_dump_archive_path)
-        _import_dump(public_timescale_dump_archive_path, timescale.engine, PUBLIC_TABLES_TIMESCALE_DUMP,
+        _import_dump(public_timescale_dump_archive_path, PUBLIC_TABLES_TIMESCALE_DUMP,
                      timescale.SCHEMA_VERSION_TIMESCALE, threads)
         current_app.logger.info('Import of Public timescale dump %s done!', public_timescale_dump_archive_path)
 
