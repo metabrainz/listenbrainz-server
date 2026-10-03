@@ -10,6 +10,9 @@ from flask import current_app
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..", "admin", "listens")
 
 
+CREATE_SCHEMAS_SQL_FILE = os.path.join(ADMIN_SQL_DIR, "create_schemas.sql")
+
+
 CREATE_TABLES_SQL_FILE = os.path.join(ADMIN_SQL_DIR, "create_tables.sql")
 
 
@@ -51,6 +54,7 @@ def _read_sql(path):
 
 def create_schema(partition_count):
     with connect_target() as conn, conn.cursor() as cur:
+        cur.execute(_read_sql(CREATE_SCHEMAS_SQL_FILE))
         cur.execute(_read_sql(CREATE_TYPES_SQL_FILE))
         cur.execute(_read_sql(CREATE_TABLES_SQL_FILE))
         cur.execute(_read_sql(CREATE_PRIMARY_KEYS_SQL_FILE))
