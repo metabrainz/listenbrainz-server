@@ -1,5 +1,6 @@
 import type { RouteObject } from "react-router";
 import { RouteQueryLoader } from "../utils/Loader";
+import { GenrePageLoader } from "../genre/Genre";
 
 const getEntityPages = (): RouteObject[] => {
   const routes = [
@@ -75,6 +76,17 @@ const getEntityPages = (): RouteObject[] => {
           lazy: {
             Component: async () => {
               return (await import("../recording/Recording")).default;
+            },
+          },
+        },
+        {
+          path: "genre/:genre/",
+          lazy: {
+            Component: async () => {
+              return (await import("../genre/Genre")).default;
+            },
+            loader: async () => {
+              return GenrePageLoader;
             },
           },
         },
