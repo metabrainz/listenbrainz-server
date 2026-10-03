@@ -175,34 +175,6 @@ CREATE TABLE mapping.canonical_release_redirect (
     release_group_mbid          UUID NOT NULL
 );
 
-CREATE TABLE mapping.spotify_metadata_index (
-    id                              SERIAL,
-    artist_ids                      TEXT NOT NULL,
-    album_id                        TEXT NOT NULL,
-    track_id                        TEXT NOT NULL,
-    combined_lookup_all             TEXT NOT NULL,
-    combined_lookup_without_album   TEXT NOT NULL,
-    score                           INTEGER NOT NULL
-);
-
-CREATE TABLE mapping.apple_metadata_index (
-    id                              SERIAL,
-    artist_ids                      TEXT NOT NULL,
-    album_id                        TEXT NOT NULL,
-    track_id                        TEXT NOT NULL,
-    combined_lookup_all             TEXT NOT NULL,
-    combined_lookup_without_album   TEXT NOT NULL,
-    score                           INTEGER NOT NULL
-);
-
-CREATE TABLE mapping.soundcloud_metadata_index (
-    id                              SERIAL,
-    artist_id                       TEXT NOT NULL,
-    track_id                        TEXT NOT NULL,
-    combined_lookup_without_album   TEXT NOT NULL,
-    score                           INTEGER NOT NULL
-);
-
 -- the various mapping columns should only be null if the match_type is no_match, otherwise the columns should be
 -- non null. we have had bugs where we completely forgot to insert values for a column and it went unchecked because
 -- it is not possible to mark the column as NOT NULL. however, we can use this constraint to enforce the NOT NULL

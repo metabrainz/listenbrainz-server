@@ -32,6 +32,36 @@ CREATE TABLE deleted_user_listen_history (
     max_created                 TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
+-- Spotify, Apple Music and SoundCloud metadata indexes, built by the mbid mapper
+
+CREATE TABLE mapping.spotify_metadata_index (
+    id                              SERIAL,
+    artist_ids                      TEXT NOT NULL,
+    album_id                        TEXT NOT NULL,
+    track_id                        TEXT NOT NULL,
+    combined_lookup_all             TEXT NOT NULL,
+    combined_lookup_without_album   TEXT NOT NULL,
+    score                           INTEGER NOT NULL
+);
+
+CREATE TABLE mapping.apple_metadata_index (
+    id                              SERIAL,
+    artist_ids                      TEXT NOT NULL,
+    album_id                        TEXT NOT NULL,
+    track_id                        TEXT NOT NULL,
+    combined_lookup_all             TEXT NOT NULL,
+    combined_lookup_without_album   TEXT NOT NULL,
+    score                           INTEGER NOT NULL
+);
+
+CREATE TABLE mapping.soundcloud_metadata_index (
+    id                              SERIAL,
+    artist_id                       TEXT NOT NULL,
+    track_id                        TEXT NOT NULL,
+    combined_lookup_without_album   TEXT NOT NULL,
+    score                           INTEGER NOT NULL
+);
+
 ALTER TABLE listen_delete_metadata
     ADD CONSTRAINT listen_delete_metadata_status_created_constraint
     CHECK ( status = 'invalid' OR status = 'pending' OR (status = 'complete' AND listen_created IS NOT NULL) );
