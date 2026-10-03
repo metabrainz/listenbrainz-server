@@ -71,19 +71,6 @@ CREATE UNIQUE INDEX canonical_recording_redirect_ndx_recording_mbid
 CREATE UNIQUE INDEX release_mbid_ndx_canonical_release_redirect
     ON mapping.canonical_release_redirect (release_mbid);
 
-CREATE INDEX spotify_metadata_index_idx_combined_lookup_all
-    ON mapping.spotify_metadata_index (combined_lookup_all);
-CREATE INDEX spotify_metadata_index_idx_combined_lookup_without_album
-    ON mapping.spotify_metadata_index (combined_lookup_without_album);
-
-CREATE INDEX apple_metadata_index_idx_combined_lookup_all
-    ON mapping.apple_metadata_index (combined_lookup_all);
-CREATE INDEX apple_metadata_index_idx_combined_lookup_without_album
-    ON mapping.apple_metadata_index (combined_lookup_without_album);
-
-CREATE INDEX soundcloud_metadata_index_idx_combined_lookup
-    ON mapping.soundcloud_metadata_index (combined_lookup_without_album);
-
 CREATE UNIQUE INDEX recording_msid_ndx_mbid_mapping ON mbid_mapping (recording_msid);
 CREATE INDEX recording_mbid_ndx_mbid_mapping ON mbid_mapping (recording_mbid);
 CREATE INDEX match_type_ndx_mbid_mapping ON mbid_mapping (match_type);
