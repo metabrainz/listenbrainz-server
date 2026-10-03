@@ -10,9 +10,11 @@ from data.model.user_release_group_stat import ReleaseGroupRecord
 from data.model.user_release_stat import ReleaseRecord
 from data.model.user_artist_evolution_activity import ArtistEvolutionActivityRecord
 from data.model.user_genre_activity import GenreActivityRecord
+from data.model.user_writer_stat import WriterRecord
 
 EntityRecord = Union[
-    RecordingRecord, ReleaseGroupRecord, ReleaseRecord, ArtistRecord, GenreActivityRecord, EraActivityRecord, ArtistEvolutionActivityRecord
+    RecordingRecord, ReleaseGroupRecord, ReleaseRecord, ArtistRecord, GenreActivityRecord, EraActivityRecord, ArtistEvolutionActivityRecord,
+    WriterRecord
 ]
 
 
