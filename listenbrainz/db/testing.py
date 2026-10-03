@@ -68,9 +68,11 @@ class TimescaleTestCase(unittest.TestCase):
         listens_connect = create_test_listens_connect_strings()
         listens_db.init_db_connection(listens_connect["DB_CONNECT"])
         self.reset_listens_db()
+        self.listens_conn = listens_db.engine.connect()
 
     def tearDown(self):
         self.ts_conn.close()
+        self.listens_conn.close()
 
     def reset_timescale_db(self):
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'reset_tables.sql'))

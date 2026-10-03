@@ -44,6 +44,13 @@ def _get_ts_conn():
     return _ts_conn
 
 
+def _get_listens_conn():
+    _listens_conn = getattr(g, "_listens_conn", None)
+    if _listens_conn is None:
+        _listens_conn = g._listens_conn = listens.engine.connect()
+    return _listens_conn
+
+
 def _get_meb_conn():
     _meb_conn = getattr(g, "_meb_conn", None)
     if donation.engine is not None and _meb_conn is None:
@@ -53,6 +60,7 @@ def _get_meb_conn():
 
 db_conn = LocalProxy(_get_db_conn)
 ts_conn = LocalProxy(_get_ts_conn)
+listens_conn = LocalProxy(_get_listens_conn)
 meb_conn = LocalProxy(_get_meb_conn)
 
 
@@ -227,6 +235,11 @@ def create_app(
         if _ts_conn is not None:
             _ts_conn.close()
             del g._ts_conn
+
+        _listens_conn = getattr(g, "_listens_conn", None)
+        if _listens_conn is not None:
+            _listens_conn.close()
+            del g._listens_conn
 
         _meb_conn = getattr(g, "_meb_conn", None)
         if _meb_conn is not None:
