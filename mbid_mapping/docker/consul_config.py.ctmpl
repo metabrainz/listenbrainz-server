@@ -59,6 +59,15 @@ TIMESCALE_ADMIN_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
 TIMESCALE_ADMIN_LB_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
 {{end}}
 
+# the listens database, which the mapping tables are being moved to
+{{if service "listenbrainz-user-listenstore"}}
+{{with index (service "listenbrainz-user-listenstore") 0}}
+SQLALCHEMY_LISTENS_URI = """postgresql://{{template "KEY" "listens_db_user"}}:{{template "KEY" "listens_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listens_db_name"}}"""
+{{end}}
+{{else}}
+SQLALCHEMY_LISTENS_URI = "SERVICEDOESNOTEXIST_listenbrainz-user-listenstore"
+{{end}}
+
 {{if service "typesense-listenbrainz-new"}}
 {{with index (service "typesense-listenbrainz-new") 0}}
 TYPESENSE_HOST = "{{.Address}}"

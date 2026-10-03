@@ -26,7 +26,7 @@ from sqlalchemy.pool import QueuePool
 
 from listenbrainz.webserver import load_config
 from listenbrainz import db
-from listenbrainz.db import timescale as ts
+from listenbrainz.db import timescale as ts, listens as listens_db
 
 register_query(ArtistCountryFromArtistMBIDQuery())
 register_query(ArtistCreditIdFromArtistMBIDQuery())
@@ -62,6 +62,13 @@ db.init_db_connection(
 )
 ts.init_db_connection(
     app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"],
+    poolclass=QueuePool,
+    pool_size=2,
+    max_overflow=2,
+    pool_pre_ping=True,
+)
+listens_db.init_db_connection(
+    app.config.get("SQLALCHEMY_LISTENS_URI"),
     poolclass=QueuePool,
     pool_size=2,
     max_overflow=2,
