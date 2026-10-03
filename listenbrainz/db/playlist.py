@@ -1082,13 +1082,13 @@ def move_recordings(db_conn, ts_conn, playlist: model_playlist.Playlist, positio
     add_recordings_to_playlist(db_conn, ts_conn, playlist, removed, position_to)
 
 
-def get_playlist_recordings_metadata(mb_curs, ts_curs, playlist: Playlist) -> Playlist:
+def get_playlist_recordings_metadata(mb_curs, listens_curs, playlist: Playlist) -> Playlist:
     """ Retrieve metadata for all recordings in a playlist from the database. """
     mbids = [str(item.mbid) for item in playlist.recordings]
     if not mbids:
         return playlist
 
-    rows = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids)
+    rows = load_recordings_from_mbids_with_redirects(mb_curs, listens_curs, mbids)
 
     for rec, row in zip(playlist.recordings, rows):
         rec.artist_credit = row.get("artist_credit_name", "")

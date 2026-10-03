@@ -92,9 +92,9 @@ def fetch_top_discoveries_for_users(lb_conn, mb_conn, year):
                             , m.recording_mbid
                             , mm.artist_mbids
                          FROM listen l
-              FULL OUTER JOIN mbid_mapping m
+              FULL OUTER JOIN mapping.mbid_mapping m
                            ON l.recording_msid = m.recording_msid
-              FULL OUTER JOIN mbid_mapping_metadata mm
+              FULL OUTER JOIN mapping.mbid_mapping_metadata mm
                               ON mm.recording_mbid = m.recording_mbid
                         WHERE user_name in %s
                           AND mm.recording_mbid IS NOT NULL
@@ -131,7 +131,7 @@ def calculate_top_discoveries(year):
         Main entry point for creating top discoveries table.
     """
 
-    with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as lb_conn:
+    with psycopg2.connect(config.SQLALCHEMY_LISTENS_URI) as lb_conn:
         with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
             create_table(mb_conn)
             fetch_top_discoveries_for_users(lb_conn, mb_conn, year)

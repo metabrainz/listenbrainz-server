@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import text
 
 from listenbrainz import db
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 
 SESSION_SKIP_THRESHOLD = 30
 DEFAULT_TRACK_LENGTH = 180
@@ -89,12 +89,12 @@ class UserListensSessionQuery(Query):
                           , {DEFAULT_TRACK_LENGTH}
                         )) AS duration
                    FROM listen l
-              LEFT JOIN mbid_mapping mm
+              LEFT JOIN mapping.mbid_mapping mm
                      ON l.recording_msid = mm.recording_msid
-              LEFT JOIN mbid_manual_mapping user_mm
+              LEFT JOIN mapping.mbid_manual_mapping user_mm
                      ON l.recording_msid = user_mm.recording_msid
                     AND user_mm.user_id = l.user_id 
-              LEFT JOIN mbid_manual_mapping_top other_mm
+              LEFT JOIN mapping.mbid_manual_mapping_top other_mm
                      ON l.recording_msid = other_mm.recording_msid
               LEFT JOIN mapping.mb_metadata_cache mbc
                      ON mbc.recording_mbid = COALESCE((data->'additional_info'->>'recording_mbid')::uuid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid)
@@ -151,7 +151,7 @@ class UserListensSessionQuery(Query):
               GROUP BY session_id
         """
         results = []
-        with timescale.engine.connect() as conn:
+        with listens_db.engine.connect() as conn:
             curs = conn.execute(text(query), {
                 "user_id": user_id,
                 "from_ts": from_ts,
