@@ -21,7 +21,7 @@ from listenbrainz.db.genre import get_tag_hierarchy_data
 from listenbrainz.db.year_in_music import LAST_FM_FOUNDING_YEAR, MAX_YEAR_IN_MUSIC_YEAR
 from listenbrainz.listenstore.timescale_listenstore import ListenStoreException
 from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
+from listenbrainz.webserver import timescale_connection, db_conn, ts_conn, listens_conn
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
@@ -79,7 +79,7 @@ def profile(user_name):
 
     pin = get_current_pin_for_user(db_conn, user_id=user.id)
     if pin:
-        pin = fetch_track_metadata_for_items(webserver.ts_conn, [pin])[0].to_api()
+        pin = fetch_track_metadata_for_items(webserver.ts_conn, webserver.listens_conn, [pin])[0].to_api()
 
     data = {
         "user": {
@@ -302,12 +302,12 @@ def taste(user_name: str):
 
     feedback_count = get_feedback_count_for_user(db_conn, user.id, score)
     feedback = get_feedback_for_user(
-        db_conn, ts_conn, user_id=user.id, limit=DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL,
+        db_conn, ts_conn, listens_conn, user_id=user.id, limit=DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL,
         offset=0, score=score, metadata=True
     )
     
     pins = get_pin_history_for_user(db_conn, user_id=user.id, count=25, offset=0)
-    pins = [pin.to_api() for pin in fetch_track_metadata_for_items(ts_conn, pins)]
+    pins = [pin.to_api() for pin in fetch_track_metadata_for_items(ts_conn, listens_conn, pins)]
     pin_count = get_pin_count_for_user(db_conn, user_id=user.id)
 
     data = {
@@ -605,7 +605,7 @@ def embed_pin(user_name):
         )
 
     pin = fetch_track_metadata_for_items(
-        webserver.ts_conn, [pin])[0].to_api()
+        webserver.ts_conn, webserver.listens_conn, [pin])[0].to_api()
 
     metadata = pin.get("track_metadata", {})
     mbid_mapping = metadata.get("mbid_mapping", {})

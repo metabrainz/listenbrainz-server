@@ -215,14 +215,14 @@ def get_artists(mb_curs, ts_curs, mbids, algorithm, count):
     return metadata
 
 
-def get_recordings(mb_curs, ts_curs, mbids, algorithm, count):
+def get_recordings(mb_curs, ts_curs, listens_curs, mbids, algorithm, count):
     """ For the given recording mbids, fetch at most `count` number of similar recordings using the given algorithm
         along with their metadata. """
     similar_mbids, score_idx, mbid_idx = get(ts_curs, "recording_dev", mbids, algorithm, count)
     if not similar_mbids:
         return []
 
-    metadata = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, similar_mbids)
+    metadata = load_recordings_from_mbids_with_redirects(mb_curs, listens_curs, similar_mbids)
 
     for item in metadata:
         item["score"] = score_idx.get(item["original_recording_mbid"])

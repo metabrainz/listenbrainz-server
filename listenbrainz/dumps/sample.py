@@ -27,7 +27,7 @@ from data.postgres.release_group import get_release_group_metadata_cache_query
 from data.postgres.tag import get_tag_or_genre_cache_query
 from listenbrainz import db
 
-from listenbrainz.db import stats, timescale
+from listenbrainz.db import stats, timescale, listens as listens_db
 from listenbrainz.db.popularity import to_entity_mbid
 from listenbrainz.dumps.exceptions import SchemaMismatchException
 
@@ -121,7 +121,7 @@ def dump_sample_data(location: str):
         all_artist_mbids.update(row["artist_mbids"])
         rg_pop_mbids.add(row["release_group_mbid"])
 
-    with timescale.engine.connect() as connection, connection.begin() as transaction:
+    with listens_db.engine.connect() as connection, connection.begin() as transaction:
         metadata_dir = os.path.join(location, "metadata")
         os.makedirs(metadata_dir, exist_ok=True)
 
@@ -154,6 +154,9 @@ def dump_sample_data(location: str):
                 fp,
             )
 
+        transaction.rollback()
+
+    with timescale.engine.connect() as connection, connection.begin() as transaction:
         ts_curs = connection.connection.cursor(cursor_factory=RealDictCursor)
         popularity_dir = os.path.join(location, "popularity")
         os.makedirs(popularity_dir, exist_ok=True)
@@ -326,8 +329,11 @@ def import_sample_data(archive_path, threads):
         "top_recording.csv": Identifier("popularity", "top_recording"),
     }
 
+    # the metadata caches live in the listens database and the popularity tables in timescale
+    listens_connection = listens_db.engine.raw_connection()
     connection = timescale.engine.raw_connection()
     try:
+        listens_cursor = listens_connection.cursor()
         cursor = connection.cursor()
         with tarfile.open(fileobj=zstd.stdout, mode="r|") as tar:
             for member in tar:
@@ -364,14 +370,14 @@ def import_sample_data(archive_path, threads):
                         chunk.append(row)
                         if len(chunk) == chunk_size:
                             param = f"[{','.join(chunk)}]"
-                            cursor.execute(query, (param,))
+                            listens_cursor.execute(query, (param,))
                             chunk = []
 
                     if chunk:
                         param = f"[{",".join(chunk)}]"
-                        cursor.execute(query, (param,))
+                        listens_cursor.execute(query, (param,))
 
-                    connection.commit()
+                    listens_connection.commit()
                     current_app.logger.info("Imported table %s", jsonl_file_table_map[file_name])
                 elif file_name in csv_file_table_map:
                     current_app.logger.info("Importing data into %s table...", csv_file_table_map[file_name])
@@ -390,4 +396,5 @@ def import_sample_data(archive_path, threads):
 
     finally:
         connection.close()
+        listens_connection.close()
         zstd.stdout.close()

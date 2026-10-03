@@ -6,7 +6,7 @@ from brainzutils import cache
 from sqlalchemy import text
 
 from listenbrainz import db
-from listenbrainz.db import listens as listens_db, timescale, user as db_user
+from listenbrainz.db import listens as listens_db, user as db_user
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT
 from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 
@@ -62,8 +62,8 @@ def unlock_cron():
 
 def refresh_top_manual_mappings():
     """ Refresh top manual msid-mbid mappings view """
-    with timescale.engine.begin() as ts_conn:
-        ts_conn.execute(text("REFRESH MATERIALIZED VIEW mbid_manual_mapping_top"))
+    with listens_db.engine.begin() as connection:
+        connection.execute(text("REFRESH MATERIALIZED VIEW mapping.mbid_manual_mapping_top"))
 
 
 class TimescaleListenStoreException(Exception):
