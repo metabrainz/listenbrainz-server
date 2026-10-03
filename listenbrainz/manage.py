@@ -123,7 +123,7 @@ TEST_LISTENS_PARTITION_COUNT = 4
 def init_listens_db(force, create_db, partitions):
     """Initializes the user-partitioned listens database.
 
-    Creates the listen table, its hash partitions and its indexes.
+    Creates the listen table, its hash partitions, the mapping tables and their indexes.
     """
     import psycopg2
     from listenbrainz import config
@@ -288,9 +288,6 @@ def init_ts_db(force, create_db):
 
         print('TS: Insert default rows...')
         res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'insert_default_data.sql'))
-
-        print('TS: Creating views...')
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
 
         print('TS: Creating indexes...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))

@@ -64,7 +64,8 @@ class TimescaleTestCase(unittest.TestCase):
         self.reset_timescale_db()
         self.ts_conn = ts.engine.connect()
 
-        # listens are dual written, so reset the partitioned database alongside timescale
+        # listens are dual written and the mapping tables live in the listens database, so
+        # reset it alongside timescale
         listens_connect = create_test_listens_connect_strings()
         listens_db.init_db_connection(listens_connect["DB_CONNECT"])
         self.reset_listens_db()
@@ -94,4 +95,9 @@ class TimescaleTestCase(unittest.TestCase):
             connection.execute(sqlalchemy.text(
                 "TRUNCATE TABLE listen, listen_user_metadata, listen_delete_metadata, deleted_user_listen_history"
             ))
+            # request scoped connections of earlier tests can still hold read locks on the mapping
+            # tables, DELETE does not wait for those unlike TRUNCATE
+            connection.execute(sqlalchemy.text("DELETE FROM mapping.mbid_mapping"))
+            connection.execute(sqlalchemy.text("DELETE FROM mapping.mbid_manual_mapping"))
+            connection.execute(sqlalchemy.text("DELETE FROM mapping.mb_metadata_cache"))
             connection.commit()

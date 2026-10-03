@@ -50,17 +50,6 @@ class APITestCase(ListenAPIIntegrationTestCase):
             query = "INSERT INTO similarity.artist (mbid0, mbid1, score) VALUES %s"
             execute_values(curs, query, similar_artists, template=None)
 
-            curs.execute("DROP TABLE IF EXISTS mapping.mb_artist_metadata_cache")
-            curs.execute("""CREATE TABLE mapping.mb_artist_metadata_cache (
-                                            dirty boolean,
-                                            last_updated timestamp with time zone default now(),
-                                            artist_mbid uuid,
-                                            artist_data jsonb,
-                                            tag_data jsonb,
-                                            release_group_data jsonb)""")
-            query = "INSERT INTO mapping.mb_artist_metadata_cache (dirty, artist_mbid, artist_data, tag_data, release_group_data) VALUES %s"
-            execute_values(curs, query, artist_cache, template=None)
-
             curs.execute("DROP TABLE IF EXISTS popularity.top_recording")
             curs.execute("""CREATE TABLE popularity.top_recording (artist_mbid uuid, recording_mbid uuid,
                                          total_listen_count integer, total_user_count integer)""")
@@ -72,6 +61,19 @@ class APITestCase(ListenAPIIntegrationTestCase):
                                          total_listen_count integer, total_user_count integer)""")
 
             self.ts_conn.connection.commit()
+
+        with self.listens_conn.connection.cursor() as curs:
+            curs.execute("DROP TABLE IF EXISTS mapping.mb_artist_metadata_cache")
+            curs.execute("""CREATE TABLE mapping.mb_artist_metadata_cache (
+                                            dirty boolean,
+                                            last_updated timestamp with time zone default now(),
+                                            artist_mbid uuid,
+                                            artist_data jsonb,
+                                            tag_data jsonb,
+                                            release_group_data jsonb)""")
+            query = "INSERT INTO mapping.mb_artist_metadata_cache (dirty, artist_mbid, artist_data, tag_data, release_group_data) VALUES %s"
+            execute_values(curs, query, artist_cache, template=None)
+            self.listens_conn.connection.commit()
 
     def test_get_listens_invalid_count(self):
         """If the count argument is negative, the API should raise HTTP 400"""

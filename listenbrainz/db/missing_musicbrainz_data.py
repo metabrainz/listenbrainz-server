@@ -58,13 +58,13 @@ def insert_user_missing_musicbrainz_data(db_conn, user_id: int,
     db_conn.commit()
 
 
-def get_user_missing_musicbrainz_data(db_conn, ts_conn, user_id: int, source: str):
+def get_user_missing_musicbrainz_data(db_conn, listens_conn, user_id: int, source: str):
     """ Get missing musicbrainz data that has not been submitted to LB
         for a user with the given row ID.
 
         Args:
             db_conn: database connection
-            ts_conn: timescale database connection
+            listens_conn: listens database connection
             user_id: the row ID of the user in the DB
             source : Source of generation of missing MusicBrainz data.
 
@@ -111,7 +111,7 @@ def get_user_missing_musicbrainz_data(db_conn, ts_conn, user_id: int, source: st
         if row:
             missing_mb_data = UserMissingMusicBrainzDataJson(missing_musicbrainz_data=row["data"]["missing_musicbrainz_data"]).missing_musicbrainz_data
             if missing_mb_data:
-                return remove_mapped_mb_data(ts_conn, user_id, missing_mb_data), row["created"]
+                return remove_mapped_mb_data(listens_conn, user_id, missing_mb_data), row["created"]
         else:
             return None, None
     except ValidationError:
@@ -121,11 +121,11 @@ def get_user_missing_musicbrainz_data(db_conn, ts_conn, user_id: int, source: st
         return None, None
 
 
-def remove_mapped_mb_data(ts_conn, user_id: int, missing_musicbrainz_data: list[UserMissingMusicBrainzDataRecord]):
+def remove_mapped_mb_data(listens_conn, user_id: int, missing_musicbrainz_data: list[UserMissingMusicBrainzDataRecord]):
     """ Remove musicbrainz data that has been mapped to MusicBrainz by the user.
 
         Args:
-            ts_conn: timescale database connection
+            listens_conn: listens database connection
             user_id: LB user id.
             missing_musicbrainz_data: List of missing musicbrainz data.
 
@@ -133,7 +133,7 @@ def remove_mapped_mb_data(ts_conn, user_id: int, missing_musicbrainz_data: list[
             List of missing musicbrainz data that has not been mapped to MusicBrainz.
     """
     missing_data_map = {r.recording_msid: r for r in missing_musicbrainz_data}
-    existing_mappings = check_manual_mapping_exists(ts_conn, user_id, missing_data_map.keys())
+    existing_mappings = check_manual_mapping_exists(listens_conn, user_id, missing_data_map.keys())
 
     remaining_data = []
     for item in missing_musicbrainz_data:

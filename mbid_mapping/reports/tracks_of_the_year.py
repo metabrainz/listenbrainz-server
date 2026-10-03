@@ -82,9 +82,9 @@ def fetch_tracks_listened_to(lb_conn, mb_conn, start_ts, end_ts):
                             , md.artist_mbids
                             , count(*) AS listen_count
                          FROM listen l
-                         JOIN mbid_mapping m
+                         JOIN mapping.mbid_mapping m
                            ON l.recording_msid = m.recording_msid
-                         JOIN mbid_mapping_metadata md
+                         JOIN mapping.mbid_mapping_metadata md
                            ON m.recording_mbid = md.recording_mbid
                         WHERE listened_at >= %s
                           AND listened_at < %s
@@ -116,7 +116,7 @@ def calculate_tracks_of_the_year(year):
 
     start_ts = int(datetime(year=year, month=1, day=1, tzinfo=timezone.utc).timestamp())
     end_ts = int(datetime(year=year + 1, month=1, day=1, tzinfo=timezone.utc).timestamp())
-    with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as lb_conn:
+    with psycopg2.connect(config.SQLALCHEMY_LISTENS_URI) as lb_conn:
         with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as mb_conn:
             create_table(mb_conn)
             fetch_tracks_listened_to(lb_conn, mb_conn, start_ts, end_ts)

@@ -13,7 +13,7 @@ from brainzutils.ratelimit import ratelimit
 from flask import request, render_template, Blueprint, current_app, redirect, url_for
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn, ts_conn, listens_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound
 from listenbrainz.webserver.views.api_tools import is_valid_uuid, _parse_bool_arg, validate_auth_header
@@ -306,7 +306,7 @@ def cover_art_artist_grid(artist_mbid, dimension, layout, image_size):
     except (IndexError, KeyError):
         raise APIBadRequest(f"layout {layout} is not available for dimension {dimension}")
 
-    artist_data = get_metadata_for_artist(ts_conn, [str(artist_mbid)])
+    artist_data = get_metadata_for_artist(listens_conn, [str(artist_mbid)])
     if not artist_data:
         raise APINotFound(f"Artist {artist_mbid} not found")
 

@@ -39,11 +39,12 @@ class MsidMbidModel(BaseModel):
 ModelT = TypeVar('ModelT', bound=MsidMbidModel)
 
 
-def fetch_track_metadata_for_items(ts_conn, items: List[ModelT]) -> List[ModelT]:
+def fetch_track_metadata_for_items(ts_conn, listens_conn, items: List[ModelT]) -> List[ModelT]:
     """ Fetches track_metadata for every object in a list of MsidMbidModel items.
 
         Args:
-            ts_conn: timescale database connection
+            ts_conn: timescale database connection, used to look up msids in messybrainz
+            listens_conn: listens database connection, used to look up mbids in the metadata cache
             items: the MsidMbidModel items to fetch track_metadata for.
         Returns:
             The given list of MsidMbidModel objects with updated track_metadata.
@@ -61,10 +62,11 @@ def fetch_track_metadata_for_items(ts_conn, items: List[ModelT]) -> List[ModelT]
 
     # first we try to load data from mapping using mbids. for the items without a mbid,
     # we'll later lookup data for these items from messybrainz.
-    with ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
-        mbid_metadatas = load_recordings_from_mbids(ts_curs, mbid_item_map.keys())
+    with listens_conn.connection.cursor(cursor_factory=DictCursor) as listens_curs:
+        mbid_metadatas = load_recordings_from_mbids(listens_curs, mbid_item_map.keys())
         _update_mbid_items(mbid_item_map, mbid_metadatas, msid_item_map)
 
+    with ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
         msid_metadatas = load_recordings_from_msids(ts_curs, msid_item_map.keys())
         _update_msid_items(msid_item_map, msid_metadatas)
 
