@@ -442,6 +442,54 @@ export default class APIService {
     return { status: response.status };
   };
 
+  followArtist = async (
+    artistMBID: string,
+    userToken: string
+  ): Promise<{ status: number }> => {
+    if (!artistMBID) {
+      throw new SyntaxError("Artist MBID missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const response = await this.fetchWithRetry(
+      `${this.APIBaseURI}/followed-artists/add`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({ artist_mbid: artistMBID }),
+      }
+    );
+    return { status: response.status };
+  };
+
+  unfollowArtist = async (
+    artistMBID: string,
+    userToken: string
+  ): Promise<{ status: number }> => {
+    if (!artistMBID) {
+      throw new SyntaxError("Artist MBID missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const response = await this.fetchWithRetry(
+      `${this.APIBaseURI}/followed-artists/remove`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({ artist_mbid: artistMBID }),
+      }
+    );
+    return { status: response.status };
+  };
+
   searchUsers = async (
     userName: string
   ): Promise<{ users: Array<SearchUser> }> => {
@@ -488,6 +536,25 @@ export default class APIService {
     const url = `${this.APIBaseURI}/user/${encodeURIComponent(
       userName
     )}/following`;
+    const response = await this.fetchWithRetry(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getArtistFollowStatus = async (
+    userName: string,
+    artistMBID: string
+  ): Promise<{ artist_mbid: string; following: boolean; user: string }> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!artistMBID) {
+      throw new SyntaxError("Artist MBID missing");
+    }
+
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/followed-artists/${artistMBID}`;
     const response = await this.fetchWithRetry(url);
     await this.checkStatus(response);
     return response.json();
@@ -2251,6 +2318,19 @@ export default class APIService {
     count: number = 25
   ): Promise<TrackTypeSearchResult> => {
     const url = `${this.MBBaseURI}/recording?query=${encodeURIComponent(
+      searchQuery
+    )}&fmt=json&offset=${offset}&limit=${count}`;
+    const response = await this.fetchWithRetry(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  eventLookup = async (
+    searchQuery: string,
+    offset: number = 0,
+    count: number = 25
+  ): Promise<EventTypeSearchResult> => {
+    const url = `${this.MBBaseURI}/event?query=${encodeURIComponent(
       searchQuery
     )}&fmt=json&offset=${offset}&limit=${count}`;
     const response = await this.fetchWithRetry(url);

@@ -15,6 +15,30 @@ declare type MusicBrainzArtist = {
   gender?: string;
 };
 
+declare type MusicBrainzEvent = {
+  event_mbid: string;
+  event_name: string;
+  begin_date_year: number | null;
+  begin_date_month: number | null;
+  begin_date_day: number | null;
+  end_date_year: number | null;
+  end_date_month: number | null;
+  end_date_day: number | null;
+  event_time: string | null;
+  cancelled: boolean;
+  event_art_presence: "absent" | "present" | "darkened";
+  rating: number | null;
+  rating_count: number | null;
+  event_type_gid?: string;
+  place_mbid?: string;
+  place_name?: string;
+  area_mbid?: string;
+  area_name?: string;
+  event_type?: string;
+  disambiguation?: string;
+  event_art_id?: number;
+};
+
 declare type MusicBrainzArtistCredit = {
   name: string;
   joinphrase: string;
