@@ -107,6 +107,11 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
     align-self: center;
     color: $gray-500;
   }
+  &.artist-page .artist-info .details {
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+  }
   &.artist-page .entity-page-content .tracks {
     max-height: 500px;
     overflow-y: hidden;
@@ -217,6 +222,17 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
             background: lightgrey;
           }
         }
+      }
+    }
+    .events {
+      width: 100%;
+      .event-cards {
+        display: grid;
+        grid-gap: 1.5em;
+        grid-auto-flow: column;
+        justify-items: center;
+        grid-template-columns: repeat(auto-fill, minmax(190px, max-content));
+        grid-template-rows: repeat(1, 1fr);
       }
     }
   }

@@ -708,6 +708,28 @@ type CoverArtArchiveResponse = {
   release: string; // Full MB URL i.e "http://musicbrainz.org/release/76df3287-6cda-33eb-8e9a-044b5e15ffdd"
 };
 
+type EventArtArchiveEntry = {
+  types: string[]; // Array of types like ["Poster"]
+  front: boolean;
+  edit: number;
+  image: string; // "https://eventartarchive.org/event/3a65af9a-3a3b-4df9-adfb-05e8be443c15/39248095288.png",
+  comment: string;
+  approved: boolean;
+  id: string;
+  thumbnails: {
+    250: string; // Full URL to 250px version "https://eventartarchive.org/event/3a65af9a-3a3b-4df9-adfb-05e8be443c15/39248095288-250.jpg",
+    500: string;
+    1200: string;
+    small: string;
+    large: string;
+  };
+};
+
+type EventArtArchiveResponse = {
+  images: EventArtArchiveEntry[];
+  event: string; // Full MB URL i.e "https://musicbrainz.org/event/3a65af9a-3a3b-4df9-adfb-05e8be443c15"
+};
+
 type ColorReleaseItem = {
   artist_name: string;
   color: number[];
@@ -746,6 +768,30 @@ type FreshReleaseItem = {
   release_name: string;
   release_tags: Array<string>;
   listen_count: number;
+};
+
+type ExplorerEventPerformer = {
+  artist_mbid: string;
+  artist_name: string | null;
+  link_type_name: string;
+};
+
+type ExplorerEventItem = MusicBrainzEvent & {
+  performers: Array<ExplorerEventPerformer>;
+  genres: Array<string>;
+  listen_count: number;
+  user_listen_count?: number;
+  followed?: boolean;
+};
+
+type ExplorerEventsResponse = {
+  payload: {
+    events: Array<ExplorerEventItem>;
+    total_count?: number;
+    count?: number;
+    offset?: number;
+    user?: string;
+  };
 };
 
 type UserFreshReleasesResponse = {

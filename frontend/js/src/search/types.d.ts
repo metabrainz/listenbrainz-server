@@ -95,3 +95,44 @@ type AlbumTypeSearchResult = {
     }[];
   }[];
 };
+
+type EventTypeSearchResult = {
+  count: number;
+  offset: number;
+  events: {
+    id: string;
+    name: string;
+    score: number;
+    type?: string;
+    disambiguation?: string;
+    time?: string;
+    "life-span"?: {
+      begin?: string;
+      end?: string;
+    };
+    tags?: {
+      count: number;
+      name: string;
+    }[];
+    aliases?: Alias[];
+    relations?: {
+      type: string;
+      "type-id": string;
+      direction: string;
+      artist?: {
+        id: string;
+        name: string;
+        "sort-name": string;
+        disambiguation?: string;
+      };
+      place?: {
+        id: string;
+        name: string;
+      };
+      area?: {
+        id: string;
+        name: string;
+      };
+    }[];
+  }[];
+};
