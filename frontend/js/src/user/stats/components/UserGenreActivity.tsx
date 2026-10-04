@@ -9,6 +9,7 @@ import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { useMediaQuery } from "../../../explore/fresh-releases/utils";
+import { useNivoTheme } from "../../../utils/nivoTheme";
 
 export type UserGenreActivityProps = {
   range: UserStatsAPIRange;
@@ -124,7 +125,7 @@ function TimeMarker({
         fontWeight: "bold",
         fontSize: isMobile ? 12 : 16,
         zIndex: 10,
-        color: "#666",
+        color: "var(--lb-text-muted)",
         ...position,
       }}
     >
@@ -137,6 +138,7 @@ export function UserGenreActivityGraph({
   rawData,
 }: UserGenreActivityGraphProps) {
   const colorScale = scaleSequential(interpolateRainbow).domain([0, 24]);
+  const nivoTheme = useNivoTheme();
   const timezoneOffset = React.useMemo(() => getRoundedTimezoneOffset(), []);
 
   // Detect mobile screen size
@@ -277,12 +279,13 @@ export function UserGenreActivityGraph({
         arcLabel={(d) => `${d.data.actualValue}`}
         arcLinkLabel={(d) => d.data.displayName}
         arcLabelsSkipAngle={chartConfig.arcLabelsSkipAngle}
-        arcLabelsTextColor="#333333"
+        arcLabelsTextColor={nivoTheme.textColor}
         arcLinkLabelsSkipAngle={isMobile ? 20 : 10}
-        arcLinkLabelsTextColor="#333333"
+        arcLinkLabelsTextColor={nivoTheme.textColor}
         arcLinkLabelsThickness={isMobile ? 1 : 2}
         arcLinkLabelsOffset={isMobile ? -5 : 0}
         tooltip={CustomTooltip}
+        theme={nivoTheme}
         animate
         motionConfig="gentle"
         legends={[]}

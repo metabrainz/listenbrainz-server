@@ -1,6 +1,6 @@
 import { ResponsiveStream, TooltipProps } from "@nivo/stream";
 // eslint-disable-next-line import/no-extraneous-dependencies
-import {  type OrdinalColorScaleConfig } from "@nivo/colors";
+import { OrdinalColorScaleConfig } from "@nivo/colors";
 import * as React from "react";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -11,6 +11,7 @@ import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { useMediaQuery } from "../../../explore/fresh-releases/utils";
+import { useNivoTheme } from "../../../utils/nivoTheme";
 
 export type UserArtistEvolutionActivityProps = {
   range: UserStatsAPIRange;
@@ -54,10 +55,9 @@ const renderCustomTooltip = (
   if (!slice || typeof slice.index === "undefined") {
     return (
       <div
-        className="bg-white p-2 border rounded"
+        className="nivo-theme-tooltip p-2 border rounded"
         style={{
           fontSize: "12px",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
           maxWidth: "240px",
         }}
       >
@@ -68,10 +68,9 @@ const renderCustomTooltip = (
 
   return (
     <div
-      className="bg-white p-2 border rounded"
+      className="nivo-theme-tooltip p-2 border rounded"
       style={{
         fontSize: "12px",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
         maxWidth: "240px",
       }}
     >
@@ -262,6 +261,7 @@ export function UserArtistEvolutionActivityGraph(
   } = props;
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 767px)");
+  const nivoTheme = useNivoTheme();
 
   const { chartData, keys, orderedTimeUnits, artistMap } = React.useMemo(
     () => transformArtistEvolutionActivityData(rawData, range, topN),
@@ -298,7 +298,6 @@ export function UserArtistEvolutionActivityGraph(
   }, [maxValue]);
 
   return (
-
     <div
       style={{ width: "100%", height: isMobile ? "500px" : "600px" }}
       data-testid="artist-evolution-stream"
@@ -344,21 +343,27 @@ export function UserArtistEvolutionActivityGraph(
           modifiers: [["darker", 0.7]],
         }}
         theme={{
+          ...nivoTheme,
           axis: {
             ticks: {
               text: {
                 fontSize: isMobile ? 10 : 12,
-                fill: "#333333",
+                fill: nivoTheme.axis?.ticks?.text?.fill,
               },
             },
           },
           grid: {
             line: {
-              stroke: "#dddddd",
+              stroke: nivoTheme.grid?.line?.stroke,
               strokeWidth: 1,
             },
           },
-          legends: { text: { fontSize: isMobile ? 10 : 12 } },
+          legends: {
+            text: {
+              fill: nivoTheme.legends?.text?.fill,
+              fontSize: isMobile ? 10 : 12,
+            },
+          },
         }}
         legends={[
           {
@@ -368,16 +373,16 @@ export function UserArtistEvolutionActivityGraph(
             translateY: 10,
             itemWidth: isMobile ? 70 : 90,
             itemHeight: 18,
-            itemTextColor: "#333333",
+            itemTextColor: nivoTheme.textColor,
             symbolSize: 12,
             symbolShape: "circle",
             itemsSpacing: isMobile ? 6 : 2,
-            itemBackground: "rgba(255,255,255,0.75)",
+            itemBackground: "var(--lb-surface-raised)",
             itemOpacity: 1,
             effects: [
               {
                 on: "hover",
-                style: { itemTextColor: "#000000" },
+                style: { itemTextColor: "var(--lb-accent-hover)" },
               },
             ],
             onClick: (datum: any) => {

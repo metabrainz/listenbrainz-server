@@ -304,7 +304,11 @@ export default function AlbumPage(): JSX.Element {
         <title>{album?.name}</title>
       </Helmet>
       <div className="entity-page-header flex">
-        <div className="cover-art">
+        <div
+          className={`cover-art ${
+            caa_id && caa_release_mbid ? "" : "entity-cover-art-placeholder"
+          }`}
+        >
           <img
             src={coverArtSrc}
             ref={albumArtRef}

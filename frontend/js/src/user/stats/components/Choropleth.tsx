@@ -1,4 +1,3 @@
-import { Theme } from "@nivo/core";
 import {
   ResponsiveChoropleth,
   ChoroplethBoundFeature,
@@ -18,8 +17,8 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faHeadphones, faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router";
 import * as worldCountries from "../data/world_countries.json";
-import { COLOR_BLACK } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
+import { useNivoTheme } from "../../../utils/nivoTheme";
 import enrichJSPFTracks from "../../../utils/Playlist";
 import { ToastMsg } from "../../../notifications/Notifications";
 import buildAuthUrl from "../../../utils/auth";
@@ -49,7 +48,7 @@ const commonLegendProps = {
     {
       on: "hover",
       style: {
-        itemTextColor: COLOR_BLACK,
+        itemTextColor: "var(--lb-accent-hover)",
         itemOpacity: 1,
       },
     },
@@ -73,26 +72,6 @@ const legends = {
   } as LegendProps,
 };
 
-const themes: {
-  desktop: Theme;
-  mobile: Theme;
-} = {
-  desktop: {
-    legends: {
-      text: {
-        fontSize: 12,
-      },
-    },
-  },
-  mobile: {
-    legends: {
-      text: {
-        fontSize: 8,
-      },
-    },
-  },
-};
-
 const tooltipWidth = 250;
 
 export default function CustomChoropleth(props: ChoroplethProps) {
@@ -100,6 +79,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   const [selectedCountry, setSelectedCountry] = useState<CountryFeature>();
   const refContainer = useRef<HTMLDivElement>(null);
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
+  const nivoTheme = useNivoTheme();
   const tooltipRef = useRef<HTMLButtonElement>(null);
 
   // Use default container width of 1000px, but promptly calculate the real width in a useLayoutEffect
@@ -244,8 +224,8 @@ export default function CustomChoropleth(props: ChoroplethProps) {
       <button
         ref={tooltipRef}
         type="button"
+        className="nivo-theme-tooltip user-artist-map-tooltip"
         style={{
-          background: "white",
           color: "inherit",
           fontSize: "inherit",
           borderRadius: "2px",
@@ -271,7 +251,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            background: `linear-gradient(180deg,rgba(252, 252, 252, 1) 0%, rgba(209, 209, 209, 1) 100%)`,
+            background: "var(--lb-surface-muted)",
             gap: "8px",
           }}
         >
@@ -406,14 +386,22 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
         colors={colorScale}
         domain={domain}
-        theme={isMobile ? themes.mobile : themes.desktop}
+        theme={{
+          ...nivoTheme,
+          legends: {
+            text: {
+              ...nivoTheme.legends?.text,
+              fontSize: isMobile ? 8 : 12,
+            },
+          },
+        }}
         valueFormat=".2~s"
         // We can't set isInteractive to false (need onClick event)
         // But we don't want to show a tooltip, so this function returns an empty element
         // eslint-disable-next-line
         tooltip={() => <></>}
         onClick={showTooltipFromEvent}
-        unknownColor="#efefef"
+        unknownColor="var(--lb-surface-muted)"
         label={(feature: CountryFeature) => feature.properties.name}
         projectionScale={containerWidth / 5.5}
         projectionType="naturalEarth1"

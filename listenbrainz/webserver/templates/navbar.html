@@ -42,6 +42,9 @@
       {%- endif -%}
       <a {{ 'class=active' if active_about_section is defined }} href="/about/">About</a>
       <a href="https://community.metabrainz.org/c/listenbrainz" target="_blank" rel="noopener noreferrer">Community</a>
+      <button type="button" class="theme-toggle" onclick="window.ListenBrainzTheme.toggle()" data-theme-toggle aria-label="Switch to dark mode" title="Switch to dark mode" aria-pressed="false">
+        <span aria-hidden="true">◐</span>
+      </button>
       <form class="search-bar" role="search" method="GET" action="/search">
           <input type="text" name="search_term" class="form-control input-sm" placeholder="Search users" required>
         <button type="submit"></button>

@@ -1,16 +1,21 @@
 import React from "react";
 import { Link, NavLink, useNavigate } from "react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCircleHalfStroke,
+  faMagnifyingGlass,
+} from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Username from "../common/Username";
 import buildAuthUrl from "../utils/auth";
+import { useTheme } from "../utils/theme";
 
 function Navbar() {
   const { currentUser } = React.useContext(GlobalAppContext);
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [theme, toggleTheme] = useTheme();
 
   const toggleSidebarButton = React.useRef<HTMLButtonElement>(null);
 
@@ -36,6 +41,10 @@ function Navbar() {
   const encodedUsername = currentUser?.name
     ? encodeURIComponent(currentUser.name)
     : undefined;
+
+  const handleThemeToggle = () => {
+    toggleTheme();
+  };
 
   return (
     <nav role="navigation">
@@ -159,6 +168,19 @@ function Navbar() {
             >
               Community
             </a>
+            <button
+              type="button"
+              className="theme-toggle"
+              data-theme-toggle
+              onClick={handleThemeToggle}
+              aria-label={`Switch to ${
+                theme === "dark" ? "light" : "dark"
+              } mode`}
+              aria-pressed={theme === "dark"}
+              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            >
+              <FontAwesomeIcon icon={faCircleHalfStroke} />
+            </button>
           </div>
           <div className="mobile-nav-fix" />
         </div>

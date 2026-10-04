@@ -184,6 +184,7 @@ export default function TrackPage(): JSX.Element {
     caa_id && caa_release_mbid
       ? generateAlbumArtThumbnailLink(caa_id, caa_release_mbid, 500)
       : "/static/img/cover-art-placeholder.jpg";
+  const hasCoverArt = Boolean(caa_id && caa_release_mbid);
 
   // Sort by the more precise secondary type first to create categories like "Live", "Compilation" and "Remix" instead of
   // "Album + Live", "Single + Live", "EP + Live", "Broadcast + Live" and "Album + Remix", etc.
@@ -241,7 +242,11 @@ export default function TrackPage(): JSX.Element {
         className="entity-page-header flex"
         style={{ ["--bg-color" as string]: albumArtPalette?.Vibrant?.hex }}
       >
-        <div className="cover-art">
+        <div
+          className={`cover-art ${
+            hasCoverArt ? "" : "entity-cover-art-placeholder"
+          }`}
+        >
           <img
             src={coverArtSrc}
             ref={albumArtRef}
