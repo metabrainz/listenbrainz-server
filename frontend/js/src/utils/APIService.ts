@@ -2258,6 +2258,19 @@ export default class APIService {
     return response.json();
   };
 
+  eventLookup = async (
+    searchQuery: string,
+    offset: number = 0,
+    count: number = 25
+  ): Promise<EventTypeSearchResult> => {
+    const url = `${this.MBBaseURI}/event?query=${encodeURIComponent(
+      searchQuery
+    )}&fmt=json&offset=${offset}&limit=${count}`;
+    const response = await this.fetchWithRetry(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   searchMBRelease = async (
     searchQuery: string
   ): Promise<{
