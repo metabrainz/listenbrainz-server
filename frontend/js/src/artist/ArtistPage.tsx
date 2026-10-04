@@ -313,7 +313,9 @@ export default function ArtistPage(): JSX.Element {
       </Helmet>
       <div className="entity-page-header flex">
         <div
-          className="cover-art"
+          className={`cover-art ${
+            coverArtSVG ? "" : "entity-cover-art-placeholder"
+          }`}
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
             __html: DOMPurify.sanitize(
