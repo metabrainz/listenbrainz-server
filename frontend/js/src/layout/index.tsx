@@ -8,6 +8,7 @@ import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import ProtectedRoutes from "../utils/ProtectedRoutes";
 import type { ServerAlert } from "../utils/utils";
+import { useTheme } from "../utils/theme";
 
 const BrainzPlayer = React.lazy(() =>
   import("../common/brainzplayer/BrainzPlayer")
@@ -83,6 +84,8 @@ export default function Layout({
   withProtectedRoutes?: boolean;
   withBrainzPlayer?: boolean;
 }) {
+  const [theme] = useTheme();
+
   React.useEffect(() => {
     showInitialAlerts(initialAlerts);
   }, [initialAlerts]);
@@ -111,7 +114,7 @@ export default function Layout({
         closeOnClick
         rtl={false}
         pauseOnHover
-        theme="light"
+        theme={theme}
         enableMultiContainer
       />
       <ScrollRestoration />

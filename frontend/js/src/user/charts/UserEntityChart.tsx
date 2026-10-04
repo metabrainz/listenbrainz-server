@@ -41,6 +41,7 @@ import { useMediaQuery } from "../../explore/fresh-releases/utils";
 import ReleaseCard from "../../explore/fresh-releases/components/ReleaseCard";
 import SyndicationFeedModal from "../../components/SyndicationFeedModal";
 import { setAmbientQueueAtom } from "../../common/brainzplayer/BrainzPlayerAtoms";
+import { useTheme } from "../../utils/theme";
 
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
@@ -115,6 +116,7 @@ function CustomBarComponent(barProps: BarItemProps<UserEntityDatum>) {
 export default function UserEntityChart() {
   const loaderData = useLoaderData() as UserEntityChartLoaderData;
   const { user, entity, terminology, range, currPage } = loaderData;
+  const [theme] = useTheme();
   const prevPage = currPage - 1;
   const nextPage = currPage + 1;
 
@@ -380,7 +382,9 @@ export default function UserEntityChart() {
                   maxValue={maxListens}
                   layout="horizontal"
                   barComponent={CustomBarComponent}
-                  labelTextColor={COLOR_LB_ASPHALT}
+                  labelTextColor={
+                    theme === "dark" ? "#e4e4e4" : COLOR_LB_ASPHALT
+                  }
                   margin={{
                     bottom: 40,
                     top: 40,
@@ -394,7 +398,7 @@ export default function UserEntityChart() {
                       colors: [
                         {
                           offset: 10,
-                          color: "antiquewhite",
+                          color: theme === "dark" ? "#3c342d" : "antiquewhite",
                         },
                         {
                           offset: 90,

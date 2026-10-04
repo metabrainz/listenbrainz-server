@@ -43,6 +43,7 @@
 @import "similarity";
 @import "dashboard";
 @import "cover-art-grids";
+@import "theme";
 
 // pre is used in a tooltip with a different background color
 pre {
@@ -200,3 +201,7 @@ details[open] > summary .summary-indicator {
 .Toastify__close-button {
   color: inherit;
 }
+
+// Keep theme overrides last: some legacy rules below Bootstrap use literal
+// colours (and a handful use !important), so the theme needs the final word.
+@include listenbrainz-theme;

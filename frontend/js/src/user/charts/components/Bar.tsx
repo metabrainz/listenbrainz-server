@@ -7,6 +7,7 @@ import {
 } from "@nivo/bar";
 import { TooltipWrapper } from "@nivo/tooltip";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
+import { useNivoTheme } from "../../../utils/nivoTheme";
 
 export type BarProps = {
   data: UserEntityData;
@@ -16,6 +17,7 @@ export type BarProps = {
 
 export default function Bar(props: BarProps) {
   const { data, maxValue, isMobileSize, ...barProps } = props;
+  const nivoTheme = useNivoTheme();
 
   const customTooltip = (tooltipProps: BarTooltipProps<BarDatum>) => {
     const { data: datum, value } = tooltipProps;
@@ -35,6 +37,7 @@ export default function Bar(props: BarProps) {
   };
 
   const theme = {
+    ...nivoTheme,
     labels: {
       text: {
         fontSize: "15px",

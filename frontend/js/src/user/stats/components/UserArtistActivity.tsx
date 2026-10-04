@@ -9,6 +9,7 @@ import { useMediaQuery } from "react-responsive";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
+import { useNivoTheme } from "../../../utils/nivoTheme";
 
 export type UserArtistActivityProps = {
   range: UserStatsAPIRange;
@@ -18,6 +19,34 @@ export type UserArtistActivityProps = {
 export declare type ChartDataItem = {
   label: string;
   [albumName: string]: number | string;
+};
+
+const wrapWordsByLength = (str: string, maxLen: number): string => {
+  const words = str.split(" ");
+  const lines: string[] = [];
+  let currentLine = words[0];
+  for (let i = 1; i < words.length; i += 1) {
+    if (currentLine.length + 1 + words[i].length <= maxLen) {
+      currentLine += ` ${words[i]}`;
+    } else {
+      lines.push(currentLine);
+      currentLine = words[i];
+    }
+  }
+  lines.push(currentLine);
+  return lines.join("\n");
+};
+
+const processData = (data?: UserArtistActivityResponse): ChartDataItem[] => {
+  if (!data?.payload?.artist_activity?.length) return [];
+
+  return data.payload.artist_activity.map((artist) => ({
+    label: wrapWordsByLength(artist.name, 14),
+    ...artist.albums.reduce(
+      (acc, album) => ({ ...acc, [album.name]: album.listen_count }),
+      {} as Record<string, number>
+    ),
+  }));
 };
 
 // Define CustomTooltip outside of the main component
@@ -33,13 +62,8 @@ function CustomTooltip({
   const formattedValue = new Intl.NumberFormat().format(value);
   return (
     <div
-      style={{
-        padding: "10px",
-        background: "white",
-        border: `1px solid ${color}`,
-        borderRadius: "4px",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-      }}
+      className="nivo-theme-tooltip"
+      style={{ padding: "10px", borderColor: color }}
     >
       <strong>
         {id}: {formattedValue}
@@ -52,6 +76,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
   const navigate = useNavigate();
   const isMobile = useMediaQuery({ maxWidth: 767 });
+  const nivoTheme = useNivoTheme();
 
   // Props
   const { user, range } = props;
@@ -97,42 +122,6 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
     errorMessage = "",
   } = loaderData || {};
 
-  const wrapWordsByLength = (str: string, maxLen: number): string => {
-    const words = str.split(" ");
-    const lines: string[] = [];
-    let currentLine = words[0];
-    for (let i = 1; i < words.length; i += 1) {
-      if (currentLine.length + 1 + words[i].length <= maxLen) {
-        currentLine += ` ${words[i]}`;
-      } else {
-        lines.push(currentLine);
-        currentLine = words[i];
-      }
-    }
-    lines.push(currentLine);
-    return lines.join("\n");
-  };
-
-  const processData = (data?: UserArtistActivityResponse) => {
-    if (
-      !data ||
-      !data.payload ||
-      !data.payload.artist_activity ||
-      data.payload.artist_activity.length === 0
-    ) {
-      return [];
-    }
-    return data.payload.artist_activity.map((artist) => {
-      const wrappedLabel = wrapWordsByLength(artist.name, 14);
-      return {
-        label: wrappedLabel,
-        ...artist.albums.reduce(
-          (acc, album) => ({ ...acc, [album.name]: album.listen_count }),
-          {} as Record<string, number>
-        ),
-      };
-    }) as ChartDataItem[];
-  };
   const [chartData, setChartData] = React.useState<ChartDataItem[]>([]);
 
   const albumRedirectMapping = React.useMemo(() => {
@@ -150,15 +139,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
   }, [rawData]);
 
   React.useEffect(() => {
-    if (
-      rawData &&
-      rawData.payload &&
-      rawData.payload.artist_activity &&
-      rawData.payload.artist_activity.length > 0
-    ) {
-      const processedData = processData(rawData);
-      setChartData(processedData);
-    }
+    setChartData(processData(rawData));
   }, [rawData]);
 
   const tooltipRenderer = React.useCallback(
@@ -296,6 +277,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                     }
                   }}
                   tooltip={tooltipRenderer}
+                  theme={nivoTheme}
                 />
               </div>
             </div>
