@@ -632,7 +632,8 @@ export default class APIService {
 
   getEventWatchStatus = async (
     userName: string,
-    eventMBID: string
+    eventMBID: string,
+    userToken: string
   ): Promise<{ event_mbid: string; watching: boolean; user: string }> => {
     if (!userName) {
       throw new SyntaxError("Username missing");
@@ -640,11 +641,19 @@ export default class APIService {
     if (!eventMBID) {
       throw new SyntaxError("Event MBID missing");
     }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
 
     const url = `${this.APIBaseURI}/user/${encodeURIComponent(
       userName
     )}/watched-events/${eventMBID}`;
-    const response = await this.fetchWithRetry(url);
+    const response = await this.fetchWithRetry(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
     await this.checkStatus(response);
     return response.json();
   };

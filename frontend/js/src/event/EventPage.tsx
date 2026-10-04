@@ -191,7 +191,11 @@ export default function EventPage(): JSX.Element {
   } = useQuery({
     queryKey: watchStatusQueryKey,
     queryFn: () =>
-      APIService.getEventWatchStatus(currentUser.name, event!.event_mbid),
+      APIService.getEventWatchStatus(
+        currentUser.name,
+        event!.event_mbid,
+        currentUser.auth_token!
+      ),
     enabled: isUserLoggedIn && Boolean(event),
   });
   const loggedInUserWatchesEvent = Boolean(watchStatusData?.watching);

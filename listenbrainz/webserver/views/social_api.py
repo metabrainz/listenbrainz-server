@@ -10,7 +10,7 @@ from data.model.user_entity import EntityRecord
 from listenbrainz.webserver import db_conn, ts_conn
 
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APINotFound, APIInternalServerError, APIBadRequest
+from listenbrainz.webserver.errors import APINotFound, APIInternalServerError, APIBadRequest, APIForbidden
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import validate_auth_header, is_valid_uuid, log_raise_400, \
     get_non_negative_param, DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET
@@ -544,7 +544,9 @@ def unwatch_event():
 @ratelimit()
 def get_watched_events(user_name: str):
     """
-    Fetch the list of events watched by the user ``user_name``, most recently watched first. Returns a JSON like:
+    Fetch the list of events watched by the user ``user_name``, most recently watched first. Only ``user_name`` and
+    users who follow ``user_name`` and are followed back can see this. A user token (found on
+    https://listenbrainz.org/settings/ ) must be provided in the Authorization header! Returns a JSON like:
 
     .. code-block:: json
 
@@ -557,14 +559,23 @@ def get_watched_events(user_name: str):
 
     :param count: The number of events to return, at most 1000. Default 25.
     :param offset: The number of events to skip from the beginning. Default 0.
+    :reqheader Authorization: Token <user token>
     :statuscode 200: Yay, you have data!
     :statuscode 400: invalid count or offset passed.
+    :statuscode 401: Unauthorized, you do not have permission to view this user's watched events.
+    :statuscode 403: Forbidden, you do not have permission to view this user's watched events.
     :statuscode 404: User not found
     """
+    current_user = validate_auth_header()
     user = db_user.get_by_mb_id(db_conn, user_name)
 
     if not user:
         raise APINotFound("User %s not found" % user_name)
+
+    if user["musicbrainz_id"] != current_user["musicbrainz_id"]:
+        if not (db_user_relationship.is_following_user(db_conn, current_user["id"], user["id"])
+                and db_user_relationship.is_following_user(db_conn, user["id"], current_user["id"])):
+            raise APIForbidden("You don't have permissions to view this user's watched events.")
 
     count = get_non_negative_param("count", DEFAULT_ITEMS_PER_GET)
     count = min(count, MAX_ITEMS_PER_GET)
@@ -590,7 +601,9 @@ def get_watched_events(user_name: str):
 @ratelimit()
 def get_event_watch_status(user_name: str, event_mbid: str):
     """
-    Check whether the user ``user_name`` is watching the event with the given ``event_mbid``. Returns a JSON like:
+    Check whether the user ``user_name`` is watching the event with the given ``event_mbid``. Only ``user_name`` and
+    users who follow ``user_name`` and are followed back can see this. A user token (found on
+    https://listenbrainz.org/settings/ ) must be provided in the Authorization header! Returns a JSON like:
 
     .. code-block:: json
 
@@ -600,14 +613,23 @@ def get_event_watch_status(user_name: str, event_mbid: str):
             "user": "user_name"
         }
 
+    :reqheader Authorization: Token <user token>
     :statuscode 200: Yay, you have data!
     :statuscode 400: invalid event_mbid passed.
+    :statuscode 401: Unauthorized, you do not have permission to view this user's watched events.
+    :statuscode 403: Forbidden, you do not have permission to view this user's watched events.
     :statuscode 404: User not found
     """
+    current_user = validate_auth_header()
     user = db_user.get_by_mb_id(db_conn, user_name)
 
     if not user:
         raise APINotFound("User %s not found" % user_name)
+
+    if user["musicbrainz_id"] != current_user["musicbrainz_id"]:
+        if not (db_user_relationship.is_following_user(db_conn, current_user["id"], user["id"])
+                and db_user_relationship.is_following_user(db_conn, user["id"], current_user["id"])):
+            raise APIForbidden("You don't have permissions to view this user's watched events.")
 
     if not is_valid_uuid(event_mbid):
         log_raise_400("event_mbid %s is not valid" % event_mbid)

@@ -320,7 +320,8 @@ class SocialAPITestCase(IntegrationTestCase):
 
     def test_get_watched_events_empty(self):
         resp = self.client.get(
-            self.custom_url_for("social_api_v1.get_watched_events", user_name=self.user["musicbrainz_id"])
+            self.custom_url_for("social_api_v1.get_watched_events", user_name=self.user["musicbrainz_id"]),
+            headers={"Authorization": "Token %s" % self.user["auth_token"]},
         )
         self.assert200(resp)
         data = resp.json
@@ -331,7 +332,8 @@ class SocialAPITestCase(IntegrationTestCase):
     def test_get_watched_events(self):
         self._watch(self.event_mbid, self.user["auth_token"])
         resp = self.client.get(
-            self.custom_url_for("social_api_v1.get_watched_events", user_name=self.user["musicbrainz_id"])
+            self.custom_url_for("social_api_v1.get_watched_events", user_name=self.user["musicbrainz_id"]),
+            headers={"Authorization": "Token %s" % self.user["auth_token"]},
         )
         self.assert200(resp)
         data = resp.json
@@ -341,14 +343,16 @@ class SocialAPITestCase(IntegrationTestCase):
 
     def test_get_watched_events_user_not_found(self):
         resp = self.client.get(
-            self.custom_url_for("social_api_v1.get_watched_events", user_name="doesnotexist_xyz")
+            self.custom_url_for("social_api_v1.get_watched_events", user_name="doesnotexist_xyz"),
+            headers={"Authorization": "Token %s" % self.user["auth_token"]},
         )
         self.assert404(resp)
 
     def test_get_watched_events_large_count(self):
         resp = self.client.get(
             self.custom_url_for("social_api_v1.get_watched_events",
-                                user_name=self.user["musicbrainz_id"], count=9999)
+                                user_name=self.user["musicbrainz_id"], count=9999),
+            headers={"Authorization": "Token %s" % self.user["auth_token"]},
         )
         self.assert200(resp)
 
@@ -356,7 +360,8 @@ class SocialAPITestCase(IntegrationTestCase):
         self._watch(self.event_mbid, self.user["auth_token"])
         resp = self.client.get(
             self.custom_url_for("social_api_v1.get_event_watch_status",
-                                user_name=self.user["musicbrainz_id"], event_mbid=self.event_mbid)
+                                user_name=self.user["musicbrainz_id"], event_mbid=self.event_mbid),
+            headers={"Authorization": "Token %s" % self.user["auth_token"]},
         )
         self.assert200(resp)
         self.assertEqual(resp.json, {
@@ -368,7 +373,8 @@ class SocialAPITestCase(IntegrationTestCase):
     def test_get_event_watch_status_not_watching(self):
         resp = self.client.get(
             self.custom_url_for("social_api_v1.get_event_watch_status",
-                                user_name=self.user["musicbrainz_id"], event_mbid=self.event_mbid)
+                                user_name=self.user["musicbrainz_id"], event_mbid=self.event_mbid),
+            headers={"Authorization": "Token %s" % self.user["auth_token"]},
         )
         self.assert200(resp)
         self.assertFalse(resp.json["watching"])
@@ -376,13 +382,15 @@ class SocialAPITestCase(IntegrationTestCase):
     def test_get_event_watch_status_invalid_mbid(self):
         resp = self.client.get(
             self.custom_url_for("social_api_v1.get_event_watch_status",
-                                user_name=self.user["musicbrainz_id"], event_mbid="not-a-uuid")
+                                user_name=self.user["musicbrainz_id"], event_mbid="not-a-uuid"),
+            headers={"Authorization": "Token %s" % self.user["auth_token"]},
         )
         self.assert400(resp)
 
     def test_get_event_watch_status_user_not_found(self):
         resp = self.client.get(
             self.custom_url_for("social_api_v1.get_event_watch_status",
-                                user_name="doesnotexist_xyz", event_mbid=self.event_mbid)
+                                user_name="doesnotexist_xyz", event_mbid=self.event_mbid),
+            headers={"Authorization": "Token %s" % self.user["auth_token"]},
         )
         self.assert404(resp)
