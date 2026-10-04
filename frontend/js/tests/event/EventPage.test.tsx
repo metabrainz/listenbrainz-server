@@ -306,11 +306,18 @@ describe("EventPage", () => {
   });
 
   it("shows that the logged in user is watching the event and who they follow", async () => {
-    renderEventPage();
+    const apiService = new APIService("");
+    const watchStatusSpy = jest.spyOn(apiService, "getEventWatchStatus");
+    renderEventPage({ APIService: apiService });
 
     expect(
       await screen.findByRole("button", { name: "Watching" })
     ).toBeInTheDocument();
+    expect(watchStatusSpy).toHaveBeenCalledWith(
+      "FNORD",
+      eventMBID,
+      "never_gonna"
+    );
     expect(screen.getByText("12 watching")).toBeInTheDocument();
     expect(
       await screen.findByRole("button", { name: "Following" })

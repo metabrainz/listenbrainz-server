@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import ANY, patch
 
 import listenbrainz.db.user as db_user
+import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_artist_relationship as db_user_artist_relationship
 import listenbrainz.db.event_interaction as db_event_interaction
 from listenbrainz.tests.integration import IntegrationTestCase
@@ -394,3 +395,74 @@ class SocialAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token %s" % self.user["auth_token"]},
         )
         self.assert404(resp)
+
+    def test_get_watched_events_needs_token(self):
+        resp = self.client.get(
+            self.custom_url_for("social_api_v1.get_watched_events", user_name=self.user["musicbrainz_id"])
+        )
+        self.assert401(resp)
+
+    def test_get_event_watch_status_needs_token(self):
+        resp = self.client.get(
+            self.custom_url_for("social_api_v1.get_event_watch_status",
+                                user_name=self.user["musicbrainz_id"], event_mbid=self.event_mbid)
+        )
+        self.assert401(resp)
+
+    def test_get_watched_events_without_mutual_follow(self):
+        other_user = db_user.get_or_create(self.db_conn, 2, "otheruserpleaseignore")
+        url = self.custom_url_for("social_api_v1.get_watched_events", user_name=self.user["musicbrainz_id"])
+        headers = {"Authorization": "Token %s" % other_user["auth_token"]}
+
+        # a stranger, then a follow in one direction only, then in the other direction only
+        self.assert403(self.client.get(url, headers=headers))
+        db_user_relationship.insert(self.db_conn, other_user["id"], self.user["id"], "follow")
+        self.assert403(self.client.get(url, headers=headers))
+        db_user_relationship.delete(self.db_conn, other_user["id"], self.user["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], other_user["id"], "follow")
+        self.assert403(self.client.get(url, headers=headers))
+
+    def test_get_event_watch_status_without_mutual_follow(self):
+        other_user = db_user.get_or_create(self.db_conn, 2, "otheruserpleaseignore")
+        url = self.custom_url_for("social_api_v1.get_event_watch_status",
+                                  user_name=self.user["musicbrainz_id"], event_mbid=self.event_mbid)
+        headers = {"Authorization": "Token %s" % other_user["auth_token"]}
+
+        # a stranger, then a follow in one direction only, then in the other direction only
+        self.assert403(self.client.get(url, headers=headers))
+        db_user_relationship.insert(self.db_conn, other_user["id"], self.user["id"], "follow")
+        self.assert403(self.client.get(url, headers=headers))
+        db_user_relationship.delete(self.db_conn, other_user["id"], self.user["id"], "follow")
+        db_user_relationship.insert(self.db_conn, self.user["id"], other_user["id"], "follow")
+        self.assert403(self.client.get(url, headers=headers))
+
+    def test_get_watched_events_mutual_follow(self):
+        other_user = db_user.get_or_create(self.db_conn, 2, "otheruserpleaseignore")
+        db_user_relationship.insert(self.db_conn, self.user["id"], other_user["id"], "follow")
+        db_user_relationship.insert(self.db_conn, other_user["id"], self.user["id"], "follow")
+        self._watch(self.event_mbid, self.user["auth_token"])
+
+        resp = self.client.get(
+            self.custom_url_for("social_api_v1.get_watched_events", user_name=self.user["musicbrainz_id"]),
+            headers={"Authorization": "Token %s" % other_user["auth_token"]},
+        )
+        self.assert200(resp)
+        self.assertEqual(resp.json["watched_events"], [self.event_mbid])
+
+    def test_get_event_watch_status_mutual_follow(self):
+        other_user = db_user.get_or_create(self.db_conn, 2, "otheruserpleaseignore")
+        db_user_relationship.insert(self.db_conn, self.user["id"], other_user["id"], "follow")
+        db_user_relationship.insert(self.db_conn, other_user["id"], self.user["id"], "follow")
+        self._watch(self.event_mbid, self.user["auth_token"])
+
+        resp = self.client.get(
+            self.custom_url_for("social_api_v1.get_event_watch_status",
+                                user_name=self.user["musicbrainz_id"], event_mbid=self.event_mbid),
+            headers={"Authorization": "Token %s" % other_user["auth_token"]},
+        )
+        self.assert200(resp)
+        self.assertEqual(resp.json, {
+            "event_mbid": self.event_mbid,
+            "watching": True,
+            "user": self.user["musicbrainz_id"],
+        })
