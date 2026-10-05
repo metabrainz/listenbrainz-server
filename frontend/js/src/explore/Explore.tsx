@@ -63,6 +63,12 @@ export default function ExplorePage() {
           url="/explore/fresh-releases/"
         />
         <ExploreCard
+          name="Events"
+          desc="Concerts and festivals"
+          img_name="events.jpg"
+          url="/explore/events/"
+        />
+        <ExploreCard
           name="Year in Music"
           desc="Yearly breakdown of your listening habits"
           img_name="year-in-music.png"

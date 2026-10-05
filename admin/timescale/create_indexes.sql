@@ -42,6 +42,14 @@ CREATE INDEX mb_metadata_cache_idx_artist_mbids ON mapping.mb_metadata_cache USI
 CREATE INDEX mb_metadata_cache_idx_artist_ids ON mapping.mb_metadata_cache USING gin(artist_ids);
 CREATE INDEX mb_metadata_cache_idx_dirty ON mapping.mb_metadata_cache (dirty);
 
+CREATE UNIQUE INDEX mb_event_cache_idx_event_id ON mapping.mb_event_cache (event_id);
+CREATE INDEX mb_event_cache_idx_date ON mapping.mb_event_cache (begin_date_year, begin_date_month, begin_date_day);
+CREATE INDEX mb_event_cache_idx_dirty ON mapping.mb_event_cache (dirty);
+
+CREATE INDEX mb_event_artist_cache_idx_artist_id_event_id ON mapping.mb_event_artist_cache (artist_id, event_id);
+CREATE INDEX mb_event_artist_cache_idx_artist_mbid ON mapping.mb_event_artist_cache (artist_mbid);
+CREATE INDEX mb_event_artist_cache_idx_event_id ON mapping.mb_event_artist_cache (event_id);
+CREATE INDEX mb_event_artist_cache_idx_link_type_gid ON mapping.mb_event_artist_cache (link_type_gid);
 CREATE UNIQUE INDEX mb_release_group_cache_idx_release_group_mbid ON mapping.mb_release_group_cache (release_group_mbid);
 CREATE INDEX mb_release_group_cache_idx_artist_mbids ON mapping.mb_release_group_cache USING gin(artist_mbids);
 CREATE INDEX mb_release_group_cache_idx_dirty ON mapping.mb_release_group_cache (dirty);

@@ -78,6 +78,26 @@ const getEntityPages = (): RouteObject[] => {
             },
           },
         },
+        {
+          path: "event/:eventMBID/",
+          lazy: {
+            Component: async () => {
+              return (await import("../event/EventPage")).default;
+            },
+            loader: async () => {
+              return RouteQueryLoader(
+                "event",
+                undefined,
+                (response: Response) => {
+                  // Don't throw an error on 404, allowing the isError state
+                  // in the EventPage query client state, to show custom error text.
+                  // The loader throws react-router's data(), which keeps the status in init
+                  return (response as any)?.init?.status !== 404;
+                }
+              );
+            },
+          },
+        },
       ],
     },
   ];

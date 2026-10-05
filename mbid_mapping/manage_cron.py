@@ -20,6 +20,8 @@ from mapping.soundcloud_metadata_index import create_soundcloud_metadata_index
 from mapping.mb_metadata_cache import cleanup_mbid_mapping_table, create_mb_metadata_cache, incremental_update_mb_metadata_cache
 from mapping.mb_artist_metadata_cache import create_mb_artist_metadata_cache, \
     incremental_update_mb_artist_metadata_cache
+from mapping.mb_event_metadata_cache import create_mb_event_metadata_cache, \
+    incremental_update_mb_event_metadata_cache
 from mapping.mb_release_group_cache import create_mb_release_group_cache, incremental_update_mb_release_group_cache
 from similar.tag_similarity import create_tag_similarity
 from mapping.utils import log
@@ -96,6 +98,7 @@ def cron_build_all_mb_caches():
         cleanup_mbid_mapping_table()
         create_mb_artist_metadata_cache(True)
         create_mb_release_group_cache(True)
+        create_mb_event_metadata_cache(True)
 
     else:
         log("day %d: skipping cron job" % dt.day)
@@ -110,6 +113,7 @@ def cron_update_all_mb_caches():
     incremental_update_mb_metadata_cache(True)
     incremental_update_mb_artist_metadata_cache(True)
     incremental_update_mb_release_group_cache(True)
+    incremental_update_mb_event_metadata_cache(True)
 
 
 @cli.command()

@@ -1019,6 +1019,16 @@ const generateAlbumArtThumbnailLink = (
 
 export type CAAThumbnailSizes = 250 | 500 | 1200 | "small" | "large";
 
+export type EAAThumbnailSizes = 250 | 500 | 1200 | "small" | "large";
+
+const generateEventArtThumbnailLink = (
+  eventArtId: number | string,
+  eventMBID: string,
+  size: EAAThumbnailSizes = 250
+): string => {
+  return `https://archive.org/download/mbid-${eventMBID}/mbid-${eventMBID}-${eventArtId}_thumb${size}.jpg`;
+};
+
 const getThumbnailFromCAAResponse = (
   body: CoverArtArchiveResponse,
   size: CAAThumbnailSizes = 250,
@@ -1097,6 +1107,47 @@ const getAlbumArtFromReleaseGroupMBID = async (
     // eslint-disable-next-line no-console
     console.warn(
       `Couldn't fetch Cover Art Archive entry for ${releaseGroupMBID}`,
+      error
+    );
+  }
+  return undefined;
+};
+
+const getEventArtFromEventMBID = async (
+  eventMBID: string,
+  optionalSize?: EAAThumbnailSizes
+): Promise<string | undefined> => {
+  try {
+    const cacheKey = `ea:${eventMBID}-${optionalSize}`;
+    const cachedEventArt = await getCoverArtCache(cacheKey);
+    if (cachedEventArt) {
+      return cachedEventArt;
+    }
+    const EAAResponse = await fetchWithRetry(
+      `https://eventartarchive.org/event/${eventMBID}`,
+      retryParams
+    );
+    if (EAAResponse.ok) {
+      const body: EventArtArchiveResponse = await EAAResponse.json();
+      const image = body.images?.find((img) => img.front) ?? body.images?.[0];
+      if (!image) {
+        return undefined;
+      }
+      const eventArt = image.id
+        ? generateEventArtThumbnailLink(image.id, eventMBID, optionalSize)
+        : image.thumbnails[optionalSize ?? 250] ??
+          image.thumbnails.small ??
+          image.image;
+      if (eventArt) {
+        // Cache the successful result
+        await setCoverArtCache(cacheKey, eventArt);
+      }
+      return eventArt;
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `Couldn't fetch Event Art Archive entry for ${eventMBID}`,
       error
     );
   }
@@ -1496,4 +1547,6 @@ export {
   getAlbumArtFromListenMetadata,
   getAdditionalContent,
   generateAlbumArtThumbnailLink,
+  getEventArtFromEventMBID,
+  generateEventArtThumbnailLink,
 };

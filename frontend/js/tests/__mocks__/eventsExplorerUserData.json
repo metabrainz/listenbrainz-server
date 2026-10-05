@@ -1,0 +1,122 @@
+{
+  "followed": {
+    "payload": {
+      "events": [
+        {
+          "event_mbid": "2fd6a1ec-6b2a-4b85-a3f1-9e2f8b3f7c01",
+          "event_name": "Radiohead at the O2",
+          "begin_date_year": 2026,
+          "begin_date_month": 10,
+          "begin_date_day": 12,
+          "end_date_year": 2026,
+          "end_date_month": 10,
+          "end_date_day": 12,
+          "event_time": null,
+          "cancelled": false,
+          "event_art_presence": "absent",
+          "rating": null,
+          "rating_count": null,
+          "event_type": "Concert",
+          "place_name": "The O2 Arena",
+          "area_name": "London",
+          "performers": [
+            {
+              "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711",
+              "artist_name": "Radiohead",
+              "link_type_name": "main performer"
+            },
+            {
+              "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+              "artist_name": "Portishead",
+              "link_type_name": "support act"
+            }
+          ],
+          "genres": [
+            "alternative rock",
+            "art rock"
+          ],
+          "listen_count": 2400000
+        }
+      ],
+      "count": 1,
+      "offset": 0,
+      "user": "chinmaykunkikar"
+    }
+  },
+  "listened": {
+    "payload": {
+      "events": [
+        {
+          "event_mbid": "2fd6a1ec-6b2a-4b85-a3f1-9e2f8b3f7c01",
+          "event_name": "Radiohead at the O2",
+          "begin_date_year": 2026,
+          "begin_date_month": 10,
+          "begin_date_day": 12,
+          "end_date_year": 2026,
+          "end_date_month": 10,
+          "end_date_day": 12,
+          "event_time": null,
+          "cancelled": false,
+          "event_art_presence": "absent",
+          "rating": null,
+          "rating_count": null,
+          "event_type": "Concert",
+          "place_name": "The O2 Arena",
+          "area_name": "London",
+          "performers": [
+            {
+              "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711",
+              "artist_name": "Radiohead",
+              "link_type_name": "main performer"
+            },
+            {
+              "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+              "artist_name": "Portishead",
+              "link_type_name": "support act"
+            }
+          ],
+          "genres": [
+            "alternative rock",
+            "art rock"
+          ],
+          "listen_count": 2400000,
+          "user_listen_count": 312
+        },
+        {
+          "event_mbid": "5b0c9a55-1f3e-4d2e-8a4e-2c6f1d9b7e02",
+          "event_name": "Björk Cornucopia",
+          "begin_date_year": 2026,
+          "begin_date_month": 10,
+          "begin_date_day": 20,
+          "end_date_year": 2026,
+          "end_date_month": 10,
+          "end_date_day": 20,
+          "event_time": null,
+          "cancelled": false,
+          "event_art_presence": "absent",
+          "rating": null,
+          "rating_count": null,
+          "event_type": "Concert",
+          "place_name": "Harpa",
+          "area_name": "Reykjavík",
+          "performers": [
+            {
+              "artist_mbid": "87c5dedd-371d-4a53-9f7f-80522fb7f3cb",
+              "artist_name": "Björk",
+              "link_type_name": "main performer"
+            }
+          ],
+          "genres": [
+            "art pop",
+            "electronic"
+          ],
+          "listen_count": 900000,
+          "user_listen_count": 45
+        }
+      ],
+      "count": 2,
+      "offset": 0,
+      "user": "chinmaykunkikar"
+    }
+  }
+}

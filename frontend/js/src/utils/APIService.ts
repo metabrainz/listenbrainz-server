@@ -442,6 +442,102 @@ export default class APIService {
     return { status: response.status };
   };
 
+  followArtist = async (
+    artistMBID: string,
+    userToken: string
+  ): Promise<{ status: number }> => {
+    if (!artistMBID) {
+      throw new SyntaxError("Artist MBID missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const response = await this.fetchWithRetry(
+      `${this.APIBaseURI}/followed-artists/add`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({ artist_mbid: artistMBID }),
+      }
+    );
+    return { status: response.status };
+  };
+
+  unfollowArtist = async (
+    artistMBID: string,
+    userToken: string
+  ): Promise<{ status: number }> => {
+    if (!artistMBID) {
+      throw new SyntaxError("Artist MBID missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const response = await this.fetchWithRetry(
+      `${this.APIBaseURI}/followed-artists/remove`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({ artist_mbid: artistMBID }),
+      }
+    );
+    return { status: response.status };
+  };
+
+  watchEvent = async (
+    eventMBID: string,
+    userToken: string
+  ): Promise<{ status: number }> => {
+    if (!eventMBID) {
+      throw new SyntaxError("Event MBID missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const response = await this.fetchWithRetry(
+      `${this.APIBaseURI}/watched-events/add`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({ event_mbid: eventMBID }),
+      }
+    );
+    return { status: response.status };
+  };
+
+  unwatchEvent = async (
+    eventMBID: string,
+    userToken: string
+  ): Promise<{ status: number }> => {
+    if (!eventMBID) {
+      throw new SyntaxError("Event MBID missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const response = await this.fetchWithRetry(
+      `${this.APIBaseURI}/watched-events/remove`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({ event_mbid: eventMBID }),
+      }
+    );
+    return { status: response.status };
+  };
+
   searchUsers = async (
     userName: string
   ): Promise<{ users: Array<SearchUser> }> => {
@@ -489,6 +585,75 @@ export default class APIService {
       userName
     )}/following`;
     const response = await this.fetchWithRetry(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getFollowedArtists = async (
+    userName: string,
+    count: number,
+    offset: number = 0
+  ): Promise<{
+    followed_artists: Array<string>;
+    user: string;
+    count: number;
+    offset: number;
+  }> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/followed-artists?count=${count}&offset=${offset}`;
+    const response = await this.fetchWithRetry(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getArtistFollowStatus = async (
+    userName: string,
+    artistMBID: string
+  ): Promise<{ artist_mbid: string; following: boolean; user: string }> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!artistMBID) {
+      throw new SyntaxError("Artist MBID missing");
+    }
+
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/followed-artists/${artistMBID}`;
+    const response = await this.fetchWithRetry(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getEventWatchStatus = async (
+    userName: string,
+    eventMBID: string,
+    userToken: string
+  ): Promise<{ event_mbid: string; watching: boolean; user: string }> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!eventMBID) {
+      throw new SyntaxError("Event MBID missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/watched-events/${eventMBID}`;
+    const response = await this.fetchWithRetry(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
     await this.checkStatus(response);
     return response.json();
   };
@@ -2132,6 +2297,108 @@ export default class APIService {
     await this.checkStatus(response);
     return response.json();
   };
+
+  fetchSitewideEvents = async (
+    count: number,
+    offset: number,
+    days?: number,
+    past?: boolean,
+    future?: boolean,
+    cancelled?: boolean
+  ): Promise<ExplorerEventsResponse> => {
+    let url = `${this.APIBaseURI}/explore/events`;
+
+    const queryParams: Array<string> = [`count=${count}`, `offset=${offset}`];
+    if (days) {
+      queryParams.push(`days=${days}`);
+    }
+    if (past === true) {
+      queryParams.push(`past=${past}`);
+    }
+    if (future === false) {
+      queryParams.push(`future=${future}`);
+    }
+    if (cancelled === true) {
+      queryParams.push(`cancelled=${cancelled}`);
+    }
+    url += `?${queryParams.join("&")}`;
+
+    const response = await this.fetchWithRetry(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  fetchUserFollowedArtistsEvents = async (
+    userName: string,
+    count: number,
+    offset: number,
+    days?: number,
+    past?: boolean,
+    future?: boolean,
+    cancelled?: boolean
+  ): Promise<ExplorerEventsResponse> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    let url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/events/followed-artists`;
+
+    const queryParams: Array<string> = [`count=${count}`, `offset=${offset}`];
+    if (days) {
+      queryParams.push(`days=${days}`);
+    }
+    if (past === true) {
+      queryParams.push(`past=${past}`);
+    }
+    if (future === false) {
+      queryParams.push(`future=${future}`);
+    }
+    if (cancelled === true) {
+      queryParams.push(`cancelled=${cancelled}`);
+    }
+    url += `?${queryParams.join("&")}`;
+
+    const response = await this.fetchWithRetry(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  fetchUserListenedArtistsEvents = async (
+    userName: string,
+    count: number,
+    offset: number,
+    days?: number,
+    past?: boolean,
+    future?: boolean,
+    cancelled?: boolean
+  ): Promise<ExplorerEventsResponse> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    let url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/events/listened-artists`;
+
+    const queryParams: Array<string> = [`count=${count}`, `offset=${offset}`];
+    if (days) {
+      queryParams.push(`days=${days}`);
+    }
+    if (past === true) {
+      queryParams.push(`past=${past}`);
+    }
+    if (future === false) {
+      queryParams.push(`future=${future}`);
+    }
+    if (cancelled === true) {
+      queryParams.push(`cancelled=${cancelled}`);
+    }
+    url += `?${queryParams.join("&")}`;
+
+    const response = await this.fetchWithRetry(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
   /** MusicBrainz */
 
   submitTagToMusicBrainz = async (
@@ -2251,6 +2518,19 @@ export default class APIService {
     count: number = 25
   ): Promise<TrackTypeSearchResult> => {
     const url = `${this.MBBaseURI}/recording?query=${encodeURIComponent(
+      searchQuery
+    )}&fmt=json&offset=${offset}&limit=${count}`;
+    const response = await this.fetchWithRetry(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  eventLookup = async (
+    searchQuery: string,
+    offset: number = 0,
+    count: number = 25
+  ): Promise<EventTypeSearchResult> => {
+    const url = `${this.MBBaseURI}/event?query=${encodeURIComponent(
       searchQuery
     )}&fmt=json&offset=${offset}&limit=${count}`;
     const response = await this.fetchWithRetry(url);

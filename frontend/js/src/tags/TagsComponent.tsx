@@ -97,7 +97,7 @@ function getOptionFromTag(
 }
 
 export default function AddTagSelect(props: {
-  entityType: "artist" | "release-group" | "recording";
+  entityType: "artist" | "release-group" | "recording" | "event";
   entityMBID?: string;
   tags?: Array<ArtistTag | RecordingTag | ReleaseGroupTag>;
 }) {

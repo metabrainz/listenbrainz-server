@@ -7,7 +7,15 @@ import {
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, isEmpty, isUndefined, orderBy, groupBy, sortBy } from "lodash";
+import {
+  chain,
+  isEmpty,
+  isNil,
+  isUndefined,
+  orderBy,
+  groupBy,
+  sortBy,
+} from "lodash";
 import DOMPurify from "dompurify";
 import {
   Link,
@@ -35,6 +43,8 @@ import type {
   SimilarArtist,
 } from "../album/utils";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
+import EventCard from "../explore/events/components/EventCard";
+import { getEventDate } from "../explore/events/utils";
 import { RouteQuery } from "../utils/Loader";
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
 import Pill from "../components/Pill";
@@ -42,6 +52,8 @@ import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import Username from "../common/Username";
 import CBReview from "../cb-review/CBReview";
 import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import FollowButton from "../user/components/follow/FollowButton";
 
 export function SortingButtons({
   sort,
@@ -88,6 +100,8 @@ export type ArtistPageProps = {
     topRecordingColor: ReleaseColor | undefined;
   };
   listeningStats: ListeningStats;
+  upcomingEvents: MusicBrainzEvent[];
+  pastEvents: MusicBrainzEvent[];
   coverArt?: string;
 };
 
@@ -143,6 +157,41 @@ export const getReleaseCard = (rg: ReleaseGroup) => {
   );
 };
 
+const getEventCard = (event: MusicBrainzEvent) => {
+  return (
+    <EventCard
+      key={event.event_mbid}
+      eventMBID={event.event_mbid}
+      eventName={event.event_name}
+      eventType={event.event_type}
+      eventDate={getEventDate(event)}
+      dateFormatOptions={{ year: "numeric", month: "short" }}
+      placeName={event.place_name}
+      areaName={event.area_name}
+      eventArtID={event.event_art_id}
+      showInformation
+      showEventTitle
+      showLocation
+    />
+  );
+};
+
+const getEventsRow = (heading: string, events?: MusicBrainzEvent[]) => {
+  if (!events?.length) {
+    return null;
+  }
+  return (
+    <div className="events">
+      <div className="listen-header">
+        <h3 className="header-with-line">{heading}</h3>
+      </div>
+      <HorizontalScrollContainer className="event-cards">
+        {events.map(getEventCard)}
+      </HorizontalScrollContainer>
+    </div>
+  );
+};
+
 export default function ArtistPage(): JSX.Element {
   const _ = useLoaderData();
   const location = useLocation();
@@ -157,6 +206,8 @@ export default function ArtistPage(): JSX.Element {
     releaseGroups,
     similarArtists,
     listeningStats,
+    upcomingEvents,
+    pastEvents,
     coverArt: coverArtSVG,
   } = data || {};
 
@@ -169,6 +220,42 @@ export default function ArtistPage(): JSX.Element {
   } = listeningStats || {};
 
   const queryClient = useQueryClient();
+  const { APIService, currentUser } = React.useContext(GlobalAppContext);
+  const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
+
+  const followStatusQueryKey = [
+    "artist-follow-status",
+    currentUser?.name,
+    artist?.artist_mbid,
+  ];
+  const {
+    data: followStatusData,
+    isSuccess: hasFollowStatus,
+    isError: followStatusError,
+  } = useQuery({
+    queryKey: followStatusQueryKey,
+    queryFn: () =>
+      APIService.getArtistFollowStatus(currentUser.name, artist!.artist_mbid),
+    enabled: isUserLoggedIn && Boolean(artist),
+  });
+  const loggedInUserFollowsArtist = Boolean(followStatusData?.following);
+
+  const updateFollowedArtists = (
+    followedArtistMBID: string,
+    action: "follow" | "unfollow"
+  ) => {
+    queryClient.setQueryData<{ following: boolean }>(
+      ["artist-follow-status", currentUser?.name, followedArtistMBID],
+      (oldData) => ({ ...oldData, following: action === "follow" })
+    );
+  };
+
+  React.useEffect(() => {
+    if (followStatusError) {
+      toast.error("Failed to load whether you follow this artist");
+    }
+  }, [followStatusError]);
+
   const [wikipediaExtract, setWikipediaExtract] = React.useState<
     WikipediaExtract
   >();
@@ -326,12 +413,25 @@ export default function ArtistPage(): JSX.Element {
         <div className="artist-info">
           <h1>{artist?.name}</h1>
           <div className="details">
-            <small className="form-text">
-              {artist?.begin_year}
-              {Boolean(artist?.end_year) && ` — ${artist?.end_year}`}
-              <br />
-              {artist?.area}
-            </small>
+            {Boolean(
+              artist?.begin_year || artist?.end_year || artist?.area
+            ) && (
+              <small className="form-text">
+                {artist?.begin_year}
+                {Boolean(artist?.end_year) && ` — ${artist?.end_year}`}
+                <br />
+                {artist?.area}
+              </small>
+            )}
+            {isUserLoggedIn && artist && hasFollowStatus && (
+              <FollowButton
+                key={artist.artist_mbid}
+                type="icon-only"
+                artistMBID={artist.artist_mbid}
+                loggedInUserFollowsUser={loggedInUserFollowsArtist}
+                updateFollowedArtists={updateFollowedArtists}
+              />
+            )}
           </div>
           {wikipediaExtract && (
             <div className="wikipedia-extract">
@@ -559,6 +659,8 @@ export default function ArtistPage(): JSX.Element {
             </div>
           )}
         </div>
+        {getEventsRow("Upcoming events", upcomingEvents)}
+        {getEventsRow("Past events", pastEvents)}
       </div>
 
       <h3 className="header-with-line">Similar Artists</h3>

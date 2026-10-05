@@ -1,0 +1,56 @@
+#entity-page.event-page {
+  .entity-page-header {
+    .cover-art img {
+      object-fit: contain;
+    }
+    .event-watch {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: auto;
+      .lb-watch-button {
+        font-size: 1.3em;
+      }
+    }
+  }
+
+  .entity-page-content {
+    .lineup,
+    .setlist {
+      width: 100%;
+    }
+    .lineup-role:not(:last-child) {
+      margin-bottom: 1em;
+    }
+    .lineup-artist {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5em;
+      padding: 0.5em 0;
+
+      &:not(:first-child) {
+        border-top: 1px solid $hr-border-color;
+      }
+    }
+    .lineup-artist-details {
+      min-width: 0;
+    }
+    .lineup-artist-actions {
+      display: flex;
+      flex-shrink: 0;
+      align-items: center;
+      gap: 0.5em;
+    }
+    .setlist .listen-card .setlist-position {
+      flex: 0 3em;
+      align-self: center;
+      color: $gray-500;
+    }
+    .setlist-comment {
+      margin: 0.5em 0;
+      color: $gray-600;
+      font-style: italic;
+    }
+  }
+}
