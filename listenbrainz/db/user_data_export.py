@@ -1,0 +1,133 @@
+import json
+from typing import Optional, Dict, Any, List
+from sqlalchemy import text
+
+from botocore.exceptions import ClientError
+from listenbrainz.garage import get_error_code, get_garage_client, get_user_data_export_bucket
+
+
+def _row_to_dict(row) -> Dict[str, Any]:
+    return {
+        "export_id": row.id,
+        "type": row.type,
+        "available_until": row.available_until.isoformat() if row.available_until is not None else None,
+        "created": row.created.isoformat(),
+        "progress": row.progress,
+        "status": row.status,
+        "filename": row.filename,
+        "start_time": row.start_time,
+        "end_time": row.end_time,
+    }
+
+
+def request_user_data_export(db_conn, user_id: int, start_time: int | None = None,
+                             end_time: int | None = None) -> Optional[Dict[str, Any]]:
+    """ Add a request to export the user data to an archive in background. """
+    query = """
+        INSERT INTO user_data_export (user_id, type, status, progress, start_time, end_time)
+             VALUES (:user_id, :type, 'waiting', :progress, :start_time, :end_time)
+        ON CONFLICT (user_id, type)
+              WHERE status = 'waiting' OR status = 'in_progress'
+         DO NOTHING
+          RETURNING id, type, available_until, created, progress, status, filename, start_time, end_time
+    """
+    result = db_conn.execute(text(query), {
+        "user_id": user_id,
+        "type": "export_all_user_data",
+        "start_time": start_time,
+        "end_time": end_time,
+        "progress": "Your data export will start soon."
+    })
+    export = result.first()
+
+    if export is not None:
+        metadata = {"export_id": export.id}
+        if start_time is not None:
+            metadata["start_time"] = start_time
+        if end_time is not None:
+            metadata["end_time"] = end_time
+        query = "INSERT INTO background_tasks (user_id, task, metadata) VALUES (:user_id, :task, :metadata) ON CONFLICT DO NOTHING RETURNING id"
+        result = db_conn.execute(text(query), {
+            "user_id": user_id,
+            "task": "export_all_user_data",
+            "metadata": json.dumps(metadata)
+        })
+        task = result.first()
+        if task is not None:
+            db_conn.commit()
+            return _row_to_dict(export)
+
+    db_conn.rollback()
+    return None
+
+
+def get_export_task(db_conn, user_id: int, export_id: int) -> Optional[Dict[str, Any]]:
+    """ Retrieve the requested export's data if it belongs to the specified user """
+    result = db_conn.execute(
+        text("SELECT * FROM user_data_export WHERE user_id = :user_id AND id = :export_id"),
+        {"user_id": user_id, "export_id": export_id}
+    )
+    row = result.first()
+    if row is None:
+        return None
+
+    return _row_to_dict(row)
+
+
+def list_export_tasks(db_conn, user_id: int) -> List[Dict[str, Any]]:
+    """ Retrieve all export tasks for the current user """
+    result = db_conn.execute(
+        text("SELECT * FROM user_data_export WHERE user_id = :user_id ORDER BY created DESC"),
+        {"user_id": user_id}
+    )
+    return [_row_to_dict(row) for row in result.all()]
+
+
+def get_completed_export_filename(db_conn, user_id: int, export_id: int) -> Optional[str]:
+    """ Retrieve the filename of a completed export task """
+    result = db_conn.execute(
+        text("SELECT filename FROM user_data_export WHERE user_id = :user_id AND status = 'completed' AND id = :export_id"),
+        {"user_id": user_id, "export_id": export_id}
+    )
+    row = result.first()
+    if row is None:
+        return None
+    return str(row.filename)
+
+
+def delete_export_task(db_conn, user_id: int, export_id: int) -> bool:
+    """ Delete the specified export archive and its background task """
+    result = db_conn.execute(
+        text("DELETE FROM user_data_export WHERE user_id = :user_id AND id = :export_id RETURNING filename"),
+        {"user_id": user_id, "export_id": export_id}
+    )
+    row = result.first()
+    if row is not None:
+        db_conn.execute(
+            text("DELETE FROM background_tasks WHERE user_id = :user_id AND (metadata->'export_id')::int = :export_id"),
+            {"user_id": user_id, "export_id": export_id}
+        )
+        db_conn.commit()
+        # archive is deleted from garage by cronjob
+        return True
+    return False
+
+def get_completed_export_archive(db_conn, user_id: int, export_id: int) -> tuple[Any, str]:
+    """ Fetch the file for the requested export if it is complete and belongs to the specified user """
+    result = db_conn.execute(
+        text("SELECT filename FROM user_data_export WHERE user_id = :user_id AND status = 'completed' AND id = :export_id"),
+        {"user_id": user_id, "export_id": export_id}
+    )
+    row = result.first()
+    if row is None:
+        return None, None
+
+    filename = str(row.filename)
+    try:
+        archive = get_garage_client().get_object(Bucket=get_user_data_export_bucket(), Key=filename)
+    except ClientError as e:
+        if get_error_code(e) in ("NoSuchKey", "NoSuchBucket", "404"):
+            return None, None
+        raise e
+
+    return archive, filename

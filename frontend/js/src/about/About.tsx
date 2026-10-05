@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Link } from "react-router";
+import Contributors from "./Contributors";
 
 export default function About() {
   return (
@@ -108,6 +109,7 @@ export default function About() {
         track of our{" "}
         <a href="http://tickets.musicbrainz.org/browse/LB">current issues</a>.
       </p>
+      <Contributors />
     </>
   );
 }

@@ -405,30 +405,51 @@ $youtube-expanded-width: 1280px;
   width: 100%;
   cursor: pointer;
   z-index: 5;
+  overflow: visible;
   transition: height, 0.2s;
 
   .progress-bar {
+    width: 100%;
     height: 100%;
     background-color: $primary-color;
-    border-right: 2px solid $dark-turquoise;
+    transform: scaleX(0);
+    transform-origin: left;
   }
-  &:hover {
+  &:hover,
+  &.dragging {
     height: $progress-bar-hover-height;
     top: -$progress-bar-hover-height;
   }
+  &.dragging {
+    cursor: grabbing;
+  }
 
-  .progress-tooltip {
+  .progress-handle {
+    position: absolute;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: $primary-color;
+    transform: translate(-50%, -50%) scaleX(0);
+    transition: transform 0.15s ease;
+    will-change: transform;
+    pointer-events: none;
+    left: var(--handle-x, 0px);
+  }
+
+  & > ::after {
+    border-color: transparent;
+  }
+}
+
+.progress-tooltip {
+  --bs-tooltip-bg: $primary-color;
+  .tooltip-inner {
     background: $primary-color;
-    margin-top: -4px;
     border-radius: 24px;
     font-size: 1.2rem;
     padding: 6px 12px;
-    &::before {
-      display: none;
-    }
-  }
-  & > ::after {
-    border-color: transparent;
   }
 }
 
@@ -691,8 +712,9 @@ $youtube-expanded-width: 1280px;
   .progress-bar-wrapper {
     margin-top: 1em;
     .progress {
-      position: inherit;
+      position: relative;
       height: 10px;
+      top: 0;
       border-radius: 10px;
       background-color: rgba(255, 255, 255, 0.3);
 

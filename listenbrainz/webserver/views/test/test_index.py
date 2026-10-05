@@ -13,6 +13,7 @@ from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver import create_web_app
 from listenbrainz.webserver.testing import ServerAppPerTestTestCase
+from listenbrainz.webserver.views.index import ROBOTS_TXT_CONTENT
 
 
 class IndexViewsTestCase(IntegrationTestCase):
@@ -24,6 +25,18 @@ class IndexViewsTestCase(IntegrationTestCase):
     def test_robots_txt(self):
         resp = self.client.get(self.custom_url_for('index.robots_txt', page=''))
         self.assert200(resp)
+        self.assertEqual(resp.mimetype, 'text/plain')
+        self.assertEqual(resp.text, ROBOTS_TXT_CONTENT)
+        self.assertIn('User-agent: facebookexternalhit', resp.text)
+        self.assertIn('User-agent: meta-webindexer', resp.text)
+        self.assertIn('User-agent: meta-externalads', resp.text)
+        self.assertIn('User-agent: meta-externalagent', resp.text)
+        self.assertIn('User-agent: meta-externalfetcher', resp.text)
+        allowed_paths = (
+            '/artist/', '/album/', '/release/', '/release-group/', '/recording/', '/playlist/', '/track/'
+        )
+        for path in allowed_paths:
+            self.assertIn(f'Allow: {path}', resp.text)
 
     def test_data(self):
         resp = self.client.get(self.custom_url_for('index.index_pages', path='data'))

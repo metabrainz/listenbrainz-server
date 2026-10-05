@@ -121,8 +121,7 @@ def _get_spotify_token(grant_type: str, token: str) -> requests.Response:
         token_key: token,
         'grant_type': grant_type,
     }
-
-    return requests.post(OAUTH_TOKEN_URL, data=payload, headers=headers, verify=True)
+    return requests.post(OAUTH_TOKEN_URL, data=payload, headers=headers, verify=True, timeout=10)
 
 
 class SpotifyService(ImporterService):

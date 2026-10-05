@@ -65,10 +65,6 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 # Size is in bytes
 MAX_CONTENT_LENGTH = 25 * 1024 * 1024  # 25MB
 
-# Specify the upload folder where all the lastfm-backup will be stored
-# The path must be absolute path
-UPLOAD_FOLDER = "/mnt/user-data-imports"
-
 API_URL = 'https://api.listenbrainz.org'
 LASTFM_PROXY_URL = 'http://0.0.0.0:7080/'
 SPOTIFY_CLIENT_ID = ''

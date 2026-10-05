@@ -1,9 +1,7 @@
 import os.path
-import shutil
 import tempfile
 import zipfile
 from datetime import datetime, date, time, timedelta, timezone
-from pathlib import Path
 
 import orjson
 from brainzutils.mail import send_mail
@@ -12,9 +10,12 @@ from flask import current_app, render_template
 from sqlalchemy import text
 
 from listenbrainz.db import user as db_user
+from listenbrainz.garage import delete_objects, ensure_bucket, get_garage_client, \
+    get_user_data_export_bucket, list_object_names
 from listenbrainz.webserver import timescale_connection
 
 BATCH_SIZE = 1000
+EXPORT_FAILED_PROGRESS = "Export failed, please try again."
 USER_DATA_EXPORT_AVAILABILITY = timedelta(days=30)  # how long should a user data export be saved for on our servers
 
 
@@ -28,8 +29,28 @@ def update_export_progress(db_conn, export_id, progress):
     db_conn.commit()
 
 
+def mark_export_failed(db_conn, export_id):
+    """ Mark the given export as failed.
+
+    An export that is left in progress blocks the user from requesting a new one forever
+    because of the user_data_export_deduplicate_waiting_idx unique index, so any failure
+    must be recorded in the export's status.
+    """
+    # the failure may have left the connection in an aborted transaction
+    db_conn.rollback()
+    db_conn.execute(text("""
+        UPDATE user_data_export
+           SET status = 'failed'
+             , progress = :progress
+         WHERE id = :export_id
+    """), {"export_id": export_id, "progress": EXPORT_FAILED_PROGRESS})
+    db_conn.commit()
+
+
 def get_time_ranges_for_listens(min_dt: datetime, max_dt: datetime):
     """ Get year-month sub periods for a given time range. """
+    if min_dt > max_dt:
+        return []
     years = []
     for year in range(min_dt.year, max_dt.year + 1):
         if year == min_dt.year:
@@ -48,8 +69,8 @@ def get_time_ranges_for_listens(min_dt: datetime, max_dt: datetime):
             end_date = start_date + relativedelta(months=1, days=-1)
             months.append({
                 "month": month,
-                "start": datetime.combine(start_date, time.min, tzinfo=timezone.utc),
-                "end": datetime.combine(end_date, time.max, tzinfo=timezone.utc),
+                "start": max(min_dt, datetime.combine(start_date, time.min, tzinfo=timezone.utc)),
+                "end": min(max_dt, datetime.combine(end_date, time.max, tzinfo=timezone.utc)),
             })
         years.append({
             "year": year,
@@ -60,12 +81,19 @@ def get_time_ranges_for_listens(min_dt: datetime, max_dt: datetime):
 
 
 def export_query_to_jsonl(conn, file_path, query, **kwargs):
-    """ Export the given query's data to the given file path in jsonl format. """
+    """ Export the given query's data to the given file path in jsonl format.
+
+    Args:
+        conn: database connection
+        file_path: path to write the JSONL file
+        query: SQL query whose rows must have a text `line` column
+        **kwargs: bind parameters forwarded to conn.execute
+    """
     rowcount = 0
     with conn.execute(
         text(query).execution_options(yield_per=BATCH_SIZE),
         kwargs
-    ) as result, open(file_path, "w") as file:
+    ) as result, open(file_path, "w", encoding="utf-8") as file:
         for partition in result.partitions():
             for row in partition:
                 file.write(row.line)
@@ -95,14 +123,16 @@ def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: 
                    AND listened_at <= :end_time
                    AND l.user_id = :user_id
           )
-                SELECT jsonb_build_object(
-                            'listened_at'
+                SELECT json_build_object(
+                            'inserted_at'
+                          , extract(epoch from inserted_at)::integer
+                          , 'listened_at'
                           ,  extract(epoch from listened_at)
-                          , 'inserted_at'
-                          ,  extract(epoch from inserted_at)
+                          , 'recording_msid'
+                          , recording_msid::text
                           , 'track_metadata'
                           , jsonb_set(
-                                jsonb_set(data, '{recording_msid}'::text[], to_jsonb(recording_msid::text)),
+                                data,
                                     '{mbid_mapping}'::text[]
                                   , CASE
                                     WHEN mbc.recording_mbid IS NULL
@@ -157,14 +187,18 @@ def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: 
                      , release_data->>'caa_release_mbid'
               ORDER BY listened_at
     """
-    return export_query_to_jsonl(ts_conn, file_path, query, user_id=user_id, start_time=start_time, end_time=end_time)
+    return export_query_to_jsonl(ts_conn, file_path, query, user_id=user_id,
+                                 start_time=start_time, end_time=end_time)
 
 
-def export_listens_for_user(export_id, db_conn, ts_conn, tmp_dir: str, user_id: int) -> list[str]:
+def export_listens_for_user(export_id, db_conn, ts_conn, tmp_dir: str, user_id: int,
+                            start_time: datetime | None = None, end_time: datetime | None = None) -> list[str]:
     """ Export user's listens to files organized by year and month in jsonl format. """
     update_export_progress(db_conn, export_id, "Exporting user listens")
     files = []
-    min_ts, max_ts = timescale_connection._ts.get_timestamps_for_user(user_id)
+    first_listen, last_listen = timescale_connection._ts.get_timestamps_for_user(user_id)
+    min_ts = max(start_time, first_listen) if start_time is not None else first_listen
+    max_ts = min(end_time, last_listen) if end_time is not None else last_listen
     time_ranges = get_time_ranges_for_listens(min_ts, max_ts)
 
     for time_range in time_ranges:
@@ -262,62 +296,73 @@ def export_user(db_conn, ts_conn, user_id: int, metadata):
         return
 
     export_id = export.id
+    try:
+        client = get_garage_client()
+        bucket = get_user_data_export_bucket()
+        ensure_bucket(client, bucket)
 
-    archive_name =  f"listenbrainz_{user.musicbrainz_id}_{int(datetime.now().timestamp())}.zip"
-    dest_path = os.path.join(current_app.config["USER_DATA_EXPORT_BASE_DIR"], archive_name)
-    os.makedirs(current_app.config["USER_DATA_EXPORT_BASE_DIR"], exist_ok=True)
+        archive_name = f"listenbrainz_{user.musicbrainz_id}_{int(datetime.now().timestamp())}.zip"
 
-    db_conn.execute(text("""
-         UPDATE user_data_export
-            SET
-                filename = :filename
-              , status = 'in_progress'
-              , progress = :progress
-          WHERE id = :export_id    
-    """), {
-        "export_id": export_id,
-        "filename": archive_name,
-        "progress": "Starting export",
-    })
-    db_conn.commit()
+        db_conn.execute(text("""
+             UPDATE user_data_export
+                SET
+                    filename = :filename
+                  , status = 'in_progress'
+                  , progress = :progress
+              WHERE id = :export_id
+        """), {
+            "export_id": export_id,
+            "filename": archive_name,
+            "progress": "Starting export",
+        })
+        db_conn.commit()
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        archive_path = os.path.join(tmp_dir, archive_name)
-        with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-            all_files = []
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            archive_path = os.path.join(tmp_dir, archive_name)
+            with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+                all_files = []
 
-            user_file = export_info_for_user(export_id, db_conn, tmp_dir, user)
-            all_files.append(user_file)
+                user_file = export_info_for_user(export_id, db_conn, tmp_dir, user)
+                all_files.append(user_file)
 
-            listen_files = export_listens_for_user(export_id, db_conn, ts_conn, tmp_dir, user_id)
-            all_files.extend(listen_files)
+                start_time = metadata.get("start_time")
+                end_time = metadata.get("end_time")
+                listen_files = export_listens_for_user(
+                    export_id, db_conn, ts_conn, tmp_dir, user_id,
+                    start_time=datetime.fromtimestamp(start_time, timezone.utc) if start_time is not None else None,
+                    end_time=datetime.fromtimestamp(end_time, timezone.utc) if end_time is not None else None,
+                )
+                all_files.extend(listen_files)
 
-            feedback_file = export_feedback_for_user(export_id, db_conn, tmp_dir, user_id)
-            if feedback_file:
-                all_files.append(feedback_file)
+                feedback_file = export_feedback_for_user(export_id, db_conn, tmp_dir, user_id)
+                if feedback_file:
+                    all_files.append(feedback_file)
 
-            pinned_recording_file = export_pinned_recordings_for_user(export_id, db_conn, tmp_dir, user_id)
-            if pinned_recording_file:
-                all_files.append(pinned_recording_file)
+                pinned_recording_file = export_pinned_recordings_for_user(export_id, db_conn, tmp_dir, user_id)
+                if pinned_recording_file:
+                    all_files.append(pinned_recording_file)
 
-            update_export_progress(db_conn, export_id, "Writing export files")
-            for file in all_files:
-                archive.write(file, arcname=os.path.relpath(file, tmp_dir))
+                update_export_progress(db_conn, export_id, "Writing export files")
+                for file in all_files:
+                    archive.write(file, arcname=os.path.relpath(file, tmp_dir))
 
-        update_export_progress(db_conn, export_id, "Finalizing user data export")
-        shutil.move(archive_path, dest_path)
+            update_export_progress(db_conn, export_id, "Finalizing user data export")
+            client.upload_file(archive_path, bucket, archive_name, ExtraArgs={"ContentType": "application/zip"})
 
-    created = datetime.now()
-    available_until = created + USER_DATA_EXPORT_AVAILABILITY
-    result = db_conn.execute(text("""
-        UPDATE user_data_export
-           SET progress = :progress
-             , available_until = :available_until
-             , status = 'completed'
-         WHERE id = :export_id
-     RETURNING id
-    """), {"export_id": export_id, "available_until": available_until, "progress": "Export completed"})
-    db_conn.commit()
+        created = datetime.now()
+        available_until = created + USER_DATA_EXPORT_AVAILABILITY
+        result = db_conn.execute(text("""
+            UPDATE user_data_export
+               SET progress = :progress
+                 , available_until = :available_until
+                 , status = 'completed'
+             WHERE id = :export_id
+         RETURNING id
+        """), {"export_id": export_id, "available_until": available_until, "progress": "Export completed"})
+        db_conn.commit()
+    except Exception:
+        mark_export_failed(db_conn, export_id)
+        raise
 
     if result.first() is None:
         return
@@ -348,10 +393,18 @@ def cleanup_old_exports(db_conn):
     with db_conn.begin():
         db_conn.execute(text("DELETE FROM user_data_export WHERE available_until < NOW()"))
         result = db_conn.execute(text("SELECT filename FROM user_data_export"))
-        files_to_keep = {r.filename for r in result.all()}
+        files_to_keep = {r.filename for r in result.all() if r.filename is not None}
 
-        # Delete exports that are no longer required
-        for path in Path(current_app.config["USER_DATA_EXPORT_BASE_DIR"]).iterdir():
-            if path.is_file() and path.name not in files_to_keep:
-                current_app.logger.info("Removing file: %s", path)
-                path.unlink(missing_ok=True)
+    client = get_garage_client()
+    bucket = get_user_data_export_bucket()
+    ensure_bucket(client, bucket)
+
+    # Delete exports that are no longer required
+    objects_to_delete = []
+    for object_name in list_object_names(client, bucket):
+        if object_name not in files_to_keep:
+            current_app.logger.info("Removing export: %s", object_name)
+            objects_to_delete.append(object_name)
+
+    for error in delete_objects(client, bucket, objects_to_delete):
+        current_app.logger.error("Failed to remove export %s: %s", error.get("Key"), error.get("Message"))

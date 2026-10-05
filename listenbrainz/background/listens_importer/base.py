@@ -1,9 +1,9 @@
 import json
+import tempfile
 import zipfile
 from abc import ABC, abstractmethod
 from datetime import datetime
 from io import TextIOWrapper
-from pathlib import Path
 from typing import Any, Iterator
 from zipfile import ZipFile
 
@@ -11,6 +11,8 @@ from flask import current_app
 from sqlalchemy.sql.expression import text
 from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 
+from listenbrainz.background.listens_importer.storage import delete_import_file, download_import_file, \
+    FINISHED_STATUSES
 from listenbrainz.db import user as db_user
 from listenbrainz.domain.external_service import ExternalServiceError
 from listenbrainz.webserver.errors import ImportFailedError, ListenValidationError
@@ -63,28 +65,36 @@ class BaseListensImporter(ABC):
 
         import_id = import_task["id"]
         metadata = import_task["metadata"]
-        if metadata["status"] in {"cancelled", "failed"}:
+        if metadata["status"] in FINISHED_STATUSES:
+            # the import is not going to run, its file is of no use to anyone any more
+            delete_import_file(import_task["file_path"])
             return
 
         self.update_import_progress_and_status(import_id, "in_progress", "Importing user listens")
 
+        object_name = import_task["file_path"]
         try:
-            validation_stats = self._initialize_validation_stats()
-            self.persist_validation_stats(import_id, validation_stats)
-            for batch in self.process_import_file(import_task):
-                validated_listens, validation_stats = self.parse_and_validate_listen_items(
-                    batch,
-                    validation_stats,
-                )
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                # the importers seek around in the uploaded file, so it is downloaded to a
+                # temporary file instead of being streamed out of garage
+                local_task = dict(import_task, file_path=download_import_file(object_name, tmp_dir))
 
-                self.submit_listens(validated_listens, user_id, user["musicbrainz_id"], import_id)
+                validation_stats = self._initialize_validation_stats()
                 self.persist_validation_stats(import_id, validation_stats)
+                for batch in self.process_import_file(local_task):
+                    validated_listens, validation_stats = self.parse_and_validate_listen_items(
+                        batch,
+                        validation_stats,
+                    )
+
+                    self.submit_listens(validated_listens, user_id, user["musicbrainz_id"], import_id)
+                    self.persist_validation_stats(import_id, validation_stats)
 
             self.update_import_progress_and_status(import_id, "completed", "Import completed!")
         except Exception as e:
             self.update_import_progress_and_status(import_id, "failed", str(e))
         finally:
-            Path(import_task["file_path"]).unlink(missing_ok=True)
+            delete_import_file(object_name)
 
     @abstractmethod
     def process_import_file(self, import_task: dict[str, Any]) -> Iterator[list[dict[str, Any]]]:
