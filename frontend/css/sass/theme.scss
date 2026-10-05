@@ -191,6 +191,28 @@
       }
     }
 
+    .btn-link {
+      color: var(--lb-accent) !important;
+
+      &:hover,
+      &:focus-visible {
+        color: var(--lb-accent-hover) !important;
+      }
+    }
+
+    // Tables declare their own light-theme custom properties, so setting
+    // those values only on html is not enough. This covers empty states as
+    // well as populated striped tables.
+    .table {
+      --bs-table-color: var(--lb-text);
+      --bs-table-bg: var(--lb-surface-raised);
+      --bs-table-border-color: var(--lb-border);
+      --bs-table-striped-color: var(--lb-text);
+      --bs-table-striped-bg: rgb(255 255 255 / 4%);
+      --bs-table-hover-color: #fff;
+      --bs-table-hover-bg: rgb(220 214 240 / 9%);
+    }
+
     // This shared heading appears on the feeds and several entity views. Its
     // original rule is a light-theme literal, so both pieces need retokening.
     .header-with-line {
