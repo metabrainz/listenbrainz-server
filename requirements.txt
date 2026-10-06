@@ -41,7 +41,7 @@ boto3==1.43.83
 itsdangerous==2.2.0
 urllib3==2.7.0
 orjson==3.11.6
-pyjwt[crypto]==2.13.0
+pyjwt[crypto]==2.15.0
 packaging==26.0
 feedgen==1.0.0
 WTForms==3.2.1
