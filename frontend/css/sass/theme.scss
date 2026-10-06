@@ -1593,8 +1593,23 @@
       }
 
       .progress .progress-bar {
-        background-color: #615b85;
-        border-right-color: #8078aa;
+        background-color: #8178ae;
+        border-right-color: #afa6df;
+      }
+
+      .progress .progress-handle {
+        background-color: #afa6df;
+        border: 2px solid var(--lb-surface-raised);
+      }
+
+      .progress:focus-visible {
+        outline: 2px solid var(--lb-focus);
+        outline-offset: 3px;
+      }
+
+      .progress-tooltip {
+        --bs-tooltip-bg: #3b3745;
+        --bs-tooltip-color: #f5f3fa;
       }
     }
 
