@@ -14,6 +14,7 @@ import {
   generateAlbumArtThumbnailLink,
   getReviewEventContent,
 } from "../utils/utils";
+import EntityCoverArtPlaceholder from "../components/EntityCoverArtPlaceholder";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import TagsComponent from "../tags/TagsComponent";
 import CBReview from "../cb-review/CBReview";
@@ -183,7 +184,7 @@ export default function TrackPage(): JSX.Element {
   const coverArtSrc =
     caa_id && caa_release_mbid
       ? generateAlbumArtThumbnailLink(caa_id, caa_release_mbid, 500)
-      : "/static/img/cover-art-placeholder.jpg";
+      : undefined;
   const hasCoverArt = Boolean(caa_id && caa_release_mbid);
 
   // Sort by the more precise secondary type first to create categories like "Live", "Compilation" and "Remix" instead of
@@ -242,18 +243,18 @@ export default function TrackPage(): JSX.Element {
         className="entity-page-header flex"
         style={{ ["--bg-color" as string]: albumArtPalette?.Vibrant?.hex }}
       >
-        <div
-          className={`cover-art ${
-            hasCoverArt ? "" : "entity-cover-art-placeholder"
-          }`}
-        >
-          <img
-            src={coverArtSrc}
-            ref={albumArtRef}
-            crossOrigin="anonymous"
-            alt="Album art"
-          />
-        </div>
+        {hasCoverArt ? (
+          <div className="cover-art">
+            <img
+              src={coverArtSrc}
+              ref={albumArtRef}
+              crossOrigin="anonymous"
+              alt="Album art"
+            />
+          </div>
+        ) : (
+          <EntityCoverArtPlaceholder alt="Album art" />
+        )}
         <div className="artist-info">
           <div>
             <h1>{recordingName}</h1>

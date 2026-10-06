@@ -19,6 +19,7 @@ import humanizeDuration from "humanize-duration";
 import CBReview from "../cb-review/CBReview";
 import ListenCard from "../common/listens/ListenCard";
 import Username from "../common/Username";
+import EntityCoverArtPlaceholder from "../components/EntityCoverArtPlaceholder";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import TagsComponent from "../tags/TagsComponent";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -99,15 +100,16 @@ export default function AlbumPage(): JSX.Element {
   const releaseGroupTags = tag?.release_group;
 
   /** Album art and album color related */
-  const [coverArtSrc, setCoverArtSrc] = React.useState(
+  const [coverArtSrc, setCoverArtSrc] = React.useState<string>();
+  const directCoverArtSrc =
     caa_id && caa_release_mbid
       ? generateAlbumArtThumbnailLink(caa_id, caa_release_mbid, 500)
-      : "/static/img/cover-art-placeholder.jpg"
-  );
+      : undefined;
+  const currentCoverArtSrc = coverArtSrc ?? directCoverArtSrc;
   const albumArtRef = React.useRef<HTMLImageElement>(null);
   const [albumArtPalette, setAlbumArtPalette] = React.useState<Palette>();
   React.useEffect(() => {
-    if (!albumArtRef.current) {
+    if (!currentCoverArtSrc || !albumArtRef.current) {
       return;
     }
     Vibrant.from(albumArtRef.current)
@@ -117,7 +119,7 @@ export default function AlbumPage(): JSX.Element {
       })
       // eslint-disable-next-line no-console
       .catch(console.error);
-  }, []);
+  }, [currentCoverArtSrc]);
 
   // Fetch reviews using React Query
   const { data: reviewsData, isError: reviewsError } = useQuery<{
@@ -304,18 +306,18 @@ export default function AlbumPage(): JSX.Element {
         <title>{album?.name}</title>
       </Helmet>
       <div className="entity-page-header flex">
-        <div
-          className={`cover-art ${
-            caa_id && caa_release_mbid ? "" : "entity-cover-art-placeholder"
-          }`}
-        >
-          <img
-            src={coverArtSrc}
-            ref={albumArtRef}
-            crossOrigin="anonymous"
-            alt="Album art"
-          />
-        </div>
+        {currentCoverArtSrc ? (
+          <div className="cover-art">
+            <img
+              src={currentCoverArtSrc}
+              ref={albumArtRef}
+              crossOrigin="anonymous"
+              alt="Album art"
+            />
+          </div>
+        ) : (
+          <EntityCoverArtPlaceholder alt="Album art" />
+        )}
         <div className="artist-info">
           <h1>{album?.name}</h1>
 

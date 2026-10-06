@@ -1511,31 +1511,6 @@
       );
     }
 
-    // Never invert or darken genuine cover art. These rules apply only when
-    // there is no cover art and the entity page would otherwise show the pale
-    // light-theme JPEG placeholder.
-    #entity-page .entity-cover-art-placeholder {
-      position: relative;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, #292535, #1c1b20);
-      border: 1px solid var(--lb-border);
-    }
-
-    #entity-page .entity-cover-art-placeholder > img {
-      visibility: hidden;
-    }
-
-    #entity-page .entity-cover-art-placeholder::after {
-      position: absolute;
-      inset: 0;
-      content: "";
-      background: url("/static/img/listenbrainz_logo_icon.svg") center / 32%
-        no-repeat;
-      opacity: 0.9;
-      pointer-events: none;
-    }
-
     #entity-page .header-with-line::after,
     #entity-page .listening-stats .separator {
       border-color: var(--lb-border);

@@ -31,6 +31,23 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
       max-width: -webkit-fill-available;
     }
   }
+  .cover-art-placeholder {
+    display: grid;
+    place-items: center;
+    background: linear-gradient(
+      135deg,
+      var(--lb-surface-muted),
+      var(--lb-surface-raised)
+    );
+    border: 1px solid var(--lb-border);
+
+    > img {
+      height: auto;
+      margin: 0;
+      max-width: 32%;
+    }
+  }
+
   .artist-info,
   .playlist-info {
     flex-grow: 1.5;
