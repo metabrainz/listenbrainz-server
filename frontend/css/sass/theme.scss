@@ -36,10 +36,10 @@
     --lb-border-strong: #5a5566;
     --lb-accent: #dcd6f0;
     --lb-accent-hover: #fff;
-    // Visited links should remain readable without competing with the primary
-    // link colour. This muted lavender has clear contrast on every dark
-    // surface while still communicating the visited state.
-    --lb-link-visited: #c4bed2;
+    // Keep ordinary links on the established dark-theme accent. Visited links
+    // alone get this lighter lavender so their history state is readable but
+    // does not recolour the rest of the interface.
+    --lb-link-visited: #ede9f5;
     --lb-focus: #afa6df;
     --lb-tooltip-bg: #252329;
     --lb-tooltip-text: #f5f3fa;
@@ -428,11 +428,11 @@
     }
 
     .btn-info {
-      --bs-btn-bg: #514b7c;
-      --bs-btn-hover-bg: #615a92;
-      --bs-btn-active-bg: #403b64;
-      --bs-btn-disabled-bg: #3c394f;
-      --bs-btn-focus-shadow-rgb: 125, 117, 177;
+      --bs-btn-bg: #353070;
+      --bs-btn-hover-bg: #47417c;
+      --bs-btn-active-bg: #27235a;
+      --bs-btn-disabled-bg: #2c2944;
+      --bs-btn-focus-shadow-rgb: 99, 94, 176;
     }
 
     .btn-warning {
@@ -977,7 +977,8 @@
       color: var(--lb-text);
     }
 
-    .explore-card-text-name a {
+    .explore-card-text-name a,
+    .explore-card-text-name a:hover {
       color: var(--lb-accent);
     }
 
@@ -985,7 +986,6 @@
       color: var(--lb-link-visited);
     }
 
-    .explore-card-text-name a:hover,
     .explore-card-text-name a:visited:hover {
       color: var(--lb-accent-hover);
     }
