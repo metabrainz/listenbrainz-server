@@ -759,6 +759,25 @@
       color: var(--lb-text);
     }
 
+    // Match Fresh Releases' layered sidebar treatment in Art Creator. Its
+    // settings and advanced groups are separate panels, so a subtle charcoal
+    // gradient preserves that grouping without adding bright surfaces.
+    #stats-art-creator .sidebar.settings-navbar {
+      background-color: var(--lb-surface-raised);
+      border: 1px solid var(--lb-border);
+      box-shadow: var(--lb-shadow);
+    }
+
+    #stats-art-creator .sidebar.settings-navbar > *:not(.sidebar-header) {
+      background: linear-gradient(50deg, #29262f 0%, #1e1e1e 72%);
+      color: var(--lb-text);
+    }
+
+    #stats-art-creator .sidebar.settings-navbar label,
+    #stats-art-creator .sidebar.settings-navbar h4 {
+      color: var(--lb-text);
+    }
+
     // The shared switch predates Bootstrap form controls. Its original grey
     // thumb and near-black checked track disappear into dark panels, so give
     // both states distinct track and thumb values without changing its size.
