@@ -15,6 +15,7 @@ import ReleaseFilters from "./components/ReleaseFilters";
 import ReleaseTimeline from "./components/ReleaseTimeline";
 import Pill from "../../components/Pill";
 import ReleaseCardsGrid from "./components/ReleaseCardsGrid";
+import NoFreshnessImage from "../../components/NoFreshnessImage";
 import { COLOR_LB_ORANGE } from "../../utils/constants";
 import SyndicationFeedModal from "../../components/SyndicationFeedModal";
 import { getBaseUrl } from "../../utils/utils";
@@ -473,10 +474,7 @@ export default function FreshReleases() {
             >
               {filteredList.length === 0 ? (
                 <div className="no-release">
-                  <img
-                    src="/static/img/recommendations/no-freshness.png"
-                    alt={alt}
-                  />
+                  <NoFreshnessImage alt={alt} />
                   <div className="text-muted">{message}</div>
                 </div>
               ) : (

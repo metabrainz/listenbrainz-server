@@ -1194,10 +1194,6 @@
       color: var(--lb-text);
     }
 
-    // `no-freshness.png` is credited artwork with its pale background and copy
-    // baked into the raster. Keep it intact in both themes until a licensed,
-    // purpose-built dark variant is available.
-
     .release-card-grid-title::before,
     .release-card-grid-title::after,
     .review .header-with-line::after {
