@@ -432,9 +432,8 @@
       border-color: #45414f !important;
     }
 
-    #dashboard .listen-card .listen-thumbnail .add-cover-art,
-    #dashboard .listen-card .listen-thumbnail .not-mapped,
-    #dashboard .listen-card .listen-thumbnail .cover-art-fallback {
+    #dashboard .listen-card .listen-thumbnail {
+      .add-cover-art, .not-mapped, .cover-art-fallback {
       background-color: var(--lb-surface-muted);
       color: #817b90;
     }
