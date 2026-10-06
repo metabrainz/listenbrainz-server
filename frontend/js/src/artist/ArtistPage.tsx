@@ -37,6 +37,7 @@ import type {
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import { RouteQuery } from "../utils/Loader";
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
+import EntityCoverArtPlaceholder from "../components/EntityCoverArtPlaceholder";
 import Pill from "../components/Pill";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import Username from "../common/Username";
@@ -312,19 +313,18 @@ export default function ArtistPage(): JSX.Element {
         <title>{artist?.name}</title>
       </Helmet>
       <div className="entity-page-header flex">
-        <div
-          className={`cover-art ${
-            coverArtSVG ? "" : "entity-cover-art-placeholder"
-          }`}
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(
-              coverArtSVG ??
-                "<img src='/static/img/cover-art-placeholder.jpg'></img>"
-            ),
-          }}
-          title={`Album art for ${artist?.name}`}
-        />
+        {coverArtSVG ? (
+          <div
+            className="cover-art"
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(coverArtSVG),
+            }}
+            title={`Album art for ${artist?.name}`}
+          />
+        ) : (
+          <EntityCoverArtPlaceholder alt={`Album art for ${artist?.name}`} />
+        )}
         <div className="artist-info">
           <h1>{artist?.name}</h1>
           <div className="details">
