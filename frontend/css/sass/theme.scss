@@ -1088,6 +1088,13 @@
       color: var(--lb-text) !important;
     }
 
+    // Music service cards render under Settings rather than User Profile, so
+    // their explanatory paragraphs need the same explicit foreground token.
+    #settings .services-grid .card-body,
+    #settings .services-grid .card-body > p {
+      color: var(--lb-text) !important;
+    }
+
     #user-profile .card-header {
       background-color: var(--lb-surface-raised);
       border-bottom-color: var(--lb-border);
