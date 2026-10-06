@@ -575,9 +575,12 @@
     }
 
     #dashboard .listen-card .listen-thumbnail {
-      .add-cover-art, .not-mapped, .cover-art-fallback {
-      background-color: var(--lb-surface-muted);
-      color: #817b90;
+      .add-cover-art,
+      .not-mapped,
+      .cover-art-fallback {
+        background-color: var(--lb-surface-muted);
+        color: #817b90;
+      }
     }
 
     // Entity pages reuse the same listen-card thumbnail component, but do not
