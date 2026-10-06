@@ -127,6 +127,64 @@
       opacity: 1;
     }
 
+    // Date inputs are rendered by the browser rather than Bootstrap. Declare
+    // their colour scheme explicitly so their segmented fields and calendar
+    // picker do not retain a light-control appearance in dark mode.
+    input[type="date"],
+    input[type="datetime-local"] {
+      // Chromium's dark native date editor omits leading zeroes and renders
+      // visibly separated segments. Its light formatter is stable; retain it
+      // for layout while the explicit colours below keep the control dark.
+      color-scheme: light;
+      border-color: var(--bs-form-control-border-color);
+    }
+
+    input[type="date"]::-webkit-datetime-edit,
+    input[type="datetime-local"]::-webkit-datetime-edit {
+      color: var(--lb-text);
+    }
+
+    input[type="date"]::-webkit-datetime-edit-year-field,
+    input[type="date"]::-webkit-datetime-edit-month-field,
+    input[type="date"]::-webkit-datetime-edit-day-field,
+    input[type="datetime-local"]::-webkit-datetime-edit-year-field,
+    input[type="datetime-local"]::-webkit-datetime-edit-month-field,
+    input[type="datetime-local"]::-webkit-datetime-edit-day-field,
+    input[type="datetime-local"]::-webkit-datetime-edit-hour-field,
+    input[type="datetime-local"]::-webkit-datetime-edit-minute-field {
+      background-color: transparent;
+      color: var(--lb-text);
+      -webkit-text-fill-color: var(--lb-text);
+    }
+
+    input[type="date"]::-webkit-datetime-edit-text,
+    input[type="datetime-local"]::-webkit-datetime-edit-text {
+      color: var(--lb-text-muted);
+    }
+
+    // Chromium paints the currently edited date segment with its own text
+    // colour. Without these overrides the leading zero can become black on
+    // our dark control background.
+    input[type="date"]::-webkit-datetime-edit-year-field:focus,
+    input[type="date"]::-webkit-datetime-edit-month-field:focus,
+    input[type="date"]::-webkit-datetime-edit-day-field:focus,
+    input[type="datetime-local"]::-webkit-datetime-edit-year-field:focus,
+    input[type="datetime-local"]::-webkit-datetime-edit-month-field:focus,
+    input[type="datetime-local"]::-webkit-datetime-edit-day-field:focus,
+    input[type="datetime-local"]::-webkit-datetime-edit-hour-field:focus,
+    input[type="datetime-local"]::-webkit-datetime-edit-minute-field:focus {
+      background-color: #4a4662;
+      color: #fff;
+      -webkit-text-fill-color: #fff;
+      outline: 0;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+      filter: invert(1) grayscale(1);
+      opacity: 0.8;
+    }
+
     // Firefox renders an opened native select menu separately from the
     // .form-select element. Keep its dark surface, but retain the familiar
     // brand-pink selected row used by the light theme.
@@ -476,6 +534,7 @@
 
     #dashboard .listen-card .additional-content,
     #dashboard #listen-count-card hr,
+    #dashboard #compatibility-card hr,
     #dashboard .card-user-sn hr,
     #dashboard .follower-following-cards hr,
     #dashboard [data-testid="similar-users-modal"] hr {
@@ -587,6 +646,13 @@
       box-shadow: inset 0 10px 8px -10px rgb(0 0 0 / 60%);
     }
 
+    // The legacy follow list sets its own light divider on each row. Scope
+    // this to the dashboard lists so the separators stay quiet in dark mode.
+    #dashboard .follower-following-list > *:not(:first-child),
+    #dashboard .similar-users-list > *:not(:first-child) {
+      border-top-color: var(--lb-border);
+    }
+
     #dashboard .header-with-line::after {
       border-color: var(--lb-border-strong);
     }
@@ -664,9 +730,8 @@
     }
 
     // Fresh Releases uses the legacy generic sidebar, whose child gradient is
-    // intentionally light in the original design. Keep the product header
-    // purple, but make its filter groups proper dark panels instead of a pale
-    // wash that competes with the controls inside it.
+    // part of the page's visual hierarchy. Keep that subtle depth in dark
+    // mode, using charcoal stops rather than flattening every filter group.
     .sidebar.sidebar-fresh-releases {
       background-color: var(--lb-surface-raised);
       border: 1px solid var(--lb-border);
@@ -674,7 +739,7 @@
     }
 
     .sidebar.sidebar-fresh-releases > *:not(.sidebar-header) {
-      background: var(--lb-surface-raised);
+      background: linear-gradient(50deg, #29262f 0%, #1e1e1e 72%);
       color: var(--lb-text);
     }
 
@@ -825,6 +890,23 @@
       background-color: var(--lb-surface-raised);
       border-color: var(--lb-border);
       color: var(--lb-text);
+    }
+
+    // The picker renders a leading-zero span just before each numeric input.
+    // Its month input overlaps that span slightly, so it must stay transparent
+    // rather than inheriting the generic dark input background above.
+    .react-datetime-picker__inputGroup__input {
+      background: transparent !important;
+      color: var(--lb-text);
+      -webkit-text-fill-color: var(--lb-text);
+      z-index: 0;
+    }
+
+    .react-datetime-picker__inputGroup__leadingZero {
+      position: relative;
+      z-index: 1;
+      color: var(--lb-text) !important;
+      -webkit-text-fill-color: var(--lb-text);
     }
 
     .track-search-dropdown .selected,
@@ -1547,15 +1629,26 @@
         color: #f5f3fa !important;
       }
 
-      // These calls to action intentionally keep a pale background in both
-      // themes, so they need a dark foreground even after a link is visited.
+      // Keep the primary sign-up action warm, while the sign-in action uses a
+      // quieter secondary treatment that belongs on the dark landing page.
       .homepage-info .create-account-button,
-      .homepage-info .create-account-button:visited,
-      .homepage-info .login-button,
-      .homepage-info .login-button:visited {
+      .homepage-info .create-account-button:visited {
         color: #1e1e1e !important;
       }
 
+      .homepage-info .login-button,
+      .homepage-info .login-button:visited {
+        background: #3b3745;
+        border: 1px solid #5a5566;
+        color: #f5f3fa !important;
+      }
+
+      .homepage-info .login-button:hover,
+      .homepage-info .login-button:focus-visible {
+        background: #4a4662;
+        border-color: #afa6df;
+        color: #fff !important;
+      }
       .number-count .number-count-group .number-count-digit {
         background: linear-gradient(180deg, #3b3745 0%, #24212a 100%);
         color: #f5f3fa;
