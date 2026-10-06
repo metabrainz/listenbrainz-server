@@ -14,6 +14,12 @@ const user = {
   name: "track_listener",
 };
 
+const userWithCreated = {
+  id: 1,
+  name: "track_listener",
+  created: 1579046400, // Jan 15, 2020 00:00:00 UTC
+};
+
 const loggedInUser = {
   id: 2,
   name: "iliekcomputers",
@@ -103,5 +109,34 @@ describe("ListenCountCard", () => {
     expect(
       screen.queryByText(/iliekcomputers has listened to/i)
     ).not.toBeInTheDocument();
+  });
+
+  it("displays join date when user has created timestamp and listens", () => {
+    render(
+      <ListenCountCard user={userWithCreated} listenCount={100} />
+    );
+
+    expect(screen.getByText(/songs so far/i)).toBeInTheDocument();
+    expect(screen.getByText(/since/i)).toBeInTheDocument();
+    expect(screen.getByText(/2020/)).toBeInTheDocument();
+  });
+
+  it("displays 'Member since' when user has created timestamp but no listens", () => {
+    render(
+      <ListenCountCard user={userWithCreated} />
+    );
+
+    expect(screen.getByText(/Member since/i)).toBeInTheDocument();
+    expect(screen.getByText(/2020/)).toBeInTheDocument();
+  });
+
+  it("does not display join date when created is not provided", () => {
+    render(
+      <ListenCountCard user={user} listenCount={100} />
+    );
+
+    expect(screen.getByText(/songs so far/i)).toBeInTheDocument();
+    expect(screen.queryByText(/since/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Member since/i)).not.toBeInTheDocument();
   });
 });
