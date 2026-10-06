@@ -130,7 +130,6 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
       };
     }) as ChartDataItem[];
   };
-
   const [chartData, setChartData] = React.useState<ChartDataItem[]>([]);
 
   const albumRedirectMapping = React.useMemo(() => {

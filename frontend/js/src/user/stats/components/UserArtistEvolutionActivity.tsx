@@ -1,6 +1,6 @@
 import { ResponsiveStream, TooltipProps } from "@nivo/stream";
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { OrdinalColorScaleConfig } from "@nivo/colors";
+import {  type OrdinalColorScaleConfig } from "@nivo/colors";
 import * as React from "react";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -298,6 +298,7 @@ export function UserArtistEvolutionActivityGraph(
   }, [maxValue]);
 
   return (
+
     <div
       style={{ width: "100%", height: isMobile ? "500px" : "600px" }}
       data-testid="artist-evolution-stream"
