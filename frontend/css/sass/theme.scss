@@ -1114,6 +1114,14 @@
       color: var(--lb-text) !important;
     }
 
+    // Bootstrap form labels inherit the legacy body colour rather than the
+    // raised settings card. Retoken the import form's labels and disclosure
+    // explicitly so they stay readable on its dark surface.
+    #settings .import-listens-form .form-label,
+    #settings .import-listens-form details > summary {
+      color: var(--lb-text);
+    }
+
     #user-profile .card-header {
       background-color: var(--lb-surface-raised);
       border-bottom-color: var(--lb-border);
