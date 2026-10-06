@@ -21,34 +21,6 @@ export declare type ChartDataItem = {
   [albumName: string]: number | string;
 };
 
-const wrapWordsByLength = (str: string, maxLen: number): string => {
-  const words = str.split(" ");
-  const lines: string[] = [];
-  let currentLine = words[0];
-  for (let i = 1; i < words.length; i += 1) {
-    if (currentLine.length + 1 + words[i].length <= maxLen) {
-      currentLine += ` ${words[i]}`;
-    } else {
-      lines.push(currentLine);
-      currentLine = words[i];
-    }
-  }
-  lines.push(currentLine);
-  return lines.join("\n");
-};
-
-const processData = (data?: UserArtistActivityResponse): ChartDataItem[] => {
-  if (!data?.payload?.artist_activity?.length) return [];
-
-  return data.payload.artist_activity.map((artist) => ({
-    label: wrapWordsByLength(artist.name, 14),
-    ...artist.albums.reduce(
-      (acc, album) => ({ ...acc, [album.name]: album.listen_count }),
-      {} as Record<string, number>
-    ),
-  }));
-};
-
 // Define CustomTooltip outside of the main component
 function CustomTooltip({
   id,
@@ -122,6 +94,43 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
     errorMessage = "",
   } = loaderData || {};
 
+  const wrapWordsByLength = (str: string, maxLen: number): string => {
+    const words = str.split(" ");
+    const lines: string[] = [];
+    let currentLine = words[0];
+    for (let i = 1; i < words.length; i += 1) {
+      if (currentLine.length + 1 + words[i].length <= maxLen) {
+        currentLine += ` ${words[i]}`;
+      } else {
+        lines.push(currentLine);
+        currentLine = words[i];
+      }
+    }
+    lines.push(currentLine);
+    return lines.join("\n");
+  };
+
+  const processData = (data?: UserArtistActivityResponse) => {
+    if (
+      !data ||
+      !data.payload ||
+      !data.payload.artist_activity ||
+      data.payload.artist_activity.length === 0
+    ) {
+      return [];
+    }
+    return data.payload.artist_activity.map((artist) => {
+      const wrappedLabel = wrapWordsByLength(artist.name, 14);
+      return {
+        label: wrappedLabel,
+        ...artist.albums.reduce(
+          (acc, album) => ({ ...acc, [album.name]: album.listen_count }),
+          {} as Record<string, number>
+        ),
+      };
+    }) as ChartDataItem[];
+  };
+
   const [chartData, setChartData] = React.useState<ChartDataItem[]>([]);
 
   const albumRedirectMapping = React.useMemo(() => {
@@ -139,7 +148,15 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
   }, [rawData]);
 
   React.useEffect(() => {
-    setChartData(processData(rawData));
+    if (
+      rawData &&
+      rawData.payload &&
+      rawData.payload.artist_activity &&
+      rawData.payload.artist_activity.length > 0
+    ) {
+      const processedData = processData(rawData);
+      setChartData(processedData);
+    }
   }, [rawData]);
 
   const tooltipRenderer = React.useCallback(
