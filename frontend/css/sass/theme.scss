@@ -36,6 +36,10 @@
     --lb-border-strong: #5a5566;
     --lb-accent: #dcd6f0;
     --lb-accent-hover: #fff;
+    // Visited links should remain readable without competing with the primary
+    // link colour. This muted lavender has clear contrast on every dark
+    // surface while still communicating the visited state.
+    --lb-link-visited: #c4bed2;
     --lb-focus: #afa6df;
     --lb-tooltip-bg: #252329;
     --lb-tooltip-text: #f5f3fa;
@@ -73,7 +77,9 @@
     --bs-dropdown-link-color: var(--lb-text);
     --bs-dropdown-link-hover-color: #fff;
     --bs-dropdown-link-hover-bg: #35323d;
+    --bs-dropdown-link-active-color: #fff;
     --bs-dropdown-link-active-bg: #4a4662;
+    --bs-dropdown-link-disabled-color: #968fa1;
     --bs-table-color: var(--lb-text);
     --bs-table-bg: transparent;
     --bs-table-border-color: var(--lb-border);
@@ -109,6 +115,17 @@
     #react-container {
       background-color: var(--lb-surface);
       color: var(--lb-text);
+    }
+
+    // A few legacy pages explicitly retain Bootstrap's old visited-link
+    // colour. Keep visited links distinct but quiet throughout the dark theme.
+    a:visited:not(.btn):not(.pill) {
+      color: var(--lb-link-visited);
+    }
+
+    a:visited:not(.btn):not(.pill):hover,
+    a:visited:not(.btn):not(.pill):focus-visible {
+      color: var(--lb-accent-hover);
     }
 
     // Native controls and keyboard focus must remain unambiguous in the dark.
@@ -328,6 +345,128 @@
       color: var(--lb-text);
     }
 
+    // Bootstrap defines these custom properties on .dropdown-menu itself,
+    // which shadows root values. Keep all menu states on the same muted dark
+    // palette, including legacy menus rendered as anchors or buttons.
+    .dropdown-menu {
+      --bs-dropdown-bg: var(--lb-surface-raised);
+      --bs-dropdown-color: var(--lb-text);
+      --bs-dropdown-border-color: var(--lb-border);
+      --bs-dropdown-link-color: var(--lb-text);
+      --bs-dropdown-link-hover-color: #fff;
+      --bs-dropdown-link-hover-bg: #35323d;
+      --bs-dropdown-link-active-color: #fff;
+      --bs-dropdown-link-active-bg: #4a4662;
+      --bs-dropdown-link-disabled-color: #968fa1;
+    }
+
+    .dropdown-menu .dropdown-item {
+      color: var(--lb-text);
+    }
+
+    .dropdown-menu .dropdown-item:hover,
+    .dropdown-menu .dropdown-item:focus {
+      background-color: #35323d;
+      color: #fff;
+    }
+
+    .dropdown-menu .dropdown-item.active,
+    .dropdown-menu .dropdown-item:active {
+      background-color: #4a4662;
+      color: #fff;
+    }
+
+    .dropdown-menu .dropdown-item.disabled,
+    .dropdown-menu .dropdown-item:disabled {
+      color: #968fa1;
+      opacity: 1;
+    }
+
+    // The light-theme semantic colours are intentionally lively. Their dark
+    // equivalents retain the same meaning but use lower-chroma surfaces so
+    // they sit with the rest of the interface instead of reading as flashes.
+    .btn-primary,
+    .btn-secondary,
+    .btn-success,
+    .btn-info,
+    .btn-warning,
+    .btn-danger,
+    .btn-light,
+    .btn-dark {
+      --bs-btn-color: #f8f7fb;
+      --bs-btn-hover-color: #fff;
+      --bs-btn-active-color: #fff;
+      --bs-btn-disabled-color: #ded9e6;
+      --bs-btn-border-color: var(--bs-btn-bg);
+      --bs-btn-hover-border-color: var(--bs-btn-hover-bg);
+      --bs-btn-active-border-color: var(--bs-btn-active-bg);
+      --bs-btn-disabled-border-color: var(--bs-btn-disabled-bg);
+    }
+
+    .btn-primary {
+      --bs-btn-bg: #925f49;
+      --bs-btn-hover-bg: #a56b54;
+      --bs-btn-active-bg: #794a3a;
+      --bs-btn-disabled-bg: #634941;
+      --bs-btn-focus-shadow-rgb: 181, 125, 102;
+    }
+
+    .btn-secondary {
+      --bs-btn-bg: #514d58;
+      --bs-btn-hover-bg: #615c69;
+      --bs-btn-active-bg: #423e48;
+      --bs-btn-disabled-bg: #3c3941;
+      --bs-btn-focus-shadow-rgb: 128, 122, 139;
+    }
+
+    .btn-success {
+      --bs-btn-bg: #467454;
+      --bs-btn-hover-bg: #568762;
+      --bs-btn-active-bg: #385e44;
+      --bs-btn-disabled-bg: #374d3d;
+      --bs-btn-focus-shadow-rgb: 108, 161, 119;
+    }
+
+    .btn-info {
+      --bs-btn-bg: #514b7c;
+      --bs-btn-hover-bg: #615a92;
+      --bs-btn-active-bg: #403b64;
+      --bs-btn-disabled-bg: #3c394f;
+      --bs-btn-focus-shadow-rgb: 125, 117, 177;
+    }
+
+    .btn-warning {
+      --bs-btn-bg: #8a6a30;
+      --bs-btn-hover-bg: #9b7838;
+      --bs-btn-active-bg: #705525;
+      --bs-btn-disabled-bg: #5c4a2a;
+      --bs-btn-focus-shadow-rgb: 170, 137, 73;
+    }
+
+    .btn-danger {
+      --bs-btn-bg: #914952;
+      --bs-btn-hover-bg: #a55760;
+      --bs-btn-active-bg: #733a41;
+      --bs-btn-disabled-bg: #623e43;
+      --bs-btn-focus-shadow-rgb: 174, 99, 107;
+    }
+
+    .btn-light {
+      --bs-btn-bg: #504b5a;
+      --bs-btn-hover-bg: #605a6b;
+      --bs-btn-active-bg: #403c49;
+      --bs-btn-disabled-bg: #393640;
+      --bs-btn-focus-shadow-rgb: 128, 122, 139;
+    }
+
+    .btn-dark {
+      --bs-btn-bg: #2c2931;
+      --bs-btn-hover-bg: #39353f;
+      --bs-btn-active-bg: #211f25;
+      --bs-btn-disabled-bg: #28262c;
+      --bs-btn-focus-shadow-rgb: 96, 91, 105;
+    }
+
     .footer {
       border-top-color: var(--lb-border);
     }
@@ -377,9 +516,12 @@
         background-color: var(--lb-nav-bg);
       }
 
-      #side-nav a,
-      #side-nav a:visited {
+      #side-nav a {
         color: var(--lb-accent);
+      }
+
+      #side-nav a:visited {
+        color: var(--lb-link-visited);
       }
 
       #side-nav a:hover,
@@ -832,11 +974,17 @@
       color: var(--lb-text);
     }
 
-    .explore-card-text-name a,
-    .explore-card-text-name a:visited,
+    .explore-card-text-name a {
+      color: var(--lb-accent);
+    }
+
+    .explore-card-text-name a:visited {
+      color: var(--lb-link-visited);
+    }
+
     .explore-card-text-name a:hover,
     .explore-card-text-name a:visited:hover {
-      color: var(--lb-accent);
+      color: var(--lb-accent-hover);
     }
 
     .explore-card-text > div:last-child {
@@ -1644,6 +1792,40 @@
       --music-player-background: linear-gradient(to bottom, #353070, #1e1e1e);
     }
 
+    // Donation views use a light glass treatment and hard-coded grey pills in
+    // the light theme. Rebuild those surfaces from the dark palette while
+    // keeping the page's purple character and the semantic donate actions.
+    #donations-page {
+      background: linear-gradient(288deg, #201e25 16.96%, #302b4a 98.91%);
+      color: var(--lb-text);
+
+      .donations-page-header {
+        color: #f5f3fa;
+      }
+
+      .donations-page-footer {
+        color: var(--lb-text);
+      }
+
+      .grey-wedge {
+        background: #211f26;
+      }
+
+      .blob {
+        opacity: 45%;
+      }
+    }
+
+    #donations-tiers .tier {
+      background: rgb(37 35 43 / 92%);
+      border-color: #504a5c;
+      box-shadow: var(--lb-shadow);
+
+      &:hover {
+        background: #2c2933;
+      }
+    }
+
     // The donors page uses legacy heading and link colours, which were chosen
     // for a white surface. Keep its heading rule and flair-help control on the
     // same text, border, and link palette as the rest of the dark interface.
@@ -1662,6 +1844,59 @@
         &:hover,
         &:focus-visible {
           color: var(--lb-accent-hover);
+        }
+      }
+
+      .donations-page-header {
+        background: linear-gradient(288deg, #26232e 16.96%, #403961 98.91%);
+        border: 1px solid var(--lb-border);
+        opacity: 1;
+
+        .donation-header-text {
+          color: #f5f3fa;
+        }
+
+        a:not(.btn),
+        a:not(.btn):visited {
+          color: #f5f3fa;
+        }
+      }
+
+      .donor-card {
+        background: var(--lb-surface-raised);
+        border-color: var(--lb-border);
+
+        &:hover {
+          background: var(--lb-card-hover);
+        }
+
+        .donation-date,
+        .recent-listens .listen-item,
+        .recent-listens .listen-item:visited {
+          color: var(--lb-text-muted) !important;
+        }
+
+        .recent-listens .listen-item {
+          background-color: var(--lb-surface-muted);
+
+          &:hover,
+          &:focus-visible {
+            background-color: #35323d;
+            color: #fff !important;
+          }
+        }
+      }
+
+      .recent-donor-card .donor-pinned-recording {
+        background: var(--lb-surface-muted);
+        border: 1px solid var(--lb-border);
+
+        .text {
+          color: var(--lb-text-muted);
+        }
+
+        svg {
+          color: var(--lb-accent);
         }
       }
     }
