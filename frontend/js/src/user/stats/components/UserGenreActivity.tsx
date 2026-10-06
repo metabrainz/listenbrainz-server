@@ -279,7 +279,9 @@ export function UserGenreActivityGraph({
         arcLabel={(d) => `${d.data.actualValue}`}
         arcLinkLabel={(d) => d.data.displayName}
         arcLabelsSkipAngle={chartConfig.arcLabelsSkipAngle}
-        arcLabelsTextColor={nivoTheme.textColor}
+        // These values sit on rainbow-coloured slices, so their contrast must
+        // not change with the surrounding site theme.
+        arcLabelsTextColor="#000000"
         arcLinkLabelsSkipAngle={isMobile ? 20 : 10}
         arcLinkLabelsTextColor={nivoTheme.textColor}
         arcLinkLabelsThickness={isMobile ? 1 : 2}
