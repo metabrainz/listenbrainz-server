@@ -51,7 +51,7 @@ LB_JDBC_URI = ""
 LB_USER = ""
 LB_PASSWORD = ""
 
-LISTENBRAINZ_API_URL = "http://localhost:8100"
+LISTENBRAINZ_API_URL = "http://localhost:8103"
 
 # User-partitioned listens database (deletion records)
 LISTENS_JDBC_URI = ""
