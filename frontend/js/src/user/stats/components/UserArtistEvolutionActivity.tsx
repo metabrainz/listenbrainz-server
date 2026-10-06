@@ -28,6 +28,31 @@ export type StreamDataItem = {
   [key: string]: string | number;
 };
 
+const WEEKDAY_LABELS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
+const MONTH_LABELS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
 const getLegendText = (timeRange: UserStatsAPIRange) => {
   switch (timeRange) {
     case "week":
@@ -75,9 +100,28 @@ const renderCustomTooltip = (
         maxWidth: "240px",
       }}
     >
-      <div className="mb-1 fw-bold">
-        {orderedTimeUnits[slice.index] || `Period ${slice.index + 1}`}
-      </div>
+      {(() => {
+        const timeUnit = orderedTimeUnits[slice.index];
+        let timeunitLabel = timeUnit;
+
+        if (timeUnit) {
+          const num = parseInt(timeUnit, 10);
+          if (!Number.isNaN(num)) {
+            if (orderedTimeUnits.length === 7) {
+              timeunitLabel = WEEKDAY_LABELS[num - 1] ?? timeUnit;
+            }
+            else if (orderedTimeUnits.length === 12) {
+              timeunitLabel = MONTH_LABELS[num - 1] ?? timeUnit;
+            }
+          }
+        }
+
+        return (
+          <div className="mb-1 fw-bold">
+        {timeunitLabel || `Period ${slice.index + 1}`}
+          </div>
+        );
+      })()}
       {slice.stack &&
         slice.stack
           .filter((point: any) => point.data && point.data.value > 0)
@@ -114,17 +158,18 @@ const getAxisFormatter = (
   return (index: number) => {
     const timeUnit = orderedTimeUnits[index];
     if (!timeUnit) return "";
+    const num = parseInt(timeUnit, 10);
 
     switch (timeRange) {
       case "week":
       case "this_week":
-        return timeUnit.substring(0, 3);
+        return WEEKDAY_LABELS[num - 1]?.substring(0, 3) ?? "";
       case "month":
       case "this_month":
         return timeUnit;
       case "year":
       case "this_year":
-        return timeUnit.substring(0, 3);
+        return MONTH_LABELS[num - 1]?.substring(0, 3) ?? "";
       case "all_time": {
         if (isMobile) {
           const year = parseInt(timeUnit, 10);
@@ -180,54 +225,26 @@ const transformArtistEvolutionActivityData = (
   let offsetYear: number | undefined;
 
   if (statsRange.includes("week")) {
-    orderedTimeUnits = [
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-      "Sunday",
-    ];
+    orderedTimeUnits = ["1", "2", "3", "4", "5", "6", "7"];
   } else if (statsRange.includes("month")) {
     orderedTimeUnits = Array.from({ length: 31 }, (_, i) => String(i + 1));
   } else if (statsRange.includes("year")) {
-    orderedTimeUnits = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
+    orderedTimeUnits = Array.from({ length: 12 }, (_, i) => String(i + 1));
   } else {
     const nowYear = new Date().getFullYear();
-    const yearsWithData = rawData.reduce<number[]>((acc, item) => {
-      const y = parseInt(String(item.time_unit), 10);
-      if (!Number.isNaN(y) && (item.listen_count || 0) > 0) {
-        acc.push(y);
-      }
-      return acc;
-    }, []);
+    const yearsWithData = rawData
+      .map((item) => parseInt(String(item.time_unit), 10))
+      .filter((y) => !Number.isNaN(y));
+
     if (yearsWithData.length) {
       const firstYearWithData = Math.min(...yearsWithData);
-      offsetYear = firstYearWithData - 1;
-      const years: string[] = [];
-      for (let y = offsetYear; y <= nowYear; y += 1) {
-        years.push(String(y));
-      }
-      orderedTimeUnits = years;
-    } else {
       orderedTimeUnits = [];
+      for (let y = firstYearWithData; y <= nowYear; y += 1) {
+        orderedTimeUnits.push(String(y));
+      }
     }
   }
-
+  
   const chartData: StreamDataItem[] = orderedTimeUnits.map((tu) => {
     const timeData = groupedByTime[tu] || {};
     const row: StreamDataItem = { id: tu };
