@@ -1345,8 +1345,16 @@
       background-color: var(--lb-surface-raised);
     }
 
-    .entity-page-header {
-      --bg-color: var(--lb-surface-muted);
+    // Entity headers receive a palette colour from their artwork. Preserve
+    // that cue in dark mode, but mix it into the page surface so bright cover
+    // art cannot reduce the contrast of the title and metadata.
+    #entity-page .entity-page-header {
+      background: linear-gradient(
+        45deg,
+        color-mix(in srgb, var(--bg-color) 36%, var(--lb-surface)) 0%,
+        color-mix(in srgb, var(--bg-color) 14%, var(--lb-surface)) 58%,
+        var(--lb-surface) 100%
+      );
     }
 
     // Never invert or darken genuine cover art. These rules apply only when
