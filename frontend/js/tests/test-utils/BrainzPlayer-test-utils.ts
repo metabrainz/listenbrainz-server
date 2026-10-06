@@ -3,6 +3,7 @@ export const createBrainzPlayerSettings = (
   overrides: Partial<BrainzPlayerSettings> = {}
 ): BrainzPlayerSettings => ({
   brainzplayerEnabled: true,
+  notificationsEnabled: true,
   spotifyEnabled: false,
   soundcloudEnabled: false,
   youtubeEnabled: false,
