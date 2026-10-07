@@ -673,6 +673,16 @@ $homepage-background-inverted: linear-gradient(
     }
   }
   @media (max-height: 600px) {
+    // Keep the compact layout's content colour on each section. Its children
+    // inherit it, allowing the theme to supply a single dark-mode override.
+    .homepage-upper {
+      color: $asphalt;
+    }
+
+    .homepage-lower {
+      color: $white;
+    }
+
     .homepage-lower,
     .homepage-upper {
       .number-count-digit {
@@ -684,7 +694,7 @@ $homepage-background-inverted: linear-gradient(
       }
       h1 {
         font-size: calc(100vh / 13);
-        color: $asphalt;
+        color: inherit;
       }
       padding-left: 3em;
       .listen-container {
@@ -692,8 +702,12 @@ $homepage-background-inverted: linear-gradient(
       }
       .homepage-info {
         bottom: 4.5em;
-        color: $asphalt;
+        color: inherit;
         max-width: 50%;
+
+        a:visited {
+          color: inherit;
+        }
       }
     }
     .homepage-upper .homepage-upper-grey-box {
