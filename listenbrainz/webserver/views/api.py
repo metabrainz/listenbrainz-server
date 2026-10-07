@@ -14,7 +14,7 @@ from data.model.external_service import ExternalServiceType
 from listenbrainz.db import listens_importer, tags
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore.timescale_listenstore import ListenStoreException
-from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
+from listenbrainz.webserver import timescale_connection, db_conn, listens_conn
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
@@ -143,7 +143,7 @@ def submit_listen():
         additional_info = track_metadata.get("additional_info", {})
         track_number = additional_info.get('tracknumber')
 
-        msid = submit_recording(connection=ts_conn,
+        msid = submit_recording(connection=listens_conn,
                         recording=track_metadata.get('track_name'),
                         artist=track_metadata.get('artist_name'),
                         release=track_metadata.get('release_name'),
