@@ -214,6 +214,13 @@ COPY ./docker/services/uwsgi/uwsgi.service /etc/service/uwsgi/run
 COPY ./docker/services/uwsgi/uwsgi.finish /etc/service/uwsgi/finish
 RUN touch /etc/service/uwsgi/down
 
+# uwsgi (API)
+COPY ./docker/services/uwsgi_api/uwsgi-api.ini.ctmpl /etc/uwsgi/uwsgi-api.ini.ctmpl
+COPY ./docker/services/uwsgi_api/consul-template-uwsgi-api.conf /etc/consul-template-uwsgi-api.conf
+COPY ./docker/services/uwsgi_api/uwsgi_api.service /etc/service/uwsgi_api/run
+COPY ./docker/services/uwsgi_api/uwsgi_api.finish /etc/service/uwsgi_api/finish
+RUN touch /etc/service/uwsgi_api/down
+
 COPY ./docker/rc.local /etc/rc.local
 
 # crontabs

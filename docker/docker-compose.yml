@@ -93,6 +93,30 @@ services:
         condition: service_started
       garage:
         condition: service_healthy
+      api:
+        condition: service_started
+
+  api:
+    image: web
+    environment:
+      FLASK_APP: listenbrainz.webserver:create_api_app()
+    command: flask run -h 0.0.0.0 -p 8103 --debug
+    ports:
+      - "127.0.0.1:8103:8103"
+    volumes:
+      - ..:/code/listenbrainz:z
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
+    depends_on:
+      redis:
+        condition: service_started
+      lb_db:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      couchdb:
+        condition: service_started
+      garage:
+        condition: service_healthy
 
   api_compat:
     image: web
