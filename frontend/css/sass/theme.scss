@@ -119,12 +119,12 @@
 
     // These selectors cover legacy links that retain the old Lobes visited
     // rule; the Sass variables also make that rule consume these tokens.
-    a:visited:not(.btn):not(.pill) {
+    a:visited:not(.btn):not(.pill):not(.dropdown-item) {
       color: var(--lb-link-visited);
     }
 
-    a:visited:not(.btn):not(.pill):hover,
-    a:visited:not(.btn):not(.pill):focus-visible {
+    a:visited:not(.btn):not(.pill):not(.dropdown-item):hover,
+    a:visited:not(.btn):not(.pill):not(.dropdown-item):focus-visible {
       color: var(--lb-link-visited-hover);
     }
 
@@ -382,9 +382,8 @@
       opacity: 1;
     }
 
-    // The light-theme semantic colours are intentionally lively. Their dark
-    // equivalents retain the same meaning but use lower-chroma surfaces so
-    // they sit with the rest of the interface instead of reading as flashes.
+    // Enabled actions need enough chroma to read as interactive on dark
+    // surfaces. Their former subdued colours are retained for disabled states.
     .btn-primary,
     .btn-secondary,
     .btn-success,
@@ -404,67 +403,67 @@
     }
 
     .btn-primary {
-      --bs-btn-bg: #925f49;
-      --bs-btn-hover-bg: #a56b54;
-      --bs-btn-active-bg: #794a3a;
-      --bs-btn-disabled-bg: #634941;
-      --bs-btn-focus-shadow-rgb: 181, 125, 102;
+      --bs-btn-bg: #a85d43;
+      --bs-btn-hover-bg: #af6247;
+      --bs-btn-active-bg: #8e4d37;
+      --bs-btn-disabled-bg: #925f49;
+      --bs-btn-focus-shadow-rgb: 168, 93, 67;
     }
 
     .btn-secondary {
-      --bs-btn-bg: #514d58;
-      --bs-btn-hover-bg: #615c69;
-      --bs-btn-active-bg: #423e48;
-      --bs-btn-disabled-bg: #3c3941;
-      --bs-btn-focus-shadow-rgb: 128, 122, 139;
+      --bs-btn-bg: #645d71;
+      --bs-btn-hover-bg: #6c647b;
+      --bs-btn-active-bg: #514b5b;
+      --bs-btn-disabled-bg: #514d58;
+      --bs-btn-focus-shadow-rgb: 100, 93, 113;
     }
 
     .btn-success {
-      --bs-btn-bg: #467454;
-      --bs-btn-hover-bg: #568762;
-      --bs-btn-active-bg: #385e44;
-      --bs-btn-disabled-bg: #374d3d;
-      --bs-btn-focus-shadow-rgb: 108, 161, 119;
+      --bs-btn-bg: #478357;
+      --bs-btn-hover-bg: #488057;
+      --bs-btn-active-bg: #3b6d48;
+      --bs-btn-disabled-bg: #467454;
+      --bs-btn-focus-shadow-rgb: 71, 131, 87;
     }
 
     .btn-info {
-      --bs-btn-bg: #353070;
-      --bs-btn-hover-bg: #47417c;
-      --bs-btn-active-bg: #27235a;
-      --bs-btn-disabled-bg: #2c2944;
-      --bs-btn-focus-shadow-rgb: 99, 94, 176;
+      --bs-btn-bg: #47417c;
+      --bs-btn-hover-bg: #514a89;
+      --bs-btn-active-bg: #393465;
+      --bs-btn-disabled-bg: #353070;
+      --bs-btn-focus-shadow-rgb: 71, 65, 124;
     }
 
     .btn-warning {
-      --bs-btn-bg: #8a6a30;
-      --bs-btn-hover-bg: #9b7838;
-      --bs-btn-active-bg: #705525;
-      --bs-btn-disabled-bg: #5c4a2a;
-      --bs-btn-focus-shadow-rgb: 170, 137, 73;
+      --bs-btn-bg: #967022;
+      --bs-btn-hover-bg: #9c6d17;
+      --bs-btn-active-bg: #7d5c1c;
+      --bs-btn-disabled-bg: #8a6a30;
+      --bs-btn-focus-shadow-rgb: 150, 112, 34;
     }
 
     .btn-danger {
-      --bs-btn-bg: #914952;
-      --bs-btn-hover-bg: #a55760;
-      --bs-btn-active-bg: #733a41;
-      --bs-btn-disabled-bg: #623e43;
-      --bs-btn-focus-shadow-rgb: 174, 99, 107;
+      --bs-btn-bg: #a5475a;
+      --bs-btn-hover-bg: #b85267;
+      --bs-btn-active-bg: #893a4a;
+      --bs-btn-disabled-bg: #914952;
+      --bs-btn-focus-shadow-rgb: 165, 71, 90;
     }
 
     .btn-light {
-      --bs-btn-bg: #504b5a;
-      --bs-btn-hover-bg: #605a6b;
-      --bs-btn-active-bg: #403c49;
-      --bs-btn-disabled-bg: #393640;
-      --bs-btn-focus-shadow-rgb: 128, 122, 139;
+      --bs-btn-bg: #60586b;
+      --bs-btn-hover-bg: #70677e;
+      --bs-btn-active-bg: #4d4757;
+      --bs-btn-disabled-bg: #504b5a;
+      --bs-btn-focus-shadow-rgb: 96, 88, 107;
     }
 
     .btn-dark {
-      --bs-btn-bg: #2c2931;
-      --bs-btn-hover-bg: #39353f;
-      --bs-btn-active-bg: #211f25;
-      --bs-btn-disabled-bg: #28262c;
-      --bs-btn-focus-shadow-rgb: 96, 91, 105;
+      --bs-btn-bg: #34303a;
+      --bs-btn-hover-bg: #443e4b;
+      --bs-btn-active-bg: #29262e;
+      --bs-btn-disabled-bg: #2c2931;
+      --bs-btn-focus-shadow-rgb: 52, 48, 58;
     }
 
     .footer {
