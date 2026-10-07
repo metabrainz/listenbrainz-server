@@ -14,6 +14,8 @@
     --lb-border-strong: #aaa49c;
     --lb-accent: #353070;
     --lb-accent-hover: #27235a;
+    --lb-link-visited: #963873;
+    --lb-link-visited-hover: #ba478f;
     --lb-focus: #635eb0;
     --lb-tooltip-bg: #fff;
     --lb-tooltip-text: #262626;
@@ -34,12 +36,10 @@
     --lb-text-muted: #b8b3c4;
     --lb-border: #3b3745;
     --lb-border-strong: #5a5566;
-    --lb-accent: #dcd6f0;
+    --lb-accent: #e1deeb;
     --lb-accent-hover: #fff;
-    // Keep ordinary links on the established dark-theme accent. Visited links
-    // alone get this lighter lavender so their history state is readable but
-    // does not recolour the rest of the interface.
-    --lb-link-visited: #ede9f5;
+    --lb-link-visited: #afa2cf;
+    --lb-link-visited-hover: var(--lb-accent);
     --lb-focus: #afa6df;
     --lb-tooltip-bg: #252329;
     --lb-tooltip-text: #f5f3fa;
@@ -61,7 +61,7 @@
     --bs-heading-color: #f5f3fa;
     --bs-link-color: var(--lb-accent);
     --bs-link-hover-color: var(--lb-accent-hover);
-    --bs-link-color-rgb: 220, 214, 240;
+    --bs-link-color-rgb: 225, 222, 235;
     --bs-link-hover-color-rgb: 255, 255, 255;
     --bs-border-color: var(--lb-border);
     --bs-border-color-translucent: rgb(228 228 228 / 18%);
@@ -75,10 +75,10 @@
     --bs-dropdown-color: var(--lb-text);
     --bs-dropdown-border-color: var(--lb-border);
     --bs-dropdown-link-color: var(--lb-text);
-    --bs-dropdown-link-hover-color: #1e1e1e;
-    --bs-dropdown-link-hover-bg: #eb743b;
-    --bs-dropdown-link-active-color: #1e1e1e;
-    --bs-dropdown-link-active-bg: #eb743b;
+    --bs-dropdown-link-hover-color: #fff;
+    --bs-dropdown-link-hover-bg: #35323d;
+    --bs-dropdown-link-active-color: #fff;
+    --bs-dropdown-link-active-bg: #35323d;
     --bs-dropdown-link-disabled-color: #968fa1;
     --bs-table-color: var(--lb-text);
     --bs-table-bg: transparent;
@@ -117,15 +117,15 @@
       color: var(--lb-text);
     }
 
-    // A few legacy pages explicitly retain Bootstrap's old visited-link
-    // colour. Keep visited links distinct but quiet throughout the dark theme.
+    // These selectors cover legacy links that retain the old Lobes visited
+    // rule; the Sass variables also make that rule consume these tokens.
     a:visited:not(.btn):not(.pill) {
       color: var(--lb-link-visited);
     }
 
     a:visited:not(.btn):not(.pill):hover,
     a:visited:not(.btn):not(.pill):focus-visible {
-      color: var(--lb-accent-hover);
+      color: var(--lb-link-visited-hover);
     }
 
     // Native controls and keyboard focus must remain unambiguous in the dark.
@@ -353,10 +353,10 @@
       --bs-dropdown-color: var(--lb-text);
       --bs-dropdown-border-color: var(--lb-border);
       --bs-dropdown-link-color: var(--lb-text);
-      --bs-dropdown-link-hover-color: #1e1e1e;
-      --bs-dropdown-link-hover-bg: #eb743b;
-      --bs-dropdown-link-active-color: #1e1e1e;
-      --bs-dropdown-link-active-bg: #eb743b;
+      --bs-dropdown-link-hover-color: #fff;
+      --bs-dropdown-link-hover-bg: #35323d;
+      --bs-dropdown-link-active-color: #fff;
+      --bs-dropdown-link-active-bg: #35323d;
       --bs-dropdown-link-disabled-color: #968fa1;
     }
 
@@ -366,23 +366,13 @@
 
     .dropdown-menu .dropdown-item:hover,
     .dropdown-menu .dropdown-item:focus {
-      background-color: #eb743b;
-      color: #1e1e1e;
+      background-color: #35323d;
+      color: #fff;
     }
 
     .dropdown-menu .dropdown-item.active,
     .dropdown-menu .dropdown-item:active {
-      background-color: #eb743b;
-      color: #1e1e1e;
-    }
-
-    // Fresh Releases uses the established pink accent to show its selected
-    // sort option; retain that deliberate exception to the shared orange menu
-    // selection treatment.
-    .fresh-releases-select .dropdown-menu .dropdown-item.active,
-    .fresh-releases-select .dropdown-menu .dropdown-item.active:hover,
-    .fresh-releases-select .dropdown-menu .dropdown-item:active {
-      background-color: #ba478f;
+      background-color: #35323d;
       color: #fff;
     }
 
@@ -535,9 +525,12 @@
       }
 
       #side-nav a:hover,
-      #side-nav a:visited:hover,
       #side-nav a.active {
         color: #fff;
+      }
+
+      #side-nav a:visited:hover {
+        color: var(--lb-link-visited-hover);
       }
 
       #side-nav .theme-toggle {
@@ -987,9 +980,12 @@
       color: var(--lb-text);
     }
 
-    .explore-card-text-name a,
-    .explore-card-text-name a:hover {
+    .explore-card-text-name a {
       color: var(--lb-accent);
+    }
+
+    .explore-card-text-name a:hover {
+      color: var(--lb-accent-hover);
     }
 
     .explore-card-text-name a:visited {
@@ -997,7 +993,7 @@
     }
 
     .explore-card-text-name a:visited:hover {
-      color: var(--lb-accent-hover);
+      color: var(--lb-link-visited-hover);
     }
 
     .explore-card-text > div:last-child {
@@ -1110,26 +1106,6 @@
     .releases-timeline.vertical {
       background-color: var(--lb-surface);
       box-shadow: none;
-    }
-
-    // A native select popup cannot consistently honour its option colours.
-    // These controlled Fresh Releases menus keep the lighter purple surface
-    // and readable labels from the light-theme design.
-    .fresh-releases-select .dropdown-menu {
-      background-color: #3d3959;
-      border-color: #5d5875;
-      box-shadow: var(--lb-shadow);
-      color: #f1eef8;
-    }
-
-    .fresh-releases-select .dropdown-item {
-      color: #f1eef8;
-    }
-
-    .fresh-releases-select .dropdown-item:hover,
-    .fresh-releases-select .dropdown-item:focus {
-      background-color: #4d486b;
-      color: #fff;
     }
 
     // Date headers divide the release grid rather than introduce another
@@ -1894,10 +1870,21 @@
         background-color: var(--lb-surface-raised);
       }
 
+      .homepage-upper,
+      .homepage-lower {
+        color: #f5f3fa;
+      }
+
       .homepage-upper .homepage-info,
       .homepage-upper .homepage-info a:visited,
       .homepage-upper .homepage-info h1,
-      .homepage-lower .listen-container,
+      .homepage-lower .homepage-info,
+      .homepage-lower .homepage-info a:visited,
+      .homepage-lower .homepage-info h1,
+      .homepage-lower .listen-container {
+        color: inherit !important;
+      }
+
       .homepage-information .info-column h2,
       .homepage-information .info-column p,
       .homepage-information .info-column .info-link {
