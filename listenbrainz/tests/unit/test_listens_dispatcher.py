@@ -22,7 +22,8 @@ class ListensDispatcherTestCase(unittest.TestCase):
         return [{
             "user_id": 1,
             "user_name": user_name,
-            # Deliberately oppose submission order to catch timestamp sorting.
+            # Descending timestamps verify that the last *received* listens win,
+            # regardless of when they were listened to.
             "timestamp": 1700000000 - index,
             "recording_msid": "00000000-0000-0000-0000-000000000001",
             "track_metadata": {
