@@ -3,6 +3,7 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import DEFAULT, Mock, patch
 
+from listenbrainz.listen import Listen
 from listenbrainz.websockets.listens_dispatcher import ListensDispatcher
 
 
@@ -68,6 +69,30 @@ class ListensDispatcherTestCase(unittest.TestCase):
         self.socketio.reset_mock()
         self.dispatcher.flush_listens()
         self.socketio.emit.assert_not_called()
+        self.assertEqual(self.dispatcher.pending_listens, {})
+
+    def test_only_retained_listens_are_parsed_at_flush(self):
+        listens = self.make_listens(25)
+        with patch.object(Listen, "from_json", wraps=Listen.from_json) as from_json:
+            self.send_listens(listens)
+            from_json.assert_not_called()
+
+            self.dispatcher.flush_listens()
+            self.assertEqual(from_json.call_count, 10)
+
+        self.assert_emitted(listens[-10:])
+
+    def test_parse_failure_does_not_stop_later_notifications(self):
+        listens = self.make_listens(2)
+        listens[0]["timestamp"] = "invalid"
+        self.send_listens(listens)
+
+        self.dispatcher.flush_listens()
+
+        self.assert_emitted(listens[1:])
+        self.app.logger.error.assert_called_once_with(
+            "Unable to emit listen notification for %s", "listener", exc_info=True
+        )
         self.assertEqual(self.dispatcher.pending_listens, {})
 
     def test_arrivals_during_flush_wait_for_next_flush(self):

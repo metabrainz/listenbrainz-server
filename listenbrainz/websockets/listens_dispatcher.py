@@ -40,10 +40,10 @@ class ListensDispatcher(ConsumerMixin):
                 listen = NowPlayingListen(user_id=data["user_id"], user_name=data["user_name"], data=data["track_metadata"])
                 self.socketio.emit(event_name, json.dumps(listen.to_api()), to=listen.user_name)
             else:
-                listen = Listen.from_json(data)
-                if listen.user_name not in self.pending_listens:
-                    self.pending_listens[listen.user_name] = deque(maxlen=WEBSOCKETS_MAX_LISTENS_PER_FLUSH)
-                self.pending_listens[listen.user_name].append(listen)
+                user_name = data["user_name"]
+                if user_name not in self.pending_listens:
+                    self.pending_listens[user_name] = deque(maxlen=WEBSOCKETS_MAX_LISTENS_PER_FLUSH)
+                self.pending_listens[user_name].append(data)
         # Listens are already stored upstream. Buffered notifications are best-effort.
         message.ack()
 
@@ -53,8 +53,9 @@ class ListensDispatcher(ConsumerMixin):
         ready = self.pending_listens
         self.pending_listens = {}
         for user_name, listens in ready.items():
-            for listen in listens:
+            for data in listens:
                 try:
+                    listen = Listen.from_json(data)
                     self.socketio.emit("listen", json.dumps(listen.to_api()), to=user_name)
                 except Exception:
                     self.app.logger.error("Unable to emit listen notification for %s", user_name, exc_info=True)
