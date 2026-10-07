@@ -554,6 +554,12 @@ export default function BrainzPlayer() {
       return;
     }
     stopOtherBrainzPlayers();
+    // Stop the previous provider before switching playback within this tab.
+    const previousDataSource =
+      dataSourceRefs[getCurrentDataSourceIndex()]?.current;
+    if (previousDataSource && previousDataSource !== dataSource) {
+      previousDataSource.stop();
+    }
     setCurrentDataSourceIndex(selectedDatasourceIndex);
     setCurrentDataSourceName(dataSource.name);
     // Make sure the datasource is ready to play
