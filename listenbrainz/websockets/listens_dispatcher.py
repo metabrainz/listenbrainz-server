@@ -57,12 +57,15 @@ class ListensDispatcher(ConsumerMixin):
                 try:
                     self.socketio.emit("listen", json.dumps(listen.to_api()), to=user_name)
                 except Exception:
-                    self.app.logger.exception("Unable to emit listen notification for %s", user_name)
+                    self.app.logger.error("Unable to emit listen notification for %s", user_name, exc_info=True)
 
     def flush_listens_periodically(self):
         while True:
             self.socketio.sleep(WEBSOCKETS_FLUSH_INTERVAL_SECONDS)
-            self.flush_listens()
+            try:
+                self.flush_listens()
+            except Exception:
+                self.app.logger.error("Unable to flush listen notifications", exc_info=True)
 
     def get_consumers(self, _, channel):
         self.playing_now_channel = channel.connection.channel()

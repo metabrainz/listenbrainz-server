@@ -1,7 +1,7 @@
 import json
 import unittest
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import DEFAULT, Mock, patch
 
 from listenbrainz.websockets.listens_dispatcher import ListensDispatcher
 
@@ -97,10 +97,27 @@ class ListensDispatcherTestCase(unittest.TestCase):
 
         self.dispatcher.flush_listens()
         self.assertEqual(self.socketio.emit.call_count, 2)
-        self.app.logger.exception.assert_called_once()
+        self.app.logger.error.assert_called_once_with(
+            "Unable to emit listen notification for %s", "listener", exc_info=True
+        )
         self.assertEqual(self.dispatcher.pending_listens, {})
 
         self.socketio.reset_mock(side_effect=True)
         self.send_listens(listens[2:])
         self.dispatcher.flush_listens()
         self.assert_emitted(listens[2:])
+
+    def test_periodic_flush_recovers_from_unexpected_failure(self):
+        listens = self.make_listens(1)
+        self.send_listens(listens)
+        self.socketio.sleep.side_effect = [None, None, KeyboardInterrupt]
+        with patch.object(
+            self.dispatcher, "flush_listens",
+            wraps=self.dispatcher.flush_listens,
+            side_effect=[RuntimeError("Unexpected flush failure"), DEFAULT],
+        ):
+            with self.assertRaises(KeyboardInterrupt):
+                self.dispatcher.flush_listens_periodically()
+
+        self.assert_emitted(listens)
+        self.app.logger.error.assert_called_once_with("Unable to flush listen notifications", exc_info=True)
