@@ -213,4 +213,20 @@ ALTER TABLE listen_delete_metadata
     ADD CONSTRAINT listen_delete_metadata_status_created_constraint
     CHECK ( status = 'invalid' OR status = 'pending' OR (status = 'complete' AND listen_created IS NOT NULL) );
 
+CREATE TABLE messybrainz.submissions (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    gid             UUID NOT NULL,
+    recording       TEXT NOT NULL,
+    artist_credit   TEXT NOT NULL,
+    release         TEXT,
+    track_number    TEXT,
+    duration        INTEGER,
+    submitted       TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE messybrainz.submissions_redirect (
+    duplicate_msid UUID NOT NULL,
+    original_msid UUID NOT NULL
+);
+
 COMMIT;

@@ -6,7 +6,7 @@ import requests_mock
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 from listenbrainz import messybrainz
-from listenbrainz.db import timescale, listens as listens_db
+from listenbrainz.db import listens as listens_db
 from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.tests.integration import IntegrationTestCase
 
@@ -16,11 +16,9 @@ class FeedbackAPITestCase(IntegrationTestCase):
         super(FeedbackAPITestCase, self).setUp()
         self.user = db_user.get_or_create(self.db_conn, 1, "testuserpleaseignore")
         self.user2 = db_user.get_or_create(self.db_conn, 2, "anothertestuserpleaseignore")
-        self.ts_conn = timescale.engine.connect()
         self.listens_conn = listens_db.engine.connect()
 
     def tearDown(self):
-        self.ts_conn.close()
         self.listens_conn.close()
         super(FeedbackAPITestCase, self).tearDown()
 
@@ -298,7 +296,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
 
-        result = db_feedback.get_feedback_for_user(self.db_conn, self.ts_conn, self.listens_conn, self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.listens_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].recording_msid, feedback["recording_msid"])
@@ -320,7 +318,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["status"], "ok")
 
         # check that the record gets updated
-        result = db_feedback.get_feedback_for_user(self.db_conn, self.ts_conn, self.listens_conn, self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.listens_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].recording_msid, updated_feedback["recording_msid"])
@@ -347,7 +345,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
 
-        result = db_feedback.get_feedback_for_user(self.db_conn, self.ts_conn, self.listens_conn, self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.listens_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].recording_mbid, feedback["recording_mbid"])
@@ -369,7 +367,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["status"], "ok")
 
         # check that the record gets updated
-        result = db_feedback.get_feedback_for_user(self.db_conn, self.ts_conn, self.listens_conn, self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.listens_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].recording_mbid, updated_feedback["recording_mbid"])
@@ -396,7 +394,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
 
-        result = db_feedback.get_feedback_for_user(self.db_conn, self.ts_conn, self.listens_conn, self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.listens_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].recording_msid, feedback["recording_msid"])
@@ -418,7 +416,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["status"], "ok")
 
         # check that the record gets deleted
-        result = db_feedback.get_feedback_for_user(self.db_conn, self.ts_conn, self.listens_conn, self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.listens_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 0)
 
     def test_recording_mbid_feedback_delete_when_score_is_zero(self):
@@ -442,7 +440,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
 
-        result = db_feedback.get_feedback_for_user(self.db_conn, self.ts_conn, self.listens_conn, self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.listens_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].user_id, self.user["id"])
         self.assertEqual(result[0].recording_mbid, feedback["recording_mbid"])
@@ -464,7 +462,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["status"], "ok")
 
         # check that the record gets deleted
-        result = db_feedback.get_feedback_for_user(self.db_conn, self.ts_conn, self.listens_conn, self.user["id"], limit=25, offset=0)
+        result = db_feedback.get_feedback_for_user(self.db_conn, self.listens_conn, self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 0)
 
     def test_get_feedback_for_user(self):
@@ -1316,7 +1314,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
                 "release": "Lucifer"
             }
         ]
-        submitted_data = messybrainz.insert_all_in_transaction(self.ts_conn, recordings)
+        submitted_data = messybrainz.insert_all_in_transaction(self.listens_conn, recordings)
 
         sample_feedback = [
             {
@@ -1390,8 +1388,8 @@ class FeedbackAPITestCase(IntegrationTestCase):
             "018dfa9b-7a80-3997-b64e-8520488656a1": "9d0c31ef-257a-41af-9a8c-f28a5cd87467",
             "2446a9ae-6e63-3273-bfc9-58eed8571d7a": "f53937b3-f6dc-450c-8d57-bbc667d8af23"
         }
-        expected_msid = messybrainz.submit_recording(self.ts_conn, "Let Me Love You", "ariana grande")
-        self.ts_conn.commit()
+        expected_msid = messybrainz.submit_recording(self.listens_conn, "Let Me Love You", "ariana grande")
+        self.listens_conn.commit()
 
         r = self.client.post(
             self.custom_url_for("feedback_api_v1.import_feedback"),
@@ -1439,9 +1437,9 @@ class FeedbackAPITestCase(IntegrationTestCase):
         # No track MBIDs in Libre.fm data, so load_recordings_from_tracks returns empty
         mock_load_recordings.return_value = {}
         # Pre-insert MessyBrainz submissions so bulk_get_msids can match them
-        expected_msid_1 = messybrainz.submit_recording(self.ts_conn, "Die Yung", "Death Souljah")
-        expected_msid_2 = messybrainz.submit_recording(self.ts_conn, "KNOW MY NAME", "aeter")
-        self.ts_conn.commit()
+        expected_msid_1 = messybrainz.submit_recording(self.listens_conn, "Die Yung", "Death Souljah")
+        expected_msid_2 = messybrainz.submit_recording(self.listens_conn, "KNOW MY NAME", "aeter")
+        self.listens_conn.commit()
 
         r = self.client.post(
             self.custom_url_for("feedback_api_v1.import_feedback"),

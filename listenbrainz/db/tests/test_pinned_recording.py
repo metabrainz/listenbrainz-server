@@ -110,7 +110,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
             }
         ]
 
-        msids = msb_db.insert_all_in_transaction(self.ts_conn, recordings)
+        msids = msb_db.insert_all_in_transaction(self.listens_conn, recordings)
 
         query = """
                 INSERT INTO mapping.mb_metadata_cache
@@ -160,7 +160,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
             )
 
         pins = db_pinned_rec.get_pin_history_for_user(self.db_conn, self.user["id"], 5, 0)
-        pins_with_metadata = fetch_track_metadata_for_items(self.ts_conn, self.listens_conn, pins)
+        pins_with_metadata = fetch_track_metadata_for_items(self.listens_conn, pins)
 
         received = [x.dict() for x in pins_with_metadata]
         # pinned recs returned in reverse order of submitted because order newest to oldest

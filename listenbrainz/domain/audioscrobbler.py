@@ -13,7 +13,7 @@ from brainzutils import musicbrainz_db
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import external_service_oauth
 from listenbrainz.domain.importer_service import ImporterService
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn, listens_conn
 from listenbrainz.webserver.errors import APINotFound
 
 logger = logging.getLogger(__name__)
@@ -183,7 +183,7 @@ class AudioscrobblerService(ImporterService):
 
         mbid_feedback = [(x["timestamp"], x["mbid"]) for x in items_with_mbids]
 
-        msids_map = bulk_get_msids(ts_conn, items_without_mbids)
+        msids_map = bulk_get_msids(listens_conn, items_without_mbids)
         for item in items_without_mbids:
             key = f"{item['track_name'].lower()}-{item['artist_name'].lower()}"
             item["msid"] = msids_map.get(key)
