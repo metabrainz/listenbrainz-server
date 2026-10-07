@@ -65,7 +65,7 @@ def create_schema(partition_count):
             cur.execute(CREATE_PARTITION_SQL.format(index=index, modulus=partition_count))
         cur.execute(_read_sql(CREATE_VIEWS_SQL_FILE))
         conn.commit()
-    current_app.logger.info("created listen and mapping tables and %d listen partitions", partition_count)
+    current_app.logger.info("created listen, mapping and MessyBrainz tables and %d listen partitions", partition_count)
 
 
 def create_indexes():

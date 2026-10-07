@@ -67,4 +67,22 @@ CREATE INDEX last_updated_ndx_mbid_mapping ON mapping.mbid_mapping (last_updated
 
 CREATE INDEX mbid_manual_mapping_top_idx ON mapping.mbid_manual_mapping_top (recording_msid) INCLUDE (recording_mbid);
 
+-- messybrainz
+CREATE UNIQUE INDEX messybrainz_gid_ndx ON messybrainz.submissions (gid);
+-- can't use a single index here because some values in these columns are too large and exceed the max
+-- index size allowed when used together.
+CREATE INDEX messybrainz_recording_ndx ON messybrainz.submissions (lower(recording));
+CREATE INDEX messybrainz_artist_credit_ndx ON messybrainz.submissions (lower(artist_credit));
+CREATE INDEX messybrainz_release_ndx ON messybrainz.submissions (lower(release));
+CREATE INDEX messybrainz_track_number_ndx ON messybrainz.submissions (lower(track_number));
+CREATE INDEX messybrainz_duration_ndx ON messybrainz.submissions (duration);
+
+CREATE UNIQUE INDEX messybrainz_redirect_gid_ndx ON messybrainz.submissions_redirect (duplicate_msid);
+
+ALTER TABLE messybrainz.submissions_redirect
+    ADD CONSTRAINT messybrainz_submissions_msid_foreign_key
+    FOREIGN KEY (original_msid)
+    REFERENCES messybrainz.submissions (gid)
+    ON DELETE NO ACTION;
+
 COMMIT;
