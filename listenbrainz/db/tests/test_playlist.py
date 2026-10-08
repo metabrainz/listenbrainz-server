@@ -345,7 +345,6 @@ class PlaylistTestCase(IntegrationTestCase):
         )
         self.assertEqual(len(playlists), 1)
 
-        db_playlist.delete_playlists_by_user_id(self.db_conn, self.user_1['id'])
         db_user.delete(self.db_conn, self.user_1['id'])
         self.db_conn.commit()
 
