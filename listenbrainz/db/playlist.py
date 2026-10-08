@@ -603,7 +603,7 @@ def get_collaborators_for_playlists(db_conn, playlist_ids: List[int]):
     """Get all of the collaborators for the given playlists
 
     Args:
-
+        db_conn: database connection
         playlist_ids: a list of playlist ids to get collaborator information for
 
     Return:
@@ -664,7 +664,7 @@ def get_recordings_count_for_playlist(db_conn, playlist_id: int):
     """ Get a count of recordings for a given playlist.
 
     Arguments:
-
+        db_conn: database connection
         playlist_id: Numerical sequential id of a playlist (NOT its UUID)
 
     Returns:
@@ -874,7 +874,7 @@ def delete_playlist(db_conn, playlist: model_playlist.Playlist):
     """Delete a playlist.
 
     Arguments:
-
+        db_conn: database connection
         playlist: The playlist to delete
 
     Returns:
@@ -887,7 +887,7 @@ def delete_playlist_by_mbid(db_conn, playlist_mbid: str):
     """Delete a playlist given an mbid.
 
     Arguments:
-
+        db_conn: database connection
         playlist_mbid: The mbid of the playlist to delete
 
     Returns:
@@ -968,7 +968,7 @@ def delete_recordings_from_playlist(db_conn, playlist: model_playlist.Playlist, 
     of items in the playlist, silently remove as many as possible
 
     Arguments:
-
+        db_conn: database connection
         playlist: The playlist to remove recordings from
         remove_from: The position to remove from, 0 indexed
         remove_count: The number of items to remove
