@@ -279,6 +279,7 @@ export default function AddTagSelect(props: {
   return (
     <div className="add-tag-select">
       <CreatableSelect
+        classNamePrefix="tag-select"
         createOptionPosition="first"
         value={sortBy(selected, ["originalTag.count", "isOwnTag"]).reverse()}
         options={musicbrainzGenres?.map((genre) => ({
@@ -315,13 +316,13 @@ export default function AddTagSelect(props: {
             scrollbarWidth: "thin",
             "::-webkit-scrollbar": {
               height: "5px",
-              backgroundColor: "#f5f5f5",
+              backgroundColor: "var(--lb-surface-muted)",
             },
             "::-webkit-scrollbar-track": {
-              backgroundColor: "#f5f5f5",
+              backgroundColor: "var(--lb-surface-muted)",
             },
             ":hover::-webkit-scrollbar-thumb": {
-              backgroundColor: "#ccc",
+              backgroundColor: "var(--lb-border-strong)",
             },
           }),
           indicatorsContainer: (styles) => ({
@@ -333,7 +334,8 @@ export default function AddTagSelect(props: {
               position: "absolute",
               height: "100%",
               left: "-3em",
-              background: "linear-gradient(-90deg, white 10%, transparent)",
+              background:
+                "linear-gradient(-90deg, var(--lb-surface-raised) 10%, transparent)",
               pointerEvents: "none",
             },
           }),

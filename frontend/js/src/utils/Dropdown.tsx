@@ -26,8 +26,8 @@ export default function DropdownRef() {
           const nextOption = dropdown.options[dropdown.selectedIndex + 1];
           if (nextOption) {
             if (selectedOption) {
-              selectedOption.style.backgroundColor = "white";
-              selectedOption.style.color = "inherit";
+              selectedOption.style.backgroundColor = "var(--lb-surface-raised)";
+              selectedOption.style.color = "var(--lb-text)";
             }
 
             nextOption.style.backgroundColor = "#353070";
@@ -43,8 +43,8 @@ export default function DropdownRef() {
           const prevOption = dropdown.options[dropdown.selectedIndex - 1];
           if (prevOption) {
             if (selectedOption) {
-              selectedOption.style.backgroundColor = "white";
-              selectedOption.style.color = "inherit";
+              selectedOption.style.backgroundColor = "var(--lb-surface-raised)";
+              selectedOption.style.color = "var(--lb-text)";
             }
 
             prevOption.style.backgroundColor = "#353070";

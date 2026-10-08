@@ -1,0 +1,1919 @@
+// Theme tokens are deliberately semantic. New components should consume these
+// values rather than adding a one-off "dark" colour beside the component. It
+// is applied at the very end of main.scss so it can safely override
+// literal colours emitted by older stylesheets.
+@mixin listenbrainz-theme {
+  :root {
+    --lb-surface: #fff;
+    --lb-surface-raised: #fff;
+    --lb-surface-muted: #f5f4f2;
+    --lb-nav-bg: #fff;
+    --lb-text: #262626;
+    --lb-text-muted: #6b665c;
+    --lb-border: #d4d0cb;
+    --lb-border-strong: #aaa49c;
+    --lb-accent: #353070;
+    --lb-accent-hover: #27235a;
+    --lb-link-visited: #963873;
+    --lb-link-visited-hover: #ba478f;
+    --lb-focus: #635eb0;
+    --lb-tooltip-bg: #fff;
+    --lb-tooltip-text: #262626;
+    --lb-shadow: 0 4px 12px rgb(0 0 0 / 12%);
+  }
+
+  html[data-bs-theme="dark"] {
+    // Bootstrap colours cover all standard controls, tables, cards, modals and
+    // dropdowns. Keep their contrast relationships close to the light theme.
+    --lb-surface: #171717;
+    --lb-surface-raised: #1e1e1e;
+    --lb-surface-muted: #282631;
+    --lb-card: #1d1d1f;
+    --lb-card-hover: #25232a;
+    --lb-card-border: #2d2b33;
+    --lb-nav-bg: #1e1e1e;
+    --lb-text: #e4e4e4;
+    --lb-text-muted: #b8b3c4;
+    --lb-border: #3b3745;
+    --lb-border-strong: #5a5566;
+    --lb-accent: #e1deeb;
+    --lb-accent-hover: #fff;
+    --lb-link-visited: #afa2cf;
+    --lb-link-visited-hover: var(--lb-accent);
+    --lb-focus: #afa6df;
+    --lb-tooltip-bg: #252329;
+    --lb-tooltip-text: #f5f3fa;
+    --lb-shadow: 0 5px 16px rgb(0 0 0 / 35%);
+
+    --bs-body-color: var(--lb-text);
+    --bs-body-color-rgb: 228, 228, 228;
+    --bs-body-bg: var(--lb-surface);
+    --bs-body-bg-rgb: 23, 23, 23;
+    --bs-emphasis-color: #fff;
+    --bs-emphasis-color-rgb: 255, 255, 255;
+    --bs-secondary-color: var(--lb-text-muted);
+    --bs-secondary-color-rgb: 184, 179, 196;
+    --bs-secondary-bg: var(--lb-surface-muted);
+    --bs-secondary-bg-rgb: 40, 38, 49;
+    --bs-tertiary-color: #aaa5b3;
+    --bs-tertiary-bg: #222;
+    --bs-tertiary-bg-rgb: 34, 34, 34;
+    --bs-heading-color: #f5f3fa;
+    --bs-link-color: var(--lb-accent);
+    --bs-link-hover-color: var(--lb-accent-hover);
+    --bs-link-color-rgb: 225, 222, 235;
+    --bs-link-hover-color-rgb: 255, 255, 255;
+    --bs-border-color: var(--lb-border);
+    --bs-border-color-translucent: rgb(228 228 228 / 18%);
+    --bs-card-bg: var(--lb-surface-raised);
+    --bs-card-color: var(--lb-text);
+    --bs-card-border-color: var(--lb-border);
+    --bs-modal-bg: var(--lb-surface-raised);
+    --bs-modal-color: var(--lb-text);
+    --bs-modal-border-color: var(--lb-border);
+    --bs-dropdown-bg: var(--lb-surface-raised);
+    --bs-dropdown-color: var(--lb-text);
+    --bs-dropdown-border-color: var(--lb-border);
+    --bs-dropdown-link-color: var(--lb-text);
+    --bs-dropdown-link-hover-color: #fff;
+    --bs-dropdown-link-hover-bg: #35323d;
+    --bs-dropdown-link-active-color: #fff;
+    --bs-dropdown-link-active-bg: #35323d;
+    --bs-dropdown-link-disabled-color: #968fa1;
+    --bs-table-color: var(--lb-text);
+    --bs-table-bg: transparent;
+    --bs-table-border-color: var(--lb-border);
+    --bs-table-striped-color: var(--lb-text);
+    --bs-table-striped-bg: rgb(255 255 255 / 4%);
+    --bs-table-hover-color: #fff;
+    --bs-table-hover-bg: rgb(220 214 240 / 9%);
+    --bs-form-control-bg: #252329;
+    --bs-form-control-color: var(--lb-text);
+    --bs-form-control-border-color: var(--lb-border-strong);
+    --bs-form-control-focus-bg: #252329;
+    --bs-form-control-focus-color: var(--lb-text);
+    --bs-form-control-focus-border-color: var(--lb-focus);
+    --bs-form-control-placeholder-color: #a7a1b1;
+    --bs-form-select-bg: #252329;
+    --bs-form-select-color: var(--lb-text);
+    --bs-form-select-border-color: var(--lb-border-strong);
+    --bs-list-group-bg: var(--lb-surface-raised);
+    --bs-list-group-color: var(--lb-text);
+    --bs-list-group-border-color: var(--lb-border);
+    --bs-list-group-action-hover-color: #fff;
+    --bs-list-group-action-hover-bg: #302d36;
+    --bs-pagination-bg: var(--lb-surface-raised);
+    --bs-pagination-color: var(--lb-accent);
+    --bs-pagination-border-color: var(--lb-border);
+    --bs-pagination-hover-bg: #302d36;
+    --bs-pagination-hover-color: #fff;
+    --bs-pagination-hover-border-color: var(--lb-border-strong);
+    --bs-pagination-disabled-bg: var(--lb-surface-muted);
+    --bs-pagination-disabled-border-color: var(--lb-border);
+
+    body,
+    #react-container {
+      background-color: var(--lb-surface);
+      color: var(--lb-text);
+    }
+
+    // These selectors cover legacy links that retain the old Lobes visited
+    // rule; the Sass variables also make that rule consume these tokens.
+    a:visited:not(.btn):not(.pill):not(.dropdown-item) {
+      color: var(--lb-link-visited);
+    }
+
+    a:visited:not(.btn):not(.pill):not(.dropdown-item):hover,
+    a:visited:not(.btn):not(.pill):not(.dropdown-item):focus-visible {
+      color: var(--lb-link-visited-hover);
+    }
+
+    // Native controls and keyboard focus must remain unambiguous in the dark.
+    input,
+    select,
+    textarea,
+    .form-control,
+    .form-select {
+      background-color: var(--bs-form-control-bg);
+      color: var(--lb-text);
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: var(--bs-form-control-placeholder-color);
+      opacity: 1;
+    }
+
+    // Date inputs are rendered by the browser rather than Bootstrap. Declare
+    // their colour scheme explicitly so their segmented fields and calendar
+    // picker do not retain a light-control appearance in dark mode.
+    input[type="date"],
+    input[type="datetime-local"] {
+      // Chromium's dark native date editor omits leading zeroes and renders
+      // visibly separated segments. Its light formatter is stable; retain it
+      // for layout while the explicit colours below keep the control dark.
+      color-scheme: light;
+      border-color: var(--bs-form-control-border-color);
+    }
+
+    input[type="date"]::-webkit-datetime-edit,
+    input[type="datetime-local"]::-webkit-datetime-edit {
+      color: var(--lb-text);
+    }
+
+    input[type="date"]::-webkit-datetime-edit-year-field,
+    input[type="date"]::-webkit-datetime-edit-month-field,
+    input[type="date"]::-webkit-datetime-edit-day-field,
+    input[type="datetime-local"]::-webkit-datetime-edit-year-field,
+    input[type="datetime-local"]::-webkit-datetime-edit-month-field,
+    input[type="datetime-local"]::-webkit-datetime-edit-day-field,
+    input[type="datetime-local"]::-webkit-datetime-edit-hour-field,
+    input[type="datetime-local"]::-webkit-datetime-edit-minute-field {
+      background-color: transparent;
+      color: var(--lb-text);
+      -webkit-text-fill-color: var(--lb-text);
+    }
+
+    input[type="date"]::-webkit-datetime-edit-text,
+    input[type="datetime-local"]::-webkit-datetime-edit-text {
+      color: var(--lb-text-muted);
+    }
+
+    // Chromium paints the currently edited date segment with its own text
+    // colour. Without these overrides the leading zero can become black on
+    // our dark control background.
+    input[type="date"]::-webkit-datetime-edit-year-field:focus,
+    input[type="date"]::-webkit-datetime-edit-month-field:focus,
+    input[type="date"]::-webkit-datetime-edit-day-field:focus,
+    input[type="datetime-local"]::-webkit-datetime-edit-year-field:focus,
+    input[type="datetime-local"]::-webkit-datetime-edit-month-field:focus,
+    input[type="datetime-local"]::-webkit-datetime-edit-day-field:focus,
+    input[type="datetime-local"]::-webkit-datetime-edit-hour-field:focus,
+    input[type="datetime-local"]::-webkit-datetime-edit-minute-field:focus {
+      background-color: #4a4662;
+      color: #fff;
+      -webkit-text-fill-color: #fff;
+      outline: 0;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+      filter: invert(1) grayscale(1);
+      opacity: 0.8;
+    }
+
+    // Firefox renders an opened native select menu separately from the
+    // .form-select element. Keep its dark surface, but retain the familiar
+    // brand-pink selected row used by the light theme.
+    .form-select option {
+      background-color: var(--bs-form-select-bg);
+      color: var(--lb-text);
+    }
+
+    .form-select option:checked {
+      background: #ba478f linear-gradient(#ba478f, #ba478f);
+      color: #fff;
+    }
+
+    .form-control:focus,
+    .form-select:focus,
+    .btn:focus-visible,
+    a:focus-visible,
+    button:focus-visible {
+      box-shadow: 0 0 0 0.2rem rgb(175 166 223 / 45%);
+      outline: 0;
+    }
+
+    .btn-close {
+      filter: invert(1) grayscale(1) brightness(2);
+    }
+
+    // Bootstrap's info outline uses a light-theme blue that is too subdued on
+    // this surface. It is the refresh control on the feed, among other shared
+    // actions, so define the whole interaction state from the theme palette.
+    .btn-outline-info {
+      --bs-btn-color: var(--lb-accent);
+      --bs-btn-border-color: #635eb0;
+      --bs-btn-hover-color: #171717;
+      --bs-btn-hover-bg: #afa6df;
+      --bs-btn-hover-border-color: #afa6df;
+      --bs-btn-active-color: #171717;
+      --bs-btn-active-bg: #afa6df;
+      --bs-btn-active-border-color: #afa6df;
+      --bs-btn-disabled-color: #8f89a0;
+      --bs-btn-disabled-border-color: #5a5566;
+    }
+
+    // Some legacy button rules write the foreground directly instead of
+    // consuming Bootstrap's custom properties. Keep this shared action style
+    // readable wherever it is used.
+    .btn.btn-outline-info {
+      background-color: transparent;
+      border-color: #635eb0 !important;
+      color: var(--lb-accent) !important;
+
+      &:hover,
+      &:focus-visible,
+      &:active {
+        background-color: #afa6df !important;
+        border-color: #afa6df !important;
+        color: #171717 !important;
+      }
+
+      &:disabled {
+        border-color: #5a5566 !important;
+        color: #8f89a0 !important;
+      }
+    }
+
+    .btn-link {
+      color: var(--lb-accent) !important;
+
+      &:hover,
+      &:focus-visible {
+        color: var(--lb-accent-hover) !important;
+      }
+    }
+
+    // Tables declare their own light-theme custom properties, so setting
+    // those values only on html is not enough. This covers empty states as
+    // well as populated striped tables.
+    .table {
+      --bs-table-color: var(--lb-text);
+      --bs-table-bg: var(--lb-surface-raised);
+      --bs-table-border-color: var(--lb-border);
+      --bs-table-striped-color: var(--lb-text);
+      --bs-table-striped-bg: rgb(255 255 255 / 4%);
+      --bs-table-hover-color: #fff;
+      --bs-table-hover-bg: rgb(220 214 240 / 9%);
+    }
+
+    // This shared heading appears on the feeds and several entity views. Its
+    // original rule is a light-theme literal, so both pieces need retokening.
+    .header-with-line {
+      color: var(--lb-text);
+
+      &::after {
+        border-color: var(--lb-border);
+      }
+    }
+
+    .nav-tabs,
+    .nav-tabs .nav-link,
+    .nav-pills .nav-link,
+    .accordion,
+    .accordion-item {
+      border-color: var(--lb-border);
+    }
+
+    .nav-tabs .nav-link {
+      color: var(--lb-text-muted);
+    }
+
+    .nav-tabs .nav-link:hover,
+    .nav-tabs .nav-link:focus,
+    .nav-tabs .nav-link.active {
+      background-color: var(--lb-surface-raised);
+      border-color: var(--lb-border) var(--lb-border) var(--lb-surface-raised);
+      color: var(--lb-text);
+    }
+
+    .accordion-button,
+    .accordion-button:not(.collapsed) {
+      background-color: var(--lb-surface-raised);
+      color: var(--lb-text);
+    }
+
+    .accordion-button::after {
+      filter: invert(1) grayscale(1);
+    }
+
+    // Site-wide legacy layout: sidebar, footer, player, and secondary nav.
+    .footer,
+    .sidebar,
+    .secondary-nav,
+    .secondary-nav > *,
+    .secondary-nav .nav.nav-tabs,
+    .secondary-nav .nav.nav-tabs > li,
+    .card,
+    .modal-content,
+    .dropdown-menu,
+    .popover,
+    .list-group-item {
+      background-color: var(--lb-surface-raised);
+      border-color: var(--lb-border);
+      color: var(--lb-text);
+    }
+
+    // Bootstrap defines these custom properties on .dropdown-menu itself,
+    // which shadows root values. Keep all menu states on the same muted dark
+    // palette, including legacy menus rendered as anchors or buttons.
+    .dropdown-menu {
+      --bs-dropdown-bg: var(--lb-surface-raised);
+      --bs-dropdown-color: var(--lb-text);
+      --bs-dropdown-border-color: var(--lb-border);
+      --bs-dropdown-link-color: var(--lb-text);
+      --bs-dropdown-link-hover-color: #fff;
+      --bs-dropdown-link-hover-bg: #35323d;
+      --bs-dropdown-link-active-color: #fff;
+      --bs-dropdown-link-active-bg: #35323d;
+      --bs-dropdown-link-disabled-color: #968fa1;
+    }
+
+    .dropdown-menu .dropdown-item {
+      color: var(--lb-text);
+    }
+
+    .dropdown-menu .dropdown-item:hover,
+    .dropdown-menu .dropdown-item:focus {
+      background-color: #35323d;
+      color: #fff;
+    }
+
+    .dropdown-menu .dropdown-item.active,
+    .dropdown-menu .dropdown-item:active {
+      background-color: #35323d;
+      color: #fff;
+    }
+
+    .dropdown-menu .dropdown-item.disabled,
+    .dropdown-menu .dropdown-item:disabled {
+      color: #968fa1;
+      opacity: 1;
+    }
+
+    // Enabled actions need enough chroma to read as interactive on dark
+    // surfaces. Their former subdued colours are retained for disabled states.
+    .btn-primary,
+    .btn-secondary,
+    .btn-success,
+    .btn-info,
+    .btn-warning,
+    .btn-danger,
+    .btn-light,
+    .btn-dark {
+      --bs-btn-color: #f8f7fb;
+      --bs-btn-hover-color: #fff;
+      --bs-btn-active-color: #fff;
+      --bs-btn-disabled-color: #ded9e6;
+      --bs-btn-border-color: var(--bs-btn-bg);
+      --bs-btn-hover-border-color: var(--bs-btn-hover-bg);
+      --bs-btn-active-border-color: var(--bs-btn-active-bg);
+      --bs-btn-disabled-border-color: var(--bs-btn-disabled-bg);
+    }
+
+    .btn-primary {
+      --bs-btn-bg: #a85d43;
+      --bs-btn-hover-bg: #af6247;
+      --bs-btn-active-bg: #8e4d37;
+      --bs-btn-disabled-bg: #925f49;
+      --bs-btn-focus-shadow-rgb: 168, 93, 67;
+    }
+
+    .btn-secondary {
+      --bs-btn-bg: #645d71;
+      --bs-btn-hover-bg: #6c647b;
+      --bs-btn-active-bg: #514b5b;
+      --bs-btn-disabled-bg: #514d58;
+      --bs-btn-focus-shadow-rgb: 100, 93, 113;
+    }
+
+    .btn-success {
+      --bs-btn-bg: #478357;
+      --bs-btn-hover-bg: #488057;
+      --bs-btn-active-bg: #3b6d48;
+      --bs-btn-disabled-bg: #467454;
+      --bs-btn-focus-shadow-rgb: 71, 131, 87;
+    }
+
+    .btn-info {
+      --bs-btn-bg: #47417c;
+      --bs-btn-hover-bg: #514a89;
+      --bs-btn-active-bg: #393465;
+      --bs-btn-disabled-bg: #353070;
+      --bs-btn-focus-shadow-rgb: 71, 65, 124;
+    }
+
+    .btn-warning {
+      --bs-btn-bg: #967022;
+      --bs-btn-hover-bg: #9c6d17;
+      --bs-btn-active-bg: #7d5c1c;
+      --bs-btn-disabled-bg: #8a6a30;
+      --bs-btn-focus-shadow-rgb: 150, 112, 34;
+    }
+
+    .btn-danger {
+      --bs-btn-bg: #a5475a;
+      --bs-btn-hover-bg: #b85267;
+      --bs-btn-active-bg: #893a4a;
+      --bs-btn-disabled-bg: #914952;
+      --bs-btn-focus-shadow-rgb: 165, 71, 90;
+    }
+
+    .btn-light {
+      --bs-btn-bg: #60586b;
+      --bs-btn-hover-bg: #70677e;
+      --bs-btn-active-bg: #4d4757;
+      --bs-btn-disabled-bg: #504b5a;
+      --bs-btn-focus-shadow-rgb: 96, 88, 107;
+    }
+
+    .btn-dark {
+      --bs-btn-bg: #34303a;
+      --bs-btn-hover-bg: #443e4b;
+      --bs-btn-active-bg: #29262e;
+      --bs-btn-disabled-bg: #2c2931;
+      --bs-btn-focus-shadow-rgb: 52, 48, 58;
+    }
+
+    .footer {
+      border-top-color: var(--lb-border);
+    }
+
+    // The base sidebar paints each section with a light gradient. Reset the
+    // full background, rather than only its colour, so every generic sidebar
+    // receives a uniform dark panel while preserving its purple header.
+    .sidebar > *:not(.sidebar-header) {
+      background: var(--lb-surface-raised);
+      color: var(--lb-text);
+    }
+
+    .sidebar .sidebar-header {
+      background: linear-gradient(135deg, #47417c, #353070);
+      color: #f9f7ff;
+    }
+
+    // Bootstrap's .border-light utility is !important; without this override,
+    // the three footer rules remain white even when the footer is dark.
+    .footer .border-light {
+      border-color: var(--lb-border) !important;
+    }
+
+    hr {
+      border-color: var(--lb-border);
+    }
+
+    .text-dark,
+    .text-body {
+      color: var(--lb-text) !important;
+    }
+
+    .text-muted,
+    .text-body-secondary {
+      color: var(--lb-text-muted) !important;
+    }
+
+    .bg-light,
+    .badge.bg-light {
+      background-color: var(--lb-surface-muted) !important;
+      color: var(--lb-text) !important;
+    }
+
+    nav[role="navigation"] {
+      #side-nav,
+      #side-nav .mobile-nav-fix {
+        background-color: var(--lb-nav-bg);
+      }
+
+      #side-nav a {
+        color: var(--lb-accent);
+      }
+
+      #side-nav a:visited {
+        color: var(--lb-link-visited);
+      }
+
+      #side-nav a:hover,
+      #side-nav a.active {
+        color: #fff;
+      }
+
+      #side-nav a:visited:hover {
+        color: var(--lb-link-visited-hover);
+      }
+
+      #side-nav .theme-toggle {
+        border-color: var(--lb-border-strong);
+        color: var(--lb-accent);
+      }
+
+      #side-nav .theme-toggle:hover {
+        background-color: #35323d;
+        color: #fff;
+      }
+
+      .search-bar,
+      .search-bar input,
+      .search-bar button {
+        background-color: var(--lb-surface-muted);
+        color: var(--lb-text);
+      }
+
+      #side-nav-overlay {
+        background-color: rgb(0 0 0 / 80%);
+      }
+    }
+
+    // Profile/dashboard: cards should be quietly layered on the page, not look
+    // like white-outline input fields. These selectors intentionally outrank
+    // the older component styles that set concrete Bootstrap colours.
+    .listen-card.card {
+      background-color: var(--lb-card) !important;
+      border: 1px solid var(--lb-card-border) !important;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 38%);
+    }
+
+    #dashboard .listen-card.card,
+    #dashboard .side-column .card,
+    #dashboard .side-column .card-user-sn {
+      background-color: var(--lb-card) !important;
+      border: 1px solid var(--lb-card-border) !important;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 38%);
+    }
+
+    .listen-card.card:hover {
+      background-color: var(--lb-card-hover) !important;
+      border-color: #45414f !important;
+    }
+
+    #dashboard .listen-card .listen-thumbnail {
+      .add-cover-art,
+      .not-mapped,
+      .cover-art-fallback {
+        background-color: var(--lb-surface-muted);
+        color: #817b90;
+      }
+    }
+
+    // Entity pages reuse the same listen-card thumbnail component, but do not
+    // live below #dashboard. Without this companion rule, a missing cover is
+    // still rendered on its old white light-theme tile.
+    .listen-card .listen-thumbnail .add-cover-art,
+    .listen-card .listen-thumbnail .not-mapped,
+    .listen-card .listen-thumbnail .cover-art-fallback {
+      background-color: var(--lb-surface-muted);
+      color: #817b90;
+    }
+
+    #dashboard .listen-card .listen-time,
+    #dashboard .listen-card .listen-controls,
+    #dashboard .listen-card .listen-controls > .icon-only,
+    #dashboard .listen-card .play-button {
+      color: var(--lb-text-muted);
+    }
+
+    #dashboard
+      .listen-card
+      .listen-controls
+      > button:not(.love):not(.hate):hover,
+    #dashboard .listen-card .listen-controls > .btn:not(.love):not(.hate):hover,
+    #dashboard .listen-card .play-button:hover {
+      color: var(--lb-accent-hover);
+    }
+
+    // Reactions are intentionally semantic rather than brand-blue: the old
+    // selected hate colour disappears against a dark listen card. Keep the
+    // outlined resting state quiet, but make both hover and selected states
+    // immediately distinguishable.
+    .listen-card .listen-controls > .love,
+    .listen-card .listen-controls > .hate {
+      color: transparent;
+      stroke: #9b95a5;
+    }
+
+    .listen-card .listen-controls > .love:hover {
+      color: transparent;
+      stroke: #ef7480;
+    }
+
+    .listen-card .listen-controls > .love.loved {
+      color: #ef7480;
+      stroke: transparent;
+    }
+
+    .listen-card .listen-controls > .hate:hover {
+      color: transparent;
+      stroke: #a99cec;
+    }
+
+    .listen-card .listen-controls > .hate.hated {
+      color: #a99cec;
+      stroke: transparent;
+    }
+
+    // Listen-card menus predate Bootstrap's custom properties and explicitly
+    // set their entries to the light theme's dark body colour. Override that
+    // concrete value so icons, labels, focus, and hover all remain legible.
+    .listen-card .listen-controls .dropdown-menu {
+      background-color: var(--lb-surface-raised);
+      border-color: var(--lb-border);
+      box-shadow: var(--lb-shadow);
+    }
+
+    .listen-card .listen-controls .dropdown-menu > a,
+    .listen-card .listen-controls .dropdown-menu > button {
+      background-color: transparent;
+      color: var(--lb-text);
+    }
+
+    .listen-card .listen-controls .dropdown-menu > a:hover,
+    .listen-card .listen-controls .dropdown-menu > a:focus,
+    .listen-card .listen-controls .dropdown-menu > button:hover,
+    .listen-card .listen-controls .dropdown-menu > button:focus {
+      background-color: #35323d;
+      color: #fff;
+    }
+
+    .listen-card .listen-controls .dropdown-menu > .love,
+    .listen-card .listen-controls .dropdown-menu > .hate {
+      color: var(--lb-text);
+      stroke: currentColor;
+    }
+
+    .listen-card .listen-controls .dropdown-menu > .love.loved {
+      color: #ef7480;
+    }
+
+    .listen-card .listen-controls .dropdown-menu > .hate.hated {
+      color: #a99cec;
+    }
+
+    #dashboard .listen-card .additional-content,
+    #dashboard #listen-count-card hr,
+    #dashboard #compatibility-card hr,
+    #dashboard .card-user-sn hr,
+    #dashboard .follower-following-cards hr,
+    #dashboard [data-testid="similar-users-modal"] hr {
+      border-top-color: var(--lb-border) !important;
+    }
+
+    .listen-card .recommendation-controls .btn {
+      background-color: var(--lb-surface-muted);
+      color: var(--lb-accent);
+    }
+
+    .listen-card .recommendation-controls .btn:hover,
+    .listen-card .recommendation-controls .btn:focus {
+      background-color: #4a4662;
+      color: #fff;
+    }
+
+    // Playlist grid cards set their light canvas on a highly specific selector,
+    // so the general card tokens cannot reach their content panel on their own.
+    #playlists-container .playlist.card,
+    #playlists-container .playlist-card-list-view {
+      background-color: var(--lb-surface-raised);
+      border-color: var(--lb-border);
+      color: var(--lb-text);
+      box-shadow: var(--lb-shadow);
+    }
+
+    #playlists-container .playlist .info {
+      background-color: var(--lb-surface-raised);
+      color: var(--lb-text);
+    }
+
+    #playlists-container .playlist .info:hover,
+    #playlists-container .playlist .info:focus {
+      background-color: var(--lb-card-hover);
+      color: var(--lb-text);
+    }
+
+    #playlists-container .playlist .info h4,
+    #playlists-container .playlist-card-list-view .playlist-title a {
+      color: var(--lb-accent);
+    }
+
+    #playlists-container .playlist-card-list-view .playlist-date {
+      color: var(--lb-text-muted);
+    }
+
+    #playlists-container .playlist .playlist-card-action-button {
+      background-color: #4a4662;
+      color: #fff;
+    }
+
+    #playlists-container .playlist .playlist-card-action-button:hover,
+    #playlists-container .playlist .playlist-card-action-button:focus {
+      background-color: #625c86;
+      color: #fff;
+    }
+
+    #playlists-page .pill {
+      border-color: var(--lb-border-strong);
+      color: var(--lb-text-muted);
+    }
+
+    #playlists-page .pill:hover,
+    #playlists-page .pill:focus {
+      background-color: #35323d;
+      color: #fff;
+    }
+
+    #playlists-page .pill.secondary.active {
+      background-color: #4a4662;
+      color: #fff;
+    }
+
+    .lb-follow-button.icon-only:hover,
+    .lb-follow-button.icon-only:focus,
+    .lb-follow-button.block.following,
+    .lb-follow-button.block:hover,
+    .lb-follow-button.block:focus {
+      background: var(--lb-surface-muted);
+      color: var(--lb-accent);
+      border-color: var(--lb-border-strong);
+    }
+
+    // The listen pager was authored against Bootstrap 3's concrete white
+    // disabled state, so Bootstrap variables alone cannot theme it.
+    #navigation.pagination .page-link {
+      background-color: var(--lb-surface-raised) !important;
+      border-color: var(--lb-card-border) !important;
+      color: var(--lb-accent) !important;
+      box-shadow: none;
+    }
+
+    #navigation.pagination .page-item.disabled .page-link {
+      background-color: var(--lb-surface-muted) !important;
+      border-color: var(--lb-card-border) !important;
+      color: #827c90 !important;
+    }
+
+    #navigation.pagination .page-link:hover,
+    #navigation.pagination .page-link:focus {
+      background-color: #35323d !important;
+      border-color: var(--lb-border-strong) !important;
+      color: #fff !important;
+    }
+
+    #dashboard .follower-following-list,
+    #dashboard .similar-users-list {
+      box-shadow: inset 0 10px 8px -10px rgb(0 0 0 / 60%);
+    }
+
+    // The legacy follow list sets its own light divider on each row. Scope
+    // this to the dashboard lists so the separators stay quiet in dark mode.
+    #dashboard .follower-following-list > *:not(:first-child),
+    #dashboard .similar-users-list > *:not(:first-child) {
+      border-top-color: var(--lb-border);
+    }
+
+    #dashboard .header-with-line::after {
+      border-color: var(--lb-border-strong);
+    }
+
+    // The secondary tabs are a navigation surface, distinct from the canvas.
+    .secondary-nav,
+    .secondary-nav > *,
+    .secondary-nav .nav.nav-tabs,
+    .secondary-nav .nav.nav-tabs > li {
+      background-color: var(--lb-surface-raised);
+    }
+
+    .secondary-nav .nav.nav-tabs > li {
+      border-bottom-color: var(--lb-border);
+    }
+
+    .secondary-nav .nav.nav-tabs > li > a {
+      border-color: var(--lb-border);
+      color: var(--lb-text-muted);
+    }
+
+    .secondary-nav .nav.nav-tabs > li > a:hover,
+    .secondary-nav .nav.nav-tabs > li > a:focus {
+      background-color: #302d36;
+      color: #fff;
+    }
+
+    .secondary-nav .nav.nav-tabs > li.active > a {
+      background-color: var(--lb-card);
+      border-bottom-color: var(--lb-card);
+      color: var(--lb-text);
+    }
+
+    .secondary-nav .nav.nav-tabs > li.username,
+    .secondary-nav .nav.nav-tabs > li.username > a {
+      background: linear-gradient(135deg, #46415e, #2c2940);
+      color: #f5f3fa;
+    }
+
+    // Breadcrumb-style secondary navigation uses explicit legacy colours rather
+    // than the tab selectors above. Keep it visible on Explore, Settings, About
+    // and search routes as well as profile tabs.
+    .secondary-nav .breadcrumb {
+      border-bottom-color: var(--lb-border);
+    }
+
+    .secondary-nav .breadcrumb > li {
+      color: var(--lb-text);
+    }
+
+    .secondary-nav .breadcrumb > li > a {
+      color: var(--lb-accent) !important;
+    }
+
+    .secondary-nav .breadcrumb > li.active {
+      color: var(--lb-text);
+    }
+
+    .secondary-nav .breadcrumb > li + li::before {
+      color: var(--lb-text-muted);
+    }
+
+    @media (max-width: $offscreen-sidenav-breakpoint) {
+      .secondary-nav::after {
+        background: linear-gradient(
+          270deg,
+          var(--lb-surface-raised),
+          transparent
+        );
+      }
+    }
+
+    .sidebar-overlay {
+      background-color: rgb(0 0 0 / 80%);
+    }
+
+    // Fresh Releases uses the legacy generic sidebar, whose child gradient is
+    // part of the page's visual hierarchy. Keep that subtle depth in dark
+    // mode, using charcoal stops rather than flattening every filter group.
+    .sidebar.sidebar-fresh-releases {
+      background-color: var(--lb-surface-raised);
+      border: 1px solid var(--lb-border);
+      box-shadow: var(--lb-shadow);
+    }
+
+    .sidebar.sidebar-fresh-releases > *:not(.sidebar-header) {
+      background: linear-gradient(50deg, #29262f 0%, #1e1e1e 72%);
+      color: var(--lb-text);
+    }
+
+    .sidebar.sidebar-fresh-releases .sidebar-header {
+      background: linear-gradient(135deg, #47417c, #353070);
+      color: #f9f7ff;
+    }
+
+    .sidebar.sidebar-fresh-releases
+      .sidenav-content-grid
+      + .sidenav-content-grid {
+      border-top: 1px solid var(--lb-border);
+    }
+
+    .sidebar.sidebar-fresh-releases label,
+    .sidebar.sidebar-fresh-releases h4 {
+      color: var(--lb-text);
+    }
+
+    // Match Fresh Releases' layered sidebar treatment in Art Creator. Its
+    // settings and advanced groups are separate panels, so a subtle charcoal
+    // gradient preserves that grouping without adding bright surfaces.
+    #stats-art-creator .sidebar.settings-navbar {
+      background-color: var(--lb-surface-raised);
+      border: 1px solid var(--lb-border);
+      box-shadow: var(--lb-shadow);
+    }
+
+    #stats-art-creator .sidebar.settings-navbar > *:not(.sidebar-header) {
+      background: linear-gradient(50deg, #29262f 0%, #1e1e1e 72%);
+      color: var(--lb-text);
+    }
+
+    #stats-art-creator .sidebar.settings-navbar label,
+    #stats-art-creator .sidebar.settings-navbar h4 {
+      color: var(--lb-text);
+    }
+
+    // The shared switch predates Bootstrap form controls. Its original grey
+    // thumb and near-black checked track disappear into dark panels, so give
+    // both states distinct track and thumb values without changing its size.
+    .toggle-switch {
+      background: #4c4855;
+    }
+
+    .toggle-switch::before,
+    .toggle:hover .toggle-switch::before {
+      background: #d7d2df;
+      box-shadow: 0 0 0 1px rgb(0 0 0 / 55%), 0 1px 3px rgb(0 0 0 / 45%);
+    }
+
+    .toggle-checkbox:checked + .toggle-switch {
+      background: #746ba8;
+    }
+
+    .toggle-checkbox:checked + .toggle-switch::before {
+      background: #f7f3ff;
+    }
+
+    .toggle-checkbox:focus-visible + .toggle-switch {
+      box-shadow: 0 0 0 3px rgb(175 166 223 / 50%);
+    }
+
+    .toggle-checkbox:disabled + .toggle-switch {
+      background: #36333d;
+      cursor: not-allowed;
+    }
+
+    .toggle-checkbox:disabled + .toggle-switch::before {
+      background: #77727e;
+    }
+
+    .toggle-checkbox:disabled ~ .toggle-label {
+      color: #827c90;
+    }
+
+    // Explore cards intentionally preserve their artwork, while the text panel
+    // is a normal application surface and needs the same contrast as a card.
+    .explore-card {
+      filter: drop-shadow(0 4px 7px rgb(0 0 0 / 38%));
+    }
+
+    .explore-card-img {
+      border-color: var(--lb-border);
+    }
+
+    .explore-card-text {
+      background: var(--lb-card);
+      border: 1px solid var(--lb-border);
+      border-top: 0;
+      color: var(--lb-text);
+    }
+
+    .explore-card-text-name a {
+      color: var(--lb-accent);
+    }
+
+    .explore-card-text-name a:hover {
+      color: var(--lb-accent-hover);
+    }
+
+    .explore-card-text-name a:visited {
+      color: var(--lb-link-visited);
+    }
+
+    .explore-card-text-name a:visited:hover {
+      color: var(--lb-link-visited-hover);
+    }
+
+    .explore-card-text > div:last-child {
+      color: var(--lb-text-muted);
+    }
+
+    .explore-page-divider hr {
+      border-color: var(--lb-border-strong);
+    }
+
+    // Older React widgets own their backgrounds rather than using Bootstrap
+    // cards. Grouping them here keeps search, release, follow and settings
+    // screens coherent without changing their layout or brand colours.
+    #AddListenModal,
+    #metadata-viewer,
+    .track-search-dropdown,
+    .album-search-dropdown,
+    .dropdown-search-suggestions,
+    .search-dropdown,
+    .release-card-grid-title,
+    .review,
+    .music-service-selection .service,
+    .follower-following-list,
+    .similar-users-list,
+    .react-calendar,
+    .react-datetime-picker__wrapper {
+      background-color: var(--lb-surface-raised);
+      border-color: var(--lb-border);
+      color: var(--lb-text);
+    }
+
+    #metadata-viewer .metadata,
+    #metadata-viewer .metadata-value,
+    #metadata-viewer .white,
+    .music-service-selection .service:hover,
+    .follower-following-empty,
+    .similar-users-empty,
+    .react-calendar__navigation button:disabled,
+    .react-calendar__tile:disabled {
+      background-color: var(--lb-surface-muted);
+      color: var(--lb-text-muted);
+    }
+
+    .react-calendar__tile--now {
+      background-color: #615b3f;
+      color: #fff;
+    }
+
+    .react-calendar__tile--now:enabled:hover,
+    .react-calendar__tile--now:enabled:focus {
+      background-color: #766f4a;
+    }
+
+    .react-calendar__tile--hasActive {
+      background-color: #4a4662;
+      color: #fff;
+    }
+
+    .react-calendar__tile--hasActive:enabled:hover,
+    .react-calendar__tile--hasActive:enabled:focus,
+    .react-calendar__tile--active,
+    .react-calendar__tile--active:enabled:hover,
+    .react-calendar__tile--active:enabled:focus {
+      background-color: #625c86;
+      color: #fff;
+    }
+
+    .react-datetime-picker__clock {
+      background-color: var(--lb-surface-raised);
+      border-color: var(--lb-border);
+      color: var(--lb-text);
+    }
+
+    // The picker renders a leading-zero span just before each numeric input.
+    // Its month input overlaps that span slightly, so it must stay transparent
+    // rather than inheriting the generic dark input background above.
+    .react-datetime-picker__inputGroup__input {
+      background: transparent !important;
+      color: var(--lb-text);
+      -webkit-text-fill-color: var(--lb-text);
+      z-index: 0;
+    }
+
+    .react-datetime-picker__inputGroup__leadingZero {
+      position: relative;
+      z-index: 1;
+      color: var(--lb-text) !important;
+      -webkit-text-fill-color: var(--lb-text);
+    }
+
+    .track-search-dropdown .selected,
+    .album-search-dropdown .selected,
+    .dropdown-search-suggestions .selected,
+    .search-dropdown .selected,
+    .react-calendar__tile:enabled:hover,
+    .react-calendar__tile:enabled:focus,
+    .react-datetime-picker__button:enabled:hover,
+    .react-datetime-picker__button:enabled:focus {
+      background-color: #35323d;
+      color: #fff;
+    }
+
+    // The filter panel remains raised. The vertical timeline must instead
+    // blend into its page column; a filled container reads as a grey block.
+    #fresh-releases .filters-main,
+    .releases-timeline.horizontal {
+      background-color: var(--lb-surface-raised);
+    }
+
+    .releases-timeline.vertical {
+      background-color: var(--lb-surface);
+      box-shadow: none;
+    }
+
+    // Date headers divide the release grid rather than introduce another
+    // surface. The raised background made each heading read as a dark-grey
+    // bar, so keep it flush with the page and use the lavender accent from
+    // the light design for both the date and its rules.
+    .release-card-grid-title {
+      background-color: var(--lb-surface);
+      color: var(--lb-accent);
+    }
+
+    .release-card-grid-title::before,
+    .release-card-grid-title::after {
+      border-color: #6d6682;
+    }
+
+    #fresh-releases .filters-main #release-filters::before {
+      background: linear-gradient(
+        90deg,
+        var(--lb-surface-raised) 50%,
+        rgb(30 30 30 / 0%) 100%
+      );
+    }
+
+    #fresh-releases .filters-main #release-filters::after {
+      background: linear-gradient(
+        -90deg,
+        var(--lb-surface-raised) 50%,
+        rgb(30 30 30 / 0%) 100%
+      );
+    }
+
+    // Fresh Releases cards normally use cover art to establish their visual
+    // boundary. Cached/local releases often have no art, so their placeholder
+    // needs its own raised dark surface instead of disappearing into the page.
+    .release-card-container .release-coverart-placeholder {
+      background: linear-gradient(145deg, #2a2732, #1a191e);
+      border: 1px solid var(--lb-border);
+      box-shadow: var(--lb-shadow);
+    }
+
+    .release-card-container .release-coverart-placeholder svg {
+      color: #dcd6f0;
+      opacity: 0.9;
+    }
+
+    .release-card-container
+      .release-coverart-container:hover
+      .release-coverart-placeholder {
+      border-color: var(--lb-border-strong);
+    }
+
+    // The timeline was authored against a white canvas. Tone its rail and
+    // marks down to the same hierarchy as card borders and secondary copy.
+    .releases-timeline .timeline-track {
+      background-color: var(--lb-border-strong);
+    }
+
+    .releases-timeline .timeline-mark .tick-mark {
+      background-color: var(--lb-border);
+    }
+
+    .releases-timeline .timeline-mark .mark-label {
+      color: var(--lb-text-muted);
+    }
+
+    .releases-timeline .timeline-mark:hover .tick-mark {
+      background-color: var(--lb-text-muted);
+    }
+
+    .releases-timeline .timeline-mark:hover .mark-label {
+      color: var(--lb-text);
+    }
+
+    .release-card-grid-title::before,
+    .release-card-grid-title::after,
+    .review .header-with-line::after {
+      border-color: var(--lb-border);
+    }
+
+    .review .text {
+      color: var(--lb-text-muted);
+    }
+
+    .artist-similarity-graph-panel-container .sidebar #artist-top-track,
+    .artist-similarity-graph-panel-container .sidebar #artist-top-album {
+      background-color: var(--lb-surface-raised);
+      color: var(--lb-text);
+    }
+
+    .artist-similarity-graph-panel-container .sidebar #artist-top-track:hover,
+    .artist-similarity-graph-panel-container .sidebar #artist-top-album:hover {
+      background-color: var(--lb-surface-muted);
+    }
+
+    .artist-similarity-graph-panel-container .sidebar > * {
+      background: linear-gradient(50deg, #282631, transparent);
+    }
+
+    #timeline > ul::before,
+    #timeline li.timeline-sub-event::before {
+      background-color: var(--lb-border-strong);
+    }
+
+    #timeline li.timeline-event .event-description .event-icon {
+      background: var(--lb-surface);
+      border-color: var(--lb-surface);
+    }
+
+    .music-service-selection .music-service-option label,
+    .music-service-selection
+      .music-service-option
+      input[type="radio"]:checked
+      + label::after {
+      background: var(--lb-surface-raised);
+      color: var(--lb-text);
+    }
+
+    // Settings pages use compiled Bootstrap alert variants and custom radio
+    // cards, both of which retain light-theme foreground values unless they are
+    // explicitly retokened here.
+    #settings > :not(.tertiary-nav-vertical),
+    #user-profile .card-body,
+    #user-profile .card-header {
+      color: var(--lb-text);
+    }
+
+    // This legacy declaration uses !important, so inheriting from the card is
+    // not enough for service descriptions and permission notes.
+    #user-profile .card-body {
+      color: var(--lb-text) !important;
+    }
+
+    // Music service cards render under Settings rather than User Profile, so
+    // their explanatory paragraphs need the same explicit foreground token.
+    #settings .services-grid .card-body,
+    #settings .services-grid .card-body > p {
+      color: var(--lb-text) !important;
+    }
+
+    // Bootstrap form labels inherit the legacy body colour rather than the
+    // raised settings card. Retoken the import form's labels and disclosure
+    // explicitly so they stay readable on its dark surface.
+    #settings .import-listens-form .form-label,
+    #settings .import-listens-form details > summary {
+      color: var(--lb-text);
+    }
+
+    #user-profile .card-header {
+      background-color: var(--lb-surface-raised);
+      border-bottom-color: var(--lb-border);
+    }
+
+    .music-service-selection .music-service-option label {
+      background: var(--lb-surface-raised);
+      border-color: #58ad67;
+      color: var(--lb-text);
+    }
+
+    .music-service-selection .music-service-option label .title,
+    .music-service-selection .music-service-option label .details {
+      color: inherit;
+    }
+
+    .music-service-selection
+      .music-service-option
+      input[type="radio"]:disabled
+      ~ label {
+      background: var(--lb-surface-muted);
+      border-color: var(--lb-border-strong);
+      color: #938d9d;
+    }
+
+    .music-service-selection
+      .music-service-option
+      input[type="radio"]:checked
+      + label {
+      background: #3f704a;
+      border-color: #63bd73;
+      color: #fff;
+    }
+
+    .music-service-selection
+      .music-service-option.disable
+      input[type="radio"]:checked
+      + label {
+      background: #403c48;
+      border-color: #817b8d;
+    }
+
+    .music-service-selection
+      .music-service-option.disable
+      input[type="radio"]:checked
+      + label::after {
+      border-color: #817b8d;
+      color: var(--lb-text);
+    }
+
+    .alert-info {
+      --bs-alert-bg: #1f3337;
+      --bs-alert-border-color: #3d7780;
+      --bs-alert-color: #d3e5e7;
+    }
+
+    .alert-warning {
+      --bs-alert-bg: #35301c;
+      --bs-alert-border-color: #807431;
+      --bs-alert-color: #ebdfb8;
+    }
+
+    .alert-success {
+      --bs-alert-bg: #203d29;
+      --bs-alert-border-color: #4f9a5e;
+      --bs-alert-color: #d1f3d7;
+    }
+
+    .alert-danger {
+      --bs-alert-bg: #47292d;
+      --bs-alert-border-color: #bb5a65;
+      --bs-alert-color: #ffdadd;
+    }
+
+    .alert a {
+      color: #f0eaff;
+      text-decoration: underline;
+    }
+
+    mark {
+      background: #665000;
+      color: #ffeca9;
+    }
+
+    input[type="file"].form-control {
+      background-color: var(--bs-form-control-bg);
+      color: var(--lb-text);
+    }
+
+    input[type="file"].form-control::file-selector-button {
+      background: #3b3745;
+      border-color: var(--lb-border-strong);
+      color: var(--lb-text);
+    }
+
+    input[type="file"].form-control:hover::file-selector-button {
+      background: #4a4662;
+      color: #fff;
+    }
+
+    #settings .btn-success:disabled {
+      background-color: #3a4440;
+      border-color: #3a4440;
+      color: #c1c9c3;
+      opacity: 1;
+    }
+
+    // React Select renders Emotion-generated class names by default. The
+    // explicit class prefix on the flair chooser gives the menu a durable hook
+    // and prevents its light default surface from breaking dark settings pages.
+    .donation-flairs-settings .flair-select__control,
+    .donation-flairs-settings .flair-select__control--is-focused {
+      background-color: var(--bs-form-control-bg);
+      border-color: var(--lb-border-strong);
+      box-shadow: none;
+    }
+
+    .donation-flairs-settings .flair-select__control--is-focused {
+      border-color: var(--lb-focus);
+      box-shadow: 0 0 0 0.2rem rgb(175 166 223 / 30%);
+    }
+
+    .donation-flairs-settings .flair-select__single-value,
+    .donation-flairs-settings .flair-select__input-container,
+    .donation-flairs-settings .flair-select__placeholder,
+    .donation-flairs-settings .flair-select__indicator {
+      color: var(--lb-text);
+    }
+
+    .donation-flairs-settings .flair-select__indicator:hover {
+      color: #fff;
+    }
+
+    .donation-flairs-settings .flair-select__indicator-separator {
+      background-color: var(--lb-border);
+    }
+
+    .donation-flairs-settings .flair-select__menu {
+      background-color: var(--lb-surface-raised);
+      border: 1px solid var(--lb-border);
+      box-shadow: var(--lb-shadow);
+    }
+
+    .donation-flairs-settings .flair-select__option {
+      background-color: var(--lb-surface-raised);
+      color: var(--lb-text);
+    }
+
+    .donation-flairs-settings .flair-select__option--is-focused {
+      background-color: #35323d;
+      color: #fff;
+    }
+
+    .donation-flairs-settings .flair-select__option--is-selected {
+      background-color: #4a4662;
+      color: #fff;
+    }
+
+    // Sweep flairs animate back to --text-color between highlights. Their
+    // legacy link value is the deep light-theme blue, which disappears against
+    // dark option rows. Use the same light-purple link baseline as every
+    // other flair option.
+    .donation-flairs-settings .flair {
+      --text-color: var(--lb-accent);
+    }
+
+    // Tags are a CreatableSelect with a custom value component. Assigning a
+    // class prefix gives its otherwise generated styles stable dark hooks.
+    .add-tag-select .tag-select__control,
+    .add-tag-select .tag-select__control--is-focused,
+    .add-tag-select .tag-select__control--is-disabled {
+      background-color: var(--lb-surface-raised);
+      border-color: var(--lb-border);
+      box-shadow: none;
+    }
+
+    .add-tag-select .tag-select__control--is-focused {
+      border-color: var(--lb-focus);
+      box-shadow: 0 0 0 0.2rem rgb(175 166 223 / 30%);
+    }
+
+    .add-tag-select .tag-select__value-container,
+    .add-tag-select .tag-select__input-container,
+    .add-tag-select .tag-select__placeholder,
+    .add-tag-select .tag-select__indicator,
+    .add-tag-select .tag-select__single-value {
+      color: var(--lb-text);
+    }
+
+    .add-tag-select .tag-select__indicator:hover {
+      color: #fff;
+    }
+
+    .add-tag-select .tag-select__indicator-separator {
+      background-color: var(--lb-border);
+    }
+
+    .add-tag-select .tag-select__menu {
+      background-color: var(--lb-surface-raised);
+      border: 1px solid var(--lb-border);
+      box-shadow: var(--lb-shadow);
+    }
+
+    .add-tag-select .tag-select__option {
+      background-color: var(--lb-surface-raised);
+      color: var(--lb-text);
+    }
+
+    .add-tag-select .tag-select__option--is-focused {
+      background-color: #35323d;
+      color: #fff;
+    }
+
+    .add-tag-select .tag-select__option--is-selected {
+      background-color: #4a4662;
+      color: #fff;
+    }
+
+    .add-tag-select .tag {
+      background-color: #36323f;
+      color: var(--lb-text);
+    }
+
+    .add-tag-select .tag > a {
+      color: var(--lb-accent);
+    }
+
+    #metadata-viewer .no-listen .pause-icon {
+      background-color: var(--lb-surface-raised);
+    }
+
+    // Entity headers receive a palette colour from their artwork. Preserve
+    // that cue in dark mode, but mix it into the page surface so bright cover
+    // art cannot reduce the contrast of the title and metadata.
+    #entity-page .entity-page-header {
+      background: linear-gradient(
+        45deg,
+        color-mix(in srgb, var(--bg-color) 36%, var(--lb-surface)) 0%,
+        color-mix(in srgb, var(--bg-color) 14%, var(--lb-surface)) 58%,
+        var(--lb-surface) 100%
+      );
+    }
+
+    #entity-page .header-with-line::after,
+    #entity-page .listening-stats .separator {
+      border-color: var(--lb-border);
+    }
+
+    #entity-page.artist-page .entity-page-content .tracks {
+      border-bottom: 1px solid var(--lb-border);
+    }
+
+    .entity-page-header .read-more,
+    #entity-page .read-more {
+      background-image: linear-gradient(
+        to bottom,
+        transparent,
+        var(--lb-surface) 65%
+      );
+    }
+
+    .horizontal-scroll-container::before {
+      background: linear-gradient(to right, var(--lb-surface) 10%, transparent);
+    }
+
+    .horizontal-scroll-container::after {
+      background: linear-gradient(to left, var(--lb-surface) 10%, transparent);
+    }
+
+    .small-scrollbar,
+    .dragscroll,
+    .react-calendar {
+      scrollbar-color: var(--lb-border-strong) var(--lb-surface-muted);
+    }
+
+    // Inputs from older standalone widgets need explicit surfaces because they
+    // predate the Bootstrap custom-property layer.
+    .rc-slider-rail {
+      background-color: var(--lb-border-strong);
+    }
+
+    .rc-slider-track {
+      background-color: #8178ae;
+    }
+
+    .rc-slider-dot,
+    .rc-slider-disabled .rc-slider-handle,
+    .rc-slider-disabled .rc-slider-dot {
+      background-color: var(--lb-surface-raised);
+      border-color: var(--lb-border-strong);
+    }
+
+    .rc-slider-mark-text {
+      color: var(--lb-text-muted);
+    }
+
+    .rc-slider-mark-text-active {
+      color: var(--lb-text);
+    }
+
+    .rc-slider-tooltip-inner {
+      background-color: var(--lb-tooltip-bg);
+      color: var(--lb-tooltip-text);
+      box-shadow: var(--lb-shadow);
+    }
+
+    .rc-slider-tooltip-placement-top .rc-slider-tooltip-arrow {
+      border-top-color: var(--lb-tooltip-bg);
+    }
+
+    .preference-switch > label .switch::after {
+      background: var(--lb-surface-raised);
+      box-shadow: 0 0 5px rgb(0 0 0 / 65%);
+    }
+
+    .similarity-score .progress {
+      background-color: var(--lb-surface-muted);
+    }
+
+    .toggle-sidebar-button {
+      background-color: var(--lb-surface-raised);
+      border-color: var(--lb-border-strong);
+      color: var(--lb-accent);
+      box-shadow: var(--lb-shadow);
+    }
+
+    .toggle-sidebar-button.open {
+      background-color: #4a4662;
+      color: #fff;
+    }
+
+    #AddListenModal .add-track-pill,
+    #AddListenModal .timestamp-inactive,
+    #ImportPlaylistModal .add-track-pill,
+    #ImportPlaylistModal .timestamp-inactive {
+      background-color: var(--lb-surface-muted);
+      border-color: var(--lb-border-strong);
+      color: var(--lb-text);
+    }
+
+    #AddListenModal .add-track-pill span,
+    #AddListenModal .add-track-pill button,
+    #ImportPlaylistModal .add-track-pill span,
+    #ImportPlaylistModal .add-track-pill button {
+      background-color: var(--lb-surface-muted);
+      color: var(--lb-text);
+    }
+
+    // Stats Art's compact controls are independent from Bootstrap's form
+    // controls, so keep their thumb and selected-ring readable on dark panels.
+    #stats-art-creator .color-preset-wrapper.preset-selected {
+      box-shadow: 0 0 0 1px var(--lb-surface-raised), 0 0 0 3px var(--lb-focus);
+    }
+
+    #stats-art-creator .cl-switch > span::after {
+      background-color: var(--lb-surface-raised);
+    }
+
+    // Listen cards, feeds, stats, and charts frequently have their own surface
+    // classes because they predate Bootstrap 5.
+    .listen,
+    .listen-card,
+    .listen-card .listen,
+    .feed-item,
+    .stats-card,
+    .stats-full-width-graph,
+    .user-stats,
+    .recommendation-card,
+    .playlist,
+    .playlist .info,
+    .metadata-viewer,
+    .entity-similarity-graph-container {
+      background-color: var(--lb-surface-raised);
+      border-color: var(--lb-border);
+      color: var(--lb-text);
+    }
+
+    .webSocket-box .read-more {
+      background: linear-gradient(
+        to bottom,
+        rgb(23 23 23 / 0%),
+        var(--lb-surface)
+      );
+    }
+
+    .graph-tooltip,
+    .custom-tooltip-genre-stats,
+    .nivo-theme-tooltip,
+    .user-artist-map-tooltip {
+      background: var(--lb-tooltip-bg) !important;
+      color: var(--lb-tooltip-text) !important;
+      box-shadow: var(--lb-shadow);
+    }
+
+    .user-artist-map-tooltip {
+      border: 1px solid var(--lb-border-strong) !important;
+    }
+
+    .user-artist-map-tooltip > div:first-child {
+      background: var(--lb-surface-muted) !important;
+    }
+
+    .bar-chart foreignObject .graph-bar .position {
+      border-color: var(--lb-border-strong);
+      color: var(--lb-text);
+    }
+
+    .bar-chart foreignObject .graph-bar .graph-bar-entity,
+    .bar-chart foreignObject .graph-bar .graph-bar-entity a {
+      color: var(--lb-accent);
+    }
+
+    .bar-chart foreignObject .graph-bar .graph-bar-artist,
+    .bar-chart foreignObject .graph-bar .graph-bar-artist a {
+      color: var(--lb-text-muted);
+    }
+
+    // The old player is an independent component, so give its stacked menus the
+    // same elevation and borders as the rest of the app.
+    #brainz-player,
+    .dropup-content,
+    .volume,
+    .queue {
+      background-color: var(--lb-surface-raised);
+      border-color: var(--lb-border);
+      color: var(--lb-text);
+    }
+
+    #brainz-player {
+      border-top-color: var(--lb-border);
+
+      .controls {
+        color: var(--lb-accent);
+      }
+
+      .controls > *:hover {
+        color: #fff;
+      }
+
+      .controls > *.disabled {
+        color: #716c7a;
+      }
+
+      .currently-playing .track-name {
+        color: #fff;
+      }
+
+      .currently-playing .artist-name,
+      .actions > * {
+        color: var(--lb-text-muted);
+      }
+
+      .actions > *:hover {
+        color: #fff;
+      }
+
+      .no-album-art,
+      .progress {
+        background-color: var(--lb-surface-muted);
+      }
+
+      .progress .progress-bar {
+        background-color: #8178ae;
+        border-right-color: #afa6df;
+      }
+
+      .progress .progress-handle {
+        background-color: #afa6df;
+        border: 2px solid var(--lb-surface-raised);
+      }
+
+      .progress:focus-visible {
+        outline: 2px solid var(--lb-focus);
+        outline-offset: 3px;
+      }
+
+      .progress-tooltip {
+        --bs-tooltip-bg: #3b3745;
+        --bs-tooltip-color: #f5f3fa;
+      }
+    }
+
+    .queue {
+      .hide-queue {
+        background-color: #3b3745;
+        color: var(--lb-text);
+      }
+
+      .queue-item,
+      .queue-headers {
+        border-color: var(--lb-border);
+      }
+    }
+
+    .music-player {
+      --music-player-background: linear-gradient(to bottom, #353070, #1e1e1e);
+    }
+
+    // Donation views use a light glass treatment and hard-coded grey pills in
+    // the light theme. Rebuild those surfaces from the dark palette while
+    // keeping the page's purple character and the semantic donate actions.
+    #donations-page {
+      background: linear-gradient(288deg, #201e25 16.96%, #302b4a 98.91%);
+      color: var(--lb-text);
+
+      .donations-page-header {
+        color: #f5f3fa;
+      }
+
+      .donations-page-footer {
+        color: var(--lb-text);
+      }
+
+      .grey-wedge {
+        background: #211f26;
+      }
+
+      .blob {
+        opacity: 45%;
+      }
+    }
+
+    #donations-tiers .tier {
+      background: rgb(37 35 43 / 92%);
+      border-color: #504a5c;
+      box-shadow: var(--lb-shadow);
+
+      &:hover {
+        background: #2c2933;
+      }
+    }
+
+    // The donors page uses legacy heading and link colours, which were chosen
+    // for a white surface. Keep its heading rule and flair-help control on the
+    // same text, border, and link palette as the rest of the dark interface.
+    #donors {
+      .header-with-line {
+        color: var(--lb-text);
+
+        &::after {
+          border-color: var(--lb-border);
+        }
+      }
+
+      .btn-link {
+        color: var(--lb-accent);
+
+        &:hover,
+        &:focus-visible {
+          color: var(--lb-accent-hover);
+        }
+      }
+
+      .donations-page-header {
+        background: linear-gradient(288deg, #26232e 16.96%, #403961 98.91%);
+        border: 1px solid var(--lb-border);
+        opacity: 1;
+
+        .donation-header-text {
+          color: #f5f3fa;
+        }
+
+        a:not(.btn),
+        a:not(.btn):visited {
+          color: #f5f3fa;
+        }
+      }
+
+      .donor-card {
+        background: var(--lb-surface-raised);
+        border-color: var(--lb-border);
+
+        &:hover {
+          background: var(--lb-card-hover);
+        }
+
+        .donation-date,
+        .recent-listens .listen-item,
+        .recent-listens .listen-item:visited {
+          color: var(--lb-text-muted) !important;
+        }
+
+        .recent-listens .listen-item {
+          background-color: var(--lb-surface-muted);
+
+          &:hover,
+          &:focus-visible {
+            background-color: #35323d;
+            color: #fff !important;
+          }
+        }
+      }
+
+      .recent-donor-card .donor-pinned-recording {
+        background: var(--lb-surface-muted);
+        border: 1px solid var(--lb-border);
+
+        .text {
+          color: var(--lb-text-muted);
+        }
+
+        svg {
+          color: var(--lb-accent);
+        }
+      }
+    }
+
+    #homepage-container {
+      background-color: var(--lb-surface);
+
+      .homepage-upper-grey-box,
+      .homepage-lower-grey-box,
+      .homepage-information-grey-box {
+        background-color: var(--lb-surface-raised);
+      }
+
+      .homepage-upper,
+      .homepage-lower {
+        color: #f5f3fa;
+      }
+
+      .homepage-upper .homepage-info,
+      .homepage-upper .homepage-info a:visited,
+      .homepage-upper .homepage-info h1,
+      .homepage-lower .homepage-info,
+      .homepage-lower .homepage-info a:visited,
+      .homepage-lower .homepage-info h1,
+      .homepage-lower .listen-container {
+        color: inherit !important;
+      }
+
+      .homepage-information .info-column h2,
+      .homepage-information .info-column p,
+      .homepage-information .info-column .info-link {
+        color: #f5f3fa !important;
+      }
+
+      // Keep the primary sign-up action warm, while the sign-in action uses a
+      // quieter secondary treatment that belongs on the dark landing page.
+      .homepage-info .create-account-button,
+      .homepage-info .create-account-button:visited {
+        color: #1e1e1e !important;
+      }
+
+      .homepage-info .login-button,
+      .homepage-info .login-button:visited {
+        background: #3b3745;
+        border: 1px solid #5a5566;
+        color: #f5f3fa !important;
+      }
+
+      .homepage-info .login-button:hover,
+      .homepage-info .login-button:focus-visible {
+        background: #4a4662;
+        border-color: #afa6df;
+        color: #fff !important;
+      }
+      .number-count .number-count-group .number-count-digit {
+        background: linear-gradient(180deg, #3b3745 0%, #24212a 100%);
+        color: #f5f3fa;
+      }
+    }
+  }
+}
