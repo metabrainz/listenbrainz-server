@@ -49,8 +49,6 @@ IS_MUSICBRAINZ_UP = True  # if set to False, login page will be blocked
 MBID_MAPPING_DATABASE_URI = ""
 MB_DATABASE_URI = ""
 
-SQLALCHEMY_BINDS = {}
-
 # Redis
 REDIS_HOST = "redis"
 REDIS_PORT = 6379

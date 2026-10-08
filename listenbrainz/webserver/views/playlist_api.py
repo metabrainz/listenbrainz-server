@@ -20,7 +20,7 @@ from listenbrainz.webserver import db_conn, ts_conn, listens_conn
 from listenbrainz.metadata_cache.apple.client import Apple
 from listenbrainz.metadata_cache.soundcloud.client import SoundCloud
 from listenbrainz.webserver.utils import parse_boolean_arg
-from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
+from listenbrainz.webserver.decorators import crossdomain, api_listens_db_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden, APIError, PlaylistAPIXMLError, APIUnauthorized
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
@@ -531,7 +531,7 @@ def edit_playlist(playlist_mbid):
 @playlist_api_bp.get("/<playlist_mbid>")
 @crossdomain
 @ratelimit()
-@api_listenstore_needed
+@api_listens_db_needed
 def get_playlist(playlist_mbid):
     """
     Fetch the given playlist.
@@ -571,7 +571,7 @@ def get_playlist(playlist_mbid):
 @playlist_api_bp.get("/<playlist_mbid>/xspf")
 @crossdomain
 @ratelimit()
-@api_listenstore_needed
+@api_listens_db_needed
 def get_playlist_xspf(playlist_mbid):
     """
     Fetch the given playlist as XSPF.

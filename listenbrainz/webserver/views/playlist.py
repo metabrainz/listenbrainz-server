@@ -2,7 +2,7 @@ from flask import Blueprint, current_app, render_template, jsonify
 from flask_login import current_user
 
 from listenbrainz.webserver import db_conn, API_PREFIX
-from listenbrainz.webserver.decorators import web_listenstore_needed
+from listenbrainz.webserver.decorators import web_listens_db_needed
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 from listenbrainz.webserver.views.playlist_api import fetch_playlist_recording_metadata
 import listenbrainz.db.playlist as db_playlist
@@ -95,7 +95,7 @@ def get_cover_art_for_playlist(playlist: model_playlist.Playlist, images: list[d
 
 
 @playlist_bp.route("/<playlist_mbid>/", methods=["POST"])
-@web_listenstore_needed
+@web_listens_db_needed
 def load_playlist(playlist_mbid: str):
     """Load a single playlist by id
     """

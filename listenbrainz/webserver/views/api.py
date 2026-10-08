@@ -722,7 +722,6 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
 @api_bp.get("/user/<playlist_user_name>/playlists/recommendations")
 @crossdomain
 @ratelimit()
-@api_listenstore_needed
 def user_recommendations(playlist_user_name):
     """
     Fetch recommendation playlist metadata in JSPF format without recordings for playlist_user_name.
@@ -745,7 +744,6 @@ def user_recommendations(playlist_user_name):
 @api_bp.get("/user/<playlist_user_name>/playlists/search")
 @crossdomain
 @ratelimit()
-@api_listenstore_needed
 def search_user_playlist(playlist_user_name):
     """
     Search for playlists associated with a user by name or description.

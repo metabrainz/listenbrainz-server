@@ -3,7 +3,7 @@ from feedgen.feed import FeedGenerator
 from flask import Blueprint, Response, current_app, request, render_template, url_for
 import listenbrainz.db.user_relationship as db_user_relationship
 from listenbrainz.db.model.user_timeline_event import UserTimelineEventType
-from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
+from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed, api_listens_db_needed
 from brainzutils.ratelimit import ratelimit
 import listenbrainz.db.user as db_user
 from listenbrainz.webserver import db_conn, ts_conn, timescale_connection, API_PREFIX
@@ -668,7 +668,7 @@ def get_recording_stats(user_name):
 
 @atom_bp.get("/playlist/<playlist_mbid>")
 @crossdomain
-@api_listenstore_needed
+@api_listens_db_needed
 @ratelimit()
 def get_playlist_recordings(playlist_mbid):
     """
@@ -740,7 +740,7 @@ def get_playlist_recordings(playlist_mbid):
 
 @atom_bp.get("/user/<mb_username:user_name>/recommendations")
 @crossdomain
-@api_listenstore_needed
+@api_listens_db_needed
 @ratelimit()
 def get_recommendation(user_name):
     """
