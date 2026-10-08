@@ -68,12 +68,12 @@ REFRESH_LISTEN_BOUNDS_QUERY = """
 # evaluate the subqueries) rather than counting their histories twice.
 STORED_AND_ACTUAL_LISTEN_COUNTS_QUERY = """
     SELECT u.user_id
-         , lm.count AS stored
+         , lm.count AS stored_count
          , lm.min_listened_at AS stored_min
          , lm.max_listened_at AS stored_max
          , CASE WHEN lm.user_id IS NOT NULL
                 THEN (SELECT count(*) FROM listen l WHERE l.user_id = u.user_id)
-           END AS actual
+           END AS actual_count
          , CASE WHEN lm.user_id IS NOT NULL
                 THEN (SELECT min(listened_at) FROM listen l WHERE l.user_id = u.user_id)
            END AS actual_min
@@ -190,7 +190,9 @@ def delete_pending_listens() -> list[int]:
     Apply negative deltas to the current metadata counts rather than replacing them
     with snapshot counts that could overwrite concurrent ingestion. This also avoids
     recounting a user's full history for a small deletion. Metadata upserts acquire
-    row locks in user_id order.
+    row locks in user_id order. The delta itself is negative, not subtracted in the
+    update, so a user without a metadata row gets an obviously invalid negative
+    count for recalculation to repair, rather than a plausible but wrong one.
 
     Deleting an endpoint can shrink timestamp bounds, so recompute those separately
     while the metadata locks remain held. Under READ COMMITTED, the next statement
@@ -364,8 +366,9 @@ def recalculate_listen_counts(user_ids: Sequence[int]):
                 cursor.execute(STORED_AND_ACTUAL_LISTEN_COUNTS_QUERY, (batch,))
                 stale = [
                     row.user_id for row in cursor.fetchall()
-                    if row.stored is None
-                    or (row.stored, row.stored_min, row.stored_max) != (row.actual, row.actual_min, row.actual_max)
+                    if row.stored_count is None
+                    or (row.stored_count, row.stored_min, row.stored_max)
+                    != (row.actual_count, row.actual_min, row.actual_max)
                 ]
                 if stale:
                     _refresh_listen_metadata(cursor, stale)
