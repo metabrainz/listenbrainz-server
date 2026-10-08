@@ -145,7 +145,7 @@ class DumpTestCase(DatabaseTestCase):
             self.assertEqual(user_count, 0)
 
             # import the dump
-            import_postgres_dump(private_dump, None, public_dump, None)
+            import_postgres_dump(private_dump, public_dump, None)
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
@@ -154,7 +154,7 @@ class DumpTestCase(DatabaseTestCase):
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 0)
 
-            import_postgres_dump(private_dump, None, public_dump, None, threads=2)
+            import_postgres_dump(private_dump, public_dump, None, threads=2)
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
             two_id = db_user.create(self.db_conn, 2, 'vnskprk')
@@ -185,7 +185,7 @@ class DumpTestCase(DatabaseTestCase):
             self.assertEqual(db_feedback.get_feedback_count_for_user(self.db_conn, user_id=one_id), 0)
 
             # import the dump and check the records are inserted
-            import_postgres_dump(private_dump, None, public_dump, None)
+            import_postgres_dump(private_dump, public_dump, None)
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
@@ -203,7 +203,7 @@ class DumpTestCase(DatabaseTestCase):
             self.assertEqual(user_count, 0)
             dumped_feedback = []
 
-            import_postgres_dump(private_dump, None, public_dump, None, threads=2)
+            import_postgres_dump(private_dump, public_dump, None, threads=2)
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 

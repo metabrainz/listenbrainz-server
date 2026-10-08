@@ -182,13 +182,7 @@ PRIVATE_TABLES = DumpTablesCollection(
             "sid",
             "api_key",
             "ts",
-        ))
-    ]
-)
-
-PRIVATE_TABLES_TIMESCALE = DumpTablesCollection(
-    engine_name=DumpEngineName.ts,
-    tables=[
+        )),
         DumpTable(table_name=Identifier("playlist", "playlist"), columns=(
             "id",
             "mbid",
@@ -208,7 +202,8 @@ PRIVATE_TABLES_TIMESCALE = DumpTablesCollection(
             "position",
             "mbid",
             "added_by_id",
-            "created"
+            "created",
+            "additional_metadata",
         )),
         DumpTable(table_name=Identifier("playlist", "playlist_collaborator"), columns=(
             "playlist_id",

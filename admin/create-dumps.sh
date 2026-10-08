@@ -212,7 +212,8 @@ else
     echo "Skipping the redundant public full dump backup."
 fi
 
-if [ -n "$PRIVATE_DUMP_INTERMEDIATE_DIR" ]; then
+# create_db_dump only makes a private dump when the postgres dump is enabled
+if [ -n "$PRIVATE_DUMP_INTERMEDIATE_DIR" ] && [ -n "$(ls -A "$PRIVATE_DUMP_INTERMEDIATE_DIR")" ]; then
     HAS_EMPTY_PRIVATE_DIRS_OR_FILES=$(find "$PRIVATE_DUMP_INTERMEDIATE_DIR" -empty)
     if [ -n "$HAS_EMPTY_PRIVATE_DIRS_OR_FILES" ]; then
         echo "Empty private files or dirs found, exiting."

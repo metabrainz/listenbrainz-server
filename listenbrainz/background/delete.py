@@ -4,11 +4,11 @@ from brainzutils import cache
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT
-from listenbrainz.db import user as db_user, listens as listens_db, listens_importer, playlist as db_playlist
+from listenbrainz.db import user as db_user, listens as listens_db, listens_importer
 from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 
 
-def delete_user(db_conn, ts_conn, user_id: int, created: datetime):
+def delete_user(db_conn, user_id: int, created: datetime):
     """ Delete an account and its listens DB history. Timescale listens are retained.
 
     Args:
@@ -16,7 +16,6 @@ def delete_user(db_conn, ts_conn, user_id: int, created: datetime):
         created: listens created before this timestamp are deleted
     """
     listens_db.delete_user(user_id, created, delete_metadata=True)
-    db_playlist.delete_playlists_by_user_id(ts_conn, user_id)
 
     db_user.delete(db_conn, user_id)
     db_conn.commit()

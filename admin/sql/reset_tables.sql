@@ -40,4 +40,6 @@ DELETE FROM background_tasks               CASCADE;
 DELETE FROM user_data_export               CASCADE;
 DELETE FROM user_data_import               CASCADE;
 
+DELETE FROM playlist.playlist           CASCADE;
+
 COMMIT;
