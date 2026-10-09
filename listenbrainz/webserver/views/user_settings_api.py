@@ -7,6 +7,7 @@ import listenbrainz.db.user_setting as db_usersetting
 from listenbrainz.troi.daily_jams import SPOTIFY_EXPORT_PREFERENCE
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz import synapse_api
 from listenbrainz.webserver.errors import APIInternalServerError, APIBadRequest
 from listenbrainz.webserver.views.api_tools import (
     validate_auth_header,
@@ -160,4 +161,26 @@ def update_brainzplayer_prefs():
         raise APIBadRequest(f"Invalid preferences in the JSON: {err.message}")
 
     db_usersetting.update_brainzplayer_prefs(db_conn, user["id"], orjson.dumps(new_preferences).decode())
+    return jsonify({"status": "ok"})
+
+
+@user_settings_api_bp.post("/notifications/subscriptions")
+@crossdomain
+@ratelimit()
+def toggle_notification_subscription():
+    user = validate_auth_header()
+
+    data = orjson.loads(request.get_data())
+    event_type = data.get("event_type")
+    channel_type = data.get("channel_type", "email")
+    enabled = data.get("enabled", False)
+
+    if not event_type:
+        raise APIBadRequest("Missing event_type")
+
+    try:
+        synapse_api.toggle_subscription(user["id"], event_type, channel_type, enabled)
+    except Exception:
+        raise APIInternalServerError("Failed to toggle notification subscription")
+
     return jsonify({"status": "ok"})
