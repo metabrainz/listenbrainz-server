@@ -225,7 +225,9 @@ CREATE TABLE background_tasks (
     task            background_tasks_type NOT NULL,
     created         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     metadata        JSONB,
-    claimed_at      TIMESTAMP WITH TIME ZONE
+    claimed_at      TIMESTAMP WITH TIME ZONE,
+    retries         INTEGER NOT NULL DEFAULT 0,
+    last_error      TEXT
 );
 
 CREATE TABLE user_data_export (
