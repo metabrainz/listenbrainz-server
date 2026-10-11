@@ -408,7 +408,7 @@ def run_daily_jams(create_all):
     method and not a core function of troi.
     """
     with create_app().app_context():
-        run_daily_jams_troi_bot(webserver.db_conn, webserver.ts_conn, create_all)
+        run_daily_jams_troi_bot(webserver.db_conn, create_all)
 
 
 @cli.command()

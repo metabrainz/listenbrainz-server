@@ -87,6 +87,37 @@ def web_listenstore_needed(func):
     return decorator
 
 
+def api_listens_db_needed(func):
+    """
+        This API decorator checks to see if the listens DB is online (by having
+        a DB URI) and if not, it raises APIServiceUnavailable.
+    """
+    @wraps(func)
+    def decorator(*args, **kwargs):
+        from listenbrainz.webserver.errors import APIServiceUnavailable
+        if listens_db.engine is None:
+            raise APIServiceUnavailable("The listen database is momentarily offline. " +
+                                        "Please wait a few minutes and try again.")
+        return func(*args, **kwargs)
+
+    return decorator
+
+
+def web_listens_db_needed(func):
+    """
+        This web decorator checks to see if the listens DB is online (by having
+        a DB URI) and if not, it redirects to an error page telling the user
+        that the listenstore is offline.
+    """
+    @wraps(func)
+    def decorator(*args, **kwargs):
+        if listens_db.engine is None:
+            return redirect(url_for("index.index_pages", page="listens-offline"))
+        return func(*args, **kwargs)
+
+    return decorator
+
+
 def web_musicbrainz_needed(func):
     """
         This web decorator checks to see if musicbrainz db is online by checking

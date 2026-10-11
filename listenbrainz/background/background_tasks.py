@@ -80,7 +80,7 @@ class BackgroundTasks:
         if task.task == "delete_listens":
             delete_listens_history(db_conn, task.user_id, task.created)
         elif task.task == "delete_user":
-            delete_user(db_conn, ts_conn, task.user_id, task.created)
+            delete_user(db_conn, task.user_id, task.created)
         elif task.task == "export_all_user_data":
             export_user(db_conn, listens_conn, task.user_id, task.metadata)
         elif task.task == "import_listens":
@@ -113,6 +113,7 @@ class BackgroundTasks:
                     remove_task(task)
                 except Exception:
                     current_app.logger.error("Error processing task:", exc_info=True)
+                    db_conn.rollback()
                     release_task(task)
                 finally:
                     self._current_task = None

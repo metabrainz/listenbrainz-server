@@ -8,7 +8,6 @@ from listenbrainz.webserver.admin import AdminModelView
 
 
 class Playlist(db.Model):
-    __bind_key__ = "timescale"
     __tablename__ = "playlist"
     __table_args__ = {"schema": "playlist"}
 

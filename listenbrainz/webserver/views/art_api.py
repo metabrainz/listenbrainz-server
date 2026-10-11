@@ -794,7 +794,7 @@ def playlist_cover_art_generate(playlist_mbid, dimension, layout):
     except IndexError:
         raise APIBadRequest(f"layout {layout} is not available for dimension {dimension}.")
 
-    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
+    playlist = db_playlist.get_by_mbid(db_conn, playlist_mbid, True)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -864,7 +864,7 @@ def playlist_og_image(playlist_mbid):
     """
     fallback_url = url_for('static', filename='img/share-header.png', _external=True)
 
-    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
+    playlist = db_playlist.get_by_mbid(db_conn, playlist_mbid, True)
     if playlist is None or not playlist.is_visible_by(None):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 

@@ -18,37 +18,6 @@ CREATE TABLE listen_user_metadata (
 
 SELECT create_hypertable('listen', 'listened_at', chunk_time_interval => INTERVAL '30 days');
 
--- Playlists
-
-CREATE TABLE playlist.playlist (
-    id serial,
-    mbid uuid not null default gen_random_uuid(),
-    creator_id int not null, -- int, but not an fk because it's in the wrong database
-    name text not null,
-    description text,
-    public boolean not null,
-    created timestamp with time zone default now() not null,
-    last_updated timestamp with time zone default now() not null,
-    copied_from_id int, -- id of another playlist
-    created_for_id int,
-    additional_metadata jsonb
-);
-
-CREATE TABLE playlist.playlist_recording (
-    id serial,
-    playlist_id int not null,  --FK playlist.id
-    position int not null,
-    mbid uuid not null,
-    added_by_id int not null,  -- int, but not an fk because it's in the wrong database
-    created timestamp with time zone default now() not null,
-    additional_metadata jsonb
-);
-
-CREATE TABLE playlist.playlist_collaborator (
-    playlist_id int not null,  -- FK playlist.id
-    collaborator_id int not null  -- link to user.id in main database
-);
-
 CREATE TABLE messybrainz.submissions (
     id              INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
     gid             UUID NOT NULL,
