@@ -146,6 +146,7 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
             "name": row["release_group_name"],
             "date": date,
             "type": row["type"],
+            "secondary_types": row["secondary_types"] or [],
             "caa_id": row["caa_id"],
             "caa_release_mbid": row["caa_release_mbid"],
             "rels": release_group_rels
@@ -437,6 +438,8 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                                  , rgca.caa_id
                                  , rgca.caa_release_mbid
                                  , rgpt.name AS type
+                                 , array_agg(DISTINCT rgst.name ORDER BY rgst.name)
+                                     FILTER (WHERE rgst.name IS NOT NULL) AS secondary_types
                                  , rgm.first_release_date_year AS year
                                  , rgm.first_release_date_month AS month
                                  , rgm.first_release_date_day AS day
@@ -447,6 +450,10 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                                 ON rg.artist_credit = ac.id
                          LEFT JOIN musicbrainz.release_group_primary_type rgpt
                                 ON rg.type = rgpt.id
+                         LEFT JOIN musicbrainz.release_group_secondary_type_join rgstj
+                                ON rgstj.release_group = rg.id
+                         LEFT JOIN musicbrainz.release_group_secondary_type rgst
+                                ON rgst.id = rgstj.secondary_type
                          LEFT JOIN musicbrainz.release_group_meta rgm
                                 ON rgm.id = rg.id
                          LEFT JOIN artist_data ard
