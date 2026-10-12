@@ -116,6 +116,7 @@ def release_redirect(release_mbid):
 
 @artist_bp.get("/<artist_mbid>/")
 def artist_page(artist_mbid: str):
+    artist_mbid = artist_mbid.lower()
     og_meta_tags = None
     if is_valid_uuid(artist_mbid) and artist_mbid not in {"89ad4ac3-39f7-470e-963a-56509c546377"}:
         artist_data = get_metadata_for_artist(listens_conn, [artist_mbid])
@@ -150,6 +151,7 @@ def artist_page(artist_mbid: str):
 @cache_public(s_maxage=120)
 def artist_entity(artist_mbid: str):
     """ Show a artist page with all their relevant information """
+    artist_mbid = artist_mbid.lower()
     # VA artist mbid
     if artist_mbid in {"89ad4ac3-39f7-470e-963a-56509c546377"}:
         return jsonify({"error": "Provided artist mbid is disabled for viewing on ListenBrainz"}), 400
@@ -240,6 +242,7 @@ def artist_entity(artist_mbid: str):
 
 @album_bp.get("/<release_group_mbid>/")
 def album_page(release_group_mbid: str):
+    release_group_mbid = release_group_mbid.lower()
     og_meta_tags = None
     if is_valid_uuid(release_group_mbid):
         metadata = fetch_release_group_metadata(
@@ -288,6 +291,7 @@ def album_page(release_group_mbid: str):
 @cache_public(s_maxage=120)
 def album_entity(release_group_mbid: str):
     """ Show an album page with all their relevant information """
+    release_group_mbid = release_group_mbid.lower()
 
     if not is_valid_uuid(release_group_mbid):
         return jsonify({"error": "Provided release group ID is invalid: %s" % release_group_mbid}), 400
@@ -349,6 +353,7 @@ def recording_redirect(path):
 
 @track_bp.get('/<recording_mbid>/')
 def recording_page(recording_mbid: str):
+    recording_mbid = recording_mbid.lower()
     og_meta_tags = None
     if is_valid_uuid(recording_mbid):
         metadata = fetch_metadata(
@@ -383,6 +388,7 @@ def recording_page(recording_mbid: str):
 @cache_public(s_maxage=120)
 def recording_entity(recording_mbid: str):
     """ Show a recording page with all their relevant information """
+    recording_mbid = recording_mbid.lower()
 
     if not is_valid_uuid(recording_mbid):
         return jsonify({"error": "Provided recording mbid is invalid: %s" % recording_mbid}), 400
