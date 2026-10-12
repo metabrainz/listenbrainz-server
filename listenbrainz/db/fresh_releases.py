@@ -133,7 +133,7 @@ def get_sitewide_fresh_releases(
 
         release_mbids = [row["release_mbid"] for row in result.values()]
         release_count_result = execute_values(
-            ts_curs, listen_count_query, (tuple(release_mbids),))
+            ts_curs, listen_count_query, (tuple(release_mbids),)) if release_mbids else None
 
         listen_counts = {row["release_mbid"]: row["total_listen_count"]
                          for row in release_count_result} if release_count_result else {}
