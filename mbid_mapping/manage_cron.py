@@ -39,6 +39,7 @@ def cron(slug):
                 func(*args, **kwargs)
                 capture_checkin(monitor_slug=slug, check_in_id=check_in_id, status=MonitorStatus.OK)
             except Exception:
+                sentry_sdk.capture_exception()
                 capture_checkin(monitor_slug=slug, check_in_id=check_in_id, status=MonitorStatus.ERROR)
                 sys.exit(-1)
 
