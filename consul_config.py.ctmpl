@@ -182,8 +182,8 @@ CLICKHOUSE_READER_COUCHDB_PORT = {{.Port}}
 CLICKHOUSE_READER_COUCHDB_HOST = ""
 CLICKHOUSE_READER_COUCHDB_PORT = 5984
 {{end}}
-CLICKHOUSE_READER_COUCHDB_USER = '''{{template "KEY" "clickhouse_reader_couchdb_user"}}'''
-CLICKHOUSE_READER_COUCHDB_ADMIN_KEY = '''{{template "KEY" "clickhouse_reader_couchdb_admin_key"}}'''
+CLICKHOUSE_READER_COUCHDB_USER = '''{{template "KEY_OPTIONAL" "clickhouse_reader_couchdb_user"}}'''
+CLICKHOUSE_READER_COUCHDB_ADMIN_KEY = '''{{template "KEY_OPTIONAL" "clickhouse_reader_couchdb_admin_key"}}'''
 
 {{if service "listenbrainz-redis"}}
 {{with index (service "listenbrainz-redis") 0}}

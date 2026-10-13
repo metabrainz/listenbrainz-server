@@ -9,13 +9,14 @@ from psycopg2.extensions import make_dsn
 
 from clickhouse.stats import deleted_listens as dl
 from clickhouse.stats.activity_cache_manager import ActivityStatsCacheManager
+from clickhouse.stats.cache_manager import FORCE_RECOMPUTE_CREATED
 from clickhouse.tests import ClickHouseTestCase
 
 
 class DeletedListensTestCase(ClickHouseTestCase):
     def setUp(self):
         super().setUp()
-        dsn = os.environ.get("CLICKHOUSE_TEST_TIMESCALE_DSN", "postgresql://postgres:postgres@lb_db/postgres")
+        dsn = os.environ.get("CLICKHOUSE_TEST_LISTENS_DSN", "postgresql://postgres:postgres@lb_db/postgres")
         pg = psycopg2.connect(dsn)
         self.addCleanup(pg.close)
         pg.autocommit = True
@@ -27,7 +28,7 @@ class DeletedListensTestCase(ClickHouseTestCase):
         cursor.execute(f"SET search_path TO {schema}")
         self.dsn = make_dsn(dsn, options=f"-c search_path={schema}")
         # Use the production table/type definitions, isolated from other test data.
-        root = Path(__file__).resolve().parents[2] / "admin" / "timescale"
+        root = Path(__file__).resolve().parents[2] / "admin" / "listens"
         types = (root / "create_types.sql").read_text()
         cursor.execute(re.search(r"CREATE TYPE listen_delete_metadata_status_enum[^;]+;", types).group())
         tables = (root / "create_tables.sql").read_text()
@@ -56,9 +57,15 @@ class DeletedListensTestCase(ClickHouseTestCase):
         expected = [r for r in original if r not in deleted] + [resubmitted]
         self.assertCountEqual(self.client.query("SELECT user_id, listened_at, created, recording_msid FROM listens").result_rows, expected)
         self.assertEqual(dl.get_import_state(self.client, dl.DELETED_LISTENS_STATE), 2)
-        # Explicitly wait for mutations before inspecting their results.
-        self.client.command("ALTER TABLE user_stats_cache_state DELETE WHERE 0 SETTINGS mutations_sync=2")
-        self.assertEqual({r[0] for r in self.client.query("SELECT DISTINCT user_id FROM user_stats_cache_state").result_rows}, {2})
+        # User 1 is marked for a forced recompute in every range, user 2 is untouched.
+        state = self.client.query(
+            "SELECT user_id, last_computed_created = toDateTime64({forced:String}, 3) FROM user_stats_cache_state FINAL",
+            parameters={"forced": FORCE_RECOMPUTE_CREATED},
+        ).result_rows
+        self.assertEqual({forced for uid, forced in state if uid == 1}, {True})
+        self.assertEqual({forced for uid, forced in state if uid == 2}, {False})
+        recomputed = list(manager.run_hourly_job())
+        self.assertEqual({u["user_id"] for m in recomputed for u in m.get("data", [])}, {1})
         retry = dl.import_deleted_listens(self.dsn, self.client, batch_size=1)
         self.assertEqual(retry["deleted_listens_imported"], 0)
         self.assertEqual(retry["deleted_listens_removed"], 0)

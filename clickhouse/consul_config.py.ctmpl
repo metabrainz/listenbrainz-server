@@ -38,18 +38,18 @@ CLICKHOUSE_EXCHANGE = '''{{ keyOrDefault (printf "docker-server-configs/LB/confi
 CLICKHOUSE_QUEUE = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/clickhouse_queue" (env "DEPLOY_ENV")) "clickhouse" }}'''
 CLICKHOUSE_RESULT_EXCHANGE = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/clickhouse_result_exchange" (env "DEPLOY_ENV")) "clickhouse_result" }}'''
 
-# ListenBrainz timescale DSN for importing listen deletions.
-{{- $listenstore_up := (keyOrDefault (printf "docker-server-configs/LB/config.%s.json/listenstore_up" (env "DEPLOY_ENV")) "false") }}
-{{- if $listenstore_up | parseBool}}
-    {{if service "timescale-listenbrainz"}}
-    {{with index (service "timescale-listenbrainz") 0}}
-TIMESCALE_DSN = """postgresql://{{template "KEY" "timescale_lb_user"}}:{{template "KEY" "timescale_lb_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "timescale_db_name"}}"""
-    {{end}}
-    {{else}}
-TIMESCALE_DSN = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
-    {{end}}
+# ListenBrainz listens database DSN for importing listen deletions
+# (listen_delete_metadata and deleted_user_listen_history live only there).
+{{if service "pgbouncer-listenbrainz-user-listenstore"}}
+{{with index (service "pgbouncer-listenbrainz-user-listenstore") 0}}
+LISTENS_DSN = """postgresql://{{template "KEY" "listens_db_user"}}:{{template "KEY" "listens_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listens_db_name"}}"""
+{{end}}
+{{else if service "listenbrainz-user-listenstore"}}
+{{with index (service "listenbrainz-user-listenstore") 0}}
+LISTENS_DSN = """postgresql://{{template "KEY" "listens_db_user"}}:{{template "KEY" "listens_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listens_db_name"}}"""
+{{end}}
 {{else}}
-TIMESCALE_DSN = ""
+LISTENS_DSN = "SERVICEDOESNOTEXIST_listenbrainz-user-listenstore"
 {{end}}
 
 # FTP settings for dump download

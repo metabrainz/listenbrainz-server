@@ -50,6 +50,26 @@ TIME_RANGES = (
 )
 
 
+# last_computed_created marker for a user whose stats must be recomputed for a time
+# range even if they have no listens in it any more (their listens were deleted, or
+# older listens were back-filled), so the stale document gets overwritten.
+FORCE_RECOMPUTE_CREATED = "1970-01-01 00:00:00.000"
+
+
+def mark_users_for_recompute(ch_client, users_query: str, parameters: dict | None = None) -> None:
+    """Force a recompute of every cached (stat type, time range) of the users selected by ``users_query``.
+
+    ``users_query`` returns ``user_id``s. Users without cache state need no marker: the next
+    stats job computes them anyway if they have listens in a range.
+    """
+    ch_client.command(f"""
+        INSERT INTO user_stats_cache_state (user_id, stat_type, time_range, last_computed_created)
+        SELECT user_id, stat_type, time_range, toDateTime64('{FORCE_RECOMPUTE_CREATED}', 3)
+        FROM user_stats_cache_state FINAL
+        WHERE user_id IN ({users_query})
+    """, parameters=parameters or {})
+
+
 @dataclass
 class CacheConfig:
     """Configuration for cache manager."""
@@ -125,6 +145,10 @@ class StatsCacheManager:
         """Compute stats for a batch of users and yield the RMQ messages carrying them."""
         raise NotImplementedError
 
+    def run_bulk_refresh(self, time_ranges: list[str], message_batch_size: int = 100) -> Iterator[dict]:
+        """Recompute every user for the given time ranges into new databases."""
+        raise NotImplementedError
+
     # ------------------------------------------------------------------
     # CouchDB database naming
     # ------------------------------------------------------------------
@@ -163,16 +187,19 @@ class StatsCacheManager:
     def get_cache_state(self) -> dict[str, dict]:
         """Get current cache state for all time ranges."""
         state_query = """
-            SELECT time_range, last_computed, period_start
+            SELECT time_range, last_computed, period_start, to_ts
             FROM stats_cache_state FINAL
             WHERE stat_type = {stat_type:String}
         """
         result = self.ch_client.query(state_query, parameters={'stat_type': self.stat_type})
-        return {row[0]: {'last_computed': row[1], 'period_start': row[2]} for row in result.result_rows}
+        return {
+            row[0]: {'last_computed': row[1], 'period_start': row[2], 'to_ts': row[3]}
+            for row in result.result_rows
+        }
 
     def get_listen_max_created(self):
-        """Get the maximum created timestamp from listens table."""
-        result = self.ch_client.query("SELECT max(created) FROM listens")
+        """Get the maximum created timestamp from listens table, None if it is empty."""
+        result = self.ch_client.query("SELECT maxOrNull(created) FROM listens")
         return result.result_rows[0][0]
 
     def on_period_rollover(
@@ -199,18 +226,21 @@ class StatsCacheManager:
         time_range: str,
         period_start,
         last_computed: datetime,
+        to_ts: int,
     ):
         """Update the global cache state for a time_range."""
         self.ch_client.command("""
             INSERT INTO stats_cache_state
-                (stat_type, time_range, last_computed, period_start)
+                (stat_type, time_range, last_computed, period_start, to_ts)
             VALUES
-                ({stat_type:String}, {time_range:String}, {last_computed:DateTime64(3)}, {period_start:Date})
+                ({stat_type:String}, {time_range:String}, {last_computed:DateTime64(3)}, {period_start:Date},
+                 {to_ts:Int64})
         """, parameters={
             'stat_type': self.stat_type,
             'time_range': time_range,
             'last_computed': last_computed,
             'period_start': period_start,
+            'to_ts': to_ts,
         })
 
     def update_user_cache_state(
@@ -242,13 +272,15 @@ class StatsCacheManager:
         time_range: str,
     ):
         """Clear all user cache state for a time_range (e.g., on period rollover)."""
+        # Wait for the mutation: the caller reads the cache state right after this, and
+        # a not yet applied delete would make it skip the users it still lists.
         self.ch_client.command("""
             ALTER TABLE user_stats_cache_state
             DELETE WHERE stat_type = {stat_type:String} AND time_range = {time_range:String}
         """, parameters={
             'stat_type': self.stat_type,
             'time_range': time_range,
-        })
+        }, settings={'mutations_sync': 2})
         logger.info(f"Cleared user cache state for {self.stat_type}/{time_range}")
 
     # ------------------------------------------------------------------
@@ -386,7 +418,12 @@ class StatsCacheManager:
         Run the hourly job and yield RabbitMQ result messages.
 
         For each time_range:
-        - If period rollover detected: yield start/data/end messages (new database)
+        - If period rollover detected, or no period has been computed yet: yield
+          start/data/end messages (new database)
+        - If the period is the same but the range end moved (all_time and the
+          listening activity this_* ranges end at the latest listen): every user's
+          stats change, including those without new listens, so the range is
+          rebuilt for all users by the bulk path into a new database
         - Otherwise: yield data messages only (append to existing database)
 
         Message flow for rollover:
@@ -400,10 +437,18 @@ class StatsCacheManager:
         stat_type = self.stat_type
         logger.info(f"Starting hourly job for {stat_type}...")
 
+        # Taken once, before any stale user query: listens inserted while the job
+        # runs are newer than this and are picked up by the next run.
+        max_created = self.get_listen_max_created()
+        if max_created is None:
+            logger.info(f"No listens, skipping hourly job for {stat_type}")
+            return
+
         cache_state = self.get_cache_state()
 
         total_users_processed = 0
         total_messages = 0
+        moved_ranges = []
 
         for time_range in TIME_RANGES:
             state = cache_state.get(time_range, {})
@@ -412,19 +457,21 @@ class StatsCacheManager:
             period_start, period_end = self.get_period_bounds(time_range)
             from_ts, to_ts = self.get_period_timestamps(time_range, period_start, period_end)
 
-            # Check for period rollover
-            is_rollover = cached_period_start is not None and cached_period_start != period_start
+            if cached_period_start == period_start and state.get('to_ts') != to_ts:
+                logger.info(f"{time_range}: range end moved ({state.get('to_ts')} -> {to_ts}), rebuilding all users")
+                moved_ranges.append(time_range)
+                continue
+
+            # A missing period (first run, or the state was reset by a replacing dump
+            # load) is treated as a rollover too: the latest existing database may hold
+            # an earlier period, so it must not be appended to.
+            is_rollover = cached_period_start != period_start
             if is_rollover:
                 logger.info(f"{time_range}: period rollover detected ({cached_period_start} -> {period_start})")
                 self.on_period_rollover(time_range, cached_period_start, period_start)
                 self.clear_user_cache_state_for_time_range(time_range)
 
             stale_users = self.get_stale_users(time_range, period_start, period_end)
-
-            if not stale_users:
-                logger.info(f"{time_range}: no stale users")
-                continue
-
             logger.info(f"{time_range}: computing stats for {len(stale_users)} users")
 
             # For rollover, create new database with timestamp; otherwise use existing
@@ -437,9 +484,6 @@ class StatsCacheManager:
             else:
                 database = None
                 database_prefix = self.get_stats_database_prefix(stat_type, time_range)
-
-            max_created = self.get_listen_max_created()
-            time_range_message_count = 0
 
             for i in range(0, len(stale_users), batch_size):
                 batch = stale_users[i:i + batch_size]
@@ -454,20 +498,26 @@ class StatsCacheManager:
                         message_batch_size=message_batch_size,
                     ):
                         yield message
-                        time_range_message_count += 1
                         total_messages += 1
                     self.update_user_cache_state(batch, time_range, max_created)
                     total_users_processed += len(batch)
                 except Exception as e:
                     logger.error(f"Error computing {time_range} batch {i}: {e}")
 
-            # For rollover, yield end message to cleanup old databases
-            if is_rollover and time_range_message_count > 0:
+            # For rollover, yield end message to cleanup old databases. Sent even if
+            # nobody has stats for the new period, so the previous period's stats stop
+            # being served. Users of a failed batch keep their stale state and are
+            # written to the new (latest) database by the next run.
+            if is_rollover:
                 yield self.generate_end_message(time_range, database)
                 total_messages += 1
 
-            if stale_users:
-                self.update_cache_state(time_range, period_start, max_created)
+            self.update_cache_state(time_range, period_start, max_created, to_ts)
+
+        if moved_ranges:
+            for message in self.run_bulk_refresh(moved_ranges, message_batch_size=message_batch_size):
+                yield message
+                total_messages += 1
 
         logger.info(
             "Hourly job for %s completed. Computed %d user/time_range combinations, %d messages",

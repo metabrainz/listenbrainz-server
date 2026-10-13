@@ -87,6 +87,21 @@ class ClickHouseHandlerTestCase(ClickHouseTestCase):
         self.assertEqual(document["data"], [{"day": "Monday", "hour": 8, "listen_count": 5}])
         self.assertEqual(len(couchdb.list_databases("")), 1)
 
+    def test_empty_stats_replace_document_and_are_served_as_none(self):
+        handle_user_entity_stats(self.message())
+        self.assertIsNotNone(stats.get(42, "clk_daily_activity", "all_time", DailyActivityRecord, clickhouse=True))
+        handle_user_entity_stats(self.message(data=[{"user_id": 42, "count": 0, "data": []}]))
+        self.assertEqual(couchdb.fetch_data("clk_daily_activity_all_time", 42)["data"], [])
+        self.assertIsNone(stats.get(42, "clk_daily_activity", "all_time", DailyActivityRecord, clickhouse=True))
+
+    def test_couchdb_errors_propagate(self):
+        unreachable = couchdb.CouchDBConnection("user", "password", "127.0.0.1", 1, "")
+        with mock.patch.object(couchdb, "_default_connection", unreachable):
+            with self.assertRaises(requests.ConnectionError):
+                handle_user_entity_stats(self.message())
+            with self.assertRaises(requests.ConnectionError):
+                handle_stats_database_start({"database": self.database})
+
     def test_unsupported_entity_does_not_create_database(self):
         handle_user_entity_stats(self.message(entity="artists", database_prefix="clk_artists_all_time"))
         self.assertEqual(couchdb.list_databases(""), [])

@@ -19,8 +19,8 @@ CLICKHOUSE_QUEUE = "clickhouse"
 # Results sent back to ListenBrainz
 CLICKHOUSE_RESULT_EXCHANGE = "clickhouse_result"
 
-# ListenBrainz timescale DSN (for importing listen deletions)
-TIMESCALE_DSN = "postgresql://listenbrainz_ts:listenbrainz_ts@lb_db/listenbrainz_ts"
+# ListenBrainz listens database DSN (for importing listen deletions)
+LISTENS_DSN = "postgresql://listenbrainz_listens:listenbrainz_listens@lb_db/listenbrainz_listens"
 
 # FTP settings for dump download
 FTP_SERVER_URI = "ftp.eu.metabrainz.org"

@@ -24,6 +24,11 @@ def handle_echo(message):
     current_app.logger.info(f"ClickHouse echo: {message.get('message', 'no message')}")
 
 
+# CouchDB errors are not caught by the handlers below: the ClickHouse side has already
+# marked these stats as computed, so the reader requeues a message whose write failed
+# with a transient error instead of dropping it.
+
+
 def handle_stats_database_start(message):
     """
     Handle start of a stats database refresh.
@@ -45,8 +50,9 @@ def handle_stats_database_start(message):
         couchdb.create_database(db_name)
         current_app.logger.info(f"Created CouchDB database: {db_name}")
     except HTTPError as e:
+        # 412: the database already exists
         if e.response.status_code != 412:
-            current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
+            raise
 
 
 def handle_stats_database_end(message):
@@ -64,14 +70,11 @@ def handle_stats_database_end(message):
         current_app.logger.error(f"Invalid database name format: {database}")
         return
 
-    try:
-        # Delete old databases, keeping the latest
-        prefix = f"{match[1]}_{match[2]}"
-        _, retained = couchdb.delete_database(prefix)
-        if retained:
-            current_app.logger.info(f"Databases retained (locked): {retained}")
-    except HTTPError as e:
-        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
+    # Delete old databases, keeping the latest
+    prefix = f"{match[1]}_{match[2]}"
+    _, retained = couchdb.delete_database(prefix)
+    if retained:
+        current_app.logger.info(f"Databases retained (locked): {retained}")
 
 
 def handle_user_entity_stats(message):
@@ -125,8 +128,7 @@ def handle_user_entity_stats(message):
                 couchdb.create_database(database)
             except HTTPError as e:
                 if e.response.status_code != 412:
-                    current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
-                    return
+                    raise
 
     docs = []
     for user_stats in batch_data:
@@ -157,14 +159,9 @@ def handle_user_entity_stats(message):
     if not docs:
         return
 
-    try:
-        with start_transaction(op="insert", name=f"insert clk user {entity} - {stats_range} stats batch"):
-            db_stats.insert(database, from_ts, to_ts, docs)
-            current_app.logger.debug(f"Inserted {len(docs)} {entity} stats docs into {database}")
-    except HTTPError as e:
-        current_app.logger.error(f"Error inserting stats batch: {e}. Response: %s", e.response.json(), exc_info=True)
-    except Exception as e:
-        current_app.logger.error(f"Error inserting stats batch: {e}", exc_info=True)
+    with start_transaction(op="insert", name=f"insert clk user {entity} - {stats_range} stats batch"):
+        db_stats.insert(database, from_ts, to_ts, docs)
+        current_app.logger.debug(f"Inserted {len(docs)} {entity} stats docs into {database}")
 
 
 def handle_dump_imported(message):

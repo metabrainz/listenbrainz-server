@@ -25,6 +25,6 @@ SQL results, cache managers and CouchDB writes are not mocked.
 
 To use existing test services outside Compose, set `CLICKHOUSE_TEST_HOST`,
 `CLICKHOUSE_TEST_PORT`, `CLICKHOUSE_TEST_USERNAME`, `CLICKHOUSE_TEST_PASSWORD`,
-`CLICKHOUSE_TEST_TIMESCALE_DSN`, and `CLICKHOUSE_TEST_COUCHDB_HOST/PORT/USER/PASSWORD`
+`CLICKHOUSE_TEST_LISTENS_DSN`, and `CLICKHOUSE_TEST_COUCHDB_HOST/PORT/USER/PASSWORD`
 as needed. Run `pytest clickhouse listenbrainz/clickhouse/tests` in an environment
 with the backend development dependencies installed.

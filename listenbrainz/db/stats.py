@@ -112,6 +112,10 @@ def get(user_id, stats_type, stats_range, stats_model, clickhouse: bool = False)
     data = None
     try:
         data = couchdb.fetch_data(prefix, user_id, connection=connection)
+        # The ClickHouse pipeline overwrites the stats of a user left without listens in
+        # the range (e.g. after deleting them) with an empty document.
+        if data is not None and clickhouse and not data.get("data"):
+            return None
         if data is not None:
             return StatApi[stats_model](
                 user_id=user_id,

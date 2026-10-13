@@ -23,7 +23,12 @@ from typing import Hashable, Iterator
 
 from dateutil.relativedelta import MO, relativedelta
 
-from clickhouse.stats.cache_manager import CacheConfig, StatsCacheManager, TIME_RANGES
+from clickhouse.stats.cache_manager import (
+    FORCE_RECOMPUTE_CREATED,
+    CacheConfig,
+    StatsCacheManager,
+    TIME_RANGES,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -372,6 +377,14 @@ class ActivityStatsCacheManager(StatsCacheManager):
                 INNER JOIN cached_users c ON l.user_id = c.user_id
                 WHERE l.created > c.last_computed_created
                   AND {_timestamp_predicate('l.listened_at', activity_range)}
+
+                UNION ALL
+
+                -- forced, e.g. after their listens were deleted: they may have no
+                -- listens left in the range, but their old stats must be overwritten
+                SELECT user_id
+                FROM cached_users
+                WHERE last_computed_created = toDateTime64('{FORCE_RECOMPUTE_CREATED}', 3)
             )
         """
         started = time.perf_counter()
@@ -504,6 +517,10 @@ class ActivityStatsCacheManager(StatsCacheManager):
             "  %s: %d/%d users have %s data",
             time_range, len(user_activity), len(user_ids), self.stat_type,
         )
+        # A stale user without listens in the range (all of them were deleted) gets an
+        # empty entry, which replaces their previous stats and is served as no stats.
+        for user_id in user_ids:
+            user_activity.setdefault(user_id, [])
         yield from self.generate_stats_messages(
             time_range,
             user_activity,
@@ -513,6 +530,11 @@ class ActivityStatsCacheManager(StatsCacheManager):
             database_prefix=database_prefix,
             batch_size=message_batch_size,
         )
+
+    def run_bulk_refresh(self, time_ranges: list[str], message_batch_size: int = 100) -> Iterator[dict]:
+        bulk = BulkActivityStatsCacheManager(self.config, self.stat_type)
+        bulk.ch_client = self.ch_client
+        yield from bulk.run_full_refresh(message_batch_size=message_batch_size, time_ranges=time_ranges)
 
 
 class BulkActivityStatsCacheManager(ActivityStatsCacheManager):
@@ -530,14 +552,24 @@ class BulkActivityStatsCacheManager(ActivityStatsCacheManager):
             "SETTINGS max_table_size_to_drop = 0"
         )
 
-    def build_intermediate_table(self) -> None:
+    def _scan_range(self, time_ranges) -> ActivityRange:
+        """The listens window covering every one of ``time_ranges``."""
+        ranges = [self.get_activity_range(time_range) for time_range in time_ranges]
+        return ActivityRange(
+            "scan",
+            min(r.start for r in ranges),
+            max(r.end for r in ranges),
+            end_inclusive=True,
+        )
+
+    def build_intermediate_table(self, time_ranges=TIME_RANGES) -> None:
+        scan_range = self._scan_range(time_ranges)
         if self.stat_type == DAILY_ACTIVITY:
             count_columns = ",\n                ".join(
                 f"countIf({_timestamp_predicate('listened_at', self.get_activity_range(time_range), literal=True)}) "
                 f"AS count_{time_range}"
-                for time_range in TIME_RANGES
+                for time_range in time_ranges
             )
-            all_time = self.get_activity_range("all_time")
             query = f"""
                 CREATE TABLE {self.intermediate_table_name}
                 ENGINE = MergeTree()
@@ -548,12 +580,11 @@ class BulkActivityStatsCacheManager(ActivityStatsCacheManager):
                     toHour(toTimeZone(listened_at, 'UTC')) AS hour,
                     {count_columns}
                 FROM listens
-                WHERE {_timestamp_predicate('listened_at', all_time, literal=True)}
+                WHERE {_timestamp_predicate('listened_at', scan_range, literal=True)}
                 GROUP BY user_id, day_of_week, hour
             """
         else:
             # per-user daily listen counts; every range's buckets are a multiple of a day
-            all_time = self.get_activity_range("all_time")
             query = f"""
                 CREATE TABLE {self.intermediate_table_name}
                 ENGINE = MergeTree()
@@ -563,7 +594,7 @@ class BulkActivityStatsCacheManager(ActivityStatsCacheManager):
                     toDate(toTimeZone(listened_at, 'UTC')) AS date,
                     count() AS listen_count
                 FROM listens
-                WHERE {_timestamp_predicate('listened_at', all_time, literal=True)}
+                WHERE {_timestamp_predicate('listened_at', scan_range, literal=True)}
                 GROUP BY user_id, date
             """
         self.ch_client.command(query)
@@ -676,29 +707,30 @@ class BulkActivityStatsCacheManager(ActivityStatsCacheManager):
         self,
         message_batch_size: int = 100,
         user_flush_size: int = 5000,
+        time_ranges=TIME_RANGES,
     ) -> Iterator[dict]:
         stat_type = self.stat_type
-        logger.info("Starting bulk full refresh for %s...", stat_type)
+        logger.info("Starting bulk refresh for %s (%s)...", stat_type, ", ".join(time_ranges))
 
         if self.get_latest_listen() is None:
             logger.info("No listens found for %s full refresh", stat_type)
             return
 
+        # Taken before the intermediate is built: listens inserted afterwards are not in
+        # it, so users must not be marked as computed up to them.
+        max_created = self.get_listen_max_created()
         self.drop_intermediate_table()
         try:
             started = time.perf_counter()
-            self.build_intermediate_table()
+            self.build_intermediate_table(time_ranges)
             row_count = self.intermediate_row_count()
             logger.info(
                 "Built intermediate %s (%d rows) in %.1fs",
                 self.intermediate_table_name, row_count, time.perf_counter() - started,
             )
-            if row_count == 0:
-                return
 
-            max_created = self.get_listen_max_created()
             total_messages = 0
-            for time_range in TIME_RANGES:
+            for time_range in time_ranges:
                 activity_range = self.get_activity_range(time_range)
                 database = self.get_stats_database_name(stat_type, time_range, with_timestamp=True)
                 yield self.generate_start_message(time_range, database)
@@ -724,10 +756,11 @@ class BulkActivityStatsCacheManager(ActivityStatsCacheManager):
                     "  %s: %d data messages in %.1fs",
                     time_range, data_messages, time.perf_counter() - range_started,
                 )
-                if data_messages:
-                    yield self.generate_end_message(time_range, database)
-                    total_messages += 1
-                self.update_cache_state(time_range, activity_range.start.date(), max_created)
+                # Sent even without data: nobody has stats for the range any more, and
+                # the previous database must not keep being served.
+                yield self.generate_end_message(time_range, database)
+                total_messages += 1
+                self.update_cache_state(time_range, activity_range.start.date(), max_created, activity_range.to_ts)
 
             logger.info(
                 "Bulk refresh for %s completed. %d messages generated",

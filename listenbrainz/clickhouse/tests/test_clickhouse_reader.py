@@ -1,6 +1,8 @@
 import unittest
 from unittest import mock
 
+import orjson
+import requests
 from flask import Flask
 
 from listenbrainz.clickhouse.clickhouse_reader import (
@@ -66,6 +68,32 @@ class ClickHouseReaderTestCase(unittest.TestCase):
 
         self.assertEqual(reader.clickhouse_result_exchange.name, "clickhouse_result")
         self.assertEqual(reader.clickhouse_result_queue.name, "clickhouse_result")
+
+    def _callback_with_handler_error(self, error):
+        with mock.patch("listenbrainz.clickhouse.clickhouse_reader.couchdb.init"):
+            reader = ClickHouseReader(self._app())
+        message = mock.Mock(body=orjson.dumps({"type": "clk_user_entity"}))
+        handler = mock.Mock(side_effect=error)
+        with mock.patch("listenbrainz.clickhouse.clickhouse_reader.get_handler", return_value=handler), \
+                mock.patch("listenbrainz.clickhouse.clickhouse_reader.time.sleep"):
+            reader.callback(message)
+        return message
+
+    def test_transient_couchdb_errors_requeue_the_message(self):
+        server_error = requests.HTTPError(response=mock.Mock(status_code=503))
+        for error in (requests.ConnectionError("down"), requests.Timeout("slow"), server_error):
+            with self.subTest(error=error):
+                message = self._callback_with_handler_error(error)
+                message.requeue.assert_called_once()
+                message.ack.assert_not_called()
+
+    def test_permanent_errors_are_acked(self):
+        client_error = requests.HTTPError(response=mock.Mock(status_code=400))
+        for error in (ValueError("bad"), client_error):
+            with self.subTest(error=error):
+                message = self._callback_with_handler_error(error)
+                message.ack.assert_called_once()
+                message.requeue.assert_not_called()
 
 
 if __name__ == "__main__":

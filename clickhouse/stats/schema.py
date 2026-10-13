@@ -37,7 +37,7 @@ CREATE_TABLES = [
     SETTINGS index_granularity = 8192
     """,
     # Listens deleted in LB after they were dumped (listen_delete_metadata) and users whose
-    # listen history was deleted (deleted_user_listen_history), imported from timescale.
+    # listen history was deleted (deleted_user_listen_history), imported from the listens database.
     # Kept permanently: they are applied retroactively to listens when imported and used
     # to filter dump loads, since a dump created before the deletion still contains the
     # listen.
@@ -94,16 +94,24 @@ CREATE_TABLES = [
     ) ENGINE = ReplacingMergeTree(updated_at)
     ORDER BY (user_id, stat_type, time_range)
     """,
+    # Per (stat type, time range): the period and range end (to_ts) the stats were last
+    # computed for, to detect a period rollover or a range end that moved.
     """
     CREATE TABLE IF NOT EXISTS stats_cache_state (
         stat_type LowCardinality(String),
         time_range LowCardinality(String),
         last_computed DateTime64(3),
         period_start Date,
+        to_ts Int64 DEFAULT 0,
         version UInt64 DEFAULT toUnixTimestamp64Milli(now64(3))
     ) ENGINE = ReplacingMergeTree(version)
     ORDER BY (stat_type, time_range)
     """,
+]
+
+# Columns added to existing tables after they were first created.
+ADD_COLUMNS = [
+    "ALTER TABLE stats_cache_state ADD COLUMN IF NOT EXISTS to_ts Int64 DEFAULT 0 AFTER period_start",
 ]
 
 # Objects of the retired entity (artist / recording / release group) stats. The
@@ -170,5 +178,7 @@ def ensure_stats_schema(ch_client: Client) -> None:
     _drop_obsolete_objects(ch_client)
 
     for statement in CREATE_TABLES:
+        ch_client.command(statement)
+    for statement in ADD_COLUMNS:
         ch_client.command(statement)
     _ensure_raw_listens_partitioned_by_load(ch_client)

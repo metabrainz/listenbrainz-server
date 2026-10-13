@@ -100,9 +100,9 @@ def record_imported_dump(dump_id: int, dump_type: str, imported_at: str):
 
 
 @cli.command(name="import_deleted_listens")
-@click.option("--batch-size", type=int, default=10000, help="Rows to fetch from timescale per batch")
+@click.option("--batch-size", type=int, default=10000, help="Rows to fetch from the listens database per batch")
 def import_deleted_listens(batch_size: int):
-    """Import listen deletions from timescale and apply them to ClickHouse listens and stats."""
+    """Import listen deletions from the listens database and apply them to ClickHouse listens and stats."""
     send_request_to_clickhouse("clickhouse.import_deleted_listens", batch_size=batch_size)
 
 

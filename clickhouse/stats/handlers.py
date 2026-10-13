@@ -49,7 +49,7 @@ def _load_dump_from_path(dump_path: str, dump_type: str, workers: int = 4, repla
         dump_path: Path to directory containing Parquet files
         dump_type: Dump type label to report in the result message.
         workers: Number of parallel workers for loading
-        replace: Truncate listens and cache state before loading.
+        replace: Replace listens with the dump and reset the cache state.
 
     Returns:
         List of result messages for the response queue
@@ -230,24 +230,24 @@ def record_dump_import(dump_id: int, dump_type: str, imported_at: Optional[str] 
 
 def import_deleted_listens(batch_size: int = 10_000) -> list[dict]:
     """
-    Import listen deletions from the ListenBrainz timescale database and apply them
+    Import listen deletions from the ListenBrainz listens database and apply them
     to ClickHouse listens.
 
     Args:
-        batch_size: Number of rows to fetch from timescale per batch.
+        batch_size: Number of rows to fetch from the listens database per batch.
 
     Returns:
         List of result messages for the response queue
     """
     try:
-        ts_dsn = config.TIMESCALE_DSN
-        if not ts_dsn:
-            raise ValueError("TIMESCALE_DSN is not configured")
+        listens_dsn = config.LISTENS_DSN
+        if not listens_dsn:
+            raise ValueError("LISTENS_DSN is not configured")
 
         import clickhouse_connect
         ch_client = clickhouse_connect.get_client(**_ch_kwargs())
         try:
-            summary = _import_deleted_listens(ts_dsn, ch_client, batch_size=batch_size)
+            summary = _import_deleted_listens(listens_dsn, ch_client, batch_size=batch_size)
         finally:
             ch_client.close()
         return [{'type': 'clk_deleted_listens_imported', 'status': 'success', **summary}]

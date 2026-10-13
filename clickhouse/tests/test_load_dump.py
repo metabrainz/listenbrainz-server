@@ -58,6 +58,44 @@ class DumpDataTestCase(ClickHouseTestCase):
         self.assertEqual(self.client.query("SELECT count() FROM deleted_listens").first_row[0], 1)
         self.assertNotIn(tuple(row[:3]), self.rows())
 
+    def test_failed_replace_keeps_existing_listens_and_stats(self):
+        self.load_spark_listens()
+        list(self.manager(ActivityStatsCacheManager, "daily_activity").run_hourly_job())
+        before = self.rows()
+        state = self.client.query("SELECT count() FROM user_stats_cache_state").first_row[0]
+        with TemporaryDirectory() as tmp:
+            shutil.copy(TEST_DATA_PATH / "incremental-dump-2" / "0.parquet", Path(tmp) / "good.parquet")
+            (Path(tmp) / "bad.parquet").write_bytes(b"not parquet")
+            failed = load_dump(tmp, **self.connection, workers=2, replace=True)
+        self.assertEqual(len(failed["errors"]), 1)
+        self.assertEqual(self.rows(), before)
+        self.assertEqual(self.client.query("SELECT count() FROM user_stats_cache_state").first_row[0], state)
+        self.assertEqual(self.client.query(
+            "SELECT count() FROM system.tables WHERE database = currentDatabase() AND name = 'listens_replace'"
+        ).first_row[0], 0)
+
+    def test_replace_swaps_in_only_the_dump(self):
+        self.load_spark_listens()
+        self.load_fixture("full-dump-1", replace=True)
+        expected = {(r["user_id"], int(r["listened_at"].timestamp()), r["recording_msid"])
+                    for path in (TEST_DATA_PATH / "full-dump-1").glob("*.parquet") for r in pq.read_table(path).to_pylist()}
+        self.assertEqual({(uid, int(ts.timestamp()), msid) for uid, ts, msid in self.rows()}, expected)
+        self.assertEqual(self.client.query(
+            "SELECT count() FROM system.tables WHERE database = currentDatabase() AND name = 'listens_replace'"
+        ).first_row[0], 0)
+
+    def test_backfilled_listens_force_recompute(self):
+        self.load_spark_listens()
+        manager = self.manager(ActivityStatsCacheManager, "daily_activity")
+        list(manager.run_hourly_job())
+        old = datetime(2021, 7, 15)
+        table = pa.table({"user_id": [1], "listened_at": [old], "created": [old], "recording_msid": ["backfilled"]})
+        with TemporaryDirectory() as tmp:
+            pq.write_table(table, Path(tmp) / "listens.parquet")
+            self.assertEqual(load_dump(tmp, **self.connection)["errors"], [])
+        messages = list(self.manager(ActivityStatsCacheManager, "daily_activity").run_hourly_job())
+        self.assertEqual({u["user_id"] for m in messages for u in m.get("data", [])}, {1})
+
     def test_deleted_history_filters_old_rows_but_keeps_resubmissions(self):
         ts = datetime(2021, 7, 1)
         self.client.insert("deleted_user_listen_history", [(1, 1, ts)], column_names=["id", "user_id", "max_created"])

@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 import pyarrow.parquet as pq
 
 from clickhouse.stats.activity_cache_manager import ActivityStatsCacheManager, BulkActivityStatsCacheManager
-from clickhouse.stats.cache_manager import TIME_RANGES
+from clickhouse.stats.cache_manager import TIME_RANGES, mark_users_for_recompute
 from clickhouse.tests import ClickHouseTestCase, TEST_DATA_PATH
 
 
@@ -110,7 +110,8 @@ class ActivityDataTestCase(ClickHouseTestCase):
         self.assertTrue(messages)
         self.assertEqual({u["user_id"] for m in messages for u in m.get("data", [])}, {1})
         all_time = next(m for m in messages if m.get("stats_range") == "all_time")
-        original = next(m for m in first if m["stats_range"] == "all_time" and m["data"][0]["user_id"] == 1)
+        original = next(m for m in first if m["type"] == "clk_user_entity"
+                        and m["stats_range"] == "all_time" and m["data"][0]["user_id"] == 1)
         self.assertEqual(sum(e["listen_count"] for e in all_time["data"][0]["data"]),
                          1 + sum(e["listen_count"] for e in original["data"][0]["data"]))
 
@@ -137,6 +138,65 @@ class ActivityBoundaryTestCase(ClickHouseTestCase):
         self.assertEqual(listening.get_stale_users("month", *listening.get_period_bounds("month")), [1])
         daily.clear_user_cache_state_for_time_range("week")
         self.assertEqual(daily.get_stale_users("month", *bounds), [])
+
+    def test_first_run_writes_every_range_to_a_new_database(self):
+        # Only July listens: this_week, week etc. have no users, but their (possibly
+        # older) databases must still be replaced rather than appended to.
+        self.insert_listens([(1, datetime(2021, 7, 15), datetime(2021, 7, 15), "july")])
+        messages = list(self.manager(ActivityStatsCacheManager, "daily_activity").run_hourly_job())
+        for time_range in TIME_RANGES:
+            with self.subTest(time_range=time_range):
+                types = [m["type"] for m in messages if m.get("time_range", m.get("stats_range")) == time_range]
+                self.assertEqual(types[0], "clk_stats_database_start")
+                self.assertEqual(types[-1], "clk_stats_database_end")
+        data = [m for m in messages if m["type"] == "clk_user_entity"]
+        self.assertTrue(data)
+        self.assertTrue(all("database" in m and "database_prefix" not in m for m in data))
+
+    def test_rollover_waits_for_cache_state_clear(self):
+        # User 1 was computed for June with a cache state newer than their July listen;
+        # when month rolls over to July the old state must be gone before stale users are read.
+        self.insert_listens([(1, datetime(2021, 6, 15), datetime(2021, 7, 20), "june"),
+                             (1, datetime(2021, 7, 15), datetime(2021, 7, 16), "july"),
+                             (2, datetime(2021, 8, 9), datetime(2021, 8, 9), "latest")])
+        daily = self.manager(ActivityStatsCacheManager, "daily_activity")
+        daily.update_cache_state("month", datetime(2021, 6, 1).date(), datetime(2021, 7, 20),
+                                 daily.get_activity_range("month").to_ts)
+        daily.update_user_cache_state([1], "month", datetime(2021, 7, 20))
+        messages = [m for m in daily.run_hourly_job() if m.get("stats_range") == "month"]
+        self.assertEqual({u["user_id"] for m in messages for u in m["data"]}, {1})
+
+    def test_moved_range_end_rebuilds_users_without_new_listens(self):
+        self.insert_listens([(1, datetime(2021, 8, 2, 10), datetime(2021, 8, 2, 10), "monday"),
+                             (2, datetime(2021, 8, 3, 10), datetime(2021, 8, 3, 10), "tuesday")])
+        list(self.manager(ActivityStatsCacheManager, "listening_activity").run_hourly_job())
+        # Only user 2 listens again, a day later: the this_week range now ends a day later.
+        self.insert_listens([(2, datetime(2021, 8, 4, 10), datetime(2021, 8, 4, 10), "wednesday")])
+        messages = list(self.manager(ActivityStatsCacheManager, "listening_activity").run_hourly_job())
+        this_week = [m for m in messages if m.get("time_range", m.get("stats_range")) == "this_week"]
+        self.assertEqual([this_week[0]["type"], this_week[-1]["type"]],
+                         ["clk_stats_database_start", "clk_stats_database_end"])
+        users = {u["user_id"]: (m["to_ts"], u["data"]) for m in this_week if m["type"] == "clk_user_entity"
+                 for u in m["data"]}
+        self.assertEqual(set(users), {1, 2})
+        to_ts, buckets = users[1]
+        self.assertEqual(to_ts, int(datetime(2021, 8, 4, tzinfo=timezone.utc).timestamp()))
+        self.assertEqual(buckets[-1]["to_ts"] + 1, to_ts)
+        # Nothing moved since: the next run has nothing to do.
+        self.assertEqual(list(self.manager(ActivityStatsCacheManager, "listening_activity").run_hourly_job()), [])
+
+    def test_forced_users_without_listens_get_empty_stats(self):
+        self.insert_listens([(1, datetime(2021, 7, 15), datetime(2021, 7, 15), "july"),
+                             (2, datetime(2021, 8, 9), datetime(2021, 8, 9), "latest")])
+        list(self.manager(ActivityStatsCacheManager, "daily_activity").run_hourly_job())
+        self.client.command("DELETE FROM listens WHERE user_id = 1")
+        mark_users_for_recompute(self.client, "SELECT 1")
+        messages = list(self.manager(ActivityStatsCacheManager, "daily_activity").run_hourly_job())
+        users = {(m["stats_range"], u["user_id"]): u for m in messages for u in m.get("data", [])}
+        self.assertEqual(users[("month", 1)], {"user_id": 1, "count": 0, "data": []})
+        self.assertEqual(users[("all_time", 1)]["data"], [])
+        self.assertNotIn(2, {user_id for _, user_id in users})
+        self.assertEqual(list(self.manager(ActivityStatsCacheManager, "daily_activity").run_hourly_job()), [])
 
     def test_empty_database_produces_no_stats(self):
         for entity in ("daily_activity", "listening_activity"):

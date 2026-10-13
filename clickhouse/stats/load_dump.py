@@ -21,8 +21,9 @@ Every dump loaded from FTP or a local dump directory is recorded in
 ``imported_dumps``, which lets ``import_missing_incremental_dumps`` load all the
 incremental dumps a missed cron run left behind rather than only the newest one.
 
-A full dump should be loaded with ``replace=True`` which truncates listens and
-the cache state first.
+A full dump should be loaded with ``replace=True``: it is processed into a new
+table that replaces listens (and resets the cache state) only once the whole
+dump has been loaded, so a failed load leaves the existing listens in place.
 
 The local and FTP paths mirror the patterns in listenbrainz_spark/dump/:
   - dump directories: listenbrainz-dump-{id}-{date}-{tod}-{full|incremental}/
@@ -45,6 +46,7 @@ import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
+from clickhouse.stats.cache_manager import mark_users_for_recompute
 from clickhouse.stats.ftp import DumpType, FTPDumpDownloader
 from clickhouse.stats.imported_dumps import (
     get_incremental_dumps_since_latest_full,
@@ -58,6 +60,9 @@ logger = logging.getLogger(__name__)
 
 LISTENS_TABLE = "listens"
 RAW_LISTENS_TABLE = "raw_listens"
+# A replacing full dump load is processed into this table, which is then swapped in
+# for listens.
+REPLACE_LISTENS_TABLE = "listens_replace"
 
 RAW_LISTEN_COLUMNS = [
     "load_id",
@@ -94,7 +99,7 @@ RAW_LISTENS_SOURCE = """
       AND r.created > duh.max_created
       AND (r.user_id, r.listened_at, r.recording_msid) NOT IN (
             SELECT user_id, listened_at, recording_msid
-            FROM listens
+            FROM __LISTENS_TABLE__
             WHERE user_id IN (
                 SELECT DISTINCT user_id FROM raw_listens
                 WHERE load_id = {load_id:String} __CHUNK_FILTER__
@@ -121,8 +126,8 @@ RAW_LISTENS_SOURCE = """
 """
 
 # End-of-load: copy the load's (filtered, deduplicated) raw listens into listens.
-PROCESS_RAW_LISTENS = f"""
-INSERT INTO {LISTENS_TABLE}
+PROCESS_RAW_LISTENS = """
+INSERT INTO __LISTENS_TABLE__
     (listened_at, created, user_id, recording_msid)
 SELECT listened_at, created, user_id, recording_msid
 FROM (__RAW_LISTENS_SOURCE__)
@@ -153,18 +158,32 @@ def choose_process_chunks(total_rows: int) -> int:
     """Pick how many user_id buckets to split the end-of-load join into."""
     return max(1, -(-total_rows // PROCESS_RAW_LISTENS_ROWS_PER_CHUNK))
 
-# Tables holding derived listen data. A full dump load with replace=True truncates
-# them so the dump becomes the sole source of truth again. deleted_listens /
-# deleted_user_listen_history are kept: they apply to the new data as well.
+# Cache state derived from the listens. A full dump load with replace=True truncates
+# it once the dump has replaced listens. deleted_listens / deleted_user_listen_history
+# are kept: they apply to the new data as well.
 REPLACE_TRUNCATE_TABLES = [
-    LISTENS_TABLE,
     "user_stats_cache_state",
     "stats_cache_state",
 ]
 
+# Users with listens in a load that are not newer than their cached stats (a
+# back-filling merge of a full dump, or a late incremental): the stale user check
+# only looks for listens created after the stats were computed and would miss them.
+MARK_BACKFILLED_USERS = """
+    SELECT c.user_id
+    FROM user_stats_cache_state AS c FINAL
+    INNER JOIN (
+        SELECT user_id, min(created) AS min_created
+        FROM raw_listens
+        WHERE load_id = {load_id:String}
+        GROUP BY user_id
+    ) AS r ON c.user_id = r.user_id
+    WHERE r.min_created <= c.last_computed_created
+"""
 
-def build_process_raw_listens_query(chunks: int = 1, chunk: int = 0) -> str:
-    """Return the INSERT...SELECT populating listens from one load's raw_listens.
+
+def build_process_raw_listens_query(chunks: int = 1, chunk: int = 0, target_table: str = LISTENS_TABLE) -> str:
+    """Return the INSERT...SELECT populating ``target_table`` from one load's raw_listens.
 
     The load is selected at execution time via the ``load_id`` query parameter.
     With ``chunks > 1`` only the ``user_id % chunks = chunk`` bucket is processed.
@@ -175,7 +194,11 @@ def build_process_raw_listens_query(chunks: int = 1, chunk: int = 0) -> str:
         .replace("__CHUNK_FILTER_R__", chunk_filter.replace("user_id", "r.user_id"))
         .replace("__CHUNK_FILTER__", chunk_filter)
     )
-    return PROCESS_RAW_LISTENS.replace("__RAW_LISTENS_SOURCE__", source)
+    return (
+        PROCESS_RAW_LISTENS
+        .replace("__RAW_LISTENS_SOURCE__", source)
+        .replace("__LISTENS_TABLE__", target_table)
+    )
 
 
 # =============================================================================
@@ -249,8 +272,8 @@ def build_raw_listens_arrow_table(table: pa.Table, load_id: str) -> pa.Table:
     })
 
 
-def process_raw_listens(client: Client, load_id: str, chunks: int = 1) -> None:
-    """Copy one load's raw_listens into listens, skipping existing and deleted listens.
+def process_raw_listens(client: Client, load_id: str, chunks: int = 1, target_table: str = LISTENS_TABLE) -> None:
+    """Copy one load's raw_listens into ``target_table``, skipping existing and deleted listens.
 
     Runs in ``chunks`` sequential buckets keyed by ``user_id % chunks`` so each
     query's sort / IN-set state stays bounded. ``chunks=1`` runs it as a single
@@ -260,7 +283,8 @@ def process_raw_listens(client: Client, load_id: str, chunks: int = 1) -> None:
     parameters = {"load_id": load_id}
     if chunks <= 1:
         client.command(
-            build_process_raw_listens_query(), parameters=parameters, settings=PROCESS_RAW_LISTENS_SETTINGS
+            build_process_raw_listens_query(target_table=target_table),
+            parameters=parameters, settings=PROCESS_RAW_LISTENS_SETTINGS,
         )
         return
 
@@ -268,7 +292,8 @@ def process_raw_listens(client: Client, load_id: str, chunks: int = 1) -> None:
         logger.info("Processing raw_listens bucket %d/%d", i + 1, chunks)
         t0 = time.time()
         client.command(
-            build_process_raw_listens_query(chunks, i), parameters=parameters, settings=PROCESS_RAW_LISTENS_SETTINGS
+            build_process_raw_listens_query(chunks, i, target_table),
+            parameters=parameters, settings=PROCESS_RAW_LISTENS_SETTINGS,
         )
         logger.info("Bucket %d/%d done in %.1fs", i + 1, chunks, time.time() - t0)
 
@@ -281,11 +306,29 @@ def drop_raw_listens_partition(client: Client, load_id: str) -> None:
     )
 
 
-def truncate_derived_tables(client: Client) -> None:
-    """Truncate listens and cache state ahead of a replacing full dump load."""
+def drop_replace_listens_table(client: Client) -> None:
+    client.command(f"DROP TABLE IF EXISTS {REPLACE_LISTENS_TABLE} SETTINGS max_table_size_to_drop = 0")
+
+
+def create_replace_listens_table(client: Client) -> None:
+    """Create an empty table for a replacing load, dropping a leftover of a failed one."""
+    drop_replace_listens_table(client)
+    client.command(f"CREATE TABLE {REPLACE_LISTENS_TABLE} AS {LISTENS_TABLE}")
+
+
+def swap_in_replaced_listens(client: Client) -> None:
+    """Make the fully loaded replacement table the listens table and reset the cache state."""
+    client.command(f"EXCHANGE TABLES {REPLACE_LISTENS_TABLE} AND {LISTENS_TABLE}")
     for table in REPLACE_TRUNCATE_TABLES:
         logger.info("Truncating %s", table)
         client.command(f"TRUNCATE TABLE IF EXISTS {table}")
+    # now holds the previous listens
+    drop_replace_listens_table(client)
+
+
+def mark_backfilled_users(client: Client, load_id: str) -> None:
+    """Force a recompute of users whose loaded listens are older than their cached stats."""
+    mark_users_for_recompute(client, MARK_BACKFILLED_USERS, {"load_id": load_id})
 
 
 # =============================================================================
@@ -346,8 +389,10 @@ def load_dump(
         process_chunks: number of user_id buckets for the end-of-load join;
             ``None`` picks it from the number of raw rows loaded
             (see :func:`choose_process_chunks`).
-        replace: truncate listens and the cache state before loading (full
-            dump semantics). Deleted-listen records are kept.
+        replace: replace listens with the dump and reset the cache state (full
+            dump semantics). The dump is processed into a separate table that is
+            swapped in only after it loaded completely; on failure listens is left
+            untouched. Deleted-listen records are kept.
 
     Returns dict with 'total_inserted', 'files_completed', 'elapsed', 'errors', 'load_id'.
     """
@@ -366,8 +411,6 @@ def load_dump(
     client = create_client(host, port, username, password, database)
     logger.info("Connected to ClickHouse at %s:%s", host, port)
     ensure_stats_schema(client)
-    if replace:
-        truncate_derived_tables(client)
     client.close()
 
     progress = LoadProgress()
@@ -415,18 +458,29 @@ def load_dump(
             logger.error("Skipping processing of load %s because %d file(s) failed", load_id, len(errors))
         elif total_inserted > 0:
             chunks = process_chunks if process_chunks is not None else choose_process_chunks(total_inserted)
+            target_table = REPLACE_LISTENS_TABLE if replace else LISTENS_TABLE
             logger.info(
-                "Processing raw_listens into listens (%s raw rows, %d chunks)...",
-                f"{total_inserted:,}", chunks,
+                "Processing raw_listens into %s (%s raw rows, %d chunks)...",
+                target_table, f"{total_inserted:,}", chunks,
             )
             process_start = time.time()
-            before = process_client.query("SELECT count(*) FROM listens").first_row[0]
-            process_raw_listens(process_client, load_id, chunks=chunks)
-            after = process_client.query("SELECT count(*) FROM listens").first_row[0]
-            logger.info(
-                "Processed listens in %.1fs: %s new listens (%s raw rows), %s total",
-                time.time() - process_start, f"{after - before:,}", f"{total_inserted:,}", f"{after:,}",
-            )
+            if replace:
+                create_replace_listens_table(process_client)
+            try:
+                before = process_client.query(f"SELECT count(*) FROM {target_table}").first_row[0]
+                process_raw_listens(process_client, load_id, chunks=chunks, target_table=target_table)
+                after = process_client.query(f"SELECT count(*) FROM {target_table}").first_row[0]
+                logger.info(
+                    "Processed listens in %.1fs: %s new listens (%s raw rows), %s total",
+                    time.time() - process_start, f"{after - before:,}", f"{total_inserted:,}", f"{after:,}",
+                )
+                if replace:
+                    swap_in_replaced_listens(process_client)
+                else:
+                    mark_backfilled_users(process_client, load_id)
+            finally:
+                if replace:
+                    drop_replace_listens_table(process_client)
             drop_raw_listens_partition(process_client, load_id)
     finally:
         process_client.close()

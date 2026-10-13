@@ -12,15 +12,26 @@ import orjson
 import sentry_sdk
 from kombu import Consumer, Exchange, Queue
 from kombu.mixins import ConsumerMixin
+from requests import HTTPError, RequestException
 
 from listenbrainz.clickhouse.handlers import get_handler
 from listenbrainz.db import couchdb
 from listenbrainz.rabbitmq import create_rabbitmq_connection
-from listenbrainz.webserver import create_app, db_conn
+from listenbrainz.webserver import create_app
 
 logger = logging.getLogger(__name__)
 
 PREFETCH_COUNT = 100
+
+# Seconds to wait before requeueing a message whose CouchDB write failed transiently.
+RETRY_DELAY = 5
+
+
+def is_retryable(error: Exception) -> bool:
+    """Whether a handler error is a transient CouchDB failure worth retrying the message for."""
+    if isinstance(error, HTTPError):
+        return error.response is not None and error.response.status_code >= 500
+    return isinstance(error, RequestException)
 
 
 def init_clickhouse_reader_couchdb(app):
@@ -96,18 +107,24 @@ class ClickHouseReader(ConsumerMixin):
 
         try:
             with self.app.app_context():
-                try:
-                    handler(response)
-                except Exception as e:
-                    self.app.logger.error(
-                        "Error in ClickHouse handler for '%s': %s",
-                        response_type, str(e), exc_info=True
-                    )
-                    sentry_sdk.capture_exception(e)
-                finally:
-                    db_conn.rollback()
-        finally:
-            message.ack()
+                handler(response)
+        except Exception as e:
+            if is_retryable(e):
+                # The ClickHouse side already considers these stats written: requeue
+                # rather than lose them while CouchDB is unavailable.
+                self.app.logger.error(
+                    "Transient error in ClickHouse handler for '%s', requeueing: %s",
+                    response_type, str(e), exc_info=True
+                )
+                time.sleep(RETRY_DELAY)
+                message.requeue()
+                return
+            self.app.logger.error(
+                "Error in ClickHouse handler for '%s': %s",
+                response_type, str(e), exc_info=True
+            )
+            sentry_sdk.capture_exception(e)
+        message.ack()
 
     def get_consumers(self, _, channel):
         return [

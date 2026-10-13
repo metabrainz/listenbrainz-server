@@ -69,6 +69,24 @@ class ClickHouseRequestConsumerTestCase(unittest.TestCase):
 
         consumer.producer.publish.assert_not_called()
 
+    def test_consume_acks_each_request_before_running_it(self):
+        consumer = self._consumer_with_mock_broker()
+        events = []
+        message = mock.Mock(body=json.dumps({"query": "q"}))
+        message.ack.side_effect = lambda: events.append("ack")
+        bound_queue = mock.Mock()
+        # one request, then an empty queue, then stop the loop
+        bound_queue.get.side_effect = [message, None, KeyboardInterrupt]
+        consumer.clickhouse_queue = mock.Mock(return_value=bound_queue)
+
+        with mock.patch.object(consumer, "callback", side_effect=lambda body: events.append("run")), \
+                mock.patch("clickhouse.request_consumer.time.sleep"):
+            with self.assertRaises(KeyboardInterrupt):
+                consumer.consume()
+
+        self.assertEqual(events, ["ack", "run"])
+        bound_queue.get.assert_called_with(no_ack=False)
+
     def test_push_to_result_queue_skips_oversized_messages(self):
         consumer = self._consumer_with_mock_broker()
         too_big = {"type": "clk_user_entity", "data": "x" * (RABBITMQ_MAX_MESSAGE_BYTES + 1)}

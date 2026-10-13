@@ -17,9 +17,8 @@ import socket
 import time
 from collections.abc import Iterable
 
-from kombu import Connection, Consumer, Exchange, Queue
+from kombu import Connection, Exchange, Queue
 from kombu.entity import PERSISTENT_DELIVERY_MODE
-from kombu.mixins import ConsumerMixin
 
 from clickhouse import config, query_map
 
@@ -33,6 +32,9 @@ logger = logging.getLogger(__name__)
 # RabbitMQ default max_message_size. Anything larger is rejected with a channel
 # error (406 PRECONDITION_FAILED) that tears down the channel mid-batch.
 RABBITMQ_MAX_MESSAGE_BYTES = 16 * 1024 * 1024
+
+# Seconds to wait before polling an empty request queue again.
+POLL_INTERVAL = 5
 
 
 def _rabbitmq_url(host, port):
@@ -59,8 +61,15 @@ def create_rabbitmq_connection(connection_name):
     )
 
 
-class ClickHouseRequestConsumer(ConsumerMixin):
-    """Consumer for ClickHouse stats and management requests."""
+class ClickHouseRequestConsumer:
+    """Consumer for ClickHouse stats and management requests.
+
+    Requests are fetched one at a time with basic.get rather than pushed by a broker
+    consumer, so the requests queued behind a running one (dump imports take hours)
+    stay in the broker and survive a restart. Each request is acked before it runs:
+    acking after it would hold the delivery unacknowledged for longer than RabbitMQ's
+    consumer timeout.
+    """
 
     def __init__(self):
         self.connection = None
@@ -165,11 +174,8 @@ class ClickHouseRequestConsumer(ConsumerMixin):
             logger.info('Request done!')
         except self._broker_errors() as e:
             # A channel/connection error (e.g. 406 PRECONDITION_FAILED from an
-            # oversized publish) also kills the consumer registration, because
-            # the producer shares the connection's default channel with the
-            # consumer. Swallowing it here would leave the process wedged: the
-            # channel gets revived but nothing is consumed anymore. Re-raise so
-            # ConsumerMixin.run() re-establishes the consumer.
+            # oversized publish) closes the channel the producer shares with the
+            # request queue. Re-raise so start() reconnects.
             logger.error("Broker error while processing request, restarting consumer: %s",
                          str(e), exc_info=True)
             raise
@@ -181,15 +187,17 @@ class ClickHouseRequestConsumer(ConsumerMixin):
             return ()
         return tuple(self.connection.connection_errors) + tuple(self.connection.channel_errors)
 
-    def get_consumers(self, Consumer, channel):
-        return [
-            Consumer(
-                queues=[self.clickhouse_queue],
-                on_message=lambda x: self.callback(x.body),
-                prefetch_count=1,
-                no_ack=True,
-            )
-        ]
+    def consume(self):
+        """Process requests from the queue, one at a time, until a broker error."""
+        queue = self.clickhouse_queue(self.connection.default_channel)
+        queue.declare()
+        while True:
+            message = queue.get(no_ack=False)
+            if message is None:
+                time.sleep(POLL_INTERVAL)
+                continue
+            message.ack()
+            self.callback(message.body)
 
     def init_rabbitmq_connection(self):
         """Initialize RabbitMQ connection and producer."""
@@ -204,9 +212,11 @@ class ClickHouseRequestConsumer(ConsumerMixin):
             try:
                 logger.info("ClickHouse request consumer starting...")
                 self.init_rabbitmq_connection()
-                self.run()
+                self.consume()
             except Exception as e:
                 logger.critical("Error in ClickHouse request consumer: %s", str(e), exc_info=True)
+                if self.connection is not None:
+                    self.connection.release()
                 time.sleep(2)
 
 
