@@ -1,0 +1,35 @@
+{{- define "KEY" -}}
+    {{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .)  (printf "KEYDOESNOTEXIST_%s" .) }}
+{{- end -}}
+
+# Put everything after the defines otherwise the rendered config might eat up some newlines
+import os
+
+# RabbitMQ connection settings
+{{- $rabbitmq_services := service "rabbitmq-listenbrainz"}}
+{{- if $rabbitmq_services}}
+RABBITMQ_HOSTS = [
+{{- range $rabbitmq_services}}
+    ("{{.Address}}", {{.Port}}),
+{{- end}}
+]
+{{else}}
+RABBITMQ_HOSTS = [("SERVICEDOESNOTEXIST_rabbitmq-listenbrainz", "SERVICEDOESNOTEXIST_rabbitmq-listenbrainz")]
+{{end}}
+RABBITMQ_USERNAME = '''{{template "KEY" "rabbitmq_user"}}'''
+RABBITMQ_PASSWORD = '''{{template "KEY" "rabbitmq_pass"}}'''
+RABBITMQ_VHOST = '''{{template "KEY" "rabbitmq_vhost"}}'''
+
+# RabbitMQ exchanges and queues for ClickHouse operations
+CLICKHOUSE_EXCHANGE = '''{{template "KEY" "clickhouse_exchange"}}'''
+CLICKHOUSE_QUEUE = '''{{template "KEY" "clickhouse_queue"}}'''
+CLICKHOUSE_RESULT_EXCHANGE = '''{{template "KEY" "clickhouse_result_exchange"}}'''
+CLICKHOUSE_RESULT_QUEUE = '''{{template "KEY" "clickhouse_result_queue"}}'''
+
+# Sentry config
+LOG_SENTRY = {
+    'dsn': '''{{template "KEY" "sentry/dsn"}}''',
+    'environment': '''{{template "KEY" "sentry/environment"}}''',
+    'release': os.getenv('GIT_SHA', None),
+    'traces_sample_rate': {{template "KEY" "sentry/traces_sample_rate"}},
+}

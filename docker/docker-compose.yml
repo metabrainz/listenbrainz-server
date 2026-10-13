@@ -9,6 +9,7 @@ volumes:
   # The contents of /root, so that bash and ipython can store history
   web_home:
   couchdb:
+  couchdb_clickhouse:
   garage:
 
 services:
@@ -37,6 +38,17 @@ services:
       - couchdb:/var/lib/couchdb
     ports:
       - "127.0.0.1:5984:5984"
+
+  # Separate CouchDB for ClickHouse stats
+  couchdb-clickhouse:
+    image: couchdb:3.2.2
+    profiles: [clickhouse]
+    environment:
+      COUCHDB_USER: listenbrainz
+      COUCHDB_PASSWORD: listenbrainz
+    volumes:
+      - ./couchdb_test.ini:/opt/couchdb/etc/local.ini
+      - couchdb_clickhouse:/var/lib/couchdb
 
   rabbitmq:
     image: rabbitmq:3.8.16-management
@@ -159,6 +171,29 @@ services:
         condition: service_started
       garage:
         condition: service_healthy
+
+  clickhouse_request_consumer:
+    image: web
+    profiles: [clickhouse]
+    command: python3 -m "clickhouse.request_consumer"
+    volumes:
+      - ..:/code/listenbrainz:z
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
+    depends_on:
+      - rabbitmq
+
+  clickhouse_reader:
+    image: web
+    profiles: [clickhouse]
+    command: python3 -m "listenbrainz.clickhouse.clickhouse_reader"
+    volumes:
+      - ..:/code/listenbrainz:z
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
+    depends_on:
+      - redis
+      - lb_db
+      - rabbitmq
+      - couchdb-clickhouse
 
   spotify_reader:
     image: web

@@ -14,11 +14,40 @@ DATABASE_NAME_PATTERN = re.compile(r"([a-zA-Z]+)_(\w+)_(\d{8})")
 
 DATABASE_LOCK_FILE = "LOCK"
 
-_user = None
-_admin_key = None
-_host = None
-_port = None
-_database_prefix = ""
+
+class CouchDBConnection:
+    """ Connection details for one CouchDB instance.
+
+    The module level functions below operate on the default connection configured
+    via ``init``, unless given another one with their ``connection`` argument (for
+    instance the instance the ClickHouse result reader writes stats to).
+    """
+
+    def __init__(self, user, password, host, port, database_prefix, timeout=None):
+        self.user = user
+        self.admin_key = password
+        self.host = host
+        self.port = port
+        self.database_prefix = database_prefix or ""
+        # passed to requests, None waits forever
+        self.timeout = timeout
+
+    def get_base_url(self):
+        return f"http://{self.user}:{self.admin_key}@{self.host}:{self.port}"
+
+    def add_database_prefix(self, database: str):
+        return f"{self.database_prefix}{database}"
+
+    def remove_database_prefix(self, database: str):
+        if self.database_prefix and database.startswith(self.database_prefix):
+            return database[len(self.database_prefix):]
+        return database
+
+    def get_database_url(self, database: str):
+        return f"{self.get_base_url()}/{self.add_database_prefix(database)}"
+
+
+_default_connection: CouchDBConnection | None = None
 
 
 def init(user, password, host, port, database_prefix):
@@ -32,33 +61,19 @@ def init(user, password, host, port, database_prefix):
         port: couchdb service port
         database_prefix: prefix to apply to all application couchdb database names
     """
-    global _user, _admin_key, _host, _port, _database_prefix
-    _user = user
-    _admin_key = password
-    _host = host
-    _port = port
-    _database_prefix = database_prefix
+    global _default_connection
+    _default_connection = CouchDBConnection(user, password, host, port, database_prefix)
+
+
+def _get_connection(connection: CouchDBConnection | None = None) -> CouchDBConnection:
+    return connection or _default_connection
 
 
 def get_base_url():
-    return f"http://{_user}:{_admin_key}@{_host}:{_port}"
+    return _get_connection().get_base_url()
 
 
-def _add_database_prefix(database: str):
-    return f"{_database_prefix}{database}"
-
-
-def _remove_database_prefix(database: str):
-    if _database_prefix and database.startswith(_database_prefix):
-        return database[len(_database_prefix):]
-    return database
-
-
-def _get_database_url(database: str):
-    return f"{get_base_url()}/{_add_database_prefix(database)}"
-
-
-def create_database(database: str):
+def create_database(database: str, connection: CouchDBConnection | None = None):
     """ Create a couchdb database with the given name.
 
     For example, if prefix is artists_weekly and the day is 2022-07-10 then the newly
@@ -67,12 +82,13 @@ def create_database(database: str):
     Args:
          database: the database's name
     """
-    databases_url = _get_database_url(database)
-    response = requests.put(databases_url)
+    connection = _get_connection(connection)
+    databases_url = connection.get_database_url(database)
+    response = requests.put(databases_url, timeout=connection.timeout)
     response.raise_for_status()
 
 
-def list_databases(stat_prefix: str) -> list[str]:
+def list_databases(stat_prefix: str, connection: CouchDBConnection | None = None) -> list[str]:
     """ List all couchdb database whose name starts with the given stat prefix
     sorted in the descending order of creation.
 
@@ -82,14 +98,15 @@ def list_databases(stat_prefix: str) -> list[str]:
     rid of the older database for that stat. This method looks up all the databases whose name
     starts with the given stat prefix.
     """
-    databases_url = f"{get_base_url()}/_all_dbs"
-    response = requests.get(databases_url)
+    connection = _get_connection(connection)
+    databases_url = f"{connection.get_base_url()}/_all_dbs"
+    response = requests.get(databases_url, timeout=connection.timeout)
     response.raise_for_status()
     all_databases = response.json()
 
-    database_prefixed_stat_prefix = _add_database_prefix(stat_prefix)
+    database_prefixed_stat_prefix = connection.add_database_prefix(stat_prefix)
     databases = [
-        _remove_database_prefix(database)
+        connection.remove_database_prefix(database)
         for database in all_databases
         if database.startswith(database_prefixed_stat_prefix)
     ]
@@ -97,7 +114,7 @@ def list_databases(stat_prefix: str) -> list[str]:
     return databases
 
 
-def delete_database(prefix: str):
+def delete_database(prefix: str, connection: CouchDBConnection | None = None):
     """ Delete all but the latest database whose name starts with the given prefix.
 
     Before deleting, the existence of a LOCK file is checked. If a file named LOCK,
@@ -110,24 +127,25 @@ def delete_database(prefix: str):
         tuple of name of databases that were deleted and which matched the prefix
         but weren't deleted
     """
-    databases = list_databases(prefix)
+    connection = _get_connection(connection)
+    databases = list_databases(prefix, connection=connection)
     # remove the latest database from the list then delete the databases remaining in the list.
     databases.pop(0)
 
     deleted, retained = [], []
 
     for database in databases:
-        if check_database_lock(database):
+        if check_database_lock(database, connection=connection):
             retained.append(database)
         else:
-            response = requests.delete(_get_database_url(database))
+            response = requests.delete(connection.get_database_url(database), timeout=connection.timeout)
             response.raise_for_status()
             deleted.append(database)
 
     return deleted, retained
 
 
-def fetch_data(prefix: str, user_id: int):
+def fetch_data(prefix: str, user_id: int, connection: CouchDBConnection | None = None):
     """ Retrieve data from couchdb for given stat type and user.
 
     For each stat type, a database is created daily. We do not have a way to do this atomically so the latest
@@ -138,11 +156,12 @@ def fetch_data(prefix: str, user_id: int):
          prefix: the string to match database names with
          user_id: the user to retrieve data for
     """
-    databases = list_databases(prefix)
+    connection = _get_connection(connection)
+    databases = list_databases(prefix, connection=connection)
 
     for database in databases:
-        document_url = f"{_get_database_url(database)}/{user_id}"
-        response = requests.get(document_url)
+        document_url = f"{connection.get_database_url(database)}/{user_id}"
+        response = requests.get(document_url, timeout=connection.timeout)
         if response.status_code == 404:
             continue
         response.raise_for_status()
@@ -151,27 +170,31 @@ def fetch_data(prefix: str, user_id: int):
     return None
 
 
-def fetch_exact_data(database: str, document_id: str):
+def fetch_exact_data(database: str, document_id: str, connection: CouchDBConnection | None = None):
     """ Retrieve data from couchdb for the exact given database and document id.
     Args:
          database: the database name to retrieve data from
          document_id: the document_id to retrieve data for
     """
-    document_url = f"{_get_database_url(database)}/{document_id}"
-    response = requests.get(document_url)
+    connection = _get_connection(connection)
+    document_url = f"{connection.get_database_url(database)}/{document_id}"
+    response = requests.get(document_url, timeout=connection.timeout)
     if response.status_code == 404:
         return None
     return response.json()
 
 
-def insert_data(database: str, data: list[dict]):
+def insert_data(database: str, data: list[dict], connection: CouchDBConnection | None = None):
     """ Insert the given data into the specified database. """
+    connection = _get_connection(connection)
     with start_span(op="serializing", name="serialize data to json"):
         docs = orjson.dumps({"docs": data})
 
     with start_span(op="http", name="insert docs in couchdb using api"):
-        couchdb_url = f"{_get_database_url(database)}/_bulk_docs"
-        response = requests.post(couchdb_url, data=docs, headers={"Content-Type": "application/json"})
+        couchdb_url = f"{connection.get_database_url(database)}/_bulk_docs"
+        response = requests.post(
+            couchdb_url, data=docs, headers={"Content-Type": "application/json"}, timeout=connection.timeout
+        )
         response.raise_for_status()
 
     with start_span(op="deserializing", name="checking response for conflicts"):
@@ -187,9 +210,10 @@ def insert_data(database: str, data: list[dict]):
 
     with start_span(op="http", name="retrieving conflicts from database"):
         response = requests.post(
-            f"{_get_database_url(database)}/_bulk_get",
+            f"{connection.get_database_url(database)}/_bulk_get",
             data=conflict_docs,
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
+            timeout=connection.timeout,
         )
         response.raise_for_status()
 
@@ -209,20 +233,23 @@ def insert_data(database: str, data: list[dict]):
         docs_to_update = orjson.dumps({"docs": docs_to_update})
 
     with start_span(op="http", name="retry updating conflicts in database"):
-        response = requests.post(couchdb_url, data=docs_to_update, headers={"Content-Type": "application/json"})
+        response = requests.post(
+            couchdb_url, data=docs_to_update, headers={"Content-Type": "application/json"}, timeout=connection.timeout
+        )
         response.raise_for_status()
 
 
-def try_insert_data(database: str, data: list[dict]):
+def try_insert_data(database: str, data: list[dict], connection: CouchDBConnection | None = None):
     """ Try to insert data in the database if it exists, otherwise create the database and try again. """
+    connection = _get_connection(connection)
     try:
-        insert_data(database, data)
+        insert_data(database, data, connection=connection)
     except Exception:
-        create_database(database)
-        insert_data(database, data)
+        create_database(database, connection=connection)
+        insert_data(database, data, connection=connection)
 
 
-def delete_data(database: str, doc_id: int | str):
+def delete_data(database: str, doc_id: int | str, connection: CouchDBConnection | None = None):
     """ Delete the given document from couchdb database.
 
     Once a document is deleted, it will return a 404 if someone tries to fetch it afterwards. However,
@@ -233,40 +260,44 @@ def delete_data(database: str, doc_id: int | str):
          database: the database to delete data from
          doc_id: the id of the document to delete
     """
-    document_url = f"{_get_database_url(database)}/{doc_id}"
-    response = requests.head(document_url)
+    connection = _get_connection(connection)
+    document_url = f"{connection.get_database_url(database)}/{doc_id}"
+    response = requests.head(document_url, timeout=connection.timeout)
     response.raise_for_status()
 
     rev = json.loads(response.headers.get("ETag"))
-    response = requests.delete(document_url, params={"rev": rev})
+    response = requests.delete(document_url, params={"rev": rev}, timeout=connection.timeout)
     response.raise_for_status()
 
 
-def check_database_lock(database: str):
+def check_database_lock(database: str, connection: CouchDBConnection | None = None):
     """ Checks whether a database is "currently locked" by checking the existence of
      DATABASE_LOCK_FILE. A database is usually locked only during dumps.
     """
-    url = f"{_get_database_url(database)}/{DATABASE_LOCK_FILE}"
-    response = requests.get(url)
+    connection = _get_connection(connection)
+    url = f"{connection.get_database_url(database)}/{DATABASE_LOCK_FILE}"
+    response = requests.get(url, timeout=connection.timeout)
     return response.status_code == 200
 
 
-def lock_database(database: str):
+def lock_database(database: str, connection: CouchDBConnection | None = None):
     """ 'Lock' the database so that it does not get deleted.
 
         Note that, this is not a couchdb feature but a way we made up to co-ordinate process in LB.
         The onus is the on other users to check for existence of the LOCK file before deleting a
         database.
     """
-    document_url = f"{_get_database_url(database)}/{DATABASE_LOCK_FILE}"
+    connection = _get_connection(connection)
+    document_url = f"{connection.get_database_url(database)}/{DATABASE_LOCK_FILE}"
     # TODO: figure out why PUT works but POST fails with a weird referer header error
-    response = requests.put(document_url, json={})
+    response = requests.put(document_url, json={}, timeout=connection.timeout)
     response.raise_for_status()
 
 
-def unlock_database(database: str):
+def unlock_database(database: str, connection: CouchDBConnection | None = None):
     """ 'Unlock' the database so that it can be cleaned up when needed. """
-    delete_data(database, DATABASE_LOCK_FILE)
+    connection = _get_connection(connection)
+    delete_data(database, DATABASE_LOCK_FILE, connection=connection)
 
 
 def _assert_status_hook(r, *args, **kwargs):
@@ -288,7 +319,7 @@ def _get_requests_session():
     return http
 
 
-def dump_database(prefix: str, fp: BinaryIO):
+def dump_database(prefix: str, fp: BinaryIO, connection: CouchDBConnection | None = None):
     """ Dump the contents of the earliest database of the asked type.
 
         The earliest database of the type is chosen because its most probably the complete one while
@@ -298,7 +329,8 @@ def dump_database(prefix: str, fp: BinaryIO):
             prefix: the string to match database names with
             fp: the text stream to dump the contents to
     """
-    databases = list_databases(prefix)
+    connection = _get_connection(connection)
+    databases = list_databases(prefix, connection=connection)
     if not databases:
         return
 
@@ -306,13 +338,13 @@ def dump_database(prefix: str, fp: BinaryIO):
     # the newer one is probably incomplete and that's why the old one has not been cleaned up yet.
     database = databases[-1]
     # check if the database is already locked from a previous failed dump attempt
-    if not check_database_lock(database):
-        lock_database(database)
+    if not check_database_lock(database, connection=connection):
+        lock_database(database, connection=connection)
 
     try:
         with _get_requests_session() as http:
-            database_url = _get_database_url(database)
-            response = http.get(database_url)
+            database_url = connection.get_database_url(database)
+            response = http.get(database_url, timeout=connection.timeout)
             total_docs = response.json()["doc_count"]
 
             all_docs_url = f"{database_url}/_all_docs"
@@ -327,7 +359,7 @@ def dump_database(prefix: str, fp: BinaryIO):
                 if startkey_docid is not None:
                     params["startkey_docid"] = startkey_docid
                     params["skip"] = 1
-                response = http.get(all_docs_url, params=params)
+                response = http.get(all_docs_url, params=params, timeout=connection.timeout)
 
                 rows = orjson.loads(response.content)["rows"]
                 for row in rows:
@@ -342,4 +374,4 @@ def dump_database(prefix: str, fp: BinaryIO):
 
                     fp.write(orjson.dumps(doc, option=orjson.OPT_APPEND_NEWLINE))
     finally:
-        unlock_database(database)
+        unlock_database(database, connection=connection)

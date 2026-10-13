@@ -170,6 +170,19 @@ COUCHDB_USER = "listenbrainz"
 COUCHDB_ADMIN_KEY = '''{{template "KEY" "couchdb_admin_key"}}'''
 COUCHDB_DATABASE_PREFIX = '''{{template "KEY_OPTIONAL" "couchdb_database_prefix"}}'''
 
+# Separate CouchDB instance the ClickHouse result reader writes stats to.
+{{if service "couchdb-clickhouse"}}
+{{with index (service "couchdb-clickhouse") 0}}
+CLICKHOUSE_READER_COUCHDB_HOST = "{{.Address}}"
+CLICKHOUSE_READER_COUCHDB_PORT = {{.Port}}
+{{end}}
+{{else}}
+CLICKHOUSE_READER_COUCHDB_HOST = "SERVICEDOESNOTEXIST_couchdb-clickhouse"
+CLICKHOUSE_READER_COUCHDB_PORT = "SERVICEDOESNOTEXIST_couchdb-clickhouse"
+{{end}}
+CLICKHOUSE_READER_COUCHDB_USER = '''{{template "KEY" "clickhouse_reader_couchdb_user"}}'''
+CLICKHOUSE_READER_COUCHDB_ADMIN_KEY = '''{{template "KEY" "clickhouse_reader_couchdb_admin_key"}}'''
+
 {{if service "listenbrainz-redis"}}
 {{with index (service "listenbrainz-redis") 0}}
 REDIS_HOST = "{{.Address}}"
@@ -212,6 +225,11 @@ SPARK_RESULT_EXCHANGE = '''{{template "KEY" "spark_result_exchange"}}'''
 SPARK_RESULT_QUEUE = '''{{template "KEY" "spark_result_queue"}}'''
 SPARK_REQUEST_EXCHANGE = '''{{template "KEY" "spark_request_exchange"}}'''
 SPARK_REQUEST_QUEUE = '''{{template "KEY" "spark_request_queue"}}'''
+
+CLICKHOUSE_EXCHANGE = '''{{template "KEY" "clickhouse_exchange"}}'''
+CLICKHOUSE_QUEUE = '''{{template "KEY" "clickhouse_queue"}}'''
+CLICKHOUSE_RESULT_EXCHANGE = '''{{template "KEY" "clickhouse_result_exchange"}}'''
+CLICKHOUSE_RESULT_QUEUE = '''{{template "KEY" "clickhouse_result_queue"}}'''
 
 REJECTION_EXCHANGE = '''{{template "KEY" "rejection_exchange"}}'''
 REJECTION_QUEUE = '''{{template "KEY" "rejection_queue"}}'''

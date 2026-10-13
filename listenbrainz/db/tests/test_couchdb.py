@@ -72,8 +72,8 @@ class CouchdbTestCase(unittest.TestCase):
         self.assertEqual({"data": "foo"}, json.loads(received[0]))
         self.assertEqual({"data": "bar"}, json.loads(received[1]))
 
-        mock_lock.assert_called_with(database)
-        mock_unlock.assert_called_with(database)
+        mock_lock.assert_called_with(database, connection=couchdb._default_connection)
+        mock_unlock.assert_called_with(database, connection=couchdb._default_connection)
 
     def test_insert_new_data_overwrites_conflicts(self):
         database = "couchdb_dump_test_db_20240204"

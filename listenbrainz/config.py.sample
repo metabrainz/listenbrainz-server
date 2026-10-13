@@ -76,6 +76,12 @@ SPARK_RESULT_QUEUE = "spark_result"
 SPARK_REQUEST_EXCHANGE = "spark_request"
 SPARK_REQUEST_QUEUE = "spark_request"
 
+# ClickHouse
+CLICKHOUSE_EXCHANGE = "clickhouse"
+CLICKHOUSE_QUEUE = "clickhouse"
+CLICKHOUSE_RESULT_EXCHANGE = "clickhouse_result"
+CLICKHOUSE_RESULT_QUEUE = "clickhouse_result"
+
 REJECTION_EXCHANGE = "rejection"
 REJECTION_QUEUE = "rejection"
 
@@ -97,6 +103,12 @@ COUCHDB_USER = "listenbrainz"
 COUCHDB_ADMIN_KEY = "listenbrainz"
 # Prefix is used verbatim; include the trailing separator, e.g. "test_".
 COUCHDB_DATABASE_PREFIX = ""
+
+# Separate CouchDB instance the ClickHouse result reader writes stats to.
+CLICKHOUSE_READER_COUCHDB_HOST = "couchdb-clickhouse"
+CLICKHOUSE_READER_COUCHDB_PORT = 5984
+CLICKHOUSE_READER_COUCHDB_USER = "listenbrainz"
+CLICKHOUSE_READER_COUCHDB_ADMIN_KEY = "listenbrainz"
 
 # MetaBrainz OAuth
 OAUTH_BASE_URL = "https://metabrainz.org"

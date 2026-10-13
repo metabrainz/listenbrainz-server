@@ -25,6 +25,9 @@ fi
 # ./test.sh spark          run spark tests
 # ./test.sh spark -b       build spark test containers
 
+# CLICKHOUSE TESTS
+# ./test.sh clickhouse     run ClickHouse pipeline tests
+
 COMPOSE_FILE_LOC=docker/docker-compose.test.yml
 COMPOSE_PROJECT_NAME=listenbrainz_test
 
@@ -88,7 +91,7 @@ function build_unit_containers {
 }
 
 function bring_up_unit_db {
-    invoke_docker_compose up -d lb_db redis rabbitmq couchdb timescale_writer websockets
+    invoke_docker_compose up -d lb_db redis rabbitmq couchdb couchdb-clickhouse timescale_writer websockets
 }
 
 function bring_up_background_tasks {
@@ -104,6 +107,7 @@ function unit_setup {
                   -wait tcp://lb_db:5432 -timeout 60s \
                   -wait tcp://rabbitmq:5672 -timeout 60s \
                   -wait tcp://couchdb:5984 -timeout 60s \
+                  -wait tcp://couchdb-clickhouse:5984 -timeout 60s \
                 bash -c "python3 manage.py init_db --create-db && \
                          python3 manage.py init_ts_db --create-db && \
                          python3 manage.py init_listens_db --create-db"
@@ -222,6 +226,11 @@ if [ "$1" == "fe" ]; then
     echo "Running tests"
     run_frontend_tests
     exit $?
+fi
+
+if [ "$1" == "clickhouse" ]; then
+    shift
+    set -- clickhouse listenbrainz/clickhouse/tests "$@"
 fi
 
 if [ "$1" == "-s" ]; then
