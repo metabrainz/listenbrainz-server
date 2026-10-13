@@ -22,8 +22,8 @@ MAILTO=""
 
 # ClickHouse stats pipeline. All of these are requests on a single FIFO queue consumed one at a
 # time, so enqueue order is execution order: import the incremental dump (blocking on the dump
-# lock like the spark import above), apply listen deletions, then refresh the MB metadata tables
-# and recompute stats for users with new listens.
+# lock like the spark import above), apply listen deletions, then recompute stats for users
+# with new listens.
 30 1 * * * root flock -x /var/lock/lb-incremental-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py clickhouse import_incremental_dump >> /logs/clickhouse.log 2>&1
 35 1 * * * root /usr/local/bin/python /code/listenbrainz/manage.py clickhouse import_deleted_listens >> /logs/clickhouse.log 2>&1
 30 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py clickhouse cron_request_all_stats >> /logs/clickhouse.log 2>&1

@@ -7,7 +7,7 @@ An incremental dump is inserted into its own ``load_id`` partition of raw_listen
 then copied into listens without the listens already there or deleted, which makes
 reloading a dump safe and covers its overlap with the full dump before it.
 
-Loads from FTP or a local dump directory advance the incremental dump mark (import_state).
+Loads from FTP advance the incremental dump mark (import_state).
 """
 
 import logging
@@ -27,7 +27,7 @@ import pyarrow.parquet as pq
 from clickhouse.client import ClickHouseConnection
 from clickhouse.stats.cache_manager import mark_users_for_recompute
 from clickhouse.stats.deleted_listens import delete_all_deleted_listens
-from clickhouse.stats.ftp import DumpType, FTPDumpDownloader, parse_dump_id
+from clickhouse.stats.ftp import DumpType, FTPDumpDownloader
 from clickhouse.stats.import_state import INCREMENTAL_DUMP_STATE, get_import_state, record_imported_dump
 from clickhouse.stats.schema import ensure_stats_schema
 
@@ -37,15 +37,6 @@ LISTENS_TABLE = "listens"
 RAW_LISTENS_TABLE = "raw_listens"
 # A full dump is loaded into this table, then swapped in for listens.
 REPLACE_LISTENS_TABLE = "listens_replace"
-
-RAW_LISTEN_COLUMNS = [
-    "load_id",
-    "listened_at",
-    "created",
-    "user_id",
-    "recording_msid",
-]
-
 
 # Reset once a full dump is swapped in. Deletion records are kept.
 REPLACE_TRUNCATE_TABLES = [
@@ -331,37 +322,6 @@ def _extract_archive(archive_path: Path, extract_dir: Path) -> Path:
     return subdirs[0] if subdirs else extract_dir
 
 
-def _find_dump_archive(base_dir: Path, dump_id: int = None, dump_type: DumpType = DumpType.FULL) -> tuple[Path, int]:
-    """Return (archive path, dump id) of a dump under ``base_dir``, laid out like the
-    ListenBrainz dumps: listenbrainz-dump-{id}-.../listenbrainz-spark-dump-{id}-....tar
-    """
-    suffix = f"-{dump_type.value}"
-    dump_dirs = sorted(
-        (parse_dump_id(d.name), d) for d in base_dir.iterdir()
-        if d.is_dir() and d.name.startswith("listenbrainz-dump-") and d.name.endswith(suffix)
-    )
-
-    if not dump_dirs:
-        raise ValueError(f"No {dump_type.value} dump directories found in {base_dir}")
-
-    if dump_id is not None:
-        matches = [(found_id, d) for found_id, d in dump_dirs if found_id == dump_id]
-        if not matches:
-            raise ValueError(f"Dump {dump_id} not found in {base_dir}")
-        found_id, dump_dir = matches[0]
-    else:
-        found_id, dump_dir = dump_dirs[-1]
-
-    archives = [
-        f for f in dump_dir.iterdir()
-        if "spark-dump" in f.name and (f.name.endswith(".tar.zst") or f.name.endswith(".tar"))
-    ]
-    if not archives:
-        raise ValueError(f"No Spark parquet listens archive found in {dump_dir}")
-
-    return archives[0], found_id
-
-
 def _load_archive(
     archive_path: Path,
     dump_id: int,
@@ -383,19 +343,6 @@ def _load_archive(
         finally:
             client.close()
     return result
-
-
-def load_from_local(
-    base_dir: str,
-    connection: ClickHouseConnection,
-    dump_id: int = None,
-    dump_type: DumpType = DumpType.FULL,
-    workers: int = 4,
-) -> dict:
-    """Load dump ``dump_id`` (latest if None) from a local directory of ListenBrainz dumps."""
-    archive_path, found_dump_id = _find_dump_archive(Path(base_dir), dump_id, dump_type)
-    logger.info("Found %s dump %d: %s", dump_type.value, found_dump_id, archive_path.name)
-    return _load_archive(archive_path, found_dump_id, dump_type, connection, workers)
 
 
 def load_from_ftp(

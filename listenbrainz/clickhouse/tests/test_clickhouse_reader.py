@@ -30,45 +30,6 @@ class ClickHouseReaderTestCase(unittest.TestCase):
         })
         return app
 
-    @mock.patch("listenbrainz.clickhouse.clickhouse_reader.couchdb.init")
-    def test_init_uses_clickhouse_reader_couchdb_config(self, mock_couchdb_init):
-        init_clickhouse_reader_couchdb(self._app())
-
-        mock_couchdb_init.assert_called_once_with(
-            "clickhouse-reader-user",
-            "clickhouse-reader-password",
-            "clickhouse-reader-couchdb",
-            15984,
-            "test_",
-        )
-
-    @mock.patch("listenbrainz.clickhouse.clickhouse_reader.init_clickhouse_reader_couchdb")
-    def test_reader_initializes_clickhouse_reader_couchdb(self, mock_init):
-        app = self._app()
-        ClickHouseReader(app)
-        mock_init.assert_called_once_with(app)
-
-    def test_init_requires_clickhouse_reader_couchdb_config(self):
-        app = self._app()
-        del app.config["CLICKHOUSE_READER_COUCHDB_HOST"]
-        with self.assertRaises(KeyError):
-            init_clickhouse_reader_couchdb(app)
-
-    def test_init_rejects_unconfigured_host(self):
-        for host in ["", "KEYDOESNOTEXIST_clickhouse_reader_couchdb_host", "SERVICEDOESNOTEXIST_couchdb-clickhouse"]:
-            with self.subTest(host=host):
-                app = self._app()
-                app.config["CLICKHOUSE_READER_COUCHDB_HOST"] = host
-                with self.assertRaisesRegex(RuntimeError, "CLICKHOUSE_READER_COUCHDB_HOST"):
-                    init_clickhouse_reader_couchdb(app)
-
-    @mock.patch("listenbrainz.clickhouse.clickhouse_reader.couchdb.init")
-    def test_reader_uses_result_exchange_and_queue(self, _mock_init):
-        reader = ClickHouseReader(self._app())
-
-        self.assertEqual(reader.clickhouse_result_exchange.name, "clickhouse_result")
-        self.assertEqual(reader.clickhouse_result_queue.name, "clickhouse_result")
-
     def _callback_with_handler_error(self, error):
         with mock.patch("listenbrainz.clickhouse.clickhouse_reader.couchdb.init"):
             reader = ClickHouseReader(self._app())

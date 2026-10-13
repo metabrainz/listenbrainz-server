@@ -98,7 +98,6 @@ class StatsDatabaseTestCase(DatabaseTestCase):
                 app.config["COUCHDB_PORT"], f"{app.config['COUCHDB_DATABASE_PREFIX']}clk_"
             )
             with mock.patch.object(db_stats, "_clickhouse_couchdb", clickhouse_couchdb):
-                self.assertTrue(db_stats.is_clickhouse_stats_configured())
                 original, from_ts1, to_ts1, from_ts2, to_ts2 = insert_test_stats(
                     "clk_artists", "week", "user_top_artists_db_data_for_api_test_week.json"
                 )
@@ -115,5 +114,4 @@ class StatsDatabaseTestCase(DatabaseTestCase):
                 self.assertEqual(received, expected)
 
             with mock.patch.object(db_stats, "_clickhouse_couchdb", None):
-                self.assertFalse(db_stats.is_clickhouse_stats_configured())
                 self.assertIsNone(db_stats.get(1, "artists", "week", EntityRecord, clickhouse=True))

@@ -62,10 +62,6 @@ def init_clickhouse_stats(user, password, host, port, database_prefix):
     _clickhouse_couchdb = CouchDBConnection(user, password, host, port, database_prefix)
 
 
-def is_clickhouse_stats_configured() -> bool:
-    return _clickhouse_couchdb is not None
-
-
 def insert(database: str, from_ts: int, to_ts: int, values: list[dict], key="user_id"):
     """ Insert stats in couchdb.
 
