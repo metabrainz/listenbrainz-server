@@ -9,6 +9,7 @@ volumes:
   # The contents of /root, so that bash and ipython can store history
   web_home:
   couchdb:
+  clickhouse:
   garage:
 
 services:
@@ -44,6 +45,22 @@ services:
       - rabbitmq:/var/lib/rabbitmq:z
     ports:
       - "127.0.0.1:25672:15672"
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.3
+    profiles: [clickhouse]
+    environment:
+      CLICKHOUSE_USER: listenbrainz
+      CLICKHOUSE_PASSWORD: listenbrainz
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - clickhouse:/var/lib/clickhouse:z
+    ports:
+      - "127.0.0.1:8123:8123"
+      - "127.0.0.1:9000:9000"
 
   garage:
     build:
@@ -168,6 +185,7 @@ services:
       - ..:/code/listenbrainz:z
     user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     depends_on:
+      - clickhouse
       - rabbitmq
       - lb_db
 
