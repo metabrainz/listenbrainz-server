@@ -220,7 +220,9 @@ def get_by_token(db_conn, token: str, *, fetch_email: bool = False):
 
 
 def get_user_count(db_conn):
-    """ Get total number of users in database.
+    """Get the number of active users in the database.
+
+    An account is active once its user has agreed to the GDPR terms.
 
     Returns:
         int: user count
@@ -229,6 +231,7 @@ def get_user_count(db_conn):
         result = db_conn.execute(sqlalchemy.text("""
             SELECT count(*) AS user_count
               FROM "user"
+             WHERE gdpr_agreed IS NOT NULL
         """))
         row = result.fetchone()
         return row.user_count

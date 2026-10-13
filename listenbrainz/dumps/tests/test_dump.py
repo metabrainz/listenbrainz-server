@@ -134,6 +134,7 @@ class DumpTestCase(DatabaseTestCase):
         # create a user
         with self.app.app_context():
             one_id = db_user.create(self.db_conn, 1, 'test_user')
+            db_user.agree_to_gdpr(self.db_conn, 'test_user')
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
@@ -165,6 +166,7 @@ class DumpTestCase(DatabaseTestCase):
         # create a user
         with self.app.app_context():
             one_id = db_user.create(self.db_conn, 1, 'test_user')
+            db_user.agree_to_gdpr(self.db_conn, 'test_user')
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
