@@ -749,7 +749,7 @@ def get_recommendation(user_name):
 
     :param recommendation_type: Type of recommendation to get. See `RECOMMENDATION_TYPES` for possible values.
     :statuscode 200: The feed was successfully generated.
-    :statuscode 204: Recommendation for the user haven't been generated.
+    :statuscode 204: Recommendations haven't been generated for the user.
     :statuscode 400: Bad Request.
     :statuscode 401: Invalid authentication.
     :statuscode 404: Playlist not found
@@ -783,14 +783,16 @@ def get_recommendation(user_name):
 
     if playlist is None:
         return Response(
-            status=204, response="Recommedation for the user haven't been generated."
+            status=204,
+            response=f"Recommendations haven't been generated for {user_name}.",
         )
-        
+
     playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist.mbid, True)
 
     if playlist is None:
         return Response(
-            status=204, response="Recommendation for the user haven't been generated."
+            status=204,
+            response=f"Recommendations haven't been generated for {user_name}.",
         )
 
     fetch_playlist_recording_metadata(playlist)
