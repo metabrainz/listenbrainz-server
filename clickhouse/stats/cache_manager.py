@@ -18,13 +18,12 @@ Architecture:
 
 import json
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Iterator
 
-import clickhouse_connect
-
 from clickhouse import config
+from clickhouse.client import ClickHouseConnection
 from clickhouse.stats.schema import ensure_stats_schema
 
 logger = logging.getLogger(__name__)
@@ -73,22 +72,14 @@ def mark_users_for_recompute(ch_client, users_query: str, parameters: dict | Non
 @dataclass
 class CacheConfig:
     """Configuration for cache manager."""
-    ch_host: str = 'localhost'
-    ch_port: int = 8123
-    ch_database: str = 'default'
-    ch_username: str = 'default'
-    ch_password: str = ''
+    connection: ClickHouseConnection = field(default_factory=ClickHouseConnection)
     couch_db_prefix: str = ''  # optional, e.g. 'clk' to keep the databases apart from spark's
 
 
 def get_cache_config() -> CacheConfig:
     """Create CacheConfig from ClickHouse config."""
     return CacheConfig(
-        ch_host=config.CLICKHOUSE_HOST,
-        ch_port=config.CLICKHOUSE_PORT,
-        ch_database=config.CLICKHOUSE_DATABASE,
-        ch_username=config.CLICKHOUSE_USERNAME,
-        ch_password=config.CLICKHOUSE_PASSWORD,
+        connection=ClickHouseConnection.from_config(),
         couch_db_prefix=config.STATS_COUCH_DB_PREFIX,
     )
 
@@ -103,15 +94,8 @@ class StatsCacheManager:
 
     def connect(self):
         """Establish a connection to ClickHouse."""
-        self.ch_client = clickhouse_connect.get_client(
-            host=self.config.ch_host,
-            port=self.config.ch_port,
-            database=self.config.ch_database,
-            username=self.config.ch_username,
-            password=self.config.ch_password,
-            form_encode_query_params=True,
-        )
-        logger.info(f"Connected to ClickHouse at {self.config.ch_host}:{self.config.ch_port}")
+        self.ch_client = self.config.connection.connect(form_encode_query_params=True)
+        logger.info("Connected to ClickHouse at %s:%s", self.config.connection.host, self.config.connection.port)
 
         # Ensure required tables exist
         ensure_stats_schema(self.ch_client)
@@ -287,47 +271,21 @@ class StatsCacheManager:
     # Result messages
     # ------------------------------------------------------------------
 
-    def generate_start_message(self, time_range: str, database: str) -> dict:
-        """
-        Generate a start message for a new stats database.
-
-        This message signals the LB handler to create a new database
-        for incoming stats data.
-
-        Args:
-            time_range: The time range for these stats
-            database: The full database name with timestamp
-
-        Returns:
-            Start message dict
-        """
+    def _database_message(self, message_type: str, time_range: str, database: str) -> dict:
         return {
-            'type': 'clk_stats_database_start',
+            'type': message_type,
             'entity_type': self.stat_type,
             'time_range': time_range,
             'database': database,
         }
+
+    def generate_start_message(self, time_range: str, database: str) -> dict:
+        """Message asking the LB handler to create a new stats database."""
+        return self._database_message('clk_stats_database_start', time_range, database)
 
     def generate_end_message(self, time_range: str, database: str) -> dict:
-        """
-        Generate an end message to finalize stats database.
-
-        This message signals the LB handler to cleanup old databases
-        of the same type.
-
-        Args:
-            time_range: The time range for these stats
-            database: The full database name with timestamp
-
-        Returns:
-            End message dict
-        """
-        return {
-            'type': 'clk_stats_database_end',
-            'entity_type': self.stat_type,
-            'time_range': time_range,
-            'database': database,
-        }
+        """Message asking the LB handler to drop the older databases of this stat / time range."""
+        return self._database_message('clk_stats_database_end', time_range, database)
 
     def generate_stats_messages(
         self,
@@ -501,8 +459,8 @@ class StatsCacheManager:
                         total_messages += 1
                     self.update_user_cache_state(batch, time_range, max_created)
                     total_users_processed += len(batch)
-                except Exception as e:
-                    logger.error(f"Error computing {time_range} batch {i}: {e}")
+                except Exception:
+                    logger.error("Error computing %s batch %d", time_range, i, exc_info=True)
 
             # For rollover, yield end message to cleanup old databases. Sent even if
             # nobody has stats for the new period, so the previous period's stats stop

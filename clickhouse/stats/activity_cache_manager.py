@@ -82,6 +82,11 @@ class ActivityRange:
     def to_ts(self) -> int:
         return int(self.end.timestamp())
 
+    @property
+    def query_parameters(self) -> dict:
+        """Parameters of the non-literal ``_timestamp_predicate`` for this range."""
+        return {"from_ms": self.from_ts * 1000, "to_ms": self.to_ts * 1000}
+
 
 def _utc(value: datetime) -> datetime:
     if value.tzinfo is None:
@@ -293,14 +298,12 @@ def _timestamp_predicate(column: str, activity_range: ActivityRange, literal: bo
     )
 
 
-def _date_predicate(column: str, activity_range: ActivityRange, literal: bool = False) -> str:
+def _date_predicate(column: str, activity_range: ActivityRange) -> str:
     operator = "<=" if activity_range.end_inclusive else "<"
-    if literal:
-        return (
-            f"{column} >= toDate('{activity_range.start.date().isoformat()}') "
-            f"AND {column} {operator} toDate('{activity_range.end.date().isoformat()}')"
-        )
-    return f"{column} >= {{from_date:Date}} AND {column} {operator} {{to_date:Date}}"
+    return (
+        f"{column} >= toDate('{activity_range.start.date().isoformat()}') "
+        f"AND {column} {operator} toDate('{activity_range.end.date().isoformat()}')"
+    )
 
 
 def _normalise_bucket_key(value, stats_range: str) -> Hashable:
@@ -391,8 +394,7 @@ class ActivityStatsCacheManager(StatsCacheManager):
         result = self.ch_client.query(query, parameters={
             "stat_type": stat_type,
             "time_range": time_range,
-            "from_ms": activity_range.from_ts * 1000,
-            "to_ms": activity_range.to_ts * 1000,
+            **activity_range.query_parameters,
         })
         logger.info("Stale users query for %s/%s took %.2fs", stat_type, time_range, time.perf_counter() - started)
         return [row[0] for row in result.result_rows]
@@ -416,8 +418,7 @@ class ActivityStatsCacheManager(StatsCacheManager):
         """
         result = self.ch_client.query(query, parameters={
             "user_ids": user_ids,
-            "from_ms": activity_range.from_ts * 1000,
-            "to_ms": activity_range.to_ts * 1000,
+            **activity_range.query_parameters,
         })
         user_activity: dict[int, list[dict]] = {}
         for user_id, day_of_week, hour, listen_count in result.result_rows:
@@ -429,13 +430,9 @@ class ActivityStatsCacheManager(StatsCacheManager):
         return user_activity
 
     @staticmethod
-    def _listening_activity_from_counts(
-        stats_range: str,
-        activity_range: ActivityRange,
-        counts: dict[Hashable, int],
-    ) -> list[dict]:
+    def _listening_activity_from_counts(activity_range: ActivityRange, counts: dict[Hashable, int]) -> list[dict]:
         normalised = {
-            _normalise_bucket_key(key, stats_range): listen_count
+            _normalise_bucket_key(key, activity_range.stats_range): listen_count
             for key, listen_count in counts.items()
         }
         return [bucket.as_dict(normalised.get(bucket.key, 0)) for bucket in activity_range.buckets]
@@ -470,16 +467,13 @@ class ActivityStatsCacheManager(StatsCacheManager):
         """
         result = self.ch_client.query(query, parameters={
             "user_ids": user_ids,
-            "from_ms": activity_range.from_ts * 1000,
-            "to_ms": activity_range.to_ts * 1000,
+            **activity_range.query_parameters,
         })
         counts_by_user: dict[int, dict[Hashable, int]] = {}
         for user_id, bucket_key, listen_count in result.result_rows:
             counts_by_user.setdefault(user_id, {})[bucket_key] = listen_count
         return {
-            user_id: self._listening_activity_from_counts(
-                activity_range.stats_range, activity_range, counts,
-            )
+            user_id: self._listening_activity_from_counts(activity_range, counts)
             for user_id, counts in counts_by_user.items()
         }
 
@@ -636,7 +630,7 @@ class BulkActivityStatsCacheManager(ActivityStatsCacheManager):
                     {bucket_expression} AS bucket_key,
                     sum(listen_count) AS listen_count
                 FROM {self.intermediate_table_name}
-                WHERE {_date_predicate('date', activity_range, literal=True)}
+                WHERE {_date_predicate('date', activity_range)}
                 GROUP BY user_id, bucket_key
                 HAVING listen_count > 0
             )
@@ -650,11 +644,7 @@ class BulkActivityStatsCacheManager(ActivityStatsCacheManager):
         with self.ch_client.query_row_block_stream(query) as stream:
             for block in stream:
                 for user_id, activity in block:
-                    yield user_id, self._listening_activity_from_counts(
-                        time_range,
-                        activity_range,
-                        dict(activity),
-                    )
+                    yield user_id, self._listening_activity_from_counts(activity_range, dict(activity))
 
     def stream_activity_for_range(self, time_range: str):
         if self.stat_type == DAILY_ACTIVITY:

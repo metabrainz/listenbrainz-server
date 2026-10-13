@@ -14,7 +14,7 @@ For every new record the matching rows in ``listens`` are removed with a
 lightweight DELETE and the affected users are marked for a forced recompute, so
 the next stats job rewrites their stats even for ranges where no listens are left. The records themselves are kept in
 ``deleted_listens`` / ``deleted_user_listen_history`` so that dump loads created
-before the deletion skip those listens (see load_dump.RAW_LISTENS_SOURCE).
+before the deletion skip those listens (see load_dump.build_process_raw_listens_query).
 
 The import state is only advanced after the deletions are applied, so a crash
 in between is retried by the next run; both steps are idempotent.
@@ -22,7 +22,8 @@ in between is retried by the next run; both steps are idempotent.
 
 import logging
 import time
-from contextlib import suppress
+from contextlib import closing
+from dataclasses import dataclass
 from datetime import datetime, timezone
 
 import psycopg2
@@ -105,99 +106,84 @@ def set_import_state(ch_client: Client, name: str, last_id: int) -> None:
 
 def _fetch_new_rows(listens_dsn: str, query: str, last_id: int, batch_size: int):
     """Yield batches of rows with id > last_id from the listens database using a server-side cursor."""
-    pg_conn = None
-    cursor = None
-    try:
-        pg_conn = psycopg2.connect(listens_dsn)
-        cursor = pg_conn.cursor(name="clickhouse_deleted_listens_cursor")
+    with closing(psycopg2.connect(listens_dsn)) as pg_conn, \
+            closing(pg_conn.cursor(name="clickhouse_deleted_listens_cursor")) as cursor:
         cursor.execute(query, (last_id,))
-        while True:
-            rows = cursor.fetchmany(batch_size)
-            if not rows:
-                break
+        while rows := cursor.fetchmany(batch_size):
             yield rows
-    finally:
-        if cursor is not None:
-            with suppress(Exception):
-                cursor.close()
-        if pg_conn is not None:
-            with suppress(Exception):
-                pg_conn.close()
 
 
-def import_deleted_listens_records(listens_dsn: str, ch_client: Client, batch_size: int) -> tuple[int, int, int]:
-    """Copy new listen_delete_metadata rows into ClickHouse deleted_listens.
+@dataclass(frozen=True)
+class DeletionSource:
+    """A listens database table of deletions and the ClickHouse table it is copied to."""
+    state_name: str  # import_state row holding the last copied id
+    table: str
+    pg_query: str
+    columns: tuple[str, ...]
+    # listens matching the records with id > {last_id:UInt64}
+    listen_filter: str
+    # keys of the import summary
+    imported_key: str
+    removed_key: str
+
+
+DELETED_LISTENS = DeletionSource(
+    state_name=DELETED_LISTENS_STATE,
+    table="deleted_listens",
+    pg_query=DELETED_LISTENS_PG_QUERY,
+    columns=("id", "user_id", "listened_at", "recording_msid", "created"),
+    listen_filter=DELETED_LISTENS_FILTER,
+    imported_key="deleted_listens_imported",
+    removed_key="deleted_listens_removed",
+)
+
+DELETED_USER_HISTORY = DeletionSource(
+    state_name=DELETED_USER_HISTORY_STATE,
+    table="deleted_user_listen_history",
+    pg_query=DELETED_USER_HISTORY_PG_QUERY,
+    columns=("id", "user_id", "max_created"),
+    listen_filter=DELETED_USER_HISTORY_FILTER,
+    imported_key="deleted_user_histories_imported",
+    removed_key="deleted_user_listens_removed",
+)
+
+
+def import_records(source: DeletionSource, listens_dsn: str, ch_client: Client, batch_size: int) -> tuple[int, int, int]:
+    """Copy the source's new rows from the listens database into ClickHouse.
 
     Returns (rows imported, previous last id, new last id).
     """
-    last_id = get_import_state(ch_client, DELETED_LISTENS_STATE)
+    last_id = get_import_state(ch_client, source.state_name)
     imported, max_id = 0, last_id
-    for rows in _fetch_new_rows(listens_dsn, DELETED_LISTENS_PG_QUERY, last_id, batch_size):
+    for rows in _fetch_new_rows(listens_dsn, source.pg_query, last_id, batch_size):
         ch_client.insert(
-            "deleted_listens",
-            [(row[0], row[1], _to_utc(row[2]), row[3], _to_utc(row[4])) for row in rows],
-            column_names=["id", "user_id", "listened_at", "recording_msid", "created"],
+            source.table,
+            [tuple(_to_utc(value) for value in row) for row in rows],
+            column_names=list(source.columns),
         )
         imported += len(rows)
         max_id = max(max_id, rows[-1][0])
     return imported, last_id, max_id
 
 
-def import_deleted_user_history_records(listens_dsn: str, ch_client: Client, batch_size: int) -> tuple[int, int, int]:
-    """Copy new deleted_user_listen_history rows into ClickHouse.
-
-    Returns (rows imported, previous last id, new last id).
-    """
-    last_id = get_import_state(ch_client, DELETED_USER_HISTORY_STATE)
-    imported, max_id = 0, last_id
-    for rows in _fetch_new_rows(listens_dsn, DELETED_USER_HISTORY_PG_QUERY, last_id, batch_size):
-        ch_client.insert(
-            "deleted_user_listen_history",
-            [(row[0], row[1], _to_utc(row[2])) for row in rows],
-            column_names=["id", "user_id", "max_created"],
-        )
-        imported += len(rows)
-        max_id = max(max_id, rows[-1][0])
-    return imported, last_id, max_id
-
-
-def _apply_deletions(ch_client: Client, listen_filter: str, last_id: int, users_query: str) -> int:
-    """Remove the listens matching ``listen_filter`` and mark their users stale.
+def apply_deletions(source: DeletionSource, ch_client: Client, last_id: int) -> int:
+    """Remove the listens matching the source's records with id > last_id and mark their users stale.
 
     Returns the number of listens removed.
     """
     parameters = {"last_id": last_id}
     count = ch_client.query(
-        f"SELECT count() FROM listens WHERE {listen_filter}", parameters=parameters
+        f"SELECT count() FROM listens WHERE {source.listen_filter}", parameters=parameters
     ).first_row[0]
     if count == 0:
         return 0
 
-    ch_client.command(f"DELETE FROM listens WHERE {listen_filter}", parameters=parameters)
+    ch_client.command(f"DELETE FROM listens WHERE {source.listen_filter}", parameters=parameters)
 
     # force these users to be recomputed by the next stats job for every time range
+    users_query = f"SELECT DISTINCT user_id FROM {source.table} WHERE id > {{last_id:UInt64}}"
     mark_users_for_recompute(ch_client, users_query, parameters)
     return count
-
-
-def apply_deleted_listens(ch_client: Client, last_id: int) -> int:
-    """Apply deleted_listens records with id > last_id to listens."""
-    return _apply_deletions(
-        ch_client,
-        DELETED_LISTENS_FILTER,
-        last_id,
-        "SELECT DISTINCT user_id FROM deleted_listens WHERE id > {last_id:UInt64}",
-    )
-
-
-def apply_deleted_user_history(ch_client: Client, last_id: int) -> int:
-    """Apply deleted_user_listen_history records with id > last_id to listens."""
-    return _apply_deletions(
-        ch_client,
-        DELETED_USER_HISTORY_FILTER,
-        last_id,
-        "SELECT DISTINCT user_id FROM deleted_user_listen_history WHERE id > {last_id:UInt64}",
-    )
 
 
 def import_deleted_listens(listens_dsn: str, ch_client: Client, batch_size: int = 10_000) -> dict:
@@ -208,24 +194,16 @@ def import_deleted_listens(listens_dsn: str, ch_client: Client, batch_size: int 
     ensure_stats_schema(ch_client)
     start = time.monotonic()
 
-    imported_listens, prev_listen_id, new_listen_id = import_deleted_listens_records(listens_dsn, ch_client, batch_size)
-    removed_listens = 0
-    if imported_listens:
-        removed_listens = apply_deleted_listens(ch_client, prev_listen_id)
-        set_import_state(ch_client, DELETED_LISTENS_STATE, new_listen_id)
+    summary = {}
+    for source in (DELETED_LISTENS, DELETED_USER_HISTORY):
+        imported, prev_id, new_id = import_records(source, listens_dsn, ch_client, batch_size)
+        removed = 0
+        if imported:
+            removed = apply_deletions(source, ch_client, prev_id)
+            set_import_state(ch_client, source.state_name, new_id)
+        summary[source.imported_key] = imported
+        summary[source.removed_key] = removed
 
-    imported_users, prev_user_id, new_user_id = import_deleted_user_history_records(listens_dsn, ch_client, batch_size)
-    removed_user_listens = 0
-    if imported_users:
-        removed_user_listens = apply_deleted_user_history(ch_client, prev_user_id)
-        set_import_state(ch_client, DELETED_USER_HISTORY_STATE, new_user_id)
-
-    summary = {
-        "deleted_listens_imported": imported_listens,
-        "deleted_listens_removed": removed_listens,
-        "deleted_user_histories_imported": imported_users,
-        "deleted_user_listens_removed": removed_user_listens,
-        "elapsed": time.monotonic() - start,
-    }
+    summary["elapsed"] = time.monotonic() - start
     logger.info("Imported deleted listens: %s", summary)
     return summary

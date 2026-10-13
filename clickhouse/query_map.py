@@ -17,8 +17,3 @@ functions = {
     'clickhouse.stats.hourly': clickhouse.stats.handlers.run_hourly_stats_job,
     'clickhouse.stats.full_refresh': clickhouse.stats.handlers.run_full_stats_refresh,
 }
-
-
-def get_query_handler(query):
-    """Get the handler function for a query."""
-    return functions[query]

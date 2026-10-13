@@ -8,10 +8,8 @@ import ftplib
 import hashlib
 import logging
 import os
-import tempfile
 import time
 from enum import Enum
-from pathlib import Path
 
 from clickhouse import config
 
@@ -31,6 +29,19 @@ class DumpInvalidException(Exception):
 class DumpNotFoundException(Exception):
     """Raised when a requested dump id is not available on the FTP server."""
     pass
+
+
+def _dump_name_parts(name: str) -> list[str]:
+    """Split a ``listenbrainz-dump-{id}-{date}-{tod}-{type}`` directory name."""
+    parts = name.rstrip('/').split('-')
+    if len(parts) < 6:
+        raise ValueError(f"Invalid dump directory name: {name}")
+    return parts
+
+
+def parse_dump_id(name: str) -> int:
+    """Return the dump id of a ``listenbrainz-dump-{id}-{date}-{tod}-{type}`` directory name."""
+    return int(_dump_name_parts(name)[2])
 
 
 class FTPDumpDownloader:
@@ -56,6 +67,13 @@ class FTPDumpDownloader:
         if self.connection:
             self.connection.close()
             self.connection = None
+
+    def __enter__(self):
+        self.connect()
+        return self
+
+    def __exit__(self, *exc_info):
+        self.close()
 
     def list_dir(self, path: str = None) -> list[str]:
         """List contents of a directory on FTP server."""
@@ -84,14 +102,10 @@ class FTPDumpDownloader:
         """List (dump_id, directory name) for every available dump, oldest first."""
         dumps = []
         for name in self.list_dump_directories(dump_type):
-            parts = name.rstrip('/').split('-')
-            if len(parts) < 6:
-                logger.warning("Skipping unrecognised dump directory: %s", name)
-                continue
             try:
-                dumps.append((int(parts[2]), name))
+                dumps.append((parse_dump_id(name), name))
             except ValueError:
-                logger.warning("Skipping dump directory with a non-numeric id: %s", name)
+                logger.warning("Skipping unrecognised dump directory: %s", name)
         dumps.sort(key=lambda dump: dump[0])
         return dumps
 
@@ -103,19 +117,6 @@ class FTPDumpDownloader:
             except ftplib.error_perm as e:
                 logger.error(f"Could not download file {src}: {e}")
                 raise
-
-    def _calc_sha256(self, file_path: str) -> str:
-        """Calculate SHA256 checksum of a file."""
-        sha256 = hashlib.sha256()
-        with open(file_path, 'rb') as f:
-            for chunk in iter(lambda: f.read(8192), b''):
-                sha256.update(chunk)
-        return sha256.hexdigest()
-
-    def _read_sha_file(self, sha_path: str) -> str:
-        """Read SHA256 checksum from a .sha256 file."""
-        with open(sha_path, 'r') as f:
-            return f.read().split()[0].strip()
 
     def download_dump(self, filename: str, directory: str) -> str:
         """
@@ -152,8 +153,10 @@ class FTPDumpDownloader:
 
         # Verify checksum
         logger.info("Verifying dump integrity...")
-        calculated_sha = self._calc_sha256(dest_path)
-        received_sha = self._read_sha_file(sha_dest_path)
+        with open(dest_path, 'rb') as f:
+            calculated_sha = hashlib.file_digest(f, 'sha256').hexdigest()
+        with open(sha_dest_path) as f:
+            received_sha = f.read().split()[0]
 
         os.remove(sha_dest_path)
 
@@ -191,15 +194,13 @@ class FTPDumpDownloader:
 
     def get_spark_dump_filename(self, dump_dir: str) -> str:
         """Get the Spark parquet archive filename for a ListenBrainz dump directory."""
-        parts = dump_dir.rstrip("/").split("-")
-        if len(parts) < 6:
-            raise ValueError(f"Invalid dump directory name: {dump_dir}")
+        parts = _dump_name_parts(dump_dir)
         return f"listenbrainz-spark-dump-{parts[2]}-{parts[3]}-{parts[4]}-{parts[5]}.tar"
 
     def download_dump_archive(
         self,
-        dump_type: DumpType = DumpType.FULL,
-        download_dir: str = None,
+        dump_type: DumpType,
+        download_dir: str,
         dump_id: int = None,
     ) -> tuple[str, int]:
         """
@@ -207,17 +208,12 @@ class FTPDumpDownloader:
 
         Args:
             dump_type: Type of dump (FULL or INCREMENTAL)
-            download_dir: Directory to save the dump (uses temp dir if not specified)
+            download_dir: Existing directory to save the dump in
             dump_id: Specific dump ID to download; defaults to the latest available.
 
         Returns:
             Tuple of (path_to_downloaded_file, dump_id)
         """
-        if download_dir is None:
-            download_dir = tempfile.mkdtemp(prefix="clickhouse_dump_")
-
-        Path(download_dir).mkdir(parents=True, exist_ok=True)
-
         dump_dir_name, dump_id = self.get_dump_name(dump_type, dump_id)
         logger.info(f"Selected {dump_type.value} dump: {dump_dir_name} (ID: {dump_id})")
 

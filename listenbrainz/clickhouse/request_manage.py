@@ -3,28 +3,22 @@ import orjson
 from kombu import Exchange
 from kombu.entity import PERSISTENT_DELIVERY_MODE
 
+from listenbrainz.clickhouse.handlers import ENTITY_MODELS
 from listenbrainz.rabbitmq import create_rabbitmq_connection
 from listenbrainz.webserver import create_app
 
 
 cli = click.Group()
 
-CLICKHOUSE_ENTITY_TYPES = [
-    "daily_activity",
-    "listening_activity",
-]
+CLICKHOUSE_ENTITY_TYPES = list(ENTITY_MODELS)
 
 
 def send_request_to_clickhouse(query, **params):
     """Send a request to the ClickHouse request queue."""
     app = create_app()
-    with app.app_context():
-        message = orjson.dumps({"query": query, "params": params})
-
-        connection = create_rabbitmq_connection(app.config)
-
-        clickhouse_exchange = Exchange(app.config.get("CLICKHOUSE_EXCHANGE", "clickhouse"), "fanout", durable=True)
-
+    message = orjson.dumps({"query": query, "params": params})
+    clickhouse_exchange = Exchange(app.config["CLICKHOUSE_EXCHANGE"], "fanout", durable=True)
+    with app.app_context(), create_rabbitmq_connection(app.config) as connection:
         with connection.Producer() as producer:
             producer.publish(
                 message,
@@ -37,14 +31,14 @@ def send_request_to_clickhouse(query, **params):
     click.echo(f"Request sent: {query}")
 
 
-def _send_stats_request(query: str, entities: tuple[str], batch_size: int):
+def _send_stats_request(query: str, entities: tuple[str], **params):
     """Send one ClickHouse stats request, or one per selected entity."""
     if not entities:
-        send_request_to_clickhouse(query, batch_size=batch_size)
+        send_request_to_clickhouse(query, **params)
         return
 
     for entity in entities:
-        send_request_to_clickhouse(query, entity=entity, batch_size=batch_size)
+        send_request_to_clickhouse(query, entity=entity, **params)
 
 
 @cli.command(name="init_schema")
@@ -121,7 +115,7 @@ def import_incremental_dump(workers: int, max_dumps: int):
 @click.option("--batch-size", type=int, default=1000, help="Users to process per ClickHouse query batch")
 def request_hourly_stats(entities: tuple[str], batch_size: int):
     """Request an incremental ClickHouse user stats refresh."""
-    _send_stats_request("clickhouse.stats.hourly", entities, batch_size)
+    _send_stats_request("clickhouse.stats.hourly", entities, batch_size=batch_size)
 
 
 @cli.command(name="request_full_stats_refresh")
@@ -133,12 +127,10 @@ def request_hourly_stats(entities: tuple[str], batch_size: int):
               help="Users buffered from the ClickHouse stream before messages are emitted.")
 def request_full_stats_refresh(entities: tuple[str], message_batch_size: int, user_flush_size: int):
     """Request a full ClickHouse user stats refresh."""
-    params = {"message_batch_size": message_batch_size, "user_flush_size": user_flush_size}
-    if not entities:
-        send_request_to_clickhouse("clickhouse.stats.full_refresh", **params)
-        return
-    for entity in entities:
-        send_request_to_clickhouse("clickhouse.stats.full_refresh", entity=entity, **params)
+    _send_stats_request(
+        "clickhouse.stats.full_refresh", entities,
+        message_batch_size=message_batch_size, user_flush_size=user_flush_size,
+    )
 
 
 @cli.command(name="cron_request_all_stats")

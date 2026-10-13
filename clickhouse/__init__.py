@@ -8,6 +8,8 @@ This module provides ClickHouse-based analytics and stats functionality:
 
 Components:
     - request_consumer: Consumes stats requests from CLICKHOUSE_EXCHANGE
-    - request_manage: CLI commands for triggering ClickHouse operations
+    - client: ClickHouse connection settings
     - stats/: Stats computation and caching logic
+
+The CLI commands that send requests live in listenbrainz/clickhouse/request_manage.py.
 """

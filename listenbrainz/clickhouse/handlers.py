@@ -13,15 +13,12 @@ from data.model.user_listening_activity import ListeningActivityRecord
 
 logger = logging.getLogger(__name__)
 
+# The user stats computed by the ClickHouse pipeline and the models their entries are
+# validated with.
 ENTITY_MODELS = {
     "daily_activity": DailyActivityRecord,
     "listening_activity": ListeningActivityRecord,
 }
-
-
-def handle_echo(message):
-    """Echo handler for testing connectivity."""
-    current_app.logger.info(f"ClickHouse echo: {message.get('message', 'no message')}")
 
 
 # CouchDB errors are not caught by the handlers below: the ClickHouse side has already
@@ -45,10 +42,8 @@ def handle_stats_database_start(message):
         return
 
     try:
-        # Create database with format: prefix_range_YYYYMMDD
-        db_name = f"{match[1]}_{match[2]}_{match[3]}"
-        couchdb.create_database(db_name)
-        current_app.logger.info(f"Created CouchDB database: {db_name}")
+        couchdb.create_database(database)
+        current_app.logger.info(f"Created CouchDB database: {database}")
     except HTTPError as e:
         # 412: the database already exists
         if e.response.status_code != 412:
@@ -247,7 +242,6 @@ def handle_schema_initialized(message):
 
 
 RESPONSE_HANDLERS = {
-    "echo": handle_echo,
     "clk_stats_database_start": handle_stats_database_start,
     "clk_stats_database_end": handle_stats_database_end,
     "clk_user_entity": handle_user_entity_stats,

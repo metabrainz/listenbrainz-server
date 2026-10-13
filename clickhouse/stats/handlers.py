@@ -7,20 +7,22 @@ These handlers are invoked by the ClickHouse request consumer via RabbitMQ.
 """
 
 import logging
+from contextlib import closing
 from datetime import datetime
-from typing import Iterator, Optional
+from typing import Callable, Iterator, Optional
 
 from clickhouse import config
+from clickhouse.client import ClickHouseConnection
 from clickhouse.stats.activity_cache_manager import (
     ACTIVITY_STAT_TYPES,
     ActivityStatsCacheManager,
     BulkActivityStatsCacheManager,
 )
+from clickhouse.stats.cache_manager import StatsCacheManager, get_cache_config
 from clickhouse.stats.deleted_listens import import_deleted_listens as _import_deleted_listens
-from clickhouse.stats.cache_manager import get_cache_config
 from clickhouse.stats.ftp import DumpType
 from clickhouse.stats.imported_dumps import record_imported_dump
-from clickhouse.stats.load_dump import import_missing_incremental_dumps, load_dump, load_from_ftp
+from clickhouse.stats.load_dump import describe_load_errors, import_missing_incremental_dumps, load_dump, load_from_ftp
 from clickhouse.stats.schema import ensure_stats_schema
 
 logger = logging.getLogger(__name__)
@@ -34,48 +36,43 @@ def _stats_manager(cache_config, stat_type: str, *, full: bool = False):
     return manager_class(cache_config, stat_type)
 
 
-def _raise_on_dump_errors(result: dict) -> None:
-    errors = result.get('errors') or []
-    if errors:
-        examples = "; ".join(f"{path}: {error}" for path, error in errors[:3])
-        raise RuntimeError(f"{len(errors)} parquet file(s) failed to load: {examples}")
+def _client():
+    return closing(ClickHouseConnection.from_config().connect())
+
+
+def _error(message_type: str, error: Exception, **fields) -> list[dict]:
+    """Log a failed request and return the error result message for it."""
+    logger.error("%s failed: %s", message_type, error, exc_info=True)
+    return [{'type': message_type, 'status': 'error', 'error': str(error), **fields}]
+
+
+def _raise_on_load_errors(result: dict) -> None:
+    if result['errors']:
+        raise RuntimeError(describe_load_errors(result['errors']))
+
+
+def _dump_imported(dump_type: str, result: dict, replace: bool, **fields) -> dict:
+    return {
+        'type': 'clk_dump_imported',
+        'dump_type': dump_type,
+        'status': 'success',
+        'dump_id': result.get('dump_id'),
+        'load_id': result['load_id'],
+        'replace': replace,
+        'total_inserted': result['total_inserted'],
+        'files_completed': result['files_completed'],
+        **fields,
+    }
 
 
 def _load_dump_from_path(dump_path: str, dump_type: str, workers: int = 4, replace: bool = False) -> list[dict]:
-    """
-    Load a Parquet dump into ClickHouse listens table.
-
-    Args:
-        dump_path: Path to directory containing Parquet files
-        dump_type: Dump type label to report in the result message.
-        workers: Number of parallel workers for loading
-        replace: Replace listens with the dump and reset the cache state.
-
-    Returns:
-        List of result messages for the response queue
-    """
+    """Load a directory of Parquet files into the ClickHouse listens table."""
     try:
-        result = load_dump(
-            directory=dump_path,
-            workers=workers,
-            replace=replace,
-            **_ch_kwargs(),
-        )
-        _raise_on_dump_errors(result)
-        return [{
-            'type': 'clk_dump_imported',
-            'dump_type': dump_type,
-            'status': 'success',
-            'dump_path': dump_path,
-            'dump_id': None,
-            'load_id': result['load_id'],
-            'replace': replace,
-            'total_inserted': result['total_inserted'],
-            'files_completed': result['files_completed'],
-        }]
+        result = load_dump(dump_path, ClickHouseConnection.from_config(), workers=workers, replace=replace)
+        _raise_on_load_errors(result)
     except Exception as e:
-        logger.error("Error loading %s dump: %s", dump_type, str(e), exc_info=True)
-        return [{'type': 'clk_dump_imported', 'dump_type': dump_type, 'status': 'error', 'error': str(e)}]
+        return _error('clk_dump_imported', e, dump_type=dump_type)
+    return [_dump_imported(dump_type, result, replace, dump_path=dump_path)]
 
 
 def load_full_dump(dump_path: str, workers: int = 4, replace: bool = True) -> list[dict]:
@@ -93,35 +90,14 @@ def load_incremental_dump(dump_path: str, workers: int = 4) -> list[dict]:
     return _load_dump_from_path(dump_path, "incremental", workers)
 
 
-def _ch_kwargs() -> dict:
-    """Return ClickHouse connection kwargs from config."""
-    return {
-        'host': config.CLICKHOUSE_HOST,
-        'port': config.CLICKHOUSE_PORT,
-        'username': config.CLICKHOUSE_USERNAME,
-        'password': config.CLICKHOUSE_PASSWORD,
-        'database': config.CLICKHOUSE_DATABASE,
-    }
-
-
 def init_schema() -> list[dict]:
-    """
-    Create the ClickHouse stats schema.
-
-    Returns:
-        List of result messages for the response queue
-    """
+    """Create the ClickHouse stats schema."""
     try:
-        import clickhouse_connect
-        ch_client = clickhouse_connect.get_client(**_ch_kwargs())
-        try:
+        with _client() as ch_client:
             ensure_stats_schema(ch_client)
-        finally:
-            ch_client.close()
-        return [{'type': 'clk_schema_initialized', 'status': 'success'}]
     except Exception as e:
-        logger.error("Error initializing ClickHouse schema: %s", str(e), exc_info=True)
-        return [{'type': 'clk_schema_initialized', 'status': 'error', 'error': str(e)}]
+        return _error('clk_schema_initialized', e)
+    return [{'type': 'clk_schema_initialized', 'status': 'success'}]
 
 
 def import_full_dump(workers: int = 4, replace: bool = True) -> list[dict]:
@@ -130,15 +106,11 @@ def import_full_dump(workers: int = 4, replace: bool = True) -> list[dict]:
     By default replaces the existing listens / stats (full dump semantics).
     """
     try:
-        result = load_from_ftp(dump_type=DumpType.FULL, workers=workers, replace=replace, **_ch_kwargs())
-        _raise_on_dump_errors(result)
-        return [{'type': 'clk_dump_imported', 'dump_type': 'full', 'status': 'success',
-                 'dump_id': result['dump_id'], 'load_id': result['load_id'], 'replace': replace,
-                 'total_inserted': result['total_inserted'],
-                 'files_completed': result['files_completed']}]
+        result = load_from_ftp(DumpType.FULL, ClickHouseConnection.from_config(), workers=workers, replace=replace)
+        _raise_on_load_errors(result)
     except Exception as e:
-        logger.error("Error importing full dump: %s", str(e), exc_info=True)
-        return [{'type': 'clk_dump_imported', 'dump_type': 'full', 'status': 'error', 'error': str(e)}]
+        return _error('clk_dump_imported', e, dump_type='full')
+    return [_dump_imported('full', result, replace)]
 
 
 def import_incremental_dump(workers: int = 4, max_dumps: Optional[int] = None) -> list[dict]:
@@ -157,22 +129,17 @@ def import_incremental_dump(workers: int = 4, max_dumps: Optional[int] = None) -
         for the failure that stopped the run, if any.
     """
     try:
-        result = import_missing_incremental_dumps(workers=workers, max_dumps=max_dumps, **_ch_kwargs())
+        result = import_missing_incremental_dumps(
+            ClickHouseConnection.from_config(), workers=workers, max_dumps=max_dumps,
+        )
     except Exception as e:
-        logger.error("Error importing incremental dumps: %s", str(e), exc_info=True)
-        return [{'type': 'clk_dump_imported', 'dump_type': 'incremental', 'status': 'error', 'error': str(e)}]
+        return _error('clk_dump_imported', e, dump_type='incremental')
 
-    messages = [{
-        'type': 'clk_dump_imported', 'dump_type': 'incremental', 'status': 'success',
-        'dump_id': dump['dump_id'], 'load_id': dump['load_id'], 'replace': False,
-        'total_inserted': dump['total_inserted'],
-        'files_completed': dump['files_completed'],
-        'pending': result['pending'],
-    } for dump in result['imported']]
-
+    pending = result['pending']
+    messages = [_dump_imported('incremental', dump, False, pending=pending) for dump in result['imported']]
     messages.extend({
         'type': 'clk_dump_imported', 'dump_type': 'incremental', 'status': 'error',
-        'dump_id': dump_id, 'pending': result['pending'], 'error': error,
+        'dump_id': dump_id, 'pending': pending, 'error': error,
     } for dump_id, error in result['errors'])
 
     if not messages:
@@ -202,25 +169,16 @@ def record_dump_import(dump_id: int, dump_type: str, imported_at: Optional[str] 
     try:
         parsed_type = DumpType(dump_type)
     except ValueError:
-        error = f"Unknown dump type {dump_type!r}, expected one of {[t.value for t in DumpType]}"
-        logger.error(error)
-        return [{'type': 'clk_dump_import_recorded', 'status': 'error', 'dump_id': dump_id, 'error': error}]
+        error = ValueError(f"Unknown dump type {dump_type!r}, expected one of {[t.value for t in DumpType]}")
+        return _error('clk_dump_import_recorded', error, dump_id=dump_id)
 
     try:
-        parsed_at = None
-        if imported_at:
-            parsed_at = datetime.fromisoformat(imported_at)
-
-        import clickhouse_connect
-        ch_client = clickhouse_connect.get_client(**_ch_kwargs())
-        try:
+        parsed_at = datetime.fromisoformat(imported_at) if imported_at else None
+        with _client() as ch_client:
             ensure_stats_schema(ch_client)
             record_imported_dump(ch_client, dump_id, parsed_type, parsed_at)
-        finally:
-            ch_client.close()
     except Exception as e:
-        logger.error("Error recording dump %s as imported: %s", dump_id, str(e), exc_info=True)
-        return [{'type': 'clk_dump_import_recorded', 'status': 'error', 'dump_id': dump_id, 'error': str(e)}]
+        return _error('clk_dump_import_recorded', e, dump_id=dump_id)
 
     return [{
         'type': 'clk_dump_import_recorded', 'status': 'success',
@@ -240,20 +198,49 @@ def import_deleted_listens(batch_size: int = 10_000) -> list[dict]:
         List of result messages for the response queue
     """
     try:
-        listens_dsn = config.LISTENS_DSN
-        if not listens_dsn:
+        if not config.LISTENS_DSN:
             raise ValueError("LISTENS_DSN is not configured")
-
-        import clickhouse_connect
-        ch_client = clickhouse_connect.get_client(**_ch_kwargs())
-        try:
-            summary = _import_deleted_listens(listens_dsn, ch_client, batch_size=batch_size)
-        finally:
-            ch_client.close()
-        return [{'type': 'clk_deleted_listens_imported', 'status': 'success', **summary}]
+        with _client() as ch_client:
+            summary = _import_deleted_listens(config.LISTENS_DSN, ch_client, batch_size=batch_size)
     except Exception as e:
-        logger.error("Error importing deleted listens: %s", str(e), exc_info=True)
-        return [{'type': 'clk_deleted_listens_imported', 'status': 'error', 'error': str(e)}]
+        return _error('clk_deleted_listens_imported', e)
+    return [{'type': 'clk_deleted_listens_imported', 'status': 'success', **summary}]
+
+
+def _run_stats_job(
+    job: str,
+    entity: Optional[str],
+    run: Callable[[StatsCacheManager], Iterator[dict]],
+) -> Iterator[dict]:
+    """Run ``run`` on the manager of ``entity`` (or of every stat type) and yield its messages.
+
+    A failing stat type is reported with a clk_stats_error message and does not stop the
+    others; a clk_stats_complete message closes the job.
+    """
+    if entity and entity not in STAT_TYPES:
+        yield {'type': 'clk_stats_error', 'entity': entity, 'job': job, 'error': f"Unknown entity: {entity}"}
+        return
+    entities_to_process = [entity] if entity else list(STAT_TYPES)
+    logger.info("Running %s stats job for entities: %s", job, entities_to_process)
+
+    cache_config = get_cache_config()
+    for entity_type in entities_to_process:
+        manager = _stats_manager(cache_config, entity_type, full=job == 'full_refresh')
+        try:
+            manager.connect()
+            message_count = 0
+            for message in run(manager):
+                yield message
+                message_count += 1
+            logger.info("%s job for %s yielded %d messages", job, entity_type, message_count)
+        except Exception as e:
+            logger.error("Error in %s job for %s: %s", job, entity_type, e, exc_info=True)
+            yield {'type': 'clk_stats_error', 'entity': entity_type, 'job': job, 'error': str(e)}
+        finally:
+            if manager.ch_client is not None:
+                manager.ch_client.close()
+
+    yield {'type': 'clk_stats_complete', 'job': job, 'entities': entities_to_process}
 
 
 def run_hourly_stats_job(
@@ -270,48 +257,7 @@ def run_hourly_stats_job(
     Yields:
         Result messages for the response queue.
     """
-    cache_config = get_cache_config()
-
-    if entity:
-        if entity not in STAT_TYPES:
-            yield {
-                'type': 'clk_stats_error',
-                'entity': entity,
-                'job': 'hourly',
-                'error': f"Unknown entity: {entity}",
-            }
-            return
-        entities_to_process = [entity]
-    else:
-        entities_to_process = list(STAT_TYPES)
-
-    logger.info("Running hourly stats job for entities: %s", entities_to_process)
-
-    for entity_type in entities_to_process:
-        try:
-            manager = _stats_manager(cache_config, entity_type)
-            manager.connect()
-
-            message_count = 0
-            for message in manager.run_hourly_job(batch_size=batch_size):
-                yield message
-                message_count += 1
-
-            logger.info("Hourly job for %s yielded %d messages", entity_type, message_count)
-        except Exception as e:
-            logger.error("Error in hourly job for %s: %s", entity_type, e, exc_info=True)
-            yield {
-                'type': 'clk_stats_error',
-                'entity': entity_type,
-                'job': 'hourly',
-                'error': str(e),
-            }
-
-    yield {
-        'type': 'clk_stats_complete',
-        'job': 'hourly',
-        'entities': entities_to_process,
-    }
+    return _run_stats_job('hourly', entity, lambda manager: manager.run_hourly_job(batch_size=batch_size))
 
 
 def run_full_stats_refresh(
@@ -336,48 +282,7 @@ def run_full_stats_refresh(
     Yields:
         Result messages for the response queue.
     """
-    cache_config = get_cache_config()
-
-    if entity:
-        if entity not in STAT_TYPES:
-            yield {
-                'type': 'clk_stats_error',
-                'entity': entity,
-                'job': 'full_refresh',
-                'error': f"Unknown entity: {entity}",
-            }
-            return
-        entities_to_process = [entity]
-    else:
-        entities_to_process = list(STAT_TYPES)
-
-    logger.info("Running full stats refresh for entities: %s", entities_to_process)
-
-    for entity_type in entities_to_process:
-        try:
-            manager = _stats_manager(cache_config, entity_type, full=True)
-            manager.connect()
-
-            message_count = 0
-            for message in manager.run_full_refresh(
-                message_batch_size=message_batch_size,
-                user_flush_size=user_flush_size,
-            ):
-                yield message
-                message_count += 1
-
-            logger.info("Full refresh for %s yielded %d messages", entity_type, message_count)
-        except Exception as e:
-            logger.error("Error in full refresh for %s: %s", entity_type, e, exc_info=True)
-            yield {
-                'type': 'clk_stats_error',
-                'entity': entity_type,
-                'job': 'full_refresh',
-                'error': str(e),
-            }
-
-    yield {
-        'type': 'clk_stats_complete',
-        'job': 'full_refresh',
-        'entities': entities_to_process,
-    }
+    return _run_stats_job('full_refresh', entity, lambda manager: manager.run_full_refresh(
+        message_batch_size=message_batch_size,
+        user_flush_size=user_flush_size,
+    ))

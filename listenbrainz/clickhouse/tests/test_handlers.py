@@ -108,7 +108,7 @@ class ClickHouseHandlerTestCase(ClickHouseTestCase):
 
     def test_request_to_clickhouse_to_couchdb_matches_spark_fixtures(self):
         self.load_spark_listens()
-        settings = {"CLICKHOUSE_" + key.upper(): value for key, value in self.connection.items()}
+        settings = self.config_settings()
         consumer = ClickHouseRequestConsumer()
         dispatch = {
             "clk_stats_database_start": handle_stats_database_start,

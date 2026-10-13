@@ -18,6 +18,7 @@ class DumpCatchupTestCase(ClickHouseTestCase):
         patcher = mock.patch("clickhouse.stats.load_dump.FTPDumpDownloader", autospec=True)
         downloader = patcher.start().return_value
         self.addCleanup(patcher.stop)
+        downloader.__enter__.return_value = downloader
         downloader.list_dump_ids.return_value = [(i, f"incremental-dump-{i}") for i in (1, 2, 3)]
         downloader.download_dump_archive.side_effect = self.archive
         self.corrupt = None
@@ -41,29 +42,29 @@ class DumpCatchupTestCase(ClickHouseTestCase):
         return str(path), dump_id
 
     def full_import(self):
-        result = load_from_ftp(dump_type=DumpType.FULL, replace=True, **self.connection)
+        result = load_from_ftp(DumpType.FULL, self.connection, replace=True)
         self.assertEqual(result["errors"], [])
         self.assertEqual(get_latest_full_dump(self.client)["dump_id"], 1)
         return self.client.query("SELECT count() FROM listens").first_row[0]
 
     def test_catchup_imports_in_order_and_resumes_with_limit(self):
         before = self.full_import()
-        first = import_missing_incremental_dumps(max_dumps=1, **self.connection)
+        first = import_missing_incremental_dumps(self.connection, max_dumps=1)
         self.assertEqual([d["dump_id"] for d in first["imported"]], [2])
         self.assertEqual(first["pending"], 1)
-        second = import_missing_incremental_dumps(**self.connection)
+        second = import_missing_incremental_dumps(self.connection)
         self.assertEqual([d["dump_id"] for d in second["imported"]], [3])
         self.assertEqual(second["pending"], 0)
         self.assertEqual(self.downloads, [1, 2, 3])
         self.assertEqual(get_incremental_dumps_since_latest_full(self.client), {2, 3})
         self.assertGreater(self.client.query("SELECT count() FROM listens").first_row[0], before)
-        self.assertEqual(import_missing_incremental_dumps(**self.connection)["imported"], [])
+        self.assertEqual(import_missing_incremental_dumps(self.connection)["imported"], [])
         self.assertEqual(self.downloads, [1, 2, 3])
 
     def test_corrupt_dump_is_not_recorded_or_skipped_and_can_be_retried(self):
         before = self.full_import()
         self.corrupt = 2
-        failed = import_missing_incremental_dumps(**self.connection)
+        failed = import_missing_incremental_dumps(self.connection)
         self.assertEqual(failed["imported"], [])
         self.assertEqual(failed["errors"][0][0], 2)
         self.assertEqual(failed["pending"], 2)
@@ -71,27 +72,27 @@ class DumpCatchupTestCase(ClickHouseTestCase):
         self.assertEqual(self.client.query("SELECT count() FROM listens").first_row[0], before)
         self.assertEqual(self.downloads, [1, 2])
         self.corrupt = None
-        retried = import_missing_incremental_dumps(**self.connection)
+        retried = import_missing_incremental_dumps(self.connection)
         self.assertEqual([d["dump_id"] for d in retried["imported"]], [2, 3])
         self.assertEqual(retried["errors"], [])
 
     def test_network_failure_stops_before_later_dumps(self):
         self.full_import()
         self.unavailable = 2
-        result = import_missing_incremental_dumps(**self.connection)
+        result = import_missing_incremental_dumps(self.connection)
         self.assertEqual(result["errors"], [(2, "FTP timed out")])
         self.assertEqual(self.downloads, [1, 2])
         self.assertEqual(get_incremental_dumps_since_latest_full(self.client), set())
 
     def test_without_full_import_only_latest_is_loaded_once(self):
-        result = import_missing_incremental_dumps(**self.connection)
+        result = import_missing_incremental_dumps(self.connection)
         self.assertEqual([d["dump_id"] for d in result["imported"]], [3])
         self.assertGreater(self.client.query("SELECT count() FROM listens").first_row[0], 0)
-        self.assertEqual(import_missing_incremental_dumps(**self.connection)["imported"], [])
+        self.assertEqual(import_missing_incremental_dumps(self.connection)["imported"], [])
         self.assertEqual(self.downloads, [3])
 
     def test_import_handlers_report_loaded_dumps_and_errors(self):
-        settings = {"CLICKHOUSE_" + key.upper(): value for key, value in self.connection.items()}
+        settings = self.config_settings()
         with mock.patch.multiple(handlers.config, **settings):
             full = handlers.import_full_dump()
             self.assertEqual(full[0]["status"], "success")

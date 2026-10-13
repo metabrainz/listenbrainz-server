@@ -81,23 +81,17 @@ class ClickHouseReader(ConsumerMixin):
         """Handle incoming message from ClickHouse result queue."""
         try:
             response = orjson.loads(message.body)
+            response_type = response.get("type")
         except Exception:
             self.app.logger.error("Error parsing message: %s", message.body, exc_info=True)
             message.ack()
             return
 
-        try:
-            response_type = response.get("type")
-            if not response_type:
-                self.app.logger.error("No type in message: %s", json.dumps(response, indent=2))
-                message.ack()
-                return
-
-            self.app.logger.info("Received ClickHouse message: %s", response_type)
-        except Exception:
-            self.app.logger.error("Error processing message: %s", json.dumps(response, indent=2), exc_info=True)
+        if not response_type:
+            self.app.logger.error("No type in message: %s", json.dumps(response, indent=2))
             message.ack()
             return
+        self.app.logger.info("Received ClickHouse message: %s", response_type)
 
         handler = get_handler(response_type)
         if not handler:
@@ -132,7 +126,7 @@ class ClickHouseReader(ConsumerMixin):
                 channel,
                 prefetch_count=PREFETCH_COUNT,
                 queues=[self.clickhouse_result_queue],
-                on_message=lambda msg: self.callback(msg)
+                on_message=self.callback,
             )
         ]
 

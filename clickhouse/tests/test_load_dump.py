@@ -66,7 +66,7 @@ class DumpDataTestCase(ClickHouseTestCase):
         with TemporaryDirectory() as tmp:
             shutil.copy(TEST_DATA_PATH / "incremental-dump-2" / "0.parquet", Path(tmp) / "good.parquet")
             (Path(tmp) / "bad.parquet").write_bytes(b"not parquet")
-            failed = load_dump(tmp, **self.connection, workers=2, replace=True)
+            failed = load_dump(tmp, self.connection, workers=2, replace=True)
         self.assertEqual(len(failed["errors"]), 1)
         self.assertEqual(self.rows(), before)
         self.assertEqual(self.client.query("SELECT count() FROM user_stats_cache_state").first_row[0], state)
@@ -92,7 +92,7 @@ class DumpDataTestCase(ClickHouseTestCase):
         table = pa.table({"user_id": [1], "listened_at": [old], "created": [old], "recording_msid": ["backfilled"]})
         with TemporaryDirectory() as tmp:
             pq.write_table(table, Path(tmp) / "listens.parquet")
-            self.assertEqual(load_dump(tmp, **self.connection)["errors"], [])
+            self.assertEqual(load_dump(tmp, self.connection)["errors"], [])
         messages = list(self.manager(ActivityStatsCacheManager, "daily_activity").run_hourly_job())
         self.assertEqual({u["user_id"] for m in messages for u in m.get("data", [])}, {1})
 
@@ -103,7 +103,7 @@ class DumpDataTestCase(ClickHouseTestCase):
                           "created": [ts, ts + timedelta(seconds=1), ts], "recording_msid": ["old", "new", "other"]})
         with TemporaryDirectory() as tmp:
             pq.write_table(table, Path(tmp) / "listens.parquet")
-            result = load_dump(tmp, **self.connection)
+            result = load_dump(tmp, self.connection)
         self.assertEqual(result["errors"], [])
         self.assertEqual({(uid, msid) for uid, _, msid in self.rows()}, {(1, "new"), (2, "other")})
 
@@ -113,13 +113,13 @@ class DumpDataTestCase(ClickHouseTestCase):
         with TemporaryDirectory() as tmp:
             shutil.copy(TEST_DATA_PATH / "incremental-dump-2" / "0.parquet", Path(tmp) / "good.parquet")
             (Path(tmp) / "bad.parquet").write_bytes(b"not parquet")
-            failed = load_dump(tmp, **self.connection, workers=2)
+            failed = load_dump(tmp, self.connection, workers=2)
             self.assertEqual(len(failed["errors"]), 1)
             self.assertEqual(failed["files_completed"], 1)
             self.assertEqual(self.rows(), before)
             self.assertGreater(self.client.query("SELECT count() FROM raw_listens").first_row[0], 0)
             (Path(tmp) / "bad.parquet").unlink()
-            retried = load_dump(tmp, **self.connection)
+            retried = load_dump(tmp, self.connection)
             self.assertEqual(retried["errors"], [])
         self.assertGreater(len(self.rows()), len(before))
         self.assertEqual(self.client.query("SELECT DISTINCT load_id FROM raw_listens").result_rows, [(failed["load_id"],)])

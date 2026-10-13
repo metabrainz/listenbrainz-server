@@ -11,7 +11,7 @@ from clickhouse.stats.imported_dumps import get_latest_full_dump, get_incrementa
 class DatabaseHandlerTestCase(ClickHouseTestCase):
     def setUp(self):
         super().setUp()
-        settings = {"CLICKHOUSE_" + key.upper(): value for key, value in self.connection.items()}
+        settings = self.config_settings()
         patcher = mock.patch.multiple(handlers.config, **settings)
         patcher.start()
         self.addCleanup(patcher.stop)

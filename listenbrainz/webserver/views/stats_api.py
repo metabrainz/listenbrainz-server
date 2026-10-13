@@ -27,15 +27,12 @@ from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
                                                     get_non_negative_param, is_valid_uuid)
 from listenbrainz.webserver.utils import parse_boolean_arg
+from listenbrainz.clickhouse.handlers import ENTITY_MODELS as CLICKHOUSE_ENTITIES
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
-# Stats for these entities are also computed by the ClickHouse pipeline and can be
-# served from it by passing ``clickhouse=true`` to the corresponding endpoints.
-CLICKHOUSE_ENTITIES = {
-    "daily_activity",
-    "listening_activity",
-}
+# Stats for the entities in CLICKHOUSE_ENTITIES are also computed by the ClickHouse
+# pipeline and can be served from it by passing ``clickhouse=true`` to the endpoints.
 
 
 @stats_api_bp.get("/user/<mb_username:user_name>/artists")

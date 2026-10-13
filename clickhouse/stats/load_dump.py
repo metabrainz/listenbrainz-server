@@ -31,23 +31,21 @@ The local and FTP paths mirror the patterns in listenbrainz_spark/dump/:
 """
 
 import logging
-import shutil
 import subprocess
-import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from threading import Lock
+from tempfile import TemporaryDirectory
 from uuid import uuid4
 
-import clickhouse_connect
 from clickhouse_connect.driver import Client
 import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
+from clickhouse.client import ClickHouseConnection
 from clickhouse.stats.cache_manager import mark_users_for_recompute
-from clickhouse.stats.ftp import DumpType, FTPDumpDownloader
+from clickhouse.stats.ftp import DumpType, FTPDumpDownloader, parse_dump_id
 from clickhouse.stats.imported_dumps import (
     get_incremental_dumps_since_latest_full,
     get_latest_full_dump,
@@ -72,67 +70,6 @@ RAW_LISTEN_COLUMNS = [
     "recording_msid",
 ]
 
-# Source rows for one load: the load's raw_listens partition (optionally one user_id
-# bucket of it), minus listens that already exist in `listens`, listens deleted in LB
-# and listens of users whose history was deleted, deduplicated on the listen key
-# (keeping the most recently created copy).
-#
-# The IN-sets are kept small: only users present in the load (bucket) are consulted,
-# and for `listens` only rows within the load's `created` range -- a re-delivered
-# listen has the same `created` as the copy already in `listens`, so nothing outside
-# that range can match. A deleted listen is matched on `created` too (like the Spark
-# pipeline does): a listen deleted and later re-submitted gets a new `created` and
-# must be loaded again.
-RAW_LISTENS_SOURCE = """
-    SELECT
-        r.listened_at AS listened_at,
-        r.created AS created,
-        r.user_id AS user_id,
-        r.recording_msid AS recording_msid
-    FROM raw_listens AS r
-    LEFT JOIN (
-        SELECT user_id, max(max_created) AS max_created
-        FROM deleted_user_listen_history
-        GROUP BY user_id
-    ) AS duh ON r.user_id = duh.user_id
-    WHERE r.load_id = {load_id:String} __CHUNK_FILTER_R__
-      AND r.created > duh.max_created
-      AND (r.user_id, r.listened_at, r.recording_msid) NOT IN (
-            SELECT user_id, listened_at, recording_msid
-            FROM __LISTENS_TABLE__
-            WHERE user_id IN (
-                SELECT DISTINCT user_id FROM raw_listens
-                WHERE load_id = {load_id:String} __CHUNK_FILTER__
-            )
-              AND created >= (
-                SELECT min(created) FROM raw_listens
-                WHERE load_id = {load_id:String} __CHUNK_FILTER__
-              )
-              AND created <= (
-                SELECT max(created) FROM raw_listens
-                WHERE load_id = {load_id:String} __CHUNK_FILTER__
-              )
-      )
-      AND (r.user_id, r.listened_at, r.recording_msid, r.created) NOT IN (
-            SELECT user_id, listened_at, recording_msid, created
-            FROM deleted_listens
-            WHERE user_id IN (
-                SELECT DISTINCT user_id FROM raw_listens
-                WHERE load_id = {load_id:String} __CHUNK_FILTER__
-            )
-      )
-    ORDER BY r.user_id, r.listened_at, r.recording_msid, r.created DESC
-    LIMIT 1 BY r.user_id, r.listened_at, r.recording_msid
-"""
-
-# End-of-load: copy the load's (filtered, deduplicated) raw listens into listens.
-PROCESS_RAW_LISTENS = """
-INSERT INTO __LISTENS_TABLE__
-    (listened_at, created, user_id, recording_msid)
-SELECT listened_at, created, user_id, recording_msid
-FROM (__RAW_LISTENS_SOURCE__)
-"""
-
 # Spill the dedup sort and the IN-set hash tables to disk if the working set
 # exceeds ~8GB. max_memory_usage raises the per-query cap above the 10GB default
 # to give spill enough room to actually engage before the memory tracker kills
@@ -144,7 +81,7 @@ PROCESS_RAW_LISTENS_SETTINGS = {
     "max_memory_usage": 32 * 1024 * 1024 * 1024,
 }
 
-# Split PROCESS_RAW_LISTENS into N sequential buckets by user_id % N so peak
+# Split the end-of-load query into N sequential buckets by user_id % N so peak
 # memory and temp-disk per query stay bounded. raw_listens is ORDER BY
 # (user_id, ...) so each bucket reads a contiguous slice of granules. The chunk
 # count is chosen from the load size: one bucket per
@@ -157,6 +94,7 @@ PROCESS_RAW_LISTENS_ROWS_PER_CHUNK = 100_000_000
 def choose_process_chunks(total_rows: int) -> int:
     """Pick how many user_id buckets to split the end-of-load join into."""
     return max(1, -(-total_rows // PROCESS_RAW_LISTENS_ROWS_PER_CHUNK))
+
 
 # Cache state derived from the listens. A full dump load with replace=True truncates
 # it once the dump has replaced listens. deleted_listens / deleted_user_listen_history
@@ -183,55 +121,74 @@ MARK_BACKFILLED_USERS = """
 
 
 def build_process_raw_listens_query(chunks: int = 1, chunk: int = 0, target_table: str = LISTENS_TABLE) -> str:
-    """Return the INSERT...SELECT populating ``target_table`` from one load's raw_listens.
+    """Return the INSERT...SELECT copying one load's raw_listens into ``target_table``.
 
+    The rows copied are the load's raw_listens partition (with ``chunks > 1`` only the
+    ``user_id % chunks = chunk`` bucket of it), minus listens that already exist in
+    ``target_table``, listens deleted in LB and listens of users whose history was
+    deleted, deduplicated on the listen key (keeping the most recently created copy).
     The load is selected at execution time via the ``load_id`` query parameter.
-    With ``chunks > 1`` only the ``user_id % chunks = chunk`` bucket is processed.
+
+    The IN-sets are kept small: only users present in the load (bucket) are consulted,
+    and for ``target_table`` only rows within the load's ``created`` range -- a
+    re-delivered listen has the same ``created`` as the copy already loaded, so nothing
+    outside that range can match. A deleted listen is matched on ``created`` too (like
+    the Spark pipeline does): a listen deleted and later re-submitted gets a new
+    ``created`` and must be loaded again.
     """
-    chunk_filter = f"AND user_id % {chunks} = {chunk}" if chunks > 1 else ""
-    source = (
-        RAW_LISTENS_SOURCE
-        .replace("__CHUNK_FILTER_R__", chunk_filter.replace("user_id", "r.user_id"))
-        .replace("__CHUNK_FILTER__", chunk_filter)
-    )
-    return (
-        PROCESS_RAW_LISTENS
-        .replace("__RAW_LISTENS_SOURCE__", source)
-        .replace("__LISTENS_TABLE__", target_table)
-    )
+    bucket = f"AND user_id % {chunks} = {chunk}" if chunks > 1 else ""
+    load_rows = f"FROM raw_listens WHERE load_id = {{load_id:String}} {bucket}"
+    # A user without a deleted history has no row on the right side of the LEFT JOIN, so
+    # duh.max_created is the column default (the epoch) and every listen is newer. This
+    # relies on join_use_nulls = 0 (the default): with NULLs the comparison would drop
+    # every listen of such a user.
+    return f"""
+        INSERT INTO {target_table} (listened_at, created, user_id, recording_msid)
+        SELECT
+            r.listened_at AS listened_at,
+            r.created AS created,
+            r.user_id AS user_id,
+            r.recording_msid AS recording_msid
+        FROM raw_listens AS r
+        LEFT JOIN (
+            SELECT user_id, max(max_created) AS max_created
+            FROM deleted_user_listen_history
+            GROUP BY user_id
+        ) AS duh ON r.user_id = duh.user_id
+        WHERE r.load_id = {{load_id:String}} {bucket.replace("user_id", "r.user_id")}
+          AND r.created > duh.max_created
+          AND (r.user_id, r.listened_at, r.recording_msid) NOT IN (
+                SELECT user_id, listened_at, recording_msid
+                FROM {target_table}
+                WHERE user_id IN (SELECT DISTINCT user_id {load_rows})
+                  AND created >= (SELECT min(created) {load_rows})
+                  AND created <= (SELECT max(created) {load_rows})
+          )
+          AND (r.user_id, r.listened_at, r.recording_msid, r.created) NOT IN (
+                SELECT user_id, listened_at, recording_msid, created
+                FROM deleted_listens
+                WHERE user_id IN (SELECT DISTINCT user_id {load_rows})
+          )
+        ORDER BY r.user_id, r.listened_at, r.recording_msid, r.created DESC
+        LIMIT 1 BY r.user_id, r.listened_at, r.recording_msid
+    """
+
+
+def describe_load_errors(errors: list[tuple[str, str]]) -> str:
+    """Summarise the (file, error) pairs of a failed load."""
+    examples = "; ".join(f"{path}: {error}" for path, error in errors[:3])
+    return f"{len(errors)} parquet file(s) failed to load: {examples}"
 
 
 # =============================================================================
 # ClickHouse client
 # =============================================================================
 
-class LoadProgress:
-    """Thread-safe progress tracker for parallel loading."""
-
-    def __init__(self):
-        self.lock = Lock()
-        self.total_inserted = 0
-        self.files_completed = 0
-
-    def update(self, rows: int):
-        with self.lock:
-            self.total_inserted += rows
-            self.files_completed += 1
-
-    def get(self) -> tuple[int, int]:
-        with self.lock:
-            return self.total_inserted, self.files_completed
-
-
 PROCESS_SEND_RECEIVE_TIMEOUT = 7200
 
 
-def create_client(
-    host: str, port: int, username: str, password: str, database: str,
-    send_receive_timeout: int = 300,
-) -> Client:
-    return clickhouse_connect.get_client(
-        host=host, port=port, username=username, password=password, database=database,
+def create_client(connection: ClickHouseConnection, send_receive_timeout: int = 300) -> Client:
+    return connection.connect(
         compress=False,
         form_encode_query_params=True,
         session_id=f"listenbrainz_load_dump_{uuid4().hex}",
@@ -281,13 +238,7 @@ def process_raw_listens(client: Client, load_id: str, chunks: int = 1, target_ta
     :func:`choose_process_chunks`.
     """
     parameters = {"load_id": load_id}
-    if chunks <= 1:
-        client.command(
-            build_process_raw_listens_query(target_table=target_table),
-            parameters=parameters, settings=PROCESS_RAW_LISTENS_SETTINGS,
-        )
-        return
-
+    chunks = max(chunks, 1)
     for i in range(chunks):
         logger.info("Processing raw_listens bucket %d/%d", i + 1, chunks)
         t0 = time.time()
@@ -338,27 +289,17 @@ def mark_backfilled_users(client: Client, load_id: str) -> None:
 def _load_parquet_file(
     file_path: Path,
     load_id: str,
-    host: str, port: int, username: str, password: str, database: str,
-    progress: LoadProgress = None,
+    connection: ClickHouseConnection,
     batch_size: int = 200_000,
 ) -> int:
-    client = create_client(host, port, username, password, database)
+    """Insert one Parquet file into the load's raw_listens partition; returns its row count."""
+    client = create_client(connection)
     try:
         parquet_file = pq.ParquetFile(file_path)
-        total_rows = parquet_file.metadata.num_rows
-        if total_rows == 0:
-            return 0
-
         for batch in parquet_file.iter_batches(batch_size=batch_size):
             listen_table = build_raw_listens_arrow_table(pa.Table.from_batches([batch]), load_id)
-            client.insert_arrow(
-                table=RAW_LISTENS_TABLE,
-                arrow_table=listen_table,
-            )
-
-        if progress:
-            progress.update(total_rows)
-        return total_rows
+            client.insert_arrow(table=RAW_LISTENS_TABLE, arrow_table=listen_table)
+        return parquet_file.metadata.num_rows
     finally:
         client.close()
 
@@ -373,11 +314,7 @@ def find_parquet_files(directory: Path) -> list[Path]:
 
 def load_dump(
     directory: str,
-    host: str = "localhost",
-    port: int = 8123,
-    username: str = "default",
-    password: str = "",
-    database: str = "default",
+    connection: ClickHouseConnection,
     workers: int = 4,
     process_chunks: int | None = None,
     replace: bool = False,
@@ -408,34 +345,33 @@ def load_dump(
 
     logger.info("Found %d parquet files, loading with %d workers (load_id=%s)", len(parquet_files), workers, load_id)
 
-    client = create_client(host, port, username, password, database)
-    logger.info("Connected to ClickHouse at %s:%s", host, port)
+    client = create_client(connection)
+    logger.info("Connected to ClickHouse at %s:%s", connection.host, connection.port)
     ensure_stats_schema(client)
     client.close()
 
-    progress = LoadProgress()
     start_time = time.time()
+    total_inserted, files_completed = 0, 0
     errors = []
 
     with ThreadPoolExecutor(max_workers=workers) as executor:
-        futures = {
-            executor.submit(_load_parquet_file, f, load_id, host, port, username, password, database, progress): f
-            for f in parquet_files
-        }
+        futures = {executor.submit(_load_parquet_file, f, load_id, connection): f for f in parquet_files}
         for future in as_completed(futures):
             file_path = futures[future]
             try:
-                future.result()
-                total, completed = progress.get()
+                total_inserted += future.result()
+                files_completed += 1
                 elapsed = time.time() - start_time
-                rate = total / elapsed if elapsed > 0 else 0
-                logger.info("[%d/%d] %s rows | %s rows/sec", completed, len(parquet_files), f"{total:,}", f"{rate:,.0f}")
+                rate = total_inserted / elapsed if elapsed > 0 else 0
+                logger.info(
+                    "[%d/%d] %s rows | %s rows/sec",
+                    files_completed, len(parquet_files), f"{total_inserted:,}", f"{rate:,.0f}",
+                )
             except Exception as e:
                 errors.append((str(file_path), str(e)))
                 logger.error("Error loading %s: %s", file_path, e)
 
     ingest_elapsed = time.time() - start_time
-    total_inserted, files_completed = progress.get()
     logger.info(
         "Ingested %s rows into raw_listens in %.1fs",
         f"{total_inserted:,}", ingest_elapsed,
@@ -446,10 +382,7 @@ def load_dump(
         for path, error in errors[:10]:
             logger.error("  %s: %s", path, error)
 
-    process_client = create_client(
-        host, port, username, password, database,
-        send_receive_timeout=PROCESS_SEND_RECEIVE_TIMEOUT,
-    )
+    process_client = create_client(connection, send_receive_timeout=PROCESS_SEND_RECEIVE_TIMEOUT)
     try:
         if errors:
             # Leave the partition in place for inspection; the retry (a new load_id)
@@ -546,22 +479,20 @@ def _find_dump_archive(base_dir: Path, dump_id: int = None, dump_type: DumpType 
     """
     suffix = f"-{dump_type.value}"
     dump_dirs = sorted(
-        [d for d in base_dir.iterdir() if d.is_dir() and d.name.startswith("listenbrainz-dump-") and d.name.endswith(suffix)],
-        key=lambda d: int(d.name.split("-")[2]),
+        (parse_dump_id(d.name), d) for d in base_dir.iterdir()
+        if d.is_dir() and d.name.startswith("listenbrainz-dump-") and d.name.endswith(suffix)
     )
 
     if not dump_dirs:
         raise ValueError(f"No {dump_type.value} dump directories found in {base_dir}")
 
     if dump_id is not None:
-        matches = [d for d in dump_dirs if int(d.name.split("-")[2]) == dump_id]
+        matches = [(found_id, d) for found_id, d in dump_dirs if found_id == dump_id]
         if not matches:
             raise ValueError(f"Dump {dump_id} not found in {base_dir}")
-        dump_dir = matches[0]
+        found_id, dump_dir = matches[0]
     else:
-        dump_dir = dump_dirs[-1]
-
-    found_id = int(dump_dir.name.split("-")[2])
+        found_id, dump_dir = dump_dirs[-1]
 
     archives = [
         f for f in dump_dir.iterdir()
@@ -573,15 +504,37 @@ def _find_dump_archive(base_dir: Path, dump_id: int = None, dump_type: DumpType 
     return archives[0], found_id
 
 
+def _load_archive(
+    archive_path: Path,
+    dump_id: int,
+    dump_type: DumpType,
+    connection: ClickHouseConnection,
+    **load_kwargs,
+) -> dict:
+    """Extract a dump archive, load it and, if it loaded cleanly, record it in ``imported_dumps``.
+
+    A load that left parquet files behind is not recorded, so the next catch-up retries it.
+    """
+    with TemporaryDirectory(prefix="clickhouse_dump_extract_") as extract_dir:
+        parquet_dir = _extract_archive(archive_path, Path(extract_dir))
+        logger.info("Extracted to %s", parquet_dir)
+        result = load_dump(str(parquet_dir), connection, **load_kwargs)
+
+    result["dump_id"] = dump_id
+    if not result["errors"]:
+        client = create_client(connection)
+        try:
+            record_imported_dump(client, dump_id, dump_type)
+        finally:
+            client.close()
+    return result
+
+
 def load_from_local(
     base_dir: str,
+    connection: ClickHouseConnection,
     dump_id: int = None,
     dump_type: DumpType = DumpType.FULL,
-    host: str = "localhost",
-    port: int = 8123,
-    username: str = "default",
-    password: str = "",
-    database: str = "default",
     workers: int = 4,
     process_chunks: int | None = None,
     replace: bool = False,
@@ -599,24 +552,12 @@ def load_from_local(
 
     Returns dict with 'total_inserted', 'files_completed', 'elapsed', 'errors', 'dump_id'.
     """
-    extract_dir = tempfile.mkdtemp(prefix="clickhouse_dump_extract_")
-    try:
-        archive_path, found_dump_id = _find_dump_archive(Path(base_dir), dump_id, dump_type)
-        logger.info("Found %s dump %d: %s", dump_type.value, found_dump_id, archive_path.name)
-
-        parquet_dir = _extract_archive(archive_path, Path(extract_dir))
-        logger.info("Extracted to %s", parquet_dir)
-
-        result = load_dump(
-            str(parquet_dir), host, port, username, password, database, workers,
-            process_chunks=process_chunks, replace=replace,
-        )
-        result["dump_id"] = found_dump_id
-        if not result["errors"]:
-            _record_dump_import(found_dump_id, dump_type, host, port, username, password, database)
-        return result
-    finally:
-        shutil.rmtree(extract_dir, ignore_errors=True)
+    archive_path, found_dump_id = _find_dump_archive(Path(base_dir), dump_id, dump_type)
+    logger.info("Found %s dump %d: %s", dump_type.value, found_dump_id, archive_path.name)
+    return _load_archive(
+        archive_path, found_dump_id, dump_type, connection,
+        workers=workers, process_chunks=process_chunks, replace=replace,
+    )
 
 
 # =============================================================================
@@ -624,26 +565,10 @@ def load_from_local(
 # (mirrors listenbrainz_spark/dump/ftp.py::ListenBrainzFtpDumpLoader.download_listens)
 # =============================================================================
 
-def _record_dump_import(
-    dump_id: int, dump_type: DumpType,
-    host: str, port: int, username: str, password: str, database: str,
-) -> None:
-    """Note in ClickHouse that ``dump_id`` is now part of the listens table."""
-    client = create_client(host, port, username, password, database)
-    try:
-        record_imported_dump(client, dump_id, dump_type)
-    finally:
-        client.close()
-
-
 def load_from_ftp(
-    *,
     dump_type: DumpType,
-    host: str,
-    port: int,
-    username: str,
-    password: str,
-    database: str,
+    connection: ClickHouseConnection,
+    *,
     workers: int = 4,
     process_chunks: int | None = None,
     replace: bool = False,
@@ -655,52 +580,25 @@ def load_from_ftp(
     Mirrors listenbrainz_spark/dump/ftp.py::ListenBrainzFtpDumpLoader.download_listens,
     but targets ClickHouse instead of HDFS/Spark.
 
-    A dump that loads cleanly is recorded in ``imported_dumps`` so a later catch-up
-    knows not to load it again; a load that left parquet files behind is not, so the
-    next run retries it.
-
     Args:
         dump_type: FULL or INCREMENTAL.
         dump_id: Specific dump id to load; defaults to the latest available.
 
     Returns dict with 'total_inserted', 'files_completed', 'elapsed', 'errors', 'dump_id'.
     """
-    download_dir = tempfile.mkdtemp(prefix="clickhouse_dump_download_")
-    extract_dir = tempfile.mkdtemp(prefix="clickhouse_dump_extract_")
-
-    try:
-        downloader = FTPDumpDownloader()
-        downloader.connect()
-        try:
+    with TemporaryDirectory(prefix="clickhouse_dump_download_") as download_dir:
+        with FTPDumpDownloader() as downloader:
             archive_path, loaded_dump_id = downloader.download_dump_archive(dump_type, download_dir, dump_id)
-        finally:
-            downloader.close()
-
         logger.info("Downloaded %s dump %d: %s", dump_type.value, loaded_dump_id, Path(archive_path).name)
-
-        parquet_dir = _extract_archive(Path(archive_path), Path(extract_dir))
-        logger.info("Extracted to %s", parquet_dir)
-
-        result = load_dump(
-            str(parquet_dir), host, port, username, password, database, workers,
-            process_chunks=process_chunks, replace=replace,
+        return _load_archive(
+            Path(archive_path), loaded_dump_id, dump_type, connection,
+            workers=workers, process_chunks=process_chunks, replace=replace,
         )
-        result["dump_id"] = loaded_dump_id
-        if not result["errors"]:
-            _record_dump_import(loaded_dump_id, dump_type, host, port, username, password, database)
-        return result
-    finally:
-        shutil.rmtree(download_dir, ignore_errors=True)
-        shutil.rmtree(extract_dir, ignore_errors=True)
 
 
 def import_missing_incremental_dumps(
+    connection: ClickHouseConnection,
     *,
-    host: str,
-    port: int,
-    username: str,
-    password: str,
-    database: str,
     workers: int = 4,
     process_chunks: int | None = None,
     max_dumps: int | None = None,
@@ -721,7 +619,7 @@ def import_missing_incremental_dumps(
     """
     start_time = time.time()
 
-    client = create_client(host, port, username, password, database)
+    client = create_client(connection)
     try:
         ensure_stats_schema(client)
         latest_full_dump = get_latest_full_dump(client)
@@ -729,12 +627,8 @@ def import_missing_incremental_dumps(
     finally:
         client.close()
 
-    downloader = FTPDumpDownloader()
-    downloader.connect()
-    try:
+    with FTPDumpDownloader() as downloader:
         available = downloader.list_dump_ids(DumpType.INCREMENTAL)
-    finally:
-        downloader.close()
 
     if latest_full_dump is None:
         # Incremental dumps only make sense on top of a full dump. Without a record of
@@ -762,10 +656,8 @@ def import_missing_incremental_dumps(
         logger.info("Loading incremental dump %d (%s)", missing_dump_id, dump_dir_name)
         try:
             result = load_from_ftp(
-                dump_type=DumpType.INCREMENTAL,
-                host=host, port=port, username=username, password=password, database=database,
-                workers=workers, process_chunks=process_chunks, replace=False,
-                dump_id=missing_dump_id,
+                DumpType.INCREMENTAL, connection,
+                workers=workers, process_chunks=process_chunks, dump_id=missing_dump_id,
             )
         except Exception as e:
             logger.error("Error loading incremental dump %d: %s", missing_dump_id, e, exc_info=True)
@@ -773,8 +665,7 @@ def import_missing_incremental_dumps(
             break
 
         if result["errors"]:
-            examples = "; ".join(f"{path}: {error}" for path, error in result["errors"][:3])
-            errors.append((missing_dump_id, f"{len(result['errors'])} parquet file(s) failed to load: {examples}"))
+            errors.append((missing_dump_id, describe_load_errors(result["errors"])))
             break
 
         imported.append(result)

@@ -96,36 +96,23 @@ class ClickHouseRequestConsumer:
 
     def get_result(self, request: dict) -> Iterable[dict] | None:
         """Process a request and return the result."""
-        try:
-            query = request['query']
-            params = request.get('params', {})
-        except Exception:
-            logger.error('Bad query sent to ClickHouse request consumer: %s',
-                        json.dumps(request), exc_info=True)
+        if not isinstance(request, dict) or 'query' not in request:
+            logger.error('Bad query sent to ClickHouse request consumer: %s', json.dumps(request))
             return None
+        query = request['query']
+        params = request.get('params', {})
+        logger.info('Query: %s, params: %s', query, params)
 
-        logger.info('Query: %s', query)
-        logger.info('Params: %s', str(params))
-
-        try:
-            query_handler = query_map.get_query_handler(query)
-        except KeyError:
-            logger.error("Unknown query: %s", query, exc_info=True)
-            return None
-        except Exception as e:
-            logger.error("Error while mapping query to function: %s", str(e), exc_info=True)
+        query_handler = query_map.functions.get(query)
+        if query_handler is None:
+            logger.error("Unknown query: %s", query)
             return None
 
         try:
             return query_handler(**params)
-        except TypeError as e:
-            logger.error(
-                "TypeError in handler for query '%s', maybe bad params. Error: %s",
-                query, str(e), exc_info=True
-            )
-            return None
-        except Exception as e:
-            logger.error("Error in handler for query '%s': %s", query, str(e), exc_info=True)
+        except Exception:
+            # a TypeError here usually means bad params
+            logger.error("Error in handler for query '%s'", query, exc_info=True)
             return None
 
     def push_to_result_queue(self, messages: Iterable[dict]) -> int:

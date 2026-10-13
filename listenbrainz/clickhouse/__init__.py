@@ -6,7 +6,8 @@ stats and management requests via RabbitMQ.
 
 Components:
     - request_manage.py: CLI commands for sending requests
-    - request_queries.json: Query definitions with parameters
+    - clickhouse_reader.py: consumes the result messages
+    - handlers.py: handlers for the result messages
 
 The actual request consumer and handlers run in the top-level clickhouse/
 module, which is a separate worker process.
