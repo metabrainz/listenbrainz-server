@@ -50,11 +50,9 @@ def init_schema():
 @cli.command(name="load_full_dump")
 @click.option("--dump-path", required=True, help="Path to directory containing Parquet files")
 @click.option("--workers", type=int, default=4, help="Number of parallel workers for loading")
-@click.option("--replace/--no-replace", default=True, show_default=True,
-              help="Truncate listens and cache state before loading.")
-def load_full_dump(dump_path: str, workers: int, replace: bool):
+def load_full_dump(dump_path: str, workers: int):
     """Load a full Parquet dump into ClickHouse listens table."""
-    send_request_to_clickhouse("clickhouse.load_full_dump", dump_path=dump_path, workers=workers, replace=replace)
+    send_request_to_clickhouse("clickhouse.load_full_dump", dump_path=dump_path, workers=workers)
 
 
 @cli.command(name="load_incremental_dump")
@@ -67,30 +65,16 @@ def load_incremental_dump(dump_path: str, workers: int):
 
 @cli.command(name="import_full_dump")
 @click.option("--workers", type=int, default=4, help="Number of parallel workers for loading")
-@click.option("--replace/--no-replace", default=True, show_default=True,
-              help="Truncate listens and cache state before loading.")
-def import_full_dump(workers: int, replace: bool):
+def import_full_dump(workers: int):
     """Download latest full dump from FTP and import into ClickHouse."""
-    send_request_to_clickhouse("clickhouse.import_full_dump", workers=workers, replace=replace)
+    send_request_to_clickhouse("clickhouse.import_full_dump", workers=workers)
 
 
-@cli.command(name="record_imported_dump")
-@click.option("--dump-id", type=int, required=True, help="Id of the dump that is already in listens")
-@click.option("--dump-type", type=click.Choice(["full", "incremental"]), required=True)
-@click.option("--imported-at", default=None,
-              help="When it was loaded, as UTC 'YYYY-MM-DD HH:MM:SS[.mmm]'; defaults to now. "
-                   "A dump loaded before the latest full dump import needs its real timestamp.")
-def record_imported_dump(dump_id: int, dump_type: str, imported_at: str):
-    """Record a dump as already loaded, without loading it.
-
-    Seeds imported_dumps for dumps that went into listens before that table existed, so
-    import_incremental_dump resumes from the right place instead of treating every dump
-    on the FTP server as missing.
-    """
-    send_request_to_clickhouse(
-        "clickhouse.record_imported_dump",
-        dump_id=dump_id, dump_type=dump_type, imported_at=imported_at,
-    )
+@cli.command(name="set_dump_import_state")
+@click.option("--dump-id", type=int, required=True, help="Id of the last dump already in listens")
+def set_dump_import_state(dump_id: int):
+    """Set the incremental dump mark, so that import_incremental_dump loads the dumps after it."""
+    send_request_to_clickhouse("clickhouse.set_dump_import_state", dump_id=dump_id)
 
 
 @cli.command(name="import_deleted_listens")

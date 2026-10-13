@@ -1,40 +1,18 @@
-#!/usr/bin/env python3
-"""
-Stats Cache Manager
-
-Shared machinery for computing per-user stats from ClickHouse and emitting them
-as RabbitMQ result messages: time ranges, cache state bookkeeping, CouchDB
-database naming, message batching and the hourly (incremental) job loop.
-
-Subclasses (see activity_cache_manager) provide the stat-specific parts: how to
-find the users whose stats are stale for a time range and how to compute a batch
-of users.
-
-Architecture:
-    - ClickHouse stores one row per listen (user_id, listened_at, created)
-    - stats are computed straight off the listens table
-    - cache state tracked to only update affected users/time_ranges
+"""Shared machinery for per-user stats: cache state, CouchDB database names, result
+messages and the hourly job. Subclasses (see activity_cache_manager) find the stale
+users of a time range and compute their stats.
 """
 
-import json
 import logging
-from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from itertools import batched
 from typing import Iterator
 
-from clickhouse import config
 from clickhouse.client import ClickHouseConnection
 from clickhouse.stats.schema import ensure_stats_schema
 
 logger = logging.getLogger(__name__)
 
-# RabbitMQ's default max_message_size is 16 MiB (128 MiB hard cap). Data
-# messages are capped by serialized payload size so no single message
-# exceeds it. 8 MiB leaves ample headroom for the message envelope and any
-# broker-side overhead.
-MAX_MESSAGE_BYTES = 8 * 1024 * 1024
-
-# Stats ranges, in the order they are computed.
 # "this_*" = current ongoing period, "*" alone = previous complete period.
 TIME_RANGES = (
     'all_time',
@@ -49,18 +27,13 @@ TIME_RANGES = (
 )
 
 
-# last_computed_created marker for a user whose stats must be recomputed for a time
-# range even if they have no listens in it any more (their listens were deleted, or
-# older listens were back-filled), so the stale document gets overwritten.
+# last_computed_created marking a user to recompute even with no listens left in a
+# range (deleted or back-filled listens), so their old stats get overwritten.
 FORCE_RECOMPUTE_CREATED = "1970-01-01 00:00:00.000"
 
 
 def mark_users_for_recompute(ch_client, users_query: str, parameters: dict | None = None) -> None:
-    """Force a recompute of every cached (stat type, time range) of the users selected by ``users_query``.
-
-    ``users_query`` returns ``user_id``s. Users without cache state need no marker: the next
-    stats job computes them anyway if they have listens in a range.
-    """
+    """Force a recompute of every cached stat of the users ``users_query`` selects."""
     ch_client.command(f"""
         INSERT INTO user_stats_cache_state (user_id, stat_type, time_range, last_computed_created)
         SELECT user_id, stat_type, time_range, toDateTime64('{FORCE_RECOMPUTE_CREATED}', 3)
@@ -69,40 +42,19 @@ def mark_users_for_recompute(ch_client, users_query: str, parameters: dict | Non
     """, parameters=parameters or {})
 
 
-@dataclass
-class CacheConfig:
-    """Configuration for cache manager."""
-    connection: ClickHouseConnection = field(default_factory=ClickHouseConnection)
-    couch_db_prefix: str = ''  # optional, e.g. 'clk' to keep the databases apart from spark's
-
-
-def get_cache_config() -> CacheConfig:
-    """Create CacheConfig from ClickHouse config."""
-    return CacheConfig(
-        connection=ClickHouseConnection.from_config(),
-        couch_db_prefix=config.STATS_COUCH_DB_PREFIX,
-    )
-
-
 class StatsCacheManager:
     """Manages ClickHouse stats computation and RabbitMQ result messages for one stat type."""
 
-    def __init__(self, config: CacheConfig, stat_type: str):
-        self.config = config
+    def __init__(self, connection: ClickHouseConnection, stat_type: str):
+        self.connection = connection
         self.stat_type = stat_type
         self.ch_client = None
 
     def connect(self):
         """Establish a connection to ClickHouse."""
-        self.ch_client = self.config.connection.connect(form_encode_query_params=True)
-        logger.info("Connected to ClickHouse at %s:%s", self.config.connection.host, self.config.connection.port)
-
-        # Ensure required tables exist
+        self.ch_client = self.connection.connect(form_encode_query_params=True)
+        logger.info("Connected to ClickHouse at %s:%s", self.connection.host, self.connection.port)
         ensure_stats_schema(self.ch_client)
-
-    # ------------------------------------------------------------------
-    # Stat-specific hooks
-    # ------------------------------------------------------------------
 
     def get_period_bounds(self, time_range: str) -> tuple:
         """Return the (start, end) dates of the current period of a time range."""
@@ -133,40 +85,14 @@ class StatsCacheManager:
         """Recompute every user for the given time ranges into new databases."""
         raise NotImplementedError
 
-    # ------------------------------------------------------------------
-    # CouchDB database naming
-    # ------------------------------------------------------------------
-
-    def get_stats_database_name(self, stat_type: str, time_range: str, with_timestamp: bool = False) -> str:
-        """
-        Generate ClickHouse stats database name for a stat type and time range.
-
-        Args:
-            stat_type: The stat type (daily_activity, listening_activity, ...)
-            time_range: The time range (all_time, this_week, etc.)
-            with_timestamp: If True, append YYYYMMDD timestamp for new database creation
-
-        Returns:
-            Database name like 'daily_activity_all_time' or 'daily_activity_all_time_20240115'
-        """
-        db_name = self.get_stats_database_prefix(stat_type, time_range)
-
-        if with_timestamp:
-            timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d")
-            db_name = f"{db_name}_{timestamp}"
-
-        return db_name
+    def get_stats_database_name(self, stat_type: str, time_range: str) -> str:
+        """Name of a new stats database for a stat type and time range, e.g. 'daily_activity_all_time_20240115'."""
+        timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d")
+        return f"{self.get_stats_database_prefix(stat_type, time_range)}_{timestamp}"
 
     def get_stats_database_prefix(self, stat_type: str, time_range: str) -> str:
-        """Get ClickHouse stats database prefix for finding the current CouchDB database."""
-        name = f"{stat_type}_{time_range}"
-        if self.config.couch_db_prefix:
-            name = f"{self.config.couch_db_prefix}_{name}"
-        return name
-
-    # ------------------------------------------------------------------
-    # Cache state
-    # ------------------------------------------------------------------
+        """Database name without the date: the Spark name, as the stats live in their own CouchDB."""
+        return f"{stat_type}_{time_range}"
 
     def get_cache_state(self) -> dict[str, dict]:
         """Get current cache state for all time ranges."""
@@ -192,14 +118,7 @@ class StatsCacheManager:
         old_period_start,
         new_period_start,
     ):
-        """
-        Called when a period rollover is detected for a time_range.
-
-        Args:
-            time_range: The time range that rolled over (e.g., 'this_week')
-            old_period_start: The previous period start date
-            new_period_start: The new/current period start date
-        """
+        """Hook called when the period of a time range rolls over."""
         logger.info(
             f"Period rollover for {time_range}: {old_period_start} -> {new_period_start}. "
             "User cache state will be cleared and a new stats database will be requested."
@@ -256,8 +175,7 @@ class StatsCacheManager:
         time_range: str,
     ):
         """Clear all user cache state for a time_range (e.g., on period rollover)."""
-        # Wait for the mutation: the caller reads the cache state right after this, and
-        # a not yet applied delete would make it skip the users it still lists.
+        # Wait for the delete: the caller reads the cache state right after.
         self.ch_client.command("""
             ALTER TABLE user_stats_cache_state
             DELETE WHERE stat_type = {stat_type:String} AND time_range = {time_range:String}
@@ -266,10 +184,6 @@ class StatsCacheManager:
             'time_range': time_range,
         }, settings={'mutations_sync': 2})
         logger.info(f"Cleared user cache state for {self.stat_type}/{time_range}")
-
-    # ------------------------------------------------------------------
-    # Result messages
-    # ------------------------------------------------------------------
 
     def _database_message(self, message_type: str, time_range: str, database: str) -> dict:
         return {
@@ -296,107 +210,45 @@ class StatsCacheManager:
         database: str | None = None,
         database_prefix: str | None = None,
         batch_size: int = 100,
-        max_message_bytes: int = MAX_MESSAGE_BYTES,
     ) -> Iterator[dict]:
+        """Yield messages with the stats of up to ``batch_size`` users each.
+
+        ``database`` names the database to write to; ``database_prefix`` instead makes LB use
+        the latest database with that prefix. Oversized messages are split when published
+        (request_consumer.serialize_result).
         """
-        Generate batched RMQ messages for stats data.
-
-        Stats are batched to reduce RMQ message count while keeping
-        individual message sizes manageable. A message is flushed when it
-        reaches ``batch_size`` users *or* when adding the next user would push
-        its serialized payload past ``max_message_bytes``, so no single
-        message exceeds RabbitMQ's ``max_message_size``.
-
-        Args:
-            time_range: The time range for these stats
-            user_results: Dict mapping user_id to their stats list
-            from_ts: Start timestamp for this stats range
-            to_ts: End timestamp for this stats range
-            database: The exact database name to insert into
-            database_prefix: Prefix used by LB to select the latest stats database
-            batch_size: Maximum number of users per message batch
-            max_message_bytes: Approximate maximum serialized size of a message's
-                ``data`` payload. A single user larger than this is still sent
-                on its own.
-
-        Yields:
-            Messages to send via RMQ
-        """
-        def make_message(batch_data: list[dict]) -> dict:
+        for batch in batched(user_results.items(), batch_size):
             message = {
                 'type': 'clk_user_entity',
                 'entity': self.stat_type,
                 'stats_range': time_range,
                 'from_ts': from_ts,
                 'to_ts': to_ts,
-                'data': batch_data,
+                'data': [{'user_id': user_id, 'count': len(stats), 'data': stats} for user_id, stats in batch],
             }
             if database is not None:
                 message['database'] = database
             if database_prefix is not None:
                 message['database_prefix'] = database_prefix
-            return message
-
-        batch_data: list[dict] = []
-        batch_bytes = 0
-        for user_id, stats in user_results.items():
-            entry = {
-                'user_id': user_id,
-                'count': len(stats),
-                'data': stats,
-            }
-            # +1 for the list separator; envelope overhead is covered by the
-            # headroom between MAX_MESSAGE_BYTES and the broker limit.
-            entry_bytes = len(json.dumps(entry)) + 1
-
-            if batch_data and (
-                len(batch_data) >= batch_size
-                or batch_bytes + entry_bytes > max_message_bytes
-            ):
-                yield make_message(batch_data)
-                batch_data = []
-                batch_bytes = 0
-
-            batch_data.append(entry)
-            batch_bytes += entry_bytes
-
-        if batch_data:
-            yield make_message(batch_data)
-
-    # ------------------------------------------------------------------
-    # Hourly (incremental) job
-    # ------------------------------------------------------------------
+            yield message
 
     def run_hourly_job(
         self,
         batch_size: int = 1000,
         message_batch_size: int = 100,
     ) -> Iterator[dict]:
-        """
-        Run the hourly job and yield RabbitMQ result messages.
+        """Yield result messages for the users whose stats changed, per time range.
 
-        For each time_range:
-        - If period rollover detected, or no period has been computed yet: yield
-          start/data/end messages (new database)
-        - If the period is the same but the range end moved (all_time and the
-          listening activity this_* ranges end at the latest listen): every user's
-          stats change, including those without new listens, so the range is
-          rebuilt for all users by the bulk path into a new database
-        - Otherwise: yield data messages only (append to existing database)
-
-        Message flow for rollover:
-        1. clk_stats_database_start - create new database
-        2. clk_user_entity (batched) - stats data
-        3. clk_stats_database_end - cleanup old databases
-
-        Yields:
-            RabbitMQ messages with stats data
+        On a period rollover a range goes to a new database: start message, data, end
+        message. The bulk refresh rebuilds a range that was never computed (first run, or
+        reset by a full dump load) and one whose end moved (ranges ending at the latest
+        listen), as every user's stats change. Otherwise the changed users are appended to
+        the current database.
         """
         stat_type = self.stat_type
         logger.info(f"Starting hourly job for {stat_type}...")
 
-        # Taken once, before any stale user query: listens inserted while the job
-        # runs are newer than this and are picked up by the next run.
+        # Taken before the stale user queries; listens inserted later go to the next run.
         max_created = self.get_listen_max_created()
         if max_created is None:
             logger.info(f"No listens, skipping hourly job for {stat_type}")
@@ -406,7 +258,7 @@ class StatsCacheManager:
 
         total_users_processed = 0
         total_messages = 0
-        moved_ranges = []
+        bulk_ranges = []
 
         for time_range in TIME_RANGES:
             state = cache_state.get(time_range, {})
@@ -415,14 +267,15 @@ class StatsCacheManager:
             period_start, period_end = self.get_period_bounds(time_range)
             from_ts, to_ts = self.get_period_timestamps(time_range, period_start, period_end)
 
+            if cached_period_start is None:
+                logger.info(f"{time_range}: not computed yet, rebuilding all users")
+                bulk_ranges.append(time_range)
+                continue
             if cached_period_start == period_start and state.get('to_ts') != to_ts:
                 logger.info(f"{time_range}: range end moved ({state.get('to_ts')} -> {to_ts}), rebuilding all users")
-                moved_ranges.append(time_range)
+                bulk_ranges.append(time_range)
                 continue
 
-            # A missing period (first run, or the state was reset by a replacing dump
-            # load) is treated as a rollover too: the latest existing database may hold
-            # an earlier period, so it must not be appended to.
             is_rollover = cached_period_start != period_start
             if is_rollover:
                 logger.info(f"{time_range}: period rollover detected ({cached_period_start} -> {period_start})")
@@ -432,11 +285,9 @@ class StatsCacheManager:
             stale_users = self.get_stale_users(time_range, period_start, period_end)
             logger.info(f"{time_range}: computing stats for {len(stale_users)} users")
 
-            # For rollover, create new database with timestamp; otherwise use existing
             if is_rollover:
-                database = self.get_stats_database_name(stat_type, time_range, with_timestamp=True)
+                database = self.get_stats_database_name(stat_type, time_range)
                 database_prefix = None
-                # Yield start message for new database
                 yield self.generate_start_message(time_range, database)
                 total_messages += 1
             else:
@@ -462,18 +313,15 @@ class StatsCacheManager:
                 except Exception:
                     logger.error("Error computing %s batch %d", time_range, i, exc_info=True)
 
-            # For rollover, yield end message to cleanup old databases. Sent even if
-            # nobody has stats for the new period, so the previous period's stats stop
-            # being served. Users of a failed batch keep their stale state and are
-            # written to the new (latest) database by the next run.
+            # Sent even without data, so the previous period stops being served.
             if is_rollover:
                 yield self.generate_end_message(time_range, database)
                 total_messages += 1
 
             self.update_cache_state(time_range, period_start, max_created, to_ts)
 
-        if moved_ranges:
-            for message in self.run_bulk_refresh(moved_ranges, message_batch_size=message_batch_size):
+        if bulk_ranges:
+            for message in self.run_bulk_refresh(bulk_ranges, message_batch_size=message_batch_size):
                 yield message
                 total_messages += 1
 

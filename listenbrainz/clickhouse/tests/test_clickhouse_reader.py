@@ -94,7 +94,3 @@ class ClickHouseReaderTestCase(unittest.TestCase):
                 message = self._callback_with_handler_error(error)
                 message.ack.assert_called_once()
                 message.requeue.assert_not_called()
-
-
-if __name__ == "__main__":
-    unittest.main()

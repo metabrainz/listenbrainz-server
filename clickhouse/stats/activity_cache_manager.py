@@ -1,17 +1,7 @@
-#!/usr/bin/env python3
-"""ClickHouse-backed daily and listening activity statistics.
+"""Daily and listening activity stats, computed from the ``listens`` table.
 
-The public payloads intentionally mirror the Spark statistics:
-
-* daily activity contains the non-empty weekday/hour cells. The API expands
-  those cells into the complete 7 x 24 heatmap;
-* listening activity contains every comparison bucket, including zero-count
-  buckets, with the same labels and timestamp boundaries as Spark.
-
-Both are computed straight off the ``listens`` table. Hourly refreshes query
-only stale user batches. Bulk full refreshes first build one compact
-intermediate so listens is scanned once per activity type instead of once per
-time range and user batch.
+The payloads match the Spark stats: daily activity holds the non-empty weekday/hour
+cells, listening activity every bucket of the range, including empty ones.
 """
 
 import calendar
@@ -23,9 +13,10 @@ from typing import Hashable, Iterator
 
 from dateutil.relativedelta import MO, relativedelta
 
+from clickhouse.client import ClickHouseConnection
+from clickhouse.utils import to_utc
 from clickhouse.stats.cache_manager import (
     FORCE_RECOMPUTE_CREATED,
-    CacheConfig,
     StatsCacheManager,
     TIME_RANGES,
 )
@@ -36,10 +27,9 @@ LAST_FM_FOUNDING_YEAR = 2002
 
 DAILY_ACTIVITY = "daily_activity"
 LISTENING_ACTIVITY = "listening_activity"
-
-# Stat types served by ActivityStatsCacheManager, keyed by the name the LB stats
-# API and CouchDB databases use for them.
 ACTIVITY_STAT_TYPES = (DAILY_ACTIVITY, LISTENING_ACTIVITY)
+LISTEN_RESOLUTION = timedelta(milliseconds=1)
+_EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
 
 @dataclass(frozen=True)
@@ -68,10 +58,10 @@ class ListeningActivityBucket:
 
 @dataclass(frozen=True)
 class ActivityRange:
+    """The listens ``start <= listened_at < end`` of a stats range."""
     stats_range: str
     start: datetime
     end: datetime
-    end_inclusive: bool = False
     buckets: tuple[ListeningActivityBucket, ...] = ()
 
     @property
@@ -83,19 +73,27 @@ class ActivityRange:
         return int(self.end.timestamp())
 
     @property
+    def last_day(self) -> date:
+        """The last day with listens in the range."""
+        return (self.end - LISTEN_RESOLUTION).date()
+
+    @property
     def query_parameters(self) -> dict:
         """Parameters of the non-literal ``_timestamp_predicate`` for this range."""
-        return {"from_ms": self.from_ts * 1000, "to_ms": self.to_ts * 1000}
+        return {"from_ms": _to_ms(self.start), "to_ms": _to_ms(self.end)}
 
 
-def _utc(value: datetime) -> datetime:
-    if value.tzinfo is None:
-        return value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc)
+def _to_ms(value: datetime) -> int:
+    return (value - _EPOCH) // LISTEN_RESOLUTION
 
 
 def _midnight(value: date) -> datetime:
     return datetime.combine(value, datetime_time.min, tzinfo=timezone.utc)
+
+
+def _all_time_range(latest_listen: datetime) -> tuple[datetime, datetime]:
+    """Bounds of the all_time range: up to and including the latest listen."""
+    return datetime(LAST_FM_FOUNDING_YEAR, 1, 1, tzinfo=timezone.utc), latest_listen + LISTEN_RESOLUTION
 
 
 def _last_quarter_offset(value: date) -> relativedelta:
@@ -133,14 +131,9 @@ def _previous_half_year_offset(value: date) -> relativedelta:
 def get_daily_activity_range(stats_range: str, latest_listen: datetime) -> ActivityRange:
     """Return the same listen bounds used by Spark daily activity stats."""
 
-    latest_listen = _utc(latest_listen)
+    latest_listen = to_utc(latest_listen)
     if stats_range == "all_time":
-        return ActivityRange(
-            stats_range,
-            datetime(LAST_FM_FOUNDING_YEAR, 1, 1, tzinfo=timezone.utc),
-            latest_listen,
-            end_inclusive=True,
-        )
+        return ActivityRange(stats_range, *_all_time_range(latest_listen))
 
     latest_date = latest_listen.date()
     if stats_range == "this_week":
@@ -174,10 +167,7 @@ def get_daily_activity_range(stats_range: str, latest_listen: datetime) -> Activ
     else:
         raise ValueError(f"Unknown stats range: {stats_range}")
 
-    # Spark's generic range filter uses ``<= to_date``. Preserve that boundary
-    # behavior for parity, including a listen submitted exactly at midnight at
-    # the end of a completed period.
-    return ActivityRange(stats_range, _midnight(start), _midnight(end), end_inclusive=True)
+    return ActivityRange(stats_range, _midnight(start), _midnight(end))
 
 
 def _listening_bucket_spec(stats_range: str) -> tuple[relativedelta, str]:
@@ -233,11 +223,9 @@ def _make_listening_buckets(
 def get_listening_activity_range(stats_range: str, latest_listen: datetime) -> ActivityRange:
     """Return Spark-compatible comparison bounds and display buckets."""
 
-    latest_listen = _utc(latest_listen)
+    latest_listen = to_utc(latest_listen)
     if stats_range == "all_time":
-        start = datetime(LAST_FM_FOUNDING_YEAR, 1, 1, tzinfo=timezone.utc)
-        end = latest_listen
-        inclusive = True
+        start, end = _all_time_range(latest_listen)
     else:
         latest_date = latest_listen.date()
         if stats_range.startswith("this"):
@@ -272,37 +260,25 @@ def get_listening_activity_range(stats_range: str, latest_listen: datetime) -> A
                 raise ValueError(f"Unknown stats range: {stats_range}")
             start = _midnight(latest_date + offset)
             end = start + duration
-        inclusive = False
 
-    return ActivityRange(
-        stats_range,
-        start,
-        end,
-        end_inclusive=inclusive,
-        buckets=_make_listening_buckets(stats_range, start, end),
-    )
+    return ActivityRange(stats_range, start, end, buckets=_make_listening_buckets(stats_range, start, end))
 
 
 def _timestamp_predicate(column: str, activity_range: ActivityRange, literal: bool = False) -> str:
-    operator = "<=" if activity_range.end_inclusive else "<"
     if literal:
-        start = activity_range.from_ts * 1000
-        end = activity_range.to_ts * 1000
-        return (
-            f"{column} >= fromUnixTimestamp64Milli({start}, 'UTC') "
-            f"AND {column} {operator} fromUnixTimestamp64Milli({end}, 'UTC')"
-        )
+        start, end = _to_ms(activity_range.start), _to_ms(activity_range.end)
+    else:
+        start, end = "{from_ms:Int64}", "{to_ms:Int64}"
     return (
-        f"{column} >= fromUnixTimestamp64Milli({{from_ms:Int64}}, 'UTC') "
-        f"AND {column} {operator} fromUnixTimestamp64Milli({{to_ms:Int64}}, 'UTC')"
+        f"{column} >= fromUnixTimestamp64Milli({start}, 'UTC') "
+        f"AND {column} < fromUnixTimestamp64Milli({end}, 'UTC')"
     )
 
 
 def _date_predicate(column: str, activity_range: ActivityRange) -> str:
-    operator = "<=" if activity_range.end_inclusive else "<"
     return (
         f"{column} >= toDate('{activity_range.start.date().isoformat()}') "
-        f"AND {column} {operator} toDate('{activity_range.end.date().isoformat()}')"
+        f"AND {column} <= toDate('{activity_range.last_day.isoformat()}')"
     )
 
 
@@ -318,10 +294,10 @@ def _normalise_bucket_key(value, stats_range: str) -> Hashable:
 class ActivityStatsCacheManager(StatsCacheManager):
     """Incremental/full batched activity stats manager."""
 
-    def __init__(self, config: CacheConfig, stat_type: str):
+    def __init__(self, connection: ClickHouseConnection, stat_type: str):
         if stat_type not in ACTIVITY_STAT_TYPES:
             raise ValueError(f"Unknown activity stat type: {stat_type}")
-        super().__init__(config, stat_type)
+        super().__init__(connection, stat_type)
         self._latest_listen: datetime | None = None
         self._activity_ranges: dict[str, ActivityRange] = {}
 
@@ -330,7 +306,7 @@ class ActivityStatsCacheManager(StatsCacheManager):
             result = self.ch_client.query("SELECT maxOrNull(listened_at) FROM listens")
             value = result.first_row[0]
             if value is not None:
-                self._latest_listen = _utc(value)
+                self._latest_listen = to_utc(value)
         return self._latest_listen
 
     def get_activity_range(self, time_range: str) -> ActivityRange:
@@ -511,8 +487,8 @@ class ActivityStatsCacheManager(StatsCacheManager):
             "  %s: %d/%d users have %s data",
             time_range, len(user_activity), len(user_ids), self.stat_type,
         )
-        # A stale user without listens in the range (all of them were deleted) gets an
-        # empty entry, which replaces their previous stats and is served as no stats.
+        # A user whose listens in the range were all deleted gets an empty entry,
+        # replacing their previous stats.
         for user_id in user_ids:
             user_activity.setdefault(user_id, [])
         yield from self.generate_stats_messages(
@@ -526,7 +502,7 @@ class ActivityStatsCacheManager(StatsCacheManager):
         )
 
     def run_bulk_refresh(self, time_ranges: list[str], message_batch_size: int = 100) -> Iterator[dict]:
-        bulk = BulkActivityStatsCacheManager(self.config, self.stat_type)
+        bulk = BulkActivityStatsCacheManager(self.connection, self.stat_type)
         bulk.ch_client = self.ch_client
         yield from bulk.run_full_refresh(message_batch_size=message_batch_size, time_ranges=time_ranges)
 
@@ -553,7 +529,6 @@ class BulkActivityStatsCacheManager(ActivityStatsCacheManager):
             "scan",
             min(r.start for r in ranges),
             max(r.end for r in ranges),
-            end_inclusive=True,
         )
 
     def build_intermediate_table(self, time_ranges=TIME_RANGES) -> None:
@@ -706,8 +681,7 @@ class BulkActivityStatsCacheManager(ActivityStatsCacheManager):
             logger.info("No listens found for %s full refresh", stat_type)
             return
 
-        # Taken before the intermediate is built: listens inserted afterwards are not in
-        # it, so users must not be marked as computed up to them.
+        # Taken before building the intermediate, which misses listens inserted later.
         max_created = self.get_listen_max_created()
         self.drop_intermediate_table()
         try:
@@ -722,7 +696,7 @@ class BulkActivityStatsCacheManager(ActivityStatsCacheManager):
             total_messages = 0
             for time_range in time_ranges:
                 activity_range = self.get_activity_range(time_range)
-                database = self.get_stats_database_name(stat_type, time_range, with_timestamp=True)
+                database = self.get_stats_database_name(stat_type, time_range)
                 yield self.generate_start_message(time_range, database)
                 total_messages += 1
                 self.clear_user_cache_state_for_time_range(time_range)
@@ -746,8 +720,7 @@ class BulkActivityStatsCacheManager(ActivityStatsCacheManager):
                     "  %s: %d data messages in %.1fs",
                     time_range, data_messages, time.perf_counter() - range_started,
                 )
-                # Sent even without data: nobody has stats for the range any more, and
-                # the previous database must not keep being served.
+                # Sent even without data, so the previous database stops being served.
                 yield self.generate_end_message(time_range, database)
                 total_messages += 1
                 self.update_cache_state(time_range, activity_range.start.date(), max_created, activity_range.to_ts)

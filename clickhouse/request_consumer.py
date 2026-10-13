@@ -1,22 +1,16 @@
 #!/usr/bin/env python3
-"""
-ClickHouse Bulk Request Consumer
+"""Worker consuming requests from CLICKHOUSE_EXCHANGE and running their handlers.
 
-Consumes bulk/management requests from the CLICKHOUSE_EXCHANGE queue and
-invokes the appropriate handlers. Handles long-running operations such as:
-- Stats computation (hourly, full refresh)
-- Listen dump loading (full, incremental)
-- Listen deletion import
-
-Results are pushed to CLICKHOUSE_RESULT_EXCHANGE for the ListenBrainz side.
+Results are published to CLICKHOUSE_RESULT_EXCHANGE for ListenBrainz.
 """
 
 import json
 import logging
 import socket
 import time
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 
+import orjson
 from kombu import Connection, Exchange, Queue
 from kombu.entity import PERSISTENT_DELIVERY_MODE
 
@@ -29,12 +23,40 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# RabbitMQ default max_message_size. Anything larger is rejected with a channel
-# error (406 PRECONDITION_FAILED) that tears down the channel mid-batch.
+# RabbitMQ's default max_message_size; a larger publish is rejected with a channel error.
 RABBITMQ_MAX_MESSAGE_BYTES = 16 * 1024 * 1024
 
 # Seconds to wait before polling an empty request queue again.
 POLL_INTERVAL = 5
+
+# Result types whose ``data`` items the LB handler processes independently, so an
+# oversized message can be split across several messages.
+SPLITTABLE_MESSAGE_TYPES = {"clk_user_entity"}
+
+
+def serialize_result(message: dict) -> Iterator[bytes]:
+    """Serialize a result message into bodies that fit RabbitMQ's max message size.
+
+    An oversized message of a SPLITTABLE_MESSAGE_TYPES type is split in half by its
+    ``data`` items until the parts fit; any other oversized message is dropped.
+    """
+    body = orjson.dumps(message)
+    if len(body) <= RABBITMQ_MAX_MESSAGE_BYTES:
+        yield body
+        return
+
+    data = message.get("data")
+    if message.get("type") not in SPLITTABLE_MESSAGE_TYPES or not isinstance(data, list) or len(data) < 2:
+        logger.error(
+            "Dropping ClickHouse result message of type %s: size %d bytes exceeds "
+            "RabbitMQ max message size %d",
+            message.get("type"), len(body), RABBITMQ_MAX_MESSAGE_BYTES,
+        )
+        return
+
+    middle = len(data) // 2
+    yield from serialize_result({**message, "data": data[:middle]})
+    yield from serialize_result({**message, "data": data[middle:]})
 
 
 def _rabbitmq_url(host, port):
@@ -62,20 +84,17 @@ def create_rabbitmq_connection(connection_name):
 
 
 class ClickHouseRequestConsumer:
-    """Consumer for ClickHouse stats and management requests.
+    """Consumer for ClickHouse requests.
 
-    Requests are fetched one at a time with basic.get rather than pushed by a broker
-    consumer, so the requests queued behind a running one (dump imports take hours)
-    stay in the broker and survive a restart. Each request is acked before it runs:
-    acking after it would hold the delivery unacknowledged for longer than RabbitMQ's
-    consumer timeout.
+    Requests are fetched one at a time with basic.get, so the ones queued behind a long
+    running request stay in the broker. Each is acked before it runs, as dump imports
+    outlast RabbitMQ's consumer timeout.
     """
 
     def __init__(self):
         self.connection = None
         self.producer = None
 
-        # ClickHouse bulk request exchange and queue (stats, cache refresh, dump loading)
         self.clickhouse_exchange = Exchange(
             config.CLICKHOUSE_EXCHANGE,
             "fanout",
@@ -87,7 +106,6 @@ class ClickHouseRequestConsumer:
             durable=True
         )
 
-        # Result exchange for sending results back to ListenBrainz
         self.clickhouse_result_exchange = Exchange(
             config.CLICKHOUSE_RESULT_EXCHANGE,
             "fanout",
@@ -123,23 +141,16 @@ class ClickHouseRequestConsumer:
         message_count = 0
         total_size = 0
         for message in messages:
-            body = json.dumps(message)
-            if len(body) > RABBITMQ_MAX_MESSAGE_BYTES:
-                logger.error(
-                    "Dropping ClickHouse result message of type %s: size %d bytes exceeds "
-                    "RabbitMQ max message size %d",
-                    message.get("type"), len(body), RABBITMQ_MAX_MESSAGE_BYTES,
+            for body in serialize_result(message):
+                total_size += len(body)
+                self.producer.publish(
+                    exchange=self.clickhouse_result_exchange,
+                    routing_key="",
+                    body=body,
+                    delivery_mode=PERSISTENT_DELIVERY_MODE,
+                    declare=[self.clickhouse_result_exchange],
                 )
-                continue
-            total_size += len(body)
-            self.producer.publish(
-                exchange=self.clickhouse_result_exchange,
-                routing_key="",
-                body=body,
-                delivery_mode=PERSISTENT_DELIVERY_MODE,
-                declare=[self.clickhouse_result_exchange],
-            )
-            message_count += 1
+                message_count += 1
         if message_count:
             logger.info(
                 "Pushed %d ClickHouse result messages, average size %d bytes",
@@ -190,7 +201,6 @@ class ClickHouseRequestConsumer:
         """Initialize RabbitMQ connection and producer."""
         connection_name = "clickhouse-request-consumer-" + socket.gethostname()
         self.connection = create_rabbitmq_connection(connection_name)
-        # Create producer for pushing results
         self.producer = self.connection.Producer()
 
     def start(self):

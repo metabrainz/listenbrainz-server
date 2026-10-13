@@ -1,14 +1,7 @@
-#!/usr/bin/env python3
-"""
-ClickHouse Stats Query Handlers
-
-Query handlers for ClickHouse-based incremental stats operations.
-These handlers are invoked by the ClickHouse request consumer via RabbitMQ.
-"""
+"""Handlers for the requests of the ClickHouse request consumer (see query_map)."""
 
 import logging
 from contextlib import closing
-from datetime import datetime
 from typing import Callable, Iterator, Optional
 
 from clickhouse import config
@@ -18,10 +11,10 @@ from clickhouse.stats.activity_cache_manager import (
     ActivityStatsCacheManager,
     BulkActivityStatsCacheManager,
 )
-from clickhouse.stats.cache_manager import StatsCacheManager, get_cache_config
+from clickhouse.stats.cache_manager import StatsCacheManager
 from clickhouse.stats.deleted_listens import import_deleted_listens as _import_deleted_listens
 from clickhouse.stats.ftp import DumpType
-from clickhouse.stats.imported_dumps import record_imported_dump
+from clickhouse.stats.import_state import INCREMENTAL_DUMP_STATE, set_import_state
 from clickhouse.stats.load_dump import describe_load_errors, import_missing_incremental_dumps, load_dump, load_from_ftp
 from clickhouse.stats.schema import ensure_stats_schema
 
@@ -31,9 +24,9 @@ logger = logging.getLogger(__name__)
 STAT_TYPES = ACTIVITY_STAT_TYPES
 
 
-def _stats_manager(cache_config, stat_type: str, *, full: bool = False):
+def _stats_manager(connection: ClickHouseConnection, stat_type: str, *, full: bool = False):
     manager_class = BulkActivityStatsCacheManager if full else ActivityStatsCacheManager
-    return manager_class(cache_config, stat_type)
+    return manager_class(connection, stat_type)
 
 
 def _client():
@@ -51,43 +44,36 @@ def _raise_on_load_errors(result: dict) -> None:
         raise RuntimeError(describe_load_errors(result['errors']))
 
 
-def _dump_imported(dump_type: str, result: dict, replace: bool, **fields) -> dict:
+def _dump_imported(dump_type: str, result: dict, **fields) -> dict:
     return {
         'type': 'clk_dump_imported',
         'dump_type': dump_type,
         'status': 'success',
         'dump_id': result.get('dump_id'),
-        'load_id': result['load_id'],
-        'replace': replace,
         'total_inserted': result['total_inserted'],
         'files_completed': result['files_completed'],
         **fields,
     }
 
 
-def _load_dump_from_path(dump_path: str, dump_type: str, workers: int = 4, replace: bool = False) -> list[dict]:
+def _load_dump_from_path(dump_path: str, dump_type: DumpType, workers: int = 4) -> list[dict]:
     """Load a directory of Parquet files into the ClickHouse listens table."""
     try:
-        result = load_dump(dump_path, ClickHouseConnection.from_config(), workers=workers, replace=replace)
+        result = load_dump(dump_path, ClickHouseConnection.from_config(), dump_type, workers)
         _raise_on_load_errors(result)
     except Exception as e:
-        return _error('clk_dump_imported', e, dump_type=dump_type)
-    return [_dump_imported(dump_type, result, replace, dump_path=dump_path)]
+        return _error('clk_dump_imported', e, dump_type=dump_type.value)
+    return [_dump_imported(dump_type.value, result, dump_path=dump_path)]
 
 
-def load_full_dump(dump_path: str, workers: int = 4, replace: bool = True) -> list[dict]:
-    """Load a full Parquet dump into ClickHouse listens table.
-
-    By default replaces the existing listens / stats (full dump semantics); pass
-    replace=False to merge into the existing data instead (already present
-    listens are skipped).
-    """
-    return _load_dump_from_path(dump_path, "full", workers, replace=replace)
+def load_full_dump(dump_path: str, workers: int = 4) -> list[dict]:
+    """Load a full Parquet dump directory, replacing listens."""
+    return _load_dump_from_path(dump_path, DumpType.FULL, workers)
 
 
 def load_incremental_dump(dump_path: str, workers: int = 4) -> list[dict]:
     """Load an incremental Parquet dump directory into ClickHouse listens table."""
-    return _load_dump_from_path(dump_path, "incremental", workers)
+    return _load_dump_from_path(dump_path, DumpType.INCREMENTAL, workers)
 
 
 def init_schema() -> list[dict]:
@@ -100,33 +86,21 @@ def init_schema() -> list[dict]:
     return [{'type': 'clk_schema_initialized', 'status': 'success'}]
 
 
-def import_full_dump(workers: int = 4, replace: bool = True) -> list[dict]:
-    """Download latest full listens dump from FTP and load into ClickHouse.
-
-    By default replaces the existing listens / stats (full dump semantics).
-    """
+def import_full_dump(workers: int = 4) -> list[dict]:
+    """Download the latest full dump from FTP and load it, replacing listens."""
     try:
-        result = load_from_ftp(DumpType.FULL, ClickHouseConnection.from_config(), workers=workers, replace=replace)
+        result = load_from_ftp(DumpType.FULL, ClickHouseConnection.from_config(), workers=workers)
         _raise_on_load_errors(result)
     except Exception as e:
         return _error('clk_dump_imported', e, dump_type='full')
-    return [_dump_imported('full', result, replace)]
+    return [_dump_imported('full', result)]
 
 
 def import_incremental_dump(workers: int = 4, max_dumps: Optional[int] = None) -> list[dict]:
-    """
-    Import every incremental dump on FTP that ClickHouse has not loaded yet.
+    """Import the incremental dumps on FTP that are not loaded yet, oldest first.
 
-    Dumps are loaded oldest first and stop at the first failure, so a dump that could
-    not be loaded is retried by the next run instead of being skipped over.
-
-    Args:
-        workers: Number of parallel workers for loading
-        max_dumps: Load at most this many dumps in this run; None loads the whole backlog.
-
-    Returns:
-        List of result messages for the response queue, one per dump loaded plus one
-        for the failure that stopped the run, if any.
+    Stops at the first failure so that dump is retried next run. ``max_dumps`` limits how
+    many are loaded in this run.
     """
     try:
         result = import_missing_incremental_dumps(
@@ -136,7 +110,7 @@ def import_incremental_dump(workers: int = 4, max_dumps: Optional[int] = None) -
         return _error('clk_dump_imported', e, dump_type='incremental')
 
     pending = result['pending']
-    messages = [_dump_imported('incremental', dump, False, pending=pending) for dump in result['imported']]
+    messages = [_dump_imported('incremental', dump, pending=pending) for dump in result['imported']]
     messages.extend({
         'type': 'clk_dump_imported', 'dump_type': 'incremental', 'status': 'error',
         'dump_id': dump_id, 'pending': pending, 'error': error,
@@ -147,56 +121,19 @@ def import_incremental_dump(workers: int = 4, max_dumps: Optional[int] = None) -
     return messages
 
 
-def record_dump_import(dump_id: int, dump_type: str, imported_at: Optional[str] = None) -> list[dict]:
-    """
-    Record a dump as already loaded, without loading it.
-
-    For dumps that went into listens before ``imported_dumps`` existed, so the
-    incremental catch-up knows where to resume instead of treating the whole FTP
-    listing as missing.
-
-    Args:
-        dump_id: Id of the dump that is already in listens.
-        dump_type: 'full' or 'incremental'.
-        imported_at: When it was loaded, as a UTC 'YYYY-MM-DD HH:MM:SS[.mmm]' string;
-            defaults to now. A dump loaded before the latest full dump import must
-            carry its real timestamp, otherwise the catch-up reads it as newer than
-            that full dump and skips dumps it should load.
-
-    Returns:
-        List of result messages for the response queue
-    """
+def set_dump_import_state(dump_id: int) -> list[dict]:
+    """Set the incremental dump mark: the next catch-up loads the dumps after ``dump_id``."""
     try:
-        parsed_type = DumpType(dump_type)
-    except ValueError:
-        error = ValueError(f"Unknown dump type {dump_type!r}, expected one of {[t.value for t in DumpType]}")
-        return _error('clk_dump_import_recorded', error, dump_id=dump_id)
-
-    try:
-        parsed_at = datetime.fromisoformat(imported_at) if imported_at else None
         with _client() as ch_client:
             ensure_stats_schema(ch_client)
-            record_imported_dump(ch_client, dump_id, parsed_type, parsed_at)
+            set_import_state(ch_client, INCREMENTAL_DUMP_STATE, dump_id)
     except Exception as e:
-        return _error('clk_dump_import_recorded', e, dump_id=dump_id)
-
-    return [{
-        'type': 'clk_dump_import_recorded', 'status': 'success',
-        'dump_id': dump_id, 'dump_type': parsed_type.value, 'imported_at': imported_at,
-    }]
+        return _error('clk_dump_import_state_set', e, dump_id=dump_id)
+    return [{'type': 'clk_dump_import_state_set', 'status': 'success', 'dump_id': dump_id}]
 
 
 def import_deleted_listens(batch_size: int = 10_000) -> list[dict]:
-    """
-    Import listen deletions from the ListenBrainz listens database and apply them
-    to ClickHouse listens.
-
-    Args:
-        batch_size: Number of rows to fetch from the listens database per batch.
-
-    Returns:
-        List of result messages for the response queue
-    """
+    """Import listen deletions from the listens database and apply them."""
     try:
         if not config.LISTENS_DSN:
             raise ValueError("LISTENS_DSN is not configured")
@@ -212,10 +149,9 @@ def _run_stats_job(
     entity: Optional[str],
     run: Callable[[StatsCacheManager], Iterator[dict]],
 ) -> Iterator[dict]:
-    """Run ``run`` on the manager of ``entity`` (or of every stat type) and yield its messages.
+    """Yield the messages of ``run`` for the manager of ``entity``, or of every stat type.
 
-    A failing stat type is reported with a clk_stats_error message and does not stop the
-    others; a clk_stats_complete message closes the job.
+    A failing stat type yields a clk_stats_error message without stopping the others.
     """
     if entity and entity not in STAT_TYPES:
         yield {'type': 'clk_stats_error', 'entity': entity, 'job': job, 'error': f"Unknown entity: {entity}"}
@@ -223,9 +159,9 @@ def _run_stats_job(
     entities_to_process = [entity] if entity else list(STAT_TYPES)
     logger.info("Running %s stats job for entities: %s", job, entities_to_process)
 
-    cache_config = get_cache_config()
+    connection = ClickHouseConnection.from_config()
     for entity_type in entities_to_process:
-        manager = _stats_manager(cache_config, entity_type, full=job == 'full_refresh')
+        manager = _stats_manager(connection, entity_type, full=job == 'full_refresh')
         try:
             manager.connect()
             message_count = 0
@@ -247,16 +183,7 @@ def run_hourly_stats_job(
     entity: Optional[str] = None,
     batch_size: int = 1000,
 ) -> Iterator[dict]:
-    """
-    Run the hourly stats cache refresh job from an RMQ request.
-
-    Args:
-        entity: Stat type to process, or None for all ClickHouse user stats.
-        batch_size: Number of users to process per batch
-
-    Yields:
-        Result messages for the response queue.
-    """
+    """Incrementally refresh the stats of ``entity``, or of every stat type."""
     return _run_stats_job('hourly', entity, lambda manager: manager.run_hourly_job(batch_size=batch_size))
 
 
@@ -265,22 +192,10 @@ def run_full_stats_refresh(
     message_batch_size: int = 100,
     user_flush_size: int = 5000,
 ) -> Iterator[dict]:
-    """
-    Run a full stats cache refresh from an RMQ request.
+    """Recompute the stats of ``entity``, or of every stat type, into new databases.
 
-    Builds a compact intermediate per stat type, then streams each time range
-    from it, aggregating weekday/hour or timeline buckets. Emits start / data /
-    end messages so the LB CouchDB handler swaps databases per (stat type, time
-    range).
-
-    Args:
-        entity: Stat type to process, or None for all ClickHouse user stats.
-        message_batch_size: Users per outbound RMQ message.
-        user_flush_size: Users buffered from the ClickHouse stream before
-            messages are emitted and cache state is updated.
-
-    Yields:
-        Result messages for the response queue.
+    ``message_batch_size`` users go in a message; ``user_flush_size`` users are buffered
+    from ClickHouse before their messages are sent and their cache state updated.
     """
     return _run_stats_job('full_refresh', entity, lambda manager: manager.run_full_refresh(
         message_batch_size=message_batch_size,

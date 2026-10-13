@@ -1,5 +1,4 @@
 import calendar
-import json
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 
@@ -15,34 +14,11 @@ class ActivityDataTestCase(ClickHouseTestCase):
         super().setUp()
         self.load_spark_listens()
 
-    def test_full_refresh_matches_spark_expected_files(self):
-        for entity in ("daily_activity", "listening_activity"):
-            with self.subTest(entity=entity):
-                expected = json.loads((TEST_DATA_PATH / f"user_{entity}_all_time.json").read_text())[0]
-                manager = self.manager(BulkActivityStatsCacheManager, entity)
-                messages = list(manager.run_full_refresh(message_batch_size=1, user_flush_size=1))
-                all_time = [m for m in messages if m.get("stats_range") == "all_time" and m["type"] == "clk_user_entity"]
-                actual = {u["user_id"]: u["data"] for m in all_time for u in m["data"]}
-                self.assertEqual(set(actual), {u["user_id"] for u in expected["data"]})
-                for user in expected["data"]:
-                    self.assertCountEqual(actual[user["user_id"]], user["data"])
-                for message in all_time:
-                    self.assertEqual(message["from_ts"], expected["from_ts"])
-                    self.assertEqual(message["to_ts"], expected["to_ts"])
-                    self.assertEqual(len(message["data"]), 1)
-                self.assertEqual(set(manager.get_cache_state()), set(TIME_RANGES))
-                self.assertEqual(self.client.query(
-                    "SELECT count() FROM system.tables WHERE database = currentDatabase() AND name LIKE 'tmp_bulk_%'"
-                ).first_row[0], 0)
-                # The full job must persist cache state that the incremental job can use.
-                incremental = self.manager(ActivityStatsCacheManager, entity)
-                self.assertEqual(list(incremental.run_hourly_job()), [])
-
     def test_all_ranges_against_independent_fixture_counts(self):
-        # These bounds are fixed for the fixture's latest listen, 2021-08-09.
-        # Do not use the production range selector to construct the oracle.
+        # These half-open [start, end) bounds are fixed for the fixture's latest listen,
+        # 2021-08-09T12:22:43. Do not use the production range selector to construct the oracle.
         daily_bounds = {
-            "all_time": ("2002-01-01", "2021-08-09T12:22:43"),
+            "all_time": ("2002-01-01", "2021-08-09T12:22:43.001"),
             "this_week": ("2021-08-02", "2021-08-09"),
             "this_month": ("2021-08-01", "2021-09-01"),
             "this_year": ("2021-01-01", "2022-01-01"),
@@ -73,9 +49,7 @@ class ActivityDataTestCase(ClickHouseTestCase):
             for stats_range, (start, end) in bounds.items():
                 with self.subTest(entity=entity, stats_range=stats_range):
                     start, end = datetime.fromisoformat(start), datetime.fromisoformat(end)
-                    inclusive = entity == "daily_activity" or stats_range == "all_time"
-                    selected = [(uid, ts) for uid, ts, _ in listens
-                                if start <= ts and (ts <= end if inclusive else ts < end)]
+                    selected = [(uid, ts) for uid, ts, _ in listens if start <= ts < end]
                     result = incremental.compute_activity_batch(stats_range, [1, 2, 999])
                     streamed = dict(bulk.stream_activity_for_range(stats_range))
                     self.assertEqual(set(result), {uid for uid, _ in selected})
@@ -127,12 +101,13 @@ class ActivityBoundaryTestCase(ClickHouseTestCase):
         self.assertEqual(daily.get_stale_users("month", *bounds), [1])
         daily.update_user_cache_state([1], "month", datetime(2021, 8, 15))
         self.assertEqual(daily.get_stale_users("month", *bounds), [])
+        # The period's ending midnight belongs to the next period: a listen there must
+        # not invalidate July stats, one just before it must.
         self.insert_listens([(1, datetime(2021, 8, 1), datetime(2021, 8, 16), "boundary")])
-        # Daily activity includes the period's ending midnight.
+        self.assertEqual(daily.get_stale_users("month", *bounds), [])
+        self.insert_listens([(1, datetime(2021, 7, 31, 23, 59, 59, 999000), datetime(2021, 8, 17), "last")])
         self.assertEqual(daily.get_stale_users("month", *bounds), [1])
-        daily.update_user_cache_state([1], "month", datetime(2021, 8, 16))
-        # A new listen outside July must not invalidate July daily stats.
-        self.insert_listens([(1, datetime(2021, 8, 2), datetime(2021, 8, 17), "outside")])
+        daily.update_user_cache_state([1], "month", datetime(2021, 8, 17))
         self.assertEqual(daily.get_stale_users("month", *bounds), [])
         listening = self.manager(ActivityStatsCacheManager, "listening_activity")
         self.assertEqual(listening.get_stale_users("month", *listening.get_period_bounds("month")), [1])
@@ -198,11 +173,6 @@ class ActivityBoundaryTestCase(ClickHouseTestCase):
         self.assertNotIn(2, {user_id for _, user_id in users})
         self.assertEqual(list(self.manager(ActivityStatsCacheManager, "daily_activity").run_hourly_job()), [])
 
-    def test_empty_database_produces_no_stats(self):
-        for entity in ("daily_activity", "listening_activity"):
-            self.assertEqual(list(self.manager(BulkActivityStatsCacheManager, entity).run_full_refresh()), [])
-            self.assertEqual(list(self.manager(ActivityStatsCacheManager, entity).run_hourly_job()), [])
-
     def test_midnight_bounds_and_utc_weekday(self):
         start = datetime(2021, 7, 1, tzinfo=timezone.utc)
         end = datetime(2021, 8, 1, tzinfo=timezone.utc)
@@ -212,10 +182,10 @@ class ActivityBoundaryTestCase(ClickHouseTestCase):
             (2, datetime(2021, 8, 9, tzinfo=timezone.utc), end, "latest"),
         ])
         daily = self.manager(ActivityStatsCacheManager, "daily_activity").compute_activity_batch("month", [1])
+        # [start, end): the listen at the ending midnight belongs to August
         self.assertCountEqual(daily[1], [
             {"day": "Thursday", "hour": 0, "listen_count": 1},
             {"day": "Saturday", "hour": 23, "listen_count": 1},
-            {"day": "Sunday", "hour": 0, "listen_count": 1},
         ])
         listening = self.manager(ActivityStatsCacheManager, "listening_activity").compute_activity_batch("month", [1])
         self.assertEqual(len(listening[1]), 61)

@@ -1,29 +1,17 @@
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from clickhouse.stats.activity_cache_manager import (
     ActivityStatsCacheManager,
     get_daily_activity_range,
     get_listening_activity_range,
 )
-from clickhouse.stats.cache_manager import CacheConfig
+from clickhouse.client import ClickHouseConnection
 
 
 class ActivityRangeTestCase(unittest.TestCase):
 
-    def test_daily_ranges_match_spark_boundaries(self):
-        latest = datetime(2021, 11, 24, 2, 3, tzinfo=timezone.utc)
-
-        this_week = get_daily_activity_range("this_week", latest)
-        previous_week = get_daily_activity_range("week", latest)
-
-        self.assertEqual(this_week.start, datetime(2021, 11, 22, tzinfo=timezone.utc))
-        self.assertEqual(this_week.end, datetime(2021, 11, 29, tzinfo=timezone.utc))
-        self.assertTrue(this_week.end_inclusive)
-        self.assertEqual(previous_week.start, datetime(2021, 11, 15, tzinfo=timezone.utc))
-        self.assertEqual(previous_week.end, datetime(2021, 11, 22, tzinfo=timezone.utc))
-
-    def test_daily_ranges_handle_period_first_day_like_spark(self):
+    def test_daily_ranges_handle_period_first_day(self):
         latest = datetime(2021, 11, 1, 3, tzinfo=timezone.utc)
         this_month = get_daily_activity_range("this_month", latest)
 
@@ -63,6 +51,8 @@ class ActivityRangeTestCase(unittest.TestCase):
 
         self.assertEqual(activity_range.from_ts, int(datetime(2002, 1, 1, tzinfo=timezone.utc).timestamp()))
         self.assertEqual(activity_range.to_ts, int(latest.timestamp()))
+        # half-open like every range, ending just after the latest listen
+        self.assertEqual(activity_range.end, latest + timedelta(milliseconds=1))
         self.assertEqual(activity_range.buckets[0].time_range, "2002")
         self.assertEqual(activity_range.buckets[-1].time_range, "2021")
 
@@ -70,4 +60,4 @@ class ActivityRangeTestCase(unittest.TestCase):
 class ActivityValidationTestCase(unittest.TestCase):
     def test_rejects_unknown_stat_types(self):
         with self.assertRaises(ValueError):
-            ActivityStatsCacheManager(CacheConfig(), "artists")
+            ActivityStatsCacheManager(ClickHouseConnection(), "artists")

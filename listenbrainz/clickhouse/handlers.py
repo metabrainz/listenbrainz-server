@@ -13,24 +13,18 @@ from data.model.user_listening_activity import ListeningActivityRecord
 
 logger = logging.getLogger(__name__)
 
-# The user stats computed by the ClickHouse pipeline and the models their entries are
-# validated with.
+# ClickHouse user stats and the models their entries are validated with.
 ENTITY_MODELS = {
     "daily_activity": DailyActivityRecord,
     "listening_activity": ListeningActivityRecord,
 }
 
 
-# CouchDB errors are not caught by the handlers below: the ClickHouse side has already
-# marked these stats as computed, so the reader requeues a message whose write failed
-# with a transient error instead of dropping it.
+# CouchDB errors propagate: the reader requeues messages whose write failed transiently.
 
 
 def handle_stats_database_start(message):
-    """
-    Handle start of a stats database refresh.
-    Creates the database for the incoming data.
-    """
+    """Create the database for a stats refresh."""
     database = message.get("database")
     if not database:
         current_app.logger.error("No database specified in clk_stats_database_start message")
@@ -51,10 +45,7 @@ def handle_stats_database_start(message):
 
 
 def handle_stats_database_end(message):
-    """
-    Handle end of a stats database refresh.
-    Cleans up old databases of the same type.
-    """
+    """Delete the older databases of a refreshed stat."""
     database = message.get("database")
     if not database:
         current_app.logger.error("No database specified in clk_stats_database_end message")
@@ -73,24 +64,15 @@ def handle_stats_database_end(message):
 
 
 def handle_user_entity_stats(message):
-    """
-    Handle batched user stats (daily_activity, listening_activity) from ClickHouse.
-    Inserts the stats data into CouchDB using bulk insert.
+    """Insert a batch of users' stats into CouchDB.
 
-    Message format:
-        {
-            'type': 'clk_user_entity',
-            'entity': 'daily_activity',
-            'stats_range': 'all_time',
-            'from_ts': 0,
-            'to_ts': 1234567890,
-            'database': 'clk_daily_activity_all_time_20240115',
-            'data': [
-                {'user_id': 123, 'count': 100, 'data': [...]},
-                {'user_id': 456, 'count': 50, 'data': [...]},
-                ...
-            ]
-        }
+    Each ``data`` item is one user's stats and must be handled on its own: oversized
+    messages are split by item (SPLITTABLE_MESSAGE_TYPES in clickhouse/request_consumer.py).
+
+        {'type': 'clk_user_entity', 'entity': 'daily_activity', 'stats_range': 'all_time',
+         'from_ts': 0, 'to_ts': 1234567890,
+         'database': 'daily_activity_all_time_20240115',  # or 'database_prefix'
+         'data': [{'user_id': 123, 'count': 100, 'data': [...]}, ...]}
     """
     entity = message.get("entity")
     stats_range = message.get("stats_range")
@@ -181,21 +163,13 @@ def handle_dump_imported(message):
         )
 
 
-def handle_dump_import_recorded(message):
-    """Handle notification that a dump was recorded as already loaded."""
-    dump_type = message.get("dump_type", "unknown")
-    dump_id = message.get("dump_id")
-    status = message.get("status", "unknown")
-    error = message.get("error")
-
-    if status == "success":
-        current_app.logger.info(
-            f"ClickHouse dump recorded as imported: type={dump_type}, id={dump_id}, "
-            f"imported_at={message.get('imported_at') or 'now'}"
-        )
+def handle_dump_import_state_set(message):
+    """Handle notification that the incremental dump mark was set."""
+    if message.get("status") == "success":
+        current_app.logger.info("ClickHouse incremental dump mark set to %s", message.get("dump_id"))
     else:
         current_app.logger.error(
-            f"ClickHouse dump could not be recorded as imported: id={dump_id}, error={error}"
+            "ClickHouse incremental dump mark could not be set to %s: %s", message.get("dump_id"), message.get("error")
         )
 
 
@@ -246,7 +220,7 @@ RESPONSE_HANDLERS = {
     "clk_stats_database_end": handle_stats_database_end,
     "clk_user_entity": handle_user_entity_stats,
     "clk_dump_imported": handle_dump_imported,
-    "clk_dump_import_recorded": handle_dump_import_recorded,
+    "clk_dump_import_state_set": handle_dump_import_state_set,
     "clk_stats_complete": handle_stats_complete,
     "clk_stats_error": handle_stats_error,
     "clk_schema_initialized": handle_schema_initialized,

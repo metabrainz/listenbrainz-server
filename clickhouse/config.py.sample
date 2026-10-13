@@ -25,8 +25,3 @@ LISTENS_DSN = "postgresql://listenbrainz_listens:listenbrainz_listens@lb_db/list
 # FTP settings for dump download
 FTP_SERVER_URI = "ftp.eu.metabrainz.org"
 FTP_LISTENS_DIR = "/pub/musicbrainz/listenbrainz/"
-
-# Stats settings
-# Optional prefix for the CouchDB stats databases. Empty: same names as the spark stats
-# ({entity}_{range}_{YYYYMMDD}), which is what the stats API expects on the ClickHouse CouchDB instance.
-STATS_COUCH_DB_PREFIX = ""

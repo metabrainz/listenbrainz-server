@@ -18,15 +18,10 @@ class ClickHouseRequestManageTestCase(unittest.TestCase):
         mock_send.assert_called_once_with("clickhouse.schema.init")
 
     @mock.patch("listenbrainz.clickhouse.request_manage.send_request_to_clickhouse")
-    def test_import_full_dump_replace_flag(self, mock_send):
-        result = self.runner.invoke(request_manage.cli, ["import_full_dump"])
+    def test_import_full_dump(self, mock_send):
+        result = self.runner.invoke(request_manage.cli, ["import_full_dump", "--workers", "2"])
         self.assertEqual(result.exit_code, 0)
-        mock_send.assert_called_once_with("clickhouse.import_full_dump", workers=4, replace=True)
-
-        mock_send.reset_mock()
-        result = self.runner.invoke(request_manage.cli, ["import_full_dump", "--no-replace", "--workers", "2"])
-        self.assertEqual(result.exit_code, 0)
-        mock_send.assert_called_once_with("clickhouse.import_full_dump", workers=2, replace=False)
+        mock_send.assert_called_once_with("clickhouse.import_full_dump", workers=2)
 
     @mock.patch("listenbrainz.clickhouse.request_manage.send_request_to_clickhouse")
     def test_import_incremental_dump_max_dumps(self, mock_send):
@@ -40,30 +35,12 @@ class ClickHouseRequestManageTestCase(unittest.TestCase):
         mock_send.assert_called_once_with("clickhouse.import_incremental_dump", workers=4, max_dumps=5)
 
     @mock.patch("listenbrainz.clickhouse.request_manage.send_request_to_clickhouse")
-    def test_record_imported_dump(self, mock_send):
-        result = self.runner.invoke(request_manage.cli, [
-            "record_imported_dump", "--dump-id", "2560", "--dump-type", "full",
-            "--imported-at", "2026-06-10 00:21:48.531",
-        ])
+    def test_set_dump_import_state(self, mock_send):
+        result = self.runner.invoke(request_manage.cli, ["set_dump_import_state", "--dump-id", "2560"])
         self.assertEqual(result.exit_code, 0)
-        mock_send.assert_called_once_with(
-            "clickhouse.record_imported_dump",
-            dump_id=2560, dump_type="full", imported_at="2026-06-10 00:21:48.531",
-        )
+        mock_send.assert_called_once_with("clickhouse.set_dump_import_state", dump_id=2560)
 
-        mock_send.reset_mock()
-        result = self.runner.invoke(request_manage.cli, [
-            "record_imported_dump", "--dump-id", "2633", "--dump-type", "incremental",
-        ])
-        self.assertEqual(result.exit_code, 0)
-        mock_send.assert_called_once_with(
-            "clickhouse.record_imported_dump",
-            dump_id=2633, dump_type="incremental", imported_at=None,
-        )
-
-        result = self.runner.invoke(request_manage.cli, [
-            "record_imported_dump", "--dump-id", "1", "--dump-type", "sample",
-        ])
+        result = self.runner.invoke(request_manage.cli, ["set_dump_import_state"])
         self.assertNotEqual(result.exit_code, 0)
 
     @mock.patch("listenbrainz.clickhouse.request_manage.send_request_to_clickhouse")
@@ -154,6 +131,3 @@ class ClickHouseRequestManageTestCase(unittest.TestCase):
 
         self.assertEqual(result.exit_code, 0)
         mock_send.assert_called_once_with("clickhouse.stats.hourly", batch_size=300)
-
-if __name__ == "__main__":
-    unittest.main()

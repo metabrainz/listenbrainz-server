@@ -1,8 +1,4 @@
-"""
-FTP Dump Downloader for ClickHouse
-
-Downloads Spark parquet listen dumps from the ListenBrainz FTP server for loading into ClickHouse.
-"""
+"""Downloads Spark parquet listen dumps from the ListenBrainz FTP server."""
 
 import ftplib
 import hashlib
@@ -119,31 +115,16 @@ class FTPDumpDownloader:
                 raise
 
     def download_dump(self, filename: str, directory: str) -> str:
-        """
-        Download and validate a dump file from FTP.
-
-        Args:
-            filename: Name of the dump file to download
-            directory: Local directory to save the file
-
-        Returns:
-            Path to the downloaded file
-
-        Raises:
-            DumpInvalidException: If checksum validation fails
-        """
-        # Check for SHA256 file
+        """Download ``filename`` into ``directory`` and verify its SHA256 checksum; returns its path."""
         sha_filename = filename + '.sha256'
         dir_content = self.list_dir()
 
         if sha_filename not in dir_content:
             raise DumpInvalidException(f"SHA256 checksum file not found for {filename}")
 
-        # Download SHA256 file
         sha_dest_path = os.path.join(directory, sha_filename)
         self._download_file(sha_filename, sha_dest_path)
 
-        # Download dump file
         dest_path = os.path.join(directory, filename)
         logger.info(f"Downloading {filename}...")
         t0 = time.monotonic()
@@ -151,7 +132,6 @@ class FTPDumpDownloader:
         elapsed = time.monotonic() - t0
         logger.info(f"Download complete in {elapsed:.1f}s")
 
-        # Verify checksum
         logger.info("Verifying dump integrity...")
         with open(dest_path, 'rb') as f:
             calculated_sha = hashlib.file_digest(f, 'sha256').hexdigest()
@@ -170,16 +150,7 @@ class FTPDumpDownloader:
         return dest_path
 
     def get_dump_name(self, dump_type: DumpType, dump_id: int = None) -> tuple[str, int]:
-        """
-        Get the name and ID of the dump to download.
-
-        Args:
-            dump_type: FULL or INCREMENTAL.
-            dump_id: Specific dump ID to look for; defaults to the latest available.
-
-        Returns:
-            Tuple of (dump_directory_name, dump_id)
-        """
+        """Return (directory name, id) of dump ``dump_id``, or of the latest dump."""
         dumps = self.list_dump_ids(dump_type)
         if not dumps:
             raise ValueError(f"No {dump_type.value} dumps found on FTP server")
@@ -203,17 +174,7 @@ class FTPDumpDownloader:
         download_dir: str,
         dump_id: int = None,
     ) -> tuple[str, int]:
-        """
-        Download a dump from FTP.
-
-        Args:
-            dump_type: Type of dump (FULL or INCREMENTAL)
-            download_dir: Existing directory to save the dump in
-            dump_id: Specific dump ID to download; defaults to the latest available.
-
-        Returns:
-            Tuple of (path_to_downloaded_file, dump_id)
-        """
+        """Download the Spark archive of dump ``dump_id`` (latest if None); returns (path, dump id)."""
         dump_dir_name, dump_id = self.get_dump_name(dump_type, dump_id)
         logger.info(f"Selected {dump_type.value} dump: {dump_dir_name} (ID: {dump_id})")
 
@@ -223,7 +184,6 @@ class FTPDumpDownloader:
         self.connection.cwd(dump_dir_name)
         dump_path = self.download_dump(spark_dump_filename, download_dir)
 
-        # Return to root
         self.connection.cwd('/')
 
         return dump_path, dump_id

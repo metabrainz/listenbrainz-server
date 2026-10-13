@@ -5,7 +5,7 @@ from unittest import mock
 
 from clickhouse.stats import handlers
 from clickhouse.tests import ClickHouseTestCase, TEST_DATA_PATH
-from clickhouse.stats.imported_dumps import get_latest_full_dump, get_incremental_dumps_since_latest_full
+from clickhouse.stats.import_state import INCREMENTAL_DUMP_STATE, get_import_state
 
 
 class DatabaseHandlerTestCase(ClickHouseTestCase):
@@ -16,27 +16,11 @@ class DatabaseHandlerTestCase(ClickHouseTestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
 
-    def test_record_import_validates_input_and_persists_timestamp(self):
-        messages = handlers.record_dump_import(2560, "full", "2026-06-10 00:21:48.531")
-        self.assertEqual(messages[0]["status"], "success")
-        self.assertEqual(get_latest_full_dump(self.client), {
-            "dump_id": 2560, "imported_at": datetime(2026, 6, 10, 0, 21, 48, 531000),
-        })
-        self.assertEqual(handlers.record_dump_import(2633, "incremental")[0]["status"], "success")
-        self.assertEqual(get_incremental_dumps_since_latest_full(self.client), {2633})
-        for dump_type, imported_at in (("sample", None), ("incremental", "last tuesday")):
-            self.assertEqual(handlers.record_dump_import(9999, dump_type, imported_at)[0]["status"], "error")
-        self.assertEqual(self.client.query("SELECT count() FROM imported_dumps").first_row[0], 2)
-
-    def test_schema_handler_reports_real_migration_failure(self):
-        self.assertEqual(handlers.init_schema(), [{"type": "clk_schema_initialized", "status": "success"}])
-        self.client.command("DROP TABLE raw_listens")
-        self.client.command("CREATE TABLE raw_listens (user_id UInt32) ENGINE=MergeTree ORDER BY user_id")
-        self.client.insert("raw_listens", [(1,)], column_names=["user_id"])
-        result = handlers.init_schema()
-        self.assertEqual(result[0]["status"], "error")
-        self.assertIn("still holds 1 rows", result[0]["error"])
-        self.assertEqual(self.client.query("SELECT * FROM raw_listens").result_rows, [(1,)])
+    def test_set_dump_import_state(self):
+        self.assertEqual(handlers.set_dump_import_state(2560), [
+            {"type": "clk_dump_import_state_set", "status": "success", "dump_id": 2560},
+        ])
+        self.assertEqual(get_import_state(self.client, INCREMENTAL_DUMP_STATE), 2560)
 
     def test_load_handlers_import_files_and_report_corrupt_data(self):
         self.assertEqual(handlers.load_full_dump(str(TEST_DATA_PATH / "full-dump-1"))[0]["status"], "success")

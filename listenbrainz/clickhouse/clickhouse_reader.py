@@ -1,9 +1,4 @@
-"""
-ClickHouse Result Reader
-
-Consumes result messages from the ClickHouse stats consumer via RabbitMQ
-and dispatches them to the appropriate handlers.
-"""
+"""Consumes ClickHouse result messages and dispatches them to their handlers."""
 import json
 import logging
 import time
@@ -35,12 +30,7 @@ def is_retryable(error: Exception) -> bool:
 
 
 def init_clickhouse_reader_couchdb(app):
-    """Initialize CouchDB for the ClickHouse result reader.
-
-    The reader writes to the ClickHouse stats CouchDB instance (same database names as
-    the Spark stats, different instance), so it overrides the default couchdb connection
-    set up by create_app.
-    """
+    """Point the default CouchDB connection at the ClickHouse stats instance."""
     host = app.config["CLICKHOUSE_READER_COUCHDB_HOST"]
     if not host or str(host).startswith(("KEYDOESNOTEXIST", "SERVICEDOESNOTEXIST")):
         raise RuntimeError(

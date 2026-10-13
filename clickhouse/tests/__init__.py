@@ -14,7 +14,7 @@ from uuid import uuid4
 import clickhouse_connect
 
 from clickhouse.client import ClickHouseConnection
-from clickhouse.stats.cache_manager import CacheConfig
+from clickhouse.stats.ftp import DumpType
 from clickhouse.stats.load_dump import load_dump
 from clickhouse.stats.schema import ensure_stats_schema
 
@@ -38,20 +38,20 @@ class ClickHouseTestCase(unittest.TestCase):
         self.client = self.connection.connect()
         self.addCleanup(self.client.close)
         ensure_stats_schema(self.client)
-        self.cache_config = CacheConfig(connection=self.connection)
 
     def config_settings(self) -> dict:
         """The clickhouse config values pointing at this test's database."""
         return {"CLICKHOUSE_" + key.upper(): value for key, value in asdict(self.connection).items()}
 
     def manager(self, manager_class, stat_type):
-        manager = manager_class(self.cache_config, stat_type)
+        manager = manager_class(self.connection, stat_type)
         manager.connect()
         self.addCleanup(manager.ch_client.close)
         return manager
 
-    def load_fixture(self, name, **kwargs):
-        result = load_dump(str(TEST_DATA_PATH / name), self.connection, workers=2, **kwargs)
+    def load_fixture(self, name):
+        dump_type = DumpType.FULL if name.startswith("full") else DumpType.INCREMENTAL
+        result = load_dump(str(TEST_DATA_PATH / name), self.connection, dump_type, workers=2)
         self.assertEqual(result["errors"], [])
         self.assertGreater(result["total_inserted"], 0)
         return result
