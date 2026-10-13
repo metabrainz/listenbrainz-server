@@ -4,6 +4,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFileCirclePlus,
   faPlusCircle,
+  faSearch,
+  faTimes,
 } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import { Link } from "react-router";
@@ -34,6 +36,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
   const { listen } = props;
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const [playlists, setPlaylists] = React.useState<Array<JSPFObject>>([]);
+  const [searchQuery, setSearchQuery] = React.useState("");
 
   React.useEffect(() => {
     async function loadPlaylists() {
@@ -135,6 +138,15 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
   }, [listen, modal]);
 
   const trackName = getTrackName(listen);
+
+  const filteredPlaylists = React.useMemo(() => {
+    if (!searchQuery.trim()) return playlists;
+    const query = searchQuery.toLowerCase();
+    return playlists.filter((jspfObject) =>
+      jspfObject.playlist.title.toLowerCase().includes(query)
+    );
+  }, [playlists, searchQuery]);
+
   return (
     <Modal
       {...bootstrapDialog(modal)}
@@ -156,6 +168,62 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
           className="list-group"
           style={{ maxHeight: "50vh", overflow: "auto" }}
         >
+          {playlists?.length > 5 && (
+            <div
+              style={{
+                position: "relative",
+                marginBottom: "8px",
+                padding: "0 4px",
+              }}
+            >
+              <FontAwesomeIcon
+                icon={faSearch}
+                style={{
+                  position: "absolute",
+                  left: "14px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#9ca3af",
+                  fontSize: "12px",
+                  pointerEvents: "none",
+                }}
+              />
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Search playlists..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  paddingLeft: "30px",
+                  paddingRight: searchQuery ? "30px" : "12px",
+                  fontSize: "13px",
+                }}
+                aria-label="Search playlists"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  style={{
+                    position: "absolute",
+                    right: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    color: "#9ca3af",
+                    cursor: "pointer",
+                    padding: "2px",
+                    lineHeight: 1,
+                  }}
+                  aria-label="Clear search"
+                >
+                  <FontAwesomeIcon icon={faTimes} />
+                </button>
+              )}
+            </div>
+          )}
           <button
             type="button"
             className="list-group-item list-group-item-info"
@@ -163,7 +231,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
           >
             <FontAwesomeIcon icon={faFileCirclePlus} /> Create new playlist
           </button>
-          {playlists?.map((jspfObject) => {
+          {filteredPlaylists?.map((jspfObject) => {
             const { playlist } = jspfObject;
             return (
               <button
