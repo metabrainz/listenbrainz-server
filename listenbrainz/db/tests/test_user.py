@@ -15,6 +15,13 @@ class UserTestCase(DatabaseTestCase):
         user_id = db_user.create(self.db_conn, 0, "izzy_cheezy")
         self.assertIsNotNone(db_user.get(self.db_conn, user_id))
 
+    def test_get_user_count_counts_only_gdpr_agreed_users(self):
+        db_user.create(self.db_conn, 1, "not-agreed")
+        db_user.create(self.db_conn, 2, "agreed")
+        db_user.agree_to_gdpr(self.db_conn, "agreed")
+
+        self.assertEqual(db_user.get_user_count(self.db_conn), 1)
+
     def test_get_by_musicbrainz_row_id(self):
         user_id = db_user.create(self.db_conn, 0, 'frank')
         user = db_user.get_by_mb_row_id(self.db_conn, 0)

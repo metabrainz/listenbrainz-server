@@ -43,14 +43,14 @@ class MissingMusicbrainzDataDatabaseTestCase(DatabaseTestCase, TimescaleTestCase
         )
 
         result = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(
-            self.db_conn, self.ts_conn, user_id=self.user['id'], source='cf'
+            self.db_conn, self.listens_conn, user_id=self.user['id'], source='cf'
         )
         self.assertEqual(missing_musicbrainz_data, result[0])
 
     def test_get_user_missing_musicbrainz_data(self):
         data_inserted = self.insert_test_data()
         result = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(
-            self.db_conn, self.ts_conn, user_id=self.user['id'], source='cf'
+            self.db_conn, self.listens_conn, user_id=self.user['id'], source='cf'
         )
         self.assertEqual(data_inserted, result[0])
 
@@ -75,6 +75,6 @@ class MissingMusicbrainzDataDatabaseTestCase(DatabaseTestCase, TimescaleTestCase
         )
 
         result = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(
-            self.db_conn, self.ts_conn, user_id=self.user['id'], source='cf'
+            self.db_conn, self.listens_conn, user_id=self.user['id'], source='cf'
         )
         self.assertIsNone(result)

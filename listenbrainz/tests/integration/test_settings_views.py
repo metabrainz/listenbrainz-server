@@ -92,7 +92,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
             self.assertEqual(task.user_id, self.user["id"])
             self.assertEqual(task.task, "delete_listens")
 
-        # Wait for the listens DB history deletion; Timescale keeps its rows and count.
+        # Wait for the listens DB history deletion, which also resets the listen count.
 
         start_time = time.time()
         timeout = 5  # 5 seconds timeout
@@ -115,7 +115,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
             'api_v1.get_listen_count', user_name=self.user['musicbrainz_id']
         ))
         self.assert200(resp)
-        self.assertEqual(json.loads(resp.data)['payload']['count'], 3)
+        self.assertEqual(json.loads(resp.data)['payload']['count'], 0)
 
         # check that the latest_import timestamp has been reset too
         resp = self.client.get(self.custom_url_for('api_v1.latest_import', user_name=self.user['musicbrainz_id']))

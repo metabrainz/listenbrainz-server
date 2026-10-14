@@ -21,7 +21,7 @@ from listenbrainz.garage import delete_objects, ensure_bucket, get_garage_client
     get_user_data_export_bucket, list_object_names
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn, listens_conn
 
 
 class ExportTestCase(ListenAPIIntegrationTestCase):
@@ -94,7 +94,7 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
         return client, bucket
 
     def create_mapping_record(self, recording_msid):
-        self.ts_conn.execute(text("""
+        self.listens_conn.execute(text("""
             INSERT INTO mapping.mb_metadata_cache
                     (recording_mbid, recording_id, artist_mbids, artist_ids, release_mbid, release_id, recording_data, artist_data, tag_data, release_data, dirty)
              VALUES (:recording_mbid ::UUID, 1, :artist_mbids ::UUID[], '{1}'::INTEGER[], :release_mbid ::UUID, 1, :recording_data, :artist_data, :tag_data, :release_data, 'f')
@@ -107,14 +107,14 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
             "release_data": json.dumps(self.recording["release_data"]),
             "tag_data": json.dumps(self.recording["tag_data"])
         })
-        self.ts_conn.execute(text("""
-            INSERT INTO mbid_mapping (recording_msid, recording_mbid, match_type)
+        self.listens_conn.execute(text("""
+            INSERT INTO mapping.mbid_mapping (recording_msid, recording_mbid, match_type)
              VALUES (:recording_msid, :recording_mbid, 'exact_match')
         """), {
             "recording_msid": recording_msid,
             "recording_mbid": self.recording["recording_mbid"]
         })
-        self.ts_conn.commit()
+        self.listens_conn.commit()
 
     def send_listens(self):
         with open(self.path_to_data_file('user_export_test.json')) as f:
@@ -509,7 +509,7 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
             with mock.patch("listenbrainz.background.export.get_garage_client",
                             side_effect=RuntimeError("garage is unavailable")):
                 with self.assertRaises(RuntimeError):
-                    export_user(db_conn, ts_conn, self.user["id"], {"export_id": export_id})
+                    export_user(db_conn, listens_conn, self.user["id"], {"export_id": export_id})
 
         export = self.get_export_row(export_id)
         self.assertEqual("failed", export.status)

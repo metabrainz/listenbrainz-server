@@ -27,7 +27,7 @@ from listenbrainz.domain.librefm import LibrefmService
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn, listens_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError, \
     APIBadRequest, APIUnauthorized
@@ -802,7 +802,7 @@ def music_services_set_token(service_name: str):
 @api_login_required
 def link_listens():
     """ Returns a list of unlinked listens for the user """
-    unlinked_listens, created = get_user_missing_musicbrainz_data(db_conn, ts_conn, current_user.id, "cf")
+    unlinked_listens, created = get_user_missing_musicbrainz_data(db_conn, listens_conn, current_user.id, "cf")
     data = {
         "unlinked_listens": unlinked_listens or [],
         "last_updated": created,

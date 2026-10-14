@@ -641,7 +641,7 @@ def get_playlists_for_user(playlist_user_name):
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
     include_private = True if user and user["id"] == playlist_user["id"] else False
-    playlists, playlist_count = db_playlist.get_playlists_for_user(db_conn, ts_conn, playlist_user["id"],
+    playlists, playlist_count = db_playlist.get_playlists_for_user(db_conn, playlist_user["id"],
                                                                    include_private=include_private,
                                                                    load_recordings=False, count=count, offset=offset)
 
@@ -674,7 +674,7 @@ def get_playlists_created_for_user(playlist_user_name):
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
     playlists, playlist_count = db_playlist.get_playlists_created_for_user(
-        db_conn, ts_conn, playlist_user["id"], load_recordings=False, count=count, offset=offset
+        db_conn, playlist_user["id"], load_recordings=False, count=count, offset=offset
     )
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
@@ -709,7 +709,7 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
 
     # TODO: This needs to be passed to the DB layer
     include_private = True if user and user["id"] == playlist_user["id"] else False
-    playlists, playlist_count = db_playlist.get_playlists_collaborated_on(db_conn, ts_conn,
+    playlists, playlist_count = db_playlist.get_playlists_collaborated_on(db_conn,
                                                                           playlist_user["id"],
                                                                           include_private=include_private,
                                                                           load_recordings=False,
@@ -722,7 +722,6 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
 @api_bp.get("/user/<playlist_user_name>/playlists/recommendations")
 @crossdomain
 @ratelimit()
-@api_listenstore_needed
 def user_recommendations(playlist_user_name):
     """
     Fetch recommendation playlist metadata in JSPF format without recordings for playlist_user_name.
@@ -738,14 +737,13 @@ def user_recommendations(playlist_user_name):
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
-    playlists = db_playlist.get_recommendation_playlists_for_user(db_conn, ts_conn, playlist_user.id)
+    playlists = db_playlist.get_recommendation_playlists_for_user(db_conn, playlist_user.id)
     return jsonify(serialize_playlists(playlists, len(playlists), 0, 0))
 
 
 @api_bp.get("/user/<playlist_user_name>/playlists/search")
 @crossdomain
 @ratelimit()
-@api_listenstore_needed
 def search_user_playlist(playlist_user_name):
     """
     Search for playlists associated with a user by name or description.
@@ -782,7 +780,7 @@ def search_user_playlist(playlist_user_name):
 
     viewer_id = user["id"] if user else None
     playlists, playlist_count = db_playlist.search_playlists_for_user(
-        db_conn, ts_conn, playlist_user["id"], query, count, offset, 
+        db_conn, playlist_user["id"], query, count, offset,
         viewer_id=viewer_id, include_global=include_global
     )
 
