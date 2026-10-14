@@ -4,7 +4,6 @@
 Results are published to CLICKHOUSE_RESULT_EXCHANGE for ListenBrainz.
 """
 
-import json
 import logging
 import socket
 import time
@@ -19,10 +18,6 @@ from kombu.entity import PERSISTENT_DELIVERY_MODE
 from clickhouse import config, query_map
 
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
-)
 logger = logging.getLogger(__name__)
 
 POLL_INTERVAL = 5
@@ -111,7 +106,7 @@ class ClickHouseRequestConsumer:
     def get_result(self, request: dict) -> Iterable[dict] | None:
         """Process a request and return the result."""
         if not isinstance(request, dict) or 'query' not in request:
-            logger.error('Bad query sent to ClickHouse request consumer: %s', json.dumps(request))
+            logger.error('Bad query sent to ClickHouse request consumer: %s', orjson.dumps(request).decode())
             return None
         query = request['query']
         params = request.get('params', {})
@@ -186,7 +181,7 @@ class ClickHouseRequestConsumer:
     def callback(self, body):
         """Handle incoming message."""
         try:
-            request = json.loads(body)
+            request = orjson.loads(body)
             logger.info('Received a request!')
             results = self.get_result(request)
             if results:
@@ -223,17 +218,17 @@ class ClickHouseRequestConsumer:
         self.producer = self.connection.Producer(channel=self.connection.channel())
 
     def start(self):
-        """Start the consumer."""
-        while True:
-            try:
-                logger.info("ClickHouse request consumer starting...")
-                self.init_rabbitmq_connection()
-                self.consume()
-            except Exception as e:
-                logger.critical("Error in ClickHouse request consumer: %s", str(e), exc_info=True)
-                if self.connection is not None:
-                    self.connection.release()
-                time.sleep(2)
+        """Start the consumer, letting failures exit so the service can restart."""
+        try:
+            logger.info("ClickHouse request consumer starting...")
+            self.init_rabbitmq_connection()
+            self.consume()
+        except Exception as e:
+            logger.critical("Error in ClickHouse request consumer: %s", str(e), exc_info=True)
+            raise
+        finally:
+            if self.connection is not None:
+                self.connection.release()
 
 
 def main():

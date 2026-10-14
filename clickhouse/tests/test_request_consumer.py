@@ -1,4 +1,3 @@
-import json
 import socket
 import unittest
 import uuid
@@ -81,7 +80,7 @@ class ClickHouseRequestConsumerTestCase(unittest.TestCase):
         queue = self.consumer.clickhouse_result_queue(self.consumer.connection.default_channel)
         results = []
         while (message := queue.get(no_ack=True)) is not None:
-            results.append(json.loads(message.body))
+            results.append(orjson.loads(message.body))
         return results
 
     def test_consume_runs_requests_and_publishes_their_results(self):
@@ -142,13 +141,13 @@ class ClickHouseRequestConsumerTestCase(unittest.TestCase):
         self.consumer.publish_retry_policy = {"max_retries": 1, "interval_start": 0, "interval_step": 0}
 
         with self.assertRaises(PublishError):
-            self.consumer.callback(json.dumps({"query": "emit", "params": {"types": ["a"]}}))
+            self.consumer.callback(orjson.dumps({"query": "emit", "params": {"types": ["a"]}}))
         self.assertEqual(self.reported_exceptions(), ["PublishError"])
 
     def test_callback_reports_and_swallows_handler_errors(self):
         for request in ({"query": "emit", "params": {"unknown": 1}}, {"query": "read_missing_dump"}):
             with self.subTest(request=request):
-                self.consumer.callback(json.dumps(request))
+                self.consumer.callback(orjson.dumps(request))
 
         self.assertEqual(self.reported_exceptions(), ["TypeError", "FileNotFoundError"])
         self.assertEqual(self.get_results(), [{"type": "a"}])

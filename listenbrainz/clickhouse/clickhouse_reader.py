@@ -1,5 +1,4 @@
 """Consumes ClickHouse result messages and dispatches them to their handlers."""
-import json
 import logging
 import time
 
@@ -107,7 +106,7 @@ class ClickHouseReader(ConsumerMixin):
             return
 
         if not response_type:
-            self.app.logger.error("No type in message: %s", json.dumps(response, indent=2))
+            self.app.logger.error("No type in message: %s", orjson.dumps(response, option=orjson.OPT_INDENT_2).decode())
             message.ack()
             return
         self.app.logger.info("Received ClickHouse message: %s", response_type)
