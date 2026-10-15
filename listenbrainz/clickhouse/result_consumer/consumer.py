@@ -53,7 +53,6 @@ class ClickHouseResultConsumer(ConsumerMixin):
                 "Error in ClickHouse handler for '%s': %s",
                 response_type, str(e), exc_info=True
             )
-            sentry_sdk.capture_exception(e)
         message.ack()
 
     def get_consumers(self, _, channel):
