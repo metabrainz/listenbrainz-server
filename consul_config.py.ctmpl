@@ -213,6 +213,9 @@ SPARK_RESULT_QUEUE = '''{{template "KEY" "spark_result_queue"}}'''
 SPARK_REQUEST_EXCHANGE = '''{{template "KEY" "spark_request_exchange"}}'''
 SPARK_REQUEST_QUEUE = '''{{template "KEY" "spark_request_queue"}}'''
 
+CLICKHOUSE_RESULT_EXCHANGE = '''{{template "KEY" "clickhouse_result_exchange"}}'''
+CLICKHOUSE_RESULT_QUEUE = '''{{template "KEY" "clickhouse_result_queue"}}'''
+
 REJECTION_EXCHANGE = '''{{template "KEY" "rejection_exchange"}}'''
 REJECTION_QUEUE = '''{{template "KEY" "rejection_queue"}}'''
 
