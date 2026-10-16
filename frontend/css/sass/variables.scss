@@ -47,6 +47,10 @@ $theme-colors: (
 
 $link-color: $blue;
 $link-hover-color: color.adjust($link-color, $lightness: 12%);
+// Lobes emits explicit :visited rules. Keep them tied to semantic tokens so
+// the colour follows the active theme instead of being fixed at compile time.
+$link-visited-color: var(--lb-link-visited);
+$link-visited-hover-color: var(--lb-link-visited-hover);
 $body-color: $asphalt;
 $font-family-sans-serif: Sintony, sans-serif;
 $font-size-base: 1.4rem;

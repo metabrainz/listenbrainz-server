@@ -156,6 +156,7 @@ export default function FlairsSettings() {
             <Select
               id="flairs"
               name="flairs"
+              classNamePrefix="flair-select"
               isMulti={false}
               value={{
                 value: selectedFlair,
