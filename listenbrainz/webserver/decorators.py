@@ -2,7 +2,31 @@ from functools import wraps
 
 from flask import request, current_app, make_response, redirect, url_for
 
+from listenbrainz.db import listens as listens_db
 from listenbrainz.webserver import timescale_connection
+
+
+def cache_public(s_maxage):
+    """Mark a public API GET as cacheable by shared caches for ``s_maxage`` seconds.
+
+    Sets ``Cache-Control: public, max-age=0, s-maxage=<s_maxage>`` on 200s.
+    ``add_cache_header`` leaves that in place and only defaults other
+    responses to private. Place below ``@crossdomain`` and ``@ratelimit``
+    so OPTIONS/429s never reach this wrapper.
+    """
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            resp = make_response(f(*args, **kwargs))
+            if resp.status_code == 200:
+                resp.cache_control.private = False
+                resp.cache_control.no_store = False
+                resp.cache_control.public = True
+                resp.cache_control.max_age = 0
+                resp.cache_control.s_maxage = s_maxage
+            return resp
+        return wrapper
+    return decorator
 
 
 def crossdomain(f):
@@ -34,13 +58,13 @@ def crossdomain(f):
 
 def api_listenstore_needed(func):
     """
-        This API decorator checks to see if timescale is online (by having
-        a DB URI) and if not, it raises APIServiceUnavailable.
+        This API decorator checks to see if timescale and the listens DB are
+        online (by having a DB URI) and if not, it raises APIServiceUnavailable.
     """
     @wraps(func)
     def decorator(*args, **kwargs):
         from listenbrainz.webserver.errors import APIServiceUnavailable
-        if timescale_connection._ts is None:
+        if timescale_connection._ts is None or listens_db.engine is None:
             raise APIServiceUnavailable("The listen database is momentarily offline. " +
                                         "Please wait a few minutes and try again.")
         return func(*args, **kwargs)
@@ -50,13 +74,44 @@ def api_listenstore_needed(func):
 
 def web_listenstore_needed(func):
     """
-        This web decorator checks to see if timescale is online (by having
+        This web decorator checks to see if timescale and the listens DB are
+        online (by having a DB URI) and if not, it redirects to an error page telling the user
+        that the listenstore is offline.
+    """
+    @wraps(func)
+    def decorator(*args, **kwargs):
+        if timescale_connection._ts is None or listens_db.engine is None:
+            return redirect(url_for("index.index_pages", page="listens-offline"))
+        return func(*args, **kwargs)
+
+    return decorator
+
+
+def api_listens_db_needed(func):
+    """
+        This API decorator checks to see if the listens DB is online (by having
+        a DB URI) and if not, it raises APIServiceUnavailable.
+    """
+    @wraps(func)
+    def decorator(*args, **kwargs):
+        from listenbrainz.webserver.errors import APIServiceUnavailable
+        if listens_db.engine is None:
+            raise APIServiceUnavailable("The listen database is momentarily offline. " +
+                                        "Please wait a few minutes and try again.")
+        return func(*args, **kwargs)
+
+    return decorator
+
+
+def web_listens_db_needed(func):
+    """
+        This web decorator checks to see if the listens DB is online (by having
         a DB URI) and if not, it redirects to an error page telling the user
         that the listenstore is offline.
     """
     @wraps(func)
     def decorator(*args, **kwargs):
-        if timescale_connection._ts is None:
+        if listens_db.engine is None:
             return redirect(url_for("index.index_pages", page="listens-offline"))
         return func(*args, **kwargs)
 

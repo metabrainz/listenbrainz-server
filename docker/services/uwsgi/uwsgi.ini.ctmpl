@@ -12,6 +12,9 @@ chdir = /code/listenbrainz
 enable-threads = true
 processes = {{template "KEY" "processes"}}
 threads = {{template "KEY" "threads"}}
+; each worker imports the app after fork so the SQLAlchemy QueuePools are
+; created per-worker (sharing a pool across forks corrupts sockets)
+lazy-apps = true
 listen = 2048
 log-x-forwarded-for=true
 disable-logging = true

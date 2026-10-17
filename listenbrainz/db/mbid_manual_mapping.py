@@ -8,15 +8,15 @@ from sqlalchemy import text
 from listenbrainz.db.model.mbid_manual_mapping import MbidManualMapping
 
 
-def create_mbid_manual_mapping(ts_conn, mapping: MbidManualMapping):
+def create_mbid_manual_mapping(listens_conn, mapping: MbidManualMapping):
     """Save a user mapping to the database. """
     query = """
-        INSERT INTO mbid_manual_mapping(recording_msid, recording_mbid, user_id)
+        INSERT INTO mapping.mbid_manual_mapping(recording_msid, recording_mbid, user_id)
              VALUES (:recording_msid, :recording_mbid, :user_id)
         ON CONFLICT (user_id, recording_msid)
       DO UPDATE SET recording_mbid = EXCLUDED.recording_mbid
     """
-    ts_conn.execute(
+    listens_conn.execute(
         text(query),
         {
             "recording_msid": mapping.recording_msid,
@@ -24,14 +24,14 @@ def create_mbid_manual_mapping(ts_conn, mapping: MbidManualMapping):
             "user_id": mapping.user_id
         }
     )
-    ts_conn.commit()
+    listens_conn.commit()
 
 
-def get_mbid_manual_mapping(ts_conn, recording_msid: uuid.UUID, user_id: int) -> Optional[MbidManualMapping]:
+def get_mbid_manual_mapping(listens_conn, recording_msid: uuid.UUID, user_id: int) -> Optional[MbidManualMapping]:
     """Get a user's manual mbid mapping for a given recording
     
     Arguments:
-        ts_conn: timescale database connection
+        listens_conn: listens database connection
         recording_msid: the msid of the recording to get the mapping for
         user_id: the user id to get the mapping for
 
@@ -43,11 +43,11 @@ def get_mbid_manual_mapping(ts_conn, recording_msid: uuid.UUID, user_id: int) ->
              , recording_mbid::text
              , user_id
              , created
-          FROM mbid_manual_mapping
+          FROM mapping.mbid_manual_mapping
          WHERE recording_msid = :recording_msid
            AND user_id = :user_id
     """
-    result = ts_conn.execute(
+    result = listens_conn.execute(
         text(query),
         {
             "recording_msid": recording_msid,
@@ -66,11 +66,11 @@ def get_mbid_manual_mapping(ts_conn, recording_msid: uuid.UUID, user_id: int) ->
         return None
 
 
-def get_mbid_manual_mappings(ts_conn, recording_msid: uuid.UUID) -> List[MbidManualMapping]:
+def get_mbid_manual_mappings(listens_conn, recording_msid: uuid.UUID) -> List[MbidManualMapping]:
     """Get all manual mbid mappings for a given recording
     
     Arguments:
-        ts_conn: timescale database connection
+        listens_conn: listens database connection
         recording_msid: the msid of the recording to get the mapping for
 
     Returns:
@@ -81,19 +81,19 @@ def get_mbid_manual_mappings(ts_conn, recording_msid: uuid.UUID) -> List[MbidMan
              , recording_mbid::text
              , user_id
              , created
-          FROM mbid_manual_mapping
+          FROM mapping.mbid_manual_mapping
          WHERE recording_msid = :recording_msid
     """
-    result = ts_conn.execute(text(query), {"recording_msid": recording_msid})
-    ts_conn.commit()
+    result = listens_conn.execute(text(query), {"recording_msid": recording_msid})
+    listens_conn.commit()
     return [MbidManualMapping(**row) for row in result.mappings()]
 
 
-def check_manual_mapping_exists(ts_conn, user_id: int, recording_msids: Iterable[str]) -> set[str]:
+def check_manual_mapping_exists(listens_conn, user_id: int, recording_msids: Iterable[str]) -> set[str]:
     """Check if a user has a mapping for a list of recordings
 
     Arguments:
-        ts_conn: timescale database connection
+        listens_conn: listens database connection
         user_id: LB user id of a user
         recording_msids: the msids of the recordings to check
 
@@ -102,11 +102,11 @@ def check_manual_mapping_exists(ts_conn, user_id: int, recording_msids: Iterable
     """
     query = SQL("""
         SELECT t.msid
-          FROM mbid_manual_mapping mmm
+          FROM mapping.mbid_manual_mapping mmm
           JOIN (VALUES %s) AS t(msid)
             ON mmm.recording_msid = t.msid::uuid
          WHERE user_id = {user_id}
         """).format(user_id=Literal(user_id))
-    with ts_conn.connection.cursor() as cursor:
+    with listens_conn.connection.cursor() as cursor:
         result = execute_values(cursor, query, [(msid,) for msid in recording_msids], fetch=True)
         return set(row[0] for row in result)

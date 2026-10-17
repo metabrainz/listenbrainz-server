@@ -243,6 +243,9 @@ class IncrementalStatsEngine:
             message = message_creator.create_end_message()
             if message is not None:
                 yield message
+        message = message_creator.create_completion_message()
+        if message is not None:
+            yield message
 
     def run(self) -> Iterator[Dict]:
         self.prepare_final_aggregate()

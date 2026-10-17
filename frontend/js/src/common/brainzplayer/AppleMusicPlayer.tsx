@@ -159,16 +159,12 @@ export default class AppleMusicPlayer
     this.disconnectAppleMusicPlayer();
   }
 
+  pause = () => {
+    this.appleMusicPlayer?.pause();
+  };
+
   stop = () => {
-    if (
-      this.appleMusicPlayer?.playbackState &&
-      !(
-        this.appleMusicPlayer.playbackState in
-        [MusicKit.PlaybackStates.paused, MusicKit.PlaybackStates.stopped]
-      )
-    ) {
-      this.appleMusicPlayer?.pause();
-    }
+    this.appleMusicPlayer?.stop();
   };
 
   playAppleMusicId = async (
@@ -267,7 +263,10 @@ export default class AppleMusicPlayer
     return false;
   };
 
-  playListen = async (listen: Listen | JSPFTrack): Promise<void> => {
+  playListen = async (
+    listen: Listen | JSPFTrack,
+    streamingUrl?: string
+  ): Promise<void> => {
     const apple_music_id = AppleMusicPlayer.getURLFromListen(listen as Listen);
     if (apple_music_id) {
       await this.playAppleMusicId(apple_music_id);

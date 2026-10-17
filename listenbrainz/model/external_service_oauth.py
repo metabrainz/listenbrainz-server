@@ -15,6 +15,8 @@ class ExternalService(db.Model):
     access_token = db.Column(db.String, nullable=False)
     refresh_token = db.Column(db.String)
     token_expires = db.Column(db.DateTime(timezone=True))
+    refresh_token_expires = db.Column(db.DateTime(timezone=True))
+    refresh_token_expiry_last_notified = db.Column(db.DateTime(timezone=True))
     last_updated = db.Column(db.DateTime(timezone=True), server_default=db.func.now())
     scopes = db.Column(db.ARRAY(db.String))
     user = db.relationship('User')
@@ -28,6 +30,8 @@ class ExternalServiceAdminView(AdminModelView):
         'access_token',
         'refresh_token',
         'token_expires',
+        'refresh_token_expires',
+        'refresh_token_expiry_last_notified',
         'last_updated',
         'scopes'
     ]
@@ -40,6 +44,8 @@ class ExternalServiceAdminView(AdminModelView):
         'access_token',
         'refresh_token',
         'token_expires',
+        'refresh_token_expires',
+        'refresh_token_expiry_last_notified',
         'last_updated',
         'scopes'
     ]
@@ -54,6 +60,8 @@ class ExternalServiceAdminView(AdminModelView):
         'service',
         'last_updated',
         'token_expires',
+        'refresh_token_expires',
+        'refresh_token_expiry_last_notified',
     ]
 
     column_formatters = {

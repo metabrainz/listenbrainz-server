@@ -20,6 +20,7 @@ import { toast } from "react-toastify";
 import NiceModal from "@ebay/nice-modal-react";
 import { Link } from "react-router";
 import { noop } from "lodash";
+import { Dropdown } from "react-bootstrap";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getPlaylistId, isPlaylistOwner } from "../utils";
@@ -267,10 +268,7 @@ function PlaylistMenu({
   const enableAppleMusicExport = isLoggedIn && appleAuth?.music_user_token;
   const enableSoundCloudExport = isLoggedIn && soundcloudAuth;
   return (
-    <div
-      className="dropdown-menu dropdown-menu-right"
-      aria-labelledby="playlistOptionsDropdown"
-    >
+    <Dropdown.Menu renderOnMount={false} align="end">
       <button
         className={`dropdown-item ${!isLoggedIn ? "disabled" : ""}`}
         onClick={isLoggedIn ? copyPlaylist : noop}
@@ -368,7 +366,7 @@ function PlaylistMenu({
       >
         <FontAwesomeIcon icon={faFileExport as IconProp} /> Export as XSPF
       </a> */}
-    </div>
+    </Dropdown.Menu>
   );
 }
 

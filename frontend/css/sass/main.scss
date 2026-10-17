@@ -5,6 +5,7 @@
 @import "homepage";
 @import "donations";
 @import "donors-page";
+@import "about";
 @import "pill";
 @import "listen-card";
 @import "pinned-recordings";
@@ -194,4 +195,8 @@ details[open] > summary .summary-indicator {
 .capitalize-bold {
   font-weight: 700;
   text-transform: capitalize;
+}
+
+.Toastify__close-button {
+  color: inherit;
 }

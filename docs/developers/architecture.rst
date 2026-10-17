@@ -44,7 +44,7 @@ In production, webservers run uwsgi server to serve the flask application. In de
 
    * - `lb_db <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/docker/docker-compose.yml#L21>`__
      - listenbrainz-timescale
-     - timescale instance for ListenBrainz to store listens and playlists. in development environment, the all databases
+     - timescale instance for ListenBrainz to store listens and mapping metadata. in development environment, all the databases
        are part of `lb_db` container.
 
    * - `lb_db <https://github.com/metabrainz/listenbrainz-server/blob/4a0304e33ef84981f38c38fae61511fe5efde25a/docker/docker-compose.yml#L21>`__
@@ -91,8 +91,11 @@ In production, webservers run uwsgi server to serve the flask application. In de
      - runs a nginx container for the compat API that exposes this service on a local IP, not through gateways.
 
    * - listenbrainz-cron-prod
-     - runs cron jobs used to execute periodic tasks like creating dumps, invoking spark jobs to import dump, requesting
-       statistics and so on.
+     - runs cron jobs used to execute periodic tasks like creating non-full dumps, invoking spark jobs to import dumps,
+       requesting statistics and so on.
+
+   * - listenbrainz-full-dumps-cron-prod
+     - runs the twice-monthly full dump cron job.
 
    * - exim-relay-listenbrainz.org
      - smtp relay used by LB to send emails.

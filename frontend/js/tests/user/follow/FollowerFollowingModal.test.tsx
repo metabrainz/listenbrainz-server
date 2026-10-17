@@ -14,7 +14,7 @@ import { ReactQueryWrapper } from "../../test-react-query";
 import { textContentMatcher } from "../../test-utils/rtl-test-utils";
 
 const defaultProps: FollowerFollowingCardsProps = {
-  user: { name: "foobar" },
+  userName: "foobar",
   followerList: ["foo"],
   followingList: ["bar"],
   loggedInUserFollowsUser: () => true,

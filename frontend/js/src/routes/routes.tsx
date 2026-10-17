@@ -16,10 +16,12 @@ import getSettingsRedirectRoutes from "../settings/routes/redirectRoutes";
 import getPlayerRoutes from "../player/routes";
 import getRecommendationsRoutes from "../recommended/tracks/routes";
 import getPlayingNowRoutes from "../player/routes/listening-now-routes";
+import type { ServerAlert } from "../utils/utils";
 
 const getRoutes = (
   musicbrainzID?: string,
-  withBrainzPlayer?: boolean
+  withBrainzPlayer?: boolean,
+  initialAlerts?: ServerAlert[]
 ): RouteObject[] => {
   const exploreRoutes = getExploreRoutes();
   const userRoutes = getUserRoutes();
@@ -38,9 +40,14 @@ const getRoutes = (
   const routes = [
     {
       path: "/",
-      element: <Layout withBrainzPlayer={withBrainzPlayer} />,
+      element: (
+        <Layout
+          initialAlerts={initialAlerts}
+          withBrainzPlayer={withBrainzPlayer}
+        />
+      ),
       errorElement: (
-        <Layout>
+        <Layout initialAlerts={initialAlerts}>
           <ErrorBoundary />
         </Layout>
       ),
@@ -58,10 +65,14 @@ const getRoutes = (
     },
     {
       element: (
-        <Layout withProtectedRoutes withBrainzPlayer={withBrainzPlayer} />
+        <Layout
+          initialAlerts={initialAlerts}
+          withProtectedRoutes
+          withBrainzPlayer={withBrainzPlayer}
+        />
       ),
       errorElement: (
-        <Layout>
+        <Layout initialAlerts={initialAlerts}>
           <ErrorBoundary />
         </Layout>
       ),

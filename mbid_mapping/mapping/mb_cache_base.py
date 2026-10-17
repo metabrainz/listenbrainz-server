@@ -159,7 +159,7 @@ class MusicBrainzEntityMetadataCache(BulkInsertTable, ABC):
 
 def select_metadata_cache_timestamp(conn, key):
     """ Retrieve the last time the mb metadata cache update was updated """
-    query = SQL("SELECT value FROM background_worker_state WHERE key = {key}")\
+    query = SQL("SELECT value FROM mapping.background_worker_state WHERE key = {key}")\
         .format(key=Literal(key))
     try:
         with conn.cursor() as curs:
@@ -178,7 +178,7 @@ def update_metadata_cache_timestamp(conn, ts: datetime, key):
     """ Update the timestamp of metadata creation in database. The incremental update process will read this
      timestamp next time it runs and only update cache for rows updated since then in MB database. """
     query = SQL("""
-        INSERT INTO background_worker_state (key, value)
+        INSERT INTO mapping.background_worker_state (key, value)
              VALUES ({key}, %s)
          ON CONFLICT (key)
            DO UPDATE
@@ -212,8 +212,8 @@ def create_metadata_cache(cache_cls, cache_key, required_tables, use_lb_conn: bo
             # I think sqlalchemy captures tracebacks and obscures where the real problem is
             try:
                 lb_conn = None
-                if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
-                    lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
+                if use_lb_conn and config.SQLALCHEMY_LISTENS_URI:
+                    lb_conn = psycopg2.connect(config.SQLALCHEMY_LISTENS_URI)
 
                 for table_cls in required_tables:
                     table = table_cls(mb_conn, lb_conn, unlogged=unlogged)
@@ -238,8 +238,8 @@ def create_metadata_cache(cache_cls, cache_key, required_tables, use_lb_conn: bo
     # the connection times out after the long process above, so start with a fresh connection
     with psycopg2.connect(mb_uri) as mb_conn:
         lb_conn = None
-        if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
-            lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
+        if use_lb_conn and config.SQLALCHEMY_LISTENS_URI:
+            lb_conn = psycopg2.connect(config.SQLALCHEMY_LISTENS_URI)
 
         update_metadata_cache_timestamp(lb_conn or mb_conn, new_timestamp, cache_key)
 
@@ -255,8 +255,8 @@ def incremental_update_metadata_cache(cache_cls, cache_key, use_lb_conn: bool):
 
     with psycopg2.connect(mb_uri) as mb_conn:
         lb_conn = None
-        if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
-            lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
+        if use_lb_conn and config.SQLALCHEMY_LISTENS_URI:
+            lb_conn = psycopg2.connect(config.SQLALCHEMY_LISTENS_URI)
 
         cache = cache_cls(mb_conn, lb_conn)
         if not cache.table_exists():

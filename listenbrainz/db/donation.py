@@ -16,12 +16,16 @@ RECENT_DONOR_CACHE_KEY = "recent_donors"
 DONOR_CACHE_TIMEOUT = 10 * 60
 
 
-def init_meb_db_connection(connect_str):
-    """Initializes database connection using the specified Flask app."""
+def init_meb_db_connection(connect_str, poolclass=NullPool, **engine_kwargs):
+    """Initializes database connection using the specified Flask app.
+
+    Pass poolclass=QueuePool (and pool_size, max_overflow, pool_pre_ping via
+    engine_kwargs) for long-running services where connection reuse matters.
+    """
     global engine
     while True:
         try:
-            engine = create_engine(connect_str, poolclass=NullPool)
+            engine = create_engine(connect_str, poolclass=poolclass, **engine_kwargs)
             break
         except psycopg2.OperationalError as e:
             print("Couldn't establish connection to db: {}".format(str(e)))

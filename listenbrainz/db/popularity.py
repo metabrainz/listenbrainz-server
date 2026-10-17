@@ -1,6 +1,7 @@
 import logging
 
 import psycopg2
+from brainzutils import cache
 from flask import current_app
 from psycopg2.extras import DictCursor, execute_values
 from psycopg2.sql import SQL, Identifier, Composable
@@ -12,6 +13,11 @@ from listenbrainz.spark.spark_dataset import DatabaseDataset
 from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata
 
 logger = logging.getLogger(__name__)
+
+POPULARITY_CACHE_EXPIRE = 86400  # 1 day -- popularity data is rebuilt by daily Spark jobs
+POPULARITY_CACHE_NAMESPACE = "popularity"
+POPULARITY_TOP_RECORDINGS_KEY = "top_recordings.%s.%s"
+POPULARITY_TOP_RELEASE_GROUPS_KEY = "top_release_groups.%s.%s"
 
 
 class PopularityDataset(DatabaseDataset):
@@ -229,14 +235,19 @@ def get_counts(ts_conn, entity, mbids):
     return entity_data, index
 
 
-def get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, count=None):
+def get_top_recordings_for_artist(db_conn, ts_conn, listens_conn, artist_mbid, count=None):
     """ Get the top recordings for a given artist mbid """
+    cache_key = POPULARITY_TOP_RECORDINGS_KEY % (artist_mbid, count)
+    cached = cache.get(cache_key, namespace=POPULARITY_CACHE_NAMESPACE, decode=True)
+    if cached is not None:
+        return cached
+
     recordings = get_top_entity_for_artist(ts_conn, "recording", artist_mbid, count)
     recording_mbids = [str(r["recording_mbid"]) for r in recordings]
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
             mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
-            ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
-        recordings_data = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, recording_mbids)
+            listens_conn.connection.cursor(cursor_factory=DictCursor) as listens_curs:
+        recordings_data = load_recordings_from_mbids_with_redirects(mb_curs, listens_curs, recording_mbids)
         release_mbids = [str(r["release_mbid"]) for r in recordings_data if r["release_mbid"] is not None]
         releases_color = color.fetch_color_for_releases(db_conn, release_mbids)
 
@@ -257,11 +268,17 @@ def get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, count=None):
             })
             results.append(data)
 
+        cache.set(cache_key, results, POPULARITY_CACHE_EXPIRE, namespace=POPULARITY_CACHE_NAMESPACE, encode=True)
         return results
 
 
 def get_top_release_groups_for_artist(db_conn, ts_conn, artist_mbid: str, count=None):
     """ Get the top releases for a given artist mbid """
+    cache_key = POPULARITY_TOP_RELEASE_GROUPS_KEY % (artist_mbid, count)
+    cached = cache.get(cache_key, namespace=POPULARITY_CACHE_NAMESPACE, decode=True)
+    if cached is not None:
+        return cached
+
     release_groups = get_top_entity_for_artist(ts_conn, "release_group", artist_mbid, count)
     release_group_mbids = [str(r["release_group_mbid"]) for r in release_groups]
 
@@ -296,4 +313,5 @@ def get_top_release_groups_for_artist(db_conn, ts_conn, artist_mbid: str, count=
                                {})
         })
 
+    cache.set(cache_key, release_groups_data, POPULARITY_CACHE_EXPIRE, namespace=POPULARITY_CACHE_NAMESPACE, encode=True)
     return release_groups_data

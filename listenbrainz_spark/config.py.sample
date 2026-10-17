@@ -3,8 +3,7 @@ HDFS_HTTP_URI = 'http://namenode:9870' # the URI of the http webclient for HDFS
 HDFS_CLUSTER_URI = 'hdfs://namenode:9000' # the URI to be used with Spark
 
 # rabbitmq
-RABBITMQ_HOST = "rabbitmq"
-RABBITMQ_PORT = 5672
+RABBITMQ_HOSTS = [("rabbitmq", 5672)]
 RABBITMQ_USERNAME = "guest"
 RABBITMQ_PASSWORD = "guest"
 RABBITMQ_VHOST = "/"
@@ -52,4 +51,9 @@ LB_JDBC_URI = ""
 LB_USER = ""
 LB_PASSWORD = ""
 
-LISTENBRAINZ_API_URL = "http://localhost:8100"
+LISTENBRAINZ_API_URL = "http://localhost:8103"
+
+# User-partitioned listens database (deletion records)
+LISTENS_JDBC_URI = ""
+LISTENS_USER = ""
+LISTENS_PASSWORD = ""

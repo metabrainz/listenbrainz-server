@@ -271,7 +271,7 @@ export default function NetworkFeedPage() {
           )}
         </div>
         <div className="col-sm-4">
-          <UserSocialNetwork user={currentUser} />
+          <UserSocialNetwork userName={currentUser.name} />
         </div>
       </div>
     </>

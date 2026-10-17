@@ -110,10 +110,10 @@ describe("MusicPlayer", () => {
 
   test("renders the component with feedback buttons and toggles feedback", async () => {
     renderMusicPlayerWithAtoms({}, { currentListenFeedback: FeedbackValue.LIKE });
-    expect(screen.getByText("Love")).toBeInTheDocument();
-    expect(screen.getByText("Hate")).toBeInTheDocument();
+    expect(screen.getByLabelText("Love")).toBeInTheDocument();
+    expect(screen.getByLabelText("Hate")).toBeInTheDocument();
 
-    const loveButton = screen.getByText("Love");
+    const loveButton = screen.getByLabelText("Love");
     await user.click(loveButton);
     expect(defaultProps.submitFeedback).toHaveBeenCalledWith(FeedbackValue.NEUTRAL);
   });

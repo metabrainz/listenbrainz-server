@@ -40,7 +40,7 @@ class ListenBrainzTestDumpLoader(ListenbrainzDumpLoader):
         return dump_tar.name, dump_name, listens_dump_id
 
     def get_api_base_url(self):
-        return "http://localhost:8100"
+        return "http://localhost:8103"
 
 
 class SparkNewTestCase(unittest.TestCase):

@@ -1,9 +1,9 @@
 import json
+import tempfile
 import zipfile
 from abc import ABC, abstractmethod
 from datetime import datetime
 from io import TextIOWrapper
-from pathlib import Path
 from typing import Any, Iterator
 from zipfile import ZipFile
 
@@ -11,6 +11,8 @@ from flask import current_app
 from sqlalchemy.sql.expression import text
 from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 
+from listenbrainz.background.listens_importer.storage import delete_import_file, download_import_file, \
+    FINISHED_STATUSES
 from listenbrainz.db import user as db_user
 from listenbrainz.domain.external_service import ExternalServiceError
 from listenbrainz.webserver.errors import ImportFailedError, ListenValidationError
@@ -63,28 +65,36 @@ class BaseListensImporter(ABC):
 
         import_id = import_task["id"]
         metadata = import_task["metadata"]
-        if metadata["status"] in {"cancelled", "failed"}:
+        if metadata["status"] in FINISHED_STATUSES:
+            # the import is not going to run, its file is of no use to anyone any more
+            delete_import_file(import_task["file_path"])
             return
 
         self.update_import_progress_and_status(import_id, "in_progress", "Importing user listens")
 
+        object_name = import_task["file_path"]
         try:
-            validation_stats = self._initialize_validation_stats()
-            self.persist_validation_stats(import_id, validation_stats)
-            for batch in self.process_import_file(import_task):
-                validated_listens, validation_stats = self.parse_and_validate_listen_items(
-                    batch,
-                    validation_stats,
-                )
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                # the importers seek around in the uploaded file, so it is downloaded to a
+                # temporary file instead of being streamed out of garage
+                local_task = dict(import_task, file_path=download_import_file(object_name, tmp_dir))
 
-                self.submit_listens(validated_listens, user_id, user["musicbrainz_id"], import_id)
+                validation_stats = self._initialize_validation_stats()
                 self.persist_validation_stats(import_id, validation_stats)
+                for batch in self.process_import_file(local_task):
+                    validated_listens, validation_stats = self.parse_and_validate_listen_items(
+                        batch,
+                        validation_stats,
+                    )
+
+                    self.submit_listens(validated_listens, user_id, user["musicbrainz_id"], import_id)
+                    self.persist_validation_stats(import_id, validation_stats)
 
             self.update_import_progress_and_status(import_id, "completed", "Import completed!")
         except Exception as e:
             self.update_import_progress_and_status(import_id, "failed", str(e))
         finally:
-            Path(import_task["file_path"]).unlink(missing_ok=True)
+            delete_import_file(object_name)
 
     @abstractmethod
     def process_import_file(self, import_task: dict[str, Any]) -> Iterator[list[dict[str, Any]]]:
@@ -136,15 +146,15 @@ class BaseListensImporter(ABC):
                     raise ExternalServiceError("ISE while trying to import listens")
 
     @staticmethod
-    def _initialize_validation_stats() -> dict[str, int]:
+    def _initialize_validation_stats() -> dict[str, Any]:
         """Return a fresh attempted/success counter dict."""
-        return {"attempted_count": 0, "success_count": 0}
+        return {"attempted_count": 0, "success_count": 0, "detailed_message": ""}
 
     def parse_and_validate_listen_items(
         self,
         batch: list[dict[str, Any]],
-        validation_stats: dict[str, int],
-    ) -> tuple[list[dict[str, Any]], dict[str, int]]:
+        validation_stats: dict[str, Any],
+    ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         """Parse raw entries and validate them while updating counters."""
         raw_attempts = len(batch)
         parsed_listens = self.parse_listen_batch(batch)
@@ -164,20 +174,27 @@ class BaseListensImporter(ABC):
                 validate_listen(listen, LISTEN_TYPE_IMPORT)
                 validated_listens.append(listen)
             except ListenValidationError as e:
-                current_app.logger.error("Invalid listen: %s", e)
+                current_app.logger.warning("Invalid listen: %s", e)
         
         validation_stats["success_count"] += len(validated_listens)
 
         return validated_listens, validation_stats
 
-    def persist_validation_stats(self, import_id: int, validation_stats: dict[str, int]) -> None:
-        """Persist the current validation counters on the import task metadata."""
+
+    def persist_validation_stats(self, import_id: int, validation_stats: dict[str, Any]) -> None:
+        """Persist the current validation counters and message on the import task metadata."""
+        detailed_message = self.get_validation_detailed_message() or ""
         update_import_task(
             self.db_conn,
             import_id,
             attempted_count=validation_stats.get("attempted_count", 0),
             success_count=validation_stats.get("success_count", 0),
+            detailed_message=detailed_message,
         )
+
+    def get_validation_detailed_message(self) -> str:
+        """Get an optional service-specific message to show users in the import summary."""
+        return ""
 
     def update_import_progress_and_status(self, import_id: int, status: str, progress: str) -> None:
         """Update progress for user data import."""

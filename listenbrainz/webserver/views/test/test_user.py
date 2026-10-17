@@ -10,9 +10,8 @@ from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
 from data.model.external_service import ExternalServiceType
-from listenbrainz.db import external_service_oauth as db_oauth, timescale
+from listenbrainz.db import external_service_oauth as db_oauth, listens as listens_db
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
-from listenbrainz.listenstore.timescale_listenstore import EPOCH
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.login import User
@@ -38,10 +37,10 @@ class UserViewsTestCase(IntegrationTestCase):
 
         abuser = db_user.get_or_create(self.db_conn, 3, 'abuser')
         self.abuser = User.from_dbrow(abuser)
-        self.ts_conn = timescale.engine.connect()
+        self.listens_conn = listens_db.engine.connect()
 
     def tearDown(self):
-        self.ts_conn.close()
+        self.listens_conn.close()
         self.logstore = None
         super().tearDown()
 
@@ -49,7 +48,7 @@ class UserViewsTestCase(IntegrationTestCase):
         my_listens_url = self.custom_url_for("redirect.index", path="")
         # Not logged in
         response = self.client.get(my_listens_url)
-        self.assertRedirects(response, self.custom_url_for("login.index", next=my_listens_url))
+        self.assertRedirects(response, self.custom_url_for("login.musicbrainz", next=my_listens_url))
 
     def test_user_redirects(self):
         response = self.client.get('/user/iliekcomputers/')
@@ -175,7 +174,7 @@ class UserViewsTestCase(IntegrationTestCase):
     def test_ts_filters(self, timescale):
         """Check that max_ts and min_ts are passed to timescale """
         user = self.user.to_dict()
-        timescale.return_value = ([], EPOCH, EPOCH)
+        timescale.return_value = []
 
         self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'))
         req_call = mock.call(user, None, None, 25)
@@ -259,7 +258,7 @@ class UserViewsTestCase(IntegrationTestCase):
         self.assert400(response, "Reason must be a string.")
 
     def test_user_pins(self):
-        self.ts_conn.execute(text("""
+        self.listens_conn.execute(text("""
             INSERT INTO mapping.mb_metadata_cache
                                (recording_mbid, recording_id, artist_mbids, artist_ids, release_mbid, release_id, recording_data, artist_data, tag_data, release_data, dirty)
                 VALUES ('1fe669c9-5a2b-4dcb-9e95-77480d1e732e'
@@ -275,14 +274,14 @@ class UserViewsTestCase(IntegrationTestCase):
                       , 'f'
                        );
 
-            INSERT INTO mbid_mapping (recording_msid, recording_mbid, match_type)
+            INSERT INTO mapping.mbid_mapping (recording_msid, recording_mbid, match_type)
              VALUES (
                 'b7ffd2af-418f-4be2-bdd1-22f8b48613da'
               , '1fe669c9-5a2b-4dcb-9e95-77480d1e732e'
               , 'exact_match'
             );
         """))
-        self.ts_conn.commit()
+        self.listens_conn.commit()
 
         pinned_rec = {
             "recording_msid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da",

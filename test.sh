@@ -84,11 +84,17 @@ function docker_compose_run_spark {
 }
 
 function build_unit_containers {
-    invoke_docker_compose build listenbrainz
+    invoke_docker_compose build listenbrainz garage
 }
 
 function bring_up_unit_db {
-    invoke_docker_compose up -d lb_db redis rabbitmq couchdb timescale_writer background_tasks websockets
+    invoke_docker_compose up -d lb_db redis rabbitmq couchdb timescale_writer websockets
+}
+
+function bring_up_background_tasks {
+    # The background tasks processor exits when the tables it polls do not exist, so it can only be
+    # started once unit_setup has created the schema.
+    invoke_docker_compose up -d background_tasks
 }
 
 function unit_setup {
@@ -99,7 +105,8 @@ function unit_setup {
                   -wait tcp://rabbitmq:5672 -timeout 60s \
                   -wait tcp://couchdb:5984 -timeout 60s \
                 bash -c "python3 manage.py init_db --create-db && \
-                         python3 manage.py init_ts_db --create-db"
+                         python3 manage.py init_ts_db --create-db && \
+                         python3 manage.py init_listens_db --create-db"
 }
 
 function is_unit_db_running {
@@ -241,6 +248,7 @@ if [ "$1" == "-u" ]; then
         echo "Bringing up DB"
         bring_up_unit_db
         unit_setup
+        bring_up_background_tasks
     fi
     exit 0
 fi
@@ -252,6 +260,7 @@ if [ $DB_RUNNING -eq 1 ] ; then
     build_unit_containers
     bring_up_unit_db
     unit_setup
+    bring_up_background_tasks
     echo "Running tests"
     docker_compose_run listenbrainz pytest "$@"
     RET=$?

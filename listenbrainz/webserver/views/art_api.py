@@ -1,3 +1,4 @@
+import hashlib
 from itertools import cycle
 from urllib.parse import quote
 
@@ -10,16 +11,17 @@ from listenbrainz.db import popularity
 from listenbrainz.db.metadata import get_metadata_for_artist
 
 from brainzutils.ratelimit import ratelimit
-from flask import request, render_template, Blueprint, current_app
+from flask import request, render_template, Blueprint, current_app, redirect, url_for
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn, ts_conn, listens_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound
 from listenbrainz.webserver.views.api_tools import is_valid_uuid, _parse_bool_arg, validate_auth_header
 from listenbrainz.webserver.views.playlist_api import PLAYLIST_TRACK_EXTENSION_URI, fetch_playlist_recording_metadata
 from listenbrainz.webserver.views.playlist import get_cover_art_options
 from listenbrainz.webserver.views.legacy_year_in_music_api import cover_art_yim_legacy
+from listenbrainz.art.og_image import generate_playlist_og_image
 
 art_api_bp = Blueprint('art_api_v1', __name__)
 
@@ -216,6 +218,12 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
     """
     show_caption = _parse_bool_arg("caption", True)
     skip_missing = _parse_bool_arg("skip-missing", True)
+    show_rank = _parse_bool_arg("show-rank", False)
+    show_listen_count = _parse_bool_arg("show-listen-count", False)
+    show_release = _parse_bool_arg("show-release", True)
+    show_artist = _parse_bool_arg("show-artist", True)
+    caption_text_color = request.args.get("caption-text-color", "#ffffff")
+    caption_bg_color = request.args.get("caption-bg-color", "#0000007a")
     
     cac = CoverArtGenerator(
         current_app.config["MB_DATABASE_URI"], dimension, image_size, show_caption=show_caption, skip_missing=skip_missing,
@@ -249,7 +257,13 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
                            entity="release",
                            width=image_size,
                            height=image_size,
-                           show_caption=show_caption), 200, {
+                           show_rank=show_rank,
+                           show_listen_count=show_listen_count,
+                           show_release=show_release,
+                           show_artist=show_artist,
+                           show_caption=show_caption,
+                           caption_text_color=caption_text_color,
+                           caption_bg_color=caption_bg_color), 200, {
                                'Content-Type': 'image/svg+xml'
                            }
 
@@ -293,7 +307,7 @@ def cover_art_artist_grid(artist_mbid, dimension, layout, image_size):
     except (IndexError, KeyError):
         raise APIBadRequest(f"layout {layout} is not available for dimension {dimension}")
 
-    artist_data = get_metadata_for_artist(ts_conn, [str(artist_mbid)])
+    artist_data = get_metadata_for_artist(listens_conn, [str(artist_mbid)])
     if not artist_data:
         raise APINotFound(f"Artist {artist_mbid} not found")
 
@@ -838,7 +852,7 @@ def playlist_cover_art_generate(playlist_mbid, dimension, layout):
     except IndexError:
         raise APIBadRequest(f"layout {layout} is not available for dimension {dimension}.")
 
-    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
+    playlist = db_playlist.get_by_mbid(db_conn, playlist_mbid, True)
     if playlist is None or not playlist.is_visible_by(user["id"]):
         raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
 
@@ -879,3 +893,83 @@ def playlist_cover_art_generate(playlist_mbid, dimension, layout):
                            show_caption=False), 200, {
                                'Content-Type': 'image/svg+xml'
                            }
+
+
+@art_api_bp.get("/playlist/<uuid:playlist_mbid>/opengraph/")
+@crossdomain
+@ratelimit()
+def playlist_og_image(playlist_mbid):
+    """
+    Generate a composed OG (OpenGraph) image for a playlist. The image combines
+    the playlist's track cover art with ListenBrainz branding.
+
+    This is a public endpoint (no auth required) so that social media crawlers
+    can fetch the image when a playlist link is shared.
+
+    If the playlist has 4+ tracks with cover art, a 2x2 grid is used.
+    Otherwise, the first track's cover art is used as a single image.
+    The ListenBrainz logo overlay is composited on the right side.
+
+    If no cover art is available, redirects to the default share-header.png.
+
+    :param playlist_mbid: The mbid of the playlist.
+    :type playlist_mbid: ``uuid``
+    :statuscode 200: OG image generated successfully.
+    :statuscode 302: Redirect to default share-header.png (no cover art available).
+    :statuscode 404: Playlist not found or not public.
+    :resheader Content-Type: *image/png*
+    :resheader Cache-Control: *max-age=86400*
+    """
+    fallback_url = url_for('static', filename='img/share-header.png', _external=True)
+
+    playlist = db_playlist.get_by_mbid(db_conn, playlist_mbid, True)
+    if playlist is None or not playlist.is_visible_by(None):
+        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+
+    # Compute ETag from recording MBIDs before the expensive metadata fetch.
+    # This lets crawlers revalidating with If-None-Match skip the DB-heavy
+    # fetch_playlist_recording_metadata call entirely.
+    recording_mbids = [str(r.mbid) for r in playlist.recordings if r.mbid]
+    etag = hashlib.md5("|".join(sorted(recording_mbids)).encode()).hexdigest()
+    if request.headers.get("If-None-Match") == etag:
+        return "", 304
+
+    # Fetch the metadata for the playlist recordings
+    try:
+        fetch_playlist_recording_metadata(playlist)
+    except Exception:
+        current_app.logger.warning("Failed to fetch playlist metadata for OG image, falling back to default", exc_info=True)
+        return redirect(fallback_url)
+
+    # Get unique cover art entries from the playlist
+    images = get_cover_art_options(playlist)
+    if not images:
+        return redirect(fallback_url)
+
+    # Resolve cover art URLs using the shared utility
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"], 3, 500,
+        server_root_url=current_app.config["SERVER_ROOT_URL"])
+    cover_art_urls = []
+    for img in images:
+        caa_id = img.get("caa_id")
+        caa_release_mbid = img.get("caa_release_mbid")
+        if caa_id and caa_release_mbid:
+            url = cac.resolve_cover_art(caa_id, caa_release_mbid, 500)
+            cover_art_urls.append(url)
+        if len(cover_art_urls) >= 4:
+            break
+
+    if not cover_art_urls:
+        return redirect(fallback_url)
+
+    # Generate the composed OG image
+    result = generate_playlist_og_image(cover_art_urls)
+    if result is None:
+        return redirect(fallback_url)
+
+    return result.getvalue(), 200, {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=86400",
+        "ETag": etag,
+    }

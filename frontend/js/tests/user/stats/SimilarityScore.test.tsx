@@ -6,7 +6,7 @@ import SimilarityScore, {
 
 const defaultProps: SimilarityScoreProps = {
   similarityScore: 0.239745792, // This will be rounded to 24%
-  user: { auth_token: "baz", name: "test" },
+  userName: "test",
   type: "regular",
 };
 

@@ -10,11 +10,11 @@ import { ToastMsg } from "../../../notifications/Notifications";
 import FlairsExplanationButton from "../../../common/flairs/FlairsExplanationButton";
 
 export type UserSocialNetworkProps = {
-  user: ListenBrainzUser;
+  userName: string;
 };
 
 function UserSocialNetwork(props: UserSocialNetworkProps) {
-  const { user: profileUser } = props;
+  const { userName } = props;
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
 
   const [followerList, setFollowerList] = React.useState<Array<string>>([]);
@@ -60,7 +60,7 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
     } = APIService;
 
     // Get followers
-    getFollowersOfUser(profileUser.name)
+    getFollowersOfUser(userName)
       .then((response: { followers: string[] }) => {
         setFollowerList(response.followers || []);
       })
@@ -79,7 +79,7 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
       });
 
     // Get following
-    getFollowingForUser(profileUser.name)
+    getFollowingForUser(userName)
       .then((response: { following: string[] }) => {
         setFollowingList(response.following || []);
       })
@@ -89,7 +89,7 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
         } else {
           toast.error(
             <ToastMsg
-              title={`Error while fetching ${profileUser?.name}'s following`}
+              title={`Error while fetching ${userName}'s following`}
               message={err.toString()}
             />,
             { toastId: "fetch-following-error" }
@@ -98,7 +98,7 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
       });
 
     // Get similar users
-    getSimilarUsersForUser(profileUser.name)
+    getSimilarUsersForUser(userName)
       .then(
         (response: {
           payload: Array<{ user_name: string; similarity: number }>;
@@ -148,9 +148,9 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
     }
 
     // Get similarity and similar artists (only if logged in and different user)
-    if (currentUser?.name && currentUser.name !== profileUser.name) {
+    if (currentUser?.name && currentUser.name !== userName) {
       // Get similarity
-      getSimilarityBetweenUsers(currentUser.name, profileUser.name)
+      getSimilarityBetweenUsers(currentUser.name, userName)
         .then((response: { payload: { similarity: number } }) => {
           setSimilarityScore(response.payload.similarity);
         })
@@ -175,7 +175,7 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
 
       // Get similar artists
       Promise.all([
-        getUserEntity(profileUser.name, "artist", "all_time", 0, 100),
+        getUserEntity(userName, "artist", "all_time", 0, 100),
         getUserEntity(currentUser.name, "artist", "all_time", 0, 100),
       ])
         .then(([userResponse, currentUserResponse]) => {
@@ -201,10 +201,10 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
           }
         });
     }
-  }, [profileUser, currentUser, APIService, showUserNotFoundToast]);
+  }, [userName, currentUser?.name, APIService, showUserNotFoundToast]);
 
   const isAnotherUser =
-    Boolean(currentUser?.name) && currentUser.name !== profileUser?.name;
+    Boolean(currentUser?.name) && currentUser.name !== userName;
 
   const loggedInUserFollowsUser = (user: ListenBrainzUser): boolean => {
     if (isNil(currentUser) || isEmpty(currentUser)) {
@@ -232,7 +232,7 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
 
     // update the users following list (for followers/following pane)
     const newFollowingList = [...followingList];
-    if (profileUser.name === currentUser.name) {
+    if (userName === currentUser.name) {
       const profileUserIndex = newFollowingList.indexOf(user.name);
       if (action === "follow" && profileUserIndex === -1) {
         newFollowingList.push(user.name);
@@ -250,7 +250,7 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
     <>
       {isAnotherUser && (
         <CompatibilityCard
-          user={profileUser}
+          userName={userName}
           similarityScore={similarityScore}
           similarArtists={similarArtists}
         />
@@ -259,7 +259,7 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
         <div className="col-6 col-lg-12 d-none d-sm-block">
           <Card>
             <FollowerFollowingCards
-              user={profileUser}
+              userName={userName}
               followerList={followerList}
               followingList={followingList}
               loggedInUserFollowsUser={loggedInUserFollowsUser}
@@ -273,7 +273,7 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
         <div className="col-6 col-lg-12 d-none d-sm-block">
           <Card className="card-user-sn">
             <SimilarUsersModal
-              user={profileUser}
+              userName={userName}
               similarUsersList={similarUsersList}
               loggedInUserFollowsUser={loggedInUserFollowsUser}
               updateFollowingList={updateFollowingList}
@@ -285,4 +285,4 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
   );
 }
 
-export default UserSocialNetwork;
+export default React.memo(UserSocialNetwork);

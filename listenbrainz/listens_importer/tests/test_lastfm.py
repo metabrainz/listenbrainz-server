@@ -1,9 +1,13 @@
+import unittest
+from datetime import datetime, timezone
+from unittest.mock import MagicMock
+
+import requests
 import requests_mock
 import listenbrainz.webserver
-from datetime import datetime, timezone
-
 import listenbrainz.db.user as db_user
 from data.model.external_service import ExternalServiceType
+from listenbrainz.domain.external_service import ExternalServiceAPIError
 from listenbrainz.domain.lastfm import LastfmService
 from listenbrainz.listens_importer.lastfm import BaseLastfmImporter
 from listenbrainz.db.testing import DatabaseTestCase
@@ -132,3 +136,43 @@ class LastfmImporterTestCase(DatabaseTestCase):
 
             self.assertEqual(success2, 1)
             self.assertEqual(failure2, 1)
+
+
+class LastfmRecentTracksTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.importer = BaseLastfmImporter("t", "t", MagicMock(), "https://ws.audioscrobbler.com/2.0/", "k")
+        self.user = {"external_user_id": "u", "latest_listened_at": datetime.fromtimestamp(0, timezone.utc)}
+
+    def _get(self, **kwargs):
+        with requests_mock.Mocker() as m:
+            m.get("https://ws.audioscrobbler.com/2.0/", **kwargs)
+            return self.importer.get_user_recent_tracks(requests.Session(), self.user, page=1)
+
+    def test_invalid_json(self):
+        with self.assertRaises(ExternalServiceAPIError):
+            self._get(text="", status_code=200)
+        with self.assertRaises(ExternalServiceAPIError):
+            self._get(text="", status_code=400)
+
+    def test_error_payload(self):
+        with self.assertRaises(ExternalServiceAPIError):
+            self._get(json={"error": 8, "message": "Operation failed"}, status_code=200)
+
+    def test_librefm_empty_range(self):
+        data = self._get(json={"error": {"code": "7"}}, status_code=200)
+        self.assertEqual(data["recenttracks"]["track"], [])
+
+    def test_single_track_dict_normalized_to_list(self):
+        """Libre.fm returns a dict instead of a list when there is one track."""
+        single_track = {"name": "Song", "artist": {"#text": "Artist", "mbid": ""}, "album": {"#text": "", "mbid": ""}, "date": {"uts": "1000"}}
+        data = self._get(json={"recenttracks": {"@attr": {"totalPages": "1"}, "track": single_track}}, status_code=200)
+        self.assertIsInstance(data["recenttracks"]["track"], list)
+        self.assertEqual(len(data["recenttracks"]["track"]), 1)
+        self.assertEqual(data["recenttracks"]["track"][0]["name"], "Song")
+
+    def test_multi_track_list_unchanged(self):
+        tracks = [{"name": "A"}, {"name": "B"}]
+        data = self._get(json={"recenttracks": {"@attr": {"totalPages": "1"}, "track": tracks}}, status_code=200)
+        self.assertIsInstance(data["recenttracks"]["track"], list)
+        self.assertEqual(len(data["recenttracks"]["track"]), 2)

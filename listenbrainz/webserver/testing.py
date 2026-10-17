@@ -3,7 +3,7 @@ from urllib import parse
 
 from flask import template_rendered, message_flashed
 
-from listenbrainz.webserver import create_api_compat_app, create_web_app
+from listenbrainz.webserver import create_api_compat_app, create_web_app, _register_api_blueprints
 
 
 class ServerTestCase(unittest.TestCase):
@@ -22,6 +22,7 @@ class ServerTestCase(unittest.TestCase):
     @classmethod
     def create_app(cls):
         app = create_web_app(debug=False)
+        _register_api_blueprints(app)
         app.config['TESTING'] = True
         return app
 

@@ -43,10 +43,13 @@ PUBLIC_TABLES_DUMP = DumpTablesCollection(
     ]
 )
 
+# the mapping tables live in the listens database but are still dumped in the timescale dump
+# under their old file names, to keep the dump format unchanged.
 PUBLIC_TABLES_TIMESCALE_DUMP = DumpTablesCollection(
     engine_name=DumpEngineName.ts,
     tables=[
-        DumpTable(table_name="mbid_mapping_metadata", columns=(
+        DumpTable(table_name=Identifier("mapping", "mbid_mapping_metadata"), filename="mbid_mapping_metadata",
+                  engine_name=DumpEngineName.listens, columns=(
             "artist_credit_id",
             "recording_mbid",
             "release_mbid",
@@ -56,14 +59,16 @@ PUBLIC_TABLES_TIMESCALE_DUMP = DumpTablesCollection(
             "recording_name",
             "last_updated",
         )),
-        DumpTable(table_name="mbid_mapping", columns=(
+        DumpTable(table_name=Identifier("mapping", "mbid_mapping"), filename="mbid_mapping",
+                  engine_name=DumpEngineName.listens, columns=(
             "recording_msid",
             "recording_mbid",
             "match_type",
             "last_updated",
             "check_again",
         )),
-        DumpTable(table_name="mbid_manual_mapping", columns=(
+        DumpTable(table_name=Identifier("mapping", "mbid_manual_mapping"), filename="mbid_manual_mapping",
+                  engine_name=DumpEngineName.listens, columns=(
             "id",
             "recording_msid",
             "recording_mbid",
@@ -177,13 +182,7 @@ PRIVATE_TABLES = DumpTablesCollection(
             "sid",
             "api_key",
             "ts",
-        ))
-    ]
-)
-
-PRIVATE_TABLES_TIMESCALE = DumpTablesCollection(
-    engine_name=DumpEngineName.ts,
-    tables=[
+        )),
         DumpTable(table_name=Identifier("playlist", "playlist"), columns=(
             "id",
             "mbid",
@@ -203,7 +202,8 @@ PRIVATE_TABLES_TIMESCALE = DumpTablesCollection(
             "position",
             "mbid",
             "added_by_id",
-            "created"
+            "created",
+            "additional_metadata",
         )),
         DumpTable(table_name=Identifier("playlist", "playlist_collaborator"), columns=(
             "playlist_id",

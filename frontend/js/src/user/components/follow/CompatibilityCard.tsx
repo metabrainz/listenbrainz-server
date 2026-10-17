@@ -4,12 +4,12 @@ import { includes as _includes } from "lodash";
 import { faCircleInfo, faSquarePlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from "react-router";
-import ReactTooltip from "react-tooltip";
 import Card from "../../../components/Card";
+import Tooltip from "../../../components/Tooltip";
 import SimilarityScore from "./SimilarityScore";
 
 export type CompatibilityCardProps = {
-  user: ListenBrainzUser;
+  userName: string;
   similarityScore: number;
   similarArtists: Array<{
     artist_name: string;
@@ -19,7 +19,7 @@ export type CompatibilityCardProps = {
 };
 
 function CompatibilityCard(props: CompatibilityCardProps) {
-  const { user, similarityScore, similarArtists } = props;
+  const { userName, similarityScore, similarArtists } = props;
 
   const firstFiveArtists = similarArtists.slice(0, 5);
   const otherArtists = similarArtists.slice(5, 25);
@@ -53,27 +53,32 @@ function CompatibilityCard(props: CompatibilityCardProps) {
           );
         })}
         {hasMoreThanFive && (
-          <>
-            <span data-tip data-for="more-artists-tooltip">
+          <Tooltip
+            id="more-artists-tooltip"
+            placement="top"
+            tooltip={
+              <>
+                {otherArtists.map((artist, index) => {
+                  return (
+                    <span>
+                      {index > 0 && ", "}
+                      {index > 0 && index === similarArtists.length - 1
+                        ? "and "
+                        : ""}
+                      {index > 0 && index % 5 === 0 && <br />}
+                      {`${artist.artist_name}`}
+                    </span>
+                  );
+                })}
+                {hasEvenMoreArtists && <span> and even more.</span>}
+              </>
+            }
+          >
+            <span>
               , and more.{" "}
               <FontAwesomeIcon icon={faSquarePlus} size="sm" color="gray" />
             </span>
-            <ReactTooltip id="more-artists-tooltip" place="top">
-              {otherArtists.map((artist, index) => {
-                return (
-                  <span>
-                    {index > 0 && ", "}
-                    {index > 0 && index === similarArtists.length - 1
-                      ? "and "
-                      : ""}
-                    {index > 0 && index % 5 === 0 && <br />}
-                    {`${artist.artist_name}`}
-                  </span>
-                );
-              })}
-              {hasEvenMoreArtists && <span> and even more.</span>}
-            </ReactTooltip>
-          </>
+          </Tooltip>
         )}
       </div>
     );
@@ -83,28 +88,35 @@ function CompatibilityCard(props: CompatibilityCardProps) {
 
   return (
     <Card id="compatibility-card" data-testid="compatibility-card">
-      <div className="info-icon" data-tip data-for="info-tooltip">
-        <Link
-          to={`/user/${encodeURIComponent(user.name)}/stats/?range=all_time`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <FontAwesomeIcon icon={faCircleInfo} />
-        </Link>
-      </div>
-      <span>Your compatibility with {user.name}:</span>
+      <Tooltip
+        id="info-tooltip"
+        placement="top"
+        tooltip={
+          <>
+            Artists displayed are the top matches, comparing the top 100 most
+            listened artists of all
+            <br /> time for both users. Click here for their statistics.
+          </>
+        }
+      >
+        <div className="info-icon">
+          <Link
+            to={`/user/${encodeURIComponent(userName)}/stats/?range=all_time`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <FontAwesomeIcon icon={faCircleInfo} />
+          </Link>
+        </div>
+      </Tooltip>
+      <span>Your compatibility with {userName}:</span>
       <SimilarityScore
         similarityScore={similarityScore}
-        user={user}
+        userName={userName}
         type="compact"
       />
       <hr />
       {content}
-      <ReactTooltip id="info-tooltip" place="top">
-        Artists displayed are the top matches, comparing the top 100 most
-        listened artists of all
-        <br /> time for both users. Click here for their statistics.
-      </ReactTooltip>
     </Card>
   );
 }

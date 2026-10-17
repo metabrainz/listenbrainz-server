@@ -1,6 +1,7 @@
 # This workflow can be used to push an image off a branch to Docker Hub.
 # This is useful to deploy changes to LB beta or test for testing.
 name: Push development image
+permissions: {}
 
 on:
   workflow_dispatch:
@@ -22,15 +23,18 @@ jobs:
 
       steps:
       # Run only if we are deploying a branch or tag from this repo
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         # empty strings evaluate to 0
         if: ${{ github.event.inputs.pr == 0}}
+        with:
+          persist-credentials: false
         
       # Run only if we are deploying a PR (may be in a forked repo)
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: ${{ github.event.inputs.pr != 0}}
         with:
           ref: ${{ format('refs/pull/{0}/head', github.event.inputs.pr) }}
+          persist-credentials: false
 
 
       - name: Login to Docker Hub
@@ -41,8 +45,12 @@ jobs:
         run: |
           docker build \
             --target listenbrainz-prod \
-            --tag metabrainz/listenbrainz:"${{ github.event.inputs.tag }}" \
+            --tag metabrainz/listenbrainz:"${GITHUB_EVENT_INPUTS_TAG}" \
             --build-arg GIT_COMMIT_SHA="${{ github.sha }}" .
+        env:
+          GITHUB_EVENT_INPUTS_TAG: ${{ github.event.inputs.tag }}
 
       - name: Push development image
-        run: docker push metabrainz/listenbrainz:"${{ github.event.inputs.tag }}"
+        run: docker push metabrainz/listenbrainz:"${GITHUB_EVENT_INPUTS_TAG}"
+        env:
+          GITHUB_EVENT_INPUTS_TAG: ${{ github.event.inputs.tag }}

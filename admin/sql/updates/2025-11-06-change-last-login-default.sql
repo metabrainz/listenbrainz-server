@@ -1,0 +1,3 @@
+BEGIN;
+ALTER TABLE "user" ALTER COLUMN "last_login" SET DEFAULT TIMESTAMP 'epoch';
+COMMIT;
