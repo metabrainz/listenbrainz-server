@@ -46,6 +46,19 @@ export enum TemplateNameEnum {
   gridStats = "grid-stats",
 }
 
+export type VinylLayout = "wood" | "close" | "vinyl" | "many";
+export type VinylWearTear = "new" | "used" | "loved";
+
+export const VINYL_LAYOUT_OPTIONS: ReadonlyArray<{
+  id: VinylLayout;
+  icon: string;
+}> = [
+  { id: "wood", icon: "1" },
+  { id: "close", icon: "2" },
+  { id: "vinyl", icon: "3" },
+  { id: "many", icon: "4" },
+];
+
 export interface TemplateOption {
   name: TemplateNameEnum;
   displayName: string;
@@ -239,12 +252,8 @@ export default function ArtCreator() {
     defaultStyleOnLoad.defaultColors[2]
   );
   const [customPresets, setCustomPresets] = useState<ColorPreset[]>([]);
-  const [vinylLayout, setVinylLayout] = useState<
-    "wood" | "close" | "vinyl" | "many"
-  >("wood");
-  const [vinylWearTear, setVinylWearTear] = useState<"new" | "used" | "loved">(
-    "used"
-  );
+  const [vinylLayout, setVinylLayout] = useState<VinylLayout>("wood");
+  const [vinylWearTear, setVinylWearTear] = useState<VinylWearTear>("used");
   const [vinylPlayerColor, setVinylPlayerColor] = useState<string>("#ffffff");
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const previewSVGRef = React.useRef<SVGSVGElement>(null);
@@ -690,8 +699,8 @@ export default function ArtCreator() {
         showListenCountArg: boolean,
         showReleaseArg: boolean,
         showArtistArg: boolean,
-        vinylLayoutArg: string,
-        vinylWearTearArg: string,
+        vinylLayoutArg: VinylLayout,
+        vinylWearTearArg: VinylWearTear,
         vinylPlayerColorArg: string
       ) => {
         if (styleArg.type === "grid") {
@@ -1099,12 +1108,7 @@ export default function ArtCreator() {
                   <>
                     <small>Choose a layout:</small>
                     <div className="cover-art-grid">
-                      {([
-                        { id: "wood", icon: "1" },
-                        { id: "close", icon: "2" },
-                        { id: "vinyl", icon: "3" },
-                        { id: "many", icon: "4" },
-                      ] as const).map((item) => (
+                      {VINYL_LAYOUT_OPTIONS.map((item) => (
                         <label className="cover-art-option" key={item.id}>
                           <input
                             type="radio"
@@ -1133,9 +1137,7 @@ export default function ArtCreator() {
                         className="form-select"
                         value={vinylWearTear}
                         onChange={(e) =>
-                          setVinylWearTear(
-                            e.target.value as "new" | "used" | "loved"
-                          )
+                          setVinylWearTear(e.target.value as VinylWearTear)
                         }
                       >
                         <option value="new">New</option>
