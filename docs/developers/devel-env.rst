@@ -112,7 +112,7 @@ register for one at the `Last.fm API page`_. Look for the following section in `
 
 Update the ``LASTFM_API_KEY`` field with your Last.fm API key.
 
-You also need to update the ``API_URL`` field value to ``http://localhost:8100``.
+You also need to update the ``API_URL`` field value to ``http://localhost:8103``.
 
 To use the Spotify importer you need to register an application on the
 `Spotify Developer Dashboard`_. Use ``http://127.0.0.1:8100/settings/music-services/spotify/callback/``
@@ -226,6 +226,7 @@ proceeding, run these commands to initialize the databases.
 
     ./develop.sh manage init_db --create-db
     ./develop.sh manage init_ts_db --create-db
+    ./develop.sh manage init_listens_db --create-db
 
 Your development environment is now ready. Now, let's actually see ListenBrainz
 load locally!
