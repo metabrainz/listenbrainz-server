@@ -220,3 +220,98 @@ class ArtViewsTestCase(IntegrationTestCase):
         self.assert200(resp)
         self.assertTrue(resp.text.startswith("<svg"))
         self.assertNotEqual(resp.text.find("2273480607"), -1)
+
+    def _get_lps_on_the_floor(self, mock_download_user_stats, mock_get_release_caa_ids,
+                              mock_get_release_group_caa_ids, **query):
+        """ Mock the release stats and fetch the lps-on-the-floor art with the given query params. """
+        mock_download_user_stats.return_value = [
+            ReleaseRecord(
+                release_mbid="b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
+                release_name="Release 1",
+                listen_count=5,
+                artist_name="Artist 1",
+                artist_mbids=["b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6"]
+            )
+            for _ in range(5)
+        ], 5
+        mock_get_release_caa_ids.return_value = {
+            "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6": {
+                "original_mbid": "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
+                "caa_id": 6945,
+                "caa_release_mbid": "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
+                "title": "Release 1",
+                "artist": "Artist 1"
+            }
+        }
+        mock_get_release_group_caa_ids.return_value = {}
+        return self.client.get(
+            self.custom_url_for('art_api_v1.cover_art_custom_stats',
+                                custom_name="lps-on-the-floor",
+                                user_name="rob",
+                                time_range="week",
+                                image_size=1000),
+            query_string=query)
+
+    @patch.object(CoverArtGenerator, "load_release_group_caa_ids")
+    @patch.object(CoverArtGenerator, "load_release_caa_ids")
+    @patch.object(CoverArtGenerator, "download_user_stats")
+    def test_cover_art_lps_on_the_floor_cover_counts(self, mock_download_user_stats,
+                                                      mock_get_release_caa_ids, mock_get_release_group_caa_ids):
+        """ Each scene must place exactly as many covers as it has sleeves (close=8 and many=12 used to crash). """
+        expected_counts = {"wood": 5, "vinyl": 5, "close": 8, "many": 12}
+        for scene, expected in expected_counts.items():
+            resp = self._get_lps_on_the_floor(mock_download_user_stats, mock_get_release_caa_ids,
+                                              mock_get_release_group_caa_ids, scene=scene)
+            self.assert200(resp)
+            self.assertEqual(resp.text.count('transform="'), expected, msg=f"scene={scene}")
+            self.assertIn(f"{scene}%20bg.png", resp.text, msg=f"scene={scene}")
+
+    @patch.object(CoverArtGenerator, "load_release_group_caa_ids")
+    @patch.object(CoverArtGenerator, "load_release_caa_ids")
+    @patch.object(CoverArtGenerator, "download_user_stats")
+    def test_cover_art_lps_on_the_floor_wear_tear_options(self, mock_download_user_stats,
+                                                           mock_get_release_caa_ids, mock_get_release_group_caa_ids):
+        """ The default wear is "used" and "new" must not add any wear layer. """
+        resp = self._get_lps_on_the_floor(mock_download_user_stats, mock_get_release_caa_ids,
+                                          mock_get_release_group_caa_ids)
+        self.assert200(resp)
+        self.assertIn("wood%20bg.png", resp.text)
+        self.assertIn("wood%20worn%201.png", resp.text)
+        self.assertNotIn("wood%20worn%202.png", resp.text)
+
+        resp = self._get_lps_on_the_floor(mock_download_user_stats, mock_get_release_caa_ids,
+                                          mock_get_release_group_caa_ids, wear_tear="new")
+        self.assert200(resp)
+        self.assertIn("wood%20bg.png", resp.text)
+        self.assertNotIn("worn", resp.text)
+
+    @patch.object(CoverArtGenerator, "load_release_group_caa_ids")
+    @patch.object(CoverArtGenerator, "load_release_caa_ids")
+    @patch.object(CoverArtGenerator, "download_user_stats")
+    def test_cover_art_lps_on_the_floor_invalid_params_use_defaults(self, mock_download_user_stats,
+                                                                     mock_get_release_caa_ids,
+                                                                     mock_get_release_group_caa_ids):
+        """ Unknown scene or wear_tear and a malformed player_color must fall back to the defaults. """
+        resp = self._get_lps_on_the_floor(mock_download_user_stats, mock_get_release_caa_ids,
+                                          mock_get_release_group_caa_ids,
+                                          scene="bogus", wear_tear="bogus", player_color="zzzzzz")
+        self.assert200(resp)
+        self.assertEqual(resp.text.count('transform="'), 5)
+        self.assertIn("wood%20bg.png", resp.text)
+        self.assertIn("wood%20worn%201.png", resp.text)
+        # white fallback: r=g=b=1.0
+        self.assertIn("0 0 0 1.0 0", resp.text)
+
+    @patch.object(CoverArtGenerator, "load_release_group_caa_ids")
+    @patch.object(CoverArtGenerator, "load_release_caa_ids")
+    @patch.object(CoverArtGenerator, "download_user_stats")
+    def test_cover_art_lps_on_the_floor_player_color_channels(self, mock_download_user_stats,
+                                                               mock_get_release_caa_ids,
+                                                               mock_get_release_group_caa_ids):
+        """ player_color is split into r, g and b channels (0x33, 0x66, 0x99 -> 0.2, 0.4, 0.6). """
+        resp = self._get_lps_on_the_floor(mock_download_user_stats, mock_get_release_caa_ids,
+                                          mock_get_release_group_caa_ids, player_color="336699")
+        self.assert200(resp)
+        self.assertIn("0 0 0 0.2 0", resp.text)
+        self.assertIn("0 0 0 0.4 0", resp.text)
+        self.assertIn("0 0 0 0.6 0", resp.text)
