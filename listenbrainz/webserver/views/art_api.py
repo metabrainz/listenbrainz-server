@@ -391,6 +391,13 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
     :type time_range: ``str``
     :param image_size: The size of the cover art image. See constants at the bottom of this document.
     :type image_size: ``int``
+    :query scene: Only used by the ``lps-on-the-floor`` cover art. The photo layout to use: ``wood`` (default),
+        ``close``, ``vinyl`` or ``many``. Any other value falls back to ``wood``.
+    :query wear_tear: Only used by the ``lps-on-the-floor`` cover art. How worn the record sleeves look: ``new``
+        (no wear), ``used`` (default) or ``loved`` (most wear). Any other value falls back to ``used``.
+    :query player_color: Only used by the ``lps-on-the-floor`` cover art. The colour of the record player as six
+        hex digits without a leading ``#``, for example ``ff0000``. Defaults to ``ffffff``; an invalid value
+        falls back to white.
     :statuscode 200: cover art created successfully.
     :statuscode 400: Invalid JSON or invalid options in JSON passed. See error message for details.
     :resheader Content-Type: *image/svg+xml*
