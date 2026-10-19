@@ -78,12 +78,12 @@
         {{ render_lp_image(0, 0, 100, 100, "matrix(2.86000,-0.60000,0.65000,2.80000,385.000,351.000)", images[9]) }}
         {{ render_lp_image(0, 0, 100, 100, "matrix(2.86990,0.05000,-0.05010,2.44010,718.000,754.000)", images[11]) }}
     {% else %}
-        {# wood — rotate around image center to align with sleeve overlays #}
-        {{ render_lp_image(89, 318, 195, 195, "rotate(6.1,186,415)", images[2]) }}
-        {{ render_lp_image(17, 223, 193, 193, "rotate(-22.4,113,319)", images[1]) }}
-        {{ render_lp_image(189, 240, 189, 189, "rotate(-4,283,334)", images[0]) }}
-        {{ render_lp_image(404, 480, 198, 198, "rotate(-11.9,503,579)", images[4]) }}
-        {{ render_lp_image(385, 488, 202, 203, "rotate(2.2,486,589)", images[3]) }}
+        {# wood — original production placement, designed for a 750-unit canvas: rotate about the origin, then scale to the 1000-unit canvas #}
+        {{ render_lp_image(89, 318, 195, 195, "scale(1.333333) rotate(6.1)", images[2]) }}
+        {{ render_lp_image(17, 223, 193, 193, "scale(1.333333) rotate(-22.4)", images[1]) }}
+        {{ render_lp_image(189, 240, 189, 189, "scale(1.333333) rotate(-4)", images[0]) }}
+        {{ render_lp_image(404, 480, 198, 198, "scale(1.333333) rotate(-11.9)", images[4]) }}
+        {{ render_lp_image(385, 488, 202, 203, "scale(1.333333) rotate(2.2)", images[3]) }}
     {% endif %}
 
     <!-- Layer 2: Scene Background -->
