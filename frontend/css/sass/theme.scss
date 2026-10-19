@@ -59,6 +59,7 @@
     --bs-tertiary-bg: #222;
     --bs-tertiary-bg-rgb: 34, 34, 34;
     --bs-heading-color: #f5f3fa;
+    --bs-light-rgb: 59, 55, 69 ; // RGB values for --lb-border
     --bs-link-color: var(--lb-accent);
     --bs-link-hover-color: var(--lb-accent-hover);
     --bs-link-color-rgb: 225, 222, 235;
@@ -344,6 +345,9 @@
       border-color: var(--lb-border);
       color: var(--lb-text);
     }
+    .footer {
+      background: linear-gradient(180deg, var(--lb-surface-raised) 65%, transparent 100%);
+    }
 
     // Bootstrap defines these custom properties on .dropdown-menu itself,
     // which shadows root values. Keep all menu states on the same muted dark
@@ -466,10 +470,6 @@
       --bs-btn-focus-shadow-rgb: 52, 48, 58;
     }
 
-    .footer {
-      border-top-color: var(--lb-border);
-    }
-
     // The base sidebar paints each section with a light gradient. Reset the
     // full background, rather than only its colour, so every generic sidebar
     // receives a uniform dark panel while preserving its purple header.
@@ -481,12 +481,6 @@
     .sidebar .sidebar-header {
       background: linear-gradient(135deg, #47417c, #353070);
       color: #f9f7ff;
-    }
-
-    // Bootstrap's .border-light utility is !important; without this override,
-    // the three footer rules remain white even when the footer is dark.
-    .footer .border-light {
-      border-color: var(--lb-border) !important;
     }
 
     hr {
