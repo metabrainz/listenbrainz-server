@@ -95,6 +95,8 @@
     {% endif %}
 
     <!-- Layer 4: Record Player Color Overlay -->
-    <image x="0" y="0" width="1000" height="1000" href="{{ player_color_url }}"
+    {# The wood player-colour overlay was exported at a different scale and offset than the wood photo, so place it explicitly. #}
+    {% set pc = (312.68, -64.15, 705.3) if scene == "wood" else (0, 0, 1000) %}
+    <image x="{{ pc[0] }}" y="{{ pc[1] }}" width="{{ pc[2] }}" height="{{ pc[2] }}" href="{{ player_color_url }}"
            filter="url(#colorizePlayer)" style="mix-blend-mode: multiply;" class="background-image" />
 </svg>

@@ -255,6 +255,22 @@ class ArtViewsTestCase(IntegrationTestCase):
     @patch.object(CoverArtGenerator, "load_release_group_caa_ids")
     @patch.object(CoverArtGenerator, "load_release_caa_ids")
     @patch.object(CoverArtGenerator, "download_user_stats")
+    def test_cover_art_lps_on_the_floor_wood_player_overlay_placement(self, mock_download_user_stats,
+                                                                      mock_get_release_caa_ids,
+                                                                      mock_get_release_group_caa_ids):
+        """ Only the wood player-colour overlay needs explicit placement, the other scenes' overlays fill the canvas. """
+        for scene in ("wood", "close", "vinyl", "many"):
+            resp = self._get_lps_on_the_floor(mock_download_user_stats, mock_get_release_caa_ids,
+                                              mock_get_release_group_caa_ids, scene=scene)
+            self.assert200(resp)
+            if scene == "wood":
+                self.assertIn('x="312.68"', resp.text)
+            else:
+                self.assertNotIn('x="312.68"', resp.text, msg=f"scene={scene}")
+
+    @patch.object(CoverArtGenerator, "load_release_group_caa_ids")
+    @patch.object(CoverArtGenerator, "load_release_caa_ids")
+    @patch.object(CoverArtGenerator, "download_user_stats")
     def test_cover_art_lps_on_the_floor_viewbox_is_fixed(self, mock_download_user_stats,
                                                          mock_get_release_caa_ids, mock_get_release_group_caa_ids):
         """ The viewBox must stay on the 1000-unit canvas so smaller image sizes scale the scene instead of cropping it. """
