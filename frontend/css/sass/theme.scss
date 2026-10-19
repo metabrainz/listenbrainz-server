@@ -1567,9 +1567,15 @@
       border-top-color: var(--lb-tooltip-bg);
     }
 
-    .preference-switch > label .switch::after {
-      background: var(--lb-surface-raised);
-      box-shadow: 0 0 5px rgb(0 0 0 / 65%);
+    .preference-switch > label .switch {
+      &::after {
+        background: var(--lb-border);
+        box-shadow: 0 0 5px rgb(0 0 0 / 65%);
+      }
+      &::before {
+        background: var(--lb-border-strong);
+        box-shadow: 0 0 5px rgb(0 0 0 / 65%);
+      }
     }
 
     .similarity-score .progress {
