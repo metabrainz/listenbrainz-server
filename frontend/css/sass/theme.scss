@@ -1357,121 +1357,128 @@
     // React Select renders Emotion-generated class names by default. The
     // explicit class prefix on the flair chooser gives the menu a durable hook
     // and prevents its light default surface from breaking dark settings pages.
-    .donation-flairs-settings .flair-select__control,
-    .donation-flairs-settings .flair-select__control--is-focused {
-      background-color: var(--bs-form-control-bg);
-      border-color: var(--lb-border-strong);
-      box-shadow: none;
-    }
-
-    .donation-flairs-settings .flair-select__control--is-focused {
-      border-color: var(--lb-focus);
-      box-shadow: 0 0 0 0.2rem rgb(175 166 223 / 30%);
-    }
-
-    .donation-flairs-settings .flair-select__single-value,
-    .donation-flairs-settings .flair-select__input-container,
-    .donation-flairs-settings .flair-select__placeholder,
-    .donation-flairs-settings .flair-select__indicator {
-      color: var(--lb-text);
-    }
-
-    .donation-flairs-settings .flair-select__indicator:hover {
-      color: #fff;
-    }
-
-    .donation-flairs-settings .flair-select__indicator-separator {
-      background-color: var(--lb-border);
-    }
-
-    .donation-flairs-settings .flair-select__menu {
-      background-color: var(--lb-surface-raised);
-      border: 1px solid var(--lb-border);
-      box-shadow: var(--lb-shadow);
-    }
-
-    .donation-flairs-settings .flair-select__option {
-      background-color: var(--lb-surface-raised);
-      color: var(--lb-text);
-    }
-
-    .donation-flairs-settings .flair-select__option--is-focused {
-      background-color: #35323d;
-      color: #fff;
-    }
-
-    .donation-flairs-settings .flair-select__option--is-selected {
-      background-color: #4a4662;
-      color: #fff;
-    }
-
-    // Sweep flairs animate back to --text-color between highlights. Their
-    // legacy link value is the deep light-theme blue, which disappears against
-    // dark option rows. Use the same light-purple link baseline as every
-    // other flair option.
-    .donation-flairs-settings .flair {
-      --text-color: var(--lb-accent);
+    .donation-flairs-settings{
+      .flair-select__control,
+      .flair-select__control--is-focused {
+        background-color: var(--bs-form-control-bg);
+        border-color: var(--lb-border-strong);
+        box-shadow: none;
+      }
+  
+      .flair-select__control--is-focused {
+        border-color: var(--lb-focus);
+        box-shadow: 0 0 0 0.2rem rgb(175 166 223 / 30%);
+      }
+  
+      .flair-select__single-value,
+      .flair-select__input-container,
+      .flair-select__placeholder,
+      .flair-select__indicator {
+        color: var(--lb-text);
+      }
+  
+      .flair-select__indicator:hover {
+        color: #fff;
+      }
+  
+      .flair-select__indicator-separator {
+        background-color: var(--lb-border);
+      }
+  
+      .flair-select__menu {
+        background-color: var(--lb-surface-raised);
+        border: 1px solid var(--lb-border);
+        box-shadow: var(--lb-shadow);
+      }
+  
+      .flair-select__option {
+        background-color: var(--lb-surface-raised);
+        color: var(--lb-text);
+      }
+  
+      .flair-select__option--is-focused {
+        background-color: #35323d;
+        color: #fff;
+      }
+  
+      .flair-select__option--is-selected {
+        background-color: #4a4662;
+        color: #fff;
+      }
+  
+      // Sweep flairs animate back to --text-color between highlights. Their
+      // legacy link value is the deep light-theme blue, which disappears against
+      // dark option rows. Use the same light-purple link baseline as every
+      // other flair option.
+      .flair {
+        --text-color: var(--lb-accent);
+        a {
+          --text-color: var(--bs-link-color);
+        }
+      }
     }
 
     // Tags are a CreatableSelect with a custom value component. Assigning a
     // class prefix gives its otherwise generated styles stable dark hooks.
-    .add-tag-select .tag-select__control,
-    .add-tag-select .tag-select__control--is-focused,
-    .add-tag-select .tag-select__control--is-disabled {
-      background-color: var(--lb-surface-raised);
-      border-color: var(--lb-border);
-      box-shadow: none;
-    }
+    .add-tag-select {
+      .tag-select__control,
+      .tag-select__control--is-focused,
+      .tag-select__control--is-disabled {
+        background-color: var(--lb-surface-raised);
+        border-color: var(--lb-border);
+        box-shadow: none;
+      }
 
-    .add-tag-select .tag-select__control--is-focused {
-      border-color: var(--lb-focus);
-      box-shadow: 0 0 0 0.2rem rgb(175 166 223 / 30%);
-    }
+      .tag-select__control--is-focused {
+        border-color: var(--lb-focus);
+        box-shadow: 0 0 0 0.2rem rgb(175 166 223 / 30%);
+      }
 
-    .add-tag-select .tag-select__value-container,
-    .add-tag-select .tag-select__input-container,
-    .add-tag-select .tag-select__placeholder,
-    .add-tag-select .tag-select__indicator,
-    .add-tag-select .tag-select__single-value {
-      color: var(--lb-text);
-    }
+      .tag-select__value-container,
+      .tag-select__input-container,
+      .tag-select__placeholder,
+      .tag-select__indicator,
+      .tag-select__single-value {
+        color: var(--lb-text);
+      }
 
-    .add-tag-select .tag-select__indicator:hover {
-      color: #fff;
-    }
+      .tag-select__indicator:hover {
+        color: #fff;
+      }
 
-    .add-tag-select .tag-select__indicator-separator {
-      background-color: var(--lb-border);
-    }
+      .tag-select__indicator-separator {
+        background-color: var(--lb-border);
+      }
 
-    .add-tag-select .tag-select__menu {
-      background-color: var(--lb-surface-raised);
-      border: 1px solid var(--lb-border);
-      box-shadow: var(--lb-shadow);
-    }
+      .tag-select__menu {
+        background-color: var(--lb-surface-raised);
+        border: 1px solid var(--lb-border);
+        box-shadow: var(--lb-shadow);
+      }
 
-    .add-tag-select .tag-select__option {
-      background-color: var(--lb-surface-raised);
-      color: var(--lb-text);
-    }
+      .tag-select__option {
+        background-color: var(--lb-surface-raised);
+        color: var(--lb-text);
 
-    .add-tag-select .tag-select__option--is-focused {
-      background-color: #35323d;
-      color: #fff;
-    }
+        &--is-focused {
+          background-color: #35323d;
+          color: #fff;
+        }
 
-    .add-tag-select .tag-select__option--is-selected {
-      background-color: #4a4662;
-      color: #fff;
-    }
+        &--is-selected {
+          background-color: #4a4662;
+          color: #fff;
+        }
+      }
 
-    .add-tag-select .tag {
-      background-color: #36323f;
-      color: var(--lb-text);
-    }
+      .tag {
+        background-color: #36323f;
+        color: var(--lb-text);
 
-    .add-tag-select .tag > a {
-      color: var(--lb-accent);
+        > a {
+          color: var(--lb-accent);
+        }
+      }
     }
 
     #metadata-viewer .no-listen .pause-icon {
@@ -1481,24 +1488,25 @@
     // Entity headers receive a palette colour from their artwork. Preserve
     // that cue in dark mode, but mix it into the page surface so bright cover
     // art cannot reduce the contrast of the title and metadata.
-    #entity-page .entity-page-header {
-      background: linear-gradient(
-        45deg,
-        color-mix(in srgb, var(--bg-color) 36%, var(--lb-surface)) 0%,
-        color-mix(in srgb, var(--bg-color) 14%, var(--lb-surface)) 58%,
-        var(--lb-surface) 100%
-      );
-    }
+    #entity-page {
+      .entity-page-header {
+        background: linear-gradient(
+          45deg,
+          color-mix(in srgb, var(--bg-color) 36%, var(--lb-surface)) 0%,
+          color-mix(in srgb, var(--bg-color) 14%, var(--lb-surface)) 58%,
+          var(--lb-surface) 100%
+        );
+      }
 
-    #entity-page .header-with-line::after,
-    #entity-page .listening-stats .separator {
-      border-color: var(--lb-border);
-    }
+      .header-with-line::after,
+      .listening-stats .separator {
+        border-color: var(--lb-border);
+      }
 
-    #entity-page.artist-page .entity-page-content .tracks {
-      border-bottom: 1px solid var(--lb-border);
+      &.artist-page .entity-page-content .tracks {
+        border-bottom: 1px solid var(--lb-border);
+      }
     }
-
     .entity-page-header .read-more,
     #entity-page .read-more {
       background-image: linear-gradient(
@@ -1508,13 +1516,15 @@
       );
     }
 
-    .horizontal-scroll-container::before {
-      background: linear-gradient(to right, var(--lb-surface) 10%, transparent);
+    .horizontal-scroll-container{
+      &::before {
+        background: linear-gradient(to right, var(--lb-surface) 10%, transparent);
+      }
+      &::after {
+        background: linear-gradient(to left, var(--lb-surface) 10%, transparent);
+      }
     }
 
-    .horizontal-scroll-container::after {
-      background: linear-gradient(to left, var(--lb-surface) 10%, transparent);
-    }
 
     .small-scrollbar,
     .dragscroll,
@@ -1649,19 +1659,21 @@
       background: var(--lb-surface-muted) !important;
     }
 
-    .bar-chart foreignObject .graph-bar .position {
-      border-color: var(--lb-border-strong);
-      color: var(--lb-text);
-    }
+    .bar-chart foreignObject .graph-bar {
+        .position {
+        border-color: var(--lb-border-strong);
+        color: var(--lb-text);
+      }
 
-    .bar-chart foreignObject .graph-bar .graph-bar-entity,
-    .bar-chart foreignObject .graph-bar .graph-bar-entity a {
-      color: var(--lb-accent);
-    }
+      .graph-bar-entity,
+      .graph-bar-entity a {
+        color: var(--lb-accent);
+      }
 
-    .bar-chart foreignObject .graph-bar .graph-bar-artist,
-    .bar-chart foreignObject .graph-bar .graph-bar-artist a {
-      color: var(--lb-text-muted);
+      .graph-bar-artist,
+      .graph-bar-artist a {
+        color: var(--lb-text-muted);
+      }
     }
 
     // The old player is an independent component, so give its stacked menus the
@@ -1866,47 +1878,54 @@
       .homepage-upper,
       .homepage-lower {
         color: #f5f3fa;
+
+        .homepage-info,
+        .homepage-info a:visited,
+        .homepage-info h1 {
+          color: inherit !important;
+        }
       }
 
-      .homepage-upper .homepage-info,
-      .homepage-upper .homepage-info a:visited,
-      .homepage-upper .homepage-info h1,
-      .homepage-lower .homepage-info,
-      .homepage-lower .homepage-info a:visited,
-      .homepage-lower .homepage-info h1,
       .homepage-lower .listen-container {
         color: inherit !important;
       }
 
-      .homepage-information .info-column h2,
-      .homepage-information .info-column p,
-      .homepage-information .info-column .info-link {
-        color: #f5f3fa !important;
+      .homepage-information .info-column {
+        h2,
+        p,
+        .info-link {
+          color: #f5f3fa !important;
+        }
       }
 
       // Keep the primary sign-up action warm, while the sign-in action uses a
       // quieter secondary treatment that belongs on the dark landing page.
-      .homepage-info .create-account-button,
-      .homepage-info .create-account-button:visited {
-        color: #1e1e1e !important;
+      .homepage-info {
+        .create-account-button,
+        .create-account-button:visited {
+          color: #1e1e1e !important;
+        }
+
+        .login-button,
+        .login-button:visited {
+          background: #3b3745;
+          border: 1px solid #5a5566;
+          color: #f5f3fa !important;
+        }
+
+        .login-button:hover,
+        .login-button:focus-visible {
+          background: #4a4662;
+          border-color: #afa6df;
+          color: #fff !important;
+        }
       }
 
-      .homepage-info .login-button,
-      .homepage-info .login-button:visited {
-        background: #3b3745;
-        border: 1px solid #5a5566;
-        color: #f5f3fa !important;
-      }
-
-      .homepage-info .login-button:hover,
-      .homepage-info .login-button:focus-visible {
-        background: #4a4662;
-        border-color: #afa6df;
-        color: #fff !important;
-      }
-      .number-count .number-count-group .number-count-digit {
-        background: linear-gradient(180deg, #3b3745 0%, #24212a 100%);
-        color: #f5f3fa;
+      .number-count .number-count-group {
+        .number-count-digit {
+          background: linear-gradient(180deg, #3b3745 0%, #24212a 100%);
+          color: #f5f3fa;
+        }
       }
     }
   }
