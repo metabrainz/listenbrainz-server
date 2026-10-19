@@ -255,6 +255,45 @@ class ArtViewsTestCase(IntegrationTestCase):
     @patch.object(CoverArtGenerator, "load_release_group_caa_ids")
     @patch.object(CoverArtGenerator, "load_release_caa_ids")
     @patch.object(CoverArtGenerator, "download_user_stats")
+    def test_cover_art_lps_on_the_floor_viewbox_is_fixed(self, mock_download_user_stats,
+                                                         mock_get_release_caa_ids, mock_get_release_group_caa_ids):
+        """ The viewBox must stay on the 1000-unit canvas so smaller image sizes scale the scene instead of cropping it. """
+        mock_download_user_stats.return_value = [
+            ReleaseRecord(
+                release_mbid="b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
+                release_name="Release 1",
+                listen_count=5,
+                artist_name="Artist 1",
+                artist_mbids=["b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6"]
+            )
+            for _ in range(5)
+        ], 5
+        mock_get_release_caa_ids.return_value = {
+            "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6": {
+                "original_mbid": "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
+                "caa_id": 6945,
+                "caa_release_mbid": "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
+                "title": "Release 1",
+                "artist": "Artist 1"
+            }
+        }
+        mock_get_release_group_caa_ids.return_value = {}
+
+        for image_size in (750, 1000):
+            resp = self.client.get(
+                self.custom_url_for('art_api_v1.cover_art_custom_stats',
+                                    custom_name="lps-on-the-floor",
+                                    user_name="rob",
+                                    time_range="week",
+                                    image_size=image_size),
+                query_string={"scene": "wood"})
+            self.assert200(resp)
+            self.assertIn('viewBox="0 0 1000 1000"', resp.text, msg=f"image_size={image_size}")
+            self.assertIn(f'width="{image_size}"', resp.text, msg=f"image_size={image_size}")
+
+    @patch.object(CoverArtGenerator, "load_release_group_caa_ids")
+    @patch.object(CoverArtGenerator, "load_release_caa_ids")
+    @patch.object(CoverArtGenerator, "download_user_stats")
     def test_cover_art_lps_on_the_floor_cover_counts(self, mock_download_user_stats,
                                                       mock_get_release_caa_ids, mock_get_release_group_caa_ids):
         """ Each scene must place exactly as many covers as it has sleeves (close=8 and many=12 used to crash). """
