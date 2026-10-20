@@ -59,7 +59,7 @@
     --bs-tertiary-bg: #222;
     --bs-tertiary-bg-rgb: 34, 34, 34;
     --bs-heading-color: #f5f3fa;
-    --bs-light-rgb: 59, 55, 69 ; // RGB values for --lb-border
+    --bs-light-rgb: 59, 55, 69; // RGB values for --lb-border
     --bs-link-color: var(--lb-accent);
     --bs-link-hover-color: var(--lb-accent-hover);
     --bs-link-color-rgb: 225, 222, 235;
@@ -346,7 +346,11 @@
       color: var(--lb-text);
     }
     .footer {
-      background: linear-gradient(180deg, var(--lb-surface-raised) 65%, transparent 100%);
+      background: linear-gradient(
+        180deg,
+        var(--lb-surface-raised) 65%,
+        transparent 100%
+      );
     }
 
     // Bootstrap defines these custom properties on .dropdown-menu itself,
@@ -1357,55 +1361,55 @@
     // React Select renders Emotion-generated class names by default. The
     // explicit class prefix on the flair chooser gives the menu a durable hook
     // and prevents its light default surface from breaking dark settings pages.
-    .donation-flairs-settings{
+    .donation-flairs-settings {
       .flair-select__control,
       .flair-select__control--is-focused {
         background-color: var(--bs-form-control-bg);
         border-color: var(--lb-border-strong);
         box-shadow: none;
       }
-  
+
       .flair-select__control--is-focused {
         border-color: var(--lb-focus);
         box-shadow: 0 0 0 0.2rem rgb(175 166 223 / 30%);
       }
-  
+
       .flair-select__single-value,
       .flair-select__input-container,
       .flair-select__placeholder,
       .flair-select__indicator {
         color: var(--lb-text);
       }
-  
+
       .flair-select__indicator:hover {
         color: #fff;
       }
-  
+
       .flair-select__indicator-separator {
         background-color: var(--lb-border);
       }
-  
+
       .flair-select__menu {
         background-color: var(--lb-surface-raised);
         border: 1px solid var(--lb-border);
         box-shadow: var(--lb-shadow);
       }
-  
+
       .flair-select__option {
         background-color: var(--lb-surface-raised);
         color: var(--lb-text);
       }
-  
+
       .flair-select__option--is-focused {
         background-color: #35323d;
         color: #fff;
       }
-  
+
       .flair-select__option--is-selected {
         background-color: #4a4662;
         color: #fff;
       }
-  
+
       // Sweep flairs animate back to --text-color between highlights. Their
       // legacy link value is the deep light-theme blue, which disappears against
       // dark option rows. Use the same light-purple link baseline as every
@@ -1516,15 +1520,22 @@
       );
     }
 
-    .horizontal-scroll-container{
+    .horizontal-scroll-container {
       &::before {
-        background: linear-gradient(to right, var(--lb-surface) 10%, transparent);
+        background: linear-gradient(
+          to right,
+          var(--lb-surface) 10%,
+          transparent
+        );
       }
       &::after {
-        background: linear-gradient(to left, var(--lb-surface) 10%, transparent);
+        background: linear-gradient(
+          to left,
+          var(--lb-surface) 10%,
+          transparent
+        );
       }
     }
-
 
     .small-scrollbar,
     .dragscroll,
@@ -1666,7 +1677,7 @@
     }
 
     .bar-chart foreignObject .graph-bar {
-        .position {
+      .position {
         border-color: var(--lb-border-strong);
         color: var(--lb-text);
       }
