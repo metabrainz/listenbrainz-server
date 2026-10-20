@@ -9,6 +9,8 @@ from flask import Blueprint, render_template, request, url_for, \
     redirect, current_app, jsonify, session
 from flask_login import current_user, login_required
 from werkzeug.exceptions import NotFound, BadRequest
+
+from listenbrainz import synapse_api
 import requests
 from requests.adapters import HTTPAdapter, Retry
 
@@ -808,6 +810,21 @@ def link_listens():
         "last_updated": created,
     }
     return jsonify(data)
+
+
+@settings_bp.post('/notifications/')
+@api_login_required
+def notifications():
+    user = db_user.get(db_conn, current_user.id, fetch_email=True)
+    email = user["email"] if user else None
+
+    try:
+        state = synapse_api.get_notification_state(current_user.id, email)
+    except Exception:
+        current_app.logger.error("Failed to fetch notification state from Synapse", exc_info=True)
+        return jsonify({"email": email, "event_types": [], "subscriptions": []})
+
+    return jsonify(state)
 
 
 @settings_bp.get('/', defaults={'path': ''})
