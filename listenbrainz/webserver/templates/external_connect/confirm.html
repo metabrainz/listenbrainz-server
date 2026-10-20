@@ -48,18 +48,18 @@
         <img width="100"src="{{ logo_url }}" alt="{{ connect_request.client_name }}"></img>
       </p>
       <p>
-        Next, {{ service_label }} will ask you to let ListenBrainz read and save
-        your listening history on behalf of
-        <strong>{{ connect_request.client_name }}</strong>.
+        {{ service_label }} will ask you to authorize access to your listening history.
       </p>
       <p>
-        Your listening history will be public on ListenBrainz under the name
-        <strong>{{ musicbrainz_id }}</strong>. Nothing will be posted to your {{
-        service_label }} account.
+        At {{ connect_request.client_name }} we only read what you listen to.
+        Nothing is posted to your {{ service_label }}, nothing is played.
       </p>
       <p>
-        After you approve, you’ll return to {{ connect_request.describe_client()
-        }}.
+        Your listens are recorded and shown publicly by our data partner ListenBrainz,
+        under an anonymous ID: {{ musicbrainz_id }}.
+      </p>
+      <p>
+        When you’re done, you’ll come straight back to {{ connect_request.describe_client() }}.
       </p>
       <hr/>
       <form
