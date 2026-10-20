@@ -161,7 +161,9 @@ class ExternalConnectViewsTestCase(IntegrationTestCase):
         # the host the user will be sent back to
         self.assertIn("fankee.example", page)
         self.assertIn(self.user["musicbrainz_id"], page)
-        self.assertIn("Spotify will ask you to let ListenBrainz read and save", page)
+        # Ensure we have clear wording in place about the public nature of LB history 
+        self.assertIn("Spotify will ask you to authorize access to your listening history.", page)
+        self.assertIn("Your listens are recorded and shown publicly", page)
         # the user must not be sent anywhere before they have confirmed
         self.assertNotIn("accounts.spotify.com", page)
         with self.client.session_transaction() as session:
