@@ -1772,7 +1772,11 @@
     }
 
     .music-player {
-      --music-player-background: linear-gradient(to bottom, $listenbrainz-blue, #1e1e1e);
+      --music-player-background: linear-gradient(
+        to bottom,
+        $listenbrainz-blue,
+        #1e1e1e
+      );
     }
 
     // Donation views use a light glass treatment and hard-coded grey pills in
