@@ -12,7 +12,7 @@
     --lb-text-muted: #6b665c;
     --lb-border: #d4d0cb;
     --lb-border-strong: #aaa49c;
-    --lb-accent: #353070;
+    --lb-accent: $listenbrainz-blue;
     --lb-accent-hover: #27235a;
     --lb-link-visited: #963873;
     --lb-link-visited-hover: #ba478f;
@@ -438,7 +438,7 @@
       --bs-btn-bg: #47417c;
       --bs-btn-hover-bg: #514a89;
       --bs-btn-active-bg: #393465;
-      --bs-btn-disabled-bg: #353070;
+      --bs-btn-disabled-bg: $listenbrainz-blue;
       --bs-btn-focus-shadow-rgb: 71, 65, 124;
     }
 
@@ -483,7 +483,7 @@
     }
 
     .sidebar .sidebar-header {
-      background: linear-gradient(135deg, #47417c, #353070);
+      background: linear-gradient(135deg, #47417c, $listenbrainz-blue);
       color: #f9f7ff;
     }
 
@@ -888,7 +888,7 @@
     }
 
     .sidebar.sidebar-fresh-releases .sidebar-header {
-      background: linear-gradient(135deg, #47417c, #353070);
+      background: linear-gradient(135deg, #47417c, $listenbrainz-blue);
       color: #f9f7ff;
     }
 
@@ -1323,11 +1323,6 @@
       --bs-alert-bg: #47292d;
       --bs-alert-border-color: #bb5a65;
       --bs-alert-color: #ffdadd;
-    }
-
-    .alert a {
-      color: #f0eaff;
-      text-decoration: underline;
     }
 
     mark {
@@ -1777,7 +1772,7 @@
     }
 
     .music-player {
-      --music-player-background: linear-gradient(to bottom, #353070, #1e1e1e);
+      --music-player-background: linear-gradient(to bottom, $listenbrainz-blue, #1e1e1e);
     }
 
     // Donation views use a light glass treatment and hard-coded grey pills in

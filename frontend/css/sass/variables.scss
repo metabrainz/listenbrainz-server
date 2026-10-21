@@ -145,7 +145,7 @@ $card-box-shadow: 0px 1px 1px color.scale($gray-500, $alpha: -90%),
 /* Misc */
 $enable-shadows: true;
 $hr-margin-y: 20px;
-$hr-border-color: $gray-light;
+$hr-border-color: var(--lb-border);
 $hr-opacity: 1;
 $alert-padding-x: 1.5rem;
 $alert-padding-y: $alert-padding-x;
