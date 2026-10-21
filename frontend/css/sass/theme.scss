@@ -1409,16 +1409,22 @@
         background-color: #4a4662;
         color: #fff;
       }
+    }
 
-      // Sweep flairs animate back to --text-color between highlights. Their
-      // legacy link value is the deep light-theme blue, which disappears against
-      // dark option rows. Use the same light-purple link baseline as every
-      // other flair option.
-      .flair {
-        --text-color: var(--lb-accent);
-        a {
-          --text-color: var(--bs-link-color);
-        }
+    // Sweep flairs animate back to --text-color between highlights. Their
+    // legacy link value is the deep light-theme blue, which disappears against
+    // dark option rows. Use the same light-purple link baseline as every
+    // other flair option.
+    .flair {
+      --text-color: var(--lb-accent);
+      a {
+        --text-color: var(--bs-link-color);
+      }
+      &.highlighter:hover {
+        color: var(--lb-surface);
+      }
+      &.extruded {
+        color: $listenbrainz-blue;
       }
     }
 

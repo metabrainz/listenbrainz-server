@@ -63,7 +63,7 @@
       width: 100%;
       height: 100%;
       animation: shake-text-effect 3s infinite;
-      color: $blue;
+      color: inherit;
     }
   }
   @keyframes shake-text-effect {
@@ -149,7 +149,7 @@
       color: var(--text-color, inherit);
     }
     3% {
-      color: $gray-light;
+      color: var(--lb-surface-muted);
     }
     6% {
       color: var(--text-color, inherit);
