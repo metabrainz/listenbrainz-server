@@ -17,7 +17,7 @@ from listenbrainz.listenstore.timescale_listenstore import ListenStoreException
 from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINoContent, APINotFound, APIServiceUnavailable, \
     APIUnauthorized, ListenValidationError, APIForbidden
 from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 from listenbrainz.webserver.models import SubmitListenUserMetadata
@@ -344,7 +344,7 @@ def get_similar_users(user_name):
                 "user_name": r["musicbrainz_id"],
                 "similarity": r["similarity"]
             }
-            for r in similar_users
+            for r in (similar_users or [])
         ]
     })
 
@@ -364,17 +364,24 @@ def get_similar_to_user(user_name, other_user_name):
             "similarity": 0.1938480256
         }
 
-    :param user_name: the MusicBrainz ID of the the one user
-    :param other_user_name: the MusicBrainz ID of the other user whose similar users are
+    :param user_name: the MusicBrainz ID of the base user
+    :param other_user_name: the MusicBrainz ID of the other user whose similarity is being requested
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
+    :statuscode 204: Similarity has not been calculated between the two users.
     :statuscode 404: The requested user was not found.
     """
     user = db_user.get_by_mb_id(db_conn, user_name)
     if not user:
         raise APINotFound("User %s not found" % user_name)
 
+    other_user = db_user.get_by_mb_id(db_conn, other_user_name)
+    if not other_user:
+        raise APINotFound("User %s not found" % other_user_name)
+
     similar_users = db_user.get_similar_users(db_conn, user['id'])
+    if not similar_users:
+        raise APINoContent("Similarity has not been calculated between %s and %s" % (user_name, other_user_name))
 
     # Constructing an id-similarity map
     id_similarity_map = {r["musicbrainz_id"]: r["similarity"] for r in similar_users}
