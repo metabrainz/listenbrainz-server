@@ -4,7 +4,7 @@ import listenbrainz.db.pinned_recording as db_pinned_rec
 from flask import Blueprint, current_app, jsonify, request
 
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn, ts_conn, listens_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIForbidden
 from brainzutils.ratelimit import ratelimit
@@ -184,7 +184,7 @@ def get_pin_by_id(row_id):
     if pin.user_id not in user_map:
         raise APINotFound("Cannot find user for pin with row_id '%s'" % row_id)
 
-    pins_with_metadata = fetch_track_metadata_for_items(ts_conn, [pin])
+    pins_with_metadata = fetch_track_metadata_for_items(ts_conn, listens_conn, [pin])
     pin = pins_with_metadata[0] if pins_with_metadata else pin
 
     pin_data = pin.to_api()
@@ -260,7 +260,7 @@ def get_pins_for_user(user_name):
         current_app.logger.error("Error while retrieving pins for user: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
 
-    pinned_recordings = fetch_track_metadata_for_items(ts_conn, pinned_recordings)
+    pinned_recordings = fetch_track_metadata_for_items(ts_conn, listens_conn, pinned_recordings)
     pinned_recordings = [pin.to_api() for pin in pinned_recordings]
     total_count = db_pinned_rec.get_pin_count_for_user(db_conn, user_id=user["id"])
 
@@ -335,7 +335,7 @@ def get_pins_for_user_following(user_name):
     pinned_recordings = db_pinned_rec.get_pins_for_user_following(
         db_conn, user_id=user["id"], count=count, offset=offset
     )
-    pinned_recordings = fetch_track_metadata_for_items(ts_conn, pinned_recordings)
+    pinned_recordings = fetch_track_metadata_for_items(ts_conn, listens_conn, pinned_recordings)
     pinned_recordings = [pin.to_api() for pin in pinned_recordings]
 
     return jsonify(
@@ -391,7 +391,7 @@ def get_current_pin_for_user(user_name):
 
     pin = db_pinned_rec.get_current_pin_for_user(db_conn, user_id=user.id)
     if pin:
-        pin = fetch_track_metadata_for_items(ts_conn, [pin])[0].to_api()
+        pin = fetch_track_metadata_for_items(ts_conn, listens_conn, [pin])[0].to_api()
 
     return jsonify({
         "pinned_recording": pin,

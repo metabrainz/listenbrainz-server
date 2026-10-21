@@ -6,7 +6,7 @@ from sqlalchemy import text
 
 from listenbrainz.background.delete import delete_listens_history, delete_user
 from listenbrainz.background.export import export_user
-from listenbrainz.webserver import create_app, db_conn, ts_conn
+from listenbrainz.webserver import create_app, db_conn, ts_conn, listens_conn
 from listenbrainz.background.listens_importer import import_listens
 
 CLAIM_TIMEOUT_HOURS = 6
@@ -80,9 +80,9 @@ class BackgroundTasks:
         if task.task == "delete_listens":
             delete_listens_history(db_conn, task.user_id, task.created)
         elif task.task == "delete_user":
-            delete_user(db_conn, ts_conn, task.user_id, task.created)
+            delete_user(db_conn, task.user_id, task.created)
         elif task.task == "export_all_user_data":
-            export_user(db_conn, ts_conn, task.user_id, task.metadata)
+            export_user(db_conn, listens_conn, task.user_id, task.metadata)
         elif task.task == "import_listens":
             import_listens(db_conn, ts_conn, task.user_id, task.metadata)
         else:
@@ -113,6 +113,7 @@ class BackgroundTasks:
                     remove_task(task)
                 except Exception:
                     current_app.logger.error("Error processing task:", exc_info=True)
+                    db_conn.rollback()
                     release_task(task)
                 finally:
                     self._current_task = None
@@ -133,6 +134,7 @@ class BackgroundTasks:
                 # by simply exiting the container when this happens and start fresh.
                 db_conn.rollback()
                 ts_conn.rollback()
+                listens_conn.rollback()
 
 
 if __name__ == "__main__":
