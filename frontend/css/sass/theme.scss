@@ -1462,6 +1462,10 @@
 
     // Tags are a CreatableSelect with a custom value component. Assigning a
     // class prefix gives its otherwise generated styles stable dark hooks.
+    .tag .tag-vote-button {
+      border-left-color: var(--lb-border);
+    }
+
     .add-tag-select {
       .tag-select__control,
       .tag-select__control--is-focused,
