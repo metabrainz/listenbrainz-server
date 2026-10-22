@@ -1019,7 +1019,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
             "token_type": "Bearer",
             "metabrainz_user_id": 123,
             "scope": "profile",
-            "sub": "lucifer",
+            "sub": 123,
+            "username": "lucifer",
             "issued_by": "https://metabrainz.org/",
             "expires_at": int(datetime(2023, 1, 2).timestamp()),
             "issued_at": int(datetime(2023, 1, 1).timestamp()),
@@ -1039,7 +1040,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
             "token_type": "Bearer",
             "metabrainz_user_id": 123,
             "scope": "profile",
-            "sub": "lucifer",
+            "sub": 123,
+            "username": "lucifer",
             "issued_by": "https://metabrainz.org/",
             "expires_at": int((datetime.now() + timedelta(hours=1)).timestamp()),
             "issued_at": int(datetime.now().timestamp()),
@@ -1052,6 +1054,38 @@ class APITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert401(response)
         self.assertEqual(response.json["error"], "Insufficient scope.")
+
+    @requests_mock.Mocker()
+    def test_oauth_valid_access_token(self, mock_requests):
+        """Test that a valid MetaBrainz access token authenticates the user.
+
+        The introspection response puts the numeric MetaBrainz account id in
+        "sub" and the MusicBrainz username in "username", so the user lookup has
+        to use the latter.
+        """
+        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
+            payload = json.load(f)
+
+        mock_requests.post(self.app.config["OAUTH_INTROSPECTION_URL"], json={
+            "active": True,
+            "client_id": "abc",
+            "token_type": "Bearer",
+            "metabrainz_user_id": 123,
+            "scope": "profile listenbrainz:submit-listens",
+            "sub": 123,
+            "username": self.user["musicbrainz_id"],
+            "issued_by": "https://metabrainz.org/",
+            "expires_at": int((datetime.now() + timedelta(hours=1)).timestamp()),
+            "issued_at": int(datetime.now().timestamp()),
+        })
+        response = self.client.post(
+            self.custom_url_for('api_v1.submit_listen'),
+            data=json.dumps(payload),
+            headers={'Authorization': 'Bearer meba_123'},
+            content_type='application/json'
+        )
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
 
     def test_get_playing_now(self):
         """ Test for valid submission and retrieval of listen_type 'playing_now'
