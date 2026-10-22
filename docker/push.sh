@@ -18,7 +18,7 @@ TAG=${1:-beta}
 
 function build_and_push_image {
     echo "building for tag $1"
-    docker build \
+    docker build --pull \
         --tag metabrainz/listenbrainz:"$1" \
         --target listenbrainz-prod \
         --build-arg GIT_COMMIT_SHA="$GIT_COMMIT_SHA" . && \
