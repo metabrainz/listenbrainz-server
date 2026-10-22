@@ -1,5 +1,5 @@
 ARG PYTHON_BASE_IMAGE_VERSION=3.13-20250313
-ARG NODE_VERSION=20-alpine
+ARG NODE_VERSION=22.23.4-alpine
 FROM docker.io/metabrainz/python:$PYTHON_BASE_IMAGE_VERSION AS listenbrainz-base
 
 ARG PYTHON_BASE_IMAGE_VERSION
@@ -82,7 +82,7 @@ RUN mkdir /code
 WORKDIR /code
 
 COPY package.json package-lock.json /code/
-RUN npm install
+RUN npm ci
 
 COPY webpack.config.js babel.config.js jest.config.js tsconfig.json .eslintrc.js .stylelintrc.js /code/
 
