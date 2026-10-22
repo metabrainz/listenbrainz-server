@@ -10,6 +10,7 @@ from listenbrainz.webserver import create_app, db_conn, ts_conn, listens_conn
 from listenbrainz.background.listens_importer import import_listens
 
 CLAIM_TIMEOUT_HOURS = 6
+FAILED_TASK_RETRY_MINUTES = 10
 
 
 def add_task(user_id, task):
@@ -59,6 +60,21 @@ def release_task(task):
     """ Release a claimed task so it can be retried by another worker. """
     db_conn.execute(text("""
         UPDATE background_tasks SET claimed_at = NULL WHERE id = :id
+    """), {"id": task.id})
+    db_conn.commit()
+
+
+def defer_task(task):
+    """ Keep a failed task claimed so it is retried after FAILED_TASK_RETRY_MINUTES.
+
+    Releasing it instead would make it the oldest claimable task again, so the worker would
+    retry it immediately in a tight loop and every task queued after it would starve.
+    """
+    # backdate the claim so that claim_task considers it expired after the retry delay
+    db_conn.execute(text(f"""
+        UPDATE background_tasks
+           SET claimed_at = now() - interval '{CLAIM_TIMEOUT_HOURS} hours' + interval '{FAILED_TASK_RETRY_MINUTES} minutes'
+         WHERE id = :id
     """), {"id": task.id})
     db_conn.commit()
 
@@ -114,7 +130,7 @@ class BackgroundTasks:
                 except Exception:
                     current_app.logger.error("Error processing task:", exc_info=True)
                     db_conn.rollback()
-                    release_task(task)
+                    defer_task(task)
                 finally:
                     self._current_task = None
             except KeyboardInterrupt:
