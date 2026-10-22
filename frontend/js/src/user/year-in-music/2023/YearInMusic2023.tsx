@@ -1158,6 +1158,7 @@ export default class YearInMusic extends React.Component<
                                 .toHexString()
                             ),
                           ]}
+                          theme="light"
                         />
                       </div>
                     </div>

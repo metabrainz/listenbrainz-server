@@ -276,6 +276,11 @@
       }
     }
 
+    // TIDAL's black mark disappears against the dark page surface.
+    .btn-link.brand-tidal {
+      color: #fff !important;
+    }
+
     // Tables declare their own light-theme custom properties, so setting
     // those values only on html is not enough. This covers empty states as
     // well as populated striped tables.
@@ -637,6 +642,12 @@
       color: var(--lb-text-muted);
     }
 
+    // Durations are secondary information, but the default muted tone is too
+    // quiet beside a dark listen-card surface.
+    .listen-card .title-duration > .text-muted {
+      color: #d4cfde !important;
+    }
+
     #dashboard
       .listen-card
       .listen-controls
@@ -731,6 +742,49 @@
     .listen-card .recommendation-controls .btn:focus {
       background-color: #4a4662;
       color: #fff;
+    }
+
+    // Year in Music has an intentional, artwork-like light canvas. Its reused
+    // listen cards and Nivo charts must retain that treatment even when the
+    // surrounding site uses dark mode.
+    #year-in-music,
+    #legacy-year-in-music {
+      --yim-card-bg: #fff;
+      --bs-card-bg: var(--yim-card-bg);
+      --bs-card-color: #46433a;
+      --bs-card-border-color: #eee;
+      --bs-secondary-color: #6b665c;
+      --bs-body-color: #46433a;
+
+      .listen-card.card,
+      .listen-card.card:hover {
+        background-color: var(--yim-card-bg) !important;
+        border-color: #eee !important;
+        color: #46433a;
+        box-shadow: $card-box-shadow;
+      }
+
+      .listen-card .title-duration > .text-muted,
+      .listen-card .text-muted {
+        color: #6b665c !important;
+      }
+
+      .listen-card .listen-thumbnail .add-cover-art,
+      .listen-card .listen-thumbnail .not-mapped,
+      .listen-card .listen-thumbnail .cover-art-fallback {
+        background-color: $gray-lighter;
+        color: #cbcbcb;
+      }
+
+      .listen-card .listen-controls,
+      .listen-card .listen-controls > .icon-only,
+      .listen-card .play-button {
+        color: $gray-600;
+      }
+    }
+
+    #year-in-music {
+      --yim-card-bg: var(--cardBackgroundColor);
     }
 
     // Playlist grid cards set their light canvas on a highly specific selector,
