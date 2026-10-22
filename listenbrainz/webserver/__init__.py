@@ -111,8 +111,8 @@ def create_app(
 
     In the Flask app returned, blueprints are not registered.
 
-    When `bypass_pgbouncer` is True, the timescale engine connects directly to the
-    timescale database instead of going through pgbouncer.
+    When `bypass_pgbouncer` is True, the timescale and listens engines connect directly to
+    their databases instead of going through pgbouncer.
 
     When `use_pool` is True, the LB postgres, timescale, partitioned listens, and
     metabrainz engines use SQLAlchemy QueuePools sized from config. This is
@@ -191,6 +191,7 @@ def create_app(
             pool_pre_ping=True,
         )
         timescale_uri_config = "SQLALCHEMY_TIMESCALE_URI" if bypass_pgbouncer else "SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"
+        listens_uri_config = "SQLALCHEMY_LISTENS_URI" if bypass_pgbouncer else "SQLALCHEMY_LISTENS_PGBOUNCER_URI"
         timescale.init_db_connection(
             app.config[timescale_uri_config],
             poolclass=QueuePool,
@@ -199,7 +200,7 @@ def create_app(
             pool_pre_ping=True,
         )
         listens.init_db_connection(
-            app.config.get("SQLALCHEMY_LISTENS_URI"),
+            app.config.get(listens_uri_config),
             poolclass=QueuePool,
             pool_size=listens_size,
             max_overflow=listens_overflow,
@@ -216,8 +217,9 @@ def create_app(
     else:
         db.init_db_connection(app.config["SQLALCHEMY_DATABASE_URI"])
         timescale_uri_config = "SQLALCHEMY_TIMESCALE_URI" if bypass_pgbouncer else "SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"
+        listens_uri_config = "SQLALCHEMY_LISTENS_URI" if bypass_pgbouncer else "SQLALCHEMY_LISTENS_PGBOUNCER_URI"
         timescale.init_db_connection(app.config[timescale_uri_config])
-        listens.init_db_connection(app.config.get("SQLALCHEMY_LISTENS_URI"))
+        listens.init_db_connection(app.config.get(listens_uri_config))
         if app.config.get("SQLALCHEMY_METABRAINZ_URI", None):
             donation.init_meb_db_connection(app.config["SQLALCHEMY_METABRAINZ_URI"])
 
