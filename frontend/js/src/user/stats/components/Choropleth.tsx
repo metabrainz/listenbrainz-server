@@ -19,6 +19,7 @@ import { Link } from "react-router";
 import * as worldCountries from "../data/world_countries.json";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { useNivoTheme } from "../../../utils/nivoTheme";
+import type { Theme } from "../../../utils/theme";
 import enrichJSPFTracks from "../../../utils/Playlist";
 import { ToastMsg } from "../../../notifications/Notifications";
 import buildAuthUrl from "../../../utils/auth";
@@ -36,6 +37,7 @@ export type ChoroplethProps = {
   data: UserArtistMapData;
   selectedMetric: "artist" | "listen";
   colorScaleRange?: string[];
+  theme?: Theme;
 };
 
 const commonLegendProps = {
@@ -79,7 +81,8 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   const [selectedCountry, setSelectedCountry] = useState<CountryFeature>();
   const refContainer = useRef<HTMLDivElement>(null);
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
-  const nivoTheme = useNivoTheme();
+  const { theme } = props;
+  const nivoTheme = useNivoTheme(theme);
   const tooltipRef = useRef<HTMLButtonElement>(null);
 
   // Use default container width of 1000px, but promptly calculate the real width in a useLayoutEffect
@@ -401,7 +404,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         // eslint-disable-next-line
         tooltip={() => <></>}
         onClick={showTooltipFromEvent}
-        unknownColor="var(--lb-surface-muted)"
+        unknownColor={theme === "light" ? "#f7f7f7" : "var(--lb-surface-muted)"}
         label={(feature: CountryFeature) => feature.properties.name}
         projectionScale={containerWidth / 5.5}
         projectionType="naturalEarth1"

@@ -50,7 +50,8 @@ export function getNivoTheme(theme: Theme): NivoTheme {
   };
 }
 
-export function useNivoTheme(): NivoTheme {
-  const [theme] = useTheme();
+export function useNivoTheme(themeOverride?: Theme): NivoTheme {
+  const [currentTheme] = useTheme();
+  const theme = themeOverride ?? currentTheme;
   return React.useMemo(() => getNivoTheme(theme), [theme]);
 }

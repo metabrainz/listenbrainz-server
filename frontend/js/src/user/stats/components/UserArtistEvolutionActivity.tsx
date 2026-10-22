@@ -1,6 +1,6 @@
 import { ResponsiveStream, TooltipProps } from "@nivo/stream";
 // eslint-disable-next-line import/no-extraneous-dependencies
-import {  type OrdinalColorScaleConfig } from "@nivo/colors";
+import type { OrdinalColorScaleConfig } from "@nivo/colors";
 import * as React from "react";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -12,6 +12,7 @@ import Loader from "../../../components/Loader";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { useMediaQuery } from "../../../explore/fresh-releases/utils";
 import { useNivoTheme } from "../../../utils/nivoTheme";
+import type { Theme } from "../../../utils/theme";
 
 export type UserArtistEvolutionActivityProps = {
   range: UserStatsAPIRange;
@@ -23,6 +24,7 @@ export type UserArtistEvolutionActivityGraphProps = {
   range: UserStatsAPIRange;
   colorPalette?: OrdinalColorScaleConfig;
   topN?: number;
+  theme?: Theme;
 };
 
 export type StreamDataItem = {
@@ -258,10 +260,11 @@ export function UserArtistEvolutionActivityGraph(
     range,
     topN = 10,
     colorPalette = { scheme: "nivo" },
+    theme,
   } = props;
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 767px)");
-  const nivoTheme = useNivoTheme();
+  const nivoTheme = useNivoTheme(theme);
 
   const { chartData, keys, orderedTimeUnits, artistMap } = React.useMemo(
     () => transformArtistEvolutionActivityData(rawData, range, topN),
@@ -298,7 +301,6 @@ export function UserArtistEvolutionActivityGraph(
   }, [maxValue]);
 
   return (
-
     <div
       style={{ width: "100%", height: isMobile ? "500px" : "600px" }}
       data-testid="artist-evolution-stream"
@@ -378,7 +380,7 @@ export function UserArtistEvolutionActivityGraph(
             symbolSize: 12,
             symbolShape: "circle",
             itemsSpacing: isMobile ? 6 : 2,
-            itemBackground: "var(--lb-surface-raised)",
+            itemBackground: nivoTheme.background,
             itemOpacity: 1,
             effects: [
               {

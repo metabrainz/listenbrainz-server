@@ -103,6 +103,7 @@ export default function YIMArtistMap(props: YIMArtistMapProps) {
             data={artistMapDataForGraph}
             selectedMetric={selectedMetric}
             colorScaleRange={colorPalette}
+            theme="light"
           />
         </div>
       </div>

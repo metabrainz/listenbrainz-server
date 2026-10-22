@@ -10,6 +10,7 @@ import Loader from "../../../components/Loader";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { useMediaQuery } from "../../../explore/fresh-releases/utils";
 import { useNivoTheme } from "../../../utils/nivoTheme";
+import type { Theme } from "../../../utils/theme";
 
 export type UserGenreActivityProps = {
   range: UserStatsAPIRange;
@@ -18,6 +19,7 @@ export type UserGenreActivityProps = {
 
 export type UserGenreActivityGraphProps = {
   rawData: GenreHourData[];
+  theme?: Theme;
 };
 
 type ProcessedTimeframeData = {
@@ -136,9 +138,10 @@ function TimeMarker({
 
 export function UserGenreActivityGraph({
   rawData,
+  theme,
 }: UserGenreActivityGraphProps) {
   const colorScale = scaleSequential(interpolateRainbow).domain([0, 24]);
-  const nivoTheme = useNivoTheme();
+  const nivoTheme = useNivoTheme(theme);
   const timezoneOffset = React.useMemo(() => getRoundedTimezoneOffset(), []);
 
   // Detect mobile screen size
