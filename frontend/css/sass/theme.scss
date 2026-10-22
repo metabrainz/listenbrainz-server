@@ -1639,6 +1639,26 @@
     }
 
     .horizontal-scroll-container {
+      .nav-button {
+        color: var(--lb-text-muted);
+
+        &.backward {
+          background: linear-gradient(
+            to right,
+            var(--lb-surface) 10%,
+            transparent
+          );
+        }
+
+        &.forward {
+          background: linear-gradient(
+            to left,
+            var(--lb-surface) 10%,
+            transparent
+          );
+        }
+      }
+
       &::before {
         background: linear-gradient(
           to right,
@@ -1856,12 +1876,12 @@
       }
 
       .progress .progress-bar {
-        background-color: #8178ae;
-        border-right-color: #afa6df;
+        background-color: var(--lb-accent);
+        border-right-color: var(--lb-accent);
       }
 
       .progress .progress-handle {
-        background-color: #afa6df;
+        background-color: var(--lb-accent);
         border: 2px solid var(--lb-surface-raised);
       }
 
@@ -1871,8 +1891,13 @@
       }
 
       .progress-tooltip {
-        --bs-tooltip-bg: #3b3745;
-        --bs-tooltip-color: #f5f3fa;
+        --bs-tooltip-bg: var(--lb-accent);
+        --bs-tooltip-color: #171717;
+
+        .tooltip-inner {
+          background-color: var(--lb-accent);
+          color: #171717;
+        }
       }
     }
 
