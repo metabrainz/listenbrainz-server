@@ -410,7 +410,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         projectionType="naturalEarth1"
         projectionTranslation={[0.5, 0.53]}
         borderWidth={0.5}
-        borderColor="#152538"
+        borderColor="var(--lb-map-border)"
         // The typescript definition file for Choropleth is incomplete, so disable typescript
         // until it is fixed.
         // @ts-ignore
