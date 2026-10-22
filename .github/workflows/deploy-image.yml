@@ -29,6 +29,7 @@ jobs:
         cache-from: metabrainz/listenbrainz:cache
         # use mode=max to cache intermediate layers as well
         cache-to: type=registry,mode=max,oci-mediatypes=true,compression=zstd,compression-level=7,ref=metabrainz/listenbrainz:cache
+        pull: true
         push: true
         tags: metabrainz/listenbrainz:${{ github.ref_name }}
         target: listenbrainz-prod
