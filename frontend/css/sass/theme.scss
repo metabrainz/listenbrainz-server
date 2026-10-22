@@ -353,6 +353,43 @@
       );
     }
 
+    // Highlight.js imports its light GitHub palette globally. The inspect
+    // listen modal is the only current use of it, so keep the override scoped
+    // here rather than changing highlighted content on light pages.
+    #ListenPayloadModal {
+      pre {
+        margin: 0;
+        background-color: var(--lb-surface-muted);
+        border: 1px solid var(--lb-border);
+      }
+
+      pre code.hljs {
+        display: block;
+        padding: 1rem;
+        background-color: transparent;
+        color: var(--lb-text);
+      }
+
+      .hljs-attr,
+      .hljs-property {
+        color: #d2a8ff;
+      }
+
+      .hljs-string,
+      .hljs-regexp {
+        color: #a5d6ff;
+      }
+
+      .hljs-number,
+      .hljs-literal {
+        color: #79c0ff;
+      }
+
+      .hljs-punctuation {
+        color: #aaa5b3;
+      }
+    }
+
     // Bootstrap defines these custom properties on .dropdown-menu itself,
     // which shadows root values. Keep all menu states on the same muted dark
     // palette, including legacy menus rendered as anchors or buttons.
