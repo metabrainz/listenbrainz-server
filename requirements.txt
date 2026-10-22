@@ -4,6 +4,7 @@ Flask-WTF==1.2.2
 Flask-SQLAlchemy==3.1.1
 Flask-SocketIO==5.6.1
 bleach==6.4.0
+certifi==2026.10.19
 click==8.3.1
 jsonschema==4.26.0
 markupsafe==3.0.3
