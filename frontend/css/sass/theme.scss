@@ -12,6 +12,7 @@
     --lb-text-muted: #6b665c;
     --lb-border: #d4d0cb;
     --lb-border-strong: #aaa49c;
+    --lb-map-border: #9ca5af;
     --lb-accent: $listenbrainz-blue;
     --lb-accent-hover: #27235a;
     --lb-link-visited: #963873;
@@ -36,6 +37,7 @@
     --lb-text-muted: #b8b3c4;
     --lb-border: #3b3745;
     --lb-border-strong: #5a5566;
+    --lb-map-border: #756e86;
     --lb-accent: #e1deeb;
     --lb-accent-hover: #fff;
     --lb-link-visited: #afa2cf;
@@ -322,6 +324,26 @@
       background-color: var(--lb-surface-raised);
       border-color: var(--lb-border) var(--lb-border) var(--lb-surface-raised);
       color: var(--lb-text);
+    }
+
+    // Statistics range selectors inherit a low-contrast light-theme gray.
+    // Keep the selected treatment, but make every range legible on the dark
+    // tertiary navigation background.
+    .tertiary-nav .pill {
+      border-color: var(--lb-border-strong);
+      color: var(--lb-text-muted);
+
+      &:visited,
+      &:hover,
+      &:visited:hover,
+      &:focus-visible {
+        color: #fff;
+      }
+
+      &.active,
+      &.secondary.active {
+        color: #fff;
+      }
     }
 
     .accordion-button,
