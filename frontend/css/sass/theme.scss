@@ -810,47 +810,202 @@
       color: #fff;
     }
 
-    // Year in Music has an intentional, artwork-like light canvas. Its reused
-    // listen cards and Nivo charts must retain that treatment even when the
-    // surrounding site uses dark mode.
+    // Year in Music deliberately keeps its own illustrated light treatment in
+    // both site themes. Its listen cards, graphs, and calls to action sit on
+    // light canvases, so do not let the general dark tokens bleed into them.
     #year-in-music,
     #legacy-year-in-music {
-      --yim-card-bg: #fff;
-      --bs-card-bg: var(--yim-card-bg);
+      color-scheme: light;
+      --lb-surface: #fff;
+      --lb-surface-raised: #fff;
+      --lb-surface-muted: #f5f4f2;
+      --lb-card: #fff;
+      --lb-card-hover: #fff;
+      --lb-card-border: #eee;
+      --lb-text: #46433a;
+      --lb-text-muted: #6b665c;
+      --lb-border: #d4d0cb;
+      --lb-border-strong: #aaa49c;
+      --lb-accent: #353070;
+      --lb-accent-hover: #635eb0;
+      --lb-link-visited: #963873;
+      --lb-link-visited-hover: #ba478f;
+      --lb-focus: #635eb0;
+      --lb-tooltip-bg: #fff;
+      --lb-tooltip-text: #262626;
+      --lb-input-focus-bg: #fff;
+      --lb-shadow: 0 4px 12px rgb(0 0 0 / 12%);
+      --bs-body-color: #46433a;
+      --bs-body-color-rgb: 70, 67, 58;
+      --bs-emphasis-color: #262626;
+      --bs-secondary-color: #6b665c;
+      --bs-secondary-color-rgb: 107, 102, 92;
+      --bs-link-color: #353070;
+      --bs-link-hover-color: #635eb0;
+      --bs-link-color-rgb: 53, 48, 112;
+      --bs-link-hover-color-rgb: 99, 94, 176;
+      --bs-border-color: #d4d0cb;
+      --bs-card-bg: #fff;
       --bs-card-color: #46433a;
       --bs-card-border-color: #eee;
-      --bs-secondary-color: #6b665c;
-      --bs-body-color: #46433a;
-
-      .listen-card.card,
-      .listen-card.card:hover {
-        background-color: var(--yim-card-bg) !important;
-        border-color: #eee !important;
-        color: #46433a;
-        box-shadow: $card-box-shadow;
-      }
-
-      .listen-card .title-duration > .text-muted,
-      .listen-card .text-muted {
-        color: #6b665c !important;
-      }
-
-      .listen-card .listen-thumbnail .add-cover-art,
-      .listen-card .listen-thumbnail .not-mapped,
-      .listen-card .listen-thumbnail .cover-art-fallback {
-        background-color: $gray-lighter;
-        color: #cbcbcb;
-      }
-
-      .listen-card .listen-controls,
-      .listen-card .listen-controls > .icon-only,
-      .listen-card .play-button {
-        color: $gray-600;
-      }
+      --bs-form-control-bg: #fff;
+      --bs-form-control-color: #46433a;
+      --bs-form-control-border-color: #aaa49c;
+      --bs-form-control-focus-bg: #fff;
+      --bs-form-control-focus-color: #46433a;
+      --bs-form-control-focus-border-color: #635eb0;
+      --bs-form-select-bg: #fff;
+      --bs-form-select-color: #46433a;
+      --bs-form-select-border-color: #aaa49c;
+      --bs-dropdown-bg: #fff;
+      --bs-dropdown-color: #46433a;
+      --bs-dropdown-border-color: #d4d0cb;
+      --bs-dropdown-link-color: #46433a;
+      --bs-dropdown-link-hover-color: #262626;
+      --bs-dropdown-link-hover-bg: #f5f4f2;
     }
 
-    #year-in-music {
-      --yim-card-bg: var(--cardBackgroundColor);
+    #year-in-music .listen-card,
+    #year-in-music .listen-card.card,
+    #year-in-music .listen-card.card:hover,
+    #legacy-year-in-music .listen-card,
+    #legacy-year-in-music .listen-card.card,
+    #legacy-year-in-music .listen-card.card:hover {
+      background-color: var(--cardBackgroundColor, #fff) !important;
+      border-color: #eee !important;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 12%);
+      color: #46433a !important;
+    }
+
+    #year-in-music .listen-card .listen-time,
+    #year-in-music .listen-card .listen-controls,
+    #year-in-music .listen-card .listen-controls > .icon-only,
+    #year-in-music .listen-card .play-button,
+    #legacy-year-in-music .listen-card .listen-time,
+    #legacy-year-in-music .listen-card .listen-controls,
+    #legacy-year-in-music .listen-card .listen-controls > .icon-only,
+    #legacy-year-in-music .listen-card .play-button {
+      color: #6b665c;
+    }
+
+    #year-in-music .listen-card .listen-controls > .love,
+    #year-in-music .listen-card .listen-controls > .hate,
+    #legacy-year-in-music .listen-card .listen-controls > .love,
+    #legacy-year-in-music .listen-card .listen-controls > .hate {
+      color: transparent;
+      stroke: #6b665c;
+    }
+
+    #year-in-music .listen-card .listen-controls > .love:hover,
+    #legacy-year-in-music .listen-card .listen-controls > .love:hover {
+      stroke: #c64040;
+    }
+
+    #year-in-music .listen-card .listen-controls > .love.loved,
+    #legacy-year-in-music .listen-card .listen-controls > .love.loved {
+      color: #c64040;
+      stroke: transparent;
+    }
+
+    #year-in-music .listen-card .listen-controls > .hate:hover,
+    #legacy-year-in-music .listen-card .listen-controls > .hate:hover {
+      stroke: #353070;
+    }
+
+    #year-in-music .listen-card .listen-controls > .hate.hated,
+    #legacy-year-in-music .listen-card .listen-controls > .hate.hated {
+      color: #353070;
+      stroke: transparent;
+    }
+
+    #year-in-music .listen-card .listen-controls .dropdown-menu,
+    #legacy-year-in-music .listen-card .listen-controls .dropdown-menu {
+      background-color: #fff;
+      border-color: #d4d0cb;
+      box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
+    }
+
+    #year-in-music .listen-card .listen-controls .dropdown-menu > a,
+    #year-in-music .listen-card .listen-controls .dropdown-menu > button,
+    #legacy-year-in-music .listen-card .listen-controls .dropdown-menu > a,
+    #legacy-year-in-music
+      .listen-card
+      .listen-controls
+      .dropdown-menu
+      > button {
+      color: #46433a;
+    }
+
+    #year-in-music .listen-card .listen-controls .dropdown-menu > a:hover,
+    #year-in-music .listen-card .listen-controls .dropdown-menu > a:focus,
+    #year-in-music .listen-card .listen-controls .dropdown-menu > button:hover,
+    #year-in-music .listen-card .listen-controls .dropdown-menu > button:focus,
+    #legacy-year-in-music
+      .listen-card
+      .listen-controls
+      .dropdown-menu
+      > a:hover,
+    #legacy-year-in-music
+      .listen-card
+      .listen-controls
+      .dropdown-menu
+      > a:focus,
+    #legacy-year-in-music
+      .listen-card
+      .listen-controls
+      .dropdown-menu
+      > button:hover,
+    #legacy-year-in-music
+      .listen-card
+      .listen-controls
+      .dropdown-menu
+      > button:focus {
+      background-color: #f5f4f2;
+      color: #262626;
+    }
+
+    #year-in-music .btn-info,
+    #year-in-music .yim-share-button,
+    #legacy-year-in-music .btn-info,
+    #legacy-year-in-music .yim-share-button {
+      --bs-btn-color: var(--headerColor, #fff);
+      --bs-btn-bg: #353070;
+      --bs-btn-border-color: #353070;
+      --bs-btn-hover-color: var(--headerColor, #fff);
+      --bs-btn-hover-bg: #4a4588;
+      --bs-btn-hover-border-color: #4a4588;
+      background-color: #353070;
+      color: var(--headerColor, #fff);
+    }
+
+    #year-in-music input,
+    #year-in-music select,
+    #year-in-music textarea,
+    #year-in-music .form-control,
+    #year-in-music .form-select,
+    #legacy-year-in-music input,
+    #legacy-year-in-music select,
+    #legacy-year-in-music textarea,
+    #legacy-year-in-music .form-control,
+    #legacy-year-in-music .form-select {
+      background-color: #fff;
+      color: #46433a;
+    }
+
+    #year-in-music .form-control:focus,
+    #year-in-music .form-select:focus,
+    #legacy-year-in-music .form-control:focus,
+    #legacy-year-in-music .form-select:focus {
+      background-color: #fff;
+      box-shadow: 0 0 0 0.2rem rgb(99 94 176 / 30%);
+    }
+
+    #year-in-music .alert-warning,
+    #legacy-year-in-music .alert-warning {
+      --bs-alert-bg: #fcf8e3;
+      --bs-alert-border-color: rgb(255 230 156);
+      --bs-alert-color: #8a6d3b;
+      --bs-alert-link-color: #8a6d3b;
     }
 
     // Playlist grid cards set their light canvas on a highly specific selector,
