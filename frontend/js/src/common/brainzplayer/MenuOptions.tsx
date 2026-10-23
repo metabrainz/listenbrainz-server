@@ -15,6 +15,7 @@ import SoundcloudPlayer from "./SoundcloudPlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
+import YouTubeLogo from "../icons/YouTubeLogo";
 
 type MenuOptionsProps = {
   currentListen?: Listen | JSPFTrack;
@@ -105,6 +106,7 @@ function MenuOptions(props: MenuOptionsProps) {
             <ListenControl
               icon={faYoutube}
               iconColor={dataSourcesInfo.youtube.color}
+              iconElement={<YouTubeLogo aria-hidden="true" />}
               text="Open in YouTube"
               link={youtubeURL}
               anchorTagAttributes={{
