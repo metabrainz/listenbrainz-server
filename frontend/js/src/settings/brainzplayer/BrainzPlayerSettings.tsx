@@ -113,6 +113,8 @@ function BrainzPlayerSettings() {
       Boolean(navidromeAuth?.instance_url),
     brainzplayerEnabled:
       userPreferences?.brainzplayer?.brainzplayerEnabled ?? true,
+    notificationsEnabled:
+      userPreferences?.brainzplayer?.notificationsEnabled ?? true,
     dataSourcesPriority: union(
       userPreferences?.brainzplayer?.dataSourcesPriority ?? [],
       defaultDataSourcesPriority
@@ -127,6 +129,7 @@ function BrainzPlayerSettings() {
     funkwhaleEnabled,
     navidromeEnabled,
     brainzplayerEnabled,
+    notificationsEnabled,
     dataSourcesPriority,
   } = settings;
 
@@ -224,6 +227,26 @@ function BrainzPlayerSettings() {
             </p>
           )}
         </summary>
+        <Switch
+          id="enable-notifications"
+          value="notifications"
+          checked={notificationsEnabled}
+          onChange={() =>
+            updateSettings((prev) => ({
+              ...prev,
+              notificationsEnabled: !prev.notificationsEnabled,
+            }))
+          }
+          switchLabel={
+            <span
+              className={`text-brand ${
+                !notificationsEnabled ? "text-muted" : ""
+              }`}
+            >
+              <span>Show a notification for each track played</span>
+            </span>
+          }
+        />
         <h3 className="mt-4">Play music with...</h3>
         <p>Choose which music services to use for playback in ListenBrainz.</p>
 
