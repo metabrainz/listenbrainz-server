@@ -30,6 +30,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { ToastMsg } from "../../notifications/Notifications";
 import { millisecondsToStr } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import YouTubeLogo from "../icons/YouTubeLogo";
 import { getRecordingMBID, getRecordingMSID } from "../../utils/utils";
 import MenuOptions from "./MenuOptions";
 import ProgressBar from "./ProgressBar";
@@ -425,10 +426,14 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <FontAwesomeIcon
-                  icon={currentDataSource.icon}
-                  color={currentDataSource.iconColor}
-                />
+                {currentDataSource.name === "youtube" ? (
+                  <YouTubeLogo aria-hidden="true" />
+                ) : (
+                  <FontAwesomeIcon
+                    icon={currentDataSource.icon}
+                    color={currentDataSource.iconColor}
+                  />
+                )}
               </a>
               {!isMobile && (
                 <FontAwesomeIcon
