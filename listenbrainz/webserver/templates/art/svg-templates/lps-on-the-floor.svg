@@ -46,10 +46,12 @@
                                                  0 0 0 {{ player_color_b }} 0
                                                  0 0 0 1 0" />
         </filter>
+        {% if scene == "close" %}<clipPath id="sleeve1"><polygon points="76,167 820,119 873,857 139,908" /></clipPath>{% endif %}
     </defs>
 
     <!-- Layer 1: Album Art -->
     {% if scene == "close" %}
+        <image x="0" y="0" width="100" height="100" preserveAspectRatio="xMidYMid slice" href="{{ images[0].url }}" transform="matrix(7.63107,-0.48651,0.56772,7.62235,65.88125,158.21395)" aria-hidden="true" />
         {{ render_lp_image(0, 0, 100, 100, "matrix(2.14948,-0.65105,0.25018,2.64779,-60.12446,294.16943)", images[1]) }}
         {{ render_lp_image(0, 0, 100, 100, "matrix(1.32965,-0.66990,0.69020,1.39055,229.50750,-101.53250)", images[2]) }}
         {{ render_lp_image(0, 0, 100, 100, "matrix(1.97925,1.11650,-1.39837,2.48597,-13.11400,677.00000)", images[3]) }}
@@ -57,7 +59,7 @@
         {{ render_lp_image(0, 0, 100, 100, "matrix(1.35560,0.64652,-1.15283,2.63505,989.86143,731.92174)", images[5]) }}
         {{ render_lp_image(0, 0, 100, 100, "matrix(2.40060,-0.76680,0.87793,2.74828,670.28700,552.14200)", images[6]) }}
         {{ render_lp_image(0, 0, 100, 100, "matrix(2.54663,0.37117,-0.50636,2.19077,360.98630,14.90292)", images[7]) }}
-        {{ render_lp_image(0, 0, 100, 100, "matrix(7.44495,-0.47464,0.55387,7.43644,75.87977,166.91620)", images[0]) }}
+        <g clip-path="url(#sleeve1)">{{ render_lp_image(0, 0, 100, 100, "matrix(7.44495,-0.47464,0.55387,7.43644,75.87977,166.91620)", images[0]) }}</g>
     {% elif scene == "vinyl" %}
         {{ render_lp_image(0, 0, 100, 100, "matrix(2.68975,2.34465,-2.19240,2.71005,673.63250,256.26500)", images[4]) }}
         {{ render_lp_image(0, 0, 100, 100, "matrix(3.23785,-1.42100,1.54280,3.18710,125.46750,319.69500)", images[3]) }}
