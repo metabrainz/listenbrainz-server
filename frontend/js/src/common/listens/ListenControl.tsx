@@ -13,6 +13,7 @@ export type ListenControlProps = {
   iconClassName?: string;
   action?: (event: React.MouseEvent) => void;
   icon?: IconDefinition;
+  iconElement?: React.ReactNode;
   iconColor?: string;
   iconSize?: SizeProp;
   text: string;
@@ -34,6 +35,7 @@ function ListenControl(props: ListenControlProps) {
     iconClassName,
     action,
     icon,
+    iconElement: customIconElement,
     iconColor,
     iconSize,
     text,
@@ -56,14 +58,17 @@ function ListenControl(props: ListenControlProps) {
         {...anchorTagAttributes}
         className={`${isDropdown ? "dropdown-item" : ""}`}
       >
-        {icon && <FontAwesomeIcon icon={icon} color={iconColor} />}
+        {customIconElement ??
+          (icon && <FontAwesomeIcon icon={icon} color={iconColor} />)}
         &nbsp;{text}
       </Link>
     );
   }
 
   let iconElement;
-  if (icon) {
+  if (customIconElement) {
+    iconElement = customIconElement;
+  } else if (icon) {
     iconElement = (
       <FontAwesomeIcon
         icon={icon as IconProp}

@@ -20,10 +20,15 @@
     --lb-focus: #635eb0;
     --lb-tooltip-bg: #fff;
     --lb-tooltip-text: #262626;
+    --lb-brand-apple: #000;
+    --lb-input-focus-bg: #fff;
     --lb-shadow: 0 4px 12px rgb(0 0 0 / 12%);
   }
 
   html[data-bs-theme="dark"] {
+    .btn-icon.brand-tidal {
+      color: #fff !important;
+    }
     // Bootstrap colours cover all standard controls, tables, cards, modals and
     // dropdowns. Keep their contrast relationships close to the light theme.
     --lb-surface: #171717;
@@ -45,6 +50,8 @@
     --lb-focus: #afa6df;
     --lb-tooltip-bg: #252329;
     --lb-tooltip-text: #f5f3fa;
+    --lb-brand-apple: #fff;
+    --lb-input-focus-bg: #35323d;
     --lb-shadow: 0 5px 16px rgb(0 0 0 / 35%);
 
     --bs-body-color: var(--lb-text);
@@ -296,6 +303,12 @@
       --bs-table-hover-bg: rgb(220 214 240 / 9%);
     }
 
+    // Search results intentionally use a stronger table header divider. Its
+    // unqualified border inherits the light text colour unless retokened.
+    .table-strong-header thead {
+      border-bottom-color: var(--lb-border-strong);
+    }
+
     // This shared heading appears on the feeds and several entity views. Its
     // original rule is a light-theme literal, so both pieces need retokening.
     .header-with-line {
@@ -326,10 +339,10 @@
       color: var(--lb-text);
     }
 
-    // Statistics range selectors inherit a low-contrast light-theme gray.
-    // Keep the selected treatment, but make every range legible on the dark
-    // tertiary navigation background.
-    .tertiary-nav .pill {
+    // Statistics range selectors and search filters share the same Pill
+    // component, so they should share its dark-theme treatment too.
+    .tertiary-nav .pill,
+    .search-type-pills .pill {
       border-color: var(--lb-border-strong);
       color: var(--lb-text-muted);
 
@@ -613,6 +626,37 @@
 
       #side-nav-overlay {
         background-color: rgb(0 0 0 / 80%);
+      }
+    }
+
+    // The search page uses the shared rounded search-bar outside the
+    // navigation. Preserve that shape in dark mode, but drop the light-theme
+    // inset focus shadow.
+    [role="main"] .search-bar {
+      background-color: var(--lb-surface-muted);
+      border-radius: 33px;
+
+      > input.form-control,
+      > button {
+        background-color: var(--lb-surface-muted);
+        color: var(--lb-text);
+      }
+
+      > input.form-control {
+        border-radius: 33px 0 0 33px;
+      }
+
+      > button {
+        border-radius: 0 33px 33px 0;
+      }
+
+      > input.form-control:focus {
+        background-color: var(--lb-input-focus-bg);
+        box-shadow: inset 3px 2px 4px rgb(0 0 0 / 45%);
+
+        & ~ button {
+          box-shadow: inset -3px 2px 4px rgb(0 0 0 / 45%);
+        }
       }
     }
 
@@ -1364,6 +1408,30 @@
       color: var(--lb-text);
     }
 
+    // Link Listens gives every album group Bootstrap's border-light utility.
+    // It is !important and otherwise leaves a bright light-theme outline and
+    // shadow around each group in dark mode.
+    #link-listens .card {
+      background-color: var(--lb-surface-raised);
+      border-color: var(--lb-border) !important;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 42%);
+    }
+
+    #link-listens .card-header {
+      background-color: var(--lb-surface-muted);
+      border-bottom-color: var(--lb-border);
+      color: var(--lb-text);
+    }
+
+    #link-listens .card-body {
+      background-color: var(--lb-surface-raised);
+      color: var(--lb-text);
+    }
+
+    #link-listens .accordion-arrow {
+      color: var(--lb-text-muted) !important;
+    }
+
     #user-profile .card-header {
       background-color: var(--lb-surface-raised);
       border-bottom-color: var(--lb-border);
@@ -1889,15 +1957,18 @@
         outline: 2px solid var(--lb-focus);
         outline-offset: 3px;
       }
+    }
 
-      .progress-tooltip {
-        --bs-tooltip-bg: var(--lb-accent);
-        --bs-tooltip-color: #171717;
+    // The progress timestamp is mounted in a body-level overlay, outside the
+    // player DOM tree, so this cannot be nested under #brainz-player.
+    .progress-tooltip,
+    #progress-tooltip {
+      --bs-tooltip-bg: var(--lb-accent);
+      --bs-tooltip-color: #171717;
 
-        .tooltip-inner {
-          background-color: var(--lb-accent);
-          color: #171717;
-        }
+      .tooltip-inner {
+        background-color: var(--lb-accent) !important;
+        color: #171717 !important;
       }
     }
 
