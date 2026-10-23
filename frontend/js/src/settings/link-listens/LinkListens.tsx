@@ -379,7 +379,7 @@ export default function LinkListensPage() {
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="btn btn-info text-start"
+            className="btn btn-info text-start link-listens-filter"
           >
             <option value="album">Album</option>
             <option value="artist">Artist</option>

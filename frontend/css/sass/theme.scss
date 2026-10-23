@@ -1432,6 +1432,44 @@
       color: var(--lb-text-muted) !important;
     }
 
+    // These cards inherit the old muted control colour, which is too quiet on
+    // the dark raised surface. Keep ordinary actions legible and retain orange
+    // for the MusicBrainz linking action in both the group header and card.
+    #link-listens .listen-time,
+    #link-listens .listen-controls,
+    #link-listens .listen-controls > button,
+    #link-listens .listen-controls > .btn {
+      color: #d4cfde;
+    }
+
+    #link-listens .card-header .btn-link.text-primary,
+    #link-listens .listen-controls > .btn-link.text-primary {
+      background-color: transparent;
+      color: #eb743b !important;
+    }
+
+    #link-listens .card-header .btn-link.text-primary:hover,
+    #link-listens .listen-controls > .btn-link.text-primary:hover {
+      background-color: transparent !important;
+      box-shadow: none;
+    }
+
+    #link-listens .card-header .btn-link.text-primary:focus-visible,
+    #link-listens .listen-controls > .btn-link.text-primary:focus-visible {
+      background-color: transparent !important;
+      outline: 2px solid var(--lb-focus);
+      outline-offset: 2px;
+    }
+
+    // The native select receives the generic dark form-control background
+    // after Bootstrap applies btn-info. Restore the same action colour as the
+    // adjacent Reset button.
+    .link-listens-filter.btn-info {
+      background-color: var(--bs-btn-bg);
+      border-color: var(--bs-btn-border-color);
+      color: var(--bs-btn-color);
+    }
+
     #user-profile .card-header {
       background-color: var(--lb-surface-raised);
       border-bottom-color: var(--lb-border);
