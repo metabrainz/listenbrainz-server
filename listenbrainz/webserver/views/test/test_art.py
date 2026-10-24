@@ -313,7 +313,7 @@ class ArtViewsTestCase(IntegrationTestCase):
     def test_cover_art_lps_on_the_floor_cover_counts(self, mock_download_user_stats,
                                                       mock_get_release_caa_ids, mock_get_release_group_caa_ids):
         """ Each scene must place exactly as many covers as it has sleeves (close=8 and many=12 used to crash). """
-        expected_counts = {"wood": 5, "vinyl": 5, "close": 8, "many": 12}
+        expected_counts = {"wood": 5, "vinyl": 5, "close": 9, "many": 12}  # 8 covers + 1 backing copy of #1
         for scene, expected in expected_counts.items():
             resp = self._get_lps_on_the_floor(mock_download_user_stats, mock_get_release_caa_ids,
                                               mock_get_release_group_caa_ids, scene=scene)
