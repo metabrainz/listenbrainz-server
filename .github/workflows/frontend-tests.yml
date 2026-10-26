@@ -14,7 +14,7 @@ on:
       - '**.less'
       - '**.scss'
       - '**.json'
-      - 'docker/Dockerfile'
+      - 'Dockerfile'
       - 'docker/docker-compose.test.yml'
       - 'test.sh'
 
