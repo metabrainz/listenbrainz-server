@@ -1514,12 +1514,8 @@
       background: linear-gradient(50deg, #282631, transparent);
     }
 
-    #timeline > ul::before,
-    #timeline li.timeline-sub-event::before {
-      background-color: var(--lb-border-strong);
-    }
-
     #timeline li.timeline-event .event-description .event-icon {
+      // Creates a separation between the icon and the timeline border
       background: var(--lb-surface);
       border-color: var(--lb-surface);
     }
