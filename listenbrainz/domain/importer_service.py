@@ -20,13 +20,9 @@ class ImporterService(ExternalService, ABC):
         """ Claim a batch of users for import processing using SKIP LOCKED. """
         return listens_importer.claim_users_to_process(db_conn, self.service, batch_size, exclude_error)
 
-    def release_user_claim(self, user_id: int):
-        """ Release a claimed user after processing. """
-        listens_importer.release_user_claim(db_conn, user_id, self.service)
-
-    def release_user_claims(self, user_ids: list[int]):
-        """ Release claims for multiple users (e.g. on worker shutdown). """
-        listens_importer.release_user_claims(db_conn, user_ids, self.service)
+    def release_user_claims(self, user_ids: list[int], touch_last_updated=True):
+        """ Release claims for the given users. """
+        listens_importer.release_user_claims(db_conn, user_ids, self.service, touch_last_updated)
 
     def update_status(
         self,

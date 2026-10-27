@@ -34,7 +34,6 @@ class ListensImporter(abc.ABC):
         self._listens_imported_since_last_update = 0
         self._metric_submission_time = time.monotonic() + METRIC_UPDATE_INTERVAL
         self.exclude_error = True
-        self._current_user = None
         self._pending_claim_user_ids = set()
         self._shutdown_requested = False
 
@@ -150,7 +149,6 @@ class ListensImporter(abc.ABC):
                 if self._shutdown_requested:
                     break
 
-                self._current_user = user
                 try:
                     self._listens_imported_since_last_update += self.process_one_user(user)
                     success += 1
@@ -171,9 +169,10 @@ class ListensImporter(abc.ABC):
                                              user['musicbrainz_id'], exc_info=True)
                     failure += 1
                 finally:
-                    self.service.release_user_claim(user['user_id'])
-                    self._pending_claim_user_ids.discard(user['user_id'])
-                    self._current_user = None
+                    # skip if the shutdown handler already released it, another worker may own it now
+                    if user['user_id'] in self._pending_claim_user_ids:
+                        self.service.release_user_claims([user['user_id']])
+                        self._pending_claim_user_ids.discard(user['user_id'])
 
                 if time.monotonic() > self._metric_submission_time:
                     self._metric_submission_time += METRIC_UPDATE_INTERVAL
@@ -181,7 +180,7 @@ class ListensImporter(abc.ABC):
                     self._listens_imported_since_last_update = 0
         finally:
             if self._pending_claim_user_ids:
-                self.service.release_user_claims(list(self._pending_claim_user_ids))
+                self.service.release_user_claims(list(self._pending_claim_user_ids), touch_last_updated=False)
                 self._pending_claim_user_ids = set()
 
         current_app.logger.info('Processed %d users successfully!', success)
@@ -189,19 +188,18 @@ class ListensImporter(abc.ABC):
         return success, failure
 
     def _release_on_shutdown(self, signum, frame):
-        """ Best-effort release of unprocessed claims in the current batch on SIGTERM.
+        """ Best-effort release of all claims in the current batch on SIGTERM.
 
-        The currently-processing user is excluded — its claim is released by the
-        for-loop's finally block after process_one_user finishes, avoiding a window
-        where another worker could claim the same user mid-processing.
+        The currently-processing user is released too: the supervisor will likely
+        SIGKILL us before a long import finishes, which would otherwise leave that
+        user claimed until the timeout. If another worker picks it up meanwhile,
+        the duplicate listens are dropped on insert (ON CONFLICT DO NOTHING).
         """
 
         ids_to_release = self._pending_claim_user_ids.copy()
-        if self._current_user:
-            ids_to_release.discard(self._current_user['user_id'])
         if ids_to_release:
             try:
-                self.service.release_user_claims(list(ids_to_release))
+                self.service.release_user_claims(list(ids_to_release), touch_last_updated=False)
                 self._pending_claim_user_ids -= ids_to_release
                 current_app.logger.info(
                     'Released %d pending user claims on shutdown.',

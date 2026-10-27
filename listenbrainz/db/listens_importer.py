@@ -180,23 +180,22 @@ def claim_users_to_process(db_conn, service, batch_size=50, exclude_error=False)
     return users
 
 
-def release_user_claim(db_conn, user_id: int, service):
-    """ Release a claimed user after processing (success or failure). """
-    release_user_claims(db_conn, [user_id], service)
+def release_user_claims(db_conn, user_ids: list[int], service, touch_last_updated=True):
+    """ Release claims for the given users.
 
-
-def release_user_claims(db_conn, user_ids: list[int], service):
-    """ Release claims for multiple users (e.g. on worker shutdown). """
+    Pass touch_last_updated=False for users released without being processed
+    (e.g. on worker shutdown) so they keep their place in the queue.
+    """
     if not user_ids:
         return
 
     db_conn.execute(text("""
         UPDATE listens_importer
            SET claimed_at = NULL
-             , last_updated = now()
+             , last_updated = CASE WHEN :touch_last_updated THEN now() ELSE last_updated END
          WHERE user_id = ANY(:user_ids)
            AND service = :service
-    """), {"user_ids": user_ids, "service": service.value})
+    """), {"user_ids": user_ids, "service": service.value, "touch_last_updated": touch_last_updated})
     db_conn.commit()
 
 

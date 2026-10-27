@@ -63,7 +63,7 @@ class ListensImporterDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(users[0]['user_id'], self.user['id'])
         self.assertIsNotNone(self._get_claimed_at(self.user['id']))
 
-        db_import.release_user_claim(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY)
+        db_import.release_user_claims(self.db_conn, [self.user['id']], ExternalServiceType.SPOTIFY)
         self.assertIsNone(self._get_claimed_at(self.user['id']))
 
     def test_claim_skips_already_claimed_users(self):
@@ -77,7 +77,7 @@ class ListensImporterDatabaseTestCase(DatabaseTestCase):
         )
         self.assertEqual(len(users), 0)
 
-        db_import.release_user_claim(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY)
+        db_import.release_user_claims(self.db_conn, [self.user['id']], ExternalServiceType.SPOTIFY)
         users = db_import.claim_users_to_process(
             self.db_conn, ExternalServiceType.SPOTIFY, batch_size=10
         )
@@ -101,7 +101,7 @@ class ListensImporterDatabaseTestCase(DatabaseTestCase):
         db_import.update_latest_listened_at(
             self.db_conn, user2['id'], ExternalServiceType.SPOTIFY, t
         )
-        db_import.release_user_claim(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY)
+        db_import.release_user_claims(self.db_conn, [self.user['id']], ExternalServiceType.SPOTIFY)
 
         users = db_import.claim_users_to_process(
             self.db_conn, ExternalServiceType.SPOTIFY, batch_size=1
