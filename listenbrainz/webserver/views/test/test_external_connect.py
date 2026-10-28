@@ -5,6 +5,7 @@ from unittest.mock import patch
 from urllib.parse import urlparse, parse_qs
 
 import spotipy
+from brainzutils import cache
 
 import listenbrainz.db.user as db_user
 from data.model.external_service import ExternalServiceType
@@ -137,7 +138,48 @@ class ExternalConnectViewsTestCase(IntegrationTestCase):
         self.assertEqual(urlparse(r.location).netloc, "accounts.spotify.com")
 
         # the ticket is spent by the confirmation, not by merely opening the page
-        self.assert400(self.client.get(self.ticket_url(ticket)))
+        r = self.client.get(self.ticket_url(ticket))
+        self.assert_returned_to_client(r, status="error", error=external_connect.ERROR_EXPIRED_REQUEST,
+                                       state="partner-state")
+
+    def test_expired_ticket_returns_to_the_client(self):
+        ticket = self.get_ticket()
+        cache.delete(ticket, namespace=external_connect.TICKET_CACHE_NAMESPACE)
+
+        r = self.client.get(self.ticket_url(ticket))
+        self.assert_returned_to_client(r, status="error", error=external_connect.ERROR_EXPIRED_REQUEST,
+                                       state="partner-state")
+
+    def test_return_copy_cannot_start_an_authorization(self):
+        ticket = self.get_ticket()
+        stored = cache.get(ticket, namespace=external_connect.RETURN_CACHE_NAMESPACE)
+        self.assertEqual(stored["request"]["oauth_state"], "")
+        self.assertIsNone(stored["request"]["user_id"])
+        self.assertEqual(stored["request"]["redirect_uri"], REDIRECT_URI)
+
+    def test_finished_flow_returns_the_same_result_again(self):
+        ticket = self.get_ticket()
+        self.submit_confirmation(ticket)
+        with self.client.session_transaction() as session:
+            oauth_state = session[external_connect.SESSION_KEY]["oauth_state"]
+        r = self.client.get(self.custom_url_for(
+            'settings.music_services_callback', service_name='spotify', error='access_denied', state=oauth_state
+        ))
+        first = self.assert_returned_to_client(r, status="error", error=external_connect.ERROR_ACCESS_DENIED)
+
+        r = self.client.get(self.ticket_url(ticket))
+        self.assertEqual(self.assert_returned_to_client(r), first)
+
+    def test_callback_with_a_mismatched_state_does_not_record_a_result(self):
+        ticket = self.get_ticket()
+        self.submit_confirmation(ticket)
+        r = self.client.get(self.custom_url_for(
+            'settings.music_services_callback', service_name='spotify', error='access_denied', state="wrong"
+        ))
+        self.assert_returned_to_client(r, status="error", error=external_connect.ERROR_INVALID_REQUEST)
+
+        r = self.client.get(self.ticket_url(ticket))
+        self.assert_returned_to_client(r, status="error", error=external_connect.ERROR_EXPIRED_REQUEST)
 
     def test_opening_the_confirmation_page_does_not_spend_the_ticket(self):
         ticket = self.get_ticket()
@@ -251,7 +293,8 @@ class ExternalConnectViewsTestCase(IntegrationTestCase):
         _, nonce = self.open_confirmation(ticket)
 
         self.assertStatus(self.submit_confirmation(ticket, nonce=nonce), 302)
-        self.assert400(self.submit_confirmation(ticket, nonce=nonce))
+        r = self.submit_confirmation(ticket, nonce=nonce)
+        self.assert_returned_to_client(r, status="error", error=external_connect.ERROR_EXPIRED_REQUEST)
 
     def test_cancelling_the_confirmation_returns_to_the_client(self):
         ticket = self.get_ticket()
@@ -262,7 +305,9 @@ class ExternalConnectViewsTestCase(IntegrationTestCase):
         with self.client.session_transaction() as session:
             self.assertNotIn(external_connect.SESSION_KEY, session)
         # cancelling spends the ticket too
-        self.assert400(self.client.get(self.ticket_url(ticket)))
+        r = self.client.get(self.ticket_url(ticket))
+        self.assert_returned_to_client(r, status="error", error=external_connect.ERROR_ACCESS_DENIED,
+                                       state="partner-state")
 
     def test_confirmation_page_rejects_a_different_logged_in_user(self):
         other_user = db_user.get_or_create(self.db_conn, 2, 'someone-else')
