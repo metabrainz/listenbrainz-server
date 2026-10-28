@@ -307,7 +307,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                     ?.filter((tag) => !releaseTagsCheckList.includes(tag))
                     ?.map((tag, index) => (
                       <option value={tag} key={tag}>
-                        {tag}
+                        {tag.length > 50 ? `${tag.slice(0, 50)}...` : tag}
                       </option>
                     ))}
                 </select>
@@ -342,7 +342,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                     )
                     ?.map((tag, index) => (
                       <option value={tag} key={tag}>
-                        {tag}
+                        {tag.length > 50 ? `${tag.slice(0, 50)}...` : tag}
                       </option>
                     ))}
                 </select>
