@@ -124,6 +124,10 @@ def connect(service_name: str):
         connect_request=connect_request,
         ticket=ticket,
         nonce=external_connect.start_confirmation(ticket),
+        recovery_return_url=external_connect.build_return_url(
+            connect_request, external_connect.ERROR_INVALID_REQUEST,
+            "The browser could not confirm the connect request. Please start again."
+        ) if request.args.get("retry") == "1" else None,
         musicbrainz_id=user["musicbrainz_id"],
         service_label=connectable.label,
         permission_description=connectable.describe_permission(connect_request.permission),
@@ -141,6 +145,10 @@ def confirm(service_name: str):
     """
     ticket = request.form.get("ticket")
     if not external_connect.check_confirmation(ticket, request.form.get("nonce")):
+        if external_connect.peek_ticket(ticket, service_name) is not None:
+            # Show a fresh confirmation; recovery must never authorize on its own.
+            return redirect(url_for("external_connect.connect", service_name=service_name,
+                                    ticket=ticket, retry="1"), code=303)
         raise BadRequest("Please open the connect link again to confirm.")
 
     connect_request = external_connect.consume_ticket(ticket, service_name)

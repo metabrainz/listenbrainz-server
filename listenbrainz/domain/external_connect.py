@@ -397,11 +397,15 @@ def start_confirmation(ticket: str) -> str:
 
 def check_confirmation(ticket: Optional[str], nonce: Optional[str]) -> bool:
     """ Check that this browser was served the confirmation page for the given ticket. """
-    stored = session.pop(CONFIRM_SESSION_KEY, None)
+    stored = session.get(CONFIRM_SESSION_KEY)
     if not isinstance(stored, dict) or not ticket or not nonce:
         return False
-    return (secrets.compare_digest(stored.get("ticket") or "", ticket)
-            and secrets.compare_digest(stored.get("nonce") or "", nonce))
+    if not (secrets.compare_digest(stored.get("ticket") or "", ticket)
+            and secrets.compare_digest(stored.get("nonce") or "", nonce)):
+        return False
+    # An unrelated or stale submission must not erase the pending confirmation.
+    session.pop(CONFIRM_SESSION_KEY, None)
+    return True
 
 
 def build_ticket_url(connect_request: ExternalConnectRequest, ticket: str) -> str:
