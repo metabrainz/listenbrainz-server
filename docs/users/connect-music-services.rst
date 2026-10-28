@@ -90,7 +90,9 @@ them the confirmation page there; once they confirm, it sends them on to the mus
 and returns them to your ``redirect_uri`` as described below. The url can only be used once
 — it is spent when the user answers the confirmation, either way — and it does **not** log
 the user in to ListenBrainz. A url that has expired or has already been used results in a
-``400 Bad Request``.
+``400 Bad Request`` HTML page explaining how to return to the originating application
+and request a new link. ListenBrainz cannot automatically redirect these requests because
+the ticket's stored return destination is no longer available.
 
 Errors from the POST are returned as JSON with a ``4xx``/``5xx`` status: ``401`` if the
 access token is missing, invalid, expired or lacks the scope, ``400`` if the request itself

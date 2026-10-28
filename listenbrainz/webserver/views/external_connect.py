@@ -6,7 +6,6 @@ description of the whole flow.
 import requests
 from flask import Blueprint, current_app, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user
-from werkzeug.exceptions import BadRequest
 
 import listenbrainz.db.user as db_user
 from listenbrainz.domain import external_connect
@@ -104,7 +103,7 @@ def connect(service_name: str):
     ticket = request.args.get("ticket")
     connect_request = external_connect.peek_ticket(ticket, service_name)
     if connect_request is None:
-        raise BadRequest(STALE_TICKET_ERROR)
+        return _stale_ticket_response()
 
     wrong_user = _reject_wrong_user(connect_request)
     if wrong_user is not None:
@@ -149,11 +148,11 @@ def confirm(service_name: str):
             # Show a fresh confirmation; recovery must never authorize on its own.
             return redirect(url_for("external_connect.connect", service_name=service_name,
                                     ticket=ticket, retry="1"), code=303)
-        raise BadRequest("Please open the connect link again to confirm.")
+        return _stale_ticket_response()
 
     connect_request = external_connect.consume_ticket(ticket, service_name)
     if connect_request is None:
-        raise BadRequest(STALE_TICKET_ERROR)
+        return _stale_ticket_response()
 
     wrong_user = _reject_wrong_user(connect_request)
     if wrong_user is not None:
@@ -166,6 +165,12 @@ def confirm(service_name: str):
         )
 
     return _authorize(connect_request)
+
+
+def _stale_ticket_response():
+    # Browser recovery must stay HTML even when Accept also permits JSON.
+    # A missing ticket gives us no trusted partner URL to redirect to.
+    return render_template("external_connect/expired.html", error=STALE_TICKET_ERROR), 400
 
 
 def _reject_wrong_user(connect_request):
