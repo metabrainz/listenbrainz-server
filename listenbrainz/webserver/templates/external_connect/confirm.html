@@ -136,11 +136,12 @@
       if (event.submitter) {
         action.value = event.submitter.value;
         action.disabled = false;
+        disableButtons();
       }
 
+      // Older Safari omits submitter; keep buttons enabled to submit their own action.
       // Allow the first submission to proceed normally, then block further attempts.
       submitted = true;
-      disableButtons();
     });
 
     window.addEventListener("pageshow", (event) => {
