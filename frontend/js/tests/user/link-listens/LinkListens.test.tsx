@@ -45,22 +45,39 @@ function renderLinkListensPage(
   );
 }
 
-const collidingListensPageData = {
+const duplicateListensPageData = {
   unlinked_listens: [
     {
-      artist_name: "Same artist",
-      listened_at: "2021-11-08 09:16:06Z",
-      recording_name: "Same track",
-      release_name: "Same release",
-      recording_msid: "aaaaaaaa-1111-1111-1111-111111111111",
+      artist_name: "Mouse",
+      listened_at: "2026-07-13 11:04:00Z",
+      recording_name: "Drawn Cart",
+      release_name: null,
+      recording_msid: "00000001-1111-1111-1111-111111111111",
     },
     {
-      artist_name: "Same artist",
-      listened_at: "2021-11-08 09:16:06Z",
-      recording_name: "Same track",
-      release_name: "Same release",
-      recording_msid: "bbbbbbbb-2222-2222-2222-222222222222",
+      artist_name: "The Vile",
+      listened_at: "2026-07-12 12:45:00Z",
+      recording_name: "Immoral and Greed",
+      release_name: null,
+      recording_msid: "00000002-1111-1111-1111-111111111111",
     },
+    {
+      artist_name: "The Sumerians",
+      listened_at: "2026-07-12 00:53:00Z",
+      recording_name: "Fall of the First Cities",
+      release_name: null,
+      recording_msid: "00000003-1111-1111-1111-111111111111",
+    },
+    ...Array.from({ length: 9 }, (_, index) => ({
+      artist_name: "Les Anjolok",
+      listened_at: "2026-07-10 21:23:00Z",
+      recording_name: "Aibuojọ",
+      release_name: null,
+      recording_msid: `${String(index + 10).padStart(
+        8,
+        "0"
+      )}-1111-1111-1111-111111111111`,
+    })),
   ],
 };
 
@@ -145,11 +162,11 @@ describe("LinkListensPage", () => {
     });
   });
 
-  it("does not duplicate listens that share a name, artist and timestamp", async () => {
+  it("does not duplicate listens when a row with a colliding key is deleted", async () => {
     const consoleErrorSpy = jest
       .spyOn(console, "error")
       .mockImplementation(() => undefined);
-    queryClient.setQueryData(queryKey, collidingListensPageData);
+    queryClient.setQueryData(queryKey, duplicateListensPageData);
     renderLinkListensPage("/settings/link-listens/", {
       id: 1,
       name: "FNORD",
@@ -158,20 +175,30 @@ describe("LinkListensPage", () => {
 
     await screen.findByText(textContentMatcher("Link with MusicBrainz"));
     await waitFor(() => {
-      expect(screen.getAllByTestId("listen")).toHaveLength(2);
+      expect(screen.getAllByTestId("listen")).toHaveLength(12);
     });
 
-    // Both listens have the same recording name, artist and timestamp, so the
-    // old key based on those fields was not unique. Deleting one used to leave
-    // both rows in the DOM.
-    const [firstListen] = screen.getAllByTestId("listen");
+    // Several listens have the same name, artist and timestamp, so the old key
+    // based on those fields was not unique. Deleting a different row used to
+    // leave duplicated rows behind (12 -> 19 in the reported scenario).
+    const cardToDelete = screen
+      .getAllByTestId("listen")
+      .find((card) => card.textContent?.includes("Immoral and Greed"));
+    expect(cardToDelete).toBeDefined();
     await user.click(
-      within(firstListen).getByRole("menuitem", { name: "Delete Listen" })
+      within(cardToDelete!).getByRole("menuitem", { name: "Delete Listen" })
     );
 
     await waitFor(() => {
-      expect(screen.getAllByTestId("listen")).toHaveLength(1);
+      expect(screen.getAllByTestId("listen")).toHaveLength(11);
     });
+    const remainingCards = screen.getAllByTestId("listen");
+    expect(
+      remainingCards.filter((card) => card.textContent?.includes("Drawn Cart"))
+    ).toHaveLength(1);
+    expect(
+      remainingCards.filter((card) => card.textContent?.includes("Aibuojọ"))
+    ).toHaveLength(9);
 
     const duplicateKeyWarnings = consoleErrorSpy.mock.calls.filter((call) =>
       String(call[0]).includes("same key")
