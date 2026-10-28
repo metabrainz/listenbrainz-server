@@ -44,6 +44,14 @@
       <h3 class="card-title">Connect {{ service_label }}</h3>
     </div>
     <div class="card-body">
+      {% if recovery_return_url %}
+      <div class="alert alert-warning" role="alert">
+        We could not confirm your previous submission. Please try again below.
+        If this keeps happening, your browser may not be retaining the session cookie.
+        <a href="{{ recovery_return_url }}">Return to {{ connect_request.describe_client() }}</a>
+        to start again.
+      </div>
+      {% endif %}
       <p class="d-flex justify-content-center my-3">
         <img width="100"src="{{ logo_url }}" alt="{{ connect_request.client_name }}"></img>
       </p>

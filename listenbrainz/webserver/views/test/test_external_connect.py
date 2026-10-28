@@ -1,5 +1,6 @@
 import re
 import time
+from html import unescape
 from unittest.mock import patch
 from urllib.parse import urlparse, parse_qs
 
@@ -187,12 +188,26 @@ class ExternalConnectViewsTestCase(IntegrationTestCase):
 
     def test_confirmation_requires_the_nonce_from_the_page(self):
         ticket = self.get_ticket()
-        self.open_confirmation(ticket)
+        _, nonce = self.open_confirmation(ticket)
 
         # a partner that posts the form itself never saw the nonce
-        self.assert400(self.submit_confirmation(ticket, nonce="not-the-nonce"))
+        response = self.submit_confirmation(ticket, nonce="not-the-nonce")
+        self.assertStatus(response, 303)
         with self.client.session_transaction() as session:
             self.assertNotIn(external_connect.SESSION_KEY, session)
+            self.assertEqual(session[external_connect.CONFIRM_SESSION_KEY]["nonce"], nonce)
+
+        page = self.client.get(response.location)
+        self.assert200(page)
+        self.assertIn(b"We could not confirm your previous submission", page.data)
+        fresh_nonce = re.search(rb'name="nonce" value="([^"]+)"', page.data).group(1).decode()
+        self.assertNotEqual(fresh_nonce, nonce)
+        with self.client.session_transaction() as session:
+            self.assertNotIn(external_connect.SESSION_KEY, session)
+
+        response = self.submit_confirmation(ticket, nonce=fresh_nonce)
+        self.assertStatus(response, 302)
+        self.assertEqual(urlparse(response.location).netloc, "accounts.spotify.com")
 
     def test_confirmation_cannot_be_submitted_without_opening_the_page(self):
         ticket = self.get_ticket()
@@ -200,7 +215,36 @@ class ExternalConnectViewsTestCase(IntegrationTestCase):
             self.custom_url_for("external_connect.confirm", service_name="spotify"),
             data={"ticket": ticket, "nonce": "guessed", "action": "continue"}
         )
-        self.assert400(r)
+        self.assertStatus(r, 303)
+        self.assertEqual(parse_qs(urlparse(r.location).query), {"ticket": [ticket], "retry": ["1"]})
+        self.assertEqual(urlparse(r.location).path, urlparse(self.ticket_url(ticket)).path)
+        with self.client.session_transaction() as session:
+            self.assertNotIn(external_connect.SESSION_KEY, session)
+
+    def test_confirmation_recovers_when_session_cookie_is_lost(self):
+        ticket = self.get_ticket()
+        _, nonce = self.open_confirmation(ticket)
+        with self.client.session_transaction() as session:
+            session.clear()
+
+        response = self.submit_confirmation(ticket, nonce=nonce)
+        self.assertStatus(response, 303)
+        page = self.client.get(response.location)
+        self.assert200(page)
+        # The escape link works even if the browser cannot retain session cookies.
+        link = re.search(rb'<a href="([^"]+)">Return to ', page.data).group(1).decode()
+        params = parse_qs(urlparse(unescape(link)).query)
+        self.assertEqual(params["status"], ["error"])
+        self.assertEqual(params["state"], ["partner-state"])
+        self.assertEqual(params["error"], [external_connect.ERROR_INVALID_REQUEST])
+        self.assertTrue(link.startswith(REDIRECT_URI))
+
+    def test_confirmation_does_not_recover_invalid_tickets(self):
+        ticket = self.get_ticket()
+        for candidate, service in [("unknown-ticket", "spotify"), ("", "spotify"),
+                                   (ticket, "soundcloud")]:
+            with self.subTest(ticket=candidate, service=service):
+                self.assert400(self.submit_confirmation(candidate, service_name=service, nonce="invalid"))
 
     def test_confirmation_nonce_is_single_use(self):
         ticket = self.get_ticket()
