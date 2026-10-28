@@ -103,7 +103,7 @@ def connect(service_name: str):
     ticket = request.args.get("ticket")
     connect_request = external_connect.peek_ticket(ticket, service_name)
     if connect_request is None:
-        return _stale_ticket_response()
+        return _stale_ticket_response(ticket, service_name)
 
     wrong_user = _reject_wrong_user(connect_request)
     if wrong_user is not None:
@@ -148,11 +148,11 @@ def confirm(service_name: str):
             # Show a fresh confirmation; recovery must never authorize on its own.
             return redirect(url_for("external_connect.connect", service_name=service_name,
                                     ticket=ticket, retry="1"), code=303)
-        return _stale_ticket_response()
+        return _stale_ticket_response(ticket, service_name)
 
     connect_request = external_connect.consume_ticket(ticket, service_name)
     if connect_request is None:
-        return _stale_ticket_response()
+        return _stale_ticket_response(ticket, service_name)
 
     wrong_user = _reject_wrong_user(connect_request)
     if wrong_user is not None:
@@ -167,9 +167,12 @@ def confirm(service_name: str):
     return _authorize(connect_request)
 
 
-def _stale_ticket_response():
+def _stale_ticket_response(ticket, service_name: str):
+    """ Send a spent or expired ticket back to the partner, or show the recovery page. """
+    return_url = external_connect.build_stale_return_url(ticket, service_name, STALE_TICKET_ERROR)
+    if return_url is not None:
+        return redirect(return_url)
     # Browser recovery must stay HTML even when Accept also permits JSON.
-    # A missing ticket gives us no trusted partner URL to redirect to.
     return render_template("external_connect/expired.html", error=STALE_TICKET_ERROR), 400
 
 
@@ -223,7 +226,7 @@ def _authorize(connect_request):
 
 
 def _return_to_client(connect_request, error: str = None, error_description: str = None):
-    return redirect(external_connect.build_return_url(connect_request, error, error_description))
+    return redirect(external_connect.finish_request(connect_request, error, error_description))
 
 
 def _get_access_token():

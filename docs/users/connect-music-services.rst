@@ -89,10 +89,16 @@ Redirect the user's browser to that url within ``expires_in`` seconds. ListenBra
 them the confirmation page there; once they confirm, it sends them on to the music service
 and returns them to your ``redirect_uri`` as described below. The url can only be used once
 — it is spent when the user answers the confirmation, either way — and it does **not** log
-the user in to ListenBrainz. A url that has expired or has already been used results in a
-``400 Bad Request`` HTML page explaining how to return to the originating application
-and request a new link. ListenBrainz cannot automatically redirect these requests because
-the ticket's stored return destination is no longer available.
+the user in to ListenBrainz.
+
+For 40 minutes after you created it, opening a used or expired url sends the browser back
+to your ``redirect_uri``: with the result you were already sent if the flow finished,
+``error=expired_request`` otherwise. After that, or for an unknown url, ListenBrainz shows a
+``400 Bad Request`` HTML page explaining how to request a new link.
+
+So your ``redirect_uri`` can receive the same result more than once, and from any browser
+holding the url. Handle repeats, and only act on a ``state`` that belongs to the browser's
+session with your application.
 
 Errors from the POST are returned as JSON with a ``4xx``/``5xx`` status: ``401`` if the
 access token is missing, invalid, expired or lacks the scope, ``400`` if the request itself
@@ -121,7 +127,7 @@ parameters added:
         ListenBrainz requires before connecting a music service. The user has to verify
         their email on their MetaBrainz profile and start the flow again.
     ``expired_request``
-        The user took too long to authorize ListenBrainz.
+        The user took too long to authorize ListenBrainz, or opened a used or expired url.
     ``server_error``
         Something went wrong on the ListenBrainz side, or the music service refused the
         authorization for a reason other than the user declining. ``error_description``
