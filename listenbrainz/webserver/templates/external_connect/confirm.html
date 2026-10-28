@@ -63,12 +63,15 @@
       </p>
       <hr/>
       <form
+        id="connect-confirm-form"
         method="post"
         class="connect-actions"
         action="{{ url_for('external_connect.confirm', service_name=connect_request.service) }}"
       >
         <input type="hidden" name="ticket" value="{{ ticket }}" />
         <input type="hidden" name="nonce" value="{{ nonce }}" />
+        <!-- for use with JS code below disabling buttons, initially disabled for no-js users -->
+        <input type="hidden" id="connect-confirm-action" name="action" disabled />
         <button
           type="submit"
           name="action"
@@ -97,4 +100,51 @@
     />
   </div>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+  // Keep this form's variables private to avoid clashes with other page scripts.
+  (() => {
+    const form = document.getElementById("connect-confirm-form");
+    const action = document.getElementById("connect-confirm-action");
+    const buttons = form.querySelectorAll('button[type="submit"]');
+    let submitted = false;
+
+    const disableButtons = () => {
+      buttons.forEach((button) => {
+        button.disabled = true;
+      });
+    };
+
+    form.addEventListener("submit", (event) => {
+      // Ignore double taps while the browser is still loading the next page.
+      if (submitted) {
+        event.preventDefault();
+        return;
+      }
+
+      // Disabled buttons are omitted from the POST, so preserve the chosen action.
+      // event.submitter is the Continue or Cancel button that submitted the form.
+      if (event.submitter) {
+        action.value = event.submitter.value;
+        action.disabled = false;
+      }
+
+      // Allow the first submission to proceed normally, then block further attempts.
+      submitted = true;
+      disableButtons();
+    });
+
+    window.addEventListener("pageshow", (event) => {
+      // persisted means Back/Forward restored a saved page without fetching it again.
+      if (event.persisted) {
+        // A restored page may contain a spent ticket or an obsolete nonce.
+        submitted = true;
+        disableButtons();
+        // Ask the server for a fresh confirmation page or an expired-link response.
+        window.location.reload();
+      }
+    });
+  })();
+</script>
 {% endblock %}
