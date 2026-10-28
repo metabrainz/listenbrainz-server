@@ -25,18 +25,19 @@
 
 <body>
 
-<div class="container-fluid">
+  <div class="container-fluid">
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-  {% for category, message in messages %}
-  {{ print_message(message, category) }}
-  {% endfor %}
-  {% endwith %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    {{ print_message(message, category) }}
+    {% endfor %}
+    {% endwith %}
 
-  <div>
-    {%- block content -%}
-      <!-- Page content -->
-    {%- endblock -%}
+    <div>
+      {%- block content -%}
+        <!-- Page content -->
+      {%- endblock -%}
+    </div>
   </div>
 
   {%- block footer -%}
