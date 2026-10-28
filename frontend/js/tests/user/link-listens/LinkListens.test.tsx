@@ -27,13 +27,16 @@ const reactQueryWrapper = ({ children }: any) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
-function renderLinkListensPage(initialEntry = "/settings/link-listens/") {
+function renderLinkListensPage(
+  initialEntry = "/settings/link-listens/",
+  currentUser: any = missingDataProps.user
+) {
   return renderWithProviders(
     <MemoryRouter initialEntries={[initialEntry]}>
       <LinkListensPage />
     </MemoryRouter>,
     {
-      currentUser: missingDataProps.user,
+      currentUser,
     },
     {
       wrapper: reactQueryWrapper,
@@ -41,6 +44,25 @@ function renderLinkListensPage(initialEntry = "/settings/link-listens/") {
     false
   );
 }
+
+const collidingListensPageData = {
+  unlinked_listens: [
+    {
+      artist_name: "Same artist",
+      listened_at: "2021-11-08 09:16:06Z",
+      recording_name: "Same track",
+      release_name: "Same release",
+      recording_msid: "aaaaaaaa-1111-1111-1111-111111111111",
+    },
+    {
+      artist_name: "Same artist",
+      listened_at: "2021-11-08 09:16:06Z",
+      recording_name: "Same track",
+      release_name: "Same release",
+      recording_msid: "bbbbbbbb-2222-2222-2222-222222222222",
+    },
+  ],
+};
 
 describe("LinkListensPage", () => {
   let server: SetupServerApi;
@@ -50,6 +72,9 @@ describe("LinkListensPage", () => {
     const handlers = [
       http.post("/settings/link-listens/", () => {
         return HttpResponse.json(pageData);
+      }),
+      http.post("/1/delete-listen", () => {
+        return new HttpResponse(null, { status: 200 });
       }),
     ];
     server = setupServer(...handlers);
@@ -118,5 +143,40 @@ describe("LinkListensPage", () => {
         screen.queryByText("Broadchurch (Music From The Original TV Series)")
       ).toBeNull();
     });
+  });
+
+  it("does not duplicate listens that share a name, artist and timestamp", async () => {
+    const consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    queryClient.setQueryData(queryKey, collidingListensPageData);
+    renderLinkListensPage("/settings/link-listens/", {
+      id: 1,
+      name: "FNORD",
+      auth_token: "never_gonna",
+    });
+
+    await screen.findByText(textContentMatcher("Link with MusicBrainz"));
+    await waitFor(() => {
+      expect(screen.getAllByTestId("listen")).toHaveLength(2);
+    });
+
+    // Both listens have the same recording name, artist and timestamp, so the
+    // old key based on those fields was not unique. Deleting one used to leave
+    // both rows in the DOM.
+    const [firstListen] = screen.getAllByTestId("listen");
+    await user.click(
+      within(firstListen).getByRole("menuitem", { name: "Delete Listen" })
+    );
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId("listen")).toHaveLength(1);
+    });
+
+    const duplicateKeyWarnings = consoleErrorSpy.mock.calls.filter((call) =>
+      String(call[0]).includes("same key")
+    );
+    expect(duplicateKeyWarnings).toHaveLength(0);
+    consoleErrorSpy.mockRestore();
   });
 });
