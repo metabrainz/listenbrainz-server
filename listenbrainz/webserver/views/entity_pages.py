@@ -7,7 +7,7 @@ from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.db import popularity, similarity
 from listenbrainz.db.stats import get_entity_listener
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects, load_release_groups_for_recordings
-from listenbrainz.webserver import db_conn, ts_conn, listens_conn
+from listenbrainz.webserver import db_conn, listens_conn
 from listenbrainz.webserver.decorators import cache_public, web_listenstore_needed
 from listenbrainz.webserver.utils import number_readable
 from listenbrainz.db.metadata import get_metadata_for_artist
@@ -175,11 +175,11 @@ def artist_entity(artist_mbid: str):
     try:
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
                 mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
-                ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
+                listens_conn.connection.cursor(cursor_factory=DictCursor) as listens_curs:
 
             similar_artists = similarity.get_artists(
                 mb_curs,
-                ts_curs,
+                listens_curs,
                 [artist_mbid],
                 "session_based_days_7500_session_300_contribution_3_threshold_10_limit_100_filter_True_skip_30",
                 18
@@ -405,11 +405,9 @@ def recording_entity(recording_mbid: str):
 
         try:
             with mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
-                    ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs, \
                     listens_conn.connection.cursor(cursor_factory=DictCursor) as listens_curs:
                 similar_recordings = similarity.get_recordings(
                     mb_curs,
-                    ts_curs,
                     listens_curs,
                     [recording_mbid],
                     "session_based_days_7500_session_300_contribution_5_threshold_15_limit_50_skip_30_top_n_listeners_1000",

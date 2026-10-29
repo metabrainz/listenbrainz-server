@@ -6,7 +6,7 @@ import psycopg2.extras
 from datasethoster import Query
 from pydantic import BaseModel
 
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 from listenbrainz.labs_api.labs.api.popular_tags import POPULAR_TAGS
 
 
@@ -36,7 +36,7 @@ class TagSimilarityQuery(Query):
     def fetch(self, params, source, offset=0, count=50):
 
         tag = params[0].tag
-        with closing(timescale.engine.raw_connection()) as conn, \
+        with closing(listens_db.engine.raw_connection()) as conn, \
                 conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
             curs.execute(
                 f"""SELECT tag_0

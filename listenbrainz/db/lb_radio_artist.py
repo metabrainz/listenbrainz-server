@@ -5,7 +5,7 @@ import uuid
 from psycopg2.extras import DictCursor
 from psycopg2.sql import SQL, Literal
 
-from listenbrainz.webserver import ts_conn, listens_conn
+from listenbrainz.webserver import listens_conn
 
 
 def lb_radio_artist(mode: str, seed_artist: str, max_similar_artists: int, num_recordings_per_artist: int, pop_begin: float,
@@ -135,7 +135,7 @@ def lb_radio_artist(mode: str, seed_artist: str, max_similar_artists: int, num_r
         artist_indexes = [0]
 
     # Pass the calculated args above to postgres and run the query
-    with ts_conn.connection.cursor(cursor_factory=DictCursor) as curs:
+    with listens_conn.connection.cursor(cursor_factory=DictCursor) as curs:
         curs.execute(query, (tuple(artist_indexes),))
         rows = curs.fetchall()
 
