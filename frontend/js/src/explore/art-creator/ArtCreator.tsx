@@ -46,6 +46,19 @@ export enum TemplateNameEnum {
   gridStats = "grid-stats",
 }
 
+export type VinylLayout = "wood" | "close" | "vinyl" | "many";
+export type VinylWearTear = "new" | "used" | "loved";
+
+export const VINYL_LAYOUT_OPTIONS: ReadonlyArray<{
+  id: VinylLayout;
+  icon: string;
+}> = [
+  { id: "wood", icon: "1" },
+  { id: "close", icon: "2" },
+  { id: "vinyl", icon: "3" },
+  { id: "many", icon: "4" },
+];
+
 export interface TemplateOption {
   name: TemplateNameEnum;
   displayName: string;
@@ -239,6 +252,9 @@ export default function ArtCreator() {
     defaultStyleOnLoad.defaultColors[2]
   );
   const [customPresets, setCustomPresets] = useState<ColorPreset[]>([]);
+  const [vinylLayout, setVinylLayout] = useState<VinylLayout>("wood");
+  const [vinylWearTear, setVinylWearTear] = useState<VinylWearTear>("used");
+  const [vinylPlayerColor, setVinylPlayerColor] = useState<string>("#ffffff");
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const previewSVGRef = React.useRef<SVGSVGElement>(null);
 
@@ -682,7 +698,10 @@ export default function ArtCreator() {
         showRankArg: boolean,
         showListenCountArg: boolean,
         showReleaseArg: boolean,
-        showArtistArg: boolean
+        showArtistArg: boolean,
+        vinylLayoutArg: VinylLayout,
+        vinylWearTearArg: VinylWearTear,
+        vinylPlayerColorArg: string
       ) => {
         if (styleArg.type === "grid") {
           let newPreviewUrl = `${
@@ -732,11 +751,20 @@ export default function ArtCreator() {
 
           setPreviewUrl(newPreviewUrl);
         } else {
-          setPreviewUrl(
-            `${APIService.APIBaseURI}/art/${styleArg.name}/${encodeURIComponent(
-              userNameArg
-            )}/${timeRangeArg}/${DEFAULT_IMAGE_SIZE}`
-          );
+          let newPreviewUrl = `${APIService.APIBaseURI}/art/${
+            styleArg.name
+          }/${encodeURIComponent(
+            userNameArg
+          )}/${timeRangeArg}/${DEFAULT_IMAGE_SIZE}`;
+
+          if (styleArg.name === TemplateNameEnum.lPsOnTheFloor) {
+            newPreviewUrl += `?scene=${vinylLayoutArg}&wear_tear=${vinylWearTearArg}&player_color=${vinylPlayerColorArg.replace(
+              "#",
+              ""
+            )}`;
+          }
+
+          setPreviewUrl(newPreviewUrl);
         }
       },
       1000,
@@ -763,7 +791,10 @@ export default function ArtCreator() {
       showRank,
       showListenCount,
       showRelease,
-      showArtist
+      showArtist,
+      vinylLayout,
+      vinylWearTear,
+      vinylPlayerColor
     );
   }, [
     userName,
@@ -781,6 +812,9 @@ export default function ArtCreator() {
     showRelease,
     showArtist,
     showListenCount,
+    vinylLayout,
+    vinylWearTear,
+    vinylPlayerColor,
     debouncedSetPreviewUrl,
   ]);
 
@@ -912,7 +946,9 @@ export default function ArtCreator() {
               {/* Font selection dropdown hidden pending LB-TBD until font files/approved font list are available */}
             </div>
           </div>
-          {(style.type === "text" || style.type === "grid") && (
+          {(style.type === "text" ||
+            style.type === "grid" ||
+            style.name === TemplateNameEnum.lPsOnTheFloor) && (
             <div className="advanced-settings-container">
               <div className="sidenav-content-grid">
                 <h4>Advanced</h4>
@@ -1063,6 +1099,69 @@ export default function ArtCreator() {
                           onChange={(e) =>
                             setCaptionBgOpacity(Number(e.target.value))
                           }
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+                {style.name === TemplateNameEnum.lPsOnTheFloor && (
+                  <>
+                    <small>Choose a layout:</small>
+                    <div className="cover-art-grid">
+                      {VINYL_LAYOUT_OPTIONS.map((item) => (
+                        <label className="cover-art-option" key={item.id}>
+                          <input
+                            type="radio"
+                            name="scene"
+                            value={item.id}
+                            className="cover-art-radio"
+                            checked={vinylLayout === item.id}
+                            onChange={() => setVinylLayout(item.id)}
+                          />
+                          <img
+                            height={80}
+                            width={80}
+                            src={`/static/img/art/lps-on-the-floor/icons/cover-art_photo-${item.icon}.svg`}
+                            alt={`${item.id} scene`}
+                            className="cover-art-image"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                    <div>
+                      <label className="form-label" htmlFor="wear-tear">
+                        Wear & Tear:
+                      </label>
+                      <select
+                        id="wear-tear"
+                        className="form-select"
+                        value={vinylWearTear}
+                        onChange={(e) =>
+                          setVinylWearTear(e.target.value as VinylWearTear)
+                        }
+                      >
+                        <option value="new">New</option>
+                        <option value="used">Used</option>
+                        <option value="loved">Loved</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="form-label" htmlFor="player-color">
+                        Record player colour:
+                      </label>
+                      <div className="input-group">
+                        <input
+                          id="player-color"
+                          type="color"
+                          className="form-control form-control-color"
+                          onChange={(e) => setVinylPlayerColor(e.target.value)}
+                          value={vinylPlayerColor}
+                        />
+                        <input
+                          className="form-control"
+                          type="text"
+                          value={vinylPlayerColor}
+                          readOnly
                         />
                       </div>
                     </div>
