@@ -16,6 +16,14 @@ class ImporterService(ExternalService, ABC):
         """ Return list of active users for importing listens. """
         return listens_importer.get_active_users_to_process(db_conn, self.service, exclude_error)
 
+    def claim_users_to_process(self, batch_size=50, exclude_error=True) -> list[dict]:
+        """ Claim a batch of users for import processing using SKIP LOCKED. """
+        return listens_importer.claim_users_to_process(db_conn, self.service, batch_size, exclude_error)
+
+    def release_user_claims(self, user_ids: list[int], touch_last_updated=True):
+        """ Release claims for the given users. """
+        listens_importer.release_user_claims(db_conn, user_ids, self.service, touch_last_updated)
+
     def update_status(
         self,
         user_id: int,
