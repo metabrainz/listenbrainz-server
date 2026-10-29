@@ -45,8 +45,8 @@ class InternetArchiveAPITestCase(ListenAPIIntegrationTestCase):
                  NOW()
                 )
         """
-        self.ts_conn.execute(text(query))
-        self.ts_conn.commit()
+        self.listens_conn.execute(text(query))
+        self.listens_conn.commit()
 
     def setUp(self):
         super(InternetArchiveAPITestCase, self).setUp()
