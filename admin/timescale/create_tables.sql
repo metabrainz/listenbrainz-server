@@ -132,37 +132,6 @@ CREATE TABLE internetarchive_cache.track (
 );
 
 
-CREATE TABLE similarity.recording_dev (
-    mbid0 UUID NOT NULL,
-    mbid1 UUID NOT NULL,
-    metadata JSONB NOT NULL
-);
-
-CREATE TABLE similarity.recording (
-    mbid0 UUID NOT NULL,
-    mbid1 UUID NOT NULL,
-    score INT NOT NULL
-);
-
-CREATE TABLE similarity.artist_credit_mbids_dev (
-    mbid0 UUID NOT NULL,
-    mbid1 UUID NOT NULL,
-    metadata JSONB NOT NULL
-);
-
-
-CREATE TABLE similarity.artist_credit_mbids (
-    mbid0 UUID NOT NULL,
-    mbid1 UUID NOT NULL,
-    score INT NOT NULL
-);
-
-CREATE TABLE similarity.overhyped_artists (
-    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
-    artist_mbid             UUID NOT NULL,
-    factor                  FLOAT
-);
-
 CREATE TABLE tags.lb_tag_radio (
     tag                     TEXT NOT NULL,
     recording_mbid          UUID NOT NULL,

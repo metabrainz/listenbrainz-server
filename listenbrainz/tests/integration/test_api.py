@@ -44,7 +44,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         with open(self.path_to_data_file('top_recording_db_data_for_api_test.json'), 'r') as f:
             top_recordings = json.loads(f.read())
 
-        with self.ts_conn.connection.cursor() as curs:
+        with self.listens_conn.connection.cursor() as curs:
             curs.execute("DROP TABLE IF EXISTS similarity.artist")
             curs.execute("CREATE TABLE similarity.artist (mbid0 uuid, mbid1 uuid, score integer)")
             query = "INSERT INTO similarity.artist (mbid0, mbid1, score) VALUES %s"
@@ -60,7 +60,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
             curs.execute("""CREATE TABLE popularity.mlhd_top_recording (artist_mbid uuid, recording_mbid uuid,
                                          total_listen_count integer, total_user_count integer)""")
 
-            self.ts_conn.connection.commit()
+            self.listens_conn.connection.commit()
 
         with self.listens_conn.connection.cursor() as curs:
             curs.execute("DROP TABLE IF EXISTS mapping.mb_artist_metadata_cache")

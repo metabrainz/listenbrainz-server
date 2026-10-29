@@ -100,6 +100,6 @@ def create_tag_similarity():
 
     mb_uri = config.MBID_MAPPING_DATABASE_URI
     with psycopg2.connect(mb_uri) as mb_conn:
-        with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as lb_conn:
+        with psycopg2.connect(config.SQLALCHEMY_LISTENS_URI) as lb_conn:
             sim = TagSimilarity(mb_conn, lb_conn)
             sim.run()
