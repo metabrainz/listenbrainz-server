@@ -2,5 +2,4 @@ CREATE SCHEMA spotify_cache;
 CREATE SCHEMA apple_cache;
 CREATE SCHEMA soundcloud_cache;
 CREATE SCHEMA tags;
-CREATE SCHEMA statistics; -- this schema is used to store the YIM tables, tables are created dynamically in listenbrainz/db/year_in_music.py
 CREATE SCHEMA internetarchive_cache;

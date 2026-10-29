@@ -36,6 +36,4 @@ CREATE INDEX internetarchive_cache_track_last_updated_idx ON internetarchive_cac
 
 CREATE INDEX tags_lb_tag_radio_percent_idx ON tags.lb_tag_radio (tag, percent) INCLUDE (source, recording_mbid, tag_count);
 
-CREATE UNIQUE INDEX year_in_music_cover_user_id_idx ON statistics.year_in_music_cover (user_id, year);
-
 COMMIT;

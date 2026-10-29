@@ -140,12 +140,4 @@ CREATE TABLE tags.lb_tag_radio (
     source                  lb_tag_radio_source_type_enum NOT NULL
 );
 
-CREATE TABLE statistics.year_in_music_cover (
-    id                  INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
-    user_id             INTEGER NOT NULL,
-    year                SMALLINT NOT NULL,
-    caa_id              BIGINT,
-    caa_release_mbid    UUID
-);
-
 COMMIT;

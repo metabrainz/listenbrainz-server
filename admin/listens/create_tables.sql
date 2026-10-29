@@ -351,4 +351,12 @@ CREATE TABLE similarity.overhyped_artists (
     factor                  FLOAT
 );
 
+CREATE TABLE statistics.year_in_music_cover (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    user_id             INTEGER NOT NULL,
+    year                SMALLINT NOT NULL,
+    caa_id              BIGINT,
+    caa_release_mbid    UUID
+);
+
 COMMIT;
