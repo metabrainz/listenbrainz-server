@@ -27,7 +27,7 @@ from data.postgres.release_group import get_release_group_metadata_cache_query
 from data.postgres.tag import get_tag_or_genre_cache_query
 from listenbrainz import db
 
-from listenbrainz.db import stats, timescale, listens as listens_db
+from listenbrainz.db import stats, listens as listens_db
 from listenbrainz.db.popularity import to_entity_mbid
 from listenbrainz.dumps.exceptions import SchemaMismatchException
 
@@ -156,8 +156,8 @@ def dump_sample_data(location: str):
 
         transaction.rollback()
 
-    with timescale.engine.connect() as connection, connection.begin() as transaction:
-        ts_curs = connection.connection.cursor(cursor_factory=RealDictCursor)
+    with listens_db.engine.connect() as connection, connection.begin() as transaction:
+        listens_curs = connection.connection.cursor(cursor_factory=RealDictCursor)
         popularity_dir = os.path.join(location, "popularity")
         os.makedirs(popularity_dir, exist_ok=True)
 
@@ -166,7 +166,7 @@ def dump_sample_data(location: str):
 
             logger.info(f"Dumping popularity {mlhd_prefix}release_group")
             rg_pop_data = get_popularity_data(
-                ts_curs, "release_group", rg_pop_mbids, per_artist=False, is_mlhd=is_mlhd
+                listens_curs, "release_group", rg_pop_mbids, per_artist=False, is_mlhd=is_mlhd
             )
             with open(os.path.join(popularity_dir, mlhd_prefix + "release_group.csv"), "w", newline="") as fp:
                 writer = DictWriter(fp, fieldnames=["release_group_mbid", "total_listen_count", "total_user_count"])
@@ -175,7 +175,7 @@ def dump_sample_data(location: str):
 
             logger.info(f"Dumping popularity {mlhd_prefix}recording")
             rec_pop_data = get_popularity_data(
-                ts_curs, "recording", rg_pop_mbids, per_artist=False, is_mlhd=is_mlhd
+                listens_curs, "recording", rg_pop_mbids, per_artist=False, is_mlhd=is_mlhd
             )
             with open(os.path.join(popularity_dir, mlhd_prefix + "recording.csv"), "w", newline="") as fp:
                 writer = DictWriter(fp, fieldnames=["recording_mbid", "total_listen_count", "total_user_count"])
@@ -184,7 +184,7 @@ def dump_sample_data(location: str):
 
             logger.info(f"Dumping popularity {mlhd_prefix}top_recording")
             rec_artist_pop_data = get_popularity_data(
-                ts_curs, "recording", all_artist_mbids, per_artist=True, is_mlhd=is_mlhd
+                listens_curs, "recording", all_artist_mbids, per_artist=True, is_mlhd=is_mlhd
             )
             with open(os.path.join(popularity_dir, mlhd_prefix + "top_recording.csv"), "w", newline="") as fp:
                 writer = DictWriter(fp, fieldnames=[
@@ -329,9 +329,9 @@ def import_sample_data(archive_path, threads):
         "top_recording.csv": Identifier("popularity", "top_recording"),
     }
 
-    # the metadata caches live in the listens database and the popularity tables in timescale
+    # the metadata caches and the popularity tables live in the listens database
     listens_connection = listens_db.engine.raw_connection()
-    connection = timescale.engine.raw_connection()
+    connection = listens_db.engine.raw_connection()
     try:
         listens_cursor = listens_connection.cursor()
         cursor = connection.cursor()
