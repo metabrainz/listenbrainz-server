@@ -84,7 +84,7 @@ class BackgroundTasks:
         elif task.task == "export_all_user_data":
             export_user(db_conn, listens_conn, task.user_id, task.metadata)
         elif task.task == "import_listens":
-            import_listens(db_conn, ts_conn, task.user_id, task.metadata)
+            import_listens(db_conn, listens_conn, task.user_id, task.metadata)
         else:
             current_app.logger.error(f"Unknown task type: {task}")
 

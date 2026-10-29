@@ -11,7 +11,7 @@ from listenbrainz.background.listens_importer.audioscrobbler import Audioscrobbl
 from listenbrainz.background.listens_importer.spinitron import SpinitronListensImporter
 
 
-def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
+def import_listens(db_conn, listens_conn, user_id, bg_task_metadata):
     """Main entry point for importing listens."""
     import_id = bg_task_metadata["import_id"]
 
@@ -29,19 +29,19 @@ def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
     import_task = dict(import_task)
     service = import_task["service"]
     if service == "spotify":
-        importer = SpotifyListensImporter(db_conn, ts_conn)
+        importer = SpotifyListensImporter(db_conn, listens_conn)
     elif service == "listenbrainz":
-        importer = ListenBrainzListensImporter(db_conn, ts_conn)
+        importer = ListenBrainzListensImporter(db_conn, listens_conn)
     elif service == "librefm":
-        importer = LibrefmListensImporter(db_conn, ts_conn)
+        importer = LibrefmListensImporter(db_conn, listens_conn)
     elif service == "panoscrobbler":
-        importer = PanoScrobblerListensImporter(db_conn, ts_conn)
+        importer = PanoScrobblerListensImporter(db_conn, listens_conn)
     elif service == "maloja":
-        importer = MalojaListensImporter(db_conn, ts_conn)
+        importer = MalojaListensImporter(db_conn, listens_conn)
     elif service == "audioscrobbler":
-        importer = AudioscrobblerListensImporter(db_conn, ts_conn)
+        importer = AudioscrobblerListensImporter(db_conn, listens_conn)
     elif service == "spinitron":
-        importer = SpinitronListensImporter(db_conn, ts_conn)
+        importer = SpinitronListensImporter(db_conn, listens_conn)
     else:
         msg = f"Unsupported service: {service}"
         update_import_task(db_conn, import_id, status="failed", progress=msg)

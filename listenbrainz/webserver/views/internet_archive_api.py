@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from listenbrainz.webserver import ts_conn
+from listenbrainz.webserver import listens_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.metadata_cache.internetarchive.store import search_ia_tracks
 
@@ -15,5 +15,5 @@ def search_ia():
     if not artist and not track and not album:
         return jsonify({"results": []})
 
-    results = search_ia_tracks(ts_conn, artist=artist, track=track, album=album)
+    results = search_ia_tracks(listens_conn, artist=artist, track=track, album=album)
     return jsonify({"results": results})

@@ -18,8 +18,8 @@ SKIP_REASONS = [
 class SpotifyListensImporter(ZipBaseListensImporter):
     """Spotify-specific listens importer."""
 
-    def __init__(self, db_conn, ts_conn):
-        super().__init__(db_conn, ts_conn)
+    def __init__(self, db_conn, listens_conn):
+        super().__init__(db_conn, listens_conn)
         self.importer_name = "Spotify Extended Streaming History Importer"
         self.skipped_incognito_count = 0
         self.skipped_short_plays_count = 0
@@ -201,7 +201,7 @@ class SpotifyListensImporter(ZipBaseListensImporter):
                ON TRUE
             WHERE t.track_id = ANY(:track_ids)
         """
-        result = self.ts_conn.execute(text(query), {"track_ids": spotify_track_ids})
+        result = self.listens_conn.execute(text(query), {"track_ids": spotify_track_ids})
         return {r.track_id: dict(r) for r in result.mappings()}
 
     def _get_spotify_data_from_api(self, spotify_track_ids: list[str]) -> dict[str, dict[str, Any]]:

@@ -367,4 +367,117 @@ CREATE TABLE tags.lb_tag_radio (
     source                  lb_tag_radio_source_type_enum NOT NULL
 );
 
+CREATE TABLE spotify_cache.album (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    album_id                TEXT   NOT NULL,
+    name                    TEXT   NOT NULL,
+    type                    TEXT   NOT NULL,
+    release_date            TEXT   NOT NULL,
+    last_refresh            TIMESTAMP WITH TIME ZONE NOT NULL,
+    expires_at              TIMESTAMP WITH TIME ZONE NOT NULL,
+    data                    JSONB  NOT NULL
+);
+
+CREATE TABLE spotify_cache.artist (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    artist_id               TEXT NOT NULL,
+    name                    TEXT NOT NULL,
+    data                    JSONB NOT NULL
+);
+
+CREATE TABLE spotify_cache.track (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    track_id                TEXT NOT NULL,
+    name                    TEXT NOT NULL,
+    track_number            INTEGER NOT NULL,
+    album_id                TEXT NOT NULL,
+    data                    JSONB NOT NULL
+);
+
+CREATE TABLE spotify_cache.rel_album_artist (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    album_id        TEXT NOT NULL,
+    artist_id       TEXT NOT NULL,
+    position        INTEGER NOT NULL
+);
+
+CREATE TABLE spotify_cache.rel_track_artist (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    track_id        TEXT NOT NULL,
+    artist_id       TEXT NOT NULL,
+    position        INTEGER NOT NULL
+);
+
+CREATE TABLE apple_cache.album (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    album_id                TEXT   NOT NULL,
+    name                    TEXT   NOT NULL,
+    type                    TEXT   NOT NULL,
+    release_date            TEXT   NOT NULL,
+    last_refresh            TIMESTAMP WITH TIME ZONE NOT NULL,
+    expires_at              TIMESTAMP WITH TIME ZONE NOT NULL,
+    data                    JSONB  NOT NULL
+);
+
+CREATE TABLE apple_cache.artist (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    artist_id               TEXT NOT NULL,
+    name                    TEXT NOT NULL,
+    data                    JSONB NOT NULL
+);
+
+CREATE TABLE apple_cache.track (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    track_id                TEXT NOT NULL,
+    name                    TEXT NOT NULL,
+    track_number            INTEGER NOT NULL,
+    album_id                TEXT NOT NULL,
+    data                    JSONB NOT NULL
+);
+
+CREATE TABLE apple_cache.rel_album_artist (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    album_id        TEXT NOT NULL,
+    artist_id       TEXT NOT NULL,
+    position        INTEGER NOT NULL
+);
+
+CREATE TABLE apple_cache.rel_track_artist (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    track_id        TEXT NOT NULL,
+    artist_id       TEXT NOT NULL,
+    position        INTEGER NOT NULL
+);
+
+CREATE TABLE soundcloud_cache.artist (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    artist_id               TEXT NOT NULL,
+    name                    TEXT NOT NULL,
+    data                    JSONB NOT NULL
+);
+
+CREATE TABLE soundcloud_cache.track (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    track_id                TEXT NOT NULL,
+    name                    TEXT NOT NULL,
+    artist_id               TEXT NOT NULL,
+    release_year            INTEGER,
+    release_month           INTEGER,
+    release_day             INTEGER,
+    data                    JSONB NOT NULL
+);
+
+
+CREATE TABLE internetarchive_cache.track (
+    id            INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    track_id      TEXT UNIQUE NOT NULL,
+    name          TEXT NOT NULL,
+    artist        TEXT[] NOT NULL,
+    album         TEXT,
+    stream_urls   TEXT[] NOT NULL,
+    artwork_url   TEXT,
+    data          JSONB NOT NULL,
+    last_updated  TIMESTAMPTZ DEFAULT NOW()
+);
+
 COMMIT;

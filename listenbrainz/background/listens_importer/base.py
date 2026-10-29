@@ -41,9 +41,9 @@ def update_import_task(db_conn, import_id: int, **kwargs):
 class BaseListensImporter(ABC):
     """Abstract base class for listens importers."""
 
-    def __init__(self, db_conn, ts_conn):
+    def __init__(self, db_conn, listens_conn):
         self.db_conn = db_conn
-        self.ts_conn = ts_conn
+        self.listens_conn = listens_conn
         self.batch_size = BATCH_SIZE
         self.file_size_limit = FILE_SIZE_LIMIT
         self.importer_name = IMPORTER_NAME
