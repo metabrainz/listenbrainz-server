@@ -14,7 +14,7 @@ from markupsafe import Markup
 from pydantic import BaseModel, Field
 from sqlalchemy import text
 
-from listenbrainz.db import similarity, timescale, listens as listens_db
+from listenbrainz.db import similarity, listens as listens_db
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 
 
@@ -64,7 +64,7 @@ class BaseSimilarRecordingsViewerQuery(Query, ABC):
         key = self.get_cache_key()
         if algorithms := cache.get(key):
             return algorithms
-        with timescale.engine.begin() as conn:
+        with listens_db.engine.begin() as conn:
             table_name = "similarity." + self.table()
             query = """
                 select distinct jsonb_object_keys(metadata) as algorithm
@@ -116,10 +116,8 @@ class BaseSimilarRecordingsViewerQuery(Query, ABC):
         count = count if count > 0 else 100
 
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-                closing(timescale.engine.raw_connection()) as ts_conn, \
                 closing(listens_db.engine.raw_connection()) as listens_conn, \
                 mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
-                ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs, \
                 listens_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as listens_curs:
             results = []
 
@@ -128,7 +126,7 @@ class BaseSimilarRecordingsViewerQuery(Query, ABC):
                 results.append(QueryOutputLine(line=Markup("<p><b>Reference recording</b></p>")))
                 results.extend(references)
 
-            similar_mbids, score_idx, mbid_idx = similarity.get(ts_curs, self.table(), recording_mbids,
+            similar_mbids, score_idx, mbid_idx = similarity.get(listens_curs, self.table(), recording_mbids,
                                                                 algorithm, count)
             if source == RequestSource.web:
                 if len(similar_mbids) == 0:
