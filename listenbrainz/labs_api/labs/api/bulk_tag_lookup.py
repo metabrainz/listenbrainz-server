@@ -8,7 +8,7 @@ import psycopg2.extras
 
 from datasethoster import Query
 
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 
 
 class BulkTagLookupInput(BaseModel):
@@ -56,7 +56,7 @@ class BulkTagLookup(Query):
             return []
 
         with (
-            closing(timescale.engine.raw_connection()) as conn,
+            closing(listens_db.engine.raw_connection()) as conn,
             conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs
         ):
             query = '''SELECT recording_mbid

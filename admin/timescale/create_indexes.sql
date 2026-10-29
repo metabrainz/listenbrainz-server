@@ -34,6 +34,4 @@ CREATE INDEX internetarchive_cache_track_stream_urls_gin_idx ON internetarchive_
 CREATE INDEX internetarchive_cache_track_last_updated_idx ON internetarchive_cache.track (last_updated);
 
 
-CREATE INDEX tags_lb_tag_radio_percent_idx ON tags.lb_tag_radio (tag, percent) INCLUDE (source, recording_mbid, tag_count);
-
 COMMIT;

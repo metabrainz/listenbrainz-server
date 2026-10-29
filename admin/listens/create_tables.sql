@@ -359,4 +359,12 @@ CREATE TABLE statistics.year_in_music_cover (
     caa_release_mbid    UUID
 );
 
+CREATE TABLE tags.lb_tag_radio (
+    tag                     TEXT NOT NULL,
+    recording_mbid          UUID NOT NULL,
+    tag_count               INTEGER NOT NULL,
+    percent                 DOUBLE PRECISION NOT NULL,
+    source                  lb_tag_radio_source_type_enum NOT NULL
+);
+
 COMMIT;
