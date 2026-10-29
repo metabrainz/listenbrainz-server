@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from brainzutils import cache
 
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 from listenbrainz.mbid_mapping_writer.job_queue import JobItem
 from listenbrainz.metadata_cache.handler import BaseHandler
 from listenbrainz.metadata_cache.models import Album
@@ -69,7 +69,7 @@ class AlbumHandler(BaseHandler):
         last_refresh = datetime.now()
         expires_at = datetime.now() + timedelta(days=CACHE_TIME)
 
-        conn = timescale.engine.raw_connection()
+        conn = listens_db.engine.raw_connection()
         try:
             with conn.cursor() as curs:
                 for album in albums:
