@@ -170,7 +170,7 @@ def artist_entity(artist_mbid: str):
         "tag": artist_data[0].tag_data,
     }
 
-    popular_recordings = popularity.get_top_recordings_for_artist(db_conn, ts_conn, listens_conn, artist_mbid, 10)
+    popular_recordings = popularity.get_top_recordings_for_artist(db_conn, listens_conn, artist_mbid, 10)
 
     try:
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
@@ -189,7 +189,7 @@ def artist_entity(artist_mbid: str):
 
     try:
         top_release_group_color = popularity.get_top_release_groups_for_artist(
-            db_conn, ts_conn, artist_mbid, 1
+            db_conn, listens_conn, artist_mbid, 1
         )[0]["release_color"]
     except IndexError:
         top_release_group_color = None
@@ -201,7 +201,7 @@ def artist_entity(artist_mbid: str):
 
     release_group_data = artist_data[0].release_group_data
     release_group_mbids = [rg["mbid"] for rg in release_group_data]
-    popularity_data, _ = popularity.get_counts(ts_conn, "release_group", release_group_mbids)
+    popularity_data, _ = popularity.get_counts(listens_conn, "release_group", release_group_mbids)
 
     release_groups = []
     for release_group, pop in zip(release_group_data, popularity_data):
@@ -311,7 +311,7 @@ def album_entity(release_group_mbid: str):
     for medium in mediums:
         for track in medium["tracks"]:
             recording_mbids.append(track["recording_mbid"])
-    popularity_data, popularity_index = popularity.get_counts(ts_conn, "recording", recording_mbids)
+    popularity_data, popularity_index = popularity.get_counts(listens_conn, "recording", recording_mbids)
 
     for medium in mediums:
         for track in medium["tracks"]:
@@ -433,7 +433,7 @@ def recording_entity(recording_mbid: str):
 
     release_group_mbids = [rg["mbid"] for rg in release_groups_data]
     try:
-        popularity_data, _ = popularity.get_counts(ts_conn, "release_group", release_group_mbids)
+        popularity_data, _ = popularity.get_counts(listens_conn, "release_group", release_group_mbids)
     except Exception:
         current_app.logger.error("Error loading popularity data for release groups:", exc_info=True)
         popularity_data = []

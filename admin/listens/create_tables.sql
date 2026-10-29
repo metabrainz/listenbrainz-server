@@ -229,4 +229,95 @@ CREATE TABLE messybrainz.submissions_redirect (
     original_msid UUID NOT NULL
 );
 
+CREATE TABLE popularity.recording (
+    recording_mbid          UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_recording (
+    recording_mbid          UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.artist (
+    artist_mbid             UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_artist (
+    artist_mbid             UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.release (
+    release_mbid            UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_release (
+    release_mbid            UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.release_group (
+    release_group_mbid      UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_release_group (
+    release_group_mbid      UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.top_recording (
+    artist_mbid             UUID NOT NULL,
+    recording_mbid          UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_top_recording (
+    artist_mbid             UUID NOT NULL,
+    recording_mbid          UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.top_release (
+    artist_mbid             UUID NOT NULL,
+    release_mbid            UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_top_release (
+    artist_mbid             UUID NOT NULL,
+    release_mbid            UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+
+CREATE TABLE popularity.top_release_group (
+    artist_mbid             UUID NOT NULL,
+    release_group_mbid      UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_top_release_group (
+    artist_mbid             UUID NOT NULL,
+    release_group_mbid      UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
 COMMIT;
