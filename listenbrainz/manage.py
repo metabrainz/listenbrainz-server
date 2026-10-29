@@ -380,7 +380,7 @@ def notify_yim_users(year: int):
     application = webserver.create_app()
     with application.app_context():
         from listenbrainz.db import year_in_music
-        year_in_music.notify_yim_users(webserver.db_conn, webserver.ts_conn, year)
+        year_in_music.notify_yim_users(webserver.db_conn, webserver.listens_conn, year)
 
 
 @cli.command(name="notify_spotify_refresh_token_expiry")

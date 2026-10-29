@@ -117,4 +117,6 @@ CREATE UNIQUE INDEX similar_artist_credit_mbids_reverse_uniq_idx ON similarity.a
 
 CREATE INDEX similarity_overhyped_artists_artist_mbid_idx ON similarity.overhyped_artists(artist_mbid) INCLUDE (factor);
 
+CREATE UNIQUE INDEX year_in_music_cover_user_id_idx ON statistics.year_in_music_cover (user_id, year);
+
 COMMIT;
