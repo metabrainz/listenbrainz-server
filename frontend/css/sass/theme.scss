@@ -339,10 +339,10 @@
       color: var(--lb-text);
     }
 
-    // Statistics range selectors and search filters share the same Pill
-    // component, so they should share its dark-theme treatment too.
-    .tertiary-nav .pill,
-    .search-type-pills .pill {
+    // Pill is a shared component. Its compact outlined treatment should be
+    // consistent everywhere it appears, not just in statistics and search.
+    .pill {
+      background-color: transparent;
       border-color: var(--lb-border-strong);
       color: var(--lb-text-muted);
 
@@ -355,6 +355,8 @@
 
       &.active,
       &.secondary.active {
+        background-color: #353070;
+        border-color: transparent;
         color: #fff;
       }
     }
@@ -672,6 +674,16 @@
     #dashboard .listen-card.card,
     #dashboard .side-column .card,
     #dashboard .side-column .card-user-sn {
+      background-color: var(--lb-card) !important;
+      border: 1px solid var(--lb-card-border) !important;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 38%);
+    }
+
+    // Recent and network feeds use the same listen/sidebar layout as a user
+    // profile, but are not nested below #dashboard. Keep their summary and
+    // social panels on that same quiet raised card surface.
+    .recent-listens-page .col-lg-4 > .card,
+    .network-feed-page > .col-sm-4 .card {
       background-color: var(--lb-card) !important;
       border: 1px solid var(--lb-card-border) !important;
       box-shadow: 0 1px 2px rgb(0 0 0 / 38%);
@@ -1049,22 +1061,6 @@
       color: #fff;
     }
 
-    #playlists-page .pill {
-      border-color: var(--lb-border-strong);
-      color: var(--lb-text-muted);
-    }
-
-    #playlists-page .pill:hover,
-    #playlists-page .pill:focus {
-      background-color: #35323d;
-      color: #fff;
-    }
-
-    #playlists-page .pill.secondary.active {
-      background-color: #4a4662;
-      color: #fff;
-    }
-
     .lb-follow-button.icon-only:hover,
     .lb-follow-button.icon-only:focus,
     .lb-follow-button.block.following,
@@ -1097,20 +1093,23 @@
       color: #fff !important;
     }
 
-    #dashboard .follower-following-list,
-    #dashboard .similar-users-list {
+    // These lists are reused in the following feed outside the dashboard.
+    // Override their legacy light inset/shadow and dividers at the component
+    // level so both placements share the same card-like depth.
+    .follower-following-list,
+    .similar-users-list {
       box-shadow: inset 0 10px 8px -10px rgb(0 0 0 / 60%);
     }
 
-    // The legacy follow list sets its own light divider on each row. Scope
-    // this to the dashboard lists so the separators stay quiet in dark mode.
-    #dashboard .follower-following-list > *:not(:first-child),
-    #dashboard .similar-users-list > *:not(:first-child) {
+    .follower-following-list > *:not(:first-child),
+    .similar-users-list > *:not(:first-child) {
       border-top-color: var(--lb-border);
     }
 
     #dashboard .header-with-line::after {
-      border-color: var(--lb-border-strong);
+      // The legacy divider inherits a near-white light-theme border. Keep it
+      // at the same quiet weight as the surrounding dashboard cards.
+      border-color: var(--lb-border) !important;
     }
 
     // The secondary tabs are a navigation surface, distinct from the canvas.
@@ -2102,8 +2101,12 @@
     #brainz-player {
       border-top-color: var(--lb-border);
 
-      .controls {
-        color: var(--lb-accent);
+      // Transport controls, utility controls and playback feedback use one
+      // neutral, high-contrast colour. Service logos retain their own brand
+      // treatment, while active love/hate states remain semantic.
+      .controls > *,
+      .actions > :not(.music-service-icon):not(.love):not(.hate) {
+        color: var(--lb-accent) !important;
       }
 
       .controls > *:hover {
@@ -2118,13 +2121,41 @@
         color: #fff;
       }
 
-      .currently-playing .artist-name,
-      .actions > * {
+      .currently-playing .artist-name {
         color: var(--lb-text-muted);
       }
 
-      .actions > *:hover {
+      .actions > :not(.music-service-icon):not(.love):not(.hate):hover {
         color: #fff;
+      }
+
+      // Match the feedback colours used by listen cards. The legacy player
+      // uses brand blue for an active dislike, which reads as a muted control
+      // colour in dark mode rather than a deliberate feedback state.
+      .actions > .love,
+      .actions > .hate {
+        color: transparent;
+        stroke: #9b95a5;
+      }
+
+      .actions > .love:hover {
+        color: transparent;
+        stroke: #ef7480;
+      }
+
+      .actions > .love.loved {
+        color: #ef7480;
+        stroke: transparent;
+      }
+
+      .actions > .hate:hover {
+        color: transparent;
+        stroke: #a99cec;
+      }
+
+      .actions > .hate.hated {
+        color: #a99cec;
+        stroke: transparent;
       }
 
       .no-album-art,
@@ -2133,13 +2164,18 @@
       }
 
       .progress .progress-bar {
-        background-color: var(--lb-accent);
-        border-right-color: var(--lb-accent);
+        background-color: var(--lb-accent) !important;
+        border-right-color: var(--lb-accent) !important;
       }
 
       .progress .progress-handle {
-        background-color: var(--lb-accent);
+        background-color: var(--lb-accent) !important;
         border: 2px solid var(--lb-surface-raised);
+      }
+
+      .volume-control,
+      .volume-control.is-open {
+        color: var(--lb-accent) !important;
       }
 
       .progress:focus-visible {
@@ -2159,6 +2195,10 @@
         background-color: var(--lb-accent) !important;
         color: #171717 !important;
       }
+    }
+
+    .volume .volume-input {
+      accent-color: var(--lb-accent);
     }
 
     .queue {
