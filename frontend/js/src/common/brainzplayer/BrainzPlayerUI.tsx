@@ -439,9 +439,10 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
                 <FontAwesomeIcon
                   icon={getVolumeIcon()}
                   fixedWidth
-                  style={{ color: showVolume ? "green" : "" }}
                   onClick={() => setShowVolume(!showVolume)}
-                  className="d-none d-md-block"
+                  className={`d-none d-md-block volume-control${
+                    showVolume ? " is-open" : ""
+                  }`}
                   title="Volume control"
                   aria-label="Volume control"
                 />
