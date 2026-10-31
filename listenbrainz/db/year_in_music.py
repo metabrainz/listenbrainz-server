@@ -11,7 +11,7 @@ from psycopg2.sql import SQL, Literal, Identifier
 from sqlalchemy import text
 
 from listenbrainz.db.model.user_timeline_event import NotificationMetadata
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 from listenbrainz.db.user import get_all_usernames
 from listenbrainz.db.user_timeline_event import create_user_notification_event
 
@@ -51,7 +51,7 @@ def get(user_id, year: int, legacy: bool = False):
         table = "legacy_" + table
     qualified_table = "statistics." + table
 
-    with timescale.engine.connect() as connection:
+    with listens_db.engine.connect() as connection:
         result = connection.execute(
             text("SELECT data FROM " + qualified_table + " WHERE user_id = :user_id"),
             {"user_id": user_id}
@@ -62,7 +62,7 @@ def get(user_id, year: int, legacy: bool = False):
 
 def insert(key, year, data, cast_to_jsonb):
     table = "year_in_music_" + str(year) + "_tmp"
-    connection = timescale.engine.raw_connection()
+    connection = listens_db.engine.raw_connection()
     query = SQL("""
         INSERT INTO {table} AS yim
                     (VALUES %s)
@@ -84,7 +84,7 @@ def insert(key, year, data, cast_to_jsonb):
 
 def insert_light(key, year, data):
     table = "year_in_music_" + str(year) + "_tmp"
-    connection = timescale.engine.raw_connection()
+    connection = listens_db.engine.raw_connection()
     query = SQL("""
         INSERT INTO {table} AS yim
              SELECT user_id::int
@@ -145,7 +145,7 @@ def create_yim_table(year):
             data JSONB NOT NULL
         )
     """
-    with timescale.engine.begin() as connection:
+    with listens_db.engine.begin() as connection:
         connection.execute(text(drop_sql))
         connection.execute(text(create_sql))
 
@@ -196,7 +196,7 @@ def get_yim_covers_for_user(user_id):
       ORDER BY year DESC
     """)
 
-    with timescale.engine.connect() as connection:
+    with listens_db.engine.connect() as connection:
         result = connection.execute(query, {"user_id": user_id})
         return [
             {
@@ -220,13 +220,13 @@ def swap_yim_tables(year):
     rename_sql = "ALTER TABLE IF EXISTS " + tmp_table + " RENAME TO " + table_without_schema
     logged_sql = "ALTER TABLE IF EXISTS " + table + " SET LOGGED"
     vacuum_sql = "VACUUM ANALYZE " + tmp_table
-    with timescale.engine.connect() as connection:
+    with listens_db.engine.connect() as connection:
         connection.connection.set_isolation_level(0)
         connection.execute(text(vacuum_sql))
 
         populate_yim_cover_table(connection, year, tmp_table)
 
-    with timescale.engine.begin() as connection:
+    with listens_db.engine.begin() as connection:
         connection.execute(text(drop_sql))
         connection.execute(text(rename_sql))
         connection.execute(text(logged_sql))
@@ -261,7 +261,7 @@ def sanitize_username(username):
     return f'"{username}"'
 
 
-def notify_yim_users(db_conn, ts_conn, year):
+def notify_yim_users(db_conn, listens_conn, year):
     logo_cid = make_msgid()
     with open("/static/img/year-in-music/yim-email-header.png", "rb") as img:
         logo = img.read()
@@ -271,7 +271,7 @@ def notify_yim_users(db_conn, ts_conn, year):
 
     table = "statistics.year_in_music_" + str(year)
 
-    result = ts_conn.execute(text("SELECT user_id FROM " + table + " WHERE data IS NOT NULL"))
+    result = listens_conn.execute(text("SELECT user_id FROM " + table + " WHERE data IS NOT NULL"))
     user_ids = [row.user_id for row in result.fetchall()]
 
     result = db_conn.execute(

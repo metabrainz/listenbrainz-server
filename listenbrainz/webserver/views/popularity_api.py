@@ -2,7 +2,7 @@ from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, request, current_app, jsonify
 
 from listenbrainz.db import popularity
-from listenbrainz.webserver import ts_conn, db_conn, listens_conn
+from listenbrainz.webserver import db_conn, listens_conn
 from listenbrainz.webserver.decorators import cache_public, crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.views.api_tools import is_valid_uuid, MAX_ITEMS_PER_GET, ensure_user_token_for_expensive_endpoint
@@ -51,7 +51,7 @@ def top_recordings_for_artist(artist_mbid):
     ensure_user_token_for_expensive_endpoint()
 
     try:
-        recordings = popularity.get_top_recordings_for_artist(db_conn, ts_conn, listens_conn, artist_mbid)
+        recordings = popularity.get_top_recordings_for_artist(db_conn, listens_conn, artist_mbid)
         return recordings
     except Exception:
         current_app.logger.error("Error while fetching metadata for recordings: ", exc_info=True)
@@ -113,7 +113,7 @@ def top_release_groups_for_artist(artist_mbid):
     ensure_user_token_for_expensive_endpoint()
 
     try:
-        releases = popularity.get_top_release_groups_for_artist(db_conn, ts_conn, artist_mbid)
+        releases = popularity.get_top_release_groups_for_artist(db_conn, listens_conn, artist_mbid)
         return releases
     except Exception:
         current_app.logger.error("Error while fetching metadata for release groups: ", exc_info=True)
@@ -138,7 +138,7 @@ def fetch_entity_popularity_counts(entity):
     if len(entity_mbids) > MAX_ITEMS_PER_GET:
         raise APIBadRequest(f"Maximum number of {entity_mbid_key} that can be fetched at once is %s" % MAX_ITEMS_PER_GET)
 
-    popularity_data, _ = popularity.get_counts(ts_conn, entity, entity_mbids)
+    popularity_data, _ = popularity.get_counts(listens_conn, entity, entity_mbids)
     return popularity_data
 
 

@@ -3,7 +3,7 @@ from flask_login import current_user
 from sqlalchemy import text
 
 from listenbrainz.db.similar_users import get_top_similar_users
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn, listens_conn
 from listenbrainz.webserver.views.api_tools import validate_auth_header
 
 explore_bp = Blueprint('explore', __name__)
@@ -27,7 +27,7 @@ def similar_users():
 def artist_similarity():
     """ Explore artist similarity """
 
-    result = ts_conn.execute(text("""
+    result = listens_conn.execute(text("""
          SELECT artist_mbid::TEXT
            FROM popularity.artist
        ORDER BY total_listen_count DESC
