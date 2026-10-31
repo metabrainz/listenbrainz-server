@@ -23,10 +23,6 @@ class SimilarityProdDataset(DatabaseDataset):
         self.entity = entity
         self.index_prefix = index_prefix
 
-    def get_engine(self):
-        # the similarity tables live in the listens database, not timescale
-        return listens_db.engine
-
     def get_table(self):
         return "CREATE TABLE {table} (mbid0 UUID NOT NULL, mbid1 UUID NOT NULL, score INT NOT NULL)"
 
@@ -64,10 +60,6 @@ class SimilarityDevDataset(DatabaseDataset):
         self.is_mlhd = is_mlhd
         self.entity = entity
         self.index_prefix = index_prefix
-
-    def get_engine(self):
-        # the similarity tables live in the listens database, not timescale
-        return listens_db.engine
 
     def get_table(self):
         return "CREATE TABLE IF NOT EXISTS {table} (mbid0 UUID NOT NULL, mbid1 UUID NOT NULL, metadata JSONB NOT NULL)"

@@ -71,41 +71,13 @@ MB_DATABASE_URI = ""
 {{end}}
 
 
-# Use a key 'listenstore_up' in consul (json boolean true or false) to decide if we connect to timescale.
-# If we set SQLALCHEMY_TIMESCALE_URI to an empty string, then the @api_listenstore_needed and @web_listenstore_needed
-# decorators will prevent the webserver from accessing the timescale database
-{{- /* This needs to use key/printf again here instead of our pre-defined template at the top of the file as you cannot
-     call a template in an if statement or variable declaration */}}
-{{- $listenstore_up := (key (printf "docker-server-configs/LB/config.%s.json/listenstore_up" (env "DEPLOY_ENV"))) }}
-{{- if $listenstore_up | parseBool}}
-    {{- if service "timescale-listenbrainz"}}
-    {{with index (service "timescale-listenbrainz") 0}}
-SQLALCHEMY_TIMESCALE_URI = """postgresql://{{template "KEY" "timescale_lb_user"}}:{{template "KEY" "timescale_lb_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "timescale_db_name"}}"""
-TIMESCALE_ADMIN_URI = """postgresql://postgres:{{template "KEY" "timescale_admin_password"}}@{{.Address}}:{{.Port}}/postgres"""
-TIMESCALE_ADMIN_LB_URI = """postgresql://postgres:{{template "KEY" "timescale_admin_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "timescale_db_name"}}"""
-    {{end}}
-    {{else}}
-SQLALCHEMY_TIMESCALE_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
-TIMESCALE_ADMIN_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
-TIMESCALE_ADMIN_LB_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
-    {{end}}
-    {{- if service "pgbouncer-listenbrainz"}}
-    {{with index (service "pgbouncer-listenbrainz") 0}}
-SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = """postgresql://{{template "KEY" "timescale_lb_user"}}:{{template "KEY" "timescale_lb_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "timescale_db_name"}}"""
-    {{end}}
-    {{else}}
-SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = "SERVICEDOESNOTEXIST_pgbouncer-listenbrainz"
-    {{end}}
-{{else}}
-SQLALCHEMY_TIMESCALE_URI = ""
-TIMESCALE_ADMIN_URI=""
-TIMESCALE_ADMIN_LB_URI=""
-SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = ""
-{{end}}
+# Use a key 'listenstore_up' in consul (json boolean true or false) to decide if the webserver reads and writes
+# listens. If false, the @api_listenstore_needed and @web_listenstore_needed decorators turn requests that need
+# the listenstore away, e.g. during listens database maintenance.
+LISTENSTORE_UP = {{template "KEY_JSON" "listenstore_up"}}
 
 
-# Listens database (plain postgres, listens partitioned by user_id). Writes go here first;
-# deletions and permanent deletion history live here only. Timescale retains its listens.
+# Listens database (plain postgres, listens partitioned by user_id).
 # SQLALCHEMY_LISTENS_URI connects directly, for long running jobs like dumps (see bypass_pgbouncer
 # in create_app) and admin commands. Everything else uses SQLALCHEMY_LISTENS_PGBOUNCER_URI.
 {{if service "listenbrainz-user-listenstore"}}
@@ -146,8 +118,8 @@ MBID_MAPPING_DATABASE_URI = ""
 # pgbouncer max_client_conn and postgres max_connections for the target host.
 DB_POOL_SIZE = {{template "KEY" "db_pool_size"}}
 DB_POOL_MAX_OVERFLOW = {{template "KEY" "db_pool_max_overflow"}}
-TIMESCALE_POOL_SIZE = {{template "KEY" "timescale_pool_size"}}
-TIMESCALE_POOL_MAX_OVERFLOW = {{template "KEY" "timescale_pool_max_overflow"}}
+LISTENS_POOL_SIZE = {{template "KEY" "listens_pool_size"}}
+LISTENS_POOL_MAX_OVERFLOW = {{template "KEY" "listens_pool_max_overflow"}}
 MEB_POOL_SIZE = {{template "KEY" "meb_pool_size"}}
 MEB_POOL_MAX_OVERFLOW = {{template "KEY" "meb_pool_max_overflow"}}
 

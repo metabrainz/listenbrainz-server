@@ -11,10 +11,6 @@ MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5
 
 POSTGRES_ADMIN_URI = "postgresql://postgres@db/postgres"
 
-SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_ts:listenbrainz_ts@db/listenbrainz_ts"
-TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@db/postgres"
-TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@db/listenbrainz_ts"
-
 # Redis
 REDIS_HOST = "redis"
 REDIS_PORT = 6379

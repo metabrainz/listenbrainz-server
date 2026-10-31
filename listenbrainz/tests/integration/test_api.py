@@ -1590,10 +1590,11 @@ class ListenAPICachingTestCase(ListenAPIIntegrationTestCase):
 
         attempts = 0
         while attempts < 10:
-            result = self.ts_conn.execute(
+            result = self.listens_conn.execute(
                 text("select exists(select 1 from listen where user_id = :user_id)"),
                 {"user_id": self.user["id"]}
             ).first()
+            self.listens_conn.rollback()
             if result[0]:
                 break
             time.sleep(1)

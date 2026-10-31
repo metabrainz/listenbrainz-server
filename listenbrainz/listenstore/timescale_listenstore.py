@@ -9,11 +9,9 @@ import psycopg2
 import psycopg2.sql
 import sqlalchemy
 from brainzutils import cache
-from psycopg2.errors import UntranslatableCharacter
-from psycopg2.extras import execute_values
 from sqlalchemy import text
 
-from listenbrainz.db import listens as listens_db, timescale
+from listenbrainz.db import listens as listens_db
 from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.dumps.exceptions import SchemaMismatchException
 from listenbrainz.listen import Listen
@@ -163,9 +161,7 @@ class TimescaleListenStore:
     def insert(self, listens):
         """
             Insert a batch of listens. Returns a list of (listened_at, user_id, recording_msid)
-            identifying rows inserted into the listens DB, which serves reads and counts. Rows
-            absent from the result were duplicates there, even if Timescale inserted them
-            (e.g. listens re-imported after a history deletion, which Timescale retains).
+            identifying rows inserted into the listens DB, rows absent from the result were duplicates.
         """
 
         if not listens:
@@ -176,36 +172,6 @@ class TimescaleListenStore:
         for listen in listens:
             listened_at, user_id, recording_msid, data = listen.to_timescale()
             submit.append((listened_at, created, user_id, recording_msid, data))
-
-        # Write Timescale before the listens DB, whose result is returned. Both stores ignore
-        # duplicates, so if the listens DB write fails the retry still reports its new listens.
-        # The reverse order would report nothing on a retry after a Timescale failure.
-        query = """
-            INSERT INTO listen (listened_at, created, user_id, recording_msid, data)
-                 VALUES %s
-            ON CONFLICT (listened_at, user_id, recording_msid)
-             DO NOTHING
-        """
-        conn = timescale.engine.raw_connection()
-        try:
-            with conn.cursor() as curs:
-                execute_values(
-                    curs,
-                    query,
-                    submit,
-                    template="(%s::timestamptz, %s::timestamptz, %s::integer, %s::uuid, %s::jsonb)",
-                )
-            conn.commit()
-        except UntranslatableCharacter:
-            # only skip the Timescale copy for its own encoding errors, the listens DB write
-            # below must still succeed or fail the batch
-            conn.rollback()
-            self.log.warning("Skipping Timescale insert of batch with untranslatable characters", exc_info=True)
-        except Exception:
-            conn.rollback()
-            raise
-        finally:
-            conn.close()
 
         return listens_db.insert(submit)
 

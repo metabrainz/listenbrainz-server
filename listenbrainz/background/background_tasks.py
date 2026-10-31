@@ -6,7 +6,7 @@ from sqlalchemy import text
 
 from listenbrainz.background.delete import delete_listens_history, delete_user
 from listenbrainz.background.export import export_user
-from listenbrainz.webserver import create_app, db_conn, ts_conn, listens_conn
+from listenbrainz.webserver import create_app, db_conn, listens_conn
 from listenbrainz.background.listens_importer import import_listens
 
 CLAIM_TIMEOUT_HOURS = 6
@@ -133,7 +133,6 @@ class BackgroundTasks:
                 # the root cause of this problem (tricky!) we can mitigate this better
                 # by simply exiting the container when this happens and start fresh.
                 db_conn.rollback()
-                ts_conn.rollback()
                 listens_conn.rollback()
 
 

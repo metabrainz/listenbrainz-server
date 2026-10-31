@@ -35,8 +35,7 @@ import listenbrainz.db as db
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.db import couchdb
-from listenbrainz.db.timescale import SCHEMA_VERSION_TIMESCALE
-from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT, SCHEMA_VERSION_CORE
+from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT, SCHEMA_VERSION_CORE, SCHEMA_VERSION_TIMESCALE
 from listenbrainz.dumps.models import DumpTablesCollection
 from listenbrainz.dumps.sample import dump_sample_data
 from listenbrainz.dumps.tables import PUBLIC_TABLES_TIMESCALE_DUMP, PUBLIC_TABLES_DUMP, \

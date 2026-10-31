@@ -24,7 +24,7 @@ class _SimilarUsersDataset(DatabaseDataset):
         super().__init__("similar_users", "similar_user", "recommendation")
 
     def get_engine(self):
-        # the similar_user table lives in the main ListenBrainz database, not timescale
+        # the similar_user table lives in the main ListenBrainz database, not the listens database
         return db.engine
 
     def get_table(self):

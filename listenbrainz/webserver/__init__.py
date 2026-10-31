@@ -14,9 +14,8 @@ from werkzeug.local import LocalProxy
 from flask_htmx import HTMX
 
 from listenbrainz import db
-from listenbrainz.db import create_test_database_connect_strings, timescale, donation, listens
+from listenbrainz.db import create_test_database_connect_strings, donation, listens
 from listenbrainz.db.listens import create_test_listens_connect_strings
-from listenbrainz.db.timescale import create_test_timescale_connect_strings
 from listenbrainz.webserver.converters import NotApiPathConverter, UsernameConverter
 
 API_PREFIX = '/1'
@@ -37,13 +36,6 @@ def _get_db_conn():
     return _db_conn
 
 
-def _get_ts_conn():
-    _ts_conn = getattr(g, "_ts_conn", None)
-    if _ts_conn is None:
-        _ts_conn = g._ts_conn = timescale.engine.connect()
-    return _ts_conn
-
-
 def _get_listens_conn():
     _listens_conn = getattr(g, "_listens_conn", None)
     if _listens_conn is None:
@@ -59,7 +51,6 @@ def _get_meb_conn():
 
 
 db_conn = LocalProxy(_get_db_conn)
-ts_conn = LocalProxy(_get_ts_conn)
 listens_conn = LocalProxy(_get_listens_conn)
 meb_conn = LocalProxy(_get_meb_conn)
 
@@ -111,10 +102,10 @@ def create_app(
 
     In the Flask app returned, blueprints are not registered.
 
-    When `bypass_pgbouncer` is True, the timescale and listens engines connect directly to
-    their databases instead of going through pgbouncer.
+    When `bypass_pgbouncer` is True, the listens engine connects directly to the listens
+    database instead of going through pgbouncer.
 
-    When `use_pool` is True, the LB postgres, timescale, partitioned listens, and
+    When `use_pool` is True, the LB postgres, partitioned listens, and
     metabrainz engines use SQLAlchemy QueuePools sized from config. This is
     intended for long-running entry points where connections can be reused.
     Other callers (manage.py, mbid_mapping_writer, background_tasks, etc.) keep
@@ -123,7 +114,7 @@ def create_app(
 
     `pool_size_overrides` (only used when `use_pool=True`) lets entry points
     shrink the per-worker pool below the consul-configured size. Keys: "db",
-    "ts", "listens", "meb". Each value is a (pool_size, max_overflow) tuple.
+    "listens", "meb". Each value is a (pool_size, max_overflow) tuple.
     """
 
     app = CustomFlask(import_name=__name__)
@@ -157,26 +148,21 @@ def create_app(
     # configuration, since that configuration could possibly point a different (production) DB.
     if "PYTHON_TESTS_RUNNING" in os.environ:
         db_connect = create_test_database_connect_strings()
-        ts_connect = create_test_timescale_connect_strings()
         listens_connect = create_test_listens_connect_strings()
         db.init_db_connection(db_connect["DB_CONNECT"])
-        timescale.init_db_connection(ts_connect["DB_CONNECT"])
-        # tests exercise the dual write too, `manage.py init_listens_db` creates this database
+        # `manage.py init_listens_db` creates this database
         listens.init_db_connection(listens_connect["DB_CONNECT"])
         app.config["SQLALCHEMY_LISTENS_URI"] = listens_connect["DB_CONNECT"]
+        app.config["SQLALCHEMY_LISTENS_PGBOUNCER_URI"] = listens_connect["DB_CONNECT"]
     elif use_pool:
         overrides = pool_size_overrides or {}
         db_size, db_overflow = overrides.get(
             "db",
             (app.config.get("DB_POOL_SIZE"), app.config.get("DB_POOL_MAX_OVERFLOW"))
         )
-        ts_size, ts_overflow = overrides.get(
-            "ts",
-            (app.config.get("TIMESCALE_POOL_SIZE"), app.config.get("TIMESCALE_POOL_MAX_OVERFLOW"))
-        )
         listens_size, listens_overflow = overrides.get(
             "listens",
-            (ts_size, ts_overflow),
+            (app.config.get("LISTENS_POOL_SIZE"), app.config.get("LISTENS_POOL_MAX_OVERFLOW"))
         )
         meb_size, meb_overflow = overrides.get(
             "meb",
@@ -188,14 +174,6 @@ def create_app(
             poolclass=QueuePool,
             pool_size=db_size,
             max_overflow=db_overflow,
-            pool_pre_ping=True,
-        )
-        timescale_uri_config = "SQLALCHEMY_TIMESCALE_URI" if bypass_pgbouncer else "SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"
-        timescale.init_db_connection(
-            app.config[timescale_uri_config],
-            poolclass=QueuePool,
-            pool_size=ts_size,
-            max_overflow=ts_overflow,
             pool_pre_ping=True,
         )
         listens_uri_config = "SQLALCHEMY_LISTENS_URI" if bypass_pgbouncer else "SQLALCHEMY_LISTENS_PGBOUNCER_URI"
@@ -216,8 +194,6 @@ def create_app(
             )
     else:
         db.init_db_connection(app.config["SQLALCHEMY_DATABASE_URI"])
-        timescale_uri_config = "SQLALCHEMY_TIMESCALE_URI" if bypass_pgbouncer else "SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"
-        timescale.init_db_connection(app.config[timescale_uri_config])
         listens_uri_config = "SQLALCHEMY_LISTENS_URI" if bypass_pgbouncer else "SQLALCHEMY_LISTENS_PGBOUNCER_URI"
         listens.init_db_connection(app.config[listens_uri_config])
         if app.config.get("SQLALCHEMY_METABRAINZ_URI", None):
@@ -233,11 +209,6 @@ def create_app(
             _db_conn.close()
             del g._db_conn
 
-        _ts_conn = getattr(g, "_ts_conn", None)
-        if _ts_conn is not None:
-            _ts_conn.close()
-            del g._ts_conn
-
         _listens_conn = getattr(g, "_listens_conn", None)
         if _listens_conn is not None:
             _listens_conn.close()
@@ -252,7 +223,7 @@ def create_app(
     from listenbrainz.webserver.redis_connection import init_redis_connection
     init_redis_connection(app.logger)
 
-    # Timescale connection
+    # Listenstore
     from listenbrainz.webserver.timescale_connection import init_timescale_connection
     init_timescale_connection(app)
 

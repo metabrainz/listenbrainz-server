@@ -9,7 +9,7 @@ from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 
 
 def delete_user(db_conn, user_id: int, created: datetime):
-    """ Delete an account and its listens DB history. Timescale listens are retained.
+    """ Delete an account and its listens DB history.
 
     Args:
         user_id: the LB row ID of the user

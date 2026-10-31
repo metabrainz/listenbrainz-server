@@ -225,7 +225,6 @@ proceeding, run these commands to initialize the databases.
 .. code-block:: bash
 
     ./develop.sh manage init_db --create-db
-    ./develop.sh manage init_ts_db --create-db
     ./develop.sh manage init_listens_db --create-db
 
 Your development environment is now ready. Now, let's actually see ListenBrainz
@@ -276,9 +275,8 @@ Listenbrainz containers
 A listenbrainz development environment contains a number of different containers running
 different services. We provide a small description of each container here:
 
-* ``db``: A PostgreSQL server that contains data about users
+* ``lb_db``: A PostgreSQL server that contains data about users, and their listens in the listens database
 * ``redis``: A redis server to store temporary server data
-* ``timescale``: A PostgreSQL server with the TimescaleDB extension that stores users listens
 * ``rabbitmq``: Used for passing listens between different services
 * ``web``: This is the main ListenBrainz web-only server
 * ``api``: The main ListenBrainz API-only server

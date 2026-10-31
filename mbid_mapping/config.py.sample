@@ -4,9 +4,6 @@
 # Connection to LB database
 SQLALCHEMY_DATABASE_URI = "dbname=listenbrainz user=listenbrainz host=listenbrainz_lb_db_1 port=5432 password=listenbrainz"
 
-# Connection to Timescale LB database
-SQLALCHEMY_TIMESCALE_URI = "dbname=listenbrainz_ts user=listenbrainz_ts host=listenbrainz_lb_db_1 port=5432 password=listenbrainz_ts"
-
 # Connection to the LB listens database, which holds the mapping tables
 SQLALCHEMY_LISTENS_URI = "dbname=listenbrainz_listens user=listenbrainz_listens host=listenbrainz_lb_db_1 port=5432 password=listenbrainz_listens"
 

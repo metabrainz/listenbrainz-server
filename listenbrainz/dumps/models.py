@@ -9,7 +9,7 @@ from pydantic import BaseModel, validator, root_validator
 from sqlalchemy import Engine
 
 from listenbrainz import db
-from listenbrainz.db import timescale, listens as listens_db
+from listenbrainz.db import listens as listens_db
 
 logger = logging.getLogger(__name__)
 
@@ -17,16 +17,13 @@ logger = logging.getLogger(__name__)
 class DumpEngineName(StrEnum):
     """ An enumeration representing different dump engines. """
     lb = "lb"
-    ts = "ts"
     mb = "mb"
     listens = "listens"
 
 
 def get_engine(engine_name: DumpEngineName) -> Engine:
     """ Return the SQLAlchemy engine for the given dump engine name. """
-    if engine_name == DumpEngineName.ts:
-        return timescale.engine
-    elif engine_name == DumpEngineName.lb:
+    if engine_name == DumpEngineName.lb:
         return db.engine
     elif engine_name == DumpEngineName.listens:
         return listens_db.engine

@@ -12,3 +12,8 @@ DUMP_DEFAULT_THREAD_COUNT = 4
 # This value must be incremented after schema changes on tables that are included in the
 # public dump
 SCHEMA_VERSION_CORE = 9
+
+# The schema version of the public timescale dump, which contains the mapping tables of the listens
+# database. Listens are tracked with `listenstore.LISTENS_DUMP_SCHEMA_VERSION`. This value must be
+# incremented after schema changes on tables that are included in the public dump
+SCHEMA_VERSION_TIMESCALE = 7

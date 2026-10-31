@@ -12,10 +12,6 @@ class _TagsDataset(DatabaseDataset):
     def __init__(self):
         super().__init__("tags_dataset", "lb_tag_radio", schema="tags")
 
-    def get_engine(self):
-        # the tag radio table lives in the listens database, not timescale
-        return listens_db.engine
-
     def get_table(self):
         return """
             CREATE TABLE {table} (

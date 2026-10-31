@@ -8,7 +8,7 @@ from listenbrainz.model.utils import generate_username_link
 from listenbrainz.webserver.admin import AdminModelView
 from listenbrainz.background.background_tasks import add_task
 from listenbrainz.db import user as db_user
-from listenbrainz.webserver import create_app, db_conn, ts_conn
+from listenbrainz.webserver import create_app, db_conn
 
 
 class User(db.Model):

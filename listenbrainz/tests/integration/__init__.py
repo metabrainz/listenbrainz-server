@@ -1,5 +1,4 @@
 import json
-import os
 import time
 
 import listenbrainz.db.user as db_user
@@ -9,8 +8,6 @@ from redis import Redis
 
 from listenbrainz.webserver.testing import ServerTestCase, APICompatServerTestCase
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
-
-TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
 
 
 class IntegrationTestCase(ServerTestCase, DatabaseTestCase):

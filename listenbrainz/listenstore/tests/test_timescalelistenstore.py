@@ -2,14 +2,13 @@ import logging
 import random
 from datetime import datetime, timedelta, timezone
 from time import time
-from unittest.mock import patch
 
 import sqlalchemy
 from brainzutils import cache
 from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
-from listenbrainz.db import listens as listens_db, timescale as ts, timescale
+from listenbrainz.db import listens as listens_db
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
@@ -87,7 +86,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
             connection.execute(sqlalchemy.text(query))
             connection.execute(sqlalchemy.text(join_query))
 
-    def test_insert_timescale(self):
+    def test_insert(self):
         count = self._create_test_data(self.testuser_name, self.testuser_id)
         from_ts = datetime.fromtimestamp(1399999999, timezone.utc)
         listens = self.logstore.fetch_listens(user=self.testuser, from_ts=from_ts)
@@ -186,35 +185,6 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(listens[0].data["mbid_mapping"]["release_group_mbid"], '53f80f76-f8af-3558-bfd5-e7221e055c75')
         self.assertEqual(listens[0].data["mbid_mapping"]["recording_mbid"], '2cfad207-3f55-4aec-8120-86cf66e34d59')
 
-    def test_fetch_listens_reads_listens_db(self):
-        """ Test that listens are served from the listens DB and not from timescale """
-        self._create_test_data(self.testuser_name, self.testuser_id)
-        with ts.engine.begin() as connection:
-            connection.execute(text("""
-                INSERT INTO listen (listened_at, created, user_id, recording_msid, data)
-                     VALUES (:listened_at, NOW(), :user_id, :recording_msid, '{}'::jsonb)
-            """), {
-                "listened_at": datetime.fromtimestamp(1400000300, timezone.utc),
-                "user_id": self.testuser_id,
-                "recording_msid": "84b7d3b2-6ca2-4bd6-b7e1-b1d8a6a0a4fd",
-            })
-
-        listens = self.logstore.fetch_listens(user=self.testuser)
-        self.assertEqual(len(listens), 5)
-        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
-        self.assertEqual(
-            self.logstore.get_timestamps_for_user(self.testuser_id)[1],
-            datetime.fromtimestamp(1400000200, timezone.utc)
-        )
-
-        recent = self.logstore.fetch_all_recent_listens_for_users(
-            [self.testuser],
-            min_ts=datetime.fromtimestamp(1399999999, timezone.utc),
-            max_ts=datetime.fromtimestamp(1400000400, timezone.utc),
-        )
-        self.assertEqual(len(recent), 5)
-        self.assertEqual(recent[0].ts_since_epoch, 1400000200)
-
     def test_fetch_recent_listens_with_mapping(self):
         self._create_test_data(self.testuser_name, self.testuser_id)
         self._insert_mapping_metadata("c7a41965-9f1e-456c-8b1d-27c0f0dde280")
@@ -285,8 +255,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
     def test_delete_listens(self):
         self._create_test_data(self.testuser_name, self.testuser_id)
         self.assertEqual(self._get_listen_count(self.testuser_id), 5)
-        with patch.object(timescale.engine, "connect", side_effect=AssertionError("Timescale delete")):
-            self.logstore.delete(self.testuser_id)
+        self.logstore.delete(self.testuser_id)
 
         with listens_db.engine.connect() as connection:
             self.assertEqual(connection.execute(text("SELECT count(*) FROM listen")).scalar(), 0)
@@ -294,11 +263,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
                 "SELECT count(*) FROM deleted_user_listen_history WHERE user_id = :user_id"
             ), {"user_id": self.testuser_id}).scalar(), 1)
         self.assertEqual(self._get_listen_count(self.testuser_id), 0)
-        with timescale.engine.connect() as connection:
-            # Deletion affects only the listens DB; Timescale retains all five listens.
-            self.assertEqual(connection.execute(text("SELECT count(*) FROM listen")).scalar(), 5)
 
-        # reads come from the listens DB, so the deleted history is no longer served
         listens = self.logstore.fetch_listens(user=self.testuser)
         self.assertEqual(listens, [])
         self.assertEqual(self.logstore.get_timestamps_for_user(self.testuser_id), (EPOCH, EPOCH))
@@ -308,15 +273,13 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
         listened_at = datetime.fromtimestamp(1400000050, timezone.utc)
         recording_msid = "c7a41965-9f1e-456c-8b1d-27c0f0dde280"
         with listens_db.engine.connect() as connection:
-            # Ingestion populated both stores before deletion.
             self.assertEqual(connection.execute(text("SELECT count(*) FROM listen")).scalar(), 5)
             created = connection.execute(text(
                 "SELECT created FROM listen WHERE user_id = :user_id AND listened_at = :listened_at"
             ), {"user_id": self.testuser_id, "listened_at": listened_at}).scalar()
-        with patch.object(timescale.engine, "begin", side_effect=AssertionError("Timescale delete")):
-            self.logstore.delete_listen(listened_at, self.testuser_id, recording_msid)
-            delete_listens()
-            delete_listens()
+        self.logstore.delete_listen(listened_at, self.testuser_id, recording_msid)
+        delete_listens()
+        delete_listens()
         with listens_db.engine.connect() as connection:
             self.assertEqual(connection.execute(text("SELECT count(*) FROM listen")).scalar(), 4)
             row = connection.execute(text("SELECT * FROM listen_delete_metadata")).one()
@@ -327,8 +290,6 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
             self.assertEqual(str(row.recording_msid), recording_msid)
         # the second delete_listens run finds nothing pending, so the listen is counted once
         self.assertEqual(self._get_listen_count(self.testuser_id), 4)
-        with timescale.engine.connect() as connection:
-            self.assertEqual(connection.execute(text("SELECT count(*) FROM listen")).scalar(), 5)
 
         listens = self.logstore.fetch_listens(user=self.testuser)
         self.assertEqual(
