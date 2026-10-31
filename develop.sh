@@ -1,7 +1,7 @@
 #!/bin/bash
 
 POSTGRES_LB_URI="postgresql://listenbrainz:listenbrainz@lb_db/listenbrainz"
-SQLALCHEMY_TIMESCALE_URI="postgresql://listenbrainz_ts:listenbrainz_ts@lb_db/listenbrainz_ts"
+SQLALCHEMY_LISTENS_URI="postgresql://listenbrainz_listens:listenbrainz_listens@lb_db/listenbrainz_listens"
 
 if [[ ! -d "docker" ]]; then
     echo "This script must be run from the top level directory of the listenbrainz-server source."
@@ -48,9 +48,9 @@ function open_psql_shell {
         ${POSTGRES_LB_URI}
 }
 
-function open_timescale_shell {
+function open_listens_shell {
     invoke_docker_compose run --rm web psql \
-        ${SQLALCHEMY_TIMESCALE_URI}
+        ${SQLALCHEMY_LISTENS_URI}
 }
 
 function invoke_docker_compose_spark {
@@ -84,9 +84,9 @@ elif [[ "$1" == "redis" ]]; then
 elif [[ "$1" == "psql" ]]; then
     echo "Connecting to postgresql..."
     open_psql_shell
-elif [[ "$1" == "timescale" ]]; then
-    echo "Connecting to timescale..."
-    open_timescale_shell
+elif [[ "$1" == "listens" ]]; then
+    echo "Connecting to the listens database..."
+    open_listens_shell
 elif [[ "$1" == "spark" ]]; then shift
     if [[ "$1" == 'format' ]]; then
         format_namenode
