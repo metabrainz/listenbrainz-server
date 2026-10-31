@@ -61,7 +61,7 @@ def create_mbcanonical(location, use_lb_conn):
     These tables are created by the mapping `canonical-data` management command.
 
     - If canonical-data is called with --use-lb-conn then the canonical metadata and recording redirect tables will
-      be in the listenbrainz timescale database connection
+      be in the listenbrainz listens database connection
     - If called with --use-mb-conn then all tables will be in the musicbrainz database connection.
     - The canonical release redirect table will always be in the musicbrainz database connection.
     """
@@ -181,11 +181,8 @@ def create_full(location: str, threads: int, dump_id: int, do_listen_dump: bool,
         with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
             f.write("%s %s full\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
 
-        # TODO: reinstate the cleanup once the listens migration to the new listens database is
-        #  done. The listen_delete_metadata / deleted_user_listen_history rows are needed to replay
-        #  deletes against the new database until then.
-        # if do_spark_dump:
-        #     ls.cleanup_listen_delete_metadata()
+        if do_spark_dump:
+            ls.cleanup_listen_delete_metadata()
 
 
 @cli.command(name="create_db_dump")
@@ -207,7 +204,8 @@ def create_full(location: str, threads: int, dump_id: int, do_listen_dump: bool,
               help="path to directory to use for creating necessary temporary files during private dumps.")
 def create_db_dump(location: str, location_private: str, threads: int, dump_id: int, do_db_dump: bool,
                    do_timescale_dump: bool, location_temp: str = None, location_private_temp: str = None):
-    """ Create a dump of the public and private data in the postgres and timescale databases.
+    """ Create a dump of the public and private data in the postgres database and the public timescale dump of the
+    mapping tables in the listens database.
 
         The listens, spark and statistics dumps are created separately by the create_full command.
     """
