@@ -128,7 +128,7 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
 
     def insert_to_listenstore(self, data):
         """
-        Inserts a batch of listens to the ListenStore. Timescale will report back as
+        Inserts a batch of listens to the ListenStore. The listens DB will report back as
         to which rows were actually inserted into the DB, allowing us to send those
         down the unique queue.
 
@@ -222,7 +222,6 @@ if __name__ == "__main__":
         use_pool=True,
         pool_size_overrides={
             "db": (1, 1),
-            "ts": (1, 1),
             "listens": (1, 1),
             "meb": (1, 1),
         },
