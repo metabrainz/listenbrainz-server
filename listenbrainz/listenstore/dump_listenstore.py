@@ -12,7 +12,7 @@ import sqlalchemy
 from psycopg2.extras import execute_values
 from sqlalchemy import text
 
-from listenbrainz.db import listens as listens_db, timescale
+from listenbrainz.db import listens as listens_db
 from listenbrainz.db.user import get_all_usernames
 from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.dumps.exporter import zstd_dump, uncompressed_dump
@@ -41,47 +41,6 @@ SPARK_LISTENS_SCHEMA = pa.schema([
     pa.field("artist_credit_mbids", pa.list_(pa.string()), True),
 ])
 
-
-# number of listens to resolve mapping data for at once while writing spark dumps
-SPARK_DUMP_MAPPING_BATCH_SIZE = 10000
-
-SPARK_DUMP_MAPPING_COLUMNS = (
-    "m_recording_mbid", "artist_credit_id", "m_artist_credit_mbids", "m_artist_name",
-    "m_release_mbid", "m_release_name", "m_recording_name",
-)
-
-# can't use coalesce with the listen's own data here because we want all listen data or all mapping data to be used
-# for a given listen, coalesce mapping data with listen data can yield values from different sources for same listen.
-SPARK_DUMP_MAPPING_QUERY = """
-      WITH listens (user_id, recording_msid) AS (
-            SELECT *
-              FROM unnest(%(user_ids)s::INTEGER[], %(recording_msids)s::UUID[])
-      ), listen_with_mbid AS (
-            SELECT l.user_id
-                 , l.recording_msid
-                 -- prefer to use user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
-                 , COALESCE(user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS m_recording_mbid
-              FROM listens l
-         LEFT JOIN mapping.mbid_mapping mm
-                ON l.recording_msid = mm.recording_msid
-         LEFT JOIN mapping.mbid_manual_mapping user_mm
-                ON l.recording_msid = user_mm.recording_msid
-               AND user_mm.user_id = l.user_id
-         LEFT JOIN mapping.mbid_manual_mapping_top other_mm
-                ON l.recording_msid = other_mm.recording_msid
-      )     SELECT l.user_id
-                 , l.recording_msid::TEXT
-                 , l.m_recording_mbid::TEXT
-                 , (artist_data->'artist_credit_id')::INT AS artist_credit_id
-                 , mbc.artist_mbids::TEXT[] AS m_artist_credit_mbids
-                 , mbc.artist_data->>'name' AS m_artist_name
-                 , mbc.release_mbid::TEXT AS m_release_mbid
-                 , mbc.release_data->>'name' AS m_release_name
-                 , mbc.recording_data->>'name' AS m_recording_name
-              FROM listen_with_mbid l
-         LEFT JOIN mapping.mb_metadata_cache mbc
-                ON l.m_recording_mbid = mbc.recording_mbid
-"""
 
 
 class DumpListenStore:
@@ -193,7 +152,7 @@ class DumpListenStore:
                 query, args = self.get_incremental_listens_query(start_time, end_time)
 
             rows_added = 0
-            with timescale.engine.connect() as connection:
+            with listens_db.engine.connect() as connection:
                 curs = connection.execute(sqlalchemy.text(query), args)
                 if curs.rowcount:
                     with open(filename, "w") as out_file:
@@ -251,7 +210,7 @@ class DumpListenStore:
             the path to the dump archive
         """
         full_dump = dump_type == "full"
-        self.log.info('Beginning dump of listens from TimescaleDB...')
+        self.log.info('Beginning dump of listens from the listens DB...')
         archive_name = f'listenbrainz-listens-dump-{dump_id}-{end_time.strftime("%Y%m%d-%H%M%S")}'
         if full_dump:
             archive_name = '{}-full'.format(archive_name)
@@ -279,8 +238,8 @@ class DumpListenStore:
                             max_created: datetime,
                             parquet_file_id=0):
         """
-            Carry out fetching listens from timescale, looking up their mapping in the listens database and
-            then writing them to parquet files.
+            Carry out fetching listens with their mapping from the listens database and then writing them
+            to parquet files.
 
         Args:
             archive_dir: the directory where the listens dump archive should be created
@@ -324,10 +283,15 @@ class DumpListenStore:
         }
 
         query = psycopg2.sql.SQL("""
+        -- can't use coalesce here because we want all listen data or all mapping data to be used for a given
+        -- listen, coalesce mapping data with listen data can yield values from different sources for same listen.
+        -- an alternative is to use to CASE, but need to put case for each column because SQL CASE doesn't allow
+        -- setting multiple columns at once.
+                WITH listen_with_mbid AS (
                      SELECT l.listened_at
                           , l.created::timestamp(3) with time zone AS created -- reduce timestamp resolution to ms
                           , l.user_id
-                          , l.recording_msid::TEXT
+                          , l.recording_msid
                           -- converting jsonb array to text array is non-trivial, so return a jsonb array not text
                           -- here and let psycopg2 adapt it to a python list which is what we want anyway
                           , data->'additional_info'->'artist_mbids' AS l_artist_credit_mbids
@@ -336,20 +300,46 @@ class DumpListenStore:
                           , data->'additional_info'->>'release_mbid' AS l_release_mbid
                           , data->>'track_name' AS l_recording_name
                           , data->'additional_info'->>'recording_mbid' AS l_recording_mbid
+                          -- prefer to use user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
+                          , COALESCE(user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS m_recording_mbid
                        FROM listen l
+                  LEFT JOIN mapping.mbid_mapping mm
+                         ON l.recording_msid = mm.recording_msid
+                  LEFT JOIN mapping.mbid_manual_mapping user_mm
+                         ON l.recording_msid = user_mm.recording_msid
+                        AND user_mm.user_id = l.user_id
+                  LEFT JOIN mapping.mbid_manual_mapping_top other_mm
+                         ON l.recording_msid = other_mm.recording_msid
                       WHERE {where_clause}
+                )    SELECT l.listened_at
+                          , l.created
+                          , l.user_id
+                          , l.recording_msid::TEXT
+                          , l_artist_credit_mbids
+                          , l_artist_name
+                          , l_release_name
+                          , l_release_mbid
+                          , l_recording_name
+                          , l_recording_mbid
+                          , m_recording_mbid::TEXT
+                          , (artist_data->'artist_credit_id')::INT AS artist_credit_id
+                          , mbc.artist_mbids::TEXT[] AS m_artist_credit_mbids
+                          , mbc.artist_data->>'name' AS m_artist_name
+                          , mbc.release_mbid::TEXT AS m_release_mbid
+                          , mbc.release_data->>'name' AS m_release_name
+                          , mbc.recording_data->>'name' AS m_recording_name
+                       FROM listen_with_mbid l
+                  LEFT JOIN mapping.mb_metadata_cache mbc
+                         ON l.m_recording_mbid = mbc.recording_mbid
                    ORDER BY {order_by}
         """).format(where_clause=where_clause, order_by=order_by)
 
         listen_count = 0
         current_listened_at = None
-        conn = timescale.engine.raw_connection()
-        mapping_conn = listens_db.engine.raw_connection()
+        conn = listens_db.engine.raw_connection()
         try:
-            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs, \
-                    mapping_conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as mapping_curs:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs:
                 curs.execute(query, args)
-                rows = self._listens_with_mapping(curs, mapping_curs)
                 while True:
                     t0 = time.monotonic()
                     written = 0
@@ -368,7 +358,7 @@ class DumpListenStore:
                         'artist_credit_mbids': []
                     }
                     while True:
-                        result = next(rows, None)
+                        result = curs.fetchone()
                         if not result:
                             break
 
@@ -430,36 +420,8 @@ class DumpListenStore:
                                   str(round(file_size / (1024 * 1024), 3)))
         finally:
             conn.close()
-            mapping_conn.close()
 
         return parquet_file_id
-
-    @staticmethod
-    def _listens_with_mapping(curs, mapping_curs):
-        """ Yield the listens fetched by curs, adding the mapping columns of each listen.
-
-            The mapping tables and the metadata cache live in the listens database, so they are queried
-            on mapping_curs for each batch of listens. All mapping columns are None for listens that are
-            not mapped or whose recording is not in the metadata cache.
-        """
-        while True:
-            rows = curs.fetchmany(SPARK_DUMP_MAPPING_BATCH_SIZE)
-            if not rows:
-                return
-
-            keys = {(row["user_id"], row["recording_msid"]) for row in rows}
-            user_ids, recording_msids = zip(*keys)
-            mapping_curs.execute(SPARK_DUMP_MAPPING_QUERY, {
-                "user_ids": list(user_ids),
-                "recording_msids": list(recording_msids),
-            })
-            mapping = {(row["user_id"], row["recording_msid"]): row for row in mapping_curs.fetchall()}
-
-            for row in rows:
-                mapped = mapping.get((row["user_id"], row["recording_msid"]))
-                for column in SPARK_DUMP_MAPPING_COLUMNS:
-                    row[column] = mapped[column] if mapped else None
-                yield row
 
     def dump_listens_for_spark(
         self, location, dump_id: int, dump_type: str,
@@ -485,7 +447,7 @@ class DumpListenStore:
         Returns:
             the path to the dump archive
         """
-        self.log.info('Beginning spark dump of listens from TimescaleDB...')
+        self.log.info('Beginning spark dump of listens from the listens DB...')
         full_dump = dump_type == "full"
         archive_name = 'listenbrainz-spark-dump-{dump_id}-{time}'.format(dump_id=dump_id,
                                                                          time=end_time.strftime('%Y%m%d-%H%M%S'))

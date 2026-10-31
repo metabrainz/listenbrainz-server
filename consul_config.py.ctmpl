@@ -106,16 +106,21 @@ SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = ""
 
 # Listens database (plain postgres, listens partitioned by user_id). Writes go here first;
 # deletions and permanent deletion history live here only. Timescale retains its listens.
-{{if service "pgbouncer-listenbrainz-user-listenstore"}}
-{{with index (service "pgbouncer-listenbrainz-user-listenstore") 0}}
-SQLALCHEMY_LISTENS_URI = """postgresql://{{template "KEY" "listens_db_user"}}:{{template "KEY" "listens_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listens_db_name"}}"""
-{{end}}
-{{else if service "listenbrainz-user-listenstore"}}
+# SQLALCHEMY_LISTENS_URI connects directly, for long running jobs like dumps (see bypass_pgbouncer
+# in create_app) and admin commands. Everything else uses SQLALCHEMY_LISTENS_PGBOUNCER_URI.
+{{if service "listenbrainz-user-listenstore"}}
 {{with index (service "listenbrainz-user-listenstore") 0}}
 SQLALCHEMY_LISTENS_URI = """postgresql://{{template "KEY" "listens_db_user"}}:{{template "KEY" "listens_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listens_db_name"}}"""
 {{end}}
 {{else}}
 SQLALCHEMY_LISTENS_URI = "SERVICEDOESNOTEXIST_listenbrainz-user-listenstore"
+{{end}}
+{{if service "pgbouncer-listenbrainz-user-listenstore"}}
+{{with index (service "pgbouncer-listenbrainz-user-listenstore") 0}}
+SQLALCHEMY_LISTENS_PGBOUNCER_URI = """postgresql://{{template "KEY" "listens_db_user"}}:{{template "KEY" "listens_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listens_db_name"}}"""
+{{end}}
+{{else}}
+SQLALCHEMY_LISTENS_PGBOUNCER_URI = SQLALCHEMY_LISTENS_URI
 {{end}}
 
 {{if service "listenbrainz-user-listenstore"}}

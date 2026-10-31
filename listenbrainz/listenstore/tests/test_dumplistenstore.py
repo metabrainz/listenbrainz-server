@@ -5,19 +5,17 @@ import tarfile
 import tempfile
 from datetime import datetime, timezone, timedelta
 from tempfile import TemporaryDirectory
-from unittest.mock import patch
 
 import pyarrow.parquet as pq
-from psycopg2.extras import execute_values
 from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
-from listenbrainz.db import timescale, listens as listens_db
+from listenbrainz.db import listens as listens_db
 from listenbrainz.dumps.exceptions import SchemaMismatchException
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION, LISTEN_MINIMUM_DATE
 from listenbrainz.listenstore.dump_listenstore import DumpListenStore
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
-from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
+from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data, delete_listens
 from listenbrainz.tests.integration import NonAPIIntegrationTestCase
 from listenbrainz.webserver import timescale_connection, redis_connection
 
@@ -43,19 +41,9 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         """
         submit = []
         for listen in listens:
-            submit.append((*listen.to_timescale(), listen.inserted_timestamp))
-
-        query = """INSERT INTO listen (listened_at, user_id, recording_msid, data, created)
-                        VALUES %s
-                   ON CONFLICT (listened_at, user_id, recording_msid)
-                    DO NOTHING
-                """
-
-        conn = timescale.engine.raw_connection()
-        with conn.cursor() as curs:
-            execute_values(curs, query, submit, template=None)
-
-        conn.commit()
+            listened_at, user_id, recording_msid, data = listen.to_timescale()
+            submit.append((listened_at, listen.inserted_timestamp, user_id, recording_msid, data))
+        listens_db.insert(submit)
 
     def test_dump_listens(self):
         self._create_test_data(self.testuser_name, self.testuser_id)
@@ -70,7 +58,6 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         self.assertTrue(os.path.isfile(dump))
         shutil.rmtree(temp_dir)
 
-    @patch("listenbrainz.listenstore.dump_listenstore.SPARK_DUMP_MAPPING_BATCH_SIZE", 2)
     def test_spark_dump_with_mapping(self):
         """ Test that the spark dump uses the mapping from the listens db, preferring the user's manual mapping """
         base = 1500000000
@@ -156,7 +143,7 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         )
         self.assertTrue(os.path.isfile(dump_location))
 
-        self.reset_timescale_db()
+        self.reset_listens_db()
         self.ls.import_listens_dump(dump_location)
         recalculate_all_user_data()
 
@@ -186,7 +173,7 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         )
         self.assertTrue(os.path.isfile(dump_location))
 
-        self.reset_timescale_db()
+        self.reset_listens_db()
         self.ls.import_listens_dump(dump_location)
         recalculate_all_user_data()
 
@@ -197,6 +184,33 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         self.assertEqual(listens[2].ts_since_epoch, base + 3)
         self.assertEqual(listens[3].ts_since_epoch, base + 2)
         self.assertEqual(listens[4].ts_since_epoch, base + 1)
+
+    def test_dump_excludes_deleted_listens(self):
+        """ Test that listens deleted from the listens DB are not dumped """
+        self._create_test_data(self.testuser_name, self.testuser_id)
+        self.ls.delete_listen(
+            datetime.fromtimestamp(1400000050, timezone.utc), self.testuser_id, "c7a41965-9f1e-456c-8b1d-27c0f0dde280"
+        )
+        delete_listens()
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.dumpstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            start_time=LISTEN_MINIMUM_DATE,
+            end_time=datetime.now(timezone.utc) + timedelta(seconds=60),
+            dump_type="full"
+        )
+
+        self.reset_listens_db()
+        self.ls.import_listens_dump(dump_location)
+        recalculate_all_user_data()
+
+        listens = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.fromtimestamp(1400000300, timezone.utc))
+        self.assertEqual(
+            [listen.ts_since_epoch for listen in listens],
+            [1400000200, 1400000150, 1400000100, 1400000000]
+        )
+        shutil.rmtree(temp_dir)
 
     # tests test_full_dump_listen_with_no_created
     # and test_incremental_dumps_listen_with_no_created have been removed because
@@ -216,7 +230,7 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         )
         self.assertTrue(os.path.isfile(dump_location))
 
-        self.reset_timescale_db()
+        self.reset_listens_db()
         self.ls.import_listens_dump(dump_location)
         recalculate_all_user_data()
 
@@ -246,7 +260,7 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         )
         self.assertTrue(os.path.isfile(dump_location))
 
-        self.reset_timescale_db()
+        self.reset_listens_db()
         self.ls.import_listens_dump(dump_location)
         recalculate_all_user_data()
 

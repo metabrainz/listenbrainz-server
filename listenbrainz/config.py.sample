@@ -25,6 +25,7 @@ TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@lb_db/listenbrainz_ts"
 
 # Listens (postgres, user_id partitioned) - migration target and dual-write store
 SQLALCHEMY_LISTENS_URI = "postgresql://listenbrainz_listens:listenbrainz_listens@lb_db/listenbrainz_listens"
+SQLALCHEMY_LISTENS_PGBOUNCER_URI = SQLALCHEMY_LISTENS_URI
 LISTENS_ADMIN_URI = "postgresql://postgres:postgres@lb_db/postgres"
 
 # Server address
