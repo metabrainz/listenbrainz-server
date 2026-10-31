@@ -2053,6 +2053,12 @@
       );
     }
 
+    // The dashboard's legacy inset border inherits the bright body text color.
+    // Replace its bevel with the same quiet divider used by the dark cards.
+    #dashboard .webSocket-box {
+      border-bottom: 1px solid var(--lb-border) !important;
+    }
+
     .graph-tooltip,
     .custom-tooltip-genre-stats,
     .nivo-theme-tooltip,
