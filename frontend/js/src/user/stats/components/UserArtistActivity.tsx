@@ -9,6 +9,7 @@ import { useMediaQuery } from "react-responsive";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
+import { useNivoTheme } from "../../../utils/nivoTheme";
 
 export type UserArtistActivityProps = {
   range: UserStatsAPIRange;
@@ -33,13 +34,8 @@ function CustomTooltip({
   const formattedValue = new Intl.NumberFormat().format(value);
   return (
     <div
-      style={{
-        padding: "10px",
-        background: "white",
-        border: `1px solid ${color}`,
-        borderRadius: "4px",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-      }}
+      className="nivo-theme-tooltip"
+      style={{ padding: "10px", borderColor: color }}
     >
       <strong>
         {id}: {formattedValue}
@@ -52,6 +48,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
   const navigate = useNavigate();
   const isMobile = useMediaQuery({ maxWidth: 767 });
+  const nivoTheme = useNivoTheme();
 
   // Props
   const { user, range } = props;
@@ -296,6 +293,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                     }
                   }}
                   tooltip={tooltipRenderer}
+                  theme={nivoTheme}
                 />
               </div>
             </div>

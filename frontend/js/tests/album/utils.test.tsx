@@ -73,6 +73,17 @@ describe("getStreamingServiceFromURL", () => {
 });
 
 describe("getRelIconLink", () => {
+  it("renders YouTube's white play triangle", () => {
+    render(
+      getRelIconLink("youtube", "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+    );
+
+    expect(screen.getByTestId("youtube-brand-play")).toHaveAttribute(
+      "fill",
+      "#fff"
+    );
+  });
+
   it("names the streaming service in the link title", () => {
     // Before LB-1992 this read "streaming", which told the reader nothing
     // about where the icon led.

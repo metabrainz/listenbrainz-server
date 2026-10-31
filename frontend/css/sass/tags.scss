@@ -27,7 +27,7 @@ $tag-border-radius: $base-border-radius;
     }
   }
   .tag-vote-button {
-    border-left: 1px dashed $gray-100;
+    border-left: 1px solid $gray-100;
     opacity: 0;
     width: 0px;
     transition-duration: 0.3s;

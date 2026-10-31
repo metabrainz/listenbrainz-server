@@ -544,7 +544,7 @@ export default function ImportListens() {
       </div>
       <div className="card">
         <div className="card-body">
-          <form onSubmit={createImport}>
+          <form className="import-listens-form" onSubmit={createImport}>
             <div className="flex flex-wrap" style={{ gap: "1em" }}>
               <div style={{ minWidth: "15em" }}>
                 <label className="form-label" htmlFor="service">
