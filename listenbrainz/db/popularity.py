@@ -7,7 +7,7 @@ from psycopg2.extras import DictCursor, execute_values
 from psycopg2.sql import SQL, Identifier, Composable
 from sqlalchemy import text
 
-from listenbrainz.db import color, listens as listens_db
+from listenbrainz.db import color
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.spark.spark_dataset import DatabaseDataset
 from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata
@@ -35,10 +35,6 @@ class PopularityDataset(DatabaseDataset):
         self.entity = entity
         self.entity_mbid = f"{entity}_mbid"
         self.mlhd = mlhd
-
-    def get_engine(self):
-        # the popularity tables live in the listens database, not timescale
-        return listens_db.engine
 
     def get_table(self):
         return f"""
@@ -95,10 +91,6 @@ class PopularityTopDataset(DatabaseDataset):
         self.entity = entity
         self.entity_mbid = f"{entity}_mbid"
         self.mlhd = mlhd
-
-    def get_engine(self):
-        # the popularity tables live in the listens database, not timescale
-        return listens_db.engine
 
     def get_table(self):
         return f"""

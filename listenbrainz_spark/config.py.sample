@@ -43,10 +43,6 @@ PG_JDBC_URI = ""
 PG_USER = ""
 PG_PASSWORD = ""
 
-TS_JDBC_URI = ""
-TS_USER = ""
-TS_PASSWORD = ""
-
 LB_JDBC_URI = ""
 LB_USER = ""
 LB_PASSWORD = ""
