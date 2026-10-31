@@ -2053,10 +2053,10 @@
       );
     }
 
-    // The dashboard's legacy inset border inherits the bright body text color.
-    // Replace its bevel with the same quiet divider used by the dark cards.
+    // Recent listens already has a divider beside its heading. Suppress the
+    // legacy inset border here so it does not create a second line above it.
     #dashboard .webSocket-box {
-      border-bottom: 1px solid var(--lb-border) !important;
+      border-bottom: 0 !important;
     }
 
     .graph-tooltip,
