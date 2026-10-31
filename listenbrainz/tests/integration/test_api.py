@@ -10,6 +10,7 @@ import requests_mock
 from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
+from listenbrainz.db import listens as listens_db
 import listenbrainz.db.user_relationship as db_user_relationship
 from data.model.external_service import ExternalServiceType
 from listenbrainz.listenstore.timescale_utils import delete_listens
@@ -49,17 +50,6 @@ class APITestCase(ListenAPIIntegrationTestCase):
             query = "INSERT INTO similarity.artist (mbid0, mbid1, score) VALUES %s"
             execute_values(curs, query, similar_artists, template=None)
 
-            curs.execute("DROP TABLE IF EXISTS mapping.mb_artist_metadata_cache")
-            curs.execute("""CREATE TABLE mapping.mb_artist_metadata_cache (
-                                            dirty boolean,
-                                            last_updated timestamp with time zone default now(),
-                                            artist_mbid uuid,
-                                            artist_data jsonb,
-                                            tag_data jsonb,
-                                            release_group_data jsonb)""")
-            query = "INSERT INTO mapping.mb_artist_metadata_cache (dirty, artist_mbid, artist_data, tag_data, release_group_data) VALUES %s"
-            execute_values(curs, query, artist_cache, template=None)
-
             curs.execute("DROP TABLE IF EXISTS popularity.top_recording")
             curs.execute("""CREATE TABLE popularity.top_recording (artist_mbid uuid, recording_mbid uuid,
                                          total_listen_count integer, total_user_count integer)""")
@@ -71,6 +61,19 @@ class APITestCase(ListenAPIIntegrationTestCase):
                                          total_listen_count integer, total_user_count integer)""")
 
             self.ts_conn.connection.commit()
+
+        with self.listens_conn.connection.cursor() as curs:
+            curs.execute("DROP TABLE IF EXISTS mapping.mb_artist_metadata_cache")
+            curs.execute("""CREATE TABLE mapping.mb_artist_metadata_cache (
+                                            dirty boolean,
+                                            last_updated timestamp with time zone default now(),
+                                            artist_mbid uuid,
+                                            artist_data jsonb,
+                                            tag_data jsonb,
+                                            release_group_data jsonb)""")
+            query = "INSERT INTO mapping.mb_artist_metadata_cache (dirty, artist_mbid, artist_data, tag_data, release_group_data) VALUES %s"
+            execute_values(curs, query, artist_cache, template=None)
+            self.listens_conn.connection.commit()
 
     def test_get_listens_invalid_count(self):
         """If the count argument is negative, the API should raise HTTP 400"""
@@ -116,7 +119,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         # send a listen
         ts = int(time.time())
         payload['payload'][0]['listened_at'] = ts
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, wait_for_writer=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -212,7 +215,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         user = db_user.get_or_create(self.db_conn, 1, 'test_order')
         for i in range(3):
             payload['payload'][0]['listened_at'] = ts + (100 * i)
-            response = self.send_data(payload, user, recalculate=True)
+            response = self.send_data(payload, user, wait_for_writer=True)
             self.assert200(response)
             self.assertEqual(response.json['status'], 'ok')
 
@@ -569,7 +572,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         payload['payload'][0]['track_metadata']['release_name'] = '   '
         ts = int(time.time())
         payload['payload'][0]['listened_at'] = ts
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, wait_for_writer=True)
         self.assert200(response)
 
         url = self.custom_url_for('api_v1.get_listens',
@@ -753,7 +756,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
             payload = json.load(f)
         payload["payload"][0]["track_metadata"]["additional_info"]["duration_ms"] = "300000"
 
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, wait_for_writer=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -779,7 +782,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
             payload = json.load(f)
 
         payload['payload'][0]['listened_at'] = 1280258690
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, wait_for_writer=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -829,7 +832,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """ Test mbid fields with [], "", null values are dropped without error """
         with open(self.path_to_data_file('invalid_mbid_listens.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, wait_for_writer=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -1604,8 +1607,18 @@ class ListenAPICachingTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(cache.get(listens_key), None)
 
         delete_listens()
+        with listens_db.engine.connect() as connection:
+            self.assertEqual(connection.execute(text(
+                "SELECT count(*) FROM listen WHERE user_id = :user_id"
+            ), {"user_id": self.user["id"]}).scalar(), 0)
+            self.assertEqual(connection.execute(text(
+                "SELECT status FROM listen_delete_metadata WHERE user_id = :user_id"
+            ), {"user_id": self.user["id"]}).scalar(), "complete")
+        self.mock_fetch_listens.reset_mock()
         response = self.client.get(url)
         self.assert200(response)
+        # Cache invalidation forces a fresh fetch from the listens DB, where the listen is deleted.
+        self.mock_fetch_listens.assert_called_once()
         self.assertEqual(response.json["payload"]["listens"], [])
 
     def test_get_listens_caching_manual_mapping(self):

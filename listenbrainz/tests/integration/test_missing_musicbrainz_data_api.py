@@ -3,7 +3,7 @@ import json
 import listenbrainz.db.user as db_user
 import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 from listenbrainz.tests.integration import IntegrationTestCase
 
 
@@ -23,16 +23,16 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
             missing_musicbrainz_data=UserMissingMusicBrainzDataJson(missing_musicbrainz_data=missing_musicbrainz_data),
             source='cf'
         )
-        self.ts_conn = timescale.engine.connect()
+        self.listens_conn = listens_db.engine.connect()
         self.data = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(
             self.db_conn,
-            self.ts_conn,
+            self.listens_conn,
             user_id=self.user['id'],
             source='cf'
         )
 
     def tearDown(self):
-        self.ts_conn.close()
+        self.listens_conn.close()
         IntegrationTestCase.tearDown(self)
 
     def test_invalid_user(self):

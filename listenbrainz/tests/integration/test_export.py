@@ -21,7 +21,7 @@ from listenbrainz.garage import delete_objects, ensure_bucket, get_garage_client
     get_user_data_export_bucket, list_object_names
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn, listens_conn
 
 
 class ExportTestCase(ListenAPIIntegrationTestCase):
@@ -94,7 +94,7 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
         return client, bucket
 
     def create_mapping_record(self, recording_msid):
-        self.ts_conn.execute(text("""
+        self.listens_conn.execute(text("""
             INSERT INTO mapping.mb_metadata_cache
                     (recording_mbid, recording_id, artist_mbids, artist_ids, release_mbid, release_id, recording_data, artist_data, tag_data, release_data, dirty)
              VALUES (:recording_mbid ::UUID, 1, :artist_mbids ::UUID[], '{1}'::INTEGER[], :release_mbid ::UUID, 1, :recording_data, :artist_data, :tag_data, :release_data, 'f')
@@ -107,14 +107,14 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
             "release_data": json.dumps(self.recording["release_data"]),
             "tag_data": json.dumps(self.recording["tag_data"])
         })
-        self.ts_conn.execute(text("""
-            INSERT INTO mbid_mapping (recording_msid, recording_mbid, match_type)
+        self.listens_conn.execute(text("""
+            INSERT INTO mapping.mbid_mapping (recording_msid, recording_mbid, match_type)
              VALUES (:recording_msid, :recording_mbid, 'exact_match')
         """), {
             "recording_msid": recording_msid,
             "recording_mbid": self.recording["recording_mbid"]
         })
-        self.ts_conn.commit()
+        self.listens_conn.commit()
 
     def send_listens(self):
         with open(self.path_to_data_file('user_export_test.json')) as f:
@@ -310,6 +310,59 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
             client, bucket = self.get_export_storage()
             self.assertEqual(list_object_names(client, bucket), [])
 
+    def test_export_listen_time_range(self):
+        """Requested bounds survive the queue and filter the archive inclusively."""
+        self.temporary_login(self.user['login_id'])
+        self.assert200(self.send_listens())
+        url = self.custom_url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        self.assert200(self.wait_for_query_to_have_items(url, 3, attempts=20, query_string={'count': '3'}))
+        db_feedback.insert(self.db_conn, Feedback(
+            user_id=self.user['id'], recording_mbid=self.recording['recording_mbid'], score=1,
+        ))
+        db_pinned_rec.pin(self.db_conn, WritablePinnedRecording(
+            user_id=self.user['id'], recording_mbid=self.recording['recording_mbid'], blurb_content="A pin",
+        ))
+        cases = [
+            ({'start_time': 1618500100, 'end_time': 1618500100}, [1618500100]),
+            ({'start_time': 1618500100}, [1618500100, 1618500200]),
+            ({'end_time': 1618500100}, [1618500000, 1618500100]),
+            ({'start_time': 1618500201}, []),
+            ({'end_time': 1618499999}, []),
+        ]
+        headers = {'Authorization': f'Token {self.user["auth_token"]}'}
+        for bounds, expected in cases:
+            with self.subTest(bounds=bounds):
+                response = self.client.post('/1/export/', headers=headers, json=bounds)
+                self.assert200(response)
+                export_id = response.json['export_id']
+                self.assertEqual(response.json['start_time'], bounds.get('start_time'))
+                self.assertEqual(response.json['end_time'], bounds.get('end_time'))
+                for _ in range(60):
+                    # Poll via the web route so waiting for the worker does not consume API rate limits.
+                    response = self.client.post(self.custom_url_for('export.download_export_archive', export_id=export_id))
+                    if response.status_code != 404:
+                        break
+                    time.sleep(1)
+                self.assert200(response)
+                with zipfile.ZipFile(BytesIO(response.data)) as archive:
+                    listens = [json.loads(line)['listened_at']
+                               for name in archive.namelist() if name.startswith('listens/')
+                               for line in archive.read(name).splitlines()]
+                    self.assertEqual(sorted(listens), expected)
+                    self.assertIn('feedback.jsonl', archive.namelist())
+                    self.assertIn('pinned_recording.jsonl', archive.namelist())
+                response = self.client.get(f'/1/export/{export_id}', headers=headers)
+                self.assert200(response)
+                self.assertEqual(response.json['status'], 'completed')
+                self.assertEqual(response.json['start_time'], bounds.get('start_time'))
+                self.assertEqual(response.json['end_time'], bounds.get('end_time'))
+                response = self.client.get('/1/export/list', headers=headers)
+                self.assert200(response)
+                completed = next(item for item in response.json if item['export_id'] == export_id)
+                self.assertEqual(completed['start_time'], bounds.get('start_time'))
+                self.assertEqual(completed['end_time'], bounds.get('end_time'))
+                self.assert200(self.client.post(f'/1/export/{export_id}/delete', headers=headers))
+
     def create_export_row(self, filename, status="completed", available_until=None, user=None):
         """ Insert a user data export row directly, as if it had been created by an earlier export. """
         if available_until is None:
@@ -456,7 +509,7 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
             with mock.patch("listenbrainz.background.export.get_garage_client",
                             side_effect=RuntimeError("garage is unavailable")):
                 with self.assertRaises(RuntimeError):
-                    export_user(db_conn, ts_conn, self.user["id"], {"export_id": export_id})
+                    export_user(db_conn, listens_conn, self.user["id"], {"export_id": export_id})
 
         export = self.get_export_row(export_id)
         self.assertEqual("failed", export.status)

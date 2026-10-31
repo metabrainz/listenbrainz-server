@@ -231,22 +231,24 @@
 
   &.horizontal {
     height: unset;
-    width: 100%;
     position: fixed;
-    right: 0;
+    right: $tertiary-nav-vertical-width;
     bottom: 0;
-    left: 0;
-    top: calc(100vh - 120px);
-    padding: 2.5rem 2rem 4rem;
+    top: auto;
     z-index: 50;
     background-color: $white;
     max-height: unset;
+    padding: 3rem;
+    padding-bottom: $brainzplayer-height;
+    width: calc(100% - $sidenav-width - $tertiary-nav-vertical-width);
   }
 
-  @media (max-width: map.get($grid-breakpoints, "lg")) {
+  @media (max-width: $offscreen-sidenav-breakpoint) {
     padding: 1rem;
     &.horizontal {
-      padding-right: 120px; // sidebar button on the right
+      width: 100%;
+      right: 0;
+      padding-right: 90px; // sidebar button on the right
     }
   }
 
@@ -266,7 +268,7 @@
     &.horizontal {
       height: 2px;
       width: 100%;
-      margin-bottom: 40px;
+      margin-bottom: calc($brainzplayer-height / 2 + 5px);
     }
   }
 

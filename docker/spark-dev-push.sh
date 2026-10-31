@@ -12,5 +12,5 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 TAG=${1:-latest}
 
-docker build --tag metabrainz/listenbrainz-spark-base:"$TAG" -f Dockerfile.spark.base . \
+docker build --pull --tag metabrainz/listenbrainz-spark-base:"$TAG" -f Dockerfile.spark.base . \
   && docker push metabrainz/listenbrainz-spark-base

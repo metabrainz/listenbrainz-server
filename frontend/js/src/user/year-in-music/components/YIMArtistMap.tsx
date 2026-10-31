@@ -2,8 +2,8 @@ import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { isEmpty } from "lodash";
 import * as React from "react";
-import Tooltip from "react-tooltip";
 import tinycolor from "tinycolor2";
+import Tooltip from "../../../components/Tooltip";
 import CustomChoropleth from "../../stats/components/Choropleth";
 
 export type YIMArtistMapData = Array<{
@@ -55,14 +55,13 @@ export default function YIMArtistMap(props: YIMArtistMapProps) {
     <div className="" id="user-artist-map" style={{ marginTop: "1.5em" }}>
       <h3 className="text-center">
         What countries are {yourOrUsersName} favorite artists from?{" "}
-        <FontAwesomeIcon
-          icon={faQuestionCircle}
-          data-tip
-          data-for="user-artist-map-helptext"
-          size="xs"
-        />
-        <Tooltip id="user-artist-map-helptext">
-          Click on a country to see more details
+        <Tooltip
+          id="user-artist-map-helptext"
+          tooltip={<>Click on a country to see more details</>}
+        >
+          <span>
+            <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+          </span>
         </Tooltip>
       </h3>
       <div className="graph-container card-bg">

@@ -14,10 +14,9 @@ from listenbrainz.background.migrate_imports import migrate_imports
 from listenbrainz.db import listens as listens_db, timescale as ts, do_not_recommend
 
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
-    update_user_listen_data as ts_update_user_listen_data, \
     add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata,\
-    delete_listens as ts_delete_listens, \
-    refresh_top_manual_mappings as ts_refresh_top_manual_mappings
+    refresh_top_manual_mappings as ts_refresh_top_manual_mappings, \
+    delete_listens as ts_delete_listens
 from listenbrainz.messybrainz import update_msids_from_mapping
 from listenbrainz.metadata_cache.seeder import submit_new_releases_to_cache
 from listenbrainz.troi.daily_jams import run_daily_jams_troi_bot
@@ -124,7 +123,7 @@ TEST_LISTENS_PARTITION_COUNT = 4
 def init_listens_db(force, create_db, partitions):
     """Initializes the user-partitioned listens database.
 
-    Creates the listen table, its hash partitions and its indexes.
+    Creates the listen table, its hash partitions, the mapping tables and their indexes.
     """
     import psycopg2
     from listenbrainz import config
@@ -290,9 +289,6 @@ def init_ts_db(force, create_db):
         print('TS: Insert default rows...')
         res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'insert_default_data.sql'))
 
-        print('TS: Creating views...')
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
-
         print('TS: Creating indexes...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
 
@@ -325,22 +321,13 @@ def set_rate_limits(per_token_limit, per_ip_limit, window_size):
 
 @cli.command(name="recalculate_all_user_data")
 def recalculate_all_user_data():
-    """ Recalculate all user timestamps and listen counts.
+    """ Recalculate all user listen counts in the listens database.
 
-    .. note::
-        **ONLY USE THIS WHEN YOU KNOW WHAT YOU ARE DOING!**
+    Safe to run while listens are being ingested or deleted, only stale users are locked while they are recounted.
     """
     application = webserver.create_app()
     with application.app_context():
         ts_recalculate_all_user_data()
-
-
-@cli.command(name="update_user_listen_data")
-def update_user_listen_data():
-    """ Scans listen table and update listen metadata for all users """
-    application = webserver.create_app()
-    with application.app_context():
-        ts_update_user_listen_data()
 
 
 @cli.command(name="delete_pending_listens")
@@ -353,8 +340,7 @@ def delete_pending_listens():
 
 @cli.command(name="delete_listens")
 def complete_delete_listens():
-    """ Complete all pending listen deletes and also run update script for
-    updating listen metadata since last cron run """
+    """Complete pending listens DB deletions and retain their history."""
     application = webserver.create_app()
     with application.app_context():
         ts_delete_listens()
@@ -422,7 +408,7 @@ def run_daily_jams(create_all):
     method and not a core function of troi.
     """
     with create_app().app_context():
-        run_daily_jams_troi_bot(webserver.db_conn, webserver.ts_conn, create_all)
+        run_daily_jams_troi_bot(webserver.db_conn, create_all)
 
 
 @cli.command()

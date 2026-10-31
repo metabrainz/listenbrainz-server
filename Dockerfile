@@ -1,5 +1,5 @@
-ARG PYTHON_BASE_IMAGE_VERSION=3.13-20250313
-ARG NODE_VERSION=20-alpine
+ARG PYTHON_BASE_IMAGE_VERSION=3.13-20261022
+ARG NODE_VERSION=22.23.4-alpine
 FROM docker.io/metabrainz/python:$PYTHON_BASE_IMAGE_VERSION AS listenbrainz-base
 
 ARG PYTHON_BASE_IMAGE_VERSION
@@ -48,6 +48,7 @@ RUN apt-get update \
 RUN mkdir -p /code/listenbrainz /static
 
 WORKDIR /code/listenbrainz
+RUN pip3 install --no-cache-dir --no-deps --upgrade "pip @ https://files.pythonhosted.org/packages/3f/06/3e4420302363fbb71be3c7f35ce042f54bfca330e3e66b3a2e3c4cca579f/pip-26.2.2-py3-none-any.whl#sha256=fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70"
 COPY requirements.txt /code/listenbrainz/
 RUN pip3 install --no-cache-dir -r requirements.txt
 
@@ -81,7 +82,7 @@ RUN mkdir /code
 WORKDIR /code
 
 COPY package.json package-lock.json /code/
-RUN npm install
+RUN npm ci
 
 COPY webpack.config.js babel.config.js jest.config.js tsconfig.json .eslintrc.js .stylelintrc.js /code/
 
@@ -146,6 +147,18 @@ COPY ./docker/services/spark_reader/consul-template-spark-reader.conf /etc/consu
 COPY ./docker/services/spark_reader/spark_reader.service /etc/service/spark_reader/run
 COPY ./docker/services/spark_reader/spark_reader.finish /etc/service/spark_reader/finish
 RUN touch /etc/service/spark_reader/down
+
+# ClickHouse result consumer
+COPY ./docker/services/clickhouse_result_consumer/consul-template-clickhouse-result-consumer.conf /etc/consul-template-clickhouse-result-consumer.conf
+COPY ./docker/services/clickhouse_result_consumer/clickhouse_result_consumer.service /etc/service/clickhouse_result_consumer/run
+COPY ./docker/services/clickhouse_result_consumer/clickhouse_result_consumer.finish /etc/service/clickhouse_result_consumer/finish
+RUN touch /etc/service/clickhouse_result_consumer/down
+
+# ClickHouse query worker
+COPY ./docker/services/clickhouse_query_worker/consul-template-clickhouse-query-worker.conf /etc/consul-template-clickhouse-query-worker.conf
+COPY ./docker/services/clickhouse_query_worker/clickhouse_query_worker.service /etc/service/clickhouse_query_worker/run
+COPY ./docker/services/clickhouse_query_worker/clickhouse_query_worker.finish /etc/service/clickhouse_query_worker/finish
+RUN touch /etc/service/clickhouse_query_worker/down
 
 # Spotify reader
 COPY ./docker/services/spotify_reader/consul-template-spotify-reader.conf /etc/consul-template-spotify-reader.conf
@@ -213,6 +226,13 @@ COPY ./docker/services/uwsgi/consul-template-uwsgi.conf /etc/consul-template-uws
 COPY ./docker/services/uwsgi/uwsgi.service /etc/service/uwsgi/run
 COPY ./docker/services/uwsgi/uwsgi.finish /etc/service/uwsgi/finish
 RUN touch /etc/service/uwsgi/down
+
+# uwsgi (API)
+COPY ./docker/services/uwsgi_api/uwsgi-api.ini.ctmpl /etc/uwsgi/uwsgi-api.ini.ctmpl
+COPY ./docker/services/uwsgi_api/consul-template-uwsgi-api.conf /etc/consul-template-uwsgi-api.conf
+COPY ./docker/services/uwsgi_api/uwsgi_api.service /etc/service/uwsgi_api/run
+COPY ./docker/services/uwsgi_api/uwsgi_api.finish /etc/service/uwsgi_api/finish
+RUN touch /etc/service/uwsgi_api/down
 
 COPY ./docker/rc.local /etc/rc.local
 

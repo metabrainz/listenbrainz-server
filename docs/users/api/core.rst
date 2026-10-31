@@ -3,6 +3,11 @@ Core
 
 The ListenBrainz server supports the following end-points for submitting and fetching listens.
 
+To retrieve a user's entire listening history, use the :doc:`export API <export>`.
+Do not scrape or paginate through the user's entire history using the listens
+endpoint. Use that endpoint for recent listens, bounded queries, and incremental
+updates after importing an export.
+
 .. autoflask:: listenbrainz.webserver:create_app_rtfd()
    :blueprints: api_v1
    :include-empty-docstring:

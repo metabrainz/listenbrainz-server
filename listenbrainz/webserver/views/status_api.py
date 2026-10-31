@@ -177,7 +177,7 @@ def get_playlists_timestamp():
     last_updated = cache.get(cache_key)
     if last_updated is None:
         last_updated = {}
-        playlists = get_recommendation_playlists_for_user(db_conn, ts_conn, 1)
+        playlists = get_recommendation_playlists_for_user(db_conn, 1)
         if playlists is None or not playlists:
             return last_updated
         for playlist in playlists:

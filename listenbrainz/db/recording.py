@@ -61,7 +61,7 @@ def resolve_canonical_mbids(curs, mbids):
     return _resolve_mbids_helper(curs, query, mbids)
 
 
-def load_recordings_from_mbids(ts_curs, mbids: Iterable[str]) -> dict:
+def load_recordings_from_mbids(listens_curs, mbids: Iterable[str]) -> dict:
     """ Given a list of mbids return a map with mbid as key and the recording info as value.
 
 
@@ -102,7 +102,7 @@ def load_recordings_from_mbids(ts_curs, mbids: Iterable[str]) -> dict:
              , release_data->>'caa_id'
              , release_data->>'caa_release_mbid'
     """
-    results = execute_values(ts_curs, query, [(mbid,) for mbid in mbids], fetch=True)
+    results = execute_values(listens_curs, query, [(mbid,) for mbid in mbids], fetch=True)
     rows = {}
     for row in results:
         data = dict(row)
@@ -124,11 +124,11 @@ def load_recordings_from_mbids(ts_curs, mbids: Iterable[str]) -> dict:
     return rows
 
 
-def load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids):
+def load_recordings_from_mbids_with_redirects(mb_curs, listens_curs, mbids):
     """ Given a list of recording mbids, resolve redirects if any and return metadata for all recordings """
     redirected_mbids, index, inverse_index = resolve_redirect_mbids(mb_curs, "recording", mbids)
-    recording_index = load_recordings_from_mbids(ts_curs, redirected_mbids)
-    _, canonical_index, _ = resolve_canonical_mbids(ts_curs, redirected_mbids)
+    recording_index = load_recordings_from_mbids(listens_curs, redirected_mbids)
+    _, canonical_index, _ = resolve_canonical_mbids(listens_curs, redirected_mbids)
 
     # Finally collate all the results, ensuring that we have one entry with original_recording_mbid for each input
     output = []

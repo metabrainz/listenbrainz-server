@@ -8,7 +8,7 @@ import listenbrainz.db.user_relationship as db_user_relationship
 
 from flask import Blueprint, render_template, request, url_for, jsonify, current_app
 from flask_login import current_user, login_required
-import psycopg2
+import sqlalchemy
 from psycopg2.extras import DictCursor
 
 from listenbrainz import webserver
@@ -19,8 +19,9 @@ from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_f
 from listenbrainz.db import year_in_music as db_year_in_music
 from listenbrainz.db.genre import get_tag_hierarchy_data
 from listenbrainz.db.year_in_music import LAST_FM_FOUNDING_YEAR, MAX_YEAR_IN_MUSIC_YEAR
+from listenbrainz.listenstore.timescale_listenstore import ListenStoreException
 from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
+from listenbrainz.webserver import timescale_connection, db_conn, ts_conn, listens_conn
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
@@ -78,7 +79,7 @@ def profile(user_name):
 
     pin = get_current_pin_for_user(db_conn, user_id=user.id)
     if pin:
-        pin = fetch_track_metadata_for_items(webserver.ts_conn, [pin])[0].to_api()
+        pin = fetch_track_metadata_for_items(webserver.ts_conn, webserver.listens_conn, [pin])[0].to_api()
 
     data = {
         "user": {
@@ -141,7 +142,6 @@ def stats(user_name: str):
 
 
 @user_bp.post("/<mb_username:user_name>/playlists/")
-@web_listenstore_needed
 def playlists(user_name: str):
     """ Show user playlists """
 
@@ -164,12 +164,12 @@ def playlists(user_name: str):
 
     if type == "collaborative":
         user_playlists, playlist_count = get_playlists_collaborated_on(
-            db_conn, ts_conn, user.id, include_private=include_private,
+            db_conn, user.id, include_private=include_private,
             load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=offset
         )
     else:
         user_playlists, playlist_count = get_playlists_for_user(
-            db_conn, ts_conn, user.id, include_private=include_private,
+            db_conn, user.id, include_private=include_private,
             load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=offset
         )
     for playlist in user_playlists:
@@ -187,7 +187,6 @@ def playlists(user_name: str):
 
 
 @user_bp.post("/<mb_username:user_name>/recommendations/")
-@web_listenstore_needed
 def recommendation_playlists(user_name: str):
     """ Show playlists created for user """
 
@@ -214,7 +213,7 @@ def recommendation_playlists(user_name: str):
     }
 
     playlists = []
-    user_playlists = get_recommendation_playlists_for_user(db_conn, ts_conn, user.id)
+    user_playlists = get_recommendation_playlists_for_user(db_conn, user.id)
     for playlist in user_playlists:
         playlists.append(playlist.serialize_jspf())
 
@@ -301,12 +300,12 @@ def taste(user_name: str):
 
     feedback_count = get_feedback_count_for_user(db_conn, user.id, score)
     feedback = get_feedback_for_user(
-        db_conn, ts_conn, user_id=user.id, limit=DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL,
+        db_conn, ts_conn, listens_conn, user_id=user.id, limit=DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL,
         offset=0, score=score, metadata=True
     )
     
     pins = get_pin_history_for_user(db_conn, user_id=user.id, count=25, offset=0)
-    pins = [pin.to_api() for pin in fetch_track_metadata_for_items(ts_conn, pins)]
+    pins = [pin.to_api() for pin in fetch_track_metadata_for_items(ts_conn, listens_conn, pins)]
     pin_count = get_pin_count_for_user(db_conn, user_id=user.id)
 
     data = {
@@ -604,7 +603,7 @@ def embed_pin(user_name):
         )
 
     pin = fetch_track_metadata_for_items(
-        webserver.ts_conn, [pin])[0].to_api()
+        webserver.ts_conn, webserver.listens_conn, [pin])[0].to_api()
 
     metadata = pin.get("track_metadata", {})
     mbid_mapping = metadata.get("mbid_mapping", {})
@@ -677,8 +676,8 @@ def index(user_name, path):
         listen_count = None
         try:
             listen_count = timescale_connection._ts.get_listen_count_for_user(user.id)
-        except psycopg2.OperationalError as err:
-            current_app.logger.error("cannot fetch user listen count: ", str(err))
+        except (sqlalchemy.exc.OperationalError, ListenStoreException) as err:
+            current_app.logger.error("cannot fetch user listen count: %s", str(err))
         og_meta_tags = {
             "title": f"{user_name} on ListenBrainz",
             "description": f'User{f" — {number_readable(listen_count)} listens" if listen_count else ""} — ListenBrainz',
