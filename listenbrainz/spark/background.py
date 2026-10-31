@@ -48,7 +48,7 @@ from listenbrainz.db.popularity import get_all_popularity_datasets
 from listenbrainz.db.similarity import SimilarRecordingsDataset, SimilarArtistsDataset, MlhdSimilarRecordingsDataset
 from listenbrainz.db.similar_users import SimilarUsersDataset
 from listenbrainz.db.tags import TagsDataset
-from listenbrainz.webserver import ts_conn, db_conn
+from listenbrainz.webserver import listens_conn, db_conn
 
 
 logger = logging.getLogger(__name__)
@@ -221,4 +221,4 @@ class BackgroundJobProcessor:
             sentry_sdk.capture_exception(e)
         finally:
             db_conn.rollback()
-            ts_conn.rollback()
+            listens_conn.rollback()
