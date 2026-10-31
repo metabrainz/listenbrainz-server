@@ -10,19 +10,6 @@ CREATE UNIQUE INDEX user_id_ndx_listen_user_metadata ON listen_user_metadata (us
 
 -- View indexes are created in listenbrainz/db/timescale.py
 
-
--- messybrainz
-CREATE UNIQUE INDEX messybrainz_gid_ndx ON messybrainz.submissions (gid);
--- can't use a single index here because some values in these columns are too large and exceed the max
--- index size allowed when used together.
-CREATE INDEX messybrainz_recording_ndx ON messybrainz.submissions (lower(recording));
-CREATE INDEX messybrainz_artist_credit_ndx ON messybrainz.submissions (lower(artist_credit));
-CREATE INDEX messybrainz_release_ndx ON messybrainz.submissions (lower(release));
-CREATE INDEX messybrainz_track_number_ndx ON messybrainz.submissions (lower(track_number));
-CREATE INDEX messybrainz_duration_ndx ON messybrainz.submissions (duration);
-
-CREATE UNIQUE INDEX messybrainz_redirect_gid_ndx ON messybrainz.submissions_redirect (duplicate_msid);
-
 CREATE UNIQUE INDEX spotify_cache_album_spotify_id_idx ON spotify_cache.album (album_id);
 CREATE UNIQUE INDEX spotify_cache_artist_spotify_id_idx ON spotify_cache.artist (artist_id);
 CREATE UNIQUE INDEX spotify_cache_track_spotify_id_idx ON spotify_cache.track (track_id);
