@@ -34,6 +34,9 @@ def read_missing_dump():
         pass
 
 
+TEST_HANDLERS = {"stop": stop, "emit": emit, "read_missing_dump": read_missing_dump}
+
+
 class ClickHouseQueryWorkerTestCase(ServerTestCase):
 
     @classmethod
@@ -57,15 +60,16 @@ class ClickHouseQueryWorkerTestCase(ServerTestCase):
 
         self.consumer = ClickHouseQueryWorker()
         self.consumer.init_rabbitmq_connection()
-        self.addCleanup(self.delete_broker_entities)
-        self.addCleanup(lambda: self.consumer.connection.release())
-        self.addCleanup(self.consumer.reset_producer)
 
-        for name, handler in (("stop", stop), ("emit", emit), ("read_missing_dump", read_missing_dump)):
-            query_map.functions[name] = handler
-            self.addCleanup(query_map.functions.pop, name)
+        query_map.functions.update(TEST_HANDLERS)
 
     def tearDown(self):
+        for name in TEST_HANDLERS:
+            query_map.functions.pop(name)
+        self.consumer.reset_producer()
+        self.consumer.connection.release()
+        self.delete_broker_entities()
+
         db_conn.rollback()
         db_conn.execute(text("DELETE FROM clickhouse_query_jobs"))
         db_conn.commit()

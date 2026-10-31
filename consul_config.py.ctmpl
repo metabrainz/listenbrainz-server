@@ -352,3 +352,23 @@ GARAGE_USER_DATA_IMPORT_BUCKET = '''{{template "KEY" "garage/user_data_import_bu
 NAVIDROME_ENCRYPTION_KEY = '''{{template "KEY" "navidrome/encryption_key"}}'''
 
 BACKGROUND_TASKS_SLEEP_TIME = 5
+
+# ClickHouse connection settings
+{{if service "clickhouse-listenbrainz"}}
+{{with index (service "clickhouse-listenbrainz") 0}}
+CLICKHOUSE_HOST = "{{.Address}}"
+CLICKHOUSE_PORT = {{.Port}}
+{{end}}
+{{else}}
+CLICKHOUSE_HOST = "SERVICEDOESNOTEXIST_clickhouse-listenbrainz"
+CLICKHOUSE_PORT = "SERVICEDOESNOTEXIST_clickhouse-listenbrainz"
+{{end}}
+CLICKHOUSE_DATABASE = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/clickhouse_database" (env "DEPLOY_ENV")) "default" }}'''
+CLICKHOUSE_USERNAME = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/clickhouse_username" (env "DEPLOY_ENV")) "default" }}'''
+CLICKHOUSE_PASSWORD = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/clickhouse_password" (env "DEPLOY_ENV")) "" }}'''
+
+# FTP settings for dump download
+FTP_SERVER_URI = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/ftp_server_uri" (env "DEPLOY_ENV")) "ftp.eu.metabrainz.org" }}'''
+FTP_LISTENS_DIR = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/ftp_listens_dir" (env "DEPLOY_ENV")) "/pub/musicbrainz/listenbrainz/" }}'''
+# A full listen dump is hundreds of GB: a volume with room for it, not the container's /tmp
+CLICKHOUSE_DUMP_DOWNLOAD_DIR = '''{{template "KEY" "clickhouse_dump_download_dir"}}'''

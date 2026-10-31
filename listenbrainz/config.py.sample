@@ -259,3 +259,17 @@ FUNKWHALE_CALLBACK_URL = f'{SERVER_ROOT_URL}/settings/music-services/funkwhale/c
 NAVIDROME_ENCRYPTION_KEY = ""
 
 BACKGROUND_TASKS_SLEEP_TIME = 1
+
+# ClickHouse connection settings ("clickhouse" when using the docker compose clickhouse profile)
+CLICKHOUSE_HOST = "clickhouse"
+CLICKHOUSE_PORT = 8123
+CLICKHOUSE_DATABASE = "default"
+CLICKHOUSE_USERNAME = "listenbrainz"
+CLICKHOUSE_PASSWORD = "listenbrainz"
+
+# FTP settings for dump download
+FTP_SERVER_URI = "ftp.eu.metabrainz.org"
+FTP_LISTENS_DIR = "/pub/musicbrainz/listenbrainz/"
+# Where the ClickHouse query worker downloads listen dumps, None for the system temp dir.
+# A full dump is hundreds of GB: point this at a volume with room for it.
+CLICKHOUSE_DUMP_DOWNLOAD_DIR = None
