@@ -26,7 +26,7 @@ from sqlalchemy.pool import QueuePool
 
 from listenbrainz.webserver import load_config
 from listenbrainz import db
-from listenbrainz.db import timescale as ts, listens as listens_db
+from listenbrainz.db import listens as listens_db
 
 register_query(ArtistCountryFromArtistMBIDQuery())
 register_query(ArtistCreditIdFromArtistMBIDQuery())
@@ -55,13 +55,6 @@ init_sentry(app, "DATASETS_SENTRY_DSN")
 # pgbouncer client churn low without holding many idle slots.
 db.init_db_connection(
     app.config["SQLALCHEMY_DATABASE_URI"],
-    poolclass=QueuePool,
-    pool_size=2,
-    max_overflow=2,
-    pool_pre_ping=True,
-)
-ts.init_db_connection(
-    app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"],
     poolclass=QueuePool,
     pool_size=2,
     max_overflow=2,

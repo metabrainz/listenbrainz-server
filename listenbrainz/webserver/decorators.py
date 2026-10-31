@@ -58,8 +58,8 @@ def crossdomain(f):
 
 def api_listenstore_needed(func):
     """
-        This API decorator checks to see if timescale and the listens DB are
-        online (by having a DB URI) and if not, it raises APIServiceUnavailable.
+        This API decorator checks to see if the listenstore is online (the listens
+        DB has a DB URI and LISTENSTORE_UP is set) and if not, it raises APIServiceUnavailable.
     """
     @wraps(func)
     def decorator(*args, **kwargs):
@@ -74,8 +74,8 @@ def api_listenstore_needed(func):
 
 def web_listenstore_needed(func):
     """
-        This web decorator checks to see if timescale and the listens DB are
-        online (by having a DB URI) and if not, it redirects to an error page telling the user
+        This web decorator checks to see if the listenstore is online (the listens
+        DB has a DB URI and LISTENSTORE_UP is set) and if not, it redirects to an error page telling the user
         that the listenstore is offline.
     """
     @wraps(func)
