@@ -97,18 +97,18 @@ MusicBrainz" feature from the listen card. A few notes about this:
 ListenBrainz data infrastructure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ListenBrainz project makes use of three major types of databases: Postgres/Timescale, Spark and CouchDB.
-Postgres is our primary workhorse that serves user data (accounts, followers, likes/hates, etc). Timescale
-(an extended version of Postgres) is used to store Listens and Playlists. Postgres and Timescale are fantastic
-tools for providing a specific piece of information quickly (e.g which users does this a user follow).
-However Postgres/Timescale are not great for inserting large amounts of data into the database each day – it
+The ListenBrainz project makes use of three major types of databases: Postgres, Spark and CouchDB.
+Postgres is our primary workhorse that serves user data (accounts, followers, likes/hates, etc), and a separate
+Postgres database partitioned by user stores Listens. Postgres is a fantastic
+tool for providing a specific piece of information quickly (e.g which users does this a user follow).
+However Postgres is not great for inserting large amounts of data into the database each day – it
 slows everything down for everyone. So we store the computed user listening statistics in CouchDB, which is
 suitable for ingesting large volumes of data and serving it for a day, before it is replaced with the next
 iteration of the data.
 
 Finally, we have Spark, which is a batch processing system. Spark is designed to work with large datasets in a
 batch fashion, where the data for *all* users might be processed in one batch task. Spark works with huge amounts
-of data in one go, which is very distinct from our use of Postgres/Timescale and CouchDB.
+of data in one go, which is very distinct from our use of Postgres and CouchDB.
 
 All of the tools we use are excellent open source tools. Each does a fantastic job, at the tasks they were
 designed for. There is no one open source solution for all of our needs, so we shuffle data from one system to
