@@ -82,8 +82,8 @@
     {% else %}
         {# wood — original production placement, designed for a 750-unit canvas: rotate about the origin, then scale to the 1000-unit canvas #}
         {{ render_lp_image(89, 318, 195, 195, "scale(1.333333) rotate(6.1)", images[2]) }}
-        {{ render_lp_image(17, 223, 193, 193, "scale(1.333333) rotate(-22.4)", images[1]) }}
-        {{ render_lp_image(189, 240, 189, 189, "scale(1.333333) rotate(-4)", images[0]) }}
+        {{ render_lp_image(19, 225, 189, 184, "scale(1.333333) rotate(-22.2)", images[1]) }}
+        {{ render_lp_image(194.0, 242.6, 195.0, 189.7, "scale(1.333333) rotate(-4.9) skewX(-2.6)", images[0]) }}
         {{ render_lp_image(404, 480, 198, 198, "scale(1.333333) rotate(-11.9)", images[4]) }}
         {{ render_lp_image(385, 488, 202, 203, "scale(1.333333) rotate(2.2)", images[3]) }}
     {% endif %}
