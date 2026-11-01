@@ -14,10 +14,13 @@ export interface LBRadioResponse {
   payload: { jspf: JSPFObject; feedback: string[] };
 }
 
+export type MusicBrainzCollectionEntityType = "recording" | "release";
+
 export type MusicBrainzCollectionSummary = {
   mbid: string;
   name: string;
   public: boolean;
+  entity_type: MusicBrainzCollectionEntityType;
   item_count: number;
 };
 
@@ -38,16 +41,26 @@ export type MusicBrainzCollectionTrack = {
   }> | null;
 };
 
+export type MusicBrainzCollectionReleaseItem = {
+  release_mbid: string;
+  title: string | null;
+  artist_credit_name: string | null;
+  caa_id?: number | null;
+  caa_release_mbid?: string | null;
+};
+
 export type MusicBrainzCollectionDetailResponse = {
   collection: {
     mbid: string;
     name: string;
     public: boolean;
+    entity_type: MusicBrainzCollectionEntityType;
   };
   track_count: number;
   count: number;
   offset: number;
   tracks: MusicBrainzCollectionTrack[];
+  items: MusicBrainzCollectionReleaseItem[];
   cover_art?: string | null;
 };
 

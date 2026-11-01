@@ -82,7 +82,7 @@ export default NiceModal.create(() => {
         >
           {!isLoading && collections.length === 0 ? (
             <p className="text-center text-muted mb-0">
-              No recording collections found
+              No recording or release collections found
             </p>
           ) : (
             collections.map((collection) => (
@@ -95,7 +95,10 @@ export default NiceModal.create(() => {
               >
                 <div style={{ fontWeight: 600 }}>{collection.name}</div>
                 <div className="text-muted">
-                  {collection.item_count} recordings
+                  {collection.item_count}{" "}
+                  {collection.entity_type === "release"
+                    ? "releases"
+                    : "recordings"}
                 </div>
               </button>
             ))
