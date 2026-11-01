@@ -6,11 +6,10 @@ import click
 import orjson
 from click import UsageError
 from dateutil.relativedelta import relativedelta, MO
-from kombu import Connection
 from kombu.entity import PERSISTENT_DELIVERY_MODE, Exchange
 
+from listenbrainz.rabbitmq import create_rabbitmq_connection
 from listenbrainz.troi.weekly_playlists import get_users_for_weekly_playlists
-from listenbrainz.utils import get_fallback_connection_name
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.webserver import create_app
 
@@ -69,16 +68,9 @@ def send_request_to_spark_cluster(query, **params):
     app = create_app()
     with app.app_context():
         message = _prepare_query_message(query, **params)
-        connection = Connection(
-            hostname=app.config["RABBITMQ_HOST"],
-            userid=app.config["RABBITMQ_USERNAME"],
-            port=app.config["RABBITMQ_PORT"],
-            password=app.config["RABBITMQ_PASSWORD"],
-            virtual_host=app.config["RABBITMQ_VHOST"],
-            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
-        )
+        connection = create_rabbitmq_connection(app.config)
         producer = connection.Producer()
-        spark_request_exchange = Exchange(app.config["SPARK_REQUEST_EXCHANGE"], "fanout", durable=False)
+        spark_request_exchange = Exchange(app.config["SPARK_REQUEST_EXCHANGE"], "fanout", durable=True)
         producer.publish(
             message,
             routing_key="",

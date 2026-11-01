@@ -1,4 +1,6 @@
-from flask import Blueprint, request, redirect, render_template, url_for, session, current_app
+from urllib.parse import urlparse
+
+from flask import Blueprint, request, redirect, url_for, session, current_app
 from flask_login import login_user, logout_user, login_required
 from markupsafe import Markup
 
@@ -8,17 +10,29 @@ from listenbrainz.webserver import flash, db_conn
 import listenbrainz.db.user as db_user
 import datetime
 
-from listenbrainz.webserver.login.provider import MusicBrainzAuthSessionError, MusicBrainzAuthNoEmailError
+from listenbrainz.webserver.login.provider import MusicBrainzAuthSessionError
+from listenbrainz.webserver.utils import EMAIL_REQUIRED_BLOG_URL, METABRAINZ_PROFILE_URL
 
 login_bp = Blueprint('login', __name__)
 
 
-@login_bp.get('/')
-@web_musicbrainz_needed
-@web_listenstore_needed
-@login_forbidden
-def index():
-    return render_template('index.html')
+def _sanitize_next_url(next_url):
+    """ Only allow redirecting to urls on this server after login, otherwise the login
+    endpoint could be used to send users to another site. """
+    if not next_url:
+        return None
+    parsed = urlparse(next_url)
+    if parsed.netloc:
+        if parsed.scheme and parsed.scheme not in ("http", "https"):
+            return None
+        allowed_hosts = {urlparse(request.host_url).netloc, urlparse(current_app.config["SERVER_ROOT_URL"]).netloc}
+        return next_url if parsed.netloc in allowed_hosts else None
+    # urlparse finds no netloc in "//evil.com", "////evil.com" or "/\evil.com" but browsers
+    # normalize backslashes to slashes and collapse the leading slashes, so all three send
+    # the user to another host. Only a single leading slash is safe.
+    if not next_url.startswith("/") or next_url[1:2] in ("/", "\\"):
+        return None
+    return next_url
 
 
 @login_bp.get('/musicbrainz/')
@@ -26,8 +40,9 @@ def index():
 @web_listenstore_needed
 @login_forbidden
 def musicbrainz():
-    session['next'] = request.args.get('next')
-    return redirect(provider.get_authentication_uri())
+    session["next"] = _sanitize_next_url(request.args.get("next"))
+    login_hint = request.args.get("login_hint")
+    return redirect(provider.get_authentication_uri(login_hint=login_hint))
 
 
 @login_bp.get('/musicbrainz/post/')
@@ -37,32 +52,30 @@ def musicbrainz():
 def musicbrainz_post():
     """Callback endpoint."""
 
-    no_email_warning = Markup('You have not provided an email address. Please provide an '
-                              '<a href="https://musicbrainz.org/account/edit">email address</a> '
-                              'and make sure you verify the email before proceeding.')
-    blog_link = Markup('Read this <a href="https://blog.metabrainz.org/?p=8915">blog post</a> '
-                       'to understand why we need your email. You can provide us with an email on your '
-                       '<a href="https://musicbrainz.org/account/edit">MusicBrainz account</a> page.')
+    no_email_warning = Markup(
+        'Your MetaBrainz account does not have a verified email address. '
+        'Please check your inbox for a verification email, or go to your '
+        f'<a href="{METABRAINZ_PROFILE_URL}">MetaBrainz profile page</a> to verify your email '
+        'before submitting listens or connecting music services. '
+        f'Read this <a href="{EMAIL_REQUIRED_BLOG_URL}">blog post</a> '
+        'to understand why we need your email.'
+    )
 
     if provider.validate_post_login():
         try:
             user = provider.get_user()
-            if current_app.config["REJECT_NEW_USERS_WITHOUT_EMAIL"] and not user["email"]:
-                # existing user without email, show a warning
-                flash.warning(no_email_warning + 'to submit listens. ' + blog_link)
+            if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
+                flash.warning(no_email_warning)
 
             db_user.update_last_login(db_conn, user["musicbrainz_id"])
             login_user(User.from_dbrow(user),
                        remember=True,
                        duration=datetime.timedelta(current_app.config['SESSION_REMEMBER_ME_DURATION']))
-            next = session.get('next')
+            next = _sanitize_next_url(session.get('next'))
             if next:
                 return redirect(next)
         except MusicBrainzAuthSessionError:
             flash.error("Login failed.")
-        except MusicBrainzAuthNoEmailError:
-            # new user without email tried to create an account
-            flash.error(no_email_warning + 'before creating a ListenBrainz account. ' + blog_link)
     else:
         flash.error("Login failed.")
     return redirect(url_for('index.index_pages', path=''))

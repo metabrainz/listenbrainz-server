@@ -1,4 +1,5 @@
 @use "sass:color";
+$release-card-width: 12em;
 
 .release-card-container {
   display: flex;
@@ -6,9 +7,9 @@
 
   .release-item {
     position: relative;
-    width: fit-content;
-    height: fit-content;
-    aspect-ratio: 1;
+    // Reserve the cover-art space while the lazy image replaces its placeholder.
+    width: $release-card-width;
+    height: $release-card-width;
   }
 
   .release-information {
@@ -125,8 +126,8 @@
   }
 
   .release-coverart {
-    width: 12em;
-    height: 12em;
+    width: $release-card-width;
+    height: $release-card-width;
     border-radius: 8px;
     user-select: none;
     aspect-ratio: 1;
@@ -141,7 +142,7 @@
 
   .name-type-container {
     margin-top: 0.5rem;
-    width: 12em;
+    width: $release-card-width;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -166,7 +167,7 @@
   }
 
   .release-artist {
-    width: 12em;
+    width: $release-card-width;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;

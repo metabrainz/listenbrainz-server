@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 from listenbrainz.messybrainz import update_msids_from_mapping
 from listenbrainz.tests.integration import IntegrationTestCase
 
@@ -134,10 +134,10 @@ class MsidUpdaterTestCase(IntegrationTestCase):
             }
         ]
         mapping_query = """
-            INSERT INTO mbid_mapping (recording_msid, recording_mbid, match_type)
+            INSERT INTO mapping.mbid_mapping (recording_msid, recording_mbid, match_type)
                  VALUES (:recording_msid, :recording_mbid, :match_type)
         """
-        with timescale.engine.begin() as conn:
+        with listens_db.engine.begin() as conn:
             for item in mapping:
                 conn.execute(text(mapping_query), {
                     "recording_msid": item["recording_msid"],

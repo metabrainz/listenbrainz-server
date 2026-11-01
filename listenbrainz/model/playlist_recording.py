@@ -5,7 +5,6 @@ from listenbrainz.webserver.admin import AdminModelView
 
 
 class PlaylistRecording(db.Model):
-    __bind_key__ = "timescale"
     __tablename__ = "playlist_recording"
     __table_args__ = {"schema": "playlist"}
 

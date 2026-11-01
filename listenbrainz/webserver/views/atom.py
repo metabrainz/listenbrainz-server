@@ -3,16 +3,15 @@ from feedgen.feed import FeedGenerator
 from flask import Blueprint, Response, current_app, request, render_template, url_for
 import listenbrainz.db.user_relationship as db_user_relationship
 from listenbrainz.db.model.user_timeline_event import UserTimelineEventType
-from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
+from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed, api_listens_db_needed
 from brainzutils.ratelimit import ratelimit
 import listenbrainz.db.user as db_user
-from listenbrainz.webserver import db_conn, timescale_connection
+from listenbrainz.webserver import db_conn, ts_conn, timescale_connection, API_PREFIX
 from listenbrainz.webserver.views.api_tools import (
     _parse_int_arg,
     get_non_negative_param,
     is_valid_uuid,
 )
-from listenbrainz.webserver import db_conn, ts_conn, API_PREFIX
 from listenbrainz.db.fresh_releases import get_sitewide_fresh_releases
 from listenbrainz.db.fresh_releases import get_fresh_releases as db_get_fresh_releases
 from data.model.common_stat import StatisticsRange
@@ -183,18 +182,17 @@ def get_listens(user_name):
     if user is None:
         return NotFound("User not found")
 
-    minutes = request.args.get("minutes", DEFAULT_MINUTES_OF_LISTENS)
-    if minutes:
-        try:
-            minutes = int(minutes)
-        except ValueError:
-            return BadRequest("Invalid value for minutes")
+    minutes = request.args.get("minutes") or DEFAULT_MINUTES_OF_LISTENS
+    try:
+        minutes = int(minutes)
+    except ValueError:
+        return BadRequest("Invalid value for minutes")
     if minutes < 1 or minutes > MAX_MINUTES_OF_LISTENS:
         return BadRequest("Value of minutes is out of range")
 
     to_ts = datetime.now()
     from_ts = to_ts - timedelta(minutes=minutes)
-    listens, _, _ = timescale_connection._ts.fetch_listens(
+    listens = timescale_connection._ts.fetch_listens(
         user, from_ts=from_ts, to_ts=to_ts, limit=MAX_ITEMS_PER_GET
     )
     
@@ -670,7 +668,7 @@ def get_recording_stats(user_name):
 
 @atom_bp.get("/playlist/<playlist_mbid>")
 @crossdomain
-@api_listenstore_needed
+@api_listens_db_needed
 @ratelimit()
 def get_playlist_recordings(playlist_mbid):
     """
@@ -685,7 +683,7 @@ def get_playlist_recordings(playlist_mbid):
     if not is_valid_uuid(playlist_mbid):
         return BadRequest("Invalid playlist MBID")
 
-    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
+    playlist = db_playlist.get_by_mbid(db_conn, playlist_mbid, True)
 
     if playlist is None:
         return NotFound("Playlist not found")
@@ -742,7 +740,7 @@ def get_playlist_recordings(playlist_mbid):
 
 @atom_bp.get("/user/<mb_username:user_name>/recommendations")
 @crossdomain
-@api_listenstore_needed
+@api_listens_db_needed
 @ratelimit()
 def get_recommendation(user_name):
     """
@@ -767,7 +765,7 @@ def get_recommendation(user_name):
         return BadRequest("Invalid type")
 
     playlists = db_playlist.get_recommendation_playlists_for_user(
-        db_conn, ts_conn, user["id"]
+        db_conn, user["id"]
     )
 
     playlist = next(
@@ -787,7 +785,7 @@ def get_recommendation(user_name):
             status=204, response="Recommedation for the user haven't been generated."
         )
         
-    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist.mbid, True)
+    playlist = db_playlist.get_by_mbid(db_conn, playlist.mbid, True)
 
     fetch_playlist_recording_metadata(playlist)
 
@@ -961,7 +959,7 @@ def get_cover_art_custom_stats(user_name):
         return BadRequest(f"Invalid range value: {range}")
 
     try:
-        custom_name = request.args.get("custome_name", "designer-top-5")
+        custom_name = request.args.get("custom_name", "designer-top-5")
         image_size = int(request.args.get("image_size", 750))
     except ValueError:
         return BadRequest("Image size must be an integer.")

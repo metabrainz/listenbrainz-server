@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 
 import psycopg2
 import orjson
-from brainzutils.musicbrainz_db import engine as mb_engine
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, request, jsonify, current_app
 
@@ -14,7 +13,7 @@ from listenbrainz.db.lb_radio_artist import lb_radio_artist
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import listens_importer, tags
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
+from listenbrainz.listenstore.timescale_listenstore import ListenStoreException
 from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.webserver.decorators import crossdomain
@@ -77,7 +76,7 @@ def submit_listen():
     :resheader Content-Type: *application/json*
     """
     user = validate_auth_header(fetch_email=True, scopes=["listenbrainz:submit-listens"])
-    if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
+    if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
         raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
 
     if user['is_paused']:
@@ -587,7 +586,7 @@ def delete_listen():
         timescale_connection._ts.delete_listen(listened_at=listened_at,
                                                recording_msid=recording_msid, user_id=user["id"])
         invalidate_user_listen_caches(user["id"])
-    except TimescaleListenStoreException as e:
+    except ListenStoreException as e:
         current_app.logger.error("Cannot delete listen for user: %s" % str(e))
         raise APIServiceUnavailable(
             "We couldn't delete the listen. Please try again later.")
@@ -644,7 +643,7 @@ def get_playlists_for_user(playlist_user_name):
     include_private = True if user and user["id"] == playlist_user["id"] else False
     tag_param = request.args.get("tag")
     tags = tag_param.split(",") if tag_param else None
-    playlists, playlist_count = db_playlist.get_playlists_for_user(db_conn, ts_conn, playlist_user["id"],
+    playlists, playlist_count = db_playlist.get_playlists_for_user(db_conn, playlist_user["id"],
                                                                    include_private=include_private,
                                                                    load_recordings=False, count=count, offset=offset,
                                                                    tags=tags, include_tags=True)
@@ -678,7 +677,7 @@ def get_playlists_created_for_user(playlist_user_name):
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
     playlists, playlist_count = db_playlist.get_playlists_created_for_user(
-        db_conn, ts_conn, playlist_user["id"], load_recordings=False, count=count, offset=offset,
+        db_conn, playlist_user["id"], load_recordings=False, count=count, offset=offset,
         tags=request.args.get("tag").split(",") if request.args.get("tag") else None,
         include_tags=True,
     )
@@ -715,7 +714,7 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
 
     # TODO: This needs to be passed to the DB layer
     include_private = True if user and user["id"] == playlist_user["id"] else False
-    playlists, playlist_count = db_playlist.get_playlists_collaborated_on(db_conn, ts_conn,
+    playlists, playlist_count = db_playlist.get_playlists_collaborated_on(db_conn,
                                                                           playlist_user["id"],
                                                                           include_private=include_private,
                                                                           load_recordings=False,
@@ -730,7 +729,6 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
 @api_bp.get("/user/<playlist_user_name>/playlists/recommendations")
 @crossdomain
 @ratelimit()
-@api_listenstore_needed
 def user_recommendations(playlist_user_name):
     """
     Fetch recommendation playlist metadata in JSPF format without recordings for playlist_user_name.
@@ -746,14 +744,13 @@ def user_recommendations(playlist_user_name):
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
-    playlists = db_playlist.get_recommendation_playlists_for_user(db_conn, ts_conn, playlist_user.id)
+    playlists = db_playlist.get_recommendation_playlists_for_user(db_conn, playlist_user.id)
     return jsonify(serialize_playlists(playlists, len(playlists), 0, 0))
 
 
 @api_bp.get("/user/<playlist_user_name>/playlists/search")
 @crossdomain
 @ratelimit()
-@api_listenstore_needed
 def search_user_playlist(playlist_user_name):
     """
     Search for playlists associated with a user by name or description.
@@ -800,7 +797,7 @@ def search_user_playlist(playlist_user_name):
 
     viewer_id = user["id"] if user else None
     playlists, playlist_count = db_playlist.search_playlists_for_user(
-        db_conn, ts_conn, playlist_user["id"], query, count, offset,
+        db_conn, playlist_user["id"], query, count, offset,
         viewer_id=viewer_id, include_global=include_global,
         playlist_type=playlist_type, tags=tags,
         include_tags=True,
@@ -834,7 +831,7 @@ def get_playlist_tags_for_user(playlist_user_name):
     include_private = True if user and user["id"] == playlist_user["id"] else False
     collaborated_only = parse_boolean_arg("collaborator", False)
     tags = db_playlist.get_tags_for_user(
-        ts_conn,
+        db_conn,
         playlist_user["id"],
         include_private=include_private,
         collaborated_only=collaborated_only,

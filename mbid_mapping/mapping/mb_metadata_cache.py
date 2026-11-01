@@ -709,7 +709,7 @@ def cleanup_mbid_mapping_table():
      because those have been merged (redirects) or deleted from MB and flag such msids
      to be re-mapped by the mbid mapping writer."""
     query = """
-        UPDATE mbid_mapping mm
+        UPDATE mapping.mbid_mapping mm
            SET last_updated = 'epoch'
          WHERE match_type != 'no_match'
            AND NOT EXISTS(
@@ -719,7 +719,7 @@ def cleanup_mbid_mapping_table():
                )
     """
     log("cleanup_mbid_mapping_table running")
-    with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as lb_conn, lb_conn.cursor() as lb_curs:
+    with psycopg2.connect(config.SQLALCHEMY_LISTENS_URI) as lb_conn, lb_conn.cursor() as lb_curs:
         lb_curs.execute(query)
         log(f"mbid mapping: invalidated {lb_curs.rowcount} rows")
         lb_conn.commit()

@@ -31,7 +31,7 @@ import listenbrainz.db as db
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
-from listenbrainz.db import timescale
+from listenbrainz.db import timescale, listens as listens_db
 from listenbrainz.db.dump_entry import add_dump_entry, get_dump_entries
 from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.db.testing import DatabaseTestCase
@@ -59,9 +59,11 @@ class DumpTestCase(DatabaseTestCase):
         }
         self.app = create_app()
         self.ts_conn = timescale.engine.connect()
+        self.listens_conn = listens_db.engine.connect()
 
     def tearDown(self):
         self.ts_conn.close()
+        self.listens_conn.close()
         shutil.rmtree(self.tempdir)
         super().tearDown()
 
@@ -132,6 +134,7 @@ class DumpTestCase(DatabaseTestCase):
         # create a user
         with self.app.app_context():
             one_id = db_user.create(self.db_conn, 1, 'test_user')
+            db_user.agree_to_gdpr(self.db_conn, 'test_user')
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
@@ -143,7 +146,7 @@ class DumpTestCase(DatabaseTestCase):
             self.assertEqual(user_count, 0)
 
             # import the dump
-            import_postgres_dump(private_dump, None, public_dump, None)
+            import_postgres_dump(private_dump, public_dump, None)
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
@@ -152,7 +155,7 @@ class DumpTestCase(DatabaseTestCase):
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 0)
 
-            import_postgres_dump(private_dump, None, public_dump, None, threads=2)
+            import_postgres_dump(private_dump, public_dump, None, threads=2)
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
             two_id = db_user.create(self.db_conn, 2, 'vnskprk')
@@ -163,6 +166,7 @@ class DumpTestCase(DatabaseTestCase):
         # create a user
         with self.app.app_context():
             one_id = db_user.create(self.db_conn, 1, 'test_user')
+            db_user.agree_to_gdpr(self.db_conn, 'test_user')
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
@@ -183,12 +187,12 @@ class DumpTestCase(DatabaseTestCase):
             self.assertEqual(db_feedback.get_feedback_count_for_user(self.db_conn, user_id=one_id), 0)
 
             # import the dump and check the records are inserted
-            import_postgres_dump(private_dump, None, public_dump, None)
+            import_postgres_dump(private_dump, public_dump, None)
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
             dumped_feedback = db_feedback.get_feedback_for_user(
-                self.db_conn, self.ts_conn, user_id=one_id, limit=1, offset=0
+                self.db_conn, self.ts_conn, self.listens_conn, user_id=one_id, limit=1, offset=0
             )
             self.assertEqual(len(dumped_feedback), 1)
             self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
@@ -201,12 +205,12 @@ class DumpTestCase(DatabaseTestCase):
             self.assertEqual(user_count, 0)
             dumped_feedback = []
 
-            import_postgres_dump(private_dump, None, public_dump, None, threads=2)
+            import_postgres_dump(private_dump, public_dump, None, threads=2)
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
             dumped_feedback = db_feedback.get_feedback_for_user(
-                self.db_conn, self.ts_conn, user_id=one_id, limit=1, offset=0
+                self.db_conn, self.ts_conn, self.listens_conn, user_id=one_id, limit=1, offset=0
             )
             self.assertEqual(len(dumped_feedback), 1)
             self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)

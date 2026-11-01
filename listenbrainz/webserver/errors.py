@@ -238,7 +238,7 @@ class InvalidAPIUsage(Exception):
         return orjson.dumps({
             "error": self.api_error.code,
             "message": self.api_error.message
-        }, indent=4).decode("utf-8")
+        }, option=orjson.OPT_INDENT_2).decode("utf-8")
 
     def to_xml(self):
         doc, tag, text = Doc().tagtext()

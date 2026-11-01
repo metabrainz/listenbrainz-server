@@ -24,7 +24,7 @@ class MappingTestCase(TimescaleTestCase):
         # test that 2 valid uuids doesn't raise error
         model = MsidMbidModel(recording_msid=str(uuid.uuid4()), recording_mbid=str(uuid.uuid4()))
 
-    def insert_recording_in_mapping(self, recording, match_type):
+    def insert_recording_in_mapping(self, recording, match_type, fixture_id):
         if match_type == "exact_match":
 
             release_data = {"name": recording["release"]}
@@ -38,23 +38,26 @@ class MappingTestCase(TimescaleTestCase):
             ]
             artist_data = {"name": recording["artist"], "artists": artists}
 
-            self.ts_conn.execute(text("""
+            self.listens_conn.execute(text("""
                 INSERT INTO mapping.mb_metadata_cache
                         (recording_mbid, recording_id, artist_mbids, artist_ids, release_mbid, release_id, recording_data, artist_data, tag_data, release_data, dirty)
-                 VALUES (:recording_mbid ::UUID, 1, :artist_mbids ::UUID[], '{1}'::INTEGER[], :release_mbid ::UUID, 1, :recording_data, :artist_data, :tag_data, :release_data, 'f')
+                 VALUES (:recording_mbid ::UUID, :recording_id, :artist_mbids ::UUID[], :artist_ids ::INTEGER[], :release_mbid ::UUID, :release_id, :recording_data, :artist_data, :tag_data, :release_data, 'f')
             """), {
                 "recording_mbid": recording["recording_mbid"],
+                "recording_id": fixture_id,
                 "artist_mbids": recording["artist_mbids"],
+                "artist_ids": [fixture_id],
                 "release_mbid": recording["release_mbid"],
+                "release_id": fixture_id,
                 "recording_data": json.dumps({"name": recording["title"]}),
                 "artist_data": json.dumps(artist_data),
                 "release_data": json.dumps(release_data),
                 "tag_data": json.dumps({"artist": [], "recording": [], "release_group": []})
             })
 
-        self.ts_conn.execute(
+        self.listens_conn.execute(
             text("""
-            INSERT INTO mbid_mapping (recording_msid, recording_mbid, match_type)
+            INSERT INTO mapping.mbid_mapping (recording_msid, recording_mbid, match_type)
                               VALUES (:recording_msid, :recording_mbid, :match_type)
         """),
             {
@@ -152,7 +155,7 @@ class MappingTestCase(TimescaleTestCase):
                 match_type = "no_match"
             else:
                 match_type = "exact_match"
-            self.insert_recording_in_mapping(recordings[idx], match_type)
+            self.insert_recording_in_mapping(recordings[idx], match_type, idx + 1)
         return recordings
 
     def test_load_recordings_from_mapping(self):
@@ -163,9 +166,9 @@ class MappingTestCase(TimescaleTestCase):
             recordings[0]["recording_mbid"]: recordings[0],
             recordings[1]["recording_mbid"]: recordings[1]
         }
-        with self.ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
+        with self.listens_conn.connection.cursor(cursor_factory=DictCursor) as listens_curs:
             received = load_recordings_from_mbids(
-                ts_curs,
+                listens_curs,
                 [recordings[0]["recording_mbid"], recordings[1]["recording_mbid"]]
             )
         self.maxDiff = None
@@ -186,7 +189,7 @@ class MappingTestCase(TimescaleTestCase):
             # test the case where user submitted a mbid for the item but its absent from mbid_mapping
             MsidMbidModel(recording_msid=recordings[4]["recording_msid"], recording_mbid="0f53fa2f-f015-40c6-a5cd-f17af596764c")
         ]
-        models = fetch_track_metadata_for_items(self.ts_conn, models)
+        models = fetch_track_metadata_for_items(self.ts_conn, self.listens_conn, models)
 
         for idx in range(5):
             metadata = models[idx].track_metadata
@@ -210,7 +213,7 @@ class MappingTestCase(TimescaleTestCase):
             MsidMbidModel(recording_msid=recording["recording_msid"], recording_mbid=recording["recording_mbid"]),
             MsidMbidModel(recording_msid=recording["recording_msid"], recording_mbid=recording["recording_mbid"]),
         ]
-        models = fetch_track_metadata_for_items(self.ts_conn, models)
+        models = fetch_track_metadata_for_items(self.ts_conn, self.listens_conn, models)
         for model in models:
             metadata = model.track_metadata
             self.assertEqual(metadata["track_name"], recording["title"])

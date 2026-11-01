@@ -50,7 +50,8 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
                       , 'f'
                        )
         """
-        self.ts_conn.execute(text(query))
+        self.listens_conn.execute(text(query))
+        self.listens_conn.commit()
         msid = messybrainz.submit_recording(self.ts_conn, "Strangers", "Portishead", "Dummy", None, 291160)
         self.ts_conn.commit()
         return msid

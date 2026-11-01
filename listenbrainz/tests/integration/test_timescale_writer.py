@@ -6,12 +6,13 @@ from random import randint
 import amqp
 import orjson
 from flask import current_app
-from kombu import Connection, Queue, Exchange
+from kombu import Queue, Exchange
 from kombu.entity import PERSISTENT_DELIVERY_MODE
 
 import listenbrainz.db.user as db_user
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
+from listenbrainz.rabbitmq import create_rabbitmq_connection
 from listenbrainz.tests.integration import NonAPIIntegrationTestCase
 from listenbrainz.webserver import redis_connection, timescale_connection
 
@@ -46,7 +47,7 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         self.assert200(r)
 
         to_ts = datetime.now(timezone.utc)
-        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
+        listens = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
         recent = self.rs.get_recent_listens(4)
@@ -79,7 +80,7 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
         to_ts = datetime.now(timezone.utc)
-        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
+        listens = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
     def test_dedup_same_batch(self):
@@ -89,7 +90,7 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         self.assert200(r)
 
         to_ts = datetime.now(timezone.utc)
-        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
+        listens = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
     def test_dedup_different_users(self):
@@ -107,10 +108,10 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         self.assert200(r)
 
         to_ts = datetime.now(timezone.utc)
-        listens, _, _ = self.ls.fetch_listens(user1, to_ts=to_ts)
+        listens = self.ls.fetch_listens(user1, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
-        listens, _, _ = self.ls.fetch_listens(user2, to_ts=to_ts)
+        listens = self.ls.fetch_listens(user2, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
     def test_dedup_same_timestamp_different_tracks(self):
@@ -134,20 +135,14 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         self.assert200(r)
 
         to_ts = datetime.now(timezone.utc)
-        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
+        listens = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 4)
 
     def test_rejection_queue_on_error(self):
         """ Test that listens are published to rejection queue when processing fails """
         user = db_user.get_or_create(self.db_conn, 1, 'difftracksametsuser')
 
-        connection = Connection(
-            hostname=current_app.config["RABBITMQ_HOST"],
-            userid=current_app.config["RABBITMQ_USERNAME"],
-            port=current_app.config["RABBITMQ_PORT"],
-            password=current_app.config["RABBITMQ_PASSWORD"],
-            virtual_host=current_app.config["RABBITMQ_VHOST"],
-        )
+        connection = create_rabbitmq_connection(current_app.config)
 
         with connection:
             ts = int(time.time())
@@ -191,10 +186,10 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
 
             self.assertEqual(body[0]['user_id'], user["id"])
             self.assertEqual(body[0]['listened_at'], ts)
-            listens, _, _ = self.ls.fetch_listens(user, to_ts=datetime.now(timezone.utc))
+            listens = self.ls.fetch_listens(user, to_ts=datetime.now(timezone.utc))
             self.assertEqual(len(listens), 0)
             # test timescale writer is still working and processing listens
             r = self.send_listen(user, "valid_single.json")
             self.assert200(r)
-            listens, _, _ = self.ls.fetch_listens(user, to_ts=datetime.now(timezone.utc))
+            listens = self.ls.fetch_listens(user, to_ts=datetime.now(timezone.utc))
             self.assertEqual(len(listens), 1)

@@ -21,7 +21,7 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.pinned_recording import get_current_pin_for_users
 from listenbrainz.domain.musicbrainz import MusicBrainzService
-from listenbrainz.webserver import flash, db_conn, meb_conn, ts_conn
+from listenbrainz.webserver import flash, db_conn, meb_conn, ts_conn, listens_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.timescale_connection import _ts
@@ -37,7 +37,21 @@ NUMBER_OF_RECENT_LISTENS = 50
 
 SEARCH_USER_LIMIT = 100  # max number of users to return in search username results
 
-ROBOTS_TXT_CONTENT = """User-agent: *
+ROBOTS_TXT_CONTENT = """
+User-agent: facebookexternalhit
+User-agent: meta-webindexer
+User-agent: meta-externalads
+User-agent: meta-externalagent
+User-agent: meta-externalfetcher
+Allow: /track/
+Allow: /artist/
+Allow: /album/
+Allow: /release/
+Allow: /release-group/
+Allow: /recording/
+Allow: /playlist/
+
+User-agent: *
 Disallow: /admin/
 Disallow: /login/
 Disallow: /player/
@@ -174,7 +188,7 @@ def recent_listens():
     if donor_ids:
         pinned_recordings = get_current_pin_for_users(db_conn, donor_ids)
         if pinned_recordings:
-            pinned_recordings_metadata = fetch_track_metadata_for_items(ts_conn, pinned_recordings)
+            pinned_recordings_metadata = fetch_track_metadata_for_items(ts_conn, listens_conn, pinned_recordings)
             # Map recordings by user_id for quick lookup
             pinned_recordings_data = {recording.user_id: dict(recording) for recording in pinned_recordings_metadata}
 

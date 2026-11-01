@@ -13,14 +13,14 @@ def fixup_mbids_to_artists(row):
     return row
 
 
-def get_metadata_for_recording(ts_conn, recording_mbid_list: List[str]) -> List[RecordingMetadata]:
+def get_metadata_for_recording(listens_conn, recording_mbid_list: List[str]) -> List[RecordingMetadata]:
     """ Get a list of recording Metadata objects for a given recording in descending order of their creation.
         The list of recordings cannot exceed `~db.metadata.MAX_ITEMS_PER_GET` per call.
         If the number of items exceeds this limit, ValueError will be raised. Data is sorted according
         to recording_mbid
 
         Args:
-            ts_conn: timescale database connection
+            listens_conn: listens database connection
             recording_mbid_list: A list of recording_mbids to fetch metadata for
 
         Returns:
@@ -36,7 +36,7 @@ def get_metadata_for_recording(ts_conn, recording_mbid_list: List[str]) -> List[
                 WHERE recording_mbid in %s
              ORDER BY recording_mbid"""
 
-    with ts_conn.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+    with listens_conn.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
         curs.execute(query, (recording_mbid_list, ))
         data = []
         for row in curs.fetchall():
@@ -45,7 +45,7 @@ def get_metadata_for_recording(ts_conn, recording_mbid_list: List[str]) -> List[
         return data
 
 
-def get_metadata_for_release_group(ts_conn, release_group_mbid_list: List[str]) -> List[ReleaseGroupMetadata]:
+def get_metadata_for_release_group(listens_conn, release_group_mbid_list: List[str]) -> List[ReleaseGroupMetadata]:
     """ Get a list of release_group Metadata objects for a given release_group in descending order of their creation.
         The list of release groups cannot exceed `~db.metadata.MAX_ITEMS_PER_GET` per call.
         If the number of items exceeds this limit, ValueError will be raised. Data is sorted according
@@ -67,7 +67,7 @@ def get_metadata_for_release_group(ts_conn, release_group_mbid_list: List[str]) 
                 WHERE release_group_mbid in %s
              ORDER BY release_group_mbid"""
 
-    with ts_conn.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+    with listens_conn.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
         curs.execute(query, (release_group_mbid_list, ))
         data = []
         for row in curs.fetchall():
@@ -76,7 +76,7 @@ def get_metadata_for_release_group(ts_conn, release_group_mbid_list: List[str]) 
         return data
 
 
-def get_metadata_for_artist(ts_conn, artist_mbid_list: List[str]) -> List[ArtistMetadata]:
+def get_metadata_for_artist(listens_conn, artist_mbid_list: List[str]) -> List[ArtistMetadata]:
     """ Get a list of artist Metadata objects for a given recording in descending order of their creation.
         The list of artists cannot exceed `~db.metadata.MAX_ITEMS_PER_GET` per call.
         If the number of items exceeds this limit, ValueError will be raised. Data is sorted according
@@ -98,6 +98,6 @@ def get_metadata_for_artist(ts_conn, artist_mbid_list: List[str]) -> List[Artist
                 WHERE artist_mbid in %s
              ORDER BY artist_mbid"""
 
-    with ts_conn.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+    with listens_conn.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
         curs.execute(query, (artist_mbid_list, ))
         return [ArtistMetadata(**dict(row)) for row in curs.fetchall()]

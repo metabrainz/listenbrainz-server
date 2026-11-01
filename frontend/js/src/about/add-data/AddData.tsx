@@ -36,6 +36,12 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://bocan.app/">Bòcan</a>
+          </em>
+          , a native macOS music player for people who own their music
+        </li>
+        <li>
+          <em>
             <a href="https://github.com/ciderapp">Cider</a>
           </em>
           , a cross-platform Apple Music player:{" "}
@@ -54,12 +60,26 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://github.com/digimezzo/dopamine">Dopamine</a>
+          </em>
+          , an audio player which tries to make organizing and listening to
+          music as simple and pretty as possible
+        </li>
+        <li>
+          <em>
             <a href="https://www.foobar2000.org/">Foobar2000</a>
           </em>
           , full-fledged music player for Windows:{" "}
           <a href="https://github.com/phw/foo_listenbrainz2">
             <code>foo_listenbrainz2</code>
           </a>
+        </li>
+        <li>
+          <em>
+            <a href="https://jellybox.app/">JellyBox</a>
+          </em>
+          , a music player for Jellyfin, Emby and Navidrome on desktop and
+          mobile
         </li>
         <li>
           <em>
@@ -379,7 +399,7 @@ export default function AddData() {
         </li>
         <li>
           <em>
-            <a href="https://boomingmusic.vercel.app/">Booming Music</a>
+            <a href="https://boomingmusic.org/">Booming Music</a>
           </em>
           , a clean and fast, and Material You music player for Android
         </li>

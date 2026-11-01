@@ -5,6 +5,15 @@ function log() {
    echo $@
 }
 
+function enable_cron() {
+    local crontab=$1
+
+    cp "$crontab" /etc/cron.d/crontab
+    chmod 0644 /etc/cron.d/crontab
+    rm -f /etc/service/cron/down
+    rm -f /etc/service/cron-config/down
+}
+
 log "Hello, this is rc.local. CONTAINER_NAME is $CONTAINER_NAME, and DEPLOY_ENV is $DEPLOY_ENV"
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-web-${DEPLOY_ENV}" ]
@@ -23,6 +32,12 @@ if [ "${CONTAINER_NAME}" = "listenbrainz-background-tasks-${DEPLOY_ENV}" ]
 then
     log Enabling background tasks
     rm -f /etc/service/background_tasks/down
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-api-${DEPLOY_ENV}" ]
+then
+    log Enabling api
+    rm -f /etc/service/uwsgi_api/down
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat-${DEPLOY_ENV}" ]
@@ -61,6 +76,18 @@ then
     rm -f /etc/service/spark_reader/down
 fi
 
+if [ "${CONTAINER_NAME}" = "listenbrainz-clickhouse-result-consumer-${DEPLOY_ENV}" ]
+then
+    log Enabling clickhouse result consumer
+    rm -f /etc/service/clickhouse_result_consumer/down
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-clickhouse-query-worker-${DEPLOY_ENV}" ]
+then
+    log Enabling clickhouse query worker
+    rm -f /etc/service/clickhouse_query_worker/down
+fi
+
 if [ "${CONTAINER_NAME}" = "listenbrainz-labs-api-${DEPLOY_ENV}" ]
 then
     log Enabling api labs
@@ -70,8 +97,13 @@ fi
 if [ "${CONTAINER_NAME}" = "listenbrainz-cron-prod" ]
 then
     log Enabling cron
-    rm -f /etc/service/cron/down
-    rm -f /etc/service/cron-config/down
+    enable_cron /etc/listenbrainz-crontabs/crontab
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-full-dumps-cron-prod" ]
+then
+    log Enabling full dumps cron
+    enable_cron /etc/listenbrainz-crontabs/full-dumps-crontab
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-mbid-mapping-writer-${DEPLOY_ENV}" ]
@@ -99,4 +131,3 @@ if [ "${CONTAINER_NAME}" = "listenbrainz-soundcloud-metadata-cache-${DEPLOY_ENV}
 then
     rm -f /etc/service/soundcloud_metadata_cache/down
 fi
-

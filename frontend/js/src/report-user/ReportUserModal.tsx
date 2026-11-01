@@ -2,9 +2,9 @@ import * as React from "react";
 import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
 import { Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
-import { Link } from "react-router";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { ToastMsg } from "../notifications/Notifications";
+import buildAuthUrl from "../utils/auth";
 
 const { useCallback, useState, useContext } = React;
 
@@ -26,11 +26,7 @@ export default NiceModal.create((props: ReportUserModalProps) => {
         toast.error(
           <ToastMsg
             title="You need to be logged in to report a user"
-            message={
-              <Link to={`/login/?next=${window.location.href}`}>
-                Log in here
-              </Link>
-            }
+            message={<a href={buildAuthUrl("login")}>Log in here</a>}
           />,
           { toastId: "auth-error" }
         );

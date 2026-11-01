@@ -98,13 +98,14 @@ def delete(db_conn, feedback: Feedback):
     db_conn.commit()
 
 
-def get_feedback_for_user(db_conn, ts_conn, user_id: int, limit: int, offset: int,
+def get_feedback_for_user(db_conn, ts_conn, listens_conn, user_id: int, limit: int, offset: int,
                           score: int = None, metadata: bool = False) -> List[Feedback]:
     """ Get a list of recording feedback given by the user in descending order of their creation
 
         Args:
             db_conn: database connection
             ts_conn: timescale database connection
+            listens_conn: listens database connection
             user_id: the row ID of the user in the DB
             score: the score value by which the results are to be filtered. If 1 then returns the loved recordings,
                    if -1 returns hated recordings.
@@ -140,7 +141,7 @@ def get_feedback_for_user(db_conn, ts_conn, user_id: int, limit: int, offset: in
     feedback = [Feedback(**row) for row in result.mappings()]
 
     if metadata and len(feedback) > 0:
-        feedback = fetch_track_metadata_for_items(ts_conn, feedback)
+        feedback = fetch_track_metadata_for_items(ts_conn, listens_conn, feedback)
 
     return feedback
 

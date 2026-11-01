@@ -12,7 +12,7 @@ from datasethoster import Query
 from pydantic import BaseModel
 from unidecode import unidecode
 from listenbrainz import config
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 
 
 class RecordingLookupBaseOutput(BaseModel):
@@ -68,7 +68,7 @@ class RecordingLookupBaseQuery(Query, ABC):
 
         lookup_strings = tuple(lookup_strings)
 
-        with closing(timescale.engine.raw_connection()) as conn, \
+        with closing(listens_db.engine.raw_connection()) as conn, \
                 conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
             curs.execute(f"""
                 SELECT artist_credit_name

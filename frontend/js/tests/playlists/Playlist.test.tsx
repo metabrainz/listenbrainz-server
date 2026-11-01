@@ -48,13 +48,15 @@ describe("PlaylistPage", () => {
     screen.getByText(textContentMatcher("Your lame 80s music"));
   });
 
-  it("hides exportPlaylistToSpotify button if playlist permissions are absent", () => {
+  it("hides exportPlaylistToSpotify button if playlist permissions are absent", async () => {
+    const user = userEvent.setup();
     renderWithProviders(
       <RouterProvider router={router} />,
       {},
       { wrapper: ReactQueryWrapper },
       false
     );
+    await user.click(screen.getByRole("button", { name: /options/i }));
     // Button exists but is disabled when permissions are missing
     const exportButton = screen.getByRole("button", {
       name: /export to spotify/i,
@@ -62,7 +64,8 @@ describe("PlaylistPage", () => {
     expect(exportButton).toHaveClass("disabled");
   });
 
-  it("shows exportPlaylistToSpotify button if playlist permissions are present", () => {
+  it("shows exportPlaylistToSpotify button if playlist permissions are present", async () => {
+    const user = userEvent.setup();
     const alternativeContextMock = {
       spotifyAuth: {
         access_token: "heyo",
@@ -80,6 +83,7 @@ describe("PlaylistPage", () => {
       { wrapper: ReactQueryWrapper },
       false
     );
+    await user.click(screen.getByRole("button", { name: /options/i }));
     screen.getByText("Export to Spotify", { exact: false });
   });
 

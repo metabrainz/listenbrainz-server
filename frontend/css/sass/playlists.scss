@@ -252,6 +252,7 @@ $long-description-lines: 8;
 
 .playlist-info .description {
   white-space: pre-wrap;
+  overflow: hidden;
 }
 
 #playlists-container {
@@ -268,7 +269,6 @@ $long-description-lines: 8;
     width: 15em;
     height: 15em !important;
     position: relative;
-    overflow: hidden;
 
     @media (max-width: map.get($grid-breakpoints, "xl")) {
       width: calc(33.333% - 1em);

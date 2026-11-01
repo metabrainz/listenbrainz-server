@@ -704,7 +704,7 @@ export default function YearInMusic() {
               ,&nbsp;
               <a
                 target="_blank"
-                href="mailto:listenbrainz@metabrainz.org"
+                href="mailto:support@listenbrainz.org"
                 rel="noopener noreferrer"
               >
                 by email

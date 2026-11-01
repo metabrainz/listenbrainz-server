@@ -5,15 +5,14 @@ from flask import Blueprint, current_app, jsonify, request
 from psycopg2 import DatabaseError
 from sqlalchemy import text
 from datetime import datetime, timezone
-from pathlib import Path
 
 from werkzeug.utils import secure_filename
 
+from listenbrainz.background.listens_importer.storage import delete_import_file, upload_import_file
 from listenbrainz.db.background import _with_validation_counts
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed, crossdomain
 from brainzutils.ratelimit import ratelimit
-from brainzutils.musicbrainz_db import engine as mb_engine
 from listenbrainz.db import background
 from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIBadRequest, APIUnauthorized
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
@@ -43,7 +42,7 @@ def create_import_task():
     """ Add a request to upload files and create a background task for the importer """
     user = validate_auth_header(fetch_email=True, scopes=["listenbrainz:submit-listens"])
 
-    if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
+    if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
         raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
 
     if user["is_paused"]:
@@ -93,7 +92,6 @@ def create_import_task():
 
     # add a unique ID to the filename to avoid collisions
     saved_filename = str(uuid.uuid4()) + "-" + secure_filename(filename)
-    save_path = os.path.join(current_app.config["UPLOAD_FOLDER"], saved_filename)
 
     try:
         query = """
@@ -108,28 +106,43 @@ def create_import_task():
         check_existing = result.first()
         if check_existing is not None:
             raise APIBadRequest("An import task is already in progress!")
-
-        result = background.create_import_task(
-            db_conn,
-            user_id=user["id"],
-            service=service,
-            from_date=from_date,
-            to_date=to_date,
-            save_path=save_path,
-            user_timezone=user_timezone,
-            filename=filename
-        )
-        if result is not None:
-            os.makedirs(current_app.config["UPLOAD_FOLDER"], exist_ok=True)
-            uploaded_file.save(save_path)
-
-            db_conn.commit()
-
-            return jsonify(result)
-
-        # task already exists in queue, rollback new entry
+        # the file can be a few hundred megabytes, uploading it must not hold a transaction
+        # (and the pooled connection it is checked out on) open for the entire transfer
         db_conn.rollback()
-        raise APIBadRequest(message="Data import already requested.")
+
+        try:
+            upload_import_file(saved_filename, uploaded_file)
+        except Exception:
+            current_app.logger.error("Error while uploading import file: %s", saved_filename, exc_info=True)
+            raise APIInternalServerError("Error while uploading the file, please try again later.")
+
+        try:
+            result = background.create_import_task(
+                db_conn,
+                user_id=user["id"],
+                service=service,
+                from_date=from_date,
+                to_date=to_date,
+                file_path=saved_filename,
+                user_timezone=user_timezone,
+                filename=filename
+            )
+            if result is None:
+                # task already exists in queue, rollback new entry
+                db_conn.rollback()
+            else:
+                db_conn.commit()
+        except Exception:
+            # the uploaded file belongs to no import, do not leave it behind in the bucket
+            db_conn.rollback()
+            delete_import_file(saved_filename)
+            raise
+
+        if result is None:
+            delete_import_file(saved_filename)
+            raise APIBadRequest(message="Data import already requested.")
+
+        return jsonify(result)
 
     except DatabaseError:
         current_app.logger.error("Error while creating import user data task: %s", user["musicbrainz_id"], exc_info=True)
@@ -199,7 +212,7 @@ def delete_import_task(import_id):
             text("DELETE FROM background_tasks WHERE user_id = :user_id AND (metadata->>'import_id')::int = :import_id"),
             {"user_id": user["id"], "import_id": import_id}
         )
-        Path(row.file_path).unlink(missing_ok=True)
+        delete_import_file(row.file_path)
         db_conn.commit()
         return jsonify({"success": True})
     else:

@@ -7,7 +7,7 @@ from flask_login import current_user
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.db.cover_art import get_caa_ids_for_release_mbids
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
-from listenbrainz.webserver import ts_conn
+from listenbrainz.webserver import listens_conn
 from listenbrainz.webserver.decorators import web_musicbrainz_needed
 from listenbrainz.webserver.views.api_tools import (
     get_non_negative_param,
@@ -205,9 +205,9 @@ def _enrich_recording_collection_tracks(mb_curs, tracks) -> list[dict]:
     recording_mbids = [t["recording_mbid"] for t in tracks]
     metadata_by_mbid = {}
     try:
-        with ts_conn.connection.cursor(cursor_factory=DictCursor) as ts_curs:
+        with listens_conn.connection.cursor(cursor_factory=DictCursor) as listens_curs:
             metadata_rows = load_recordings_from_mbids_with_redirects(
-                mb_curs, ts_curs, recording_mbids,
+                mb_curs, listens_curs, recording_mbids,
             )
         for row in metadata_rows:
             metadata_by_mbid[row["original_recording_mbid"]] = row

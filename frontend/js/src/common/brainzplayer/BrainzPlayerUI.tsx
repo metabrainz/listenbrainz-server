@@ -240,6 +240,14 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     setShowMusicPlayer((prevShow) => !prevShow);
   }, []);
 
+  // The volume slider is positioned independently of the music player,
+  // so hide it when the player is minimised to avoid leaving it on screen
+  React.useEffect(() => {
+    if (!showMusicPlayer) {
+      setShowVolume(false);
+    }
+  }, [showMusicPlayer, setShowVolume]);
+
   const musicPlayerCoverArtRef = React.useRef<HTMLImageElement>(null);
 
   React.useEffect(() => {

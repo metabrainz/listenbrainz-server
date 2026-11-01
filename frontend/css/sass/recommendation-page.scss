@@ -50,13 +50,13 @@
       max-width: 80%;
     }
     .playlist-timer {
-      --timer-color: fade(white, 50%);
+      --timer-color: rgba(255, 255, 255, 0.5);
       width: 25px;
       height: 25px;
       border-radius: 50%;
       background: conic-gradient(
         from 0deg,
-        fade(white, 15%) var(--degrees-progress),
+        rgba(255, 255, 255, 0.15) var(--degrees-progress),
         var(--timer-color) var(--degrees-progress)
       );
       align-self: flex-start;
@@ -67,8 +67,8 @@
       ); // width of parent minus padding minus width of timer
       &.pressing {
         animation: blink 1s ease-out alternate infinite;
-        --timer-color: fade(red, 70%);
-        background-color: fade(white, 20%);
+        --timer-color: rgba(255, 0, 0, 0.75);
+        background-color: rgba(255, 255, 255, 0.2);
       }
       @keyframes blink {
         0% {

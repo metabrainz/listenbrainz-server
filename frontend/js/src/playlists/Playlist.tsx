@@ -20,6 +20,7 @@ import { Link, useLoaderData, useNavigate, useRevalidator } from "react-router";
 import { formatDuration, intervalToDuration } from "date-fns";
 import NiceModal from "@ebay/nice-modal-react";
 import { useSetAtom } from "jotai";
+import { Dropdown } from "react-bootstrap";
 import Card from "../components/Card";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -631,18 +632,15 @@ export default function PlaylistPage() {
         </div>
         <div className="right-side">
           <div className="entity-rels">
-            <div className="dropdown">
-              <button
-                className="btn btn-info dropdown-toggle"
-                type="button"
+            <Dropdown>
+              <Dropdown.Toggle
+                as="button"
+                className="btn btn-info"
                 id="playlistOptionsDropdown"
-                data-bs-toggle="dropdown"
-                aria-haspopup="true"
-                aria-expanded="false"
               >
                 <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
                 &nbsp;Options
-              </button>
+              </Dropdown.Toggle>
               <PlaylistMenu
                 playlist={playlist}
                 coverArtGridOptions={coverArtGridOptions}
@@ -651,7 +649,7 @@ export default function PlaylistPage() {
                 onPlaylistDeleted={onDeletePlaylist}
                 disallowEmptyPlaylistExport
               />
-            </div>
+            </Dropdown>
             {customFields?.public && (
               <button
                 type="button"

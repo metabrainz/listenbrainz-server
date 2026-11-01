@@ -1,7 +1,7 @@
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
-import Tooltip from "react-tooltip";
+import Tooltip from "../../../components/Tooltip";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { getEntityLink } from "../../stats/utils";
 import { getArtistLink } from "../../../utils/utils";
@@ -42,17 +42,20 @@ export default function YIMNewReleases({
       <div className="heading">
         <h3>
           New albums from {yourOrUsersName} top artists{" "}
-          <FontAwesomeIcon
-            icon={faQuestionCircle}
-            data-tip
-            data-for="new-albums-helptext"
-            size="xs"
-          />
-          <Tooltip id="new-albums-helptext">
-            Albums and singles released in {year} from artists {youOrUsername}{" "}
-            listened to.
-            <br />
-            Missed anything?
+          <Tooltip
+            id="new-albums-helptext"
+            tooltip={
+              <>
+                Albums and singles released in {year} from artists{" "}
+                {youOrUsername} listened to.
+                <br />
+                Missed anything?
+              </>
+            }
+          >
+            <span>
+              <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+            </span>
           </Tooltip>
         </h3>
       </div>

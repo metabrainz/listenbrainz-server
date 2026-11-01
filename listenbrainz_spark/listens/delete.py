@@ -50,7 +50,7 @@ def import_deleted_listens(location):
           FROM listen_delete_metadata
          WHERE status = 'complete'::listen_delete_metadata_status_enum
     """
-    new_listens_to_delete_df = load_from_db(config.TS_JDBC_URI, config.TS_USER, config.TS_PASSWORD, query)
+    new_listens_to_delete_df = load_from_db(config.LISTENS_JDBC_URI, config.LISTENS_USER, config.LISTENS_PASSWORD, query)
     columns = "id, user_id, listened_at, recording_msid, created"
     query = f"""\
         WITH intermediate AS (
@@ -66,7 +66,7 @@ def import_deleted_listens(location):
 
 def import_deleted_user_listen_history(location):
     query = """SELECT id, user_id, max_created FROM deleted_user_listen_history"""
-    new_deleted_history_df = load_from_db(config.TS_JDBC_URI, config.TS_USER, config.TS_PASSWORD, query)
+    new_deleted_history_df = load_from_db(config.LISTENS_JDBC_URI, config.LISTENS_USER, config.LISTENS_PASSWORD, query)
     query = """\
         WITH intermediate AS (
             SELECT user_id, max_created FROM {new_table}
@@ -80,7 +80,7 @@ def import_deleted_user_listen_history(location):
 
 
 def main():
-    """ Import deleted listens from timescale """
+    """ Import deleted listens from the listens database """
     location = get_listens_metadata().location
     import_deleted_listens(location)
     import_deleted_user_listen_history(location)

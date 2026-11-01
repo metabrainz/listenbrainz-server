@@ -1,0 +1,33 @@
+.contributors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 64px);
+  gap: 12px;
+  padding: 0;
+  margin-bottom: 20px;
+  list-style: none;
+
+  a {
+    display: block;
+    position: relative;
+    border-radius: 50%;
+    transition: transform 150ms ease;
+
+    &:hover,
+    &:focus-visible {
+      transform: scale(1.2);
+      z-index: 1;
+      outline: 2px solid $primary;
+      outline-offset: 3px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  img {
+    display: block;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+}

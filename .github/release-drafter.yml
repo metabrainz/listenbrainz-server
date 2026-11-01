@@ -1,4 +1,13 @@
-template: |
-  ## What’s Changed
+categories:
+  - title: "What’s Changed"
+  - title: "🤖 Dependency upgrades"
+    collapse-after: 0
+    when:
+      conventional:
+        type: "chore"
+        scopes:
+          - "deps"
+          - "deps-dev"
 
+template: |
   $CHANGES

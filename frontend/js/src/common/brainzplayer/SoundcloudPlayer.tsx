@@ -177,10 +177,12 @@ export default class SoundcloudPlayer
     );
   };
 
+  pause = () => {
+    this.soundcloudPlayer?.pause();
+  };
+
   stop = () => {
-    if (!this.soundcloudPlayer?.isPaused) {
-      this.soundcloudPlayer?.pause();
-    }
+    this.pause();
   };
 
   onReady = (): void => {

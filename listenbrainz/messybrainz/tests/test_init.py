@@ -150,3 +150,38 @@ class DataTestCase(TimescaleTestCase):
         }
 
         self.assertDictEqual(expected, received)
+
+    def test_insert_all_in_transaction_deduplicates_batch(self):
+        submissions: list[dict] = [
+            {
+                'artist': 'Frank Ocean',
+                'release': 'Blond',
+                'title': 'Pretty Sweet'
+            },
+            {
+                'artist': 'FRANK OCEAN',
+                'release': 'BLoNd',
+                'title': 'PReTtY SWEET'
+            },
+            {
+                'artist': 'Frank Ocean',
+                'release': 'Blond',
+                'title': 'Pretty Sweet'
+            }
+        ]
+        msids = messybrainz.insert_all_in_transaction(self.ts_conn, submissions)
+
+        self.assertEqual(1, len(set(msids)))
+
+        result = self.ts_conn.execute(text("""
+            SELECT count(*)
+              FROM messybrainz.submissions
+             WHERE lower(recording) = lower(:recording)
+               AND lower(artist_credit) = lower(:artist_credit)
+               AND lower(release) = lower(:release)
+        """), {
+            "recording": "Pretty Sweet",
+            "artist_credit": "Frank Ocean",
+            "release": "Blond"
+        })
+        self.assertEqual(1, result.scalar())
