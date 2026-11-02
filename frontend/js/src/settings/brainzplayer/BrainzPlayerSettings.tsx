@@ -18,6 +18,7 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import SpotifyPlayer from "../../common/brainzplayer/SpotifyPlayer";
 import SoundcloudPlayer from "../../common/brainzplayer/SoundcloudPlayer";
 import FunkwhalePlayer from "../../common/brainzplayer/FunkwhalePlayer";
+import { hasNotificationPermission } from "../../notifications/Notifications";
 import AppleMusicPlayer from "../../common/brainzplayer/AppleMusicPlayer";
 import Card from "../../components/Card";
 import faInternetArchive from "../../common/icons/faInternetArchive";
@@ -231,12 +232,17 @@ function BrainzPlayerSettings() {
           id="enable-notifications"
           value="notifications"
           checked={notificationsEnabled}
-          onChange={() =>
+          onChange={() => {
+            // Prompt for OS/browser notification permission as soon as the
+            // user opts in, rather than waiting for the next track change.
+            if (!notificationsEnabled) {
+              hasNotificationPermission();
+            }
             updateSettings((prev) => ({
               ...prev,
               notificationsEnabled: !prev.notificationsEnabled,
-            }))
-          }
+            }));
+          }}
           switchLabel={
             <span
               className={`text-brand ${
