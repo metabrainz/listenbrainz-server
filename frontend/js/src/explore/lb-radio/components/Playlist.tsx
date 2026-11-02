@@ -14,6 +14,7 @@ type LBRadioFeedbackProps = {
 
 type PlaylistProps = {
   playlist?: JSPFPlaylist;
+  onRemoveTrack?: (track: JSPFTrack) => void;
 };
 
 export function LBRadioFeedback(props: LBRadioFeedbackProps) {
@@ -36,7 +37,7 @@ export function LBRadioFeedback(props: LBRadioFeedbackProps) {
 }
 
 export function Playlist(props: PlaylistProps) {
-  const { playlist } = props;
+  const { playlist, onRemoveTrack } = props;
 
   if (!playlist?.track?.length) {
     if (playlist !== undefined) {
@@ -67,6 +68,9 @@ export function Playlist(props: PlaylistProps) {
             <PlaylistItemCard
               key={`${track.id}-${index.toString()}`}
               canEdit={false}
+              canRemove={Boolean(onRemoveTrack)}
+              removeTrackText="Remove from radio"
+              removeTrackFromPlaylist={onRemoveTrack}
               track={track}
             />
           );
