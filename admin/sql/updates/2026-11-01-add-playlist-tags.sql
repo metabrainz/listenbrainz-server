@@ -1,5 +1,3 @@
--- Copyright (C) 2026 Ansh Goyal
-
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS playlist.playlist_tag (
