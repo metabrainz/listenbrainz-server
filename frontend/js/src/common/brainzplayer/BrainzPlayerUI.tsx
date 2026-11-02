@@ -80,6 +80,7 @@ function PlaybackControlButton(props: PlaybackControlButtonProps) {
     <button
       className={`btn-link ${className} ${disabled ? "disabled" : ""}`}
       title={title}
+      aria-label={title}
       onClick={disabled ? noop : () => action()}
       type="button"
       tabIndex={0}
