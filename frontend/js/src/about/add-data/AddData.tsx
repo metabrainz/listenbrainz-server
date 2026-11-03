@@ -76,6 +76,13 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://jellybox.app/">JellyBox</a>
+          </em>
+          , a music player for Jellyfin, Emby and Navidrome on desktop and
+          mobile
+        </li>
+        <li>
+          <em>
             <a href="https://wiki.gnome.org/Apps/Lollypop">Lollypop</a>
           </em>
           , a modern music player for GNOME

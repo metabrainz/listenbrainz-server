@@ -37,7 +37,7 @@ service connected to the attacker's ListenBrainz account.
 import base64
 import os
 import secrets
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, asdict, field, replace
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from urllib.parse import urlencode, urlparse, urlunparse, parse_qsl
@@ -82,6 +82,10 @@ METABRAINZ_TOKEN_PREFIX = "meba_"
 # be short.
 TICKET_TTL = timedelta(minutes=10)
 TICKET_CACHE_NAMESPACE = "external_connect_ticket"
+
+# how long a spent or expired ticket can still send the user back to the partner
+RETURN_TTL = TICKET_TTL + REQUEST_TTL
+RETURN_CACHE_NAMESPACE = "external_connect_return"
 
 # values of the error parameter ListenBrainz sends back to the partner application
 ERROR_INVALID_REQUEST = "invalid_request"
@@ -170,6 +174,8 @@ class ExternalConnectRequest:
     # whether to send the user to the music service even if the account is already connected
     # with the requested permissions
     force: bool = False
+    # the spent ticket, so that finish_request can record the result for it
+    ticket: Optional[str] = None
     created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     def has_expired(self) -> bool:
@@ -342,7 +348,33 @@ def create_ticket(connect_request: ExternalConnectRequest) -> str:
     ticket = secrets.token_urlsafe(32)
     cache.set(ticket, asdict(connect_request), int(TICKET_TTL.total_seconds()),
               namespace=TICKET_CACHE_NAMESPACE)
+    _store_return(ticket, connect_request)
     return ticket
+
+
+def _store_return(ticket: str, connect_request: ExternalConnectRequest, result: Optional[dict] = None):
+    """ Remember where to send a browser that comes back with the ticket. Without the OAuth
+    state and user, this copy cannot start an authorization. """
+    returnable = replace(connect_request, oauth_state="", user_id=None, ticket=None)
+    cache.set(ticket, {"request": asdict(returnable), "result": result},
+              int(RETURN_TTL.total_seconds()), namespace=RETURN_CACHE_NAMESPACE)
+
+
+def _load_return(ticket: Optional[str], service_name: str) -> Optional[tuple[ExternalConnectRequest, Optional[dict]]]:
+    if not ticket:
+        return None
+
+    stored = cache.get(ticket, namespace=RETURN_CACHE_NAMESPACE)
+    if not isinstance(stored, dict) or not isinstance(stored.get("request"), dict):
+        return None
+
+    try:
+        connect_request = ExternalConnectRequest(**stored["request"])
+    except TypeError:
+        return None
+    if connect_request.service != service_name.lower():
+        return None
+    return connect_request, stored.get("result")
 
 
 def _load_ticket(ticket: Optional[str], service_name: str) -> Optional[ExternalConnectRequest]:
@@ -379,7 +411,23 @@ def consume_ticket(ticket: Optional[str], service_name: str) -> Optional[Externa
     # one that actually removed it
     if cache.delete(ticket, namespace=TICKET_CACHE_NAMESPACE) != 1:
         return None
+    connect_request.ticket = ticket
     return connect_request
+
+
+def build_stale_return_url(ticket: Optional[str], service_name: str, error_description: str) -> Optional[str]:
+    """ Return where to send a browser back with a spent or expired ticket, if we still know.
+
+    A finished flow repeats the result the partner was already sent, so that it never gets
+    two different answers for the same state.
+    """
+    stored = _load_return(ticket, service_name)
+    if stored is None:
+        return None
+    connect_request, result = stored
+    if result is not None:
+        return build_return_url(connect_request, result.get("error"), result.get("error_description"))
+    return build_return_url(connect_request, ERROR_EXPIRED_REQUEST, error_description)
 
 
 def start_confirmation(ticket: str) -> str:
@@ -397,11 +445,15 @@ def start_confirmation(ticket: str) -> str:
 
 def check_confirmation(ticket: Optional[str], nonce: Optional[str]) -> bool:
     """ Check that this browser was served the confirmation page for the given ticket. """
-    stored = session.pop(CONFIRM_SESSION_KEY, None)
+    stored = session.get(CONFIRM_SESSION_KEY)
     if not isinstance(stored, dict) or not ticket or not nonce:
         return False
-    return (secrets.compare_digest(stored.get("ticket") or "", ticket)
-            and secrets.compare_digest(stored.get("nonce") or "", nonce))
+    if not (secrets.compare_digest(stored.get("ticket") or "", ticket)
+            and secrets.compare_digest(stored.get("nonce") or "", nonce)):
+        return False
+    # An unrelated or stale submission must not erase the pending confirmation.
+    session.pop(CONFIRM_SESSION_KEY, None)
+    return True
 
 
 def build_ticket_url(connect_request: ExternalConnectRequest, ticket: str) -> str:
@@ -520,6 +572,16 @@ def build_return_url(connect_request: ExternalConnectRequest, error: Optional[st
         if key not in RETURN_QUERY_PARAMETERS
     ] + params
     return urlunparse(parsed._replace(query=urlencode(query)))
+
+
+def finish_request(connect_request: ExternalConnectRequest, error: Optional[str] = None,
+                   error_description: Optional[str] = None) -> str:
+    """ Like :func:`build_return_url`, but also records the result for
+    :func:`build_stale_return_url`. """
+    if connect_request.ticket:
+        _store_return(connect_request.ticket, connect_request,
+                      {"error": error, "error_description": error_description})
+    return build_return_url(connect_request, error, error_description)
 
 
 def build_authorize_url(service, permissions, state: str) -> str:

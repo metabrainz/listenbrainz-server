@@ -1,4 +1,5 @@
 click==8.1.8
+certifi==2026.10.19
 pytest==9.0.3
 pytest-cov==6.1.1
 psycopg2-binary==2.9.10
