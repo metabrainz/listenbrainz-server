@@ -1,0 +1,48 @@
+[
+    {
+        "user_id": 1,
+        "count": 8,
+        "data": [
+            {
+                "writer_mbid": "d59d99ea-23d4-4a80-b066-edca32ee158f",
+                "listen_count": 150,
+                "writer_name": "Max Martin"
+            },
+            {
+                "writer_mbid": "ae9ed5e2-4caf-4b3d-9cb3-2ad626b91714",
+                "listen_count": 120,
+                "writer_name": "Guy Berryman"
+            },
+            {
+                "writer_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234",
+                "listen_count": 100,
+                "writer_name": "Jonny Buckland"
+            },
+            {
+                "writer_mbid": "fecda98e-0533-4b87-a9d1-c89b4521918b",
+                "listen_count": 60,
+                "writer_name": "Dan Reynolds"
+            },
+            {
+                "writer_mbid": "9d5adabb-9775-4535-93eb-12b485aed8bf",
+                "listen_count": 45,
+                "writer_name": "Adam Levine"
+            },
+            {
+                "writer_mbid": "7addbcac-ae39-4b4c-a956-53da336d68e8",
+                "listen_count": 30,
+                "writer_name": "Shellback"
+            },
+            {
+                "writer_mbid": "67f4ae2e-260e-4020-b957-f2df5b719501",
+                "listen_count": 20,
+                "writer_name": "Ryan Tedder"
+            },
+            {
+                "writer_mbid": "2b0646af-f3f0-4a5b-b629-6c31301c1c29",
+                "listen_count": 15,
+                "writer_name": "Chris Martin"
+            }
+        ]
+    }
+]

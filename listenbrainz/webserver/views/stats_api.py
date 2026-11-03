@@ -299,6 +299,74 @@ def get_recording(user_name):
     return _get_entity_stats(user_name, "recordings", "total_recording_count")
 
 
+@stats_api_bp.get("/user/<mb_username:user_name>/writers")
+@crossdomain
+@ratelimit()
+def get_writer(user_name):
+    """
+    Get top writers (composers, lyricists, and songwriters) for user ``user_name``.
+
+    Writers are determined by traversing MusicBrainz relationships from recordings to works
+    and then to the artists credited as composer, lyricist, or writer of those works. Each listen
+    contributes one count to every writer associated with the recording's linked work(s).
+
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "writers": [
+                    {
+                       "writer_mbid": "d59d99ea-23d4-4a80-b066-edca32ee158f",
+                       "writer_name": "Max Martin",
+                       "listen_count": 385
+                    },
+                    {
+                       "writer_mbid": "ae9ed5e2-4caf-4b3d-9cb3-2ad626b91714",
+                       "writer_name": "Guy Berryman",
+                       "listen_count": 333
+                    },
+                    {
+                       "writer_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234",
+                       "writer_name": "Jonny Buckland",
+                       "listen_count": 321
+                    }
+                ],
+                "count": 3,
+                "total_writer_count": 175,
+                "range": "all_time",
+                "last_updated": 1588494361,
+                "user_id": "John Doe",
+                "from_ts": 1009823400,
+                "to_ts": 1590029157
+            }
+        }
+
+    .. note::
+        - This endpoint only includes data for recordings that are mapped to MusicBrainz and
+          have associated work-artist (composer/lyricist/writer) relationships.
+        - ``writer_mbid`` is an optional field and may not be present in all the responses.
+
+    :param count: Optional, number of writers to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+        Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :type count: ``int``
+    :param offset: Optional, number of writers to skip from the beginning, for pagination.
+        Ex. An offset of 5 means the top 5 writers will be skipped, defaults to 0
+    :type offset: ``int``
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+    return _get_entity_stats(user_name, "writers", "total_writer_count")
+
+
 def _get_entity_stats(user_name: str, entity: str, count_key: str, entire_range: bool = False):
     user, stats_range = _validate_stats_user_params(user_name)
 

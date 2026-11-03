@@ -1,0 +1,33 @@
+[
+    {
+        "user_id": 1,
+        "count": 5,
+        "data": [
+            {
+                "writer_mbid": "d59d99ea-23d4-4a80-b066-edca32ee158f",
+                "listen_count": 21,
+                "writer_name": "Max Martin"
+            },
+            {
+                "writer_mbid": "ae9ed5e2-4caf-4b3d-9cb3-2ad626b91714",
+                "listen_count": 10,
+                "writer_name": "Guy Berryman"
+            },
+            {
+                "writer_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234",
+                "listen_count": 6,
+                "writer_name": "Jonny Buckland"
+            },
+            {
+                "writer_mbid": "fecda98e-0533-4b87-a9d1-c89b4521918b",
+                "listen_count": 3,
+                "writer_name": "Dan Reynolds"
+            },
+            {
+                "writer_mbid": "9d5adabb-9775-4535-93eb-12b485aed8bf",
+                "listen_count": 2,
+                "writer_name": "Adam Levine"
+            }
+        ]
+    }
+]
