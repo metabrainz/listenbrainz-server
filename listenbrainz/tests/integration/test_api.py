@@ -1087,6 +1087,29 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
+    @requests_mock.Mocker()
+    def test_oauth_client_credentials_token(self, mock_requests):
+        """Client-credentials tokens have no username and cannot authenticate a user."""
+        mock_requests.post(self.app.config["OAUTH_INTROSPECTION_URL"], json={
+            "active": True,
+            "client_id": "abc",
+            "token_type": "Bearer",
+            "scope": "",
+            "sub": "-1",
+            "issued_by": "https://metabrainz.org/",
+            "expires_at": int((datetime.now() + timedelta(hours=1)).timestamp()),
+            "issued_at": int(datetime.now().timestamp()),
+        })
+        # This endpoint does not require a scope, so authentication must reject
+        # the missing user identity itself.
+        response = self.client.post(
+            self.custom_url_for('api_v1.delete_listen'),
+            json={"listened_at": 1, "recording_msid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f"},
+            headers={'Authorization': 'Bearer meba_123'},
+        )
+        self.assert401(response)
+        self.assertEqual(response.json["error"], "Invalid authorization token.")
+
     def test_get_playing_now(self):
         """ Test for valid submission and retrieval of listen_type 'playing_now'
         """

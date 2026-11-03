@@ -570,7 +570,10 @@ def validate_auth_header(*, optional: bool = False, fetch_email: bool = False, s
         # MetaBrainz account id in "sub" and carries the MusicBrainz username in
         # "username". get_by_mb_id() matches against the musicbrainz_id column,
         # so it needs the username.
-        user = db_user.get_by_mb_id(db_conn, token["username"], fetch_email=fetch_email)
+        username = token.get("username")
+        if not username:
+            raise APIUnauthorized("Invalid authorization token.")
+        user = db_user.get_by_mb_id(db_conn, username, fetch_email=fetch_email)
     else:
         user = db_user.get_by_token(db_conn, auth_token, fetch_email=fetch_email)
 
