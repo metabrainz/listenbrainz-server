@@ -36,6 +36,7 @@ DELETE FROM funkwhale_servers              CASCADE;
 DELETE FROM navidrome_tokens               CASCADE;
 DELETE FROM navidrome_servers              CASCADE;
 
+DELETE FROM clickhouse_query_jobs          CASCADE;
 DELETE FROM background_tasks               CASCADE;
 DELETE FROM user_data_export               CASCADE;
 DELETE FROM user_data_import               CASCADE;

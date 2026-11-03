@@ -107,7 +107,7 @@ def _start_service_authorization(service: ExternalService, permissions) -> str:
 
 def _return_to_client(connect_request, error: str | None = None, error_description: str | None = None):
     """ Send the user back to the third party application that started the flow. """
-    return redirect(external_connect.build_return_url(connect_request, error, error_description))
+    return redirect(external_connect.finish_request(connect_request, error, error_description))
 
 
 @settings_bp.post("/resettoken/")
@@ -405,10 +405,11 @@ def music_services_callback(service_name: str):
     if not expected_state or not secrets.compare_digest(request.args.get("state") or "", expected_state):
         current_app.logger.error("%s OAuth state mismatch for user %s", service_name, user_id)
         if connect_request is not None:
-            return _return_to_client(
+            # not the result of the flow, the genuine callback may still arrive
+            return redirect(external_connect.build_return_url(
                 connect_request, external_connect.ERROR_INVALID_REQUEST,
                 f"{service_name.capitalize()} authorization failed: invalid state"
-            )
+            ))
         if isinstance(service, SoundCloudService):
             return redirect(url_for(
                 "settings.index",

@@ -160,6 +160,30 @@ services:
       garage:
         condition: service_healthy
 
+  clickhouse_query_worker:
+    image: web
+    profiles: [clickhouse]
+    command: python3 -m "listenbrainz.clickhouse.query_worker"
+    volumes:
+      - ..:/code/listenbrainz:z
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
+    depends_on:
+      - rabbitmq
+      - lb_db
+
+  clickhouse_result_consumer:
+    image: web
+    profiles: [clickhouse]
+    command: python3 -m "listenbrainz.clickhouse.result_consumer"
+    volumes:
+      - ..:/code/listenbrainz:z
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
+    depends_on:
+      - redis
+      - lb_db
+      - rabbitmq
+      - couchdb
+
   spotify_reader:
     image: web
     volumes:
