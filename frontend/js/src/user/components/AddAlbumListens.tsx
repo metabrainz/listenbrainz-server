@@ -119,9 +119,10 @@ const AddAlbumListens = forwardRef(function AddAlbumListens(
   const initialTextRef = useRef(initialText);
   React.useEffect(() => {
     // Trigger search manually if auto-switching from album to recording search
-    if (initialText && initialTextRef.current !== initialText) {
-      searchInputRef.current?.triggerSearch(initialText);
-      initialTextRef.current = initialText;
+    const cleanText = initialText ? initialText.trim() : "";
+    if (cleanText && initialTextRef.current !== cleanText) {
+      searchInputRef.current?.triggerSearch(cleanText);
+      initialTextRef.current = cleanText;
     }
     return () => {
       initialTextRef.current = undefined;
