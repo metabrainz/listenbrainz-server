@@ -147,7 +147,7 @@ class Playlist(BaseModel):
         if self.additional_metadata:
             extension['additional_metadata'] = self.additional_metadata
 
-        pl["extension"] = {PLAYLIST_EXTENSION_URI: extension}
+        pl["extension"] = {PLAYLIST_EXTENSION_URI: [extension]}
 
         tracks = []
         for rec in self.recordings:
@@ -174,7 +174,7 @@ class Playlist(BaseModel):
             if rec.additional_metadata:
                 extension["additional_metadata"] = rec.additional_metadata
 
-            tr["extension"] = {PLAYLIST_TRACK_EXTENSION_URI: extension}
+            tr["extension"] = {PLAYLIST_TRACK_EXTENSION_URI: [extension]}
             tracks.append(tr)
 
         pl["track"] = tracks
