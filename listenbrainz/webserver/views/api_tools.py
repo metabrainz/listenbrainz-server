@@ -224,6 +224,16 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         validate_duration_field(listen, "duration", MAX_DURATION_LIMIT)
         validate_duration_field(listen, "duration_ms", MAX_DURATION_MS_LIMIT)
 
+        # if both duration_played and duration_played_ms are given and valid, an error will be raised.
+        if (
+            'duration_played' in listen['track_metadata']['additional_info']
+            and 'duration_played_ms' in listen['track_metadata']['additional_info']
+        ):
+            raise ListenValidationError("JSON document should not contain both duration_played and duration_played_ms.", listen)
+        # check duration_played validity
+        validate_duration_field(listen, "duration_played", MAX_DURATION_LIMIT)
+        validate_duration_field(listen, "duration_played_ms", MAX_DURATION_MS_LIMIT)
+
         # MBIDs, both of the mbid validation methods mutate the listen payload if needed.
         single_mbid_keys = ['release_mbid', 'recording_mbid', 'release_group_mbid', 'track_mbid']
         for key in single_mbid_keys:

@@ -716,6 +716,20 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual('JSON document should not contain both duration and duration_ms.',
                          response.json['error'])
 
+    def test_multi_duration_played(self):
+        """ Test for duration_played and duration_played_ms both given """
+        with open(self.path_to_data_file('multi_duration.json'), 'r') as f:
+            payload = json.load(f)
+        payload["payload"][0]["track_metadata"]["additional_info"] = {
+            "duration_played": 120,
+            "duration_played_ms": 120000,
+        }
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+        self.assertEqual('JSON document should not contain both duration_played and duration_played_ms.',
+                         response.json['error'])
+
     def test_invalid_duration(self):
         """ Test for error on invalid duration """
         with open(self.path_to_data_file('invalid_duration.json'), 'r') as f:
@@ -740,12 +754,55 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual('Value for duration_ms is too large, max permitted value is 2073600000',
                          response.json['error'])
 
+        del payload["payload"][0]["track_metadata"]["additional_info"]["duration_ms"]
+        payload["payload"][0]["track_metadata"]["additional_info"]["duration_played"] = 5345029000
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+        self.assertEqual('Value for duration_played is too large, max permitted value is 2073600',
+                         response.json['error'])
+
+        del payload["payload"][0]["track_metadata"]["additional_info"]["duration_played"]
+        payload["payload"][0]["track_metadata"]["additional_info"]["duration_played_ms"] = 53450290000
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+        self.assertEqual('Value for duration_played_ms is too large, max permitted value is 2073600000',
+                         response.json['error'])
+
+        del payload["payload"][0]["track_metadata"]["additional_info"]["duration_played_ms"]
+        payload["payload"][0]["track_metadata"]["additional_info"]["duration_played"] = -10
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+        self.assertEqual('Value for duration_played is invalid, should be a positive integer.',
+                         response.json['error'])
+
+        del payload["payload"][0]["track_metadata"]["additional_info"]["duration_played"]
+        payload["payload"][0]["track_metadata"]["additional_info"]["duration_played_ms"] = -1000
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+        self.assertEqual('Value for duration_played_ms is invalid, should be a positive integer.',
+                         response.json['error'])
+
     def test_valid_duration(self):
         """ Test for valid submission in which a listen contains a valid duration_ms field
             in additional_info
         """
         with open(self.path_to_data_file('valid_duration.json'), 'r') as f:
             payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        payload["payload"][0]["track_metadata"]["additional_info"]["duration_played"] = 180
+        response = self.send_data(payload)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        del payload["payload"][0]["track_metadata"]["additional_info"]["duration_played"]
+        payload["payload"][0]["track_metadata"]["additional_info"]["duration_played_ms"] = 180000
         response = self.send_data(payload)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
