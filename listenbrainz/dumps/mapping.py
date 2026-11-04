@@ -78,7 +78,7 @@ MAPPING_TABLES = [
 def create_mapping_dump(location: str, dump_time: datetime, use_lb_conn: bool):
     """ Create postgres database dump of the mapping supplemental tables. """
     tables_collection = DumpTablesCollection(
-        engine_name=DumpEngineName.ts if use_lb_conn else DumpEngineName.mb,
+        engine_name=DumpEngineName.listens if use_lb_conn else DumpEngineName.mb,
         tables=MAPPING_TABLES
     )
 

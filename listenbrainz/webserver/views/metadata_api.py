@@ -13,7 +13,7 @@ from listenbrainz.labs_api.labs.api.artist_credit_recording_release_lookup impor
     ArtistCreditRecordingReleaseLookupQuery, ArtistCreditRecordingReleaseLookupInput
 from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery, MBIDMappingInput
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MBIDMapper
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn, listens_conn
 from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 from listenbrainz.webserver.decorators import cache_public, crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
@@ -66,7 +66,7 @@ def fetch_metadata(recording_mbids, incs):
             misses.append(mbid)
 
     if misses:
-        for entry in get_metadata_for_recording(ts_conn, misses):
+        for entry in get_metadata_for_recording(listens_conn, misses):
             full = {
                 "recording": entry.recording_data,
                 "artist": entry.artist_data,
@@ -81,7 +81,7 @@ def fetch_metadata(recording_mbids, incs):
 
 
 def fetch_release_group_metadata(release_group_mbids, incs):
-    metadata = get_metadata_for_release_group(ts_conn, release_group_mbids)
+    metadata = get_metadata_for_release_group(listens_conn, release_group_mbids)
     result = {}
     for entry in metadata:
         data = {"release_group": entry.release_group_data}
@@ -524,7 +524,7 @@ def submit_manual_mapping():
         user_id=user["id"]
     )
 
-    create_mbid_manual_mapping(ts_conn, mapping)
+    create_mbid_manual_mapping(listens_conn, mapping)
     update_pinned_recording_mbid_for_msid(db_conn, user["id"], recording_msid, recording_mbid)
 
     invalidate_user_listen_caches(user["id"])
@@ -551,7 +551,7 @@ def get_manual_mapping():
     if not recording_msid or not is_valid_uuid(recording_msid):
         raise APIBadRequest("recording_msid is invalid or not present in arguments")
 
-    existing_mapping = get_mbid_manual_mapping(ts_conn, recording_msid=recording_msid, user_id=user["id"])
+    existing_mapping = get_mbid_manual_mapping(listens_conn, recording_msid=recording_msid, user_id=user["id"])
 
     if existing_mapping:
         return jsonify({
@@ -603,7 +603,7 @@ def metadata_artist():
         artist_mbids.append(mbid_clean)
 
     results = []
-    for row in get_metadata_for_artist(ts_conn, artist_mbids):
+    for row in get_metadata_for_artist(listens_conn, artist_mbids):
         item = {"artist_mbid": row.artist_mbid}
         item.update(**row.artist_data)
         if "tag" in incs:

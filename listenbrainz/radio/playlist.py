@@ -2,7 +2,7 @@ from troi.service import Service
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.playlist as db_playlist
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn
 
 
 class LBRadioPlaylistService(Service):
@@ -15,7 +15,7 @@ class LBRadioPlaylistService(Service):
         super().__init__(self.SLUG)
 
     def fetch(self, playlist_mbid: str, auth_token: str | None) -> list[str]:
-        playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, load_recordings=True)
+        playlist = db_playlist.get_by_mbid(db_conn, playlist_mbid, load_recordings=True)
         if playlist is None:
             raise RuntimeError(f"Cannot find playlist {playlist_mbid}.")
 

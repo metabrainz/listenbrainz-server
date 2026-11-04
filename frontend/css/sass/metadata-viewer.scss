@@ -1,4 +1,5 @@
 @use "sass:map";
+@use "sass:color";
 
 @import "./musicbrainz-entity-icons";
 
@@ -54,7 +55,7 @@ $outer-padding: $grid-gutter-width * 0.5;
   .left-side {
     resize: none;
     padding: $outer-padding;
-    background-color: fadein($black, 30%);
+    background-color: color.adjust($black, $alpha: 0.3);
     transition: background-color 0.3s;
     border-radius: $border-radius;
     margin-bottom: $outer-padding;

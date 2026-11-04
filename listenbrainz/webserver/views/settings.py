@@ -27,7 +27,7 @@ from listenbrainz.domain.librefm import LibrefmService
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn, listens_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError, \
     APIBadRequest, APIUnauthorized
@@ -107,7 +107,7 @@ def _start_service_authorization(service: ExternalService, permissions) -> str:
 
 def _return_to_client(connect_request, error: str | None = None, error_description: str | None = None):
     """ Send the user back to the third party application that started the flow. """
-    return redirect(external_connect.build_return_url(connect_request, error, error_description))
+    return redirect(external_connect.finish_request(connect_request, error, error_description))
 
 
 @settings_bp.post("/resettoken/")
@@ -405,10 +405,11 @@ def music_services_callback(service_name: str):
     if not expected_state or not secrets.compare_digest(request.args.get("state") or "", expected_state):
         current_app.logger.error("%s OAuth state mismatch for user %s", service_name, user_id)
         if connect_request is not None:
-            return _return_to_client(
+            # not the result of the flow, the genuine callback may still arrive
+            return redirect(external_connect.build_return_url(
                 connect_request, external_connect.ERROR_INVALID_REQUEST,
                 f"{service_name.capitalize()} authorization failed: invalid state"
-            )
+            ))
         if isinstance(service, SoundCloudService):
             return redirect(url_for(
                 "settings.index",
@@ -802,7 +803,7 @@ def music_services_set_token(service_name: str):
 @api_login_required
 def link_listens():
     """ Returns a list of unlinked listens for the user """
-    unlinked_listens, created = get_user_missing_musicbrainz_data(db_conn, ts_conn, current_user.id, "cf")
+    unlinked_listens, created = get_user_missing_musicbrainz_data(db_conn, listens_conn, current_user.id, "cf")
     data = {
         "unlinked_listens": unlinked_listens or [],
         "last_updated": created,

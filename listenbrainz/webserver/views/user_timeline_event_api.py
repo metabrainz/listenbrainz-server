@@ -40,7 +40,7 @@ from listenbrainz.db.model.review import CBReviewMetadata
 from listenbrainz.db.pinned_recording import get_pins_for_feed, get_pin_by_id
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
-from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
+from listenbrainz.webserver import timescale_connection, db_conn, ts_conn, listens_conn
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, \
     APIForbidden
@@ -325,7 +325,7 @@ def user_feed_event(user_name: str, event_id: int):
         raise APINotFound(f"Event with id {event_id} not found")
 
     # Get metadata for event
-    _ = fetch_track_metadata_for_items(ts_conn, [user_event.metadata])
+    _ = fetch_track_metadata_for_items(ts_conn, listens_conn, [user_event.metadata])
 
     # Format the event
     user_event = APITimelineEvent(
@@ -1028,7 +1028,7 @@ def get_recording_recommendation_events(
         count=count,
     )
     _ = fetch_track_metadata_for_items(
-        ts_conn, [e.metadata for e in recording_recommendation_events_db])
+        ts_conn, listens_conn, [e.metadata for e in recording_recommendation_events_db])
 
     events = []
     for event in recording_recommendation_events_db:
@@ -1124,7 +1124,7 @@ def get_recording_pin_events(
         count=count,
     )
     recording_pin_events_db = fetch_track_metadata_for_items(
-        ts_conn, recording_pin_events_db)
+        ts_conn, listens_conn, recording_pin_events_db)
 
     events = []
     for pin in recording_pin_events_db:
@@ -1167,7 +1167,7 @@ def get_personal_recording_recommendation_events(
         count=count,
     )
     _ = fetch_track_metadata_for_items(
-        ts_conn, [e.metadata for e in personal_recording_recommendation_events_db])
+        ts_conn, listens_conn, [e.metadata for e in personal_recording_recommendation_events_db])
 
     events = []
     for event in personal_recording_recommendation_events_db:

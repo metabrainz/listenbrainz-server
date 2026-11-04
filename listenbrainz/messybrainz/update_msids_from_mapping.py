@@ -6,7 +6,7 @@ from psycopg2.extras import execute_values
 from sqlalchemy import text
 
 from listenbrainz import db
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 
 
 class BaseMsidMappingUpdater(abc.ABC):
@@ -42,12 +42,12 @@ class BaseMsidMappingUpdater(abc.ABC):
         query = """
             SELECT recording_msid
                  , recording_mbid
-              FROM mbid_mapping
+              FROM mapping.mbid_mapping
               JOIN (VALUES %s) AS t(recording_msid)
              USING (recording_msid)
              WHERE recording_mbid IS NOT NULL
         """
-        conn = timescale.engine.raw_connection()
+        conn = listens_db.engine.raw_connection()
         try:
             with conn.cursor() as curs:
                 execute_values(curs, query, [(msid,) for msid in msids], page_size=len(msids))

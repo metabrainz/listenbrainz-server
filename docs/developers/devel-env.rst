@@ -112,7 +112,7 @@ register for one at the `Last.fm API page`_. Look for the following section in `
 
 Update the ``LASTFM_API_KEY`` field with your Last.fm API key.
 
-You also need to update the ``API_URL`` field value to ``http://localhost:8100``.
+You also need to update the ``API_URL`` field value to ``http://localhost:8103``.
 
 To use the Spotify importer you need to register an application on the
 `Spotify Developer Dashboard`_. Use ``http://127.0.0.1:8100/settings/music-services/spotify/callback/``
@@ -226,6 +226,7 @@ proceeding, run these commands to initialize the databases.
 
     ./develop.sh manage init_db --create-db
     ./develop.sh manage init_ts_db --create-db
+    ./develop.sh manage init_listens_db --create-db
 
 Your development environment is now ready. Now, let's actually see ListenBrainz
 load locally!
@@ -279,7 +280,8 @@ different services. We provide a small description of each container here:
 * ``redis``: A redis server to store temporary server data
 * ``timescale``: A PostgreSQL server with the TimescaleDB extension that stores users listens
 * ``rabbitmq``: Used for passing listens between different services
-* ``web``: This is the main ListenBrainz server
+* ``web``: This is the main ListenBrainz web-only server
+* ``api``: The main ListenBrainz API-only server
 * ``api_compat``: A Last.fm-compatible API server
 * ``websockets``: A websocket server used for the user-following and playlist updates on the front-end
 * ``static_builder``: A helper service to build Javascript/Typescript and CSS assets if they are changed

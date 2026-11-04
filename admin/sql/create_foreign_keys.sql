@@ -175,4 +175,39 @@ ALTER TABLE navidrome_tokens
     REFERENCES navidrome_servers (id)
     ON DELETE CASCADE;
 
+ALTER TABLE playlist.playlist_recording
+    ADD CONSTRAINT playlist_id_foreign_key
+    FOREIGN KEY (playlist_id)
+    REFERENCES "playlist".playlist (id)
+    ON DELETE CASCADE;
+ALTER TABLE playlist.playlist_collaborator
+    ADD CONSTRAINT playlist_id_foreign_key
+    FOREIGN KEY (playlist_id)
+    REFERENCES "playlist".playlist (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE playlist.playlist
+    ADD CONSTRAINT playlist_creator_id_foreign_key
+    FOREIGN KEY (creator_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE playlist.playlist
+    ADD CONSTRAINT playlist_created_for_id_foreign_key
+    FOREIGN KEY (created_for_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE playlist.playlist_collaborator
+    ADD CONSTRAINT playlist_collaborator_id_foreign_key
+    FOREIGN KEY (collaborator_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE playlist.playlist_recording
+    ADD CONSTRAINT playlist_recording_added_by_id_foreign_key
+    FOREIGN KEY (added_by_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 COMMIT;

@@ -566,7 +566,14 @@ def validate_auth_header(*, optional: bool = False, fetch_email: bool = False, s
                 if scope not in token_scopes:
                     raise APIUnauthorized("Insufficient scope.")
 
-        user = db_user.get_by_mb_id(db_conn, token["sub"], fetch_email=fetch_email)
+        # The introspection response identifies the user with the numeric
+        # MetaBrainz account id in "sub" and carries the MusicBrainz username in
+        # "username". get_by_mb_id() matches against the musicbrainz_id column,
+        # so it needs the username.
+        username = token.get("username")
+        if not username:
+            raise APIUnauthorized("Invalid authorization token.")
+        user = db_user.get_by_mb_id(db_conn, username, fetch_email=fetch_email)
     else:
         user = db_user.get_by_token(db_conn, auth_token, fetch_email=fetch_email)
 

@@ -80,6 +80,7 @@ function PlaybackControlButton(props: PlaybackControlButtonProps) {
     <button
       className={`btn-link ${className} ${disabled ? "disabled" : ""}`}
       title={title}
+      aria-label={title}
       onClick={disabled ? noop : () => action()}
       type="button"
       tabIndex={0}
@@ -239,6 +240,14 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const toggleMusicPlayer = React.useCallback(() => {
     setShowMusicPlayer((prevShow) => !prevShow);
   }, []);
+
+  // The volume slider is positioned independently of the music player,
+  // so hide it when the player is minimised to avoid leaving it on screen
+  React.useEffect(() => {
+    if (!showMusicPlayer) {
+      setShowVolume(false);
+    }
+  }, [showMusicPlayer, setShowVolume]);
 
   const musicPlayerCoverArtRef = React.useRef<HTMLImageElement>(null);
 

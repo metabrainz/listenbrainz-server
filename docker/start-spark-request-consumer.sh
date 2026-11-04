@@ -7,7 +7,8 @@ rm -rf pyspark_venv pyspark_venv.tar.gz listenbrainz_spark_request_consumer.zip 
 
 python3.13 -m venv pyspark_venv
 source pyspark_venv/bin/activate
-pip install --upgrade pip setuptools wheel venv-pack -r requirements_spark.txt
+pip install --no-cache-dir --no-deps --upgrade "pip @ https://files.pythonhosted.org/packages/3f/06/3e4420302363fbb71be3c7f35ce042f54bfca330e3e66b3a2e3c4cca579f/pip-26.2.2-py3-none-any.whl#sha256=fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70"
+pip install --upgrade setuptools wheel venv-pack -r requirements_spark.txt
 venv-pack -o pyspark_venv.tar.gz
 
 VENV_PATH="$(realpath pyspark_venv)"

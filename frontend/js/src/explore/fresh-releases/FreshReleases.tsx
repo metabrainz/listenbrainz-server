@@ -134,7 +134,8 @@ export default function FreshReleases() {
     setHasSelectedSortDirection,
   ] = React.useState(false);
 
-  const releaseCardGridRef = React.useRef(null);
+  const releaseCardGridRef = React.useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = React.useState(false);
 
   const availableSortOptions =
     pageType === PAGE_TYPE_SITEWIDE
@@ -437,7 +438,11 @@ export default function FreshReleases() {
               </div>
             </div>
           ) : (
-            <div id="release-card-grids" ref={releaseCardGridRef}>
+            <div
+              id="release-card-grids"
+              ref={releaseCardGridRef}
+              className={isDragging ? "is-dragging" : ""}
+            >
               {filteredList.length === 0 ? (
                 <div className="no-release">
                   <img
@@ -462,6 +467,8 @@ export default function FreshReleases() {
             releases={filteredList}
             order={sort}
             direction={sortDirection}
+            releaseCardGridRef={releaseCardGridRef}
+            onDraggingChange={setIsDragging}
           />
         )}
         <ReleaseFilters

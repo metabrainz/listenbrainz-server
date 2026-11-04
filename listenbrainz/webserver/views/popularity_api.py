@@ -2,7 +2,7 @@ from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, request, current_app, jsonify
 
 from listenbrainz.db import popularity
-from listenbrainz.webserver import ts_conn, db_conn
+from listenbrainz.webserver import ts_conn, db_conn, listens_conn
 from listenbrainz.webserver.decorators import cache_public, crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.views.api_tools import is_valid_uuid, MAX_ITEMS_PER_GET, ensure_user_token_for_expensive_endpoint
@@ -51,7 +51,7 @@ def top_recordings_for_artist(artist_mbid):
     ensure_user_token_for_expensive_endpoint()
 
     try:
-        recordings = popularity.get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid)
+        recordings = popularity.get_top_recordings_for_artist(db_conn, ts_conn, listens_conn, artist_mbid)
         return recordings
     except Exception:
         current_app.logger.error("Error while fetching metadata for recordings: ", exc_info=True)

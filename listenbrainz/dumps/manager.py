@@ -192,7 +192,7 @@ def create_full(location: str, threads: int, dump_id: int, do_listen_dump: bool,
 @click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'),
               help="path to the directory where the public dumps should be made")
 @click.option('--location-private', '-lp', default=None,
-              help="path to the directory where the private dumps should be made")
+              help="path to the directory where the private postgres dump should be made")
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT,
               help="the number of threads to be used while compression")
 @click.option('--dump-id', type=int, default=None,
@@ -200,7 +200,7 @@ def create_full(location: str, threads: int, dump_id: int, do_listen_dump: bool,
 @click.option('--postgres/--no-postgres', 'do_db_dump', type=bool, default=True,
               help="If True, make a public/private postgres dump")
 @click.option('--timescale/--no-timescale', 'do_timescale_dump', type=bool, default=True,
-              help="If True, make a public/private timescale dump")
+              help="If True, make a public timescale dump")
 @click.option("--location-temp", "-lt", default=None,
               help="path to directory to use for creating necessary temporary files during dumps.")
 @click.option("--location-private-temp", "-lpt", default=None,
@@ -216,15 +216,16 @@ def create_db_dump(location: str, location_private: str, threads: int, dump_id: 
         if not do_db_dump and not do_timescale_dump:
             current_app.logger.error("Nothing to dump, both postgres and timescale dumps are disabled")
             sys.exit(-1)
-        if not location_private:
-            current_app.logger.error("No location specified for creating private database and timescale dumps")
-            sys.exit(-1)
-        if os.path.normpath(location_private) == os.path.normpath(location):
-            current_app.logger.error("Location specified for public and private dumps cannot be same")
-            sys.exit(-1)
-        if PurePath(location_private).is_relative_to(PurePath(location)):
-            current_app.logger.error("Private dumps location cannot be a subdirectory of public dumps location")
-            sys.exit(-1)
+        if do_db_dump:
+            if not location_private:
+                current_app.logger.error("No location specified for creating private database dumps")
+                sys.exit(-1)
+            if os.path.normpath(location_private) == os.path.normpath(location):
+                current_app.logger.error("Location specified for public and private dumps cannot be same")
+                sys.exit(-1)
+            if PurePath(location_private).is_relative_to(PurePath(location)):
+                current_app.logger.error("Private dumps location cannot be a subdirectory of public dumps location")
+                sys.exit(-1)
 
         if dump_id is None:
             end_time = datetime.now(tz=timezone.utc)
@@ -240,8 +241,11 @@ def create_db_dump(location: str, location_private: str, threads: int, dump_id: 
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
 
-        private_dump_path = os.path.join(location_private, dump_name)
-        create_path(private_dump_path)
+        # only the postgres dump has private data
+        private_dump_path = None
+        if do_db_dump:
+            private_dump_path = os.path.join(location_private, dump_name)
+            create_path(private_dump_path)
 
         locations = {
             "public": dump_path,
@@ -251,19 +255,17 @@ def create_db_dump(location: str, location_private: str, threads: int, dump_id: 
         }
 
         expected_num_dumps = 0
-        expected_num_private_dumps = 0
         if do_db_dump:
             dump_database("postgres", locations, end_time, threads)
             expected_num_dumps += 1
-            expected_num_private_dumps += 1
         if do_timescale_dump:
             dump_database("timescale", locations, end_time, threads)
             expected_num_dumps += 1
-            expected_num_private_dumps += 1
 
         try:
             write_hashes(dump_path)
-            write_hashes(private_dump_path)
+            if private_dump_path:
+                write_hashes(private_dump_path)
         except IOError as e:
             current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
             sys.exit(-1)
@@ -271,23 +273,25 @@ def create_db_dump(location: str, location_private: str, threads: int, dump_id: 
         try:
             # archive, md5, sha256 for each expected dump archive
             expected_num_dump_files = expected_num_dumps * 3
-            expected_num_private_dump_files = expected_num_private_dumps * 3
             if not sanity_check_dumps(dump_path, expected_num_dump_files):
                 return sys.exit(-1)
-            if not sanity_check_dumps(private_dump_path, expected_num_private_dump_files):
+            # the private dump only contains the postgres archive
+            if private_dump_path and not sanity_check_dumps(private_dump_path, 3):
                 return sys.exit(-1)
         except OSError:
             sys.exit(-1)
 
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
-        current_app.logger.info('Private dumps created and hashes written at %s' % private_dump_path)
 
         # Write the DUMP_ID file so that the FTP sync scripts can be more robust
         with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
             f.write("%s %s db\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
-        # Write the DUMP_ID file so that the backup sync scripts can be more robust
-        with open(os.path.join(private_dump_path, "DUMP_ID.txt"), "w") as f:
-            f.write("%s %s db\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
+
+        if private_dump_path:
+            current_app.logger.info('Private dumps created and hashes written at %s' % private_dump_path)
+            # Write the DUMP_ID file so that the backup sync scripts can be more robust
+            with open(os.path.join(private_dump_path, "DUMP_ID.txt"), "w") as f:
+                f.write("%s %s db\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
 
 
 @cli.command(name="create_incremental")
@@ -421,8 +425,6 @@ def create_sample(location, threads):
 @cli.command(name="import_dump")
 @click.option('--private-archive', '-pr', default=None, required=False,
               help="the path to the ListenBrainz private dump to be imported")
-@click.option('--private-timescale-archive', default=None, required=False,
-              help="the path to the ListenBrainz private timescale dump to be imported")
 @click.option('--public-archive', '-pu', default=None, required=False,
               help="the path to the ListenBrainz public dump to be imported")
 @click.option('--public-timescale-archive', default=None, required=False,
@@ -433,14 +435,12 @@ def create_sample(location, threads):
               help="the path to the ListenBrainz sample dump archive to be imported")
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT,
               help="the number of threads to use during decompression, defaults to 1")
-def import_dump(private_archive, private_timescale_archive,
-                public_archive, public_timescale_archive,
+def import_dump(private_archive, public_archive, public_timescale_archive,
                 listen_archive, sample_archive, threads):
     """ Import a ListenBrainz dump into the database.
 
     Args:
         private_archive (str): the path to the ListenBrainz private dump to be imported
-        private_timescale_archive (str): the path to the ListenBrainz private timescale dump to be imported
         public_archive (str): the path to the ListenBrainz public dump to be imported
         public_timescale_archive (str): the path to the ListenBrainz public timescale dump to be imported
         listen_archive (str): the path to the ListenBrainz listen dump archive to be imported
@@ -455,9 +455,8 @@ def import_dump(private_archive, private_timescale_archive,
     """
     app = create_app(bypass_pgbouncer=True)
     with app.app_context():
-        if private_archive or private_timescale_archive or public_archive or public_timescale_archive:
-            import_postgres_dump(private_archive, private_timescale_archive,
-                                 public_archive, public_timescale_archive,
+        if private_archive or public_archive or public_timescale_archive:
+            import_postgres_dump(private_archive, public_archive, public_timescale_archive,
                                  threads)
 
         if listen_archive:

@@ -4,6 +4,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCog } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
+import { Dropdown } from "react-bootstrap";
 import PlaylistItemCard from "../../../playlists/components/PlaylistItemCard";
 import PlaylistMenu from "../../../playlists/components/PlaylistMenu";
 
@@ -46,20 +47,17 @@ export function Playlist(props: PlaylistProps) {
   return (
     <div>
       <div id="playlist-title">
-        <span className="dropdown pull-right">
-          <button
-            className="btn btn-info dropdown-toggle"
-            type="button"
+        <Dropdown as="span" className="pull-right">
+          <Dropdown.Toggle
+            as="button"
+            className="btn btn-info"
             id="options-dropdown"
-            data-bs-toggle="dropdown"
-            aria-haspopup="true"
-            aria-expanded="false"
           >
             <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
             &nbsp;Options
-          </button>
+          </Dropdown.Toggle>
           <PlaylistMenu playlist={playlist} disallowEmptyPlaylistExport />
-        </span>
+        </Dropdown>
         <div id="title">{playlist?.title}</div>
         <div id="description">{playlist?.annotation}</div>
       </div>

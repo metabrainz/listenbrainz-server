@@ -18,7 +18,7 @@ from data.model.user_era_activity import EraActivityRecord
 from data.model.user_artist_evolution_activity import ArtistEvolutionActivityRecord
 from listenbrainz.db import year_in_music as db_year_in_music
 from listenbrainz.db.year_in_music import LAST_FM_FOUNDING_YEAR, MAX_YEAR_IN_MUSIC_YEAR
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn, listens_conn
 from listenbrainz.webserver.decorators import cache_public, crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APINoContent, APINotFound)
@@ -467,7 +467,7 @@ def _get_artist_activity(release_groups_list):
         WHERE artist_mbid IN %s
         """
         artist_mbid_tuple = tuple(artist_mbids)
-        with ts_conn.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+        with listens_conn.connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
             curs.execute(query, (artist_mbid_tuple,))
             artist_mbid_name_map = {str(row["artist_mbid"]): row["artist_name"] for row in curs.fetchall() if row["artist_name"]}
 

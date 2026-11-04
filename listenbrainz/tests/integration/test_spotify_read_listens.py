@@ -54,7 +54,7 @@ class SpotifyReaderTestCase(ListenAPIIntegrationTestCase):
 
         payload = r.json['payload']
         self.assertEqual(payload['count'], 1)
-        self.assertEqual(payload['latest_listen_ts'], 1635138793)
+        self.assertEqual(payload['listens'][0]['listened_at'], 1635138793)
 
         actual_listen = payload['listens'][0]
         expected_listen = expected_data['payload']['listens'][0]

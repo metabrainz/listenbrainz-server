@@ -58,7 +58,7 @@ export default NiceModal.create(() => {
         .
         <br />
         However if you encounter an issue please&nbsp;
-        <a href="mailto:listenbrainz@metabrainz.org">contact us</a>.
+        <a href="mailto:support@listenbrainz.org">contact us</a>.
       </Modal.Body>
       <Modal.Footer>
         <button

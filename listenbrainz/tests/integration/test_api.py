@@ -10,6 +10,7 @@ import requests_mock
 from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
+from listenbrainz.db import listens as listens_db
 import listenbrainz.db.user_relationship as db_user_relationship
 from data.model.external_service import ExternalServiceType
 from listenbrainz.listenstore.timescale_utils import delete_listens
@@ -49,17 +50,6 @@ class APITestCase(ListenAPIIntegrationTestCase):
             query = "INSERT INTO similarity.artist (mbid0, mbid1, score) VALUES %s"
             execute_values(curs, query, similar_artists, template=None)
 
-            curs.execute("DROP TABLE IF EXISTS mapping.mb_artist_metadata_cache")
-            curs.execute("""CREATE TABLE mapping.mb_artist_metadata_cache (
-                                            dirty boolean,
-                                            last_updated timestamp with time zone default now(),
-                                            artist_mbid uuid,
-                                            artist_data jsonb,
-                                            tag_data jsonb,
-                                            release_group_data jsonb)""")
-            query = "INSERT INTO mapping.mb_artist_metadata_cache (dirty, artist_mbid, artist_data, tag_data, release_group_data) VALUES %s"
-            execute_values(curs, query, artist_cache, template=None)
-
             curs.execute("DROP TABLE IF EXISTS popularity.top_recording")
             curs.execute("""CREATE TABLE popularity.top_recording (artist_mbid uuid, recording_mbid uuid,
                                          total_listen_count integer, total_user_count integer)""")
@@ -71,6 +61,19 @@ class APITestCase(ListenAPIIntegrationTestCase):
                                          total_listen_count integer, total_user_count integer)""")
 
             self.ts_conn.connection.commit()
+
+        with self.listens_conn.connection.cursor() as curs:
+            curs.execute("DROP TABLE IF EXISTS mapping.mb_artist_metadata_cache")
+            curs.execute("""CREATE TABLE mapping.mb_artist_metadata_cache (
+                                            dirty boolean,
+                                            last_updated timestamp with time zone default now(),
+                                            artist_mbid uuid,
+                                            artist_data jsonb,
+                                            tag_data jsonb,
+                                            release_group_data jsonb)""")
+            query = "INSERT INTO mapping.mb_artist_metadata_cache (dirty, artist_mbid, artist_data, tag_data, release_group_data) VALUES %s"
+            execute_values(curs, query, artist_cache, template=None)
+            self.listens_conn.connection.commit()
 
     def test_get_listens_invalid_count(self):
         """If the count argument is negative, the API should raise HTTP 400"""
@@ -116,7 +119,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         # send a listen
         ts = int(time.time())
         payload['payload'][0]['listened_at'] = ts
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, wait_for_writer=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -212,7 +215,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         user = db_user.get_or_create(self.db_conn, 1, 'test_order')
         for i in range(3):
             payload['payload'][0]['listened_at'] = ts + (100 * i)
-            response = self.send_data(payload, user, recalculate=True)
+            response = self.send_data(payload, user, wait_for_writer=True)
             self.assert200(response)
             self.assertEqual(response.json['status'], 'ok')
 
@@ -569,7 +572,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         payload['payload'][0]['track_metadata']['release_name'] = '   '
         ts = int(time.time())
         payload['payload'][0]['listened_at'] = ts
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, wait_for_writer=True)
         self.assert200(response)
 
         url = self.custom_url_for('api_v1.get_listens',
@@ -753,7 +756,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
             payload = json.load(f)
         payload["payload"][0]["track_metadata"]["additional_info"]["duration_ms"] = "300000"
 
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, wait_for_writer=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -779,7 +782,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
             payload = json.load(f)
 
         payload['payload'][0]['listened_at'] = 1280258690
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, wait_for_writer=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -829,7 +832,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         """ Test mbid fields with [], "", null values are dropped without error """
         with open(self.path_to_data_file('invalid_mbid_listens.json'), 'r') as f:
             payload = json.load(f)
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, wait_for_writer=True)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
@@ -1016,7 +1019,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
             "token_type": "Bearer",
             "metabrainz_user_id": 123,
             "scope": "profile",
-            "sub": "lucifer",
+            "sub": 123,
+            "username": "lucifer",
             "issued_by": "https://metabrainz.org/",
             "expires_at": int(datetime(2023, 1, 2).timestamp()),
             "issued_at": int(datetime(2023, 1, 1).timestamp()),
@@ -1036,7 +1040,8 @@ class APITestCase(ListenAPIIntegrationTestCase):
             "token_type": "Bearer",
             "metabrainz_user_id": 123,
             "scope": "profile",
-            "sub": "lucifer",
+            "sub": 123,
+            "username": "lucifer",
             "issued_by": "https://metabrainz.org/",
             "expires_at": int((datetime.now() + timedelta(hours=1)).timestamp()),
             "issued_at": int(datetime.now().timestamp()),
@@ -1049,6 +1054,61 @@ class APITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert401(response)
         self.assertEqual(response.json["error"], "Insufficient scope.")
+
+    @requests_mock.Mocker()
+    def test_oauth_valid_access_token(self, mock_requests):
+        """Test that a valid MetaBrainz access token authenticates the user.
+
+        The introspection response puts the numeric MetaBrainz account id in
+        "sub" and the MusicBrainz username in "username", so the user lookup has
+        to use the latter.
+        """
+        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
+            payload = json.load(f)
+
+        mock_requests.post(self.app.config["OAUTH_INTROSPECTION_URL"], json={
+            "active": True,
+            "client_id": "abc",
+            "token_type": "Bearer",
+            "metabrainz_user_id": 123,
+            "scope": "profile listenbrainz:submit-listens",
+            "sub": 123,
+            "username": self.user["musicbrainz_id"],
+            "issued_by": "https://metabrainz.org/",
+            "expires_at": int((datetime.now() + timedelta(hours=1)).timestamp()),
+            "issued_at": int(datetime.now().timestamp()),
+        })
+        response = self.client.post(
+            self.custom_url_for('api_v1.submit_listen'),
+            data=json.dumps(payload),
+            headers={'Authorization': 'Bearer meba_123'},
+            content_type='application/json'
+        )
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+    @requests_mock.Mocker()
+    def test_oauth_client_credentials_token(self, mock_requests):
+        """Client-credentials tokens have no username and cannot authenticate a user."""
+        mock_requests.post(self.app.config["OAUTH_INTROSPECTION_URL"], json={
+            "active": True,
+            "client_id": "abc",
+            "token_type": "Bearer",
+            "scope": "",
+            "sub": "-1",
+            "issued_by": "https://metabrainz.org/",
+            "expires_at": int((datetime.now() + timedelta(hours=1)).timestamp()),
+            "issued_at": int(datetime.now().timestamp()),
+        })
+        # This endpoint does not require a scope, so authentication must reject
+        # the missing user identity itself.
+        response = self.client.post(
+            self.custom_url_for('api_v1.delete_listen'),
+            json={"listened_at": 1, "recording_msid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f"},
+            headers={'Authorization': 'Bearer meba_123'},
+        )
+        self.assert401(response)
+        self.assertEqual(response.json["error"], "Invalid authorization token.")
 
     def test_get_playing_now(self):
         """ Test for valid submission and retrieval of listen_type 'playing_now'
@@ -1593,7 +1653,7 @@ class ListenAPICachingTestCase(ListenAPIIntegrationTestCase):
             self.custom_url_for('api_v1.delete_listen'),
             data=json.dumps({
                 'listened_at': listen['listened_at'],
-                'recording_msid': listen['track_metadata']['additional_info']['recording_msid']
+                'recording_msid': listen['recording_msid']
             }),
             headers={"Authorization": f"Token {self.user['auth_token']}"},
             content_type='application/json'
@@ -1604,8 +1664,18 @@ class ListenAPICachingTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(cache.get(listens_key), None)
 
         delete_listens()
+        with listens_db.engine.connect() as connection:
+            self.assertEqual(connection.execute(text(
+                "SELECT count(*) FROM listen WHERE user_id = :user_id"
+            ), {"user_id": self.user["id"]}).scalar(), 0)
+            self.assertEqual(connection.execute(text(
+                "SELECT status FROM listen_delete_metadata WHERE user_id = :user_id"
+            ), {"user_id": self.user["id"]}).scalar(), "complete")
+        self.mock_fetch_listens.reset_mock()
         response = self.client.get(url)
         self.assert200(response)
+        # Cache invalidation forces a fresh fetch from the listens DB, where the listen is deleted.
+        self.mock_fetch_listens.assert_called_once()
         self.assertEqual(response.json["payload"]["listens"], [])
 
     def test_get_listens_caching_manual_mapping(self):
@@ -1630,7 +1700,7 @@ class ListenAPICachingTestCase(ListenAPIIntegrationTestCase):
             self.custom_url_for("metadata.submit_manual_mapping"),
             headers={"Authorization": f"Token {self.user['auth_token']}"},
             json={
-                "recording_msid": response.json["payload"]["listens"][0]["track_metadata"]["additional_info"]["recording_msid"],
+                "recording_msid": response.json["payload"]["listens"][0]["recording_msid"],
                 "recording_mbid": recording_mbid,
             },
         )

@@ -92,33 +92,37 @@ TIMESCALE_ADMIN_LB_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
     {{- if service "pgbouncer-listenbrainz"}}
     {{with index (service "pgbouncer-listenbrainz") 0}}
 SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = """postgresql://{{template "KEY" "timescale_lb_user"}}:{{template "KEY" "timescale_lb_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "timescale_db_name"}}"""
-# for use in playlists admin view
-SQLALCHEMY_BINDS = {
-   'timescale': SQLALCHEMY_TIMESCALE_PGBOUNCER_URI
-}
     {{end}}
     {{else}}
 SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = "SERVICEDOESNOTEXIST_pgbouncer-listenbrainz"
-SQLALCHEMY_BINDS = {}
     {{end}}
 {{else}}
 SQLALCHEMY_TIMESCALE_URI = ""
 TIMESCALE_ADMIN_URI=""
 TIMESCALE_ADMIN_LB_URI=""
 SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = ""
-SQLALCHEMY_BINDS = {}
 {{end}}
 
 
-# New listens database (plain postgres, listens partitioned by user_id). During migration, new
-# listens and deletes are mirrored here while Timescale remains the read store.
-{{if service "listenbrainz-user-listenstore"}}
+# Listens database (plain postgres, listens partitioned by user_id). Writes go here first;
+# deletions and permanent deletion history live here only. Timescale retains its listens.
+{{if service "pgbouncer-listenbrainz-user-listenstore"}}
+{{with index (service "pgbouncer-listenbrainz-user-listenstore") 0}}
+SQLALCHEMY_LISTENS_URI = """postgresql://{{template "KEY" "listens_db_user"}}:{{template "KEY" "listens_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listens_db_name"}}"""
+{{end}}
+{{else if service "listenbrainz-user-listenstore"}}
 {{with index (service "listenbrainz-user-listenstore") 0}}
 SQLALCHEMY_LISTENS_URI = """postgresql://{{template "KEY" "listens_db_user"}}:{{template "KEY" "listens_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listens_db_name"}}"""
-LISTENS_ADMIN_URI = """postgresql://postgres:{{template "KEY" "listens_admin_password"}}@{{.Address}}:{{.Port}}/postgres"""
 {{end}}
 {{else}}
 SQLALCHEMY_LISTENS_URI = "SERVICEDOESNOTEXIST_listenbrainz-user-listenstore"
+{{end}}
+
+{{if service "listenbrainz-user-listenstore"}}
+{{with index (service "listenbrainz-user-listenstore") 0}}
+LISTENS_ADMIN_URI = """postgresql://postgres:{{template "KEY" "listens_admin_password"}}@{{.Address}}:{{.Port}}/postgres"""
+{{end}}
+{{else}}
 LISTENS_ADMIN_URI = "SERVICEDOESNOTEXIST_listenbrainz-user-listenstore"
 {{end}}
 
@@ -208,6 +212,9 @@ SPARK_RESULT_EXCHANGE = '''{{template "KEY" "spark_result_exchange"}}'''
 SPARK_RESULT_QUEUE = '''{{template "KEY" "spark_result_queue"}}'''
 SPARK_REQUEST_EXCHANGE = '''{{template "KEY" "spark_request_exchange"}}'''
 SPARK_REQUEST_QUEUE = '''{{template "KEY" "spark_request_queue"}}'''
+
+CLICKHOUSE_RESULT_EXCHANGE = '''{{template "KEY" "clickhouse_result_exchange"}}'''
+CLICKHOUSE_RESULT_QUEUE = '''{{template "KEY" "clickhouse_result_queue"}}'''
 
 REJECTION_EXCHANGE = '''{{template "KEY" "rejection_exchange"}}'''
 REJECTION_QUEUE = '''{{template "KEY" "rejection_queue"}}'''

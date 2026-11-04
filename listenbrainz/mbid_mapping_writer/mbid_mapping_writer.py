@@ -57,17 +57,19 @@ class MBIDMappingWriter(ConsumerMixin):
 
 if __name__ == "__main__":
     # Pool sizing for the writer process:
-    #   ts: 3 ThreadPoolExecutor workers (matcher) each hold up to 2 timescale
-    #       connections at peak (ts_conn for the surrounding work + a brief
+    #   listens: 3 ThreadPoolExecutor workers (matcher) each hold up to 2 listens
+    #       DB connections at peak (listens_conn for the surrounding work + a brief
     #       raw_connection() inside recording_lookup_base) → 6, plus 1 main
     #       job_queue thread + 1 occasional legacy loader ≈ 8 concurrent users.
+    #   ts: only the occasional legacy loader reads listens and messybrainz data.
     #   db / meb: writer never touches them, keep the pool minimal so we don't
     #       hold idle slots on pgbouncer-master for nothing.
     app = create_app(
         use_pool=True,
         pool_size_overrides={
             "db": (1, 1),
-            "ts": (6, 4),
+            "ts": (1, 1),
+            "listens": (6, 4),
             "meb": (1, 1),
         },
     )

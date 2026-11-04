@@ -49,11 +49,6 @@ IS_MUSICBRAINZ_UP = True  # if set to False, login page will be blocked
 MBID_MAPPING_DATABASE_URI = ""
 MB_DATABASE_URI = ""
 
-# for use in playlists admin view
-SQLALCHEMY_BINDS = {
-   'timescale': SQLALCHEMY_TIMESCALE_PGBOUNCER_URI
-}
-
 # Redis
 REDIS_HOST = "redis"
 REDIS_PORT = 6379
@@ -80,6 +75,10 @@ SPARK_RESULT_EXCHANGE = "spark_result"
 SPARK_RESULT_QUEUE = "spark_result"
 SPARK_REQUEST_EXCHANGE = "spark_request"
 SPARK_REQUEST_QUEUE = "spark_request"
+
+# ClickHouse
+CLICKHOUSE_RESULT_EXCHANGE = "clickhouse_result"
+CLICKHOUSE_RESULT_QUEUE = "clickhouse_result"
 
 REJECTION_EXCHANGE = "rejection"
 REJECTION_QUEUE = "rejection"
@@ -160,7 +159,7 @@ MAX_CONTENT_LENGTH = 200 * 1024 * 1024 + 10  # 200MB plus some buffer
 
 # Set to "https://api.listenbrainz.org" if you want to work on frontend for user statistics
 # without going through the process of generating the stats in local environment. Otherwise,
-# set it to "http://localhost:8100"
+# set it to "http://localhost:8103"
 API_URL = 'https://api.listenbrainz.org'
 LASTFM_PROXY_URL = 'http://localhost:8101/'
 SERVER_ROOT_URL = 'http://localhost:8100'

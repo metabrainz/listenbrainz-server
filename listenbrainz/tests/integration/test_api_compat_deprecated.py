@@ -156,7 +156,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         recalculate_all_user_data()
         to_ts = datetime.now(timezone.utc)
         with self.app.app_context():
-            listens, _, _ = self.ls.fetch_listens(self.user, to_ts=to_ts)
+            listens = self.ls.fetch_listens(self.user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
     def test_submit_listen_invalid_sid(self):

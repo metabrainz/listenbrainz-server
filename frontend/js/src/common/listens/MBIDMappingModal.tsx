@@ -9,7 +9,6 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { toast } from "react-toastify";
-import Tooltip from "react-tooltip";
 import { Link } from "react-router";
 import { merge } from "lodash";
 import ListenCard from "./ListenCard";
