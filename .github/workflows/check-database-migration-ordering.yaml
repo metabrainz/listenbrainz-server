@@ -1,0 +1,32 @@
+# ensure that the dates in database migration filenames are (roughly) at merge time. this is done to better allow automatically running migrations on self-hosted instances.
+# whomever merges needs to re-run this check right before merging.
+name: Check database migration filename date
+permissions: {}
+on:
+  pull_request:
+    branches: ['master']
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths: ['admin/sql/updates']
+jobs:
+  check-migration-date:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Find changed migrations
+        run: |
+          oldest_valid_timestamp=$(date --utc --date='1 days ago' +%s)
+          expired_migrations=0
+          for file in $(git diff --name-only master..HEAD admin/sql/updates); do
+            date=$(echo "$file" | rev | cut -d/ -f1 | rev | cut -d- -f1-3)
+            timestamp=$(date --utc --date="$date" +%s)
+            echo "::debug::Found migration: $file"
+            if [ "$timestamp" -lt "$oldest_valid_timestamp" ]; then
+              diff_days=$(awk -v oldest="$oldest_valid_timestamp" -v pull="$timestamp" 'BEGIN { print (oldest-pull)/(60*60*24) }' </dev/null)
+              echo "::error file=$file::Date in migration is too old by $diff_days days"
+              expired_migrations=$((expired_migrations + 1))
+            fi
+          done
+          exit $expired_migrations
