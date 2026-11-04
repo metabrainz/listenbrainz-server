@@ -466,7 +466,10 @@ export default function MusicServices() {
           navidromeAuth.username,
           "navidrome" as any
         );
-        const { imported, total } = response as any;
+        const {
+          total_imported: imported,
+          total_found: total,
+        } = response as any;
         toast.success(
           <ToastMsg
             title="Import Successful"
