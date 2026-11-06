@@ -1,6 +1,7 @@
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, jsonify, request
 from pydantic import ValidationError
+from datetime import datetime, timezone
 
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
@@ -46,16 +47,29 @@ def recording_feedback():
         log_raise_400("JSON document must contain either recording_msid or recording_mbid, and "
                       "score top level keys", data)
 
-    if set(data) - {"recording_msid", "recording_mbid", "score"}:
-        log_raise_400("JSON document may only contain recording_msid, recording_mbid and "
-                      "score top level keys", data)
+    if set(data) - {"recording_msid", "recording_mbid", "score", "timestamp"}:
+        log_raise_400("JSON document may only contain recording_msid, recording_mbid, score and "
+                      "timestamp top level keys", data)
+
+    created = None
+    if "timestamp" in data:
+        timestamp = data["timestamp"]
+
+        if isinstance(timestamp, bool) or not isinstance(timestamp, int):
+            log_raise_400("timestamp must be an integer Unix timestamp", data)
+
+        try:
+            created = datetime.fromtimestamp(timestamp, timezone.utc)
+        except (ValueError, OverflowError, OSError):
+            log_raise_400("timestamp is out of valid range", data)
 
     try:
         feedback = Feedback(
             user_id=user["id"],
             recording_msid=data.get("recording_msid", None),
             recording_mbid=data.get("recording_mbid", None),
-            score=data["score"]
+            score=data["score"],
+            created=created
         )
     except ValidationError as e:
         # Validation errors from the Pydantic model are multi-line. While passing it as a response the new lines
