@@ -83,14 +83,12 @@ def create_soundcloud_metadata_index(use_lb_conn: bool):
             use_lb_conn: whether to use LB conn or not
     """
 
-    cache_conn = None
     listens_conn = None
     if use_lb_conn and config.SQLALCHEMY_LISTENS_URI:
-        cache_conn = psycopg2.connect(config.SQLALCHEMY_LISTENS_URI)
         listens_conn = psycopg2.connect(config.SQLALCHEMY_LISTENS_URI)
     log("soundcloud_metadata_index: start!")
 
-    ndx = SoundCloudMetadataIndex(cache_conn, listens_conn)
+    ndx = SoundCloudMetadataIndex(listens_conn)
     ndx.run()
 
     log("soundcloud_metadata_index: done!")
