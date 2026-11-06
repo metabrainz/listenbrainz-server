@@ -69,5 +69,5 @@ class SparkReader(ConsumerMixin):
 
 
 if __name__ == '__main__':
-    sr = SparkReader(create_app())
+    sr = SparkReader(create_app(bypass_pgbouncer=True))
     sr.start()
