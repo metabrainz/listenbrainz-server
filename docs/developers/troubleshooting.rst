@@ -27,3 +27,22 @@ the command prompt. Then, restart your WSL instance.
 
 For more detailed information, refer to the `wsl settings page 
 <https://learn.microsoft.com/en-us/windows/wsl/wsl-config#main-wsl-settings>`_.
+
+
+macOS (Apple Silicon)
+^^^^^^^^^^^^^^^^^^^^^
+
+If containers fail with ``exec format error`` or ``input/output error``, or
+database services such as ``lb_db`` cannot be resolved, even though the images
+report the ``arm64`` architecture, check which image store Docker Desktop uses.
+
+This has been seen on Docker Desktop 4.97 with the containerd image store
+enabled: the TimescaleDB entrypoint script and some CouchDB executables
+inside the containers were zero-byte files.
+
+To fix it, switch back to the classic image store (overlay2):
+
+1. Open Docker Desktop → Settings → General.
+2. Untick ``Use containerd for pulling and storing images``.
+3. Click Apply & Restart.
+4. Rebuild the images with ``./develop.sh build``.
