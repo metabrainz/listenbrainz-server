@@ -154,9 +154,6 @@ def dump_sample_data(location: str):
                 fp,
             )
 
-        transaction.rollback()
-
-    with listens_db.engine.connect() as connection, connection.begin() as transaction:
         listens_curs = connection.connection.cursor(cursor_factory=RealDictCursor)
         popularity_dir = os.path.join(location, "popularity")
         os.makedirs(popularity_dir, exist_ok=True)
@@ -330,10 +327,8 @@ def import_sample_data(archive_path, threads):
     }
 
     # the metadata caches and the popularity tables live in the listens database
-    listens_connection = listens_db.engine.raw_connection()
     connection = listens_db.engine.raw_connection()
     try:
-        listens_cursor = listens_connection.cursor()
         cursor = connection.cursor()
         with tarfile.open(fileobj=zstd.stdout, mode="r|") as tar:
             for member in tar:
@@ -370,14 +365,14 @@ def import_sample_data(archive_path, threads):
                         chunk.append(row)
                         if len(chunk) == chunk_size:
                             param = f"[{','.join(chunk)}]"
-                            listens_cursor.execute(query, (param,))
+                            cursor.execute(query, (param,))
                             chunk = []
 
                     if chunk:
                         param = f"[{",".join(chunk)}]"
-                        listens_cursor.execute(query, (param,))
+                        cursor.execute(query, (param,))
 
-                    listens_connection.commit()
+                    connection.commit()
                     current_app.logger.info("Imported table %s", jsonl_file_table_map[file_name])
                 elif file_name in csv_file_table_map:
                     current_app.logger.info("Importing data into %s table...", csv_file_table_map[file_name])
@@ -396,5 +391,4 @@ def import_sample_data(archive_path, threads):
 
     finally:
         connection.close()
-        listens_connection.close()
         zstd.stdout.close()
