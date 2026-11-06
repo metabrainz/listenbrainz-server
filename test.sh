@@ -25,6 +25,9 @@ fi
 # ./test.sh spark          run spark tests
 # ./test.sh spark -b       build spark test containers
 
+# CLICKHOUSE TESTS
+# ./test.sh listenbrainz/clickhouse     run ClickHouse tests against real database services
+
 COMPOSE_FILE_LOC=docker/docker-compose.test.yml
 COMPOSE_PROJECT_NAME=listenbrainz_test
 
@@ -88,7 +91,7 @@ function build_unit_containers {
 }
 
 function bring_up_unit_db {
-    invoke_docker_compose up -d lb_db redis rabbitmq couchdb timescale_writer websockets
+    invoke_docker_compose up -d lb_db redis rabbitmq couchdb clickhouse timescale_writer websockets
 }
 
 function bring_up_background_tasks {
