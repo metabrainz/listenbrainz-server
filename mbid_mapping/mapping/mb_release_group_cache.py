@@ -34,7 +34,7 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
         super().__init__("mapping.mb_release_group_cache", select_conn, insert_conn, batch_size, unlogged)
 
     def get_create_table_columns(self):
-        # this table is created in local development and tables using admin/timescale/create_tables.sql
+        # this table is created in local development and tables using admin/listens/create_tables.sql
         # remember to keep both in sync.
         # TODO: DO this.
         return [("dirty ",                     "BOOLEAN DEFAULT FALSE"),
