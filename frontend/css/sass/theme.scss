@@ -576,8 +576,18 @@
     }
 
     .text-muted,
+    .text-secondary,
     .text-body-secondary {
       color: var(--lb-text-muted) !important;
+    }
+
+    // entity-pages.scss sets this link to $blue, which is unreadable on dark cards
+    .review .review-card-footer .read-more-link {
+      color: var(--bs-link-color);
+
+      &:hover {
+        color: var(--bs-link-hover-color);
+      }
     }
 
     .bg-light,
