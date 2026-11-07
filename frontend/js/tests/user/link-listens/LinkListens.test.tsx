@@ -27,13 +27,16 @@ const reactQueryWrapper = ({ children }: any) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
-function renderLinkListensPage(initialEntry = "/settings/link-listens/") {
+function renderLinkListensPage(
+  initialEntry = "/settings/link-listens/",
+  currentUser: any = missingDataProps.user
+) {
   return renderWithProviders(
     <MemoryRouter initialEntries={[initialEntry]}>
       <LinkListensPage />
     </MemoryRouter>,
     {
-      currentUser: missingDataProps.user,
+      currentUser,
     },
     {
       wrapper: reactQueryWrapper,
@@ -41,6 +44,42 @@ function renderLinkListensPage(initialEntry = "/settings/link-listens/") {
     false
   );
 }
+
+const duplicateListensPageData = {
+  unlinked_listens: [
+    {
+      artist_name: "Mouse",
+      listened_at: "2026-07-13 11:04:00Z",
+      recording_name: "Drawn Cart",
+      release_name: null,
+      recording_msid: "00000001-1111-1111-1111-111111111111",
+    },
+    {
+      artist_name: "The Vile",
+      listened_at: "2026-07-12 12:45:00Z",
+      recording_name: "Immoral and Greed",
+      release_name: null,
+      recording_msid: "00000002-1111-1111-1111-111111111111",
+    },
+    {
+      artist_name: "The Sumerians",
+      listened_at: "2026-07-12 00:53:00Z",
+      recording_name: "Fall of the First Cities",
+      release_name: null,
+      recording_msid: "00000003-1111-1111-1111-111111111111",
+    },
+    ...Array.from({ length: 9 }, (_, index) => ({
+      artist_name: "Les Anjolok",
+      listened_at: "2026-07-10 21:23:00Z",
+      recording_name: "Aibuojọ",
+      release_name: null,
+      recording_msid: `${String(index + 10).padStart(
+        8,
+        "0"
+      )}-1111-1111-1111-111111111111`,
+    })),
+  ],
+};
 
 describe("LinkListensPage", () => {
   let server: SetupServerApi;
@@ -50,6 +89,9 @@ describe("LinkListensPage", () => {
     const handlers = [
       http.post("/settings/link-listens/", () => {
         return HttpResponse.json(pageData);
+      }),
+      http.post("/1/delete-listen", () => {
+        return new HttpResponse(null, { status: 200 });
       }),
     ];
     server = setupServer(...handlers);
@@ -118,5 +160,50 @@ describe("LinkListensPage", () => {
         screen.queryByText("Broadchurch (Music From The Original TV Series)")
       ).toBeNull();
     });
+  });
+
+  it("does not duplicate listens when a row with a colliding key is deleted", async () => {
+    const consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    queryClient.setQueryData(queryKey, duplicateListensPageData);
+    renderLinkListensPage("/settings/link-listens/", {
+      id: 1,
+      name: "FNORD",
+      auth_token: "never_gonna",
+    });
+
+    await screen.findByText(textContentMatcher("Link with MusicBrainz"));
+    await waitFor(() => {
+      expect(screen.getAllByTestId("listen")).toHaveLength(12);
+    });
+
+    // Several listens have the same name, artist and timestamp, so the old key
+    // based on those fields was not unique. Deleting a different row used to
+    // leave duplicated rows behind (12 -> 19 in the reported scenario).
+    const cardToDelete = screen
+      .getAllByTestId("listen")
+      .find((card) => card.textContent?.includes("Immoral and Greed"));
+    expect(cardToDelete).toBeDefined();
+    await user.click(
+      within(cardToDelete!).getByRole("menuitem", { name: "Delete Listen" })
+    );
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId("listen")).toHaveLength(11);
+    });
+    const remainingCards = screen.getAllByTestId("listen");
+    expect(
+      remainingCards.filter((card) => card.textContent?.includes("Drawn Cart"))
+    ).toHaveLength(1);
+    expect(
+      remainingCards.filter((card) => card.textContent?.includes("Aibuojọ"))
+    ).toHaveLength(9);
+
+    const duplicateKeyWarnings = consoleErrorSpy.mock.calls.filter((call) =>
+      String(call[0]).includes("same key")
+    );
+    expect(duplicateKeyWarnings).toHaveLength(0);
+    consoleErrorSpy.mockRestore();
   });
 });
