@@ -472,6 +472,7 @@ declare type JSPFPlaylistMetadata = {
   };
   expires_at?: string; // ISO date string
   cover_art?: CoverArtGridOptions;
+  tags?: string[];
 };
 
 declare type JSPFPlaylistExtension = {
