@@ -11,6 +11,10 @@ import ListenControl from "../../common/listens/ListenControl";
 export type PlaylistItemCardProps = {
   track: JSPFTrack;
   canEdit: Boolean;
+  // Allows removing a track without enabling the rest of the edit UI (drag to reorder).
+  // Defaults to the value of canEdit.
+  canRemove?: Boolean;
+  removeTrackText?: string;
   removeTrackFromPlaylist?: (track: JSPFTrack) => void;
   showTimestamp?: boolean;
   showUsername?: boolean;
@@ -30,6 +34,8 @@ export default class PlaylistItemCard extends React.Component<
     const {
       track,
       canEdit,
+      canRemove = canEdit,
+      removeTrackText = "Remove from playlist",
       showUsername,
       showTimestamp,
       removeTrackFromPlaylist,
@@ -48,11 +54,11 @@ export default class PlaylistItemCard extends React.Component<
       </div>
     ) : undefined;
     let additionalMenuItems;
-    if (canEdit && isFunction(removeTrackFromPlaylist)) {
+    if (canRemove && isFunction(removeTrackFromPlaylist)) {
       additionalMenuItems = [
         <ListenControl
-          title="Remove from playlist"
-          text="Remove from playlist"
+          title={removeTrackText}
+          text={removeTrackText}
           icon={faMinusCircle}
           action={this.removeTrack}
         />,

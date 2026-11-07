@@ -99,6 +99,24 @@ export default function LBRadio() {
     [setJspfPlaylist, setFeedback, APIService, currentUser]
   );
 
+  const removeTrack = React.useCallback((trackToRemove: JSPFTrack) => {
+    setJspfPlaylist((prevJspf) => {
+      if (!prevJspf?.playlist?.track) {
+        return prevJspf;
+      }
+      return {
+        ...prevJspf,
+        playlist: {
+          ...prevJspf.playlist,
+          // Compare by reference: the same recording can appear more than once
+          track: prevJspf.playlist.track.filter(
+            (track) => track !== trackToRemove
+          ),
+        },
+      };
+    });
+  }, []);
+
   const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
 
   React.useEffect(() => {
@@ -127,7 +145,10 @@ export default function LBRadio() {
             className="playlist-loader"
           >
             <LBRadioFeedback feedback={feedback} />
-            <Playlist playlist={jspfPlaylist?.playlist} />
+            <Playlist
+              playlist={jspfPlaylist?.playlist}
+              onRemoveTrack={removeTrack}
+            />
           </Loader>
         </div>
       </div>
