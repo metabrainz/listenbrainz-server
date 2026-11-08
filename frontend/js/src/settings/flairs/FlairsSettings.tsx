@@ -10,8 +10,12 @@ import {
   faQuestionCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { FlairEnum, Flair } from "../../utils/constants";
-import type { FlairName } from "../../utils/constants";
+import {
+  FlairEnum,
+  Flair,
+  FlairDisplayPreferenceEnum,
+} from "../../utils/constants";
+import type { FlairName, FlairDisplayPreference } from "../../utils/constants";
 import Username from "../../common/Username";
 import queryClient from "../../utils/QueryClient";
 import useUserFlairs from "../../utils/FlairLoader";
@@ -46,12 +50,20 @@ export default function FlairsSettings() {
   const flairNames = Object.keys(FlairEnum) as FlairName[];
 
   const globalContext = React.useContext(GlobalAppContext);
-  const { currentUser, APIService, flair: currentFlair } = globalContext;
+  const {
+    currentUser,
+    APIService,
+    flair: currentFlair,
+    flairDisplayPreference: currentDisplayPreference,
+  } = globalContext;
   const { name } = currentUser;
 
   const [selectedFlair, setSelectedFlair] = React.useState<Flair>(
     currentFlair ?? FlairEnum.None
   );
+  const [displayPreference, setDisplayPreference] = React.useState<
+    FlairDisplayPreference
+  >(currentDisplayPreference ?? FlairDisplayPreferenceEnum.All);
 
   const currentUnlockedFlair = useUserFlairs(name);
   // However we also hit the metabrainz nag-check endpoint to comfirm that
@@ -100,6 +112,26 @@ export default function FlairsSettings() {
     delay: 3000,
     onSave: submitFlairPreferences,
   });
+
+  const submitDisplayPreference = React.useCallback(
+    async (newPreference: FlairDisplayPreference) => {
+      if (!currentUser?.auth_token) {
+        toast.error("You must be logged in to update your preferences");
+        return;
+      }
+
+      await APIService.submitFlairPreferences(
+        currentUser.auth_token,
+        undefined,
+        newPreference
+      );
+
+      globalContext.flairDisplayPreference = newPreference;
+      setDisplayPreference(newPreference);
+      queryClient.invalidateQueries({ queryKey: ["flair"] });
+    },
+    [APIService, currentUser?.auth_token, globalContext]
+  );
   const flairTooltip = (
     <>
       Every $5 donation unlocks flairs for 1 month, with larger donations
@@ -190,6 +222,66 @@ export default function FlairsSettings() {
               elementType="a"
             />
           </div>
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <h4>Other users&apos; flair</h4>
+        <p>Control how flair is displayed for other users across the site.</p>
+        <div className="form-check mb-2">
+          <input
+            className="form-check-input"
+            type="radio"
+            name="flair-display-preference"
+            id="flair-display-all"
+            value={FlairDisplayPreferenceEnum.All}
+            checked={displayPreference === FlairDisplayPreferenceEnum.All}
+            onChange={() =>
+              submitDisplayPreference(FlairDisplayPreferenceEnum.All)
+            }
+          />
+          <label className="form-check-label" htmlFor="flair-display-all">
+            <b>Show all flairs</b> (Default) — display all flair animations and
+            styles.
+          </label>
+        </div>
+        <div className="form-check mb-2">
+          <input
+            className="form-check-input"
+            type="radio"
+            name="flair-display-preference"
+            id="flair-display-no-animations"
+            value={FlairDisplayPreferenceEnum.NoAnimations}
+            checked={
+              displayPreference === FlairDisplayPreferenceEnum.NoAnimations
+            }
+            onChange={() =>
+              submitDisplayPreference(FlairDisplayPreferenceEnum.NoAnimations)
+            }
+          />
+          <label
+            className="form-check-label"
+            htmlFor="flair-display-no-animations"
+          >
+            <b>Disable animations</b> — display flair styling without motion or
+            animations.
+          </label>
+        </div>
+        <div className="form-check mb-2">
+          <input
+            className="form-check-input"
+            type="radio"
+            name="flair-display-preference"
+            id="flair-display-disabled"
+            value={FlairDisplayPreferenceEnum.Disabled}
+            checked={displayPreference === FlairDisplayPreferenceEnum.Disabled}
+            onChange={() =>
+              submitDisplayPreference(FlairDisplayPreferenceEnum.Disabled)
+            }
+          />
+          <label className="form-check-label" htmlFor="flair-display-disabled">
+            <b>Hide all flairs</b> — display all usernames as normal plain text.
+          </label>
         </div>
       </div>
     </div>

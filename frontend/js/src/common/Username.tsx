@@ -1,7 +1,8 @@
 import * as React from "react";
 import { Link } from "react-router";
 import useUserFlairs from "../utils/FlairLoader";
-import { Flair } from "../utils/constants";
+import { Flair, FlairDisplayPreferenceEnum } from "../utils/constants";
+import GlobalAppContext from "../utils/GlobalAppContext";
 
 interface BaseUsernameProps extends React.HTMLAttributes<HTMLElement> {
   username: string;
@@ -30,32 +31,45 @@ function Username(props: WithLinkProps | WithElementProps) {
     ...otherProps
   } = props;
 
+  const {
+    flairDisplayPreference = FlairDisplayPreferenceEnum.All,
+  } = React.useContext(GlobalAppContext);
+
+  const shouldHideFlair =
+    hideFlair || flairDisplayPreference === FlairDisplayPreferenceEnum.Disabled;
+  const isNoAnimation =
+    flairDisplayPreference === FlairDisplayPreferenceEnum.NoAnimations;
+
   const savedFlairType = useUserFlairs(username);
   const flairType = selectedFlair ?? savedFlairType;
   const cssClasses = `${otherProps?.className || ""} ${
-    !hideFlair ? `flair ${flairType || ""}` : ""
+    !shouldHideFlair
+      ? `flair ${flairType || ""} ${isNoAnimation ? "flair-no-animation" : ""}`
+      : ""
   }`;
 
   let htmlContent: string | JSX.Element[] = username;
-  switch (flairType) {
-    /*
-      Split each letter into a span element to allow animating each letter separately
-      Only required for some animation (see the flairs.less file)
-    */
-    case "flip-3d":
-    case "flip-horizontal":
-    case "flip-vertical":
-    case "lb-colors-sweep":
-    case "light-sweep":
-    case "wave":
-    case "tornado":
-      htmlContent = username.split("").map((letter, i) => (
-        // eslint-disable-next-line react/no-array-index-key
-        <span key={username + letter + i}>{letter}</span>
-      ));
-      break;
-    default:
-      break;
+  if (!shouldHideFlair) {
+    switch (flairType) {
+      /*
+        Split each letter into a span element to allow animating each letter separately
+        Only required for some animation (see the flairs.less file)
+      */
+      case "flip-3d":
+      case "flip-horizontal":
+      case "flip-vertical":
+      case "lb-colors-sweep":
+      case "light-sweep":
+      case "wave":
+      case "tornado":
+        htmlContent = username.split("").map((letter, i) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <span key={username + letter + i}>{letter}</span>
+        ));
+        break;
+      default:
+        break;
+    }
   }
 
   if (!hideLink) {

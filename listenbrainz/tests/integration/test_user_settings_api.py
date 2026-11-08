@@ -126,3 +126,84 @@ class UserSettingsAPITestCase(ListenAPIIntegrationTestCase):
 
         prefs = db_user_setting.get_brainzplayer_prefs(self.db_conn, self.user["id"])
         self.assertEqual(prefs, {"brainzplayer": {"youtubeEnabled": False, "spotifyEnabled": True}})
+
+    def test_invalid_flair_prefs(self):
+        response = self.client.post(
+            self.custom_url_for("user_settings_api_v1.update_flair"),
+            json={},
+            headers={"Authorization": f"Token {self.user['auth_token']}"}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Missing flair or display_preference field")
+
+        response = self.client.post(
+            self.custom_url_for("user_settings_api_v1.update_flair"),
+            json={"flair": 123},
+            headers={"Authorization": f"Token {self.user['auth_token']}"}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Flair must be a string")
+
+        response = self.client.post(
+            self.custom_url_for("user_settings_api_v1.update_flair"),
+            json={"flair": "invalid-flair"},
+            headers={"Authorization": f"Token {self.user['auth_token']}"}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Invalid flair: invalid-flair")
+
+        response = self.client.post(
+            self.custom_url_for("user_settings_api_v1.update_flair"),
+            json={"display_preference": 123},
+            headers={"Authorization": f"Token {self.user['auth_token']}"}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Display preference must be a string")
+
+        response = self.client.post(
+            self.custom_url_for("user_settings_api_v1.update_flair"),
+            json={"display_preference": "invalid_preference"},
+            headers={"Authorization": f"Token {self.user['auth_token']}"}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Invalid display_preference: invalid_preference")
+
+    def test_valid_flair_prefs(self):
+        flair = db_user_setting.get_flair(self.db_conn, self.user["id"])
+        self.assertEqual(flair, None)
+
+        response = self.client.post(
+            self.custom_url_for("user_settings_api_v1.update_flair"),
+            json={"flair": "wave"},
+            headers={"Authorization": f"Token {self.user['auth_token']}"}
+        )
+        self.assert200(response)
+        flair = db_user_setting.get_flair(self.db_conn, self.user["id"])
+        self.assertEqual(flair, {"flair": "wave", "display_preference": "all"})
+
+        response = self.client.post(
+            self.custom_url_for("user_settings_api_v1.update_flair"),
+            json={"display_preference": "no_animations"},
+            headers={"Authorization": f"Token {self.user['auth_token']}"}
+        )
+        self.assert200(response)
+        flair = db_user_setting.get_flair(self.db_conn, self.user["id"])
+        self.assertEqual(flair, {"flair": "wave", "display_preference": "no_animations"})
+
+        response = self.client.post(
+            self.custom_url_for("user_settings_api_v1.update_flair"),
+            json={"display_preference": "disabled"},
+            headers={"Authorization": f"Token {self.user['auth_token']}"}
+        )
+        self.assert200(response)
+        flair = db_user_setting.get_flair(self.db_conn, self.user["id"])
+        self.assertEqual(flair, {"flair": "wave", "display_preference": "disabled"})
+
+        response = self.client.post(
+            self.custom_url_for("user_settings_api_v1.update_flair"),
+            json={"flair": None},
+            headers={"Authorization": f"Token {self.user['auth_token']}"}
+        )
+        self.assert200(response)
+        flair = db_user_setting.get_flair(self.db_conn, self.user["id"])
+        self.assertEqual(flair, {"flair": None, "display_preference": "disabled"})
