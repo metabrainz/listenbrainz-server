@@ -39,6 +39,7 @@ function CustomOption(
           selectedFlair={data.value}
           hideLink
           elementType="a"
+          ignoreDisplayPreference
         />
       </div>
     </components.Option>
@@ -220,6 +221,7 @@ export default function FlairsSettings() {
               selectedFlair={selectedFlair}
               hideLink
               elementType="a"
+              ignoreDisplayPreference
             />
           </div>
         </div>

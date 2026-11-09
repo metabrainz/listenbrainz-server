@@ -9,6 +9,8 @@ interface BaseUsernameProps extends React.HTMLAttributes<HTMLElement> {
   hideFlair?: boolean;
   // Allow overriding the flair (for example for flair preview)
   selectedFlair?: Flair;
+  // Allow ignoring global display preference (for flair picker and preview)
+  ignoreDisplayPreference?: boolean;
 }
 
 type WithLinkProps = BaseUsernameProps & {
@@ -28,6 +30,7 @@ function Username(props: WithLinkProps | WithElementProps) {
     hideFlair = false,
     hideLink = false,
     selectedFlair,
+    ignoreDisplayPreference = false,
     ...otherProps
   } = props;
 
@@ -36,8 +39,11 @@ function Username(props: WithLinkProps | WithElementProps) {
   } = React.useContext(GlobalAppContext);
 
   const shouldHideFlair =
-    hideFlair || flairDisplayPreference === FlairDisplayPreferenceEnum.Disabled;
+    hideFlair ||
+    (!ignoreDisplayPreference &&
+      flairDisplayPreference === FlairDisplayPreferenceEnum.Disabled);
   const isNoAnimation =
+    !ignoreDisplayPreference &&
     flairDisplayPreference === FlairDisplayPreferenceEnum.NoAnimations;
 
   const savedFlairType = useUserFlairs(username);

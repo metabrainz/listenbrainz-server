@@ -46,6 +46,22 @@ describe("Username component flair display preferences", () => {
     expect(userElement.className).not.toContain("wave");
     expect(userElement.textContent).toBe("testuser");
   });
+
+  it("renders flair when ignoreDisplayPreference is true even if preference is Disabled", () => {
+    renderWithProviders(
+      <ReactQueryWrapper>
+        <Username
+          username="testuser"
+          selectedFlair={FlairEnum.Wave}
+          ignoreDisplayPreference
+        />
+      </ReactQueryWrapper>,
+      { flairDisplayPreference: FlairDisplayPreferenceEnum.Disabled }
+    );
+    const userElement = screen.getByTitle("testuser");
+    expect(userElement.className).toContain("flair wave");
+    expect(userElement.className).not.toContain("flair-no-animation");
+  });
 });
 
 describe("FlairsExplanationButton component", () => {
