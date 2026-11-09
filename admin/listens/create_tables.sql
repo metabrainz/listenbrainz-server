@@ -482,7 +482,7 @@ CREATE TABLE internetarchive_cache.track (
 
 CREATE TABLE youtube_cache.video (
     id            INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
-    video_id      TEXT UNIQUE NOT NULL,
+    video_id      TEXT NOT NULL,
     title         TEXT NOT NULL,
     channel_name  TEXT NOT NULL,
     duration_ms   INTEGER,
