@@ -3,6 +3,7 @@ import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import { faCircleXmark } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as _ from "lodash";
+import { truncateText } from "../../../utils/truncateText";
 import Switch from "../../../components/Switch";
 import SideBar from "../../../components/Sidebar";
 import type {
@@ -306,8 +307,8 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                   {releaseTags
                     ?.filter((tag) => !releaseTagsCheckList.includes(tag))
                     ?.map((tag, index) => (
-                      <option value={tag} key={tag}>
-                        {tag.length > 50 ? `${tag.slice(0, 50)}...` : tag}
+                      <option value={tag} key={tag} title={tag}>
+                        {truncateText(tag)}
                       </option>
                     ))}
                 </select>
@@ -341,8 +342,8 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                       (tag) => !releaseTagsExcludeCheckList.includes(tag)
                     )
                     ?.map((tag, index) => (
-                      <option value={tag} key={tag}>
-                        {tag.length > 50 ? `${tag.slice(0, 50)}...` : tag}
+                      <option value={tag} key={tag} title={tag}>
+                        {truncateText(tag)}
                       </option>
                     ))}
                 </select>
