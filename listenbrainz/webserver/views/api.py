@@ -219,7 +219,7 @@ def get_listen_count(user_name):
     try:
         listen_count = timescale_connection._ts.get_listen_count_for_user(user["id"])
     except psycopg2.OperationalError as err:
-        current_app.logger.error("cannot fetch user listen count: ", str(err))
+        current_app.logger.error("cannot fetch user listen count: %s", str(err))
         raise APIServiceUnavailable("Cannot fetch user listen count right now.")
 
     return jsonify({'payload': {
