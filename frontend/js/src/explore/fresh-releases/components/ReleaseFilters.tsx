@@ -3,7 +3,7 @@ import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import { faCircleXmark } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as _ from "lodash";
-import { truncateText } from "../../../utils/truncateText";
+import truncateText from "../../../utils/truncateText";
 import Switch from "../../../components/Switch";
 import SideBar from "../../../components/Sidebar";
 import type {
