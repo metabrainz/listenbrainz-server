@@ -259,7 +259,7 @@ def get_top_recordings_for_artist(db_conn, listens_conn, artist_mbid, count=None
         release_mbids = [str(r["release_mbid"]) for r in recordings_data if r["release_mbid"] is not None]
         releases_color = color.fetch_color_for_releases(db_conn, release_mbids)
 
-        results = []
+        seen = {}
         for recording, data in zip(recordings, recordings_data):
             if data["artist_credit_name"] is None:
                 continue
@@ -267,14 +267,30 @@ def get_top_recordings_for_artist(db_conn, listens_conn, artist_mbid, count=None
             data.pop("artist_credit_id", None)
             data.pop("canonical_recording_mbid", None)
             data.pop("original_recording_mbid", None)
+
+            recording_mbid = data["recording_mbid"]
+            if recording_mbid in seen:
+                # two old MBIDs redirected to the same recording after a MusicBrainz merge,
+                # so combine their counts instead of showing the same track twice
+                seen[recording_mbid]["total_listen_count"] += recording["total_listen_count"] or 0
+                seen[recording_mbid]["total_user_count"] = max(
+                    seen[recording_mbid]["total_user_count"] or 0,
+                    recording["total_user_count"] or 0
+                )
+                continue
+
             data.update({
                 "artist_name": data.pop("artist_credit_name"),
                 "artist_mbids": data.pop("artist_credit_mbids"),
-                "total_listen_count": recording["total_listen_count"],
-                "total_user_count": recording["total_user_count"],
+                "total_listen_count": recording["total_listen_count"] or 0,
+                "total_user_count": recording["total_user_count"] or 0,
                 "release_color": releases_color.get(str(data["release_mbid"]), {})
             })
-            results.append(data)
+            seen[recording_mbid] = data
+
+        results = sorted(seen.values(), key=lambda r: r["total_listen_count"] or 0, reverse=True)
+        if count:
+            results = results[:count]
 
         cache.set(cache_key, results, POPULARITY_CACHE_EXPIRE, namespace=POPULARITY_CACHE_NAMESPACE, encode=True)
         return results
