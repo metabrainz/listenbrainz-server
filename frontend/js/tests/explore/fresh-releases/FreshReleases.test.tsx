@@ -300,4 +300,67 @@ describe("FreshReleases", () => {
       "Real Album"
     );
   });
+
+  it("hides a release when any of its credited artists is special-purpose", async () => {
+    // A collaboration where only one of the two artists is a special-purpose
+    // artist ([unknown]) should still be hidden by default (`.some()` match).
+    const collabRelease: FreshReleaseItem = {
+      artist_credit_name: "Real Artist feat. [unknown]",
+      artist_mbids: [
+        "e148e786-f078-49e2-a9fb-fd044bd68905",
+        "125ec42a-7229-4250-afc5-e057484327fe", // [unknown]
+      ],
+      caa_id: null,
+      caa_release_mbid: null,
+      release_date: "2023-07-26",
+      release_group_mbid: "bfbed4d8-09a1-4222-a4a9-e10c07e1be62",
+      release_group_primary_type: "Album",
+      release_mbid: "33333333-3333-3333-3333-333333333333",
+      release_name: "Collab Release",
+      release_tags: [],
+      listen_count: 0,
+    };
+    const releases: Array<FreshReleaseItem> = [collabRelease];
+    const emptyTags: Array<string> = [];
+    const emptyTypes: Array<string> = [];
+
+    function FiltersHarness() {
+      const [filteredList, setFilteredList] = React.useState<
+        Array<FreshReleaseItem>
+      >(releases);
+      const releaseCardGridRef = React.createRef<HTMLDivElement>();
+      return (
+        <>
+          <div data-testid="filtered-names">
+            {filteredList.map((r) => r.release_name).join(",")}
+          </div>
+          <ReleaseFilters
+            releaseTags={emptyTags}
+            releaseTypes={emptyTypes}
+            displaySettings={userDisplayFilters}
+            releases={releases}
+            filteredList={filteredList}
+            setFilteredList={setFilteredList}
+            range="three_months"
+            handleRangeChange={jest.fn()}
+            toggleSettings={jest.fn()}
+            showPastReleases
+            setShowPastReleases={jest.fn()}
+            showFutureReleases
+            setShowFutureReleases={jest.fn()}
+            releaseCardGridRef={releaseCardGridRef}
+            pageType="sitewide"
+          />
+        </>
+      );
+    }
+
+    renderWithProviders(<FiltersHarness />);
+
+    await waitFor(() =>
+      expect(screen.getByTestId("filtered-names").textContent).not.toContain(
+        "Collab Release"
+      )
+    );
+  });
 });
