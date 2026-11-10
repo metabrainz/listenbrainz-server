@@ -42,6 +42,12 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://cassettecat.caffeinelabs.in/">CassetteCat</a>
+          </em>
+          , a music player for local files and media servers on Android, Windows, macOS and Linux
+        </li>
+        <li>
+          <em>
             <a href="https://github.com/ciderapp">Cider</a>
           </em>
           , a cross-platform Apple Music player:{" "}

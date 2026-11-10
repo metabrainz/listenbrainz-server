@@ -972,6 +972,7 @@ export default class YearInMusic extends React.Component<
                         "#ff6b36",
                         "#ff0a23",
                       ]}
+                      theme="light"
                     />
                   </div>
                 </div>

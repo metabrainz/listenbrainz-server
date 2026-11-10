@@ -22,7 +22,6 @@ import {
   faSpotify,
   faTidal,
   faTwitter,
-  faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
 import { dataSourcesInfo } from "../settings/brainzplayer/BrainzPlayerSettings";
 import { faQobuz } from "../common/icons/faQobuz";
@@ -93,7 +92,6 @@ const streamingServices: Array<{
     pattern: /(^|\.)tidal\.com$/,
     name: "Tidal",
     icon: faTidal,
-    color: "#000000",
   },
   {
     pattern: /(^|\.)deezer\.com$/,
@@ -160,10 +158,32 @@ export function getStreamingServiceFromURL(url: string) {
   return streamingServices.find(({ pattern }) => pattern.test(hostname));
 }
 
+function YouTubeLogo() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="youtube-brand-icon"
+      focusable="false"
+      viewBox="0 0 28 20"
+    >
+      <path
+        d="M27.4 3.1a3.5 3.5 0 0 0-2.5-2.5C22.7 0 14 0 14 0S5.3 0 3.1.6A3.5 3.5 0 0 0 .6 3.1C0 5.3 0 10 0 10s0 4.7.6 6.9a3.5 3.5 0 0 0 2.5 2.5C5.3 20 14 20 14 20s8.7 0 10.9-.6a3.5 3.5 0 0 0 2.5-2.5C28 14.7 28 10 28 10s0-4.7-.6-6.9Z"
+        fill="#f00"
+      />
+      <path
+        d="m11.2 14.3 7.2-4.3-7.2-4.3v8.6Z"
+        data-testid="youtube-brand-play"
+        fill="#fff"
+      />
+    </svg>
+  );
+}
+
 export function getRelIconLink(relName: string, relValue: string) {
   let icon;
   let color;
   let isYoutube = false;
+  let isTidal = false;
   // Falls back to the relationship name, which is all we had before.
   let title = relName;
   switch (relName) {
@@ -173,6 +193,7 @@ export function getRelIconLink(relName: string, relValue: string) {
       icon = service?.icon ?? faMusic;
       color = service?.color;
       title = service?.name ?? relName;
+      isTidal = service?.name === "Tidal";
       break;
     }
     case "lyrics":
@@ -183,7 +204,6 @@ export function getRelIconLink(relName: string, relValue: string) {
       break;
     case "youtube":
     case "youtube music":
-      icon = faYoutube;
       color = dataSourcesInfo.youtube.color;
       isYoutube = true;
       break;
@@ -232,28 +252,20 @@ export function getRelIconLink(relName: string, relValue: string) {
       icon = faLink;
       break;
   }
-  let style = {};
-  if (isYoutube) {
-    // Youtube forces us to follow their branding guidelines to the letter,
-    // so we need to force a minimum height of 20px for the icon path inside the svg
-    // [poo emoji]
-    style = { height: "26.7px", width: "auto" };
-  }
   return (
     <a
       key={relName}
       href={relValue}
       title={title}
-      className="btn btn-icon btn-link"
+      className={`btn btn-icon btn-link${isTidal ? " brand-tidal" : ""}`}
       target="_blank"
       rel="noopener noreferrer"
     >
-      <FontAwesomeIcon
-        icon={icon}
-        fixedWidth={!isYoutube}
-        color={color}
-        style={style}
-      />
+      {isYoutube ? (
+        <YouTubeLogo />
+      ) : (
+        <FontAwesomeIcon icon={icon ?? faMusic} fixedWidth color={color} />
+      )}
     </a>
   );
 }

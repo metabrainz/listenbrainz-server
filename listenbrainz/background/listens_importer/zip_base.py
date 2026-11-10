@@ -16,8 +16,8 @@ FILE_SIZE_LIMIT = 524288000  # 500 MB
 class ZipBaseListensImporter(BaseListensImporter, ABC):
     """Abstract base class for zip based listens importers."""
 
-    def __init__(self, db_conn, ts_conn):
-        super().__init__(db_conn, ts_conn)
+    def __init__(self, db_conn, listens_conn):
+        super().__init__(db_conn, listens_conn)
         self.file_size_limit = FILE_SIZE_LIMIT
 
     @abstractmethod

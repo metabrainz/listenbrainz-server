@@ -1,7 +1,7 @@
 from psycopg2.extras import execute_values
 from psycopg2.sql import SQL, Literal, Identifier, Composable
 
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 from listenbrainz.db.artist import load_artists_from_mbids_with_redirects
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.spark.spark_dataset import DatabaseDataset, SparkDataset
@@ -22,6 +22,10 @@ class SimilarityProdDataset(DatabaseDataset):
         self.is_mlhd = is_mlhd
         self.entity = entity
         self.index_prefix = index_prefix
+
+    def get_engine(self):
+        # the similarity tables live in the listens database, not timescale
+        return listens_db.engine
 
     def get_table(self):
         return "CREATE TABLE {table} (mbid0 UUID NOT NULL, mbid1 UUID NOT NULL, score INT NOT NULL)"
@@ -60,6 +64,10 @@ class SimilarityDevDataset(DatabaseDataset):
         self.is_mlhd = is_mlhd
         self.entity = entity
         self.index_prefix = index_prefix
+
+    def get_engine(self):
+        # the similarity tables live in the listens database, not timescale
+        return listens_db.engine
 
     def get_table(self):
         return "CREATE TABLE IF NOT EXISTS {table} (mbid0 UUID NOT NULL, mbid1 UUID NOT NULL, metadata JSONB NOT NULL)"
@@ -111,7 +119,7 @@ class SimilarityDevDataset(DatabaseDataset):
         table = self._get_table_name()
         query = SQL(query).format(table=table)
 
-        conn = timescale.engine.raw_connection()
+        conn = listens_db.engine.raw_connection()
         try:
             with conn.cursor() as curs:
                 execute_values(curs, query, values, template)
@@ -201,10 +209,10 @@ def get(curs, table, mbids, algorithm, count):
     return mbids, score_index, similar_mbid_index
 
 
-def get_artists(mb_curs, ts_curs, mbids, algorithm, count):
+def get_artists(mb_curs, listens_curs, mbids, algorithm, count):
     """ For the given artist mbids, fetch at most `count` number of similar artists using the given algorithm
         along with their metadata. """
-    similar_mbids, score_idx, mbid_idx = get(ts_curs, "artist_credit_mbids_dev", mbids, algorithm, count)
+    similar_mbids, score_idx, mbid_idx = get(listens_curs, "artist_credit_mbids_dev", mbids, algorithm, count)
     if not similar_mbids:
         return []
 
@@ -215,10 +223,10 @@ def get_artists(mb_curs, ts_curs, mbids, algorithm, count):
     return metadata
 
 
-def get_recordings(mb_curs, ts_curs, listens_curs, mbids, algorithm, count):
+def get_recordings(mb_curs, listens_curs, mbids, algorithm, count):
     """ For the given recording mbids, fetch at most `count` number of similar recordings using the given algorithm
         along with their metadata. """
-    similar_mbids, score_idx, mbid_idx = get(ts_curs, "recording_dev", mbids, algorithm, count)
+    similar_mbids, score_idx, mbid_idx = get(listens_curs, "recording_dev", mbids, algorithm, count)
     if not similar_mbids:
         return []
 

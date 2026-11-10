@@ -11,7 +11,7 @@ from markupsafe import Markup
 from pydantic import BaseModel
 from sqlalchemy import text
 
-from listenbrainz.db import similarity, timescale
+from listenbrainz.db import similarity, listens as listens_db
 from listenbrainz.db.artist import load_artists_from_mbids_with_redirects
 
 ALGORITHM_CHOICES_CACHE_TTL = 3600
@@ -55,7 +55,7 @@ class SimilarArtistsViewerQuery(Query):
         key = self.get_cache_key()
         if algorithms := cache.get(key):
             return algorithms
-        with timescale.engine.begin() as conn:
+        with listens_db.engine.begin() as conn:
             table_name = "similarity." + self.table()
             query = """
                 select distinct jsonb_object_keys(metadata) as algorithm
@@ -87,9 +87,9 @@ class SimilarArtistsViewerQuery(Query):
         count = count if count > 0 else 100
 
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-                closing(timescale.engine.raw_connection()) as ts_conn, \
+                closing(listens_db.engine.raw_connection()) as listens_conn, \
                 mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
-                ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
+                listens_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as listens_curs:
             results = []
 
             if source == RequestSource.web:
@@ -97,7 +97,7 @@ class SimilarArtistsViewerQuery(Query):
                 results.append(QueryOutputLine(line=Markup("<p><b>Reference artists</b></p>")))
                 results.extend([SimilarArtistsViewerOutputItem(**artist) for artist in references])
 
-            similar_artists = similarity.get_artists(mb_curs, ts_curs, artist_mbids, algorithm, count)
+            similar_artists = similarity.get_artists(mb_curs, listens_curs, artist_mbids, algorithm, count)
             if source == RequestSource.web:
                 if len(similar_artists) == 0:
                     results.append(QueryOutputLine(line=Markup("<p><b>No similar artists found!</b></p>")))

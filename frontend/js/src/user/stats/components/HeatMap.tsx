@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ResponsiveHeatMap } from "@nivo/heatmap";
 import { useMediaQuery } from "react-responsive";
+import { useNivoTheme } from "../../../utils/nivoTheme";
 
 export type HeatMapProps = {
   data: UserDailyActivityData;
@@ -8,6 +9,7 @@ export type HeatMapProps = {
 
 export default function Heatmap(props: HeatMapProps) {
   const isMobile = useMediaQuery({ maxWidth: 767 });
+  const nivoTheme = useNivoTheme();
 
   const margin = {
     desktop: {
@@ -54,9 +56,11 @@ export default function Heatmap(props: HeatMapProps) {
         }}
         axisTop={null}
         theme={{
+          ...nivoTheme,
           axis: {
             legend: {
               text: {
+                ...nivoTheme.axis?.legend?.text,
                 fontWeight: "bold",
               },
             },

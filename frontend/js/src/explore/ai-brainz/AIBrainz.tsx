@@ -47,7 +47,7 @@ function AIBrainzHeader() {
 
         .toggle-switch {
           display: inline-block;
-          background: #ccc;
+          background: var(--lb-border-strong);
           border-radius: 16px;
           width: 42px;
           height: 18px;
@@ -60,7 +60,11 @@ function AIBrainzHeader() {
         }
         .toggle-switch:before {
           display: block;
-          background: linear-gradient(to bottom, #fff 0%, #eee 100%);
+          background: linear-gradient(
+            to bottom,
+            var(--lb-surface-raised) 0%,
+            var(--lb-surface-muted) 100%
+          );
           border-radius: 50%;
           box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
           width: 19px;
@@ -71,7 +75,7 @@ function AIBrainzHeader() {
           transition: left 0.25s;
         }
         .toggle:hover .toggle-switch:before {
-          background: linear-gradient(to bottom, #fff 0%, #fff 100%);
+          background: var(--lb-surface-raised);
           box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
         }
         .toggle-checkbox:checked + .toggle-switch {

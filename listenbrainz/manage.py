@@ -123,7 +123,7 @@ TEST_LISTENS_PARTITION_COUNT = 4
 def init_listens_db(force, create_db, partitions):
     """Initializes the user-partitioned listens database.
 
-    Creates the listen table, its hash partitions, the mapping tables and their indexes.
+    Creates the listen table, its hash partitions, the mapping and MessyBrainz tables and their indexes.
     """
     import psycopg2
     from listenbrainz import config
@@ -286,15 +286,11 @@ def init_ts_db(force, create_db):
         print('TS: Creating tables...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
 
-        print('TS: Insert default rows...')
-        res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'insert_default_data.sql'))
-
         print('TS: Creating indexes...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
 
-        print('TS: Creating Primary and Foreign Keys...')
+        print('TS: Creating Primary Keys...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_primary_keys.sql'))
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_foreign_keys.sql'))
 
         print("Done!")
 
@@ -384,7 +380,7 @@ def notify_yim_users(year: int):
     application = webserver.create_app()
     with application.app_context():
         from listenbrainz.db import year_in_music
-        year_in_music.notify_yim_users(webserver.db_conn, webserver.ts_conn, year)
+        year_in_music.notify_yim_users(webserver.db_conn, webserver.listens_conn, year)
 
 
 @cli.command(name="notify_spotify_refresh_token_expiry")

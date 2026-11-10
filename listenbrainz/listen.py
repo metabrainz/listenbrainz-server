@@ -63,6 +63,7 @@ class Listen(object):
         'duration_ms',
         'duration',
         'duration_played',
+        'duration_played_ms',
         'origin_url',
         'music_service',
         'music_service_name',

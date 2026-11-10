@@ -3,6 +3,7 @@ import { ResponsiveNetwork, NodeProps, NetworkSvgProps } from "@nivo/network";
 import { animated, to } from "@react-spring/web";
 import { debounce, noop } from "lodash";
 import tinycolor from "tinycolor2";
+import { useNivoTheme } from "../../../utils/nivoTheme";
 
 interface GraphProps {
   data: GraphDataType;
@@ -74,6 +75,7 @@ function SimilarArtistsGraph({
   background,
   graphParentElementRef,
 }: GraphProps) {
+  const nivoTheme = useNivoTheme();
   const minimalSize = 650;
   let initialWidth = minimalSize;
   let initialHeight = minimalSize;
@@ -149,6 +151,7 @@ function SimilarArtistsGraph({
     >
       <ResponsiveNetwork
         {...chartProperties}
+        theme={nivoTheme}
         nodeComponent={CustomNodeComponent}
         // We can't set isInteractive to false (need onClick event)
         // But we don't want to show a tooltip, so this function returns an empty element

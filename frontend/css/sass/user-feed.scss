@@ -14,13 +14,12 @@
       // Fade the line out at the bottom.
       background: linear-gradient(
         180deg,
-        $gray-light calc(100% - 65px),
+        var(--lb-border-strong) calc(100% - 65px),
         transparent 100%
       );
       position: absolute;
       top: 10px;
       left: 1.5em;
-      z-index: -1;
     }
 
     li.timeline-event {
@@ -30,7 +29,7 @@
         display: flex;
         flex-wrap: wrap;
         .event-time {
-          color: $gray-600;
+          color: var(--lb-text-muted);
           // position: absolute;
           // right:0;
           font-size: 0.8em;
@@ -90,7 +89,7 @@
           content: "";
           height: 1.25px;
           width: 2em;
-          background-color: $gray-light;
+          background-color: var(--lb-border-strong);
           position: absolute;
           top: 2em;
           left: -2.3em;

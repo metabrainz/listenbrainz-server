@@ -64,7 +64,7 @@ class TimescaleTestCase(unittest.TestCase):
         self.reset_timescale_db()
         self.ts_conn = ts.engine.connect()
 
-        # listens are dual written and the mapping tables live in the listens database, so
+        # listens are dual written and the mapping and MessyBrainz tables live in the listens database, so
         # reset it alongside timescale
         listens_connect = create_test_listens_connect_strings()
         listens_db.init_db_connection(listens_connect["DB_CONNECT"])
@@ -97,7 +97,15 @@ class TimescaleTestCase(unittest.TestCase):
             ))
             # request scoped connections of earlier tests can still hold read locks on the mapping
             # tables, DELETE does not wait for those unlike TRUNCATE
+            connection.execute(sqlalchemy.text("DELETE FROM messybrainz.submissions_redirect"))
+            connection.execute(sqlalchemy.text("DELETE FROM messybrainz.submissions"))
             connection.execute(sqlalchemy.text("DELETE FROM mapping.mbid_mapping"))
             connection.execute(sqlalchemy.text("DELETE FROM mapping.mbid_manual_mapping"))
             connection.execute(sqlalchemy.text("DELETE FROM mapping.mb_metadata_cache"))
+            connection.execute(sqlalchemy.text("DELETE FROM spotify_cache.rel_album_artist"))
+            connection.execute(sqlalchemy.text("DELETE FROM spotify_cache.rel_track_artist"))
+            connection.execute(sqlalchemy.text("DELETE FROM spotify_cache.artist"))
+            connection.execute(sqlalchemy.text("DELETE FROM spotify_cache.track"))
+            connection.execute(sqlalchemy.text("DELETE FROM spotify_cache.album"))
+            connection.execute(sqlalchemy.text("DELETE FROM internetarchive_cache.track"))
             connection.commit()

@@ -24,6 +24,7 @@ import Card from "../../components/Card";
 import faInternetArchive from "../../common/icons/faInternetArchive";
 import faFunkwhale from "../../common/icons/faFunkwhale";
 import { faNavidrome } from "../../common/icons/faNavidrome";
+import YouTubeLogo from "../../common/icons/YouTubeLogo";
 import useAutoSave from "../../hooks/useAutoSave";
 
 export const dataSourcesInfo = {
@@ -45,7 +46,7 @@ export const dataSourcesInfo = {
   appleMusic: {
     name: "Apple Music",
     icon: faApple,
-    color: "#000000",
+    color: "var(--lb-brand-apple)",
   },
   internetArchive: {
     name: "Internet Archive",
@@ -541,9 +542,14 @@ function BrainzPlayerSettings() {
                 className={`text-brand ${!youtubeEnabled ? "text-muted" : ""}`}
               >
                 <span className={youtubeEnabled ? "text-success" : ""}>
-                  <FontAwesomeIcon
-                    icon={faYoutube}
-                    color={youtubeEnabled ? dataSourcesInfo.youtube.color : ""}
+                  <YouTubeLogo
+                    aria-hidden="true"
+                    style={{
+                      height: "1em",
+                      opacity: youtubeEnabled ? 1 : 0.5,
+                      verticalAlign: "-0.125em",
+                      width: "1.4em",
+                    }}
                   />
                 </span>
                 <span>&nbsp;YouTube</span>
@@ -644,10 +650,21 @@ function BrainzPlayerSettings() {
                   <FontAwesomeIcon icon={faGripLines} />
                 </span>
                 <span>
-                  <FontAwesomeIcon
-                    icon={item.info?.icon}
-                    color={item.info?.color}
-                  />
+                  {item.id === "youtube" ? (
+                    <YouTubeLogo
+                      aria-hidden="true"
+                      style={{
+                        height: "1em",
+                        verticalAlign: "-0.125em",
+                        width: "1.4em",
+                      }}
+                    />
+                  ) : (
+                    <FontAwesomeIcon
+                      icon={item.info?.icon}
+                      color={item.info?.color}
+                    />
+                  )}
                 </span>
                 <span>&nbsp;{item.info?.name}</span>
               </div>

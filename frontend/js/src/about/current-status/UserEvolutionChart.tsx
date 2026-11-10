@@ -2,6 +2,7 @@ import React from "react";
 import { PointTooltipProps, ResponsiveLine } from "@nivo/line";
 import { COLOR_LB_ORANGE } from "../../utils/constants";
 import { useMediaQuery } from "../../explore/fresh-releases/utils";
+import { useNivoTheme } from "../../utils/nivoTheme";
 
 export type UserEvolutionData = {
   period: string; // ISO date string
@@ -15,17 +16,10 @@ function UserEvolutionChart({
   userCountEvolution: UserEvolutionData[];
 }) {
   const isMobile = useMediaQuery("(max-width: 767px)");
+  const nivoTheme = useNivoTheme();
   const getTooltip = React.useCallback(({ point }: PointTooltipProps) => {
     return (
-      <div
-        style={{
-          background: "white",
-          padding: "9px 12px",
-          border: "1px solid #ccc",
-          borderRadius: "4px",
-          color: "#333",
-        }}
-      >
+      <div className="nivo-theme-tooltip" style={{ padding: "9px 12px" }}>
         <b className="mb-2">{point.data.x.toString()}</b>
         <div>
           New users:{" "}
@@ -87,6 +81,7 @@ function UserEvolutionChart({
         yFormat=".4s"
         enableGridX={false}
         useMesh
+        theme={nivoTheme}
         tooltip={getTooltip}
         colors={COLOR_LB_ORANGE}
         pointSize={2}

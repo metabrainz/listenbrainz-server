@@ -47,6 +47,10 @@ $theme-colors: (
 
 $link-color: $blue;
 $link-hover-color: color.adjust($link-color, $lightness: 12%);
+// Lobes emits explicit :visited rules. Keep them tied to semantic tokens so
+// the colour follows the active theme instead of being fixed at compile time.
+$link-visited-color: var(--lb-link-visited);
+$link-visited-hover-color: var(--lb-link-visited-hover);
 $body-color: $asphalt;
 $font-family-sans-serif: Sintony, sans-serif;
 $font-size-base: 1.4rem;
@@ -141,7 +145,7 @@ $card-box-shadow: 0px 1px 1px color.scale($gray-500, $alpha: -90%),
 /* Misc */
 $enable-shadows: true;
 $hr-margin-y: 20px;
-$hr-border-color: $gray-light;
+$hr-border-color: var(--lb-border);
 $hr-opacity: 1;
 $alert-padding-x: 1.5rem;
 $alert-padding-y: $alert-padding-x;

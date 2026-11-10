@@ -108,7 +108,7 @@ class MappingJobQueue(threading.Thread):
         if len(msids) == 0:
             return 0
 
-        with timescale.engine.connect() as connection:
+        with listens_db.engine.connect() as connection:
             curs = connection.execute(text(msb_query), {"msids": tuple(msids)})
             while True:
                 result = curs.fetchone()
