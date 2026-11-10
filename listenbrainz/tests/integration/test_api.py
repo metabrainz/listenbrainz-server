@@ -881,6 +881,21 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(data['user_name'], self.user2['musicbrainz_id'])
         self.assertEqual(data['similarity'], .123)
 
+    def test_similar_to_user_missing_similarity(self):
+        """An existing user absent from a nonempty similarity list returns 204."""
+        with self.db_conn.connection.cursor() as curs:
+            data = {self.user2['id']: 0.123}
+            curs.execute("""INSERT INTO recommendation.similar_user VALUES (%s, %s)""",
+                         (self.user['id'], json.dumps(data)))
+        self.db_conn.commit()
+
+        # Fetch similarity for a third user for which there is no data
+        response = self.client.get(self.custom_url_for(
+            'api_v1.get_similar_to_user', user_name=self.user['musicbrainz_id'],
+            other_user_name=self.followed_user['musicbrainz_id']))
+
+        self.assertStatus(response, 204)
+
     def test_latest_import(self):
         """ Test for api.latest_import """
 
