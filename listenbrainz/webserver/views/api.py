@@ -354,7 +354,10 @@ def get_similar_users(user_name):
 @ratelimit()
 def get_similar_to_user(user_name, other_user_name):
     """
-    Get the similarity of the user and the other user, based on their listening history.
+    Get the similarity of a user and another user, based on their listening history.
+    Note: we only store similarity between a user and their 25 most similar users, so
+    most user pairs will not return any data (204 response).
+
     Returns a single dict:
 
     .. code-block:: json
