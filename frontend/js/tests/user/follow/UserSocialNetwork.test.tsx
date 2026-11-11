@@ -386,6 +386,39 @@ describe("<UserSocialNetwork />", () => {
     });
   });
 
+  it("handles 204 No Content when similarity is not calculated", async () => {
+    server.use(
+      http.get("/1/user/*/similar-to/*", () => {
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+
+    const differentUserProps = {
+      userName: "differentuser",
+    };
+
+    renderWithProviders(
+      <QueryClientProvider client={queryClient}>
+        <UserSocialNetwork {...differentUserProps} />
+      </QueryClientProvider>,
+      globalContext
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Similarity not calculated")
+      ).toBeInTheDocument();
+      expect(toast.error).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          props: expect.objectContaining({
+            title: "Error while fetching similarity",
+          }),
+        }),
+        { toastId: "fetch-similarity-error" }
+      );
+    });
+  });
+
   it("re-fetches data when profileUser changes", async () => {
     const { rerender } = renderWithProviders(
       <QueryClientProvider client={queryClient}>
