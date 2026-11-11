@@ -5,6 +5,7 @@ import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider as JotaiProvider, createStore } from "jotai";
 import BrainzPlayer from "../../../src/common/brainzplayer/BrainzPlayer";
+import AppleMusicPlayer from "../../../src/common/brainzplayer/AppleMusicPlayer";
 import { GlobalAppContextT } from "../../../src/utils/GlobalAppContext";
 
 import APIService from "../../../src/utils/APIService";
@@ -328,6 +329,89 @@ describe("BrainzPlayer", () => {
       // recreate the Jotai store to reset queue every time
       store = createStore();
     });
+
+    test("stops the previous provider when skipping between SoundCloud and Apple Music", async () => {
+      const soundcloudWidget = {
+        load: jest.fn(),
+        pause: jest.fn(),
+        bind: jest.fn(),
+        unbind: jest.fn(),
+      };
+      const previousSC = (window as any).SC;
+      (window as any).SC = {
+        Widget: jest.fn().mockReturnValue(soundcloudWidget),
+      };
+      const applePlay = jest.fn().mockResolvedValue(undefined);
+      const appleStop = jest.fn();
+      const appleMount = jest
+        .spyOn(AppleMusicPlayer.prototype, "componentDidMount")
+        .mockImplementation(async function mockAppleMount(
+          this: AppleMusicPlayer
+        ) {
+          this.playListen = applePlay;
+          this.stop = appleStop;
+        });
+      const soundcloudListen = listenOrJSPFTrackToQueueItem({
+        ...listen,
+        track_metadata: {
+          ...listen.track_metadata,
+          additional_info: {
+            origin_url: "https://soundcloud.com/artist/track",
+          },
+        },
+      });
+      const { unmount } = renderWithProviders(
+        <BrainzPlayerWithWrapper
+          additionalContextValues={{
+            queue: [soundcloudListen, listen2],
+            currentListenIndex: -1,
+            isActivated: true,
+          }}
+        />,
+        {
+          ...GlobalContextMock.context,
+          appleAuth: { music_user_token: "apple-token" } as AppleMusicUser,
+          soundcloudAuth: { access_token: "soundcloud-token" },
+          userPreferences: {
+            brainzplayer: createBrainzPlayerSettings({
+              appleMusicEnabled: true,
+              soundcloudEnabled: true,
+              dataSourcesPriority: ["appleMusic", "soundcloud"],
+            }),
+          },
+        },
+        { wrapper: ReactQueryWrapper }
+      );
+
+      try {
+        const nextButton = screen.getByTestId("bp-next-button");
+        await user.click(nextButton);
+        expect(soundcloudWidget.load).toHaveBeenCalledWith(
+          "https://soundcloud.com/artist/track",
+          expect.objectContaining({ auto_play: true })
+        );
+        appleStop.mockClear();
+
+        await user.click(nextButton);
+        expect(applePlay).toHaveBeenCalledWith(listen2);
+        expect(soundcloudWidget.pause).toHaveBeenCalledTimes(1);
+        expect(soundcloudWidget.pause.mock.invocationCallOrder[0]).toBeLessThan(
+          applePlay.mock.invocationCallOrder[0]
+        );
+
+        await user.click(screen.getByTestId("bp-previous-button"));
+        expect(soundcloudWidget.load).toHaveBeenCalledTimes(2);
+        expect(appleStop).toHaveBeenCalledTimes(1);
+        expect(appleStop.mock.invocationCallOrder[0]).toBeLessThan(
+          soundcloudWidget.load.mock.invocationCallOrder[1]
+        );
+      } finally {
+        unmount();
+        appleMount.mockRestore();
+        (window as any).SC = previousSC;
+      }
+    });
+
     test("queue is being rendered correctly", async () => {
       renderWithProviders(
         <BrainzPlayerWithWrapper
