@@ -1,5 +1,6 @@
 from abc import ABC
 from datetime import datetime
+from traceback import format_exc
 
 from typing import List, Set
 import uuid
@@ -231,7 +232,7 @@ def create_metadata_cache(cache_cls, cache_key, required_tables, use_lb_conn: bo
 
     except psycopg2.OperationalError:
         if not success:
-            raise()
+            raise
 
         # Otherwise ignore the connection error, makde a new connection
 
