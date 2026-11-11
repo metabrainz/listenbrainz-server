@@ -2,7 +2,7 @@ import * as React from "react";
 
 export type SimilarityScoreProps = {
   type: "regular" | "compact";
-  similarityScore: number;
+  similarityScore: number | null;
   userName?: string;
 };
 
@@ -20,6 +20,19 @@ const getclassName = (similarityScore: number): string => {
 
 function SimilarityScore(props: SimilarityScoreProps) {
   const { userName, type, similarityScore } = props;
+
+  if (similarityScore === null || similarityScore === undefined) {
+    return (
+      <div
+        className={`similarity-score ${type}`}
+        title="Similarity not calculated"
+      >
+        <p className={type === "regular" ? "text-muted" : "small text-muted"}>
+          Similarity not calculated
+        </p>
+      </div>
+    );
+  }
 
   // We transform the similarity score from a scale 0-1 to 0-100
   const percentage = Number((similarityScore * 100).toFixed());

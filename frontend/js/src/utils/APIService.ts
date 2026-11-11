@@ -1317,7 +1317,7 @@ export default class APIService {
     otherUserName: string
   ): Promise<{
     payload: { user_name: string; similarity: number };
-  }> => {
+  } | null> => {
     if (!userName || !otherUserName) {
       throw new SyntaxError("One username missing");
     }
@@ -1327,6 +1327,9 @@ export default class APIService {
     )}/similar-to/${encodeURIComponent(otherUserName)}`;
     const response = await this.fetchWithRetry(url);
     await this.checkStatus(response);
+    if (response.status === 204) {
+      return null;
+    }
     return response.json();
   };
 
