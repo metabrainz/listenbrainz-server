@@ -2,211 +2,211 @@
 	"payload": {
 		"artist_evolution_activity": [
 			{
-				"time_unit": "Monday",
+				"time_unit": "1",
 				"artist_mbid": "mbid_taylor",
 				"artist_name": "Taylor Swift",
 				"listen_count": 120
 			},
 			{
-				"time_unit": "Monday",
+				"time_unit": "1",
 				"artist_mbid": "mbid_drake",
 				"artist_name": "Drake",
 				"listen_count": 80
 			},
 			{
-				"time_unit": "Monday",
+				"time_unit": "1",
 				"artist_mbid": "mbid_coldplay",
 				"artist_name": "Coldplay",
 				"listen_count": 150
 			},
 			{
-				"time_unit": "Monday",
+				"time_unit": "1",
 				"artist_mbid": "mbid_adele",
 				"artist_name": "Adele",
 				"listen_count": 60
 			},
 			{
-				"time_unit": "Monday",
+				"time_unit": "1",
 				"artist_mbid": "mbid_weeknd",
 				"artist_name": "The Weeknd",
 				"listen_count": 40
 			},
 			{
-				"time_unit": "Tuesday",
+				"time_unit": "2",
 				"artist_mbid": "mbid_taylor",
 				"artist_name": "Taylor Swift",
 				"listen_count": 50
 			},
 			{
-				"time_unit": "Tuesday",
+				"time_unit": "2",
 				"artist_mbid": "mbid_drake",
 				"artist_name": "Drake",
 				"listen_count": 200
 			},
 			{
-				"time_unit": "Tuesday",
+				"time_unit": "2",
 				"artist_mbid": "mbid_coldplay",
 				"artist_name": "Coldplay",
 				"listen_count": 90
 			},
 			{
-				"time_unit": "Tuesday",
+				"time_unit": "2",
 				"artist_mbid": "mbid_adele",
 				"artist_name": "Adele",
 				"listen_count": 30
 			},
 			{
-				"time_unit": "Tuesday",
+				"time_unit": "2",
 				"artist_mbid": "mbid_weeknd",
 				"artist_name": "The Weeknd",
 				"listen_count": 180
 			},
 			{
-				"time_unit": "Wednesday",
+				"time_unit": "3",
 				"artist_mbid": "mbid_taylor",
 				"artist_name": "Taylor Swift",
 				"listen_count": 300
 			},
 			{
-				"time_unit": "Wednesday",
+				"time_unit": "3",
 				"artist_mbid": "mbid_drake",
 				"artist_name": "Drake",
 				"listen_count": 40
 			},
 			{
-				"time_unit": "Wednesday",
+				"time_unit": "3",
 				"artist_mbid": "mbid_coldplay",
 				"artist_name": "Coldplay",
 				"listen_count": 20
 			},
 			{
-				"time_unit": "Wednesday",
+				"time_unit": "3",
 				"artist_mbid": "mbid_adele",
 				"artist_name": "Adele",
 				"listen_count": 200
 			},
 			{
-				"time_unit": "Wednesday",
+				"time_unit": "3",
 				"artist_mbid": "mbid_weeknd",
 				"artist_name": "The Weeknd",
 				"listen_count": 60
 			},
 			{
-				"time_unit": "Thursday",
+				"time_unit": "4",
 				"artist_mbid": "mbid_taylor",
 				"artist_name": "Taylor Swift",
 				"listen_count": 180
 			},
 			{
-				"time_unit": "Thursday",
+				"time_unit": "4",
 				"artist_mbid": "mbid_drake",
 				"artist_name": "Drake",
 				"listen_count": 100
 			},
 			{
-				"time_unit": "Thursday",
+				"time_unit": "4",
 				"artist_mbid": "mbid_coldplay",
 				"artist_name": "Coldplay",
 				"listen_count": 300
 			},
 			{
-				"time_unit": "Thursday",
+				"time_unit": "4",
 				"artist_mbid": "mbid_adele",
 				"artist_name": "Adele",
 				"listen_count": 20
 			},
 			{
-				"time_unit": "Thursday",
+				"time_unit": "4",
 				"artist_mbid": "mbid_weeknd",
 				"artist_name": "The Weeknd",
 				"listen_count": 250
 			},
 			{
-				"time_unit": "Friday",
+				"time_unit": "5",
 				"artist_mbid": "mbid_taylor",
 				"artist_name": "Taylor Swift",
 				"listen_count": 400
 			},
 			{
-				"time_unit": "Friday",
+				"time_unit": "5",
 				"artist_mbid": "mbid_drake",
 				"artist_name": "Drake",
 				"listen_count": 50
 			},
 			{
-				"time_unit": "Friday",
+				"time_unit": "5",
 				"artist_mbid": "mbid_coldplay",
 				"artist_name": "Coldplay",
 				"listen_count": 280
 			},
 			{
-				"time_unit": "Friday",
+				"time_unit": "5",
 				"artist_mbid": "mbid_adele",
 				"artist_name": "Adele",
 				"listen_count": 150
 			},
 			{
-				"time_unit": "Friday",
+				"time_unit": "5",
 				"artist_mbid": "mbid_weeknd",
 				"artist_name": "The Weeknd",
 				"listen_count": 70
 			},
 			{
-				"time_unit": "Saturday",
+				"time_unit": "6",
 				"artist_mbid": "mbid_taylor",
 				"artist_name": "Taylor Swift",
 				"listen_count": 90
 			},
 			{
-				"time_unit": "Saturday",
+				"time_unit": "6",
 				"artist_mbid": "mbid_drake",
 				"artist_name": "Drake",
 				"listen_count": 350
 			},
 			{
-				"time_unit": "Saturday",
+				"time_unit": "6",
 				"artist_mbid": "mbid_coldplay",
 				"artist_name": "Coldplay",
 				"listen_count": 100
 			},
 			{
-				"time_unit": "Saturday",
+				"time_unit": "6",
 				"artist_mbid": "mbid_adele",
 				"artist_name": "Adele",
 				"listen_count": 80
 			},
 			{
-				"time_unit": "Saturday",
+				"time_unit": "6",
 				"artist_mbid": "mbid_weeknd",
 				"artist_name": "The Weeknd",
 				"listen_count": 300
 			},
 			{
-				"time_unit": "Sunday",
+				"time_unit": "7",
 				"artist_mbid": "mbid_taylor",
 				"artist_name": "Taylor Swift",
 				"listen_count": 500
 			},
 			{
-				"time_unit": "Sunday",
+				"time_unit": "7",
 				"artist_mbid": "mbid_drake",
 				"artist_name": "Drake",
 				"listen_count": 120
 			},
 			{
-				"time_unit": "Sunday",
+				"time_unit": "7",
 				"artist_mbid": "mbid_coldplay",
 				"artist_name": "Coldplay",
 				"listen_count": 30
 			},
 			{
-				"time_unit": "Sunday",
+				"time_unit": "7",
 				"artist_mbid": "mbid_adele",
 				"artist_name": "Adele",
 				"listen_count": 200
 			},
 			{
-				"time_unit": "Sunday",
+				"time_unit": "7",
 				"artist_mbid": "mbid_weeknd",
 				"artist_name": "The Weeknd",
 				"listen_count": 400

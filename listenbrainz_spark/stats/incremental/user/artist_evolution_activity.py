@@ -31,11 +31,11 @@ class ArtistEvolutionActivityUserStatsQueryEntity(UserStatsQueryProvider):
 
     def _get_time_field_expression(self):
         if self.stats_range in ("week", "this_week"):
-            return "date_format(listened_at, 'EEEE')"
+            return "((dayofweek(listened_at) + 5) % 7) + 1"
         elif self.stats_range in ("month", "this_month"):
             return "day(listened_at)"
         elif self.stats_range in ("year", "half_yearly", "quarter", "this_year"):
-            return "date_format(listened_at, 'MMMM')"
+            return "month(listened_at)"
         else:
             return "year(listened_at)"
 
