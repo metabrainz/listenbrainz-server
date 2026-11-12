@@ -21,6 +21,7 @@ from listenbrainz.messybrainz import update_msids_from_mapping
 from listenbrainz.metadata_cache.seeder import submit_new_releases_to_cache
 from listenbrainz.troi.daily_jams import run_daily_jams_troi_bot
 from listenbrainz.webserver import create_app
+from listenbrainz.retry_rejected_listens import replay_rejected_listens
 
 
 @click.group()
@@ -30,6 +31,21 @@ def cli():
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'admin', 'sql')
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'admin', 'timescale')
+
+
+@cli.command(name="retry-rejected-listens")
+@click.option("--max-messages", type=click.IntRange(min=1),
+              help="Maximum number of message batches to replay; defaults to the initial ready count.")
+@click.option("--dry-run", is_flag=True, help="Show the replay count without consuming messages.")
+def retry_rejected_listens(max_messages, dry_run):
+    """Replay rejection messages after fixing the writer error.
+
+    Uses the configured RabbitMQ queues. Each message may contain multiple listens.
+    An interruption after publication but before acknowledgement can cause duplicates.
+    """
+    app = create_app()
+    with app.app_context():
+        replay_rejected_listens(max_messages, dry_run)
 
 
 @cli.command(name="init_db")

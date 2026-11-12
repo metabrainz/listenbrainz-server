@@ -58,6 +58,24 @@ Procedures
   There will be no data loss but a short downtime while the containers restart.
 * Remove service: LB cannot function without RabbitMQ. So the only way is to stop LB containers, and LB will become unavailable.
 
+Retry rejected listens
+~~~~~~~~~~~~~~~~~~~~~~
+
+After fixing the timescale writer error, preview the backlog, retry a few messages,
+then check the writer logs before replaying the rest::
+
+    python manage.py retry-rejected-listens --dry-run
+    python manage.py retry-rejected-listens --max-messages 10
+    python manage.py retry-rejected-listens
+
+The command uses the configured RabbitMQ queues and processes up to 100 messages per
+batch, stopping at the initial backlog count. Each message may contain multiple listens.
+No plugin or broker restart is needed.
+
+Batches are acknowledged only after RabbitMQ confirms publication to the incoming
+queue. Failures stop replay and requeue the unacknowledged batch; some messages may
+be delivered twice. Check writer logs to confirm the listens were stored successfully.
+
 Implementation details
 ~~~~~~~~~~~~~~~~~~~~~~
 
