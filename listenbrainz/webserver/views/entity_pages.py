@@ -1,10 +1,11 @@
 from datetime import datetime
 
-from flask import Blueprint, render_template, current_app, jsonify
+from flask import Blueprint, render_template, current_app, jsonify, redirect, url_for
 from werkzeug.exceptions import BadRequest
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.db import popularity, similarity
+from listenbrainz.db.artist import load_artists_from_mbids_with_redirects
 from listenbrainz.db.stats import get_entity_listener
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects, load_release_groups_for_recordings
 from listenbrainz.webserver import db_conn, listens_conn
@@ -161,14 +162,40 @@ def artist_entity(artist_mbid: str):
 
     # Fetch the artist cached data
     artist_data = get_metadata_for_artist(listens_conn, [artist_mbid])
-    if len(artist_data) == 0:
-        return jsonify({"error": f"artist {artist_mbid} not found in the metadata cache"}), 404
 
-    artist = {
-        "artist_mbid": str(artist_data[0].artist_mbid),
-        **artist_data[0].artist_data,
-        "tag": artist_data[0].tag_data,
-    }
+    if len(artist_data) > 0:
+        artist = {
+            "artist_mbid": str(artist_data[0].artist_mbid),
+            **artist_data[0].artist_data,
+            "tag": artist_data[0].tag_data,
+        }
+    else:
+        # Fallback: Query MusicBrainz database directly for redirects or uncached artists
+        try:
+            with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn:
+                with mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
+                    mb_artist_records = load_artists_from_mbids_with_redirects(mb_curs, [artist_mbid])
+        except psycopg2.OperationalError:
+            mb_artist_records = []
+
+        if not mb_artist_records or mb_artist_records[0].get("name") is None:
+            return jsonify({"error": f"artist {artist_mbid} not found in the metadata cache"}), 404
+
+        mb_artist = mb_artist_records[0]
+        canonical_mbid = mb_artist.get("artist_mbid")
+
+        if canonical_mbid and canonical_mbid != artist_mbid:
+            return redirect(url_for("artist.artist_entity", artist_mbid=canonical_mbid), code=301)
+
+        artist = {
+            "artist_mbid": canonical_mbid,
+            "artist_name": mb_artist.get("name"),
+            "artist_type": mb_artist.get("type"),
+            "gender": mb_artist.get("gender"),
+            "disambiguation": mb_artist.get("comment"),
+            "tag": [],
+            "release_groups": [],
+        }
 
     popular_recordings = popularity.get_top_recordings_for_artist(db_conn, listens_conn, artist_mbid, 10)
 
