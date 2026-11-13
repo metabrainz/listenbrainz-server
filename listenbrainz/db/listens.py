@@ -2,7 +2,9 @@
 
 import logging
 import time
-from typing import Optional, Sequence
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Callable, Iterator, Optional, Sequence
 
 import psycopg2
 import sqlalchemy
@@ -314,6 +316,133 @@ def add_missing_to_listen_user_metadata(user_ids: Sequence[int]):
         raise
     finally:
         connection.close()
+
+
+@dataclass(frozen=True)
+class ListenKey:
+    """ The position of a listen in the order listens are paged through. created is only set when paging
+        by created. """
+    user_id: int
+    listened_at: datetime
+    recording_msid: str
+    created: Optional[datetime] = None
+
+    @classmethod
+    def from_row(cls, row) -> "ListenKey":
+        """ Get the key of a row selected by a page query, from its key_ columns. """
+        return cls(row["key_user_id"], row["key_listened_at"], str(row["key_recording_msid"]), row.get("key_created"))
+
+    def args(self) -> dict:
+        args = {
+            "after_user_id": self.user_id,
+            "after_listened_at": self.listened_at,
+            "after_recording_msid": self.recording_msid,
+        }
+        if self.created is not None:
+            args["after_created"] = self.created
+        return args
+
+
+# the key columns that page queries select in addition to the requested ones, to resume after the last row
+_PAGE_KEY_COLUMNS = "l.user_id AS key_user_id, l.listened_at AS key_listened_at, l.recording_msid AS key_recording_msid"
+
+
+def get_listen_partitions() -> list[str]:
+    """ Get the names of the partitions of the listen table, sorted, quoted where needed. """
+    query = """
+        SELECT inhrelid::regclass::TEXT AS partition
+          FROM pg_inherits
+         WHERE inhparent = 'listen'::regclass
+      ORDER BY 1
+    """
+    with engine.connect() as connection:
+        return connection.execute(sqlalchemy.text(query)).scalars().all()
+
+
+def partition_page_query(partition: str, select: str, where: str, after: Optional[ListenKey]) -> tuple[str, dict]:
+    """ Get a query for the next page of listens of a partition of the listen table and its args.
+
+    Listens are paged through in the order of the partition's (user_id, listened_at DESC, recording_msid)
+    index, so a page reads a range of the index however many listens a user has. The query selects the
+    select columns of the listen table aliased l and the key_ columns, from listens matching the where
+    condition after the after key, at most :page_size of them, in that order. The rest of the user of the
+    after key and the users after it are selected by separate branches, because the index has mixed
+    directions and a single row comparison can not express it.
+
+    Args:
+        partition: the name of the partition, as returned by get_listen_partitions
+        select: the columns to select, of the listen table aliased l
+        where: an SQL condition on l, with bind parameters for the caller's args
+        after: the key of the last listen of the previous page, None for the first page
+    """
+    order_by = "ORDER BY l.user_id, l.listened_at DESC, l.recording_msid"
+
+    def branch(condition):
+        return f"""
+            SELECT {select}, {_PAGE_KEY_COLUMNS}
+              FROM {partition} l
+             WHERE ({where})
+               AND {condition}
+                   {order_by}
+             LIMIT :page_size
+        """
+
+    if after is None:
+        return branch("TRUE"), {}
+
+    # ORDER BY sorts results but does not locate the next page. These disjoint branches express
+    # "after" for the mixed sort directions and let each range use the index instead of one OR filter.
+    branches = [
+        """l.user_id = :after_user_id
+       AND l.listened_at = :after_listened_at
+       AND l.recording_msid > CAST(:after_recording_msid AS UUID)""",
+        "l.user_id = :after_user_id AND l.listened_at < :after_listened_at",
+        "l.user_id > :after_user_id",
+    ]
+    query = " UNION ALL ".join(f"({branch(condition)})" for condition in branches) + """
+        ORDER BY key_user_id, key_listened_at DESC, key_recording_msid
+        LIMIT :page_size
+    """
+    return query, after.args()
+
+
+def created_page_query(select: str, where: str, after: Optional[ListenKey]) -> tuple[str, dict]:
+    """ Get a query for the next page of listens of the listen table in the order they were created
+    and its args. Like partition_page_query, but across all partitions and with a key_created column.
+    """
+    after_condition = "TRUE"
+    if after is not None:
+        after_condition = """(l.created, l.user_id, l.listened_at, l.recording_msid)
+                           > (:after_created, :after_user_id, :after_listened_at, CAST(:after_recording_msid AS UUID))"""
+    query = f"""
+        SELECT {select}, {_PAGE_KEY_COLUMNS}, l.created AS key_created
+          FROM listen l
+         WHERE ({where})
+           AND {after_condition}
+      ORDER BY l.created, l.user_id, l.listened_at, l.recording_msid
+         LIMIT :page_size
+    """
+    return query, after.args() if after is not None else {}
+
+
+def iter_listen_pages(page_size: int, page_query: Callable[[Optional[ListenKey]], tuple[str, dict]],
+                      args: dict) -> Iterator[list]:
+    """ Yield pages of rows, as mappings, of the query returned by page_query for the key of the last row
+    of the previous page, until a page has less than page_size rows. Each page is selected in its own
+    transaction, so neither memory nor transactions grow with the number of listens.
+    """
+    after = None
+    while True:
+        query, page_args = page_query(after)
+        with engine.connect() as connection:
+            rows = connection.execute(
+                sqlalchemy.text(query), {**args, **page_args, "page_size": page_size}
+            ).mappings().all()
+        if rows:
+            yield rows
+        if len(rows) < page_size:
+            return
+        after = ListenKey.from_row(rows[-1])
 
 
 def _refresh_listen_metadata(cursor, user_ids: Sequence[int]):
