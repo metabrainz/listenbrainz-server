@@ -775,7 +775,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.send_data(payload)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
-        self.assertEqual('Value for duration_played is invalid, should be a positive integer.',
+        self.assertEqual('Value for duration_played is invalid, should be a non-negative integer.',
                          response.json['error'])
 
         del payload["payload"][0]["track_metadata"]["additional_info"]["duration_played"]
@@ -783,7 +783,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.send_data(payload)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
-        self.assertEqual('Value for duration_played_ms is invalid, should be a positive integer.',
+        self.assertEqual('Value for duration_played_ms is invalid, should be a non-negative integer.',
                          response.json['error'])
 
     def test_valid_duration(self):
@@ -803,6 +803,19 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
         del payload["payload"][0]["track_metadata"]["additional_info"]["duration_played"]
         payload["payload"][0]["track_metadata"]["additional_info"]["duration_played_ms"] = 180000
+        response = self.send_data(payload)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        # duration_played of 0 is valid — happens when a now-playing listen is submitted right as the track starts
+        del payload["payload"][0]["track_metadata"]["additional_info"]["duration_played_ms"]
+        payload["payload"][0]["track_metadata"]["additional_info"]["duration_played"] = 0
+        response = self.send_data(payload)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        del payload["payload"][0]["track_metadata"]["additional_info"]["duration_played"]
+        payload["payload"][0]["track_metadata"]["additional_info"]["duration_played_ms"] = 0
         response = self.send_data(payload)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
