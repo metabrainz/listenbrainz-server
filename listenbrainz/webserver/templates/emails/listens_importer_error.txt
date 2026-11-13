@@ -4,7 +4,7 @@ We encountered an error while importing your listens from {{service}}.
 The error was as follows: "{{error}}"
 
 Please take a look at your {{service}} import page ({{link}})
-for more information.
+for more information. You may need to disconnect and reconnect {{service}}.
 
 Best,
 The ListenBrainz Team
