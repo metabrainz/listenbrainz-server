@@ -126,3 +126,14 @@ class UserSettingsAPITestCase(ListenAPIIntegrationTestCase):
 
         prefs = db_user_setting.get_brainzplayer_prefs(self.db_conn, self.user["id"])
         self.assertEqual(prefs, {"brainzplayer": {"youtubeEnabled": False, "spotifyEnabled": True}})
+
+    def test_brainzplayer_notifications_pref(self):
+        response = self.client.post(
+            self.custom_url_for("user_settings_api_v1.update_brainzplayer_prefs"),
+            json={"notificationsEnabled": False},
+            headers={"Authorization": f"Token {self.user['auth_token']}"}
+        )
+        self.assert200(response)
+
+        prefs = db_user_setting.get_brainzplayer_prefs(self.db_conn, self.user["id"])
+        self.assertEqual(prefs, {"brainzplayer": {"notificationsEnabled": False}})

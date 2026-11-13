@@ -18,6 +18,7 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import SpotifyPlayer from "../../common/brainzplayer/SpotifyPlayer";
 import SoundcloudPlayer from "../../common/brainzplayer/SoundcloudPlayer";
 import FunkwhalePlayer from "../../common/brainzplayer/FunkwhalePlayer";
+import { hasNotificationPermission } from "../../notifications/Notifications";
 import AppleMusicPlayer from "../../common/brainzplayer/AppleMusicPlayer";
 import Card from "../../components/Card";
 import faInternetArchive from "../../common/icons/faInternetArchive";
@@ -114,6 +115,8 @@ function BrainzPlayerSettings() {
       Boolean(navidromeAuth?.instance_url),
     brainzplayerEnabled:
       userPreferences?.brainzplayer?.brainzplayerEnabled ?? true,
+    notificationsEnabled:
+      userPreferences?.brainzplayer?.notificationsEnabled ?? true,
     dataSourcesPriority: union(
       userPreferences?.brainzplayer?.dataSourcesPriority ?? [],
       defaultDataSourcesPriority
@@ -128,6 +131,7 @@ function BrainzPlayerSettings() {
     funkwhaleEnabled,
     navidromeEnabled,
     brainzplayerEnabled,
+    notificationsEnabled,
     dataSourcesPriority,
   } = settings;
 
@@ -225,6 +229,31 @@ function BrainzPlayerSettings() {
             </p>
           )}
         </summary>
+        <Switch
+          id="enable-notifications"
+          value="notifications"
+          checked={notificationsEnabled}
+          onChange={() => {
+            // Prompt for OS/browser notification permission as soon as the
+            // user opts in, rather than waiting for the next track change.
+            if (!notificationsEnabled) {
+              hasNotificationPermission();
+            }
+            updateSettings((prev) => ({
+              ...prev,
+              notificationsEnabled: !prev.notificationsEnabled,
+            }));
+          }}
+          switchLabel={
+            <span
+              className={`text-brand ${
+                !notificationsEnabled ? "text-muted" : ""
+              }`}
+            >
+              <span>Show a notification for each track played</span>
+            </span>
+          }
+        />
         <h3 className="mt-4">Play music with...</h3>
         <p>Choose which music services to use for playback in ListenBrainz.</p>
 
