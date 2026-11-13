@@ -14,6 +14,22 @@ import { PAGE_TYPE_SITEWIDE, filterRangeOptions } from "../FreshReleases";
 
 const VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377";
 
+// Special Purpose Artists (SPAs) are placeholders rather than real artists
+// (e.g. [unknown], [no artist]) and are not meaningful on the Fresh Releases
+// page, so they are hidden by default behind an opt-in toggle. MBIDs are from
+// the MusicBrainz style guideline:
+// https://musicbrainz.org/doc/Style/Unknown_and_untitled/Special_purpose_artist
+// Note: "Various Artists" is also an SPA but is handled by its own filter.
+const SPECIAL_PURPOSE_ARTIST_MBIDS = [
+  "f731ccc4-e22a-43af-a747-64213329e088", // [anonymous]
+  "33cf029c-63b0-41a0-9855-be2a3665fb3b", // [data]
+  "314e1c25-dde7-4e4d-b2f4-0a7b9f7c56dc", // [dialogue]
+  "eec63d3c-3b81-4ad4-b1e4-7c147d4d2b61", // [no artist]
+  "9be7f096-97ec-4615-8957-8d40b5dcbc41", // [traditional]
+  "125ec42a-7229-4250-afc5-e057484327fe", // [unknown]
+  "7e84f845-ac16-41fe-9ff8-df12eb32af55", // MusicBrainz Test Artist
+];
+
 type ReleaseFiltersProps = {
   releases: Array<FreshReleaseItem>;
   releaseTypes: Array<string>;
@@ -62,6 +78,10 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
   const [includeVariousArtists, setIncludeVariousArtists] = React.useState<
     boolean
   >(false);
+  const [
+    includeSpecialPurposeArtists,
+    setIncludeSpecialPurposeArtists,
+  ] = React.useState<boolean>(false);
 
   const [
     releaseTagsExcludeCheckList,
@@ -153,6 +173,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     setCoverartOnly(false);
     setCheckedList([]);
     setIncludeVariousArtists(false);
+    setIncludeSpecialPurposeArtists(false);
   }, [releaseTags, releaseTypes]);
 
   React.useEffect(() => {
@@ -176,12 +197,19 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
       );
       const isVariousArtistsValid = !isVariousArtists || includeVariousArtists;
 
+      const isSpecialPurposeArtist = item.artist_mbids.some((mbid) =>
+        SPECIAL_PURPOSE_ARTIST_MBIDS.includes(mbid)
+      );
+      const isSpecialPurposeArtistValid =
+        !isSpecialPurposeArtist || includeSpecialPurposeArtists;
+
       return (
         isCoverArtValid &&
         isReleaseTypeValid &&
         isReleaseTagValid &&
         !isReleaseTagExcluded &&
-        isVariousArtistsValid
+        isVariousArtistsValid &&
+        isSpecialPurposeArtistValid
       );
     });
 
@@ -197,6 +225,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     releaseTagsExcludeCheckList,
     coverartOnly,
     includeVariousArtists,
+    includeSpecialPurposeArtists,
     releases,
     filteredList,
     releaseCardGridRef,
@@ -402,6 +431,17 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
               checked={includeVariousArtists}
               onChange={(e) => setIncludeVariousArtists(!includeVariousArtists)}
               switchLabel="Releases by Various Artists"
+            />
+
+            <Switch
+              id="include-special-purpose-artists-switch"
+              key="include-special-purpose-artists-switch"
+              value="special-purpose-artists"
+              checked={includeSpecialPurposeArtists}
+              onChange={(e) =>
+                setIncludeSpecialPurposeArtists(!includeSpecialPurposeArtists)
+              }
+              switchLabel="Releases by special-purpose artists"
             />
 
             {Object.keys(displaySettings).map((setting, index) =>
