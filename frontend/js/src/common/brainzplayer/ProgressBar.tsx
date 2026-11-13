@@ -152,9 +152,17 @@ function ProgressBar(props: ProgressBarProps) {
       if (!isDraggingRef.current) return;
       isDraggingRef.current = false;
       document.body.style.cursor = "";
-      const msPos = getMsFromClientX(e.clientX);
-      pendingSeekMsRef.current = msPos;
-      seekToPositionMs(msPos);
+      if (e.type !== "pointercancel") {
+        const msPos = getMsFromClientX(e.clientX);
+        pendingSeekMsRef.current = msPos;
+        seekToPositionMs(msPos);
+      }
+      if (
+        handleRef.current &&
+        (e.pointerType === "touch" || e.type === "pointercancel")
+      ) {
+        handleRef.current.style.transform = "translate(-50%, -50%) scaleX(0)";
+      }
       draggingElementRef.current?.classList.remove("dragging");
       draggingElementRef.current = null;
       setShowTooltip(false);
@@ -206,7 +214,10 @@ function ProgressBar(props: ProgressBarProps) {
     const musicPlayerXOffset = progressBarBoundingRect.x;
     const absoluteClickXPos = event.clientX;
     const relativeClickXPos = absoluteClickXPos - musicPlayerXOffset;
-    const percentPos = relativeClickXPos / progressBarWidth;
+    const percentPos = Math.max(
+      0,
+      Math.min(relativeClickXPos / progressBarWidth, 1)
+    );
     const positionMs = Math.round(durationMs * percentPos);
 
     return {
@@ -237,7 +248,13 @@ function ProgressBar(props: ProgressBarProps) {
     setTooltipXPosition(mousePosition.tooltipXPosition);
   };
 
-  const onMouseDownHandler = (e: React.MouseEvent<HTMLDivElement>) => {
+  const onPointerDownHandler = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // Ignored if pointer is no longer active
+    }
     e.preventDefault();
     isDraggingRef.current = true;
     document.body.style.cursor = "grabbing";
@@ -301,7 +318,7 @@ function ProgressBar(props: ProgressBarProps) {
           }
         }}
         onKeyDown={onKeyPressHandler}
-        onMouseDown={onMouseDownHandler}
+        onPointerDown={onPointerDownHandler}
         onMouseEnter={() => {
           setShowTooltip(true);
           if (handleRef.current) {
