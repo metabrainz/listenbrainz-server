@@ -40,6 +40,7 @@ const props = {
   onPlayerPausedChange: jest.fn(),
   onProgressChange: jest.fn(),
   onDurationChange: jest.fn(),
+  onBufferingChange: jest.fn(),
   onTrackInfoChange: jest.fn(),
   onTrackEnd: jest.fn(),
   onTrackNotFound: jest.fn(),

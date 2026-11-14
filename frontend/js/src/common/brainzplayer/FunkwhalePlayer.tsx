@@ -166,8 +166,9 @@ export default class FunkwhalePlayer
   };
 
   onLoadedMetadata = (): void => {
-    const { onDurationChange } = this.props;
+    const { onDurationChange, onBufferingChange } = this.props;
     const audioElement = this.audioRef.current;
+    onBufferingChange(true);
     if (audioElement) {
       onDurationChange(audioElement.duration * 1000);
     }
@@ -219,6 +220,8 @@ export default class FunkwhalePlayer
 
   onCanPlay = (): void => {
     const { currentTrack } = this.state;
+    const { onBufferingChange } = this.props;
+    onBufferingChange(false);
     if (currentTrack) {
       this.updateTrackInfo();
     }

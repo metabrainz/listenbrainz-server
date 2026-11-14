@@ -397,8 +397,12 @@ export default class AppleMusicPlayer
   onPlaybackStateChange = ({
     state: currentState,
   }: MusicKit.PlayerPlaybackState) => {
-    const { onPlayerPausedChange, onTrackEnd } = this.props;
+    const { onPlayerPausedChange, onTrackEnd, onBufferingChange } = this.props;
+    if (currentState === MusicKit.PlaybackStates.loading) {
+      onBufferingChange(true);
+    }
     if (currentState === MusicKit.PlaybackStates.playing) {
+      onBufferingChange(false);
       onPlayerPausedChange(false);
     }
     if (currentState === MusicKit.PlaybackStates.paused) {

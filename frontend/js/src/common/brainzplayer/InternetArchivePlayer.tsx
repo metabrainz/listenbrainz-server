@@ -87,6 +87,7 @@ export default class InternetArchivePlayer
     audioElement.addEventListener("loadedmetadata", this.handleLoadedMetadata);
     audioElement.addEventListener("durationchange", this.handleLoadedMetadata);
     audioElement.addEventListener("timeupdate", this.handleTimeUpdate);
+    audioElement.addEventListener("canplay", this.onCanPlay);
     audioElement.addEventListener("play", this.onPlay);
     audioElement.addEventListener("pause", this.onPause);
     audioElement.addEventListener("ended", this.handleAudioEnded);
@@ -119,10 +120,16 @@ export default class InternetArchivePlayer
   };
 
   handleLoadedMetadata = () => {
-    const { onDurationChange } = this.props;
+    const { onDurationChange, onBufferingChange } = this.props;
+    onBufferingChange(true);
     if (this.audioRef.current) {
       onDurationChange(this.audioRef.current.duration * 1000);
     }
+  };
+
+  onCanPlay = (): void => {
+    const { onBufferingChange } = this.props;
+    onBufferingChange(false);
   };
 
   onPlay = (): void => {

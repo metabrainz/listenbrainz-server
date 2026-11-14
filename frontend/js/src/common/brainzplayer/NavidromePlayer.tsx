@@ -127,9 +127,10 @@ export default class NavidromePlayer
   };
 
   onLoadedMetadata = (event: Event): void => {
-    const { onDurationChange } = this.props;
+    const { onDurationChange, onBufferingChange } = this.props;
     const { currentTrack } = this.state;
     const audioElement = event.target as HTMLAudioElement;
+    onBufferingChange(true);
     if (currentTrack?.duration) {
       onDurationChange(currentTrack.duration * 1000);
     } else {
@@ -187,6 +188,8 @@ export default class NavidromePlayer
 
   onCanPlay = (event: Event): void => {
     const { currentTrack } = this.state;
+    const { onBufferingChange } = this.props;
+    onBufferingChange(false);
     if (currentTrack) {
       this.updateTrackInfo();
     }
