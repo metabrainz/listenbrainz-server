@@ -54,6 +54,8 @@ function Navbar() {
           className="navbar-toggler"
           data-bs-toggle="collapse"
           data-bs-target="#side-nav,#side-nav-overlay"
+          aria-controls="side-nav"
+          aria-label="Toggle navigation"
           ref={toggleSidebarButton}
         >
           <span className="navbar-toggler-icon" />
@@ -84,7 +86,7 @@ function Navbar() {
             onChange={(e) => setSearchTerm(e.target.value)}
             required
           />
-          <button type="submit">
+          <button type="submit" aria-label="Search">
             <FontAwesomeIcon icon={faMagnifyingGlass} />
           </button>
         </form>
