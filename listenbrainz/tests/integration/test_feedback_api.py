@@ -250,7 +250,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual(
             response.json["error"],
-            "JSON document may only contain recording_msid, recording_mbid and score top level keys"
+            "JSON document may only contain recording_msid, recording_mbid, score and timestamp top level keys"
         )
 
     def test_recording_feedback_invalid_values(self):
