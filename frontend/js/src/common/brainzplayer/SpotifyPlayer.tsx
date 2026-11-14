@@ -550,6 +550,7 @@ export default class SpotifyPlayer
       paused,
       position,
       duration,
+      loading,
       track_window: { current_track, previous_tracks },
     } = playerState;
     const { currentSpotifyTrack, durationMs } = this.state;
@@ -559,11 +560,13 @@ export default class SpotifyPlayer
       onPlayerPausedChange,
       onProgressChange,
       onDurationChange,
+      onBufferingChange,
     } = this.props;
 
     if (paused !== playerPaused) {
       onPlayerPausedChange(paused);
     }
+    onBufferingChange(loading);
 
     if (!current_track) {
       // Assume we got a state update from another device, and don't try to do anything

@@ -9,6 +9,7 @@ import {
   progressMsAtom,
   playerPausedAtom,
   updateTimeAtom,
+  isBufferingAtom,
 } from "./BrainzPlayerAtoms";
 
 type ProgressBarProps = {
@@ -70,6 +71,7 @@ function ProgressBar(props: ProgressBarProps) {
   const durationMs = useAtomValue(durationMsAtom);
   const playerPaused = useAtomValue(playerPausedAtom);
   const updateTime = useAtomValue(updateTimeAtom);
+  const isBuffering = useAtomValue(isBufferingAtom);
 
   const { seekToPositionMs, showNumbers } = props;
   const [tipContent, setTipContent] = React.useState(TOOLTIP_INITIAL_CONTENT);
@@ -94,7 +96,7 @@ function ProgressBar(props: ProgressBarProps) {
   React.useEffect(() => {
     let rafId: number;
     const tick = () => {
-      if (!isDraggingRef.current) {
+      if (!isDraggingRef.current && !isBuffering) {
         const base =
           pendingSeekMsRef.current >= 0 ? pendingSeekMsRef.current : progressMs;
         const elapsed = playerPaused ? 0 : performance.now() - updateTime;
@@ -113,7 +115,7 @@ function ProgressBar(props: ProgressBarProps) {
     };
     rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
-  }, [progressMs, durationMs, playerPaused, updateTime]);
+  }, [progressMs, durationMs, playerPaused, updateTime, isBuffering]);
 
   // Converts a pointer clientX coordinate to a millisecond position using the cached bar rect
   const getMsFromClientX = (clientX: number): number => {
@@ -288,7 +290,7 @@ function ProgressBar(props: ProgressBarProps) {
   return (
     <div className="progress-bar-wrapper">
       <div
-        className="progress"
+        className={`progress${isBuffering ? " buffering" : ""}`}
         onClick={onClickHandler}
         onMouseMove={onMouseMoveHandler}
         onMouseLeave={() => {

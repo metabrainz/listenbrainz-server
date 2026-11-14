@@ -211,13 +211,14 @@ export default class SoundcloudPlayer
   };
 
   onPlay = (event: ProgressEvent): void => {
-    const { onPlayerPausedChange } = this.props;
+    const { onPlayerPausedChange, onBufferingChange } = this.props;
     // Detect new track loaded
     const { currentSound } = this.state;
     if (event.soundId !== currentSound?.id) {
       this.updateTrackInfo(event);
     }
 
+    onBufferingChange(false);
     onPlayerPausedChange(false);
   };
 
@@ -341,8 +342,9 @@ export default class SoundcloudPlayer
   };
 
   playStreamUrl = (streamUrl: string, retryCount = 0) => {
-    const { onInvalidateDataSource } = this.props;
+    const { onInvalidateDataSource, onBufferingChange } = this.props;
     if (this.soundcloudPlayer) {
+      onBufferingChange(true);
       this.soundcloudPlayer.load(streamUrl, this.options);
     } else if (retryCount <= 3) {
       this.initialize();

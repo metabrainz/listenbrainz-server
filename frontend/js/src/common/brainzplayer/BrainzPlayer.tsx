@@ -45,6 +45,7 @@ import {
   playerPausedAtom,
   setPlaybackTimerAtom,
   durationMsAtom,
+  isBufferingAtom,
   volumeAtom,
   progressMsAtom,
   updateTimeAtom,
@@ -101,6 +102,7 @@ export type DataSourceProps = {
   onPlayerPausedChange: (paused: boolean) => void;
   onProgressChange: (progressMs: number) => void;
   onDurationChange: (durationMs: number) => void;
+  onBufferingChange: (isBuffering: boolean) => void;
   onTrackInfoChange: (
     title: string,
     trackURL: string,
@@ -215,6 +217,7 @@ export default function BrainzPlayer() {
   const setCurrentListenIndex = useSetAtom(currentListenIndexAtom);
   const setCurrentListen = useSetAtom(currentListenAtom);
   const setDurationMs = useSetAtom(durationMsAtom);
+  const setIsBuffering = useSetAtom(isBufferingAtom);
 
   const [playerPaused, setPlayerPaused] = useAtom(playerPausedAtom);
   const [currentDataSourceIndex, setCurrentDataSourceIndex] = useAtom(
@@ -913,6 +916,10 @@ export default function BrainzPlayer() {
     }
   };
 
+  const bufferingChange = (isBuffering: boolean): void => {
+    setIsBuffering(isBuffering);
+  };
+
   const durationChange = (newDurationMs: number): void => {
     setDurationMs(newDurationMs);
   };
@@ -1156,6 +1163,7 @@ export default function BrainzPlayer() {
                 onPlayerPausedChange={playerPauseChange}
                 onProgressChange={progressChange}
                 onDurationChange={durationChange}
+                onBufferingChange={bufferingChange}
                 onTrackInfoChange={throttledTrackInfoChange}
                 onTrackEnd={playNextTrack}
                 onTrackNotFound={failedToPlayTrack}
@@ -1175,6 +1183,7 @@ export default function BrainzPlayer() {
                 onPlayerPausedChange={playerPauseChange}
                 onProgressChange={progressChange}
                 onDurationChange={durationChange}
+                onBufferingChange={bufferingChange}
                 onTrackInfoChange={throttledTrackInfoChange}
                 onTrackEnd={playNextTrack}
                 onTrackNotFound={failedToPlayTrack}
@@ -1193,6 +1202,7 @@ export default function BrainzPlayer() {
                 onPlayerPausedChange={playerPauseChange}
                 onProgressChange={progressChange}
                 onDurationChange={durationChange}
+                onBufferingChange={bufferingChange}
                 onTrackInfoChange={throttledTrackInfoChange}
                 onTrackEnd={playNextTrack}
                 onTrackNotFound={failedToPlayTrack}
@@ -1211,6 +1221,7 @@ export default function BrainzPlayer() {
                 onPlayerPausedChange={playerPauseChange}
                 onProgressChange={progressChange}
                 onDurationChange={durationChange}
+                onBufferingChange={bufferingChange}
                 onTrackInfoChange={throttledTrackInfoChange}
                 onTrackEnd={playNextTrack}
                 onTrackNotFound={failedToPlayTrack}
@@ -1228,6 +1239,7 @@ export default function BrainzPlayer() {
                 onPlayerPausedChange={playerPauseChange}
                 onProgressChange={progressChange}
                 onDurationChange={durationChange}
+                onBufferingChange={bufferingChange}
                 onTrackInfoChange={throttledTrackInfoChange}
                 onTrackEnd={playNextTrack}
                 onTrackNotFound={failedToPlayTrack}
@@ -1245,6 +1257,7 @@ export default function BrainzPlayer() {
                 onPlayerPausedChange={playerPauseChange}
                 onProgressChange={progressChange}
                 onDurationChange={durationChange}
+                onBufferingChange={bufferingChange}
                 onTrackInfoChange={throttledTrackInfoChange}
                 onTrackEnd={playNextTrack}
                 onTrackNotFound={failedToPlayTrack}
@@ -1261,6 +1274,7 @@ export default function BrainzPlayer() {
                 onPlayerPausedChange={playerPauseChange}
                 onProgressChange={progressChange}
                 onDurationChange={durationChange}
+                onBufferingChange={bufferingChange}
                 onTrackInfoChange={throttledTrackInfoChange}
                 onTrackEnd={playNextTrack}
                 onTrackNotFound={failedToPlayTrack}
