@@ -559,6 +559,9 @@ def _register_web_blueprints(app):
     from listenbrainz.webserver.views.playlist import playlist_bp
     app.register_blueprint(playlist_bp, url_prefix='/playlist')
 
+    from listenbrainz.webserver.views.collection import collection_bp
+    app.register_blueprint(collection_bp, url_prefix='/collection')
+
     from listenbrainz.webserver.views.settings import settings_bp
     app.register_blueprint(settings_bp, url_prefix='/settings')
     app.register_blueprint(settings_bp, url_prefix='/profile', name='profile')

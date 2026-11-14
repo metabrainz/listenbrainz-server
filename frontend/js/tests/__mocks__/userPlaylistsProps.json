@@ -1,0 +1,91 @@
+{
+  "loaderPlaylists": [
+    {
+      "playlist": {
+        "creator": "Coder",
+        "identifier": "https://listenbrainz.org/playlist/11111111-1111-1111-1111-111111111101",
+        "date": "2026-05-01T10:00:00.000Z",
+        "title": "Zebra Playlist",
+        "annotation": "",
+        "track": [],
+        "extension": {
+          "https://musicbrainz.org/doc/jspf#playlist": {
+            "public": true,
+            "last_modified_at": "2026-05-01T10:00:00.000Z",
+            "collaborators": []
+          }
+        }
+      }
+    },
+    {
+      "playlist": {
+        "creator": "Coder",
+        "identifier": "https://listenbrainz.org/playlist/11111111-1111-1111-1111-111111111102",
+        "date": "2026-04-01T10:00:00.000Z",
+        "title": "Alpha Playlist",
+        "annotation": "",
+        "track": [],
+        "extension": {
+          "https://musicbrainz.org/doc/jspf#playlist": {
+            "public": true,
+            "last_modified_at": "2026-04-02T10:00:00.000Z",
+            "collaborators": []
+          }
+        }
+      }
+    },
+    {
+      "playlist": {
+        "creator": "Coder",
+        "identifier": "https://listenbrainz.org/playlist/11111111-1111-1111-1111-111111111103",
+        "date": "2026-05-06T10:00:00.000Z",
+        "title": "Beta Playlist",
+        "annotation": "",
+        "track": [],
+        "extension": {
+          "https://musicbrainz.org/doc/jspf#playlist": {
+            "public": true,
+            "last_modified_at": "2026-05-07T10:00:00.000Z",
+            "collaborators": []
+          }
+        }
+      }
+    }
+  ],
+  "searchResults": [
+    {
+      "playlist": {
+        "creator": "Coder",
+        "identifier": "https://listenbrainz.org/playlist/22222222-2222-2222-2222-222222222201",
+        "date": "2026-05-07T10:00:00.000Z",
+        "title": "Zebra Search",
+        "annotation": "",
+        "track": [],
+        "extension": {
+          "https://musicbrainz.org/doc/jspf#playlist": {
+            "public": true,
+            "last_modified_at": "2026-05-07T10:00:00.000Z",
+            "collaborators": []
+          }
+        }
+      }
+    },
+    {
+      "playlist": {
+        "creator": "Coder",
+        "identifier": "https://listenbrainz.org/playlist/22222222-2222-2222-2222-222222222202",
+        "date": "2024-04-01T10:00:00.000Z",
+        "title": "Alpha Search",
+        "annotation": "",
+        "track": [],
+        "extension": {
+          "https://musicbrainz.org/doc/jspf#playlist": {
+            "public": true,
+            "last_modified_at": "2024-04-01T10:00:00.000Z",
+            "collaborators": []
+          }
+        }
+      }
+    }
+  ]
+}

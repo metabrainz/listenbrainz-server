@@ -20,7 +20,7 @@ from listenbrainz.webserver import db_conn, listens_conn
 from listenbrainz.metadata_cache.apple.client import Apple
 from listenbrainz.metadata_cache.soundcloud.client import SoundCloud
 from listenbrainz.webserver.utils import parse_boolean_arg
-from listenbrainz.webserver.decorators import crossdomain, api_listens_db_needed
+from listenbrainz.webserver.decorators import crossdomain, api_listens_db_needed, api_musicbrainz_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden, APIError, PlaylistAPIXMLError, APIUnauthorized
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
@@ -34,6 +34,40 @@ playlist_api_bp = Blueprint('playlist_api_v1', __name__)
 
 MAX_RECORDINGS_PER_ADD = 100
 DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
+MAX_TAGS_PER_PLAYLIST_REQUEST = 25
+
+
+def _validate_tags_payload(data):
+    if not isinstance(data, dict):
+        log_raise_400("Invalid JSON document submitted.")
+    tags = data.get("tags")
+    if tags is None:
+        log_raise_400("Missing 'tags' in request body.")
+    if type(tags) not in (list, tuple):
+        log_raise_400("'tags' must be a list.")
+    if len(tags) > MAX_TAGS_PER_PLAYLIST_REQUEST:
+        log_raise_400(
+            "Cannot add more than %d tags in a single request." % MAX_TAGS_PER_PLAYLIST_REQUEST
+        )
+    normalized = []
+    for tag in tags:
+        if type(tag) != str:
+            log_raise_400("Tag values must be strings.")
+        n = db_playlist.normalize_playlist_tag(tag)
+        if n is None:
+            collapsed = " ".join(tag.strip().split())
+            if not collapsed:
+                log_raise_400("Tag values cannot be empty.")
+            log_raise_400(
+                "Please keep tag length to %d characters or less."
+                % db_playlist.MAX_PLAYLIST_TAG_LENGTH
+            )
+        normalized.append(n)
+
+    normalized = list(dict.fromkeys(normalized))
+    if not normalized:
+        log_raise_400("No valid tags submitted.")
+    return normalized
 
 supported_services = {
     "spotify": SpotifyService,
@@ -513,10 +547,11 @@ def edit_playlist(playlist_mbid):
 
     try:
         if "additional_metadata" in data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]:
-            if playlist.additional_metadata is None:
-                playlist.additional_metadata = {}
-
-            playlist.additional_metadata = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["additional_metadata"]
+            metadata = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["additional_metadata"]
+            # Stripping any submitted tags so they cannot bypass validation or the playlist_tag table.
+            if isinstance(metadata, dict):
+                metadata = {k: v for k, v in metadata.items() if k != "tags"}
+            playlist.additional_metadata = metadata
     except KeyError:
         pass
 
@@ -855,6 +890,64 @@ def copy_playlist(playlist_mbid):
     return jsonify({'status': 'ok', 'playlist_mbid': new_playlist.mbid})
 
 
+@playlist_api_bp.post("/<playlist_mbid>/tags")
+@crossdomain
+@ratelimit()
+def add_playlist_tags(playlist_mbid):
+    """Add one or more tags to a playlist.
+
+    Only the playlist owner can edit tags. Collaborators can view tags but cannot modify them.
+    """
+    user = validate_auth_header()
+
+    if not is_valid_uuid(playlist_mbid):
+        log_raise_400("Provided playlist ID is invalid.")
+
+    playlist = db_playlist.get_by_mbid(db_conn, playlist_mbid, False)
+    if playlist is None or not playlist.is_visible_by(user["id"]):
+        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+
+    if playlist.creator_id != user["id"]:
+        raise APIForbidden("You are not allowed to edit tags on this playlist.")
+
+    tags = _validate_tags_payload(request.json)
+    try:
+        added = db_playlist.add_tags_to_playlist(db_conn, playlist.id, tags)
+    except ValueError as e:
+        log_raise_400(str(e))
+    except Exception:
+        current_app.logger.error("Error while adding tags to playlist: ", exc_info=True)
+        raise APIInternalServerError("Failed to add tags to the playlist. Please try again.")
+
+    return jsonify({"status": "ok", "added": added})
+
+
+@playlist_api_bp.delete("/<playlist_mbid>/tags/<path:tag>")
+@crossdomain
+@ratelimit()
+def delete_playlist_tag(playlist_mbid, tag):
+    """Remove a tag from a playlist. Only the playlist owner can edit tags."""
+    user = validate_auth_header()
+
+    if not is_valid_uuid(playlist_mbid):
+        log_raise_400("Provided playlist ID is invalid.")
+
+    playlist = db_playlist.get_by_mbid(db_conn, playlist_mbid, False)
+    if playlist is None or not playlist.is_visible_by(user["id"]):
+        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+
+    if playlist.creator_id != user["id"]:
+        raise APIForbidden("You are not allowed to edit tags on this playlist.")
+
+    try:
+        db_playlist.remove_tag_from_playlist(db_conn, playlist.id, tag)
+    except Exception:
+        current_app.logger.error("Error while removing tag from playlist: ", exc_info=True)
+        raise APIInternalServerError("Failed to remove the tag from the playlist. Please try again.")
+
+    return jsonify({"status": "ok"})
+
+
 @playlist_api_bp.route("/<playlist_mbid>/export/<service>", methods=["POST", "OPTIONS"])
 @crossdomain
 @ratelimit()
@@ -983,6 +1076,74 @@ def import_playlist_from_music_service(service):
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
+
+
+@playlist_api_bp.get("/import/musicbrainz/collections")
+@crossdomain
+@ratelimit()
+@api_musicbrainz_needed
+def import_musicbrainz_collections():
+    """List the authenticated user's MusicBrainz recording and release collections."""
+    user = validate_auth_header()
+
+    if not current_app.config.get("MB_DATABASE_URI"):
+        raise APIInternalServerError("MusicBrainz database is not configured on this server.")
+
+    if not user.get("musicbrainz_row_id"):
+        raise APIBadRequest(
+            "Your ListenBrainz account is not linked to a MusicBrainz account."
+        )
+
+    try:
+        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+                mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
+            mb_curs.execute(
+                """
+                  SELECT ec.gid::text AS mbid
+                       , ec.name AS name
+                       , ec.public AS public
+                       , ect.entity_type AS entity_type
+                       , CASE ect.entity_type
+                             WHEN 'recording' THEN (
+                               SELECT COUNT(*)::int
+                                 FROM musicbrainz.editor_collection_recording ecr
+                                 JOIN musicbrainz.recording r
+                                   ON r.id = ecr.recording
+                                WHERE ecr.collection = ec.id
+                             )
+                             WHEN 'release' THEN (
+                               SELECT COUNT(*)::int
+                                 FROM musicbrainz.editor_collection_release ecrel
+                                 JOIN musicbrainz.release rel
+                                   ON rel.id = ecrel.release
+                                WHERE ecrel.collection = ec.id
+                             )
+                             ELSE 0
+                         END AS item_count
+                    FROM musicbrainz.editor_collection ec
+                    JOIN musicbrainz.editor_collection_type ect
+                      ON ect.id = ec.type
+                   WHERE ec.editor = %s
+                     AND ect.entity_type IN ('recording', 'release')
+                ORDER BY LOWER(ec.name)
+                """,
+                (user["musicbrainz_row_id"],),
+            )
+            collections = mb_curs.fetchall()
+    except Exception:
+        current_app.logger.error("Error fetching MusicBrainz collections:", exc_info=True)
+        raise APIInternalServerError("Failed to fetch MusicBrainz collections. Please try again.")
+
+    return jsonify([
+        {
+            "mbid": row["mbid"],
+            "name": row["name"],
+            "public": bool(row["public"]),
+            "entity_type": row["entity_type"],
+            "item_count": int(row["item_count"] or 0),
+        }
+        for row in collections
+    ])
 
 
 @playlist_api_bp.get("/spotify/<playlist_id>/tracks")

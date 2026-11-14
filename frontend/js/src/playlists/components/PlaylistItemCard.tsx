@@ -11,6 +11,7 @@ import ListenControl from "../../common/listens/ListenControl";
 export type PlaylistItemCardProps = {
   track: JSPFTrack;
   canEdit: Boolean;
+  dragEnabled?: boolean;
   removeTrackFromPlaylist?: (track: JSPFTrack) => void;
   showTimestamp?: boolean;
   showUsername?: boolean;
@@ -30,6 +31,7 @@ export default class PlaylistItemCard extends React.Component<
     const {
       track,
       canEdit,
+      dragEnabled,
       showUsername,
       showTimestamp,
       removeTrackFromPlaylist,
@@ -39,12 +41,18 @@ export default class PlaylistItemCard extends React.Component<
     //   ? millisecondsToStr(track.duration)
     //   : null;
 
+    const isDragEnabled = dragEnabled ?? true;
     const dragHandle = canEdit ? (
-      <div className="drag-handle text-muted">
-        <FontAwesomeIcon
-          icon={faGripLines as IconProp}
-          title="Drag to reorder"
-        />
+      <div
+        className={`drag-handle text-muted ${isDragEnabled ? "" : "disabled"}`}
+        aria-disabled={!isDragEnabled}
+        title={
+          isDragEnabled
+            ? "Drag to reorder"
+            : "Switch to Default order to reorder tracks"
+        }
+      >
+        <FontAwesomeIcon icon={faGripLines as IconProp} />
       </div>
     ) : undefined;
     let additionalMenuItems;

@@ -324,5 +324,12 @@ CREATE TABLE playlist.playlist_collaborator (
     playlist_id int not null,  -- FK playlist.id
     collaborator_id int not null  -- link to user.id in main database
 );
+CREATE TABLE playlist.playlist_tag (
+    id serial,
+    playlist_id int not null,  -- FK playlist.playlist.id
+    tag text not null,
+    created timestamp with time zone default now() not null,
+    UNIQUE (playlist_id, tag)
+);
 
 COMMIT;

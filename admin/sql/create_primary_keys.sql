@@ -47,5 +47,6 @@ ALTER TABLE navidrome_tokens ADD CONSTRAINT navidrome_tokens_id_pkey PRIMARY KEY
 
 ALTER TABLE playlist.playlist ADD CONSTRAINT playlist_pkey PRIMARY KEY (id);
 ALTER TABLE playlist.playlist_recording ADD CONSTRAINT playlist_recording_pkey PRIMARY KEY (id);
+ALTER TABLE playlist.playlist_tag ADD CONSTRAINT playlist_tag_pkey PRIMARY KEY (id);
 
 COMMIT;
