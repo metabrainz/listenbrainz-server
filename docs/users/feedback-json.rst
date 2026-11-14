@@ -37,6 +37,17 @@ A sample feedback may look like:
         "score": 1
     }
 
+.. code-block:: json
+
+    {
+        "recording_msid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
+        "score": 1,
+        "timestamp": 1609459200
+    }
+
+The optional ``timestamp`` parameter specifies the Unix timestamp (in seconds)
+at which the feedback was given. If omitted, the current time is used.
+
 Score can have one of these three values:
 
 - ``1``: Mark the track as loved
