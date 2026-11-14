@@ -508,7 +508,7 @@ export default function LinkListensPage() {
               }
               return (
                 <ListenCard
-                  key={`${groupItem.recording_name}-${groupItem.artist_name}-${groupItem.listened_at}`}
+                  key={`${groupItem.recording_msid}-${groupItem.listened_at}`}
                   showTimestamp
                   showUsername={false}
                   // eslint-disable-next-line react/jsx-no-useless-fragment
