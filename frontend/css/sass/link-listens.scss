@@ -1,0 +1,41 @@
+#link-listens .link-listens-service-links {
+  list-style: none;
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 5px 20px;
+    color: $body-color;
+    background: none;
+    font: inherit;
+    text-decoration: none;
+    white-space: normal;
+    overflow-wrap: break-word;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      color: #fff;
+      background-color: $orange;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $body-color;
+      outline-offset: -2px;
+    }
+  }
+
+  ul .dropdown-item {
+    padding-left: 40px;
+  }
+
+  .harmony-link .dropdown-item {
+    white-space: pre-line;
+  }
+}

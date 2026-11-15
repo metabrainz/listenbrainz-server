@@ -724,12 +724,27 @@ type ColorReleasesResponse = {
   };
 };
 
+type MissingDataAdditionalInfo = Partial<
+  Record<
+    | "spotify_id"
+    | "spotify_album_id"
+    | "youtube_id"
+    | "apple_music_id"
+    | "apple_album_id"
+    | "origin_url"
+    | "music_service"
+    | "music_service_name",
+    string
+  >
+>;
+
 type UnlinkedListens = {
   artist_name: string;
   listened_at: string;
   recording_name: string;
   release_name?: string | null;
   recording_msid: string;
+  additional_info?: MissingDataAdditionalInfo | null;
 };
 
 type FreshReleaseItem = {
