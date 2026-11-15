@@ -101,4 +101,99 @@ describe("NotificationBell", () => {
     await waitFor(() => expect(count).toHaveBeenCalled());
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
+
+  async function openBell(count = 2) {
+    renderBell();
+    await userEvent.click(
+      await screen.findByRole("button", {
+        name: `Notifications, ${count} unread`,
+      })
+    );
+  }
+
+  it("keeps the page up when Synapse fails after load", async () => {
+    const unhandled = jest.fn();
+    process.on("unhandledRejection", unhandled);
+    server.use(
+      http.get(`${ROOT}/unread-count`, () => HttpResponse.json({ count: 2 })),
+      http.get(ROOT, () =>
+        HttpResponse.json({
+          notifications: [notification(1, "follow", { actor })],
+        })
+      ),
+      http.post(`${ROOT}/read-all`, () => HttpResponse.error()),
+      http.post(`${ROOT}/1/read`, () => HttpResponse.error())
+    );
+    await openBell();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Mark all read" })
+    );
+    await userEvent.click(screen.getByText(/started following you/));
+    await new Promise((resolve) => {
+      setTimeout(resolve, 50);
+    });
+    process.off("unhandledRejection", unhandled);
+
+    expect(unhandled).not.toHaveBeenCalled();
+    expect(
+      screen.getByText("Couldn't update notifications, try again later.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Notifications, 2 unread" })
+    ).toBeInTheDocument();
+  });
+
+  it("says so when the list can't be loaded", async () => {
+    server.use(
+      http.get(`${ROOT}/unread-count`, () => HttpResponse.json({ count: 2 })),
+      http.get(ROOT, () => new HttpResponse(null, { status: 503 }))
+    );
+    await openBell();
+
+    expect(
+      await screen.findByText("Couldn't load notifications, try again later.")
+    ).toBeInTheDocument();
+    expect(screen.queryByText("No notifications")).not.toBeInTheDocument();
+  });
+
+  it("refreshes the badge when the list is opened", async () => {
+    let count = 2;
+    server.use(
+      http.get(`${ROOT}/unread-count`, () => HttpResponse.json({ count })),
+      http.get(ROOT, () => HttpResponse.json({ notifications: [] }))
+    );
+    renderBell();
+    const bell = await screen.findByRole("button", {
+      name: "Notifications, 2 unread",
+    });
+    count = 3;
+    await userEvent.click(bell);
+
+    expect(
+      await screen.findByRole("button", { name: "Notifications, 3 unread" })
+    ).toBeInTheDocument();
+  });
+
+  it("keeps links in a message clickable", async () => {
+    server.use(
+      http.get(`${ROOT}/unread-count`, () => HttpResponse.json({ count: 1 })),
+      http.get(ROOT, () =>
+        HttpResponse.json({
+          notifications: [
+            notification(1, "notification", {
+              actor,
+              message: 'See <a href="https://lb.test/news">the news</a>',
+            }),
+          ],
+        })
+      )
+    );
+    await openBell(1);
+
+    // The message's link must not sit inside a clickable item, which would swallow the click.
+    await screen.findByRole("link", { name: "the news" });
+    expect(screen.queryByRole("link", { name: /a_friend/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /a_friend/ })).toBeNull();
+  });
 });

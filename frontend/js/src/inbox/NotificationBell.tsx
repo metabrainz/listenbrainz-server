@@ -111,6 +111,7 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = React.useState<
     InboxNotification[]
   >();
+  const [error, setError] = React.useState<string>();
 
   React.useEffect(() => {
     api?.unreadCount().then(setCount, () => setCount(null));
@@ -122,42 +123,54 @@ export default function NotificationBell() {
 
   const onToggle = async (show: boolean) => {
     if (!show) return;
+    setError(undefined);
     try {
-      setNotifications(await api.list(LIST_LIMIT));
+      const [list, unread] = await Promise.all([
+        api.list(LIST_LIMIT),
+        api.unreadCount(),
+      ]);
+      setNotifications(list);
+      setCount(unread);
     } catch {
-      setNotifications([]);
+      setError("Couldn't load notifications, try again later.");
     }
   };
 
-  const markRead = (n: InboxNotification) => {
-    if (n.read_at) return;
-    api.markRead(n.id).catch(() => {});
-    setCount((c) => Math.max((c ?? 1) - 1, 0));
-  };
-
-  const markAllRead = async () => {
-    await api.markAllRead();
-    setCount(0);
+  // Only update the badge and list once Synapse has the change.
+  const update = async (change: Promise<void>, ids?: number[]) => {
+    try {
+      await change;
+    } catch {
+      setError("Couldn't update notifications, try again later.");
+      return;
+    }
     const now = new Date().toISOString();
     setNotifications((list) =>
-      list?.map((n) => ({ ...n, read_at: n.read_at ?? now }))
+      list?.map((n) =>
+        !ids || ids.includes(n.id) ? { ...n, read_at: n.read_at ?? now } : n
+      )
     );
+    setCount((c) => (ids ? Math.max((c ?? 1) - ids.length, 0) : 0));
   };
+
+  const markRead = (n: InboxNotification) =>
+    !n.read_at && update(api.markRead(n.id), [n.id]);
+  const markAllRead = () => update(api.markAllRead());
 
   const items = notifications
     ?.map((n) => ({ n, rendered: render(n) }))
     .filter((item) => item.rendered !== null);
 
   return (
-    <Dropdown onToggle={onToggle} align="end">
+    <Dropdown onToggle={onToggle} drop="up">
       <Dropdown.Toggle
         variant="link"
-        className="position-relative text-reset"
+        className="text-reset"
         aria-label={`Notifications, ${count} unread`}
       >
         <FontAwesomeIcon icon={faBell} />
         {count > 0 && (
-          <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+          <span className="badge rounded-pill bg-danger ms-1">
             {count > 99 ? "99+" : count}
           </span>
         )}
@@ -177,7 +190,10 @@ export default function NotificationBell() {
             Mark all read
           </button>
         </div>
-        {!items && (
+        {error && (
+          <Dropdown.ItemText className="text-danger">{error}</Dropdown.ItemText>
+        )}
+        {!items && !error && (
           <Dropdown.ItemText className="text-muted">Loading…</Dropdown.ItemText>
         )}
         {items?.length === 0 && (
@@ -188,6 +204,8 @@ export default function NotificationBell() {
         {items?.map(({ n, rendered }) => (
           <Dropdown.Item
             key={n.id}
+            // A message can hold its own links, which can't sit inside another link.
+            as={rendered?.href ? "a" : "div"}
             href={rendered?.href}
             onClick={() => markRead(n)}
             className={`text-wrap border-bottom py-2 ${
