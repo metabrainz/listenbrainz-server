@@ -43,7 +43,10 @@ def init_synapse_client(app) -> None:
     connection = create_rabbitmq_connection(
         {**app.config, "RABBITMQ_VHOST": vhost},
         connection_name="synapse-publisher",
-        transport_options={"confirm_publish": True},
+        # The publish timeouts don't cover the socket, e.g. closing the channel after a timed-out confirm.
+        connect_timeout=PUBLISH_TIMEOUT_SECONDS,
+        transport_options={"confirm_publish": True, "read_timeout": PUBLISH_TIMEOUT_SECONDS,
+                           "write_timeout": PUBLISH_TIMEOUT_SECONDS},
     )
     _producer_pool = pools.producers[connection]
 
@@ -127,6 +130,7 @@ def _publish_recording(event_type: str, recipients: list, actor: dict, item, blu
     item = fetch_track_metadata_for_items(listens_conn, [item.copy()])[0]
     recording = _recording(item.track_metadata)
     if recording is None:
+        logger.info("Not publishing %s to Synapse: no track or artist name for %s", key, item.recording_mbid or item.recording_msid)
         return
     payload = {"actor": _actor(actor["musicbrainz_id"]), "recording": recording}
     if blurb:
