@@ -1,14 +1,21 @@
 from datetime import datetime, timezone
+from email.utils import format_datetime
 
+import orjson
 import requests_mock
 import spotipy
+import sqlalchemy
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.funkwhale as db_funkwhale
+import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
 import listenbrainz.db.navidrome as db_navidrome
 import time
 
 from data.model.external_service import ExternalServiceType
+from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
+from listenbrainz.db import listens as listens_db
+from listenbrainz.db.testing import TimescaleTestCase
 from listenbrainz.domain import external_connect
 from listenbrainz.webserver.utils import CONNECT_SERVICES_WITHOUT_EMAIL_ERROR
 from listenbrainz.domain.spotify import SpotifyService, OAUTH_TOKEN_URL
@@ -473,3 +480,88 @@ class SettingsViewsTestCase(IntegrationTestCase):
             response.json["error"],
             "Invalid host_url 'demo.navidrome.org' for Navidrome connect."
         )
+
+
+class LinkListensViewsTestCase(IntegrationTestCase, TimescaleTestCase):
+    """ Tests for the authenticated link-listens settings endpoint. """
+
+    def setUp(self):
+        IntegrationTestCase.setUp(self)
+        TimescaleTestCase.setUp(self)
+        self.user = db_user.get_or_create(self.db_conn, 1, 'link_listens_user')
+        db_user.agree_to_gdpr(self.db_conn, self.user['musicbrainz_id'])
+
+    def tearDown(self):
+        TimescaleTestCase.tearDown(self)
+        IntegrationTestCase.tearDown(self)
+
+    def _insert_cache(self, records):
+        db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(
+            self.db_conn,
+            user_id=self.user['id'],
+            missing_musicbrainz_data=UserMissingMusicBrainzDataJson(missing_musicbrainz_data=records),
+            source='cf',
+        )
+
+    def _cache_created(self):
+        result = self.db_conn.execute(sqlalchemy.text("""
+            SELECT created
+              FROM missing_musicbrainz_data
+             WHERE user_id = :user_id
+               AND source = 'cf'
+            """), {'user_id': self.user['id']})
+        return result.scalar_one()
+
+    def test_link_listens_requires_login(self):
+        """ Unauthenticated requests are rejected. """
+        response = self.client.post(self.custom_url_for('settings.link_listens'))
+        self.assert401(response)
+
+    def test_link_listens_returns_hydrated_records(self):
+        """ The response carries allowlisted service metadata for hydrated records. """
+        msid = "cdcdcdcd-cdcd-4cdc-8cdc-cdcdcdcdcdcd"
+        record = {
+            "artist_name": "Link Artist",
+            "listened_at": "2026-11-04T10:00:00.000Z",
+            "release_name": "Link Release",
+            "recording_name": "Link Track",
+            "recording_msid": msid,
+        }
+        self._insert_cache([record])
+        track_metadata = {
+            "artist_name": "Link Artist",
+            "track_name": "Link Track",
+            "release_name": "Link Release",
+            "additional_info": {
+                "spotify_id": "https://open.spotify.com/track/2TZIQDtf2H4bazKfBa6I4T",
+                "spotify_album_id": "https://open.spotify.com/album/2HaqZjwdtGVdDsoenjoJrT",
+                "submission_client": "quodlibet",
+            },
+        }
+        listened_at = datetime(2026, 11, 4, 10, 0, 0, tzinfo=timezone.utc)
+        listens_db.insert([(listened_at, listened_at, self.user['id'], msid,
+                            orjson.dumps(track_metadata).decode("utf-8"))])
+        created = self._cache_created()
+
+        self.temporary_login(self.user['login_id'])
+        response = self.client.post(self.custom_url_for('settings.link_listens'))
+
+        self.assert200(response)
+        self.assertEqual(
+            {
+                "unlinked_listens": [dict(record, additional_info={
+                    "spotify_id": "https://open.spotify.com/track/2TZIQDtf2H4bazKfBa6I4T",
+                    "spotify_album_id": "https://open.spotify.com/album/2HaqZjwdtGVdDsoenjoJrT",
+                })],
+                "last_updated": format_datetime(created.astimezone(timezone.utc), usegmt=True),
+            },
+            response.json,
+        )
+
+    def test_link_listens_without_cache(self):
+        """ A user without calculated data receives an empty list. """
+        self.temporary_login(self.user['login_id'])
+        response = self.client.post(self.custom_url_for('settings.link_listens'))
+
+        self.assert200(response)
+        self.assertEqual({"unlinked_listens": [], "last_updated": None}, response.json)
