@@ -837,6 +837,7 @@ type GlobalAppProps = {
   navidrome?: NavidromeUser;
   user_preferences?: UserPreferences;
   flair?: Flair;
+  synapse_url?: string;
 };
 type GlobalProps = GlobalAppProps & SentryProps;
 export type ServerAlert = {
@@ -900,6 +901,7 @@ const getPageProps = async (): Promise<{
       sentry_dsn,
       user_preferences,
       flair,
+      synapse_url,
     } = globalReactProps;
 
     const userPreferences = {
@@ -953,6 +955,7 @@ const getPageProps = async (): Promise<{
         current_user
       ),
       flair,
+      synapseUrl: synapse_url,
     };
     sentryProps = {
       sentry_dsn,

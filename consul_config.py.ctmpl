@@ -196,6 +196,7 @@ RABBITMQ_PASSWORD = '''{{template "KEY" "rabbitmq_pass"}}'''
 RABBITMQ_VHOST = '''{{template "KEY" "rabbitmq_vhost"}}'''
 MAXIMUM_RABBITMQ_CONNECTIONS = 20
 SYNAPSE_RABBITMQ_VHOST = '''{{template "KEY_OPTIONAL" "synapse_rabbitmq_vhost"}}'''
+SYNAPSE_URL = '''{{template "KEY_OPTIONAL" "synapse_url"}}'''
 
 
 INCOMING_EXCHANGE = '''{{template "KEY" "incoming_exchange"}}'''

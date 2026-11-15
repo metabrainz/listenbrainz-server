@@ -64,6 +64,8 @@ MAXIMUM_RABBITMQ_CONNECTIONS = 20
 
 # Synapse's vhost on the RabbitMQ above. Leave empty to not publish notifications.
 SYNAPSE_RABBITMQ_VHOST = ""
+# Synapse's public URL, which the browser calls for the notification bell. Leave empty to hide the bell.
+SYNAPSE_URL = ""
 
 # RabbitMQ exchanges and queues
 INCOMING_EXCHANGE = "incoming"

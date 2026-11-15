@@ -111,6 +111,9 @@ def get_global_props():
     }
 
     if current_user.is_authenticated:
+        if current_app.config.get("SYNAPSE_URL"):
+            props["synapse_url"] = current_app.config["SYNAPSE_URL"]
+
         brainzplayer_props = db_usersetting.get_brainzplayer_prefs(db_conn, current_user.id)
         if brainzplayer_props is not None:
             props["user_preferences"] = brainzplayer_props
