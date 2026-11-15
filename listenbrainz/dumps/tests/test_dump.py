@@ -31,7 +31,7 @@ import listenbrainz.db as db
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
-from listenbrainz.db import timescale, listens as listens_db
+from listenbrainz.db import listens as listens_db
 from listenbrainz.db.dump_entry import add_dump_entry, get_dump_entries
 from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.db.testing import DatabaseTestCase
@@ -58,11 +58,9 @@ class DumpTestCase(DatabaseTestCase):
             "private_temp": self.tempdir_private_temp,
         }
         self.app = create_app()
-        self.ts_conn = timescale.engine.connect()
         self.listens_conn = listens_db.engine.connect()
 
     def tearDown(self):
-        self.ts_conn.close()
         self.listens_conn.close()
         shutil.rmtree(self.tempdir)
         super().tearDown()
@@ -192,7 +190,7 @@ class DumpTestCase(DatabaseTestCase):
             self.assertEqual(user_count, 1)
 
             dumped_feedback = db_feedback.get_feedback_for_user(
-                self.db_conn, self.ts_conn, self.listens_conn, user_id=one_id, limit=1, offset=0
+                self.db_conn, self.listens_conn, user_id=one_id, limit=1, offset=0
             )
             self.assertEqual(len(dumped_feedback), 1)
             self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
@@ -210,7 +208,7 @@ class DumpTestCase(DatabaseTestCase):
             self.assertEqual(user_count, 1)
 
             dumped_feedback = db_feedback.get_feedback_for_user(
-                self.db_conn, self.ts_conn, self.listens_conn, user_id=one_id, limit=1, offset=0
+                self.db_conn, self.listens_conn, user_id=one_id, limit=1, offset=0
             )
             self.assertEqual(len(dumped_feedback), 1)
             self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)

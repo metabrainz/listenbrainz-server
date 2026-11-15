@@ -22,6 +22,7 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import { preciseTimestamp } from "../../utils/utils";
 import RecommendationPlaylistSettings from "./components/RecommendationPlaylistSettings";
 import HorizontalScrollContainer from "../../components/HorizontalScrollContainer";
+import NoFreshnessImage from "../../components/NoFreshnessImage";
 import StatsExplanationsModal from "../../common/stats/StatsExplanationsModal";
 import { setAmbientQueueAtom } from "../../common/brainzplayer/BrainzPlayerAtoms";
 
@@ -336,8 +337,7 @@ export default function RecommendationsPage() {
 
       {!playlists.length ? (
         <div className="text-center">
-          <img
-            src="/static/img/recommendations/no-freshness.png"
+          <NoFreshnessImage
             alt="No recommendations to show"
             style={{ maxHeight: "500px" }}
           />

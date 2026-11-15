@@ -1,0 +1,33 @@
+{% extends "stripped-out-base.html" %}
+{% block title %}Connect link unavailable - ListenBrainz{% endblock %}
+{% block content %}
+<div class="row justify-content-center my-5">
+  <div class="col-12 col-md-8 col-lg-6">
+    <div class="card">
+      <div class="card-body">
+        <h1 class="h3">This connect link is no longer available</h1>
+        <p>{{ error }}</p>
+        <p>
+          Return to the application where you started connecting your music service
+          and request a new connect link. Refreshing this page will not renew this link.
+        </p>
+        <button type="button" id="connect-go-back" class="btn btn-primary">
+          Go back
+        </button>
+        <p class="mt-3 mb-0">
+          If going back does not take you to that application, open it directly to start again.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  (() => {
+    // The previous page may be confirmation or Spotify, not the partner application.
+    const button = document.getElementById("connect-go-back");
+    button.addEventListener("click", () => window.history.back());
+  })();
+</script>
+{% endblock %}

@@ -42,6 +42,12 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://cassettecat.caffeinelabs.in/">CassetteCat</a>
+          </em>
+          , a music player for local files and media servers on Android, Windows, macOS and Linux
+        </li>
+        <li>
+          <em>
             <a href="https://github.com/ciderapp">Cider</a>
           </em>
           , a cross-platform Apple Music player:{" "}
@@ -73,6 +79,13 @@ export default function AddData() {
           <a href="https://github.com/phw/foo_listenbrainz2">
             <code>foo_listenbrainz2</code>
           </a>
+        </li>
+        <li>
+          <em>
+            <a href="https://jellybox.app/">JellyBox</a>
+          </em>
+          , a music player for Jellyfin, Emby and Navidrome on desktop and
+          mobile
         </li>
         <li>
           <em>

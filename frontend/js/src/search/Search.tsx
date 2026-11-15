@@ -101,7 +101,7 @@ export default function Search() {
             </div>
           </h2>
         </form>
-        <div style={{ marginBottom: "20px" }}>
+        <div className="search-type-pills" style={{ marginBottom: "20px" }}>
           <Pill
             id="search-type-artist"
             onClick={() => {

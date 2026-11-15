@@ -14,10 +14,10 @@ from data.model.external_service import ExternalServiceType
 from listenbrainz.db import listens_importer, tags
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore.timescale_listenstore import ListenStoreException
-from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
+from listenbrainz.webserver import timescale_connection, db_conn, listens_conn
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINoContent, APINotFound, APIServiceUnavailable, \
     APIUnauthorized, ListenValidationError, APIForbidden
 from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 from listenbrainz.webserver.models import SubmitListenUserMetadata
@@ -143,7 +143,7 @@ def submit_listen():
         additional_info = track_metadata.get("additional_info", {})
         track_number = additional_info.get('tracknumber')
 
-        msid = submit_recording(connection=ts_conn,
+        msid = submit_recording(connection=listens_conn,
                         recording=track_metadata.get('track_name'),
                         artist=track_metadata.get('artist_name'),
                         release=track_metadata.get('release_name'),
@@ -219,7 +219,7 @@ def get_listen_count(user_name):
     try:
         listen_count = timescale_connection._ts.get_listen_count_for_user(user["id"])
     except psycopg2.OperationalError as err:
-        current_app.logger.error("cannot fetch user listen count: ", str(err))
+        current_app.logger.error("cannot fetch user listen count: %s", str(err))
         raise APIServiceUnavailable("Cannot fetch user listen count right now.")
 
     return jsonify({'payload': {
@@ -344,7 +344,7 @@ def get_similar_users(user_name):
                 "user_name": r["musicbrainz_id"],
                 "similarity": r["similarity"]
             }
-            for r in similar_users
+            for r in (similar_users or [])
         ]
     })
 
@@ -354,7 +354,10 @@ def get_similar_users(user_name):
 @ratelimit()
 def get_similar_to_user(user_name, other_user_name):
     """
-    Get the similarity of the user and the other user, based on their listening history.
+    Get the similarity of a user and another user, based on their listening history.
+    Note: we only store similarity between a user and their 25 most similar users, so
+    most user pairs will not return any data (204 response).
+
     Returns a single dict:
 
     .. code-block:: json
@@ -364,20 +367,28 @@ def get_similar_to_user(user_name, other_user_name):
             "similarity": 0.1938480256
         }
 
-    :param user_name: the MusicBrainz ID of the the one user
-    :param other_user_name: the MusicBrainz ID of the other user whose similar users are
+    :param user_name: the MusicBrainz ID of the base user
+    :param other_user_name: the MusicBrainz ID of the other user whose similarity is being requested
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
+    :statuscode 204: Similarity has not been calculated between the two users.
     :statuscode 404: The requested user was not found.
     """
     user = db_user.get_by_mb_id(db_conn, user_name)
     if not user:
         raise APINotFound("User %s not found" % user_name)
 
+    other_user = db_user.get_by_mb_id(db_conn, other_user_name)
+    if not other_user:
+        raise APINotFound("User %s not found" % other_user_name)
+
     similar_users = db_user.get_similar_users(db_conn, user['id'])
 
     # Constructing an id-similarity map
-    id_similarity_map = {r["musicbrainz_id"]: r["similarity"] for r in similar_users}
+    id_similarity_map = {r["musicbrainz_id"]: r["similarity"] for r in (similar_users or [])}
+
+    if other_user_name not in id_similarity_map:
+        raise APINoContent("Similarity has not been calculated between %s and %s" % (user_name, other_user_name))
 
     try:
         return jsonify({'payload': {"user_name": other_user_name, "similarity": id_similarity_map[other_user_name]}})

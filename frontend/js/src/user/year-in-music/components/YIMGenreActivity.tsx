@@ -33,6 +33,7 @@ export default function YIMGenreActivity(props: YIMGenreActivityProps) {
         <div className="graph">
           <UserGenreActivityGraph
             rawData={genreActivityData}
+            theme="light"
             // colorPalette={colorPalette}
           />
         </div>

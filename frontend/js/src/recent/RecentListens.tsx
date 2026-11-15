@@ -43,7 +43,7 @@ export default class RecentListens extends React.Component<
     const { globalListenCount, globalUserCount, recentDonors } = this.props;
 
     return (
-      <div role="main">
+      <div role="main" className="recent-listens-page">
         <Helmet>
           <title>Recent listens</title>
         </Helmet>

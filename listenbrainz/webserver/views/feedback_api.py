@@ -6,9 +6,11 @@ import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 from listenbrainz.db.model.feedback import Feedback
 
+from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError
 from listenbrainz.domain.lastfm import LastfmService
 from listenbrainz.domain.librefm import LibrefmService
-from listenbrainz.webserver import db_conn, ts_conn, listens_conn
+from listenbrainz.domain.navidrome import NavidromeService, import_starred_tracks
+from listenbrainz.webserver import db_conn, listens_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APINotFound, APIBadRequest
 from listenbrainz.webserver.utils import parse_boolean_arg
@@ -112,7 +114,7 @@ def get_feedback_for_user(user_name):
         if score not in [-1, 1]:
             log_raise_400("Score can have a value of 1 or -1.", request.args)
 
-    feedback = db_feedback.get_feedback_for_user(db_conn, ts_conn, listens_conn, user_id=user["id"], limit=count,
+    feedback = db_feedback.get_feedback_for_user(db_conn, listens_conn, user_id=user["id"], limit=count,
                                                  offset=offset, score=score, metadata=metadata)
     total_count = db_feedback.get_feedback_count_for_user(db_conn, user["id"], score)
 
@@ -309,16 +311,34 @@ def import_feedback():
 
     if "service" not in data:
         raise APIBadRequest("missing service")
+
+    service = data["service"]
+
+    if service == "navidrome":
+        navidrome_service = NavidromeService()
+        nav_user = navidrome_service.get_user(user["id"], include_token=True)
+        if not nav_user:
+            raise APIBadRequest("Navidrome account not connected. Please connect your Navidrome account first.")
+        try:
+            counts = import_starred_tracks(
+                user["id"],
+                nav_user["instance_url"],
+                nav_user["md5_auth_token"],
+                nav_user["salt"],
+                nav_user["username"]
+            )
+        except (ExternalServiceError, ExternalServiceAPIError) as e:
+            raise APIBadRequest(str(e))
+        return jsonify(counts)
+
     if "user_name" not in data:
         raise APIBadRequest("missing user name")
 
-    if data["service"] == "lastfm":
-        service = LastfmService()
-    elif data["service"] == "librefm":
-        service = LibrefmService()
+    if service == "lastfm":
+        counts = LastfmService().import_feedback(user["id"], data["user_name"])
+    elif service == "librefm":
+        counts = LibrefmService().import_feedback(user["id"], data["user_name"])
     else:
-        raise APIBadRequest(f"Service {data['service']} is not supported for feedback import.")
-
-    counts = service.import_feedback(user["id"], data["user_name"])
+        raise APIBadRequest(f"Service {service} is not supported for feedback import.")
 
     return jsonify(counts)

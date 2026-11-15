@@ -1,3 +1,9 @@
+#link-listens .listen-controls .dropdown-menu {
+  max-height: calc(50vh - 40px);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
 #link-listens .link-listens-service-links {
   list-style: none;
 

@@ -5,7 +5,7 @@ from sqlalchemy import text
 import internetarchive
 from bs4 import BeautifulSoup
 from brainzutils import cache
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 from listenbrainz.metadata_cache.handler import BaseHandler
 from listenbrainz.metadata_cache.unique_queue import JobItem
 
@@ -29,7 +29,7 @@ class InternetArchiveHandler(BaseHandler):
             external_service_queue=app.config["EXTERNAL_SERVICES_IA_CACHE_QUEUE"]
         )
         self.app = app
-        self.database = timescale.engine
+        self.database = listens_db.engine
         self.redis = cache._r
         # Cache to avoid querying same artists repeatedly 
         self.discovered_creators = set()

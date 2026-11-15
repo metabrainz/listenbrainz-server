@@ -14,7 +14,7 @@ import listenbrainz.shared.status_cache_helpers as status_cache_helpers
 from listenbrainz.rabbitmq import create_rabbitmq_connection
 from listenbrainz.db.dump_entry import get_dump_entries, get_dump_entry
 from listenbrainz.db.playlist import get_recommendation_playlists_for_user
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound
 

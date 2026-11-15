@@ -13,7 +13,7 @@ from brainzutils.ratelimit import ratelimit
 from flask import request, render_template, Blueprint, current_app, redirect, url_for
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
-from listenbrainz.webserver import db_conn, ts_conn, listens_conn
+from listenbrainz.webserver import db_conn, listens_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound
 from listenbrainz.webserver.views.api_tools import is_valid_uuid, _parse_bool_arg, validate_auth_header
@@ -313,7 +313,7 @@ def cover_art_artist_grid(artist_mbid, dimension, layout, image_size):
     release_groups = artist_data[0].release_group_data
     release_group_mbids = [rg["mbid"] for rg in release_groups]
 
-    popularity_data, _ = popularity.get_counts(ts_conn, "release_group", release_group_mbids)
+    popularity_data, _ = popularity.get_counts(listens_conn, "release_group", release_group_mbids)
 
     for rg, pop in zip(release_groups, popularity_data):
         rg["total_listen_count"] = pop["total_listen_count"]

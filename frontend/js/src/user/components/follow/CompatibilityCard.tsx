@@ -10,7 +10,7 @@ import SimilarityScore from "./SimilarityScore";
 
 export type CompatibilityCardProps = {
   userName: string;
-  similarityScore: number;
+  similarityScore: number | null;
   similarArtists: Array<{
     artist_name: string;
     artist_mbid: string | null;

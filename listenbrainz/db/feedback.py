@@ -6,6 +6,9 @@ from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.model.feedback import Feedback
 from typing import List
 
+from psycopg2.extras import execute_values
+from psycopg2.sql import SQL, Identifier
+
 INSERT_QUERIES = {
     "msid": """
         INSERT INTO recording_feedback (user_id, recording_msid, score)
@@ -98,13 +101,12 @@ def delete(db_conn, feedback: Feedback):
     db_conn.commit()
 
 
-def get_feedback_for_user(db_conn, ts_conn, listens_conn, user_id: int, limit: int, offset: int,
+def get_feedback_for_user(db_conn, listens_conn, user_id: int, limit: int, offset: int,
                           score: int = None, metadata: bool = False) -> List[Feedback]:
     """ Get a list of recording feedback given by the user in descending order of their creation
 
         Args:
             db_conn: database connection
-            ts_conn: timescale database connection
             listens_conn: listens database connection
             user_id: the row ID of the user in the DB
             score: the score value by which the results are to be filtered. If 1 then returns the loved recordings,
@@ -141,7 +143,7 @@ def get_feedback_for_user(db_conn, ts_conn, listens_conn, user_id: int, limit: i
     feedback = [Feedback(**row) for row in result.mappings()]
 
     if metadata and len(feedback) > 0:
-        feedback = fetch_track_metadata_for_items(ts_conn, listens_conn, feedback)
+        feedback = fetch_track_metadata_for_items(listens_conn, feedback)
 
     return feedback
 
@@ -296,3 +298,26 @@ def get_feedback_for_multiple_recordings_for_user(db_conn, user_id: int, user_na
     query = query_base + query_remaining
     result = db_conn.execute(text(query), params)
     return [Feedback(user_id=user_id, user_name=user_name, **row) for row in result.mappings()]
+
+
+def bulk_insert_loved_tracks(db_conn, user_id: int, feedback: list[tuple[int, str]], column: str = 'recording_mbid'):
+    """ Insert loved tracks imported from external services into feedback table """
+    # delete existing feedback for given mbids and then import new in same transaction
+    delete_query = SQL("""
+               WITH entries(user_id, {column}) AS (VALUES %s)
+        DELETE FROM recording_feedback rf
+              USING entries e
+              WHERE e.user_id = rf.user_id
+                AND e.{column}::uuid = rf.{column}
+    """).format(column=Identifier(column))
+    insert_query = SQL("""
+        INSERT INTO recording_feedback (user_id, created, {column}, score)
+             VALUES %s
+    """).format(column=Identifier(column))
+    
+    with db_conn.connection.cursor() as cursor:
+        if feedback:
+            execute_values(cursor, delete_query, [(mbid,) for ts, mbid in feedback], template=f"({user_id}, %s)")
+            execute_values(cursor, insert_query, feedback, template=f"({user_id}, to_timestamp(%s), %s, 1)")
+    
+    db_conn.connection.commit()

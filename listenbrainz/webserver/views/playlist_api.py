@@ -16,7 +16,7 @@ from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.troi.export import PlaylistExportError, export_to_spotify, export_to_apple_music, export_to_soundcloud
 from listenbrainz.troi.import_ms import import_from_spotify, import_from_apple_music, import_from_soundcloud
-from listenbrainz.webserver import db_conn, ts_conn, listens_conn
+from listenbrainz.webserver import db_conn, listens_conn
 from listenbrainz.metadata_cache.apple.client import Apple
 from listenbrainz.metadata_cache.soundcloud.client import SoundCloud
 from listenbrainz.webserver.utils import parse_boolean_arg
