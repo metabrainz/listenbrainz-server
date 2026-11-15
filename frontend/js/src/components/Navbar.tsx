@@ -9,6 +9,7 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import Username from "../common/Username";
 import buildAuthUrl from "../utils/auth";
 import { useTheme } from "../utils/theme";
+import NotificationBell from "../inbox/NotificationBell";
 
 function Navbar() {
   const { currentUser } = React.useContext(GlobalAppContext);
@@ -140,6 +141,7 @@ function Navbar() {
                   elementType="div"
                   className="username"
                 />
+                <NotificationBell />
                 <a href="/login/logout/">Logout</a>
                 <NavLink to="/settings/" onClick={toggleSidebar}>
                   Settings
