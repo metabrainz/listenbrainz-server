@@ -29,6 +29,7 @@ from flask import Blueprint, jsonify, request, current_app
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
+from listenbrainz import synapse_client
 from data.model.listen import APIListen
 from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, \
     SimilarUserTimelineEvent, UserTimelineEventType, \
@@ -109,6 +110,7 @@ def create_user_recording_recommendation_event(user_name):
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
 
+    synapse_client.publish_recording_recommendation(user, event)
     event_data = event.dict()
     event_data['created'] = int(event_data['created'].timestamp())
     event_data['event_type'] = event_data['event_type'].value
@@ -168,6 +170,7 @@ def create_user_notification_event(user_name):
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
 
+    synapse_client.publish_notification(creator, user, message, event.id)
     event_data = event.dict()
     event_data['created'] = int(event_data['created'].timestamp())
     event_data['event_type'] = event_data['event_type'].value
@@ -236,6 +239,7 @@ def create_user_cb_review_event(user_name):
     )
     event = db_user_timeline_event.create_user_cb_review_event(
         db_conn, user["id"], metadata)
+    synapse_client.publish_cb_review(user, review_id, review.name)
 
     event_data = event.dict()
     event_data["created"] = int(event_data["created"].timestamp())
@@ -712,6 +716,7 @@ def create_personal_recommendation_event(user_name):
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
 
+    synapse_client.publish_personal_recommendation(user, event, metadata.users)
     event_data = event.dict()
     event_data['created'] = int(event_data['created'].timestamp())
     event_data['event_type'] = event_data['event_type'].value
@@ -779,6 +784,9 @@ def create_thanks_event(user_name):
         if db_user_relationship.is_following_user(db_conn, user['id'], result.user_id):
             db_user_timeline_event.create_thanks_event(
                 db_conn, user['id'], user_name, result.user_id, thankee_username, metadata)
+            # A pin is the thanked item itself; a recommendation carries it in metadata.
+            item = result if event_type == UserTimelineEventType.RECORDING_PIN else result.metadata
+            synapse_client.publish_thanks(user, result.user_id, item, metadata)
             return jsonify({"status": "ok"})
         else:
             raise APIUnauthorized("You cannot thank events of this user")

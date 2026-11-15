@@ -103,7 +103,7 @@ def get_followers_of_user(db_conn, user: int) -> List[dict]:
     """ Returns a list of users who follow the specified user.
     """
     result = db_conn.execute(sqlalchemy.text("""
-        SELECT "user".musicbrainz_id AS musicbrainz_id, "user".id as id
+        SELECT "user".musicbrainz_id AS musicbrainz_id, "user".id as id, "user".musicbrainz_row_id
           FROM user_relationship
           JOIN "user"
             ON "user".id = user_0

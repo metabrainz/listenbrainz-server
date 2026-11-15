@@ -1,5 +1,6 @@
 import listenbrainz.db.user as db_user
 import listenbrainz.db.pinned_recording as db_pinned_rec
+from listenbrainz import synapse_client
 
 from flask import Blueprint, current_app, jsonify, request
 
@@ -73,6 +74,7 @@ def pin_recording_for_user():
         current_app.logger.error("Error while inserting pinned track record: {}".format(e))
         raise APIInternalServerError("Something went wrong. Please try again.")
 
+    synapse_client.publish_recording_pin(user, recording_to_pin_with_id)
     return jsonify({"pinned_recording": recording_to_pin_with_id.to_api()})
 
 
