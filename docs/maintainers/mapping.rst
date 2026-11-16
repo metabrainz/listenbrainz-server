@@ -33,9 +33,7 @@ If a listen isn't showing up as mapped on ListenBrainz, one of the following mig
 If the recording doesn't exist in MusicBrainz during mapping, a row will be added to the ``mbid_mapping`` table
 with the MSID and a ``match_type`` of ``no_match``. Currently no_match values aren't looked up again automatically.
 
-You can test the results of a lookup by using `https://labs.api.listenbrainz.org/explain-mbid-mapping <https://labs.api.listenbrainz.org/explain-mbid-mapping>`
-This uses the same lookup process that the mapper uses. If this returns a result, but there is no mapping present
-it could be due to data being recently added to MusicBrainz or improvements to the mapping algorithm.
+The MBID mapping explain tool is `no longer publicly available <https://blog.metabrainz.org/2025/12/11/we-cant-have-nice-things-because-of-ai-scrapers/>`_.
 
 If no data is returned or an incorrect match is being returned, this should be reported to us, by adding a comment
 to `LB-1036 <https://tickets.metabrainz.org/browse/LB-1036>`.
