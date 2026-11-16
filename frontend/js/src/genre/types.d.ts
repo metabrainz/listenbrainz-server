@@ -5,6 +5,7 @@ export type TaggedEntity = {
 };
 
 export type TaggedReleaseGroupEntity = TaggedEntity & {
+  has_metadata: boolean;
   date?: string | null;
   type?: string | null;
   caa_id?: number | null;
@@ -19,10 +20,17 @@ export type TaggedEntityGroup<T = TaggedEntity> = {
   entities: Array<T>;
 };
 
-export type TaggedRecordingEntity = import("../track/Track").Recording & {
+type Recording = import("../track/Track").Recording;
+
+export type TaggedRecordingEntity = (
+  | Recording
+  | (Pick<Recording, "recording_mbid" | "recording_name"> & {
+      artist_credit_name?: null;
+    })
+) & {
   tag_count?: number;
-  total_listen_count?: number;
-  total_user_count?: number;
+  total_listen_count?: number | null;
+  total_user_count?: number | null;
 };
 
 export type TaggedArtistEntity = TaggedEntity & {

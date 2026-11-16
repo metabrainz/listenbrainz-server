@@ -28,7 +28,7 @@ track_bp = Blueprint("track", __name__)
 recording_bp = Blueprint("recording", __name__)
 genre_bp = Blueprint("genre", __name__)
 
-GENRE_PAGE_CACHE_NAMESPACE = "genre_page"
+GENRE_PAGE_CACHE_NAMESPACE = "genre_page_v2"
 GENRE_PAGE_CACHE_TTL = 60 * 60
 GENRE_PAGE_RATE_LIMIT = 10  # Per configured rate-limit window, per caller.
 
@@ -533,15 +533,14 @@ def genre_entity(genre_slug: str):
         enriched_rg = []
         for entity in rg_entities:
             mbid = entity["mbid"]
-            meta = rg_metadata.get(mbid)
-            if not meta:
-                continue
+            meta = rg_metadata.get(mbid, {})
             pop = pop_by_mbid.get(mbid, {})
-            rg = meta["release_group"]
+            rg = meta.get("release_group") or {}
             artist = meta.get("artist") or {}
             enriched_rg.append({
                 "mbid": mbid,
-                "name": rg.get("name"),
+                "name": rg.get("name") or entity["name"],
+                "has_metadata": bool(rg),
                 "date": rg.get("date"),
                 "type": rg.get("type"),
                 "caa_id": rg.get("caa_id"),
@@ -569,11 +568,11 @@ def genre_entity(genre_slug: str):
         )
         enriched_rec = []
         for i, (entity, rec) in enumerate(zip(rec_entities, recordings_data)):
-            if rec.get("recording_mbid") is None:
-                continue
             pop = popularity_data[i] if i < len(popularity_data) else {}
             enriched_rec.append({
-                **rec,
+                **(rec if rec.get("recording_mbid") else {}),
+                "recording_mbid": rec.get("recording_mbid") or entity["mbid"],
+                "recording_name": rec.get("recording_name") or entity["name"],
                 "tag_count": entity.get("tag_count"),
                 "total_listen_count": pop.get("total_listen_count"),
                 "total_user_count": pop.get("total_user_count"),

@@ -18,6 +18,7 @@ type ReleaseCardProps = {
   artistMBIDs: Array<string>;
   releaseMBID?: string;
   releaseGroupMBID?: string;
+  releaseLink?: string;
   releaseName: string;
   artistCreditName: string;
   artistCredits?: Array<MBIDMappingArtist>;
@@ -43,6 +44,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   const {
     releaseMBID,
     releaseGroupMBID,
+    releaseLink,
     releaseDate,
     dateFormatOptions,
     releaseName,
@@ -142,7 +144,9 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   }, [releaseMBID, releaseGroupMBID, caaID, caaReleaseMBID, setCoverartSrc]);
 
   let linkToEntity: string;
-  if (releaseGroupMBID) {
+  if (releaseLink) {
+    linkToEntity = releaseLink;
+  } else if (releaseGroupMBID) {
     linkToEntity = `/album/${releaseGroupMBID}/`;
   } else if (releaseMBID) {
     linkToEntity = `/release/${releaseMBID}/`;

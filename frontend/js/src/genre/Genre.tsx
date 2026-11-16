@@ -12,6 +12,7 @@ import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import ListenCard from "../common/listens/ListenCard";
+import type { Recording } from "../track/Track";
 import { recordingToListen } from "../track/Track";
 import { formatListenCount } from "../explore/fresh-releases/utils";
 import { getEntityLink } from "../user/stats/utils";
@@ -79,6 +80,7 @@ function sortReleaseGroupsForGenre(
 }
 
 function getReleaseCard(rg: TaggedReleaseGroupEntity) {
+  const hasMetadata = rg.has_metadata;
   const artistCreditName =
     rg.artist_credit_name ??
     rg.artists?.map((ar) => ar.artist_credit_name + ar.join_phrase).join("") ??
@@ -89,7 +91,12 @@ function getReleaseCard(rg: TaggedReleaseGroupEntity) {
       key={rg.mbid}
       releaseDate={rg.date ?? undefined}
       dateFormatOptions={{ year: "numeric", month: "short" }}
-      releaseGroupMBID={rg.mbid}
+      releaseGroupMBID={hasMetadata ? rg.mbid : undefined}
+      releaseLink={
+        hasMetadata
+          ? undefined
+          : `https://musicbrainz.org/release-group/${rg.mbid}`
+      }
       releaseName={rg.name}
       releaseTypePrimary={rg.type ?? undefined}
       artistCredits={rg.artists}
@@ -97,13 +104,19 @@ function getReleaseCard(rg: TaggedReleaseGroupEntity) {
       artistMBIDs={artistMBIDs}
       caaID={rg.caa_id ?? null}
       caaReleaseMBID={rg.caa_release_mbid ?? null}
-      showInformation
-      showArtist
+      showInformation={hasMetadata}
+      showArtist={hasMetadata}
       showReleaseTitle
       showListens
       listenCount={rg.total_listen_count ?? undefined}
     />
   );
+}
+
+function isPlayableRecording(
+  recording: TaggedRecordingEntity
+): recording is Recording {
+  return Boolean(recording.recording_name && recording.artist_credit_name);
 }
 
 export default function GenrePage(): JSX.Element {
@@ -143,8 +156,7 @@ export default function GenrePage(): JSX.Element {
   const wikipediaExtract = wikipediaExtractData?.wikipediaExtract;
 
   const artists: TaggedArtistEntity[] = entities?.artist?.entities ?? [];
-  const recordings: TaggedRecordingEntity[] =
-    entities?.recording?.entities ?? [];
+  const recordings = entities?.recording?.entities;
   const releaseGroups: TaggedReleaseGroupEntity[] =
     entities?.release_group?.entities ?? [];
 
@@ -172,7 +184,7 @@ export default function GenrePage(): JSX.Element {
   // Playable recordings
   const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
   const playableRecordings = React.useMemo(
-    () => recordings.filter((r) => r.recording_name),
+    () => recordings?.filter(isPlayableRecording) ?? [],
     [recordings]
   );
 
@@ -325,36 +337,52 @@ export default function GenrePage(): JSX.Element {
             </div>
           </div>
         )}
-        {playableRecordings.length > 0 && (
+        {recordings && recordings.length > 0 && (
           <div>
             <h3 className="header-with-line">
               Top recordings
-              <button
-                type="button"
-                className="btn btn-info btn-rounded play-tracks-button"
-                title="Play top recordings"
-                onClick={() => {
-                  window.postMessage(
-                    {
-                      brainzplayer_event: "play-ambient-queue",
-                      payload: listensFromRecordings,
-                    },
-                    window.location.origin
-                  );
-                }}
-              >
-                <FontAwesomeIcon icon={faPlayCircle} fixedWidth /> Play all
-              </button>
+              {playableRecordings.length > 0 && (
+                <button
+                  type="button"
+                  className="btn btn-info btn-rounded play-tracks-button"
+                  title="Play top recordings"
+                  onClick={() => {
+                    window.postMessage(
+                      {
+                        brainzplayer_event: "play-ambient-queue",
+                        payload: listensFromRecordings,
+                      },
+                      window.location.origin
+                    );
+                  }}
+                >
+                  <FontAwesomeIcon icon={faPlayCircle} fixedWidth /> Play all
+                </button>
+              )}
             </h3>
             <div className="top-entity-listencards">
-              {playableRecordings.map((rec) => (
-                <ListenCard
-                  key={rec.recording_mbid}
-                  listen={recordingToListen(rec)}
-                  showTimestamp={false}
-                  showUsername={false}
-                />
-              ))}
+              {recordings.map((rec) =>
+                isPlayableRecording(rec) ? (
+                  <ListenCard
+                    key={rec.recording_mbid}
+                    listen={recordingToListen(rec)}
+                    showTimestamp={false}
+                    showUsername={false}
+                  />
+                ) : (
+                  <div className="card listen-card" key={rec.recording_mbid}>
+                    <div className="main-content">
+                      <div className="listen-details">
+                        {getEntityLink(
+                          "recording",
+                          rec.recording_name,
+                          rec.recording_mbid
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              )}
             </div>
           </div>
         )}

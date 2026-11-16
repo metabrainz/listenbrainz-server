@@ -67,3 +67,27 @@ class GenreEntityTest(TestCase):
         self.assertEqual(self.client.post("/genre/rock/").status_code, 429)
         self.rate_limit.assert_called_once_with("genre_page:test-client", 10, 10)
         self.connect.assert_not_called()
+
+    def test_keeps_tagged_entities_without_cached_metadata(self):
+        self.tags.return_value = {
+            "release_group": {"entities": [{"mbid": "album-id", "name": "Album", "tag_count": 2}]},
+            "recording": {"entities": [{"mbid": "track-id", "name": "Track", "tag_count": 3}]},
+        }
+        self.enterContext(patch.object(entity_pages, "listens_conn"))
+        self.enterContext(patch.object(entity_pages.popularity, "get_counts", return_value=([], {})))
+        self.enterContext(patch.object(entity_pages, "fetch_release_group_metadata", return_value={}))
+        self.enterContext(patch.object(
+            entity_pages, "load_recordings_from_mbids_with_redirects", return_value=[{"recording_mbid": None}],
+        ))
+
+        response = self.client.post("/genre/rock/")
+
+        self.assertEqual(response.status_code, 200)
+        release_group, = response.json["entities"]["release_group"]["entities"]
+        recording, = response.json["entities"]["recording"]["entities"]
+        self.assertEqual(release_group["mbid"], "album-id")
+        self.assertEqual(release_group["name"], "Album")
+        self.assertIs(release_group["has_metadata"], False)
+        self.assertEqual(recording["recording_mbid"], "track-id")
+        self.assertEqual(recording["recording_name"], "Track")
+        self.assertIsNone(recording.get("artist_credit_name"))
