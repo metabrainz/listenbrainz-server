@@ -1,8 +1,6 @@
 import * as React from "react";
 import { Dropdown } from "react-bootstrap";
 import DOMPurify from "dompurify";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBell } from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { preciseTimestamp } from "../utils/utils";
 import createSynapseApi, {
@@ -93,6 +91,27 @@ function render(n: InboxNotification): Rendered | null {
   return renderer ? (renderer as (p: unknown) => Rendered)(n.payload) : null;
 }
 
+// A plain link, so the toggle looks like the other sidebar nav links.
+const NavToggle = React.forwardRef<
+  HTMLAnchorElement,
+  React.AnchorHTMLAttributes<HTMLAnchorElement>
+>(function NavToggle({ onClick, children, ...props }, ref) {
+  return (
+    <a
+      ref={ref}
+      href="#notifications"
+      role="button"
+      onClick={(e) => {
+        e.preventDefault();
+        onClick?.(e);
+      }}
+      {...props}
+    >
+      {children}
+    </a>
+  );
+});
+
 export default function NotificationBell() {
   const { synapseUrl, musicbrainzAuth } = React.useContext(GlobalAppContext);
   const api = React.useMemo<SynapseApi | null>(
@@ -162,13 +181,13 @@ export default function NotificationBell() {
     .filter((item) => item.rendered !== null);
 
   return (
-    <Dropdown onToggle={onToggle} drop="up">
+    // Opens beside the sidebar, where there is room for the list.
+    <Dropdown onToggle={onToggle} drop="end">
       <Dropdown.Toggle
-        variant="link"
-        className="text-reset"
+        as={NavToggle}
         aria-label={`Notifications, ${count} unread`}
       >
-        <FontAwesomeIcon icon={faBell} />
+        Notifications
         {count > 0 && (
           <span className="badge rounded-pill bg-danger ms-1">
             {count > 99 ? "99+" : count}

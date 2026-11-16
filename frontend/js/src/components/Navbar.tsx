@@ -130,6 +130,7 @@ function Navbar() {
             <NavLink to="/explore/" onClick={toggleSidebar}>
               Explore
             </NavLink>
+            {currentUser?.name && <NotificationBell />}
           </div>
 
           <div className="navbar-bottom">
@@ -141,7 +142,6 @@ function Navbar() {
                   elementType="div"
                   className="username"
                 />
-                <NotificationBell />
                 <a href="/login/logout/">Logout</a>
                 <NavLink to="/settings/" onClick={toggleSidebar}>
                   Settings
