@@ -8,11 +8,9 @@ from time import monotonic, sleep
 from typing import Any
 
 from brainzutils import metrics, cache
-from more_itertools import chunked
 from sqlalchemy import text
 
-from listenbrainz.db import timescale, listens as listens_db
-from listenbrainz.listenstore import LISTEN_MINIMUM_DATE
+from listenbrainz.db import listens as listens_db
 from listenbrainz.mbid_mapping_writer.matcher import process_listens
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MATCH_TYPES
 from listenbrainz.utils import init_cache
@@ -29,7 +27,7 @@ NEW_LISTEN = 0
 # How long to wait if all unmatched listens have been processed before starting the process anew
 UNMATCHED_LISTENS_COMPLETED_TIMEOUT = 86400  # in s
 
-# This is the point where the legacy listens should be processed from
+# Legacy listens are loaded a window of this length of their created time at a time, going back from now
 LEGACY_LISTENS_LOAD_WINDOW = timedelta(days=3)
 LEGACY_LISTENS_INDEX_DATE_CACHE_KEY = "mbid.legacy_index_date"
 
@@ -38,9 +36,6 @@ NUM_ITEMS_TO_RECHECK_PER_PASS = 100000
 
 # When looking for mapped items marked for re-checking, use this batch size
 RECHECK_BATCH_SIZE = 5000
-
-# When looking up which legacy listens have already been mapped, use this batch size
-LEGACY_MAPPED_LOOKUP_BATCH_SIZE = 10000
 
 
 @dataclass(order=True)
@@ -134,17 +129,18 @@ class MappingJobQueue(threading.Thread):
            on the matched listens, finding the next chunk of legacy listens to look up.
            Listens are added to the queue with a low priority."""
 
-        # Find the listens in the time window, timescale has an index on listened_at
-        legacy_query = """SELECT recording_msid::TEXT AS recording_msid
-                            FROM listen
-                           WHERE listened_at <= :max_ts
-                             AND listened_at > :min_ts"""
+        # Find the listens created in the time window that are not mapped to a recording yet,
+        # the listen table has an index on created
+        legacy_query = """SELECT DISTINCT l.recording_msid::TEXT AS recording_msid
+                            FROM listen l
+                       LEFT JOIN mapping.mbid_mapping m
+                              ON l.recording_msid = m.recording_msid
+                           WHERE l.created <= :max_ts
+                             AND l.created > :min_ts
+                             AND m.recording_mbid IS NULL"""
 
-        # Of those, find the listens which have already been mapped to a recording
-        mapped_query = """SELECT recording_msid::TEXT AS recording_msid
-                            FROM mapping.mbid_mapping
-                           WHERE recording_msid = ANY(CAST(:msids AS UUID[]))
-                             AND recording_mbid IS NOT NULL"""
+        # The created time of the oldest listen, where loading legacy listens is done
+        min_created_query = "SELECT min(created) FROM listen"
 
         # Find mapping rows that need to be rechecked
         recheck_query = """SELECT recording_msid
@@ -171,7 +167,9 @@ class MappingJobQueue(threading.Thread):
                 self.app.logger.info("Use date index now()")
 
         # Check to see if we're done
-        if self.legacy_listens_index_date < LISTEN_MINIMUM_DATE - LEGACY_LISTENS_LOAD_WINDOW:
+        with listens_db.engine.connect() as connection:
+            min_created = connection.execute(text(min_created_query)).scalar()
+        if min_created is None or self.legacy_listens_index_date < min_created:
             self.app.logger.info("Finished looking up all legacy listens! Wooo!")
             self.legacy_next_run = monotonic() + UNMATCHED_LISTENS_COMPLETED_TIMEOUT
             self.legacy_listens_index_date = datetime.now(tz=timezone.utc)
@@ -194,17 +192,12 @@ class MappingJobQueue(threading.Thread):
             return
         else:
             # If none, check for old legacy listens that have no entry in the mapping yet
-            with timescale.engine.connect() as connection:
-                msids = {row.recording_msid for row in connection.execute(text(legacy_query), {
+            with listens_db.engine.connect() as connection:
+                msids = [row.recording_msid for row in connection.execute(text(legacy_query), {
                     "max_ts": self.legacy_listens_index_date,
                     "min_ts": self.legacy_listens_index_date - LEGACY_LISTENS_LOAD_WINDOW
-                })}
-            unmapped_msids = []
-            with listens_db.engine.connect() as connection:
-                for batch in chunked(msids, LEGACY_MAPPED_LOOKUP_BATCH_SIZE):
-                    mapped = {row.recording_msid for row in connection.execute(text(mapped_query), {"msids": batch})}
-                    unmapped_msids.extend(msid for msid in batch if msid not in mapped)
-            count = self.fetch_and_queue_listens(unmapped_msids, LEGACY_LISTEN)
+                })]
+            count = self.fetch_and_queue_listens(msids, LEGACY_LISTEN)
             self.app.logger.info("Loaded %s more legacy listens for %s" %
                                  (count, self.legacy_listens_index_date.strftime("%Y-%m-%d")))
 

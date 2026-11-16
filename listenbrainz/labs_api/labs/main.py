@@ -68,7 +68,7 @@ ts.init_db_connection(
     pool_pre_ping=True,
 )
 listens_db.init_db_connection(
-    app.config.get("SQLALCHEMY_LISTENS_URI"),
+    app.config.get("SQLALCHEMY_LISTENS_PGBOUNCER_URI"),
     poolclass=QueuePool,
     pool_size=2,
     max_overflow=2,

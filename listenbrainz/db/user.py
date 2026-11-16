@@ -240,10 +240,10 @@ def get_user_count(db_conn):
         raise
 
 def get_user_count_evolution(db_conn):
-    """ Get total number of users in database.
+    """Get monthly and cumulative counts of users with an active account.
 
     Returns:
-        list: tuple(period, total_users) for each period
+        list: tuple(period, total_users, new_users) for each creation month
     """
     try:
         time_period = "month"
@@ -253,6 +253,7 @@ def get_user_count_evolution(db_conn):
             COUNT(id) AS new_users,
             SUM(COUNT(id)) OVER (ORDER BY DATE_TRUNC(:bucket, created)) AS total_users
         FROM "user"
+        WHERE gdpr_agreed IS NOT NULL
         GROUP BY period
         ORDER BY period ASC;
         """

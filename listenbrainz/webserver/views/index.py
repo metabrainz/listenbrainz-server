@@ -319,7 +319,6 @@ def _get_user_count():
 def _get_user_count_evolution():
     user_count_evolution_key = "{}.{}".format(STATS_PREFIX, 'user_count_evolution')
     user_count_evolution = cache.get(user_count_evolution_key, decode=True)
-    user_count_evolution = None
     if user_count_evolution:
         return user_count_evolution
     else:

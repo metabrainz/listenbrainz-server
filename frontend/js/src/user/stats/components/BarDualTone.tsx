@@ -141,7 +141,7 @@ export default function BarDualTone(props: BarDualToneProps) {
 
   const { data, range, lastRangePeriod, thisRangePeriod } = props;
   let { showLegend } = props;
-  showLegend = showLegend && !(isMobile && range === "month");
+  showLegend = showLegend && !(isMobile && range.includes("month"));
 
   const { dateFormat, keys, itemWidth } = rangeMap[range] || {};
 
@@ -205,7 +205,7 @@ export default function BarDualTone(props: BarDualToneProps) {
         }}
         axisBottom={{
           format:
-            (range === "all_time" || range === "month") && isMobile
+            (range === "all_time" || range.includes("month")) && isMobile
               ? tickFormatter
               : undefined,
         }}
