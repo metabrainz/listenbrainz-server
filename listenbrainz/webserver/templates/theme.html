@@ -1,0 +1,40 @@
+{#
+  Apply the saved preference before the stylesheet is painted. This is kept
+  deliberately small because React is not available on legacy pages.
+#}
+<script>
+  (() => {
+    const storageKey = "listenbrainz-theme";
+    const root = document.documentElement;
+    const apply = (theme) => {
+      root.dataset.bsTheme = theme;
+      root.style.colorScheme = theme;
+    };
+    const current = () => root.dataset.bsTheme === "dark" ? "dark" : "light";
+    const updateToggleControls = () => {
+      const theme = current();
+      const label = `Switch to ${theme === "dark" ? "light" : "dark"} mode`;
+      document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+        button.setAttribute("aria-label", label);
+        button.setAttribute("title", label);
+        button.setAttribute("aria-pressed", String(theme === "dark"));
+      });
+    };
+    try {
+      apply(localStorage.getItem(storageKey) === "dark" ? "dark" : "light");
+    } catch (_) {
+      apply("light");
+    }
+    window.ListenBrainzTheme = {
+      set: (theme) => {
+        apply(theme === "dark" ? "dark" : "light");
+        try { localStorage.setItem(storageKey, current()); } catch (_) {}
+        updateToggleControls();
+        window.dispatchEvent(new Event("listenbrainzthemechange"));
+        return current();
+      },
+      toggle: () => window.ListenBrainzTheme.set(current() === "dark" ? "light" : "dark"),
+    };
+    document.addEventListener("DOMContentLoaded", updateToggleControls, { once: true });
+  })();
+</script>

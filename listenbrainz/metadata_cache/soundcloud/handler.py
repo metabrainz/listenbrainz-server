@@ -8,7 +8,7 @@ from psycopg2.sql import SQL
 from requests import Session
 from requests.adapters import HTTPAdapter
 
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.metadata_cache.handler import BaseHandler
 from listenbrainz.metadata_cache.soundcloud.models import SoundcloudTrack, SoundcloudArtist
@@ -225,7 +225,7 @@ class SoundcloudCrawlerHandler(BaseHandler):
         track_expires_at = datetime.now() + timedelta(days=TRACK_CACHE_TIME)
         track_expires_at_ts = int(track_expires_at.timestamp())
 
-        conn = timescale.engine.raw_connection()
+        conn = listens_db.engine.raw_connection()
         try:
             with conn.cursor() as curs:
                 self.insert(curs, tracks)

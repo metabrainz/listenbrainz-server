@@ -1,9 +1,15 @@
-import { throttle } from "lodash";
+import { debounce, throttle } from "lodash";
 import * as React from "react";
-import ReactTooltip from "react-tooltip";
+import { Overlay, Tooltip } from "react-bootstrap";
+import type { OverlayInjectedProps } from "react-bootstrap/Overlay";
 import { useAtomValue } from "jotai";
 import { millisecondsToStr } from "../../playlists/utils";
-import { durationMsAtom, progressMsAtom } from "./BrainzPlayerAtoms";
+import {
+  durationMsAtom,
+  progressMsAtom,
+  playerPausedAtom,
+  updateTimeAtom,
+} from "./BrainzPlayerAtoms";
 
 type ProgressBarProps = {
   seekToPositionMs: (msTimeCode: number) => void;
@@ -16,12 +22,15 @@ const KEYBOARD_BIG_STEP_MS: number = 10000;
 
 const EVENT_KEY_ARROWLEFT: string = "ArrowLeft";
 const EVENT_KEY_ARROWRIGHT: string = "ArrowRight";
-const EVENT_TYPE_CLICK: string = "click";
-const EVENT_TYPE_MOUSEMOVE: string = "mousemove";
 const MOUSE_THROTTLE_DELAY: number = 300;
 
 const TOOLTIP_INITIAL_CONTENT: string = "0:00";
-const TOOLTIP_TOP_OFFSET: number = 39;
+
+type ProgressTooltipProps = {
+  overlayProps: OverlayInjectedProps;
+  tipContent: string;
+  tooltipXPosition: number;
+};
 
 // Originally by ford04 - https://stackoverflow.com/a/62017005
 const useThrottle = (callback: any, delay: number | undefined) => {
@@ -36,44 +45,212 @@ const useThrottle = (callback: any, delay: number | undefined) => {
   );
 };
 
+function ProgressTooltip({
+  overlayProps,
+  tipContent,
+  tooltipXPosition,
+}: ProgressTooltipProps) {
+  React.useEffect(() => {
+    overlayProps.popper?.scheduleUpdate?.();
+  }, [overlayProps.popper, tooltipXPosition]);
+
+  return (
+    <Tooltip
+      id="progress-tooltip"
+      {...overlayProps}
+      className={`progress-tooltip ${overlayProps.className ?? ""}`.trim()}
+    >
+      {tipContent}
+    </Tooltip>
+  );
+}
+
 function ProgressBar(props: ProgressBarProps) {
   const progressMs = useAtomValue(progressMsAtom);
   const durationMs = useAtomValue(durationMsAtom);
+  const playerPaused = useAtomValue(playerPausedAtom);
+  const updateTime = useAtomValue(updateTimeAtom);
 
   const { seekToPositionMs, showNumbers } = props;
   const [tipContent, setTipContent] = React.useState(TOOLTIP_INITIAL_CONTENT);
+  const [showTooltip, setShowTooltip] = React.useState(false);
+  const [tooltipXPosition, setTooltipXPosition] = React.useState(0);
   const progressBarRef = React.useRef<HTMLDivElement>(null);
-  const progressPercentage = Number(
-    ((progressMs * 100) / durationMs).toFixed()
-  );
 
-  const mouseEventHandler = useThrottle(
-    (event: React.MouseEvent<HTMLInputElement>): void => {
-      const progressBarBoundingRect = event.currentTarget.getBoundingClientRect();
-      const progressBarWidth = progressBarBoundingRect.width;
-      const musicPlayerXOffset = progressBarBoundingRect.x;
-      const absoluteClickXPos = event.clientX;
-      const relativeClickXPos = absoluteClickXPos - musicPlayerXOffset;
-      const percentPos = relativeClickXPos / progressBarWidth;
-      const positionMs = Math.round(durationMs * percentPos);
-      const positionTime = millisecondsToStr(positionMs);
+  const tooltipTargetRef = React.useRef<HTMLSpanElement>(null);
+  const throttledSetTipContent = useThrottle((positionTime: string): void => {
+    setTipContent(positionTime);
+  }, MOUSE_THROTTLE_DELAY);
 
-      const isMobile = /Mobi/.test(navigator.userAgent);
+  const progressBarInnerRef = React.useRef<HTMLDivElement>(null);
+  const handleRef = React.useRef<HTMLDivElement>(null);
+  const isDraggingRef = React.useRef<boolean>(false);
+  const rectCacheRef = React.useRef<DOMRect | null>(null);
+  const pendingSeekMsRef = React.useRef<number>(-1);
+  const draggingElementRef = React.useRef<Element | null>(null);
 
-      if (isMobile) {
-        setTipContent(positionTime);
-        seekToPositionMs(positionMs);
-        return;
+  const isMobileDevice = /Mobi/.test(navigator.userAgent);
+
+  React.useEffect(() => {
+    let rafId: number;
+    const tick = () => {
+      if (!isDraggingRef.current) {
+        const base =
+          pendingSeekMsRef.current >= 0 ? pendingSeekMsRef.current : progressMs;
+        const elapsed = playerPaused ? 0 : performance.now() - updateTime;
+        const liveProgressMs = base + elapsed;
+        const ratio = Math.min(liveProgressMs / durationMs, 1) || 0;
+        if (progressBarInnerRef.current) {
+          progressBarInnerRef.current.style.transform = `scaleX(${ratio})`;
+        }
+        if (handleRef.current) {
+          const barWidth = rectCacheRef.current?.width ?? 0;
+          const handleX = ratio * barWidth;
+          handleRef.current.style.setProperty("--handle-x", `${handleX}px`);
+        }
       }
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [progressMs, durationMs, playerPaused, updateTime]);
 
-      if (event.type === EVENT_TYPE_MOUSEMOVE) {
-        setTipContent(positionTime);
-      } else if (event.type === EVENT_TYPE_CLICK) {
-        seekToPositionMs(positionMs);
-      }
-    },
-    MOUSE_THROTTLE_DELAY
-  );
+  // Converts a pointer clientX coordinate to a millisecond position using the cached bar rect
+  const getMsFromClientX = (clientX: number): number => {
+    const rect = rectCacheRef.current;
+    if (!rect || durationMs <= 0) return 0;
+    const ratio = Math.max(0, Math.min((clientX - rect.left) / rect.width, 1));
+    return ratio * durationMs;
+  };
+
+  // Synchronously writes progress bar transform and handle position to the DOM during drag
+  const flushVisuals = (msPosition: number): void => {
+    throttledSetTipContent(millisecondsToStr(msPosition));
+    const ratio = Math.min(msPosition / durationMs, 1) || 0;
+    const barWidth = rectCacheRef.current?.width ?? 0;
+    const handleX = ratio * barWidth;
+    if (progressBarInnerRef.current) {
+      progressBarInnerRef.current.style.transform = `scaleX(${ratio})`;
+    }
+    if (handleRef.current) {
+      handleRef.current.style.setProperty("--handle-x", `${handleX}px`);
+    }
+  };
+
+  React.useEffect(() => {
+    // During drag: update visuals on every pointer move without firing seek
+    const onPointerMove = (e: PointerEvent) => {
+      if (!isDraggingRef.current) return;
+      const msPos = getMsFromClientX(e.clientX);
+      flushVisuals(msPos);
+      setShowTooltip(true);
+      setTooltipXPosition(e.clientX);
+    };
+
+    // On drag release: fire the actual seek and let pendingSeekMsRef hold the optimistic position
+    const endDrag = (e: PointerEvent) => {
+      if (!isDraggingRef.current) return;
+      isDraggingRef.current = false;
+      document.body.style.cursor = "";
+      const msPos = getMsFromClientX(e.clientX);
+      pendingSeekMsRef.current = msPos;
+      seekToPositionMs(msPos);
+      draggingElementRef.current?.classList.remove("dragging");
+      draggingElementRef.current = null;
+      setShowTooltip(false);
+    };
+
+    document.addEventListener("pointermove", onPointerMove);
+    document.addEventListener("pointerup", endDrag);
+    document.addEventListener("pointercancel", endDrag);
+    return () => {
+      document.removeEventListener("pointermove", onPointerMove);
+      document.removeEventListener("pointerup", endDrag);
+      document.removeEventListener("pointercancel", endDrag);
+    };
+  }, [seekToPositionMs, durationMs]);
+
+  // Clear pendingSeek once the player atom catches up (within 500ms tolerance)
+  React.useEffect(() => {
+    if (pendingSeekMsRef.current < 0) return;
+    if (Math.abs(progressMs - pendingSeekMsRef.current) < 500) {
+      pendingSeekMsRef.current = -1;
+    }
+  }, [progressMs]);
+
+  // Cache bar rect on mount and keep it fresh on resize
+  React.useEffect(() => {
+    if (progressBarRef.current) {
+      rectCacheRef.current = progressBarRef.current.getBoundingClientRect();
+    }
+    const onResize = debounce(
+      () => {
+        if (progressBarRef.current) {
+          rectCacheRef.current = progressBarRef.current.getBoundingClientRect();
+        }
+      },
+      800,
+      { leading: false, trailing: true }
+    );
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const getPositionFromMouseEvent = (
+    event: React.MouseEvent<HTMLDivElement>
+  ) => {
+    const progressBarBoundingRect =
+      progressBarRef.current?.getBoundingClientRect() ??
+      event.currentTarget.getBoundingClientRect();
+    const progressBarWidth = progressBarBoundingRect.width;
+    const musicPlayerXOffset = progressBarBoundingRect.x;
+    const absoluteClickXPos = event.clientX;
+    const relativeClickXPos = absoluteClickXPos - musicPlayerXOffset;
+    const percentPos = relativeClickXPos / progressBarWidth;
+    const positionMs = Math.round(durationMs * percentPos);
+
+    return {
+      positionMs,
+      positionTime: millisecondsToStr(positionMs),
+      tooltipXPosition: absoluteClickXPos,
+    };
+  };
+
+  const onMouseMoveHandler = (
+    event: React.MouseEvent<HTMLDivElement>
+  ): void => {
+    if (isMobileDevice) {
+      setShowTooltip(false);
+      return;
+    }
+
+    const mousePosition = getPositionFromMouseEvent(event);
+    throttledSetTipContent(mousePosition.positionTime);
+    setTooltipXPosition(mousePosition.tooltipXPosition);
+    setShowTooltip(true);
+  };
+
+  const onClickHandler = (event: React.MouseEvent<HTMLDivElement>): void => {
+    const mousePosition = getPositionFromMouseEvent(event);
+    throttledSetTipContent(mousePosition.positionTime);
+    seekToPositionMs(mousePosition.positionMs);
+    setTooltipXPosition(mousePosition.tooltipXPosition);
+  };
+
+  const onMouseDownHandler = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    isDraggingRef.current = true;
+    document.body.style.cursor = "grabbing";
+    rectCacheRef.current = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+    if (handleRef.current) {
+      handleRef.current.style.transform = "translate(-50%, -50%) scaleX(1)";
+    }
+    (e.currentTarget as HTMLDivElement).classList.add("dragging");
+    draggingElementRef.current = e.currentTarget as HTMLDivElement;
+    const msPos = getMsFromClientX(e.clientX);
+    flushVisuals(msPos);
+    setShowTooltip(true);
+  };
 
   const onKeyPressHandler = (
     event: React.KeyboardEvent<HTMLInputElement>
@@ -90,7 +267,9 @@ function ProgressBar(props: ProgressBarProps) {
       } else {
         oneStepEarlier = progressMs - KEYBOARD_BIG_STEP_MS;
       }
-      seekToPositionMs(oneStepEarlier > 0 ? oneStepEarlier : 0);
+      const newPos = oneStepEarlier > 0 ? oneStepEarlier : 0;
+      pendingSeekMsRef.current = newPos;
+      seekToPositionMs(newPos);
     }
     if (event.key === EVENT_KEY_ARROWRIGHT) {
       let oneStepLater;
@@ -100,50 +279,73 @@ function ProgressBar(props: ProgressBarProps) {
         oneStepLater = progressMs + KEYBOARD_STEP_MS;
       }
       if (oneStepLater <= durationMs - 500) {
+        pendingSeekMsRef.current = oneStepLater;
         seekToPositionMs(oneStepLater);
       }
     }
   };
 
-  const progressBarStyle: React.CSSProperties = {
-    width: `${progressPercentage || 0}%`,
-  };
-  if (!progressPercentage || progressPercentage === 0) {
-    // Hide little nubbin' appearing when at 0, for those with mild OCD.
-    progressBarStyle.borderRight = "none";
-  }
-
   return (
     <div className="progress-bar-wrapper">
       <div
         className="progress"
-        onClick={mouseEventHandler}
-        onMouseMove={mouseEventHandler}
+        onClick={onClickHandler}
+        onMouseMove={onMouseMoveHandler}
+        onMouseLeave={() => {
+          if (handleRef.current) {
+            handleRef.current.style.transform =
+              "translate(-50%, -50%) scaleX(0)";
+          }
+          if (!isDraggingRef.current) {
+            setShowTooltip(false);
+          }
+        }}
         onKeyDown={onKeyPressHandler}
+        onMouseDown={onMouseDownHandler}
+        onMouseEnter={() => {
+          setShowTooltip(true);
+          if (handleRef.current) {
+            handleRef.current.style.transform =
+              "translate(-50%, -50%) scaleX(1)";
+          }
+        }}
         aria-label="Audio progress control"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuenow={progressPercentage || 0}
+        aria-valuenow={
+          durationMs > 0 ? Math.round((progressMs * 100) / durationMs) : 0
+        }
         tabIndex={0}
-        data-tip={tipContent}
         ref={progressBarRef}
       >
-        <div className="progress-bar bg-info" style={progressBarStyle} />
-        <ReactTooltip
-          className="progress-tooltip"
-          arrowColor="inherit"
-          getContent={() => tipContent}
-          globalEventOff="click"
-          overridePosition={({ left, top }) => {
-            const progressBarBoundingRect = progressBarRef.current?.getBoundingClientRect();
-            if (progressBarBoundingRect) {
-              // eslint-disable-next-line no-param-reassign
-              top = progressBarBoundingRect.top - TOOLTIP_TOP_OFFSET;
-            }
-            return { left, top };
+        <div className="progress-bar bg-info" ref={progressBarInnerRef} />
+        <div ref={handleRef} className="progress-handle" />
+        <span
+          ref={tooltipTargetRef}
+          style={{
+            position: "fixed",
+            left: tooltipXPosition,
+            top: progressBarRef.current?.getBoundingClientRect().top,
+            width: 1,
+            height: 1,
+            pointerEvents: "none",
           }}
         />
+        <Overlay
+          target={tooltipTargetRef.current}
+          show={showTooltip}
+          placement="top"
+          transition={false}
+        >
+          {(overlayProps) => (
+            <ProgressTooltip
+              overlayProps={overlayProps}
+              tipContent={tipContent}
+              tooltipXPosition={tooltipXPosition}
+            />
+          )}
+        </Overlay>
       </div>
       {showNumbers && (
         <div className="progress-numbers">

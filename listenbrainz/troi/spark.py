@@ -11,7 +11,6 @@ from troi import Recording, Playlist
 from troi.tools.spotify_lookup import submit_to_spotify
 
 from listenbrainz import db
-from listenbrainz.db import timescale
 from listenbrainz.db.playlist import LISTENBRAINZ_USER_ID
 from listenbrainz.domain.spotify import SpotifyService
 from listenbrainz.troi.utils import get_existing_playlist_urls, SPOTIFY_EXPORT_PREFERENCE
@@ -51,8 +50,8 @@ def get_user_details(slug, user_ids):
 
             if r.export_to_spotify:
                 users_for_urls.append(r.user_id)
-    with timescale.engine.connect() as ts_conn:
-        existing_urls = get_existing_playlist_urls(ts_conn, users_for_urls, slug)
+    with db.engine.connect() as db_conn:
+        existing_urls = get_existing_playlist_urls(db_conn, users_for_urls, slug)
     for user_id, detail in details.items():
         detail["existing_url"] = existing_urls.get(user_id)
 
@@ -146,7 +145,7 @@ def batch_process_playlists(all_playlists, playlists_to_export, do_export_to_spo
     if do_export_to_spotify:
         export_to_spotify(playlists_to_export)
 
-    conn = timescale.engine.raw_connection()
+    conn = db.engine.raw_connection()
     try:
         with conn.cursor(cursor_factory=DictCursor) as curs:
             playlist_ids = insert_playlists(curs, all_playlists)
@@ -177,5 +176,5 @@ def remove_old_playlists(slug, keep):
                   WHERE pp.id = ap.id
                     AND ap.position > :keep
     """
-    with timescale.engine.begin() as connection:
+    with db.engine.begin() as connection:
         connection.execute(text(query), {"creator_id": LISTENBRAINZ_USER_ID, "source_patch": slug, "keep": keep})

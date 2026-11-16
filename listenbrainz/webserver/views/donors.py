@@ -4,7 +4,7 @@ from math import ceil
 from listenbrainz.webserver.views.api_tools import _parse_int_arg
 
 from listenbrainz.db.donation import get_recent_donors, get_biggest_donors
-from listenbrainz.webserver import db_conn, meb_conn, ts_conn, timescale_connection
+from listenbrainz.webserver import db_conn, meb_conn, timescale_connection
 import listenbrainz.db.user as db_user
 import listenbrainz.db.playlist as db_playlist
 
@@ -36,7 +36,7 @@ def donors_post():
     donor_ids = [donor_info.id for _, donor_info in donors_info.items()]
 
     user_listen_count = timescale_connection._ts.get_listen_count_for_users(donor_ids) if donor_ids else {}
-    user_playlist_count = db_playlist.get_playlist_count(ts_conn, donor_ids) if donor_ids else {}
+    user_playlist_count = db_playlist.get_playlist_count(db_conn, donor_ids) if donor_ids else {}
 
     for donor in donors:
         donor_info = donors_info.get(donor["musicbrainz_id"].lower())

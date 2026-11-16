@@ -6,10 +6,11 @@ from sqlalchemy import text
 
 from listenbrainz.background.delete import delete_listens_history, delete_user
 from listenbrainz.background.export import export_user
-from listenbrainz.webserver import create_app, db_conn, ts_conn
+from listenbrainz.webserver import create_app, db_conn, ts_conn, listens_conn
 from listenbrainz.background.listens_importer import import_listens
 
 CLAIM_TIMEOUT_HOURS = 6
+FAILED_TASK_RETRY_MINUTES = 10
 
 
 def add_task(user_id, task):
@@ -63,6 +64,21 @@ def release_task(task):
     db_conn.commit()
 
 
+def defer_task(task):
+    """ Keep a failed task claimed so it is retried after FAILED_TASK_RETRY_MINUTES.
+
+    Releasing it instead would make it the oldest claimable task again, so the worker would
+    retry it immediately in a tight loop and every task queued after it would starve.
+    """
+    # backdate the claim so that claim_task considers it expired after the retry delay
+    db_conn.execute(text(f"""
+        UPDATE background_tasks
+           SET claimed_at = now() - interval '{CLAIM_TIMEOUT_HOURS} hours' + interval '{FAILED_TASK_RETRY_MINUTES} minutes'
+         WHERE id = :id
+    """), {"id": task.id})
+    db_conn.commit()
+
+
 def remove_task(task):
     """ Delete a completed task. """
     db_conn.execute(text("DELETE FROM background_tasks WHERE id = :id"), {"id": task.id})
@@ -80,11 +96,11 @@ class BackgroundTasks:
         if task.task == "delete_listens":
             delete_listens_history(db_conn, task.user_id, task.created)
         elif task.task == "delete_user":
-            delete_user(db_conn, ts_conn, task.user_id, task.created)
+            delete_user(db_conn, task.user_id, task.created)
         elif task.task == "export_all_user_data":
-            export_user(db_conn, ts_conn, task.user_id, task.metadata)
+            export_user(db_conn, listens_conn, task.user_id, task.metadata)
         elif task.task == "import_listens":
-            import_listens(db_conn, ts_conn, task.user_id, task.metadata)
+            import_listens(db_conn, listens_conn, task.user_id, task.metadata)
         else:
             current_app.logger.error(f"Unknown task type: {task}")
 
@@ -113,7 +129,8 @@ class BackgroundTasks:
                     remove_task(task)
                 except Exception:
                     current_app.logger.error("Error processing task:", exc_info=True)
-                    release_task(task)
+                    db_conn.rollback()
+                    defer_task(task)
                 finally:
                     self._current_task = None
             except KeyboardInterrupt:
@@ -133,6 +150,7 @@ class BackgroundTasks:
                 # by simply exiting the container when this happens and start fresh.
                 db_conn.rollback()
                 ts_conn.rollback()
+                listens_conn.rollback()
 
 
 if __name__ == "__main__":

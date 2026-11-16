@@ -19,7 +19,6 @@ from sqlalchemy import text
 
 from listenbrainz import messybrainz
 from listenbrainz import db
-from listenbrainz.db import timescale
 from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 
@@ -50,9 +49,10 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
                       , 'f'
                        )
         """
-        self.ts_conn.execute(text(query))
-        msid = messybrainz.submit_recording(self.ts_conn, "Strangers", "Portishead", "Dummy", None, 291160)
-        self.ts_conn.commit()
+        self.listens_conn.execute(text(query))
+        self.listens_conn.commit()
+        msid = messybrainz.submit_recording(self.listens_conn, "Strangers", "Portishead", "Dummy", None, 291160)
+        self.listens_conn.commit()
         return msid
 
     def create_and_follow_user(self, user: int, mb_row_id: int, name: str) -> dict:

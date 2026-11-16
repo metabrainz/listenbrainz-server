@@ -33,7 +33,9 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
       listen_count: number;
     }>
   >([]);
-  const [similarityScore, setSimilarityScore] = React.useState<number>(0);
+  const [similarityScore, setSimilarityScore] = React.useState<number | null>(
+    null
+  );
 
   const isUserNotFoundError = (err: Error): boolean => {
     const msg = err.toString().toLowerCase();
@@ -151,9 +153,19 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
     if (currentUser?.name && currentUser.name !== userName) {
       // Get similarity
       getSimilarityBetweenUsers(currentUser.name, userName)
-        .then((response: { payload: { similarity: number } }) => {
-          setSimilarityScore(response.payload.similarity);
-        })
+        .then(
+          (
+            response: {
+              payload: { similarity: number };
+            } | null
+          ) => {
+            if (response?.payload?.similarity !== undefined) {
+              setSimilarityScore(response.payload.similarity);
+            } else {
+              setSimilarityScore(null);
+            }
+          }
+        )
         .catch((err: Error) => {
           // This is expected in some cases and should remain there
           if (err.toString() === "Error: Similar-to user not found") {

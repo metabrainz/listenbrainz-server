@@ -8,7 +8,7 @@ from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery, MBIDMa
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MATCH_TYPES, MATCH_TYPE_EXACT_MATCH
 from listenbrainz.labs_api.labs.api.artist_credit_recording_lookup import ArtistCreditRecordingLookupQuery, \
     ArtistCreditRecordingLookupInput
-from listenbrainz.webserver import ts_conn
+from listenbrainz.webserver import listens_conn
 
 
 MAX_THREADS = 2
@@ -27,14 +27,14 @@ def filter_incoming_listens(msids, stats, app, debug):
              , mm.match_type
     -- unable to use values here because sqlachemy having trouble to pass list/tuple to values clause
           FROM unnest(:msids) AS t(recording_msid)
-     LEFT JOIN mbid_mapping mm
+     LEFT JOIN mapping.mbid_mapping mm
             ON t.recording_msid::uuid = mm.recording_msid
          WHERE mm.last_updated = '1970-01-01'  -- msid marked for rechecking manually
             OR mm.check_again <= NOW()     -- msid not found last time, marked for rechecking
             OR (mm.check_again IS NULL AND mm.recording_mbid IS NULL)  -- msid not found last time, not marked for rechecking because existed prior to rechecking existed
             OR mm.recording_msid IS NULL   -- msid seen for first time
     """
-    curs = ts_conn.execute(sqlalchemy.text(query), {"msids": list(msids.keys())})
+    curs = listens_conn.execute(sqlalchemy.text(query), {"msids": list(msids.keys())})
     msids_to_check = curs.fetchall()
 
     rem_msids = []
@@ -62,7 +62,7 @@ def process_listens(app, listens, priority):
        a result alrady exists in the DB -- the selection of legacy listens
        has already taken care of this.
 
-       Wrapped in an app context so worker threads can use the ts_conn /
+       Wrapped in an app context so worker threads can use the listens_conn /
        db_conn LocalProxies. teardown_appcontext closes those on exit which
        returns the SQLAlchemy connections to the global pools."""
     with app.app_context():
@@ -98,10 +98,10 @@ def _process_listens(app, listens, priority):
 
     # Reach into the SQLAlchemy connection for a raw psycopg2 cursor since the
     # INSERT statements below use psycopg2 %s placeholders. Commits and
-    # rollbacks go through ts_conn so SQLAlchemy's transaction state stays
+    # rollbacks go through listens_conn so SQLAlchemy's transaction state stays
     # consistent. The connection itself is released back to the pool by
     # teardown_appcontext when this worker's app_context exits.
-    raw_conn = ts_conn.connection
+    raw_conn = listens_conn.connection
     with raw_conn.cursor() as curs:
         try:
             # Try an exact lookup (in postgres) first.
@@ -126,7 +126,7 @@ def _process_listens(app, listens, priority):
             stats["processed"] += len(matches)
 
             metadata_query = """
-                INSERT INTO mbid_mapping_metadata AS mbid
+                INSERT INTO mapping.mbid_mapping_metadata AS mbid
                           ( recording_mbid
                           , release_mbid
                           , release_name
@@ -157,7 +157,7 @@ def _process_listens(app, listens, priority):
             """
 
             mapping_query = """
-                INSERT INTO mbid_mapping AS m(recording_msid, recording_mbid, match_type, last_updated, check_again)
+                INSERT INTO mapping.mbid_mapping AS m(recording_msid, recording_mbid, match_type, last_updated, check_again)
                      VALUES (
                             %(recording_msid)s::UUID
                           , %(recording_mbid)s::UUID
@@ -189,15 +189,15 @@ def _process_listens(app, listens, priority):
 
         except psycopg2.errors.CardinalityViolation:
             app.logger.error("CardinalityViolation on insert to mbid mapping\n", exc_info=True)
-            ts_conn.rollback()
+            listens_conn.rollback()
             return
 
         except (psycopg2.OperationalError, psycopg2.errors.DatatypeMismatch) as err:
             app.logger.info("Cannot insert MBID mapping rows. (%s)" % str(err))
-            ts_conn.rollback()
+            listens_conn.rollback()
             return
 
-    ts_conn.commit()
+    listens_conn.commit()
 
     return stats
 

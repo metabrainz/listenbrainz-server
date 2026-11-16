@@ -55,9 +55,9 @@ def insert_playlists_in_yim(slug, year, playlists, user_details):
     playlist_jsons = []
 
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-            psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"]) as ts_conn, \
+            psycopg2.connect(current_app.config["SQLALCHEMY_LISTENS_URI"]) as listens_conn, \
             mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
-            ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
+            listens_conn.cursor(cursor_factory=DictCursor) as listens_curs:
 
         for playlist in playlists:
             playlist_obj = Playlist(
@@ -82,7 +82,7 @@ def insert_playlists_in_yim(slug, year, playlists, user_details):
                     ) for idx, recording_mbid in enumerate(playlist["recordings"])
                 ]
             )
-            get_playlist_recordings_metadata(mb_curs, ts_curs, playlist_obj)
+            get_playlist_recordings_metadata(mb_curs, listens_curs, playlist_obj)
             playlist_jsons.append({
                 "user_id": playlist["user_id"],
                 "data": playlist_obj.serialize_jspf()["playlist"]
