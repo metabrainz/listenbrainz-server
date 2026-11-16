@@ -9,7 +9,7 @@ from pydantic import BaseModel, validator, root_validator
 from sqlalchemy import Engine
 
 from listenbrainz import db
-from listenbrainz.db import timescale
+from listenbrainz.db import timescale, listens as listens_db
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +19,19 @@ class DumpEngineName(StrEnum):
     lb = "lb"
     ts = "ts"
     mb = "mb"
+    listens = "listens"
+
+
+def get_engine(engine_name: DumpEngineName) -> Engine:
+    """ Return the SQLAlchemy engine for the given dump engine name. """
+    if engine_name == DumpEngineName.ts:
+        return timescale.engine
+    elif engine_name == DumpEngineName.lb:
+        return db.engine
+    elif engine_name == DumpEngineName.listens:
+        return listens_db.engine
+    else:
+        return musicbrainz_db.engine
 
 
 class DumpFormat(StrEnum):
@@ -40,6 +53,8 @@ class DumpTable(BaseModel):
     columns: tuple[str | Composable, ...]
     filename: str | None = None
     file_format: str | None = None
+    # the database engine to dump the table from, if different from the engine of its collection
+    engine_name: DumpEngineName | None = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -172,34 +187,35 @@ class DumpTablesCollection(BaseModel):
 
     Attributes:
         engine_name: An enum indicating the name of the database engine used for
-                     dumping the tables.
+                     dumping the tables, unless a table specifies its own engine.
         tables: A list of DumpTable objects representing the tables to be exported.
     """
     engine_name: DumpEngineName
     tables: list[DumpTable]
 
-    def get_engine(self) -> Engine:
-        if self.engine_name == DumpEngineName.ts:
-            return timescale.engine
-        elif self.engine_name == DumpEngineName.lb:
-            return db.engine
-        else:
-            return musicbrainz_db.engine
+    def get_table_engine_name(self, table: DumpTable) -> DumpEngineName:
+        return table.engine_name or self.engine_name
 
     def dump_tables(self, archive_tables_dir: str):
         """
         Dump tables to the specified directory in their individual files.
 
+        The tables of each database engine are dumped in a single transaction, so that they
+        are consistent with each other.
+
         Args:
             archive_tables_dir (str): Directory path where the tables should be exported.
         """
-        engine = self.get_engine()
-        with engine.connect() as connection, connection.begin() as transaction:
-            cursor = connection.connection.cursor()
-            for table in self.tables:
-                try:
-                    table.export(cursor=cursor, location=archive_tables_dir)
-                except Exception:
-                    logger.error("Error while copying table %s: ", table, exc_info=True)
-                    raise
-            transaction.rollback()
+        engine_names = list(dict.fromkeys(self.get_table_engine_name(table) for table in self.tables))
+        for engine_name in engine_names:
+            with get_engine(engine_name).connect() as connection, connection.begin() as transaction:
+                cursor = connection.connection.cursor()
+                for table in self.tables:
+                    if self.get_table_engine_name(table) != engine_name:
+                        continue
+                    try:
+                        table.export(cursor=cursor, location=archive_tables_dir)
+                    except Exception:
+                        logger.error("Error while copying table %s: ", table, exc_info=True)
+                        raise
+                transaction.rollback()

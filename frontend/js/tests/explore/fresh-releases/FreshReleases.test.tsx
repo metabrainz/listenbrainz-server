@@ -104,6 +104,48 @@ describe("FreshReleases", () => {
     expect(screen.getByText("Fresh Releases")).toBeInTheDocument();
   });
 
+  it("changes the sort using the styled dropdown", async () => {
+    const mockFetchUserFreshReleases = jest.fn().mockResolvedValue({
+      payload: userData.payload,
+    });
+    mountOptions.context.APIService.fetchUserFreshReleases = mockFetchUserFreshReleases;
+    const userEventInstance = userEvent.setup();
+
+    renderWithProviders(
+      <QueryClientProvider client={queryClient}>
+        <FreshReleases />
+      </QueryClientProvider>,
+      mountOptions.context
+    );
+
+    await waitFor(() => {
+      expect(mockFetchUserFreshReleases).toHaveBeenCalledWith(
+        "chinmaykunkikar",
+        7,
+        true,
+        true,
+        "release_date"
+      );
+    });
+
+    await userEventInstance.click(
+      screen.getByRole("button", { name: "Sort By: Release Date" })
+    );
+    await userEventInstance.click(
+      screen.getByRole("button", { name: "Artist" })
+    );
+
+    await waitFor(() => {
+      expect(mockFetchUserFreshReleases).toHaveBeenCalledWith(
+        "chinmaykunkikar",
+        7,
+        true,
+        true,
+        "artist_credit_name"
+      );
+    });
+  });
+
   it("renders sitewide fresh releases page, including timeline component", async () => {
     const mockFetchSitewideFreshReleases = jest
       .fn()

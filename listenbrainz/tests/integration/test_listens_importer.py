@@ -71,8 +71,8 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         expires = now + timedelta(days=365)
 
         from listenbrainz.metadata_cache.store import insert
-        insert(self.ts_conn.connection.cursor(), "spotify_cache", album, now, expires)
-        self.ts_conn.connection.commit()
+        insert(self.listens_conn.connection.cursor(), "spotify_cache", album, now, expires)
+        self.listens_conn.connection.commit()
 
     def create_empty_zip(self):
         return self.create_zip("empty.zip", [])
@@ -457,7 +457,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
 
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
         # Some tracks will be skipped,only expecting 6 tracks 
-        response = self.wait_for_query_to_have_items(url, num_items=6, attempts=20)
+        response = self.wait_for_query_to_have_items(url, num_items=6, attempts=40)
         listens = response.json["payload"]["listens"]
         self.assertEqual(len(listens), 6)
 

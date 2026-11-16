@@ -143,7 +143,7 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
 
         ts = int(time.time())
         payload["payload"][0]["listened_at"] = ts
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, wait_for_writer=True)
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
 
@@ -187,14 +187,14 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
         # First listen
         ts1 = int(time.time()) - 100
         payload["payload"][0]["listened_at"] = ts1
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, wait_for_writer=True)
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
 
         # Second listen
         ts2 = int(time.time()) - 50
         payload["payload"][0]["listened_at"] = ts2
-        response = self.send_data(payload, recalculate=True)
+        response = self.send_data(payload, wait_for_writer=True)
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
 

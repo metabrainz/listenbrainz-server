@@ -86,6 +86,26 @@ body {
           margin-left: auto;
           font-weight: normal;
         }
+
+        .theme-toggle {
+          align-items: center;
+          background: transparent;
+          border: 0;
+          border-radius: 0;
+          color: $blue;
+          cursor: pointer;
+          display: inline-flex;
+          height: 2rem;
+          justify-content: center;
+          margin-top: 0.8rem;
+          padding: 0;
+          width: 2rem;
+
+          &:hover {
+            background-color: transparent;
+            color: color.adjust($blue, $lightness: 12%);
+          }
+        }
       }
       .navbar-logo {
         z-index: 102; // just above the toggle hamburger button

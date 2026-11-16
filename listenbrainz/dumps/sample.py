@@ -27,7 +27,7 @@ from data.postgres.release_group import get_release_group_metadata_cache_query
 from data.postgres.tag import get_tag_or_genre_cache_query
 from listenbrainz import db
 
-from listenbrainz.db import stats, timescale
+from listenbrainz.db import stats, listens as listens_db
 from listenbrainz.db.popularity import to_entity_mbid
 from listenbrainz.dumps.exceptions import SchemaMismatchException
 
@@ -121,7 +121,7 @@ def dump_sample_data(location: str):
         all_artist_mbids.update(row["artist_mbids"])
         rg_pop_mbids.add(row["release_group_mbid"])
 
-    with timescale.engine.connect() as connection, connection.begin() as transaction:
+    with listens_db.engine.connect() as connection, connection.begin() as transaction:
         metadata_dir = os.path.join(location, "metadata")
         os.makedirs(metadata_dir, exist_ok=True)
 
@@ -154,7 +154,7 @@ def dump_sample_data(location: str):
                 fp,
             )
 
-        ts_curs = connection.connection.cursor(cursor_factory=RealDictCursor)
+        listens_curs = connection.connection.cursor(cursor_factory=RealDictCursor)
         popularity_dir = os.path.join(location, "popularity")
         os.makedirs(popularity_dir, exist_ok=True)
 
@@ -163,7 +163,7 @@ def dump_sample_data(location: str):
 
             logger.info(f"Dumping popularity {mlhd_prefix}release_group")
             rg_pop_data = get_popularity_data(
-                ts_curs, "release_group", rg_pop_mbids, per_artist=False, is_mlhd=is_mlhd
+                listens_curs, "release_group", rg_pop_mbids, per_artist=False, is_mlhd=is_mlhd
             )
             with open(os.path.join(popularity_dir, mlhd_prefix + "release_group.csv"), "w", newline="") as fp:
                 writer = DictWriter(fp, fieldnames=["release_group_mbid", "total_listen_count", "total_user_count"])
@@ -172,7 +172,7 @@ def dump_sample_data(location: str):
 
             logger.info(f"Dumping popularity {mlhd_prefix}recording")
             rec_pop_data = get_popularity_data(
-                ts_curs, "recording", rg_pop_mbids, per_artist=False, is_mlhd=is_mlhd
+                listens_curs, "recording", rg_pop_mbids, per_artist=False, is_mlhd=is_mlhd
             )
             with open(os.path.join(popularity_dir, mlhd_prefix + "recording.csv"), "w", newline="") as fp:
                 writer = DictWriter(fp, fieldnames=["recording_mbid", "total_listen_count", "total_user_count"])
@@ -181,7 +181,7 @@ def dump_sample_data(location: str):
 
             logger.info(f"Dumping popularity {mlhd_prefix}top_recording")
             rec_artist_pop_data = get_popularity_data(
-                ts_curs, "recording", all_artist_mbids, per_artist=True, is_mlhd=is_mlhd
+                listens_curs, "recording", all_artist_mbids, per_artist=True, is_mlhd=is_mlhd
             )
             with open(os.path.join(popularity_dir, mlhd_prefix + "top_recording.csv"), "w", newline="") as fp:
                 writer = DictWriter(fp, fieldnames=[
@@ -326,7 +326,8 @@ def import_sample_data(archive_path, threads):
         "top_recording.csv": Identifier("popularity", "top_recording"),
     }
 
-    connection = timescale.engine.raw_connection()
+    # the metadata caches and the popularity tables live in the listens database
+    connection = listens_db.engine.raw_connection()
     try:
         cursor = connection.cursor()
         with tarfile.open(fileobj=zstd.stdout, mode="r|") as tar:

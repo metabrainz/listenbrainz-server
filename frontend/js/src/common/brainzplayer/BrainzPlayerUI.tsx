@@ -30,6 +30,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { ToastMsg } from "../../notifications/Notifications";
 import { millisecondsToStr } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import YouTubeLogo from "../icons/YouTubeLogo";
 import { getRecordingMBID, getRecordingMSID } from "../../utils/utils";
 import MenuOptions from "./MenuOptions";
 import ProgressBar from "./ProgressBar";
@@ -80,6 +81,7 @@ function PlaybackControlButton(props: PlaybackControlButtonProps) {
     <button
       className={`btn-link ${className} ${disabled ? "disabled" : ""}`}
       title={title}
+      aria-label={title}
       onClick={disabled ? noop : () => action()}
       type="button"
       tabIndex={0}
@@ -425,18 +427,23 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <FontAwesomeIcon
-                  icon={currentDataSource.icon}
-                  color={currentDataSource.iconColor}
-                />
+                {currentDataSource.name === "youtube" ? (
+                  <YouTubeLogo aria-hidden="true" />
+                ) : (
+                  <FontAwesomeIcon
+                    icon={currentDataSource.icon}
+                    color={currentDataSource.iconColor}
+                  />
+                )}
               </a>
               {!isMobile && (
                 <FontAwesomeIcon
                   icon={getVolumeIcon()}
                   fixedWidth
-                  style={{ color: showVolume ? "green" : "" }}
                   onClick={() => setShowVolume(!showVolume)}
-                  className="d-none d-md-block"
+                  className={`d-none d-md-block volume-control${
+                    showVolume ? " is-open" : ""
+                  }`}
                   title="Volume control"
                   aria-label="Volume control"
                 />

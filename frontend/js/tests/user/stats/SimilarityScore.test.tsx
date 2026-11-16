@@ -60,4 +60,24 @@ describe("SimilarityScore", () => {
     rerender(<SimilarityScore {...defaultProps} similarityScore={0.3} />);
     expect(progressBar.firstChild).toHaveClass("orange");
   });
+
+  it("renders 'Similarity not calculated' when similarityScore is null (regular)", () => {
+    render(<SimilarityScore {...defaultProps} similarityScore={null} />);
+
+    expect(screen.getByText("Similarity not calculated")).toBeInTheDocument();
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+  });
+
+  it("renders 'Similarity not calculated' when similarityScore is null (compact)", () => {
+    render(
+      <SimilarityScore
+        {...defaultProps}
+        similarityScore={null}
+        type="compact"
+      />
+    );
+
+    expect(screen.getByText("Similarity not calculated")).toBeInTheDocument();
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+  });
 });

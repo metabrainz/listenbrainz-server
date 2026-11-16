@@ -14,7 +14,7 @@ import listenbrainz.shared.status_cache_helpers as status_cache_helpers
 from listenbrainz.rabbitmq import create_rabbitmq_connection
 from listenbrainz.db.dump_entry import get_dump_entries, get_dump_entry
 from listenbrainz.db.playlist import get_recommendation_playlists_for_user
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound
 
@@ -177,7 +177,7 @@ def get_playlists_timestamp():
     last_updated = cache.get(cache_key)
     if last_updated is None:
         last_updated = {}
-        playlists = get_recommendation_playlists_for_user(db_conn, ts_conn, 1)
+        playlists = get_recommendation_playlists_for_user(db_conn, 1)
         if playlists is None or not playlists:
             return last_updated
         for playlist in playlists:

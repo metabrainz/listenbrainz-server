@@ -21,7 +21,7 @@ from psycopg2.extras import DictCursor
 from sqlalchemy import text
 
 from listenbrainz import messybrainz
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 from listenbrainz.db.testing import TimescaleTestCase
 
 
@@ -53,7 +53,7 @@ recording2 = {
 class DataTestCase(TimescaleTestCase):
 
     def test_submit_recording(self):
-        with timescale.engine.begin() as connection:
+        with listens_db.engine.begin() as connection:
             title, artist, release, track_number, duration = \
                 recording["title"], recording["artist"], recording["release"],\
                 recording["additional_info"]["track_number"], recording["additional_info"]["duration"]
@@ -72,7 +72,7 @@ class DataTestCase(TimescaleTestCase):
     def test_add_recording_different_cases(self):
         """ Tests that recordings with only case differences get the same MessyBrainz ID.
         """
-        with timescale.engine.begin() as connection:
+        with listens_db.engine.begin() as connection:
             title1, artist1, release1, track_number1, duration1 = \
                 recording["title"], recording["artist"], recording["release"], \
                 recording["additional_info"]["track_number"], recording["additional_info"]["duration"]
@@ -84,7 +84,7 @@ class DataTestCase(TimescaleTestCase):
             self.assertEqual(msid1, msid2)
 
     def test_load_recordings_from_msids(self):
-        with timescale.engine.begin() as connection, connection.connection.cursor(cursor_factory=DictCursor) as curs:
+        with listens_db.engine.begin() as connection, connection.connection.cursor(cursor_factory=DictCursor) as curs:
             title, artist, release = recording["title"], recording["artist"], recording["release"]
             recording_msid = messybrainz.submit_recording(connection, title, artist, release)
             result = messybrainz.load_recordings_from_msids(curs, [recording_msid])
@@ -101,7 +101,7 @@ class DataTestCase(TimescaleTestCase):
 
     def test_get_msid_duplicates(self):
         """ Test that in case of duplicates the earliest submitted msid is returned """
-        with timescale.engine.begin() as connection:
+        with listens_db.engine.begin() as connection:
             args = {
                 "msid1": "0becc74d-9ba9-44c5-afa4-2f4ffe380d67",
                 "msid2": "9b750fdd-222e-4500-a22e-a0a942d5e342",
@@ -135,8 +135,8 @@ class DataTestCase(TimescaleTestCase):
                 'duration': 56000
             }
         ]
-        msids = messybrainz.insert_all_in_transaction(self.ts_conn, submissions)
-        with self.ts_conn.connection.cursor(cursor_factory=DictCursor) as curs:
+        msids = messybrainz.insert_all_in_transaction(self.listens_conn, submissions)
+        with self.listens_conn.connection.cursor(cursor_factory=DictCursor) as curs:
             received = messybrainz.load_recordings_from_msids(curs, msids)
 
         submissions[0]['track_number'] = None
@@ -169,11 +169,11 @@ class DataTestCase(TimescaleTestCase):
                 'title': 'Pretty Sweet'
             }
         ]
-        msids = messybrainz.insert_all_in_transaction(self.ts_conn, submissions)
+        msids = messybrainz.insert_all_in_transaction(self.listens_conn, submissions)
 
         self.assertEqual(1, len(set(msids)))
 
-        result = self.ts_conn.execute(text("""
+        result = self.listens_conn.execute(text("""
             SELECT count(*)
               FROM messybrainz.submissions
              WHERE lower(recording) = lower(:recording)
@@ -185,3 +185,23 @@ class DataTestCase(TimescaleTestCase):
             "release": "Blond"
         })
         self.assertEqual(1, result.scalar())
+
+    def test_submission_and_redirect_in_listens_database(self):
+        msid = messybrainz.submit_listens_and_sing_me_a_sweet_song([recording])[0]
+        duplicate = "94b92e66-012e-4432-8811-7ff7d82c28ad"
+        with listens_db.engine.begin() as connection:
+            connection.execute(text("""
+                INSERT INTO messybrainz.submissions_redirect (duplicate_msid, original_msid)
+                VALUES (:duplicate, :original)
+            """), {"duplicate": duplicate, "original": msid})
+
+        with (
+            listens_db.engine.connect() as connection,
+            connection.connection.cursor(cursor_factory=DictCursor) as cursor
+        ):
+            result = messybrainz.load_recordings_from_msids(cursor, [msid, duplicate])
+        self.assertEqual(result[msid]["title"], recording["title"])
+        self.assertEqual(result[duplicate], {**result[msid], "msid": duplicate})
+        self.assertEqual(
+            messybrainz.submit_listens_and_sing_me_a_sweet_song([recording])[0], msid
+        )

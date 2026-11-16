@@ -75,8 +75,8 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
     with psycopg2.connect(mb_uri) as mb_conn:
 
         lb_conn = None
-        if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
-            lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
+        if use_lb_conn and config.SQLALCHEMY_LISTENS_URI:
+            lb_conn = psycopg2.connect(config.SQLALCHEMY_LISTENS_URI)
             unlogged = False
         else:
             unlogged = True
@@ -140,8 +140,8 @@ def update_canonical_release_data(use_lb_conn: bool):
     with psycopg2.connect(mb_uri) as mb_conn:
 
         lb_conn = None
-        if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
-            lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
+        if use_lb_conn and config.SQLALCHEMY_LISTENS_URI:
+            lb_conn = psycopg2.connect(config.SQLALCHEMY_LISTENS_URI)
             releases = CanonicalRelease(mb_conn, lb_conn, unlogged=False)
         else:
             releases = CanonicalRelease(mb_conn, unlogged=False)

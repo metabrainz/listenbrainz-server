@@ -57,7 +57,7 @@ class MainTestCase(flask_testing.TestCase):
         self.assertCountEqual(q.inputs().__fields__.keys(), ['tag'])
         self.assertCountEqual(q.outputs().__fields__.keys(), ['similar_tag', 'count'])
 
-    @patch('listenbrainz.db.timescale.engine')
+    @patch('listenbrainz.db.listens.engine')
     def test_fetch(self, mock_engine):
         mock_engine.raw_connection().cursor().__enter__().fetchone.side_effect = [db_response[0], db_response[1], None]
         q = TagSimilarityQuery()
