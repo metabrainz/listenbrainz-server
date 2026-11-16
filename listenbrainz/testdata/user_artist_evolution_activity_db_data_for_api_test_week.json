@@ -6,43 +6,43 @@
     "range": "week",
     "data": [
       {
-        "time_unit": "Monday",
+        "time_unit": "1",
         "artist_mbid": "mbid-ts",
         "artist_name": "Taylor Swift",
         "listen_count": 5
       },
       {
-        "time_unit": "Monday",
+        "time_unit": "1",
         "artist_mbid": "mbid-drake",
         "artist_name": "Drake",
         "listen_count": 3
       },
       {
-        "time_unit": "Tuesday",
+        "time_unit": "2",
         "artist_mbid": "mbid-coldplay",
         "artist_name": "Coldplay",
         "listen_count": 4
       },
       {
-        "time_unit": "Wednesday",
+        "time_unit": "3",
         "artist_mbid": "mbid-adele",
         "artist_name": "Adele",
         "listen_count": 2
       },
       {
-        "time_unit": "Thursday",
+        "time_unit": "4",
         "artist_mbid": "mbid-weeknd",
         "artist_name": "The Weeknd",
         "listen_count": 6
       },
       {
-        "time_unit": "Friday",
+        "time_unit": "5",
         "artist_mbid": "mbid-ts",
         "artist_name": "Taylor Swift",
         "listen_count": 8
       },
       {
-        "time_unit": "Sunday",
+        "time_unit": "7",
         "artist_mbid": "mbid-drake",
         "artist_name": "Drake",
         "listen_count": 1

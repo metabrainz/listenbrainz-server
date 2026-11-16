@@ -6,31 +6,31 @@
     "range": "year",
     "data": [
       {
-        "time_unit": "January",
+        "time_unit": "1",
         "artist_mbid": "mbid-ts",
         "artist_name": "Taylor Swift",
         "listen_count": 7
       },
       {
-        "time_unit": "March",
+        "time_unit": "3",
         "artist_mbid": "mbid-coldplay",
         "artist_name": "Coldplay",
         "listen_count": 5
       },
       {
-        "time_unit": "June",
+        "time_unit": "6",
         "artist_mbid": "mbid-adele",
         "artist_name": "Adele",
         "listen_count": 4
       },
       {
-        "time_unit": "September",
+        "time_unit": "9",
         "artist_mbid": "mbid-weeknd",
         "artist_name": "The Weeknd",
         "listen_count": 6
       },
       {
-        "time_unit": "December",
+        "time_unit": "12",
         "artist_mbid": "mbid-drake",
         "artist_name": "Drake",
         "listen_count": 3
