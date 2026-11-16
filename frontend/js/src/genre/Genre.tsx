@@ -30,8 +30,8 @@ import queryClient from "../utils/QueryClient";
 
 const genreQuery = (identifier: string) => ({
   queryKey: ["genre", identifier],
-  queryFn: async () => {
-    const res = await fetch(`/genre/${identifier}/`, {
+  queryFn: async (): Promise<GenrePageProps> => {
+    const res = await fetch(`/genre/${encodeURIComponent(identifier)}/`, {
       method: "POST",
       headers: { Accept: "application/json" },
     });
@@ -50,11 +50,10 @@ export const GenrePageLoader = async ({
   if (!genreParam) return null;
 
   const data = await queryClient.fetchQuery(genreQuery(genreParam));
-  const slug = encodeURIComponent(data.genre.name);
-
-  if (slug !== genreParam) {
-    queryClient.setQueryData(["genre", slug], data);
-    throw redirect(`/genre/${slug}/`);
+  const canonicalName = data.genre.name;
+  if (canonicalName !== genreParam) {
+    queryClient.setQueryData(["genre", canonicalName], data);
+    throw redirect(`/genre/${encodeURIComponent(canonicalName)}/`);
   }
 
   return null;
