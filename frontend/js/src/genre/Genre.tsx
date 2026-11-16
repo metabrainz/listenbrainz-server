@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { Helmet } from "react-helmet";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
+import { faHeadphones, faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import DOMPurify from "dompurify";
 import { groupBy, orderBy, sortBy } from "lodash";
 import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
@@ -307,6 +307,9 @@ export default function GenrePage(): JSX.Element {
                     artist.total_listen_count != null ? (
                       <span className="badge bg-info">
                         {formatListenCount(artist.total_listen_count)}
+                        &nbsp;
+                        <FontAwesomeIcon icon={faHeadphones} />
+                        <span className="visually-hidden">listens</span>
                       </span>
                     ) : undefined
                   }
