@@ -33,7 +33,7 @@ describe("ArtistEvolutionActivityStreamGraph", () => {
           case "week":
             return HttpResponse.json(userArtistEvolutionActivityResponse);
           case "month":
-            return HttpResponse.json({ message: "Failed to fetch data" }, { status: 500 });
+            return HttpResponse.json({ message: "Failed to fetch data" }, { status: 418 });
           default:
             return HttpResponse.json(userArtistEvolutionActivityResponse);
         }

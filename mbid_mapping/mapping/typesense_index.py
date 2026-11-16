@@ -84,7 +84,7 @@ def build(client, collection_name, table, combiner):
 
     client.collections.create(schema)
 
-    with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as conn:
+    with psycopg2.connect(config.SQLALCHEMY_LISTENS_URI) as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
             curs.execute(f"SELECT max(score) FROM {table}")

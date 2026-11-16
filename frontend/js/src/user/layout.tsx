@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 import GlobalAppContext from "../utils/GlobalAppContext";
+import buildAuthUrl from "../utils/auth";
 
 function NavItem({
   label,
@@ -58,9 +59,9 @@ function DashboardLayout() {
               </Link>
             ) : (
               <div>
-                <Link className="nav-link" to="/login/">
+                <a className="nav-link" href={buildAuthUrl("login")}>
                   Sign in
-                </Link>
+                </a>
               </div>
             )}
           </li>

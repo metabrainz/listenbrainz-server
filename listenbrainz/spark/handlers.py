@@ -19,7 +19,6 @@ from data.model.user_cf_recommendations_recording_message import UserRecommendat
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from listenbrainz.db import year_in_music
 from listenbrainz.db.fresh_releases import insert_fresh_releases
-from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.troi.daily_jams import run_post_recommendation_troi_bot
 from listenbrainz.troi.weekly_playlists import process_weekly_playlists, process_weekly_playlists_end
 from listenbrainz.troi.year_in_music import process_yim_playlists, process_yim_playlists_end
@@ -309,32 +308,6 @@ def cf_recording_recommendations_complete(data):
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
-
-
-def handle_similar_users(message):
-    """ Save the similar users data to the DB
-    """
-
-    if current_app.config['TESTING']:
-        return
-
-    user_count, avg_similar_users, error = import_user_similarities(message['data'])
-    if error:
-        send_mail(
-            subject='Similar User data failed to be calculated',
-            text=render_template('emails/similar_users_failed_notification.txt', error=error),
-            recipients=['listenbrainz-observability@metabrainz.org'],
-            from_name='ListenBrainz',
-            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
-        )
-    else:
-        send_mail(
-            subject='Similar User data has been calculated',
-            text=render_template('emails/similar_users_updated_notification.txt', user_count=str(user_count), avg_similar_users="%.1f" % avg_similar_users),
-            recipients=['listenbrainz-observability@metabrainz.org'],
-            from_name='ListenBrainz',
-            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
-        )
 
 
 def handle_yim_similar_users(message):

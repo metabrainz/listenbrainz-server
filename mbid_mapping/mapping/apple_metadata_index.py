@@ -13,12 +13,12 @@ def create_apple_metadata_index(use_lb_conn: bool):
             use_lb_conn: whether to use LB conn or not
     """
 
-    lb_conn = None
-    if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
-        lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
+    listens_conn = None
+    if use_lb_conn and config.SQLALCHEMY_LISTENS_URI:
+        listens_conn = psycopg2.connect(config.SQLALCHEMY_LISTENS_URI)
     log("apple_metadata_index: start!")
 
-    ndx = AlbumMetadataIndex("apple", "apple_cache", lb_conn)
+    ndx = AlbumMetadataIndex("apple", "apple_cache", listens_conn)
     ndx.run()
 
     log("apple_metadata_index: done!")

@@ -2,8 +2,8 @@ import * as React from "react";
 
 export type SimilarityScoreProps = {
   type: "regular" | "compact";
-  similarityScore: number;
-  user?: ListenBrainzUser;
+  similarityScore: number | null;
+  userName?: string;
 };
 
 const getclassName = (similarityScore: number): string => {
@@ -19,7 +19,20 @@ const getclassName = (similarityScore: number): string => {
 };
 
 function SimilarityScore(props: SimilarityScoreProps) {
-  const { user, type, similarityScore } = props;
+  const { userName, type, similarityScore } = props;
+
+  if (similarityScore === null || similarityScore === undefined) {
+    return (
+      <div
+        className={`similarity-score ${type}`}
+        title="Similarity not calculated"
+      >
+        <p className={type === "regular" ? "text-muted" : "small text-muted"}>
+          Similarity not calculated
+        </p>
+      </div>
+    );
+  }
 
   // We transform the similarity score from a scale 0-1 to 0-100
   const percentage = Number((similarityScore * 100).toFixed());
@@ -48,7 +61,7 @@ function SimilarityScore(props: SimilarityScoreProps) {
       </div>
       {type === "regular" ? (
         <p className="text-muted">
-          Your compatibility with {user?.name} is {percentage}%
+          Your compatibility with {userName} is {percentage}%
         </p>
       ) : (
         <p className="small text-muted">{percentage}%</p>

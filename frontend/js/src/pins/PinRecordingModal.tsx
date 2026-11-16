@@ -1,5 +1,4 @@
 import * as React from "react";
-import { get as _get } from "lodash";
 import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
 import { Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
@@ -7,6 +6,7 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import {
   getArtistName,
   getRecordingMBID,
+  getRecordingMSID,
   getTrackName,
   preciseTimestamp,
 } from "../utils/utils";
@@ -69,10 +69,7 @@ export default NiceModal.create(
       async (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
         if (recordingToPin && currentUser?.auth_token) {
-          const recordingMSID = _get(
-            recordingToPin,
-            "track_metadata.additional_info.recording_msid"
-          );
+          const recordingMSID = getRecordingMSID(recordingToPin);
           const recordingMBID = getRecordingMBID(recordingToPin);
           let newPin: PinnedRecording;
 

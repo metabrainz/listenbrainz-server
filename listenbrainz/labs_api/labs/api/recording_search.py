@@ -69,7 +69,10 @@ class RecordingSearchQuery(Query):
             'num_typos': NUM_TYPOS
         }
 
-        hits = self.client.collections[COLLECTION_NAME_WITHOUT_RELEASE].documents.search(search_parameters)
+        try:
+            hits = self.client.collections[COLLECTION_NAME_WITHOUT_RELEASE].documents.search(search_parameters)
+        except typesense.exceptions.TypesenseClientError:
+            return []
 
         output = []
         for hit in hits['hits']:

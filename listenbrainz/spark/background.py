@@ -19,7 +19,6 @@ from listenbrainz.spark.handlers import (
     handle_sitewide_listening_activity,
     handle_sitewide_era_activity,
     handle_sitewide_artist_evolution_activity,
-    handle_similar_users,
     handle_yim_new_releases_of_top_artists,
     handle_yim_similar_users,
     handle_yim_day_of_week,
@@ -47,6 +46,7 @@ from listenbrainz.spark.spark_dataset import CouchDbDataset, UserEntityStatsData
     ArtistEvolutionActivityStatsDataset
 from listenbrainz.db.popularity import get_all_popularity_datasets
 from listenbrainz.db.similarity import SimilarRecordingsDataset, SimilarArtistsDataset, MlhdSimilarRecordingsDataset
+from listenbrainz.db.similar_users import SimilarUsersDataset
 from listenbrainz.db.tags import TagsDataset
 from listenbrainz.webserver import ts_conn, db_conn
 
@@ -93,6 +93,7 @@ class BackgroundJobProcessor:
             SimilarRecordingsDataset,
             SimilarArtistsDataset,
             MlhdSimilarRecordingsDataset,
+            SimilarUsersDataset,
             TagsDataset,
             *get_all_popularity_datasets()
         ]
@@ -171,7 +172,6 @@ class BackgroundJobProcessor:
             "import_mapping": notify_mapping_import,
             "missing_musicbrainz_data": handle_missing_musicbrainz_data,
             "cf_recommendations_recording_mail": cf_recording_recommendations_complete,
-            "similar_users": handle_similar_users,
             "year_in_music_top_stats": handle_yim_top_stats,
             "year_in_music_listens_per_day": handle_yim_listens_per_day,
             "year_in_music_listen_count": handle_yim_listen_counts,

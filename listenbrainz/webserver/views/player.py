@@ -20,22 +20,28 @@ player_bp = Blueprint("player", __name__)
 @player_bp.post("/")
 def load_instant():
     """
-    This endpoint takes in a list of recording_mbids and optional desc/name arguments  and then loads
-    the recording_mbid's metadata and creates a JSPF file from this data and sends it to the front end
-    so a playlist can be instantly played.
+    Create an instant JSPF playlist from a list of recording MBIDs.
+
+    This endpoint accepts a comma-separated list of recording MBIDs as a query
+    parameter, fetches their metadata, and returns a JSPF playlist suitable for
+    immediate playback. All parameters are passed as query string arguments.
+
+    The response is a JSON object containing a JSPF playlist with track entries
+    for each valid recording MBID.
 
     .. note::
         We recommend that you do not send more than 50 recording_mbids in one request -- our
         server infrastructure will likely give you a gateway error (502) if you do.
 
-    :param recording_mbids: A comma separated list of recording_mbids
+    :param recording_mbids: A comma separated list of recording MBIDs (query string).
     :type recording_mbids: ``str``
-    :param desc: A description for this instant playlist (optional).
+    :param desc: A description for this instant playlist (optional, defaults to "Instant playlist").
     :type desc: ``str``
-    :param name: A name for this instant playlist (optional).
+    :param name: A name for this instant playlist (optional, defaults to "Instant playlist").
     :type name: ``str``
-    :statuscode 200: playlist generated
-    :statuscode 400: invalid recording_mbid arguments
+    :statuscode 200: playlist generated, returns JSPF.
+    :statuscode 400: ``recording_mbids`` parameter is missing or contains an invalid UUID.
+    :resheader Content-Type: *application/json*
     """
 
     recordings = request.args.get("recording_mbids", default=None)
@@ -72,16 +78,23 @@ def load_instant():
 @player_bp.post("/release/<release_mbid>/")
 def load_release(release_mbid):
     """
-    This endpoint takes a release mbid, loads the tracks for this release and makes a playlist from it and
-    sends it to the front end via JSPF.
+    Create a JSPF playlist from all tracks on a MusicBrainz release.
 
-    :statuscode 200: playlist generated
-    :statuscode 400: invalid recording_mbid arguments
+    Given a release MBID, this endpoint looks up the release in MusicBrainz,
+    retrieves all tracks across all media, and returns them as a JSPF playlist.
+    Cover art information is included when available.
+
+    :param release_mbid: A valid MusicBrainz release MBID (URL path parameter).
+    :type release_mbid: ``str``
+    :statuscode 200: playlist generated, returns JSPF.
+    :statuscode 400: the provided ``release_mbid`` is not a valid UUID.
+    :statuscode 404: the release was not found in the MusicBrainz database.
+    :resheader Content-Type: *application/json*
     """
 
     release_mbid = release_mbid.strip()
     if not is_valid_uuid(release_mbid):
-        raise BadRequest(f"Recording mbid {release_mbid} is not valid.")
+        raise BadRequest(f"Release mbid {release_mbid} is not valid.")
 
     playlist = None
     if mb_engine:

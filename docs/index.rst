@@ -22,6 +22,7 @@ Contents
 
    users/api/index
    users/api-usage
+   users/connect-music-services
    users/json
    users/widgets
    users/clients
@@ -43,6 +44,7 @@ Contents
    developers/architecture
    developers/spark-architecture
    developers/mapping
+   developers/docs
    developers/commands
    developers/troubleshooting
 

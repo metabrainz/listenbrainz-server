@@ -27,7 +27,9 @@ export function ErrorBoundary() {
   const errorMessage = error.data?.error || error.message || errorStatusMessage;
 
   React.useEffect(() => {
-    Sentry.captureException(error);
+    if (!isRouteErrorResponse(error) || errorStatus >= 500) {
+      Sentry.captureException(error);
+    }
   }, [error]);
 
   return isRouteErrorResponse(error) ? (

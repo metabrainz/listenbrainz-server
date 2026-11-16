@@ -6,7 +6,7 @@ import SimilarityScore, {
 
 const defaultProps: SimilarityScoreProps = {
   similarityScore: 0.239745792, // This will be rounded to 24%
-  user: { auth_token: "baz", name: "test" },
+  userName: "test",
   type: "regular",
 };
 
@@ -59,5 +59,25 @@ describe("SimilarityScore", () => {
 
     rerender(<SimilarityScore {...defaultProps} similarityScore={0.3} />);
     expect(progressBar.firstChild).toHaveClass("orange");
+  });
+
+  it("renders 'Similarity not calculated' when similarityScore is null (regular)", () => {
+    render(<SimilarityScore {...defaultProps} similarityScore={null} />);
+
+    expect(screen.getByText("Similarity not calculated")).toBeInTheDocument();
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+  });
+
+  it("renders 'Similarity not calculated' when similarityScore is null (compact)", () => {
+    render(
+      <SimilarityScore
+        {...defaultProps}
+        similarityScore={null}
+        type="compact"
+      />
+    );
+
+    expect(screen.getByText("Similarity not calculated")).toBeInTheDocument();
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });
 });

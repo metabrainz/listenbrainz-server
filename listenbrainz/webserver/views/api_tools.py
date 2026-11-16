@@ -18,7 +18,7 @@ import sentry_sdk
 
 from typing import NoReturn
 
-from flask import current_app, request
+from flask import current_app, jsonify, request
 
 from listenbrainz.listenstore import LISTEN_MINIMUM_TS
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW, db_conn
@@ -224,6 +224,16 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         validate_duration_field(listen, "duration", MAX_DURATION_LIMIT)
         validate_duration_field(listen, "duration_ms", MAX_DURATION_MS_LIMIT)
 
+        # if both duration_played and duration_played_ms are given and valid, an error will be raised.
+        if (
+            'duration_played' in listen['track_metadata']['additional_info']
+            and 'duration_played_ms' in listen['track_metadata']['additional_info']
+        ):
+            raise ListenValidationError("JSON document should not contain both duration_played and duration_played_ms.", listen)
+        # check duration_played validity
+        validate_duration_field(listen, "duration_played", MAX_DURATION_LIMIT)
+        validate_duration_field(listen, "duration_played_ms", MAX_DURATION_MS_LIMIT)
+
         # MBIDs, both of the mbid validation methods mutate the listen payload if needed.
         single_mbid_keys = ['release_mbid', 'recording_mbid', 'release_group_mbid', 'track_mbid']
         for key in single_mbid_keys:
@@ -248,7 +258,9 @@ def validate_basic_metadata(listen, key, required=True):
 
         listen['track_metadata'][key] = listen['track_metadata'][key].strip()
         if len(listen['track_metadata'][key]) == 0:
-            raise ListenValidationError(f"field track_metadata.{key} is empty.", listen)
+            if required:
+                raise ListenValidationError(f"field track_metadata.{key} is empty.", listen)
+            del listen['track_metadata'][key]
     elif required:
         raise ListenValidationError(f"JSON document does not contain required field track_metadata.{key}.", listen)
 
@@ -564,7 +576,14 @@ def validate_auth_header(*, optional: bool = False, fetch_email: bool = False, s
                 if scope not in token_scopes:
                     raise APIUnauthorized("Insufficient scope.")
 
-        user = db_user.get_by_mb_id(db_conn, token["sub"], fetch_email=fetch_email)
+        # The introspection response identifies the user with the numeric
+        # MetaBrainz account id in "sub" and carries the MusicBrainz username in
+        # "username". get_by_mb_id() matches against the musicbrainz_id column,
+        # so it needs the username.
+        username = token.get("username")
+        if not username:
+            raise APIUnauthorized("Invalid authorization token.")
+        user = db_user.get_by_mb_id(db_conn, username, fetch_email=fetch_email)
     else:
         user = db_user.get_by_token(db_conn, auth_token, fetch_email=fetch_email)
 
@@ -593,3 +612,14 @@ def _allow_metabrainz_domains(tag, name, value):
 def _filter_description_html(description):
     ok_tags = [u"a", u"strong", u"b", u"em", u"i", u"u", u"ul", u"li", u"p", u"br"]
     return bleach.clean(description, tags=ok_tags, attributes={"a": _allow_metabrainz_domains}, strip=True)
+
+
+def ensure_user_token_for_expensive_endpoint():
+    """ Ensure that the user is passing an auth header for expensive endpoints
+        like /popularity, /lb-radio, etc.
+    """
+    try:
+        validate_auth_header()
+    except APIUnauthorized:
+        raise APIUnauthorized("Due to bad actors and AI scrapers causing undue traffic on our sites, "
+                              "you need to provide an Auth token for this endpoint. Sorry for this mess.")
