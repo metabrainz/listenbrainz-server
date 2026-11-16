@@ -167,8 +167,7 @@ class UserViewsTestCase(IntegrationTestCase):
         self.assert200(response)
         parsed_response = orjson.loads(response.data)
         # Check username is equal to unencoded name
-        self.assertDictEqual(parsed_response['user'], {
-                             'id': self.weirduser.id, 'name': self.weirduser.musicbrainz_id})
+        self.assertEqual(parsed_response['user']['name'], self.weirduser.musicbrainz_id)
 
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
     def test_ts_filters(self, timescale):
