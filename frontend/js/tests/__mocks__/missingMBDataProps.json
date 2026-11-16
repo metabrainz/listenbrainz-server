@@ -1,7 +1,8 @@
 {
     "user": {
         "id": 1,
-        "name": "riksucks"
+        "name": "riksucks",
+        "auth_token": "never_gonna"
     },
     "missingData": [
         {
