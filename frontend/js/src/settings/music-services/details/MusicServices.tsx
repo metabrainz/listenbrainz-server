@@ -22,6 +22,7 @@ import {
   EmailVerificationRequiredToastMessage,
 } from "../../../utils/emailVerification";
 import { dataSourcesInfo } from "../../brainzplayer/BrainzPlayerSettings";
+import ImportStatus from "./components/ImportStatus";
 
 type MusicServicesLoaderData = {
   user_has_email: boolean;
@@ -637,7 +638,9 @@ export default function MusicServices() {
               aria-label="Close"
             />
           </div>
-
+          {["both", "import"].includes(permissions.spotify) && (
+            <ImportStatus serviceName="spotify" />
+          )}
           <div className="music-service-selection">
             <form onSubmit={(e) => e.preventDefault}>
               <ServicePermissionButton
