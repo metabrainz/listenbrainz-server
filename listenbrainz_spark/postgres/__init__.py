@@ -5,6 +5,7 @@ from listenbrainz_spark.postgres.recording import create_recording_length_cache,
 from listenbrainz_spark.postgres.release import create_release_metadata_cache
 from listenbrainz_spark.postgres.release_group import create_release_group_metadata_cache
 from listenbrainz_spark.postgres.tag import create_tag_cache, create_genre_cache
+from listenbrainz_spark.postgres.recording_writer import create_recording_writer_cache
 
 
 def import_all_pg_tables():
@@ -18,3 +19,4 @@ def import_all_pg_tables():
     create_feedback_cache()
     create_tag_cache()
     create_genre_cache()
+    create_recording_writer_cache()
