@@ -38,7 +38,7 @@ This uses the same lookup process that the mapper uses. If this returns a result
 it could be due to data being recently added to MusicBrainz or improvements to the mapping algorithm.
 
 If no data is returned or an incorrect match is being returned, this should be reported to us, by adding a comment
-to `LB-1036 <https://tickets.metabrainz.org/browse/LB-1036>`.
+to `LB-1036 <https://tickets.metabrainz.org/browse/LB-1036>`_.
 
 In this case you can retrigger a lookup by seting the ``mbid_mapping.last_updated`` field to '1970-01-01 00:00:00' (the unix epoch). 
 The mapper will pick up these items and put them on the queue again.
