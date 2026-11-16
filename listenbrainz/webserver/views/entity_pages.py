@@ -1,6 +1,9 @@
 from datetime import datetime
+from uuid import UUID
 
-from flask import Blueprint, render_template, current_app, jsonify, redirect
+from brainzutils import cache
+from brainzutils.ratelimit import RateLimit, get_rate_limit_data, on_over_limit
+from flask import Blueprint, render_template, current_app, g, jsonify, redirect, request
 from werkzeug.exceptions import BadRequest
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
@@ -24,6 +27,10 @@ release_group_bp = Blueprint("release-group", __name__)
 track_bp = Blueprint("track", __name__)
 recording_bp = Blueprint("recording", __name__)
 genre_bp = Blueprint("genre", __name__)
+
+GENRE_PAGE_CACHE_NAMESPACE = "genre_page"
+GENRE_PAGE_CACHE_TTL = 60 * 60
+GENRE_PAGE_RATE_LIMIT = 10  # Per configured rate-limit window, per caller.
 
 
 def get_release_group_sort_key(release_group):
@@ -464,28 +471,37 @@ def genre_page(genre: str):
 @web_listenstore_needed
 def genre_entity(genre_slug: str):
     """Genre slug in URL can be a name (e.g. 'rock') or a MusicBrainz UUID."""
+    limits = get_rate_limit_data(request)
+    rate_limit = RateLimit(
+        f"genre_page:{limits['key']}", min(GENRE_PAGE_RATE_LIMIT, limits["limit"]), limits["window"]
+    )
+    g._view_rate_limit = rate_limit
+    if rate_limit.over_limit:
+        return on_over_limit(rate_limit)
+
+    try:
+        requested_mbid = str(UUID(genre_slug))
+    except ValueError:
+        requested_mbid = None
+
+    name_key = f"name:{genre_slug.strip().lower()}"
+    genre_mbid = requested_mbid or cache.get(name_key, namespace=GENRE_PAGE_CACHE_NAMESPACE)
+    if genre_mbid:
+        cached = cache.get(genre_mbid, namespace=GENRE_PAGE_CACHE_NAMESPACE)
+        if cached is not None:
+            return jsonify(cached)
+
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
             mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
-        if is_valid_uuid(genre_slug):
-            genre_mbid = genre_slug
-
-            genre_data = load_genres_from_mbids(mb_curs, [genre_mbid])
-            if not genre_data or genre_mbid not in genre_data:
-                return jsonify({"error": f"Genre not found: {genre_mbid}"}), 404
-
-            genre = genre_data[genre_mbid]
-            genre_dict = dict(genre)
-            genre_name = genre_dict.get("name") or ""
-
+        if requested_mbid:
+            genre = load_genres_from_mbids(mb_curs, [requested_mbid]).get(requested_mbid)
         else:
-            genre_name = genre_slug
-            genre_row = get_genre_by_name(mb_curs, genre_name)
-            if not genre_row:
-                return jsonify({"error": f"Genre not found: {genre_name}"}), 404
+            genre = get_genre_by_name(mb_curs, genre_slug)
+        if not genre:
+            return jsonify({"error": f"Genre not found: {genre_slug}"}), 404
 
-            genre_mbid = genre_row["genre_gid"]
-            genre_dict = dict(genre_row)
-
+        genre_mbid = genre["genre_gid"]
+        genre_name = genre["name"]
         tagged_entities = find_tagged_entities(mb_curs, genre_name)
 
     # Add listen counts to artist entities
@@ -571,9 +587,15 @@ def genre_entity(genre_slug: str):
         current_app.logger.error("Error generating cover art for genre:", exc_info=True)
         cover_art = None
 
-    return jsonify({
-        "genre": genre_dict,
+    data = {
+        "genre": genre,
         "genre_mbid": genre_mbid,
         "entities": tagged_entities,
         "coverArt": cover_art,
-    })
+    }
+    cache.set_many(
+        {genre_mbid: data, f"name:{genre_name.lower()}": genre_mbid},
+        expirein=GENRE_PAGE_CACHE_TTL,
+        namespace=GENRE_PAGE_CACHE_NAMESPACE,
+    )
+    return jsonify(data)

@@ -139,7 +139,7 @@ def find_tagged_entities(
     tag_id = get_tag_id_by_name(mb_curs, tag_name)
     if tag_id is None:
         return {
-            entity_type: {"count": 0, "entities": []}
+            entity_type: {"entities": []}
             for entity_type, _tag_table, _id_col, _order_col, _limit in TAGGED_ENTITY_TYPES
         }
 
@@ -160,16 +160,8 @@ def find_tagged_entities(
         """
         mb_curs.execute(query, (tag_id, limit))
         rows = mb_curs.fetchall()
-        count_query = f"""
-            SELECT COUNT(*) AS total
-            FROM musicbrainz.{tag_table} tt
-            WHERE tt.tag = %s AND tt.count > 0
-        """
-        mb_curs.execute(count_query, (tag_id,))
-        total = mb_curs.fetchone()["total"]
 
         result[entity_type] = {
-            "count": total,
             "entities": [
                 {
                     "mbid": row["mbid"],

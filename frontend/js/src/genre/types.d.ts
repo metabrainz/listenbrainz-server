@@ -16,7 +16,6 @@ export type TaggedReleaseGroupEntity = TaggedEntity & {
 };
 
 export type TaggedEntityGroup<T = TaggedEntity> = {
-  count: number;
   entities: Array<T>;
 };
 

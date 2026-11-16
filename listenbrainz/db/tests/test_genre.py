@@ -1,4 +1,5 @@
 from unittest import TestCase
+from unittest.mock import patch
 
 import listenbrainz.db.genre as db_genre
 
@@ -39,3 +40,13 @@ class GenreDatabaseTest(TestCase):
             "genre-id": {"genre_gid": "genre-id", "name": "rock"}
         }
         assert cursor.calls[0][1] == (("genre-id",),)
+
+    def test_tagged_entities_does_not_query_unused_totals(self):
+        cursor = Cursor([{"mbid": "entity-id", "name": "Entity", "tag_count": 3}])
+        with patch.object(db_genre, "get_tag_id_by_name", return_value=1):
+            result = db_genre.find_tagged_entities(cursor, "rock")
+
+        assert len(cursor.calls) == 3
+        assert result["artist"] == {
+            "entities": [{"mbid": "entity-id", "name": "Entity", "tag_count": 3}],
+        }
