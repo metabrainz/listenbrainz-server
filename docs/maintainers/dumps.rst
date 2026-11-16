@@ -14,7 +14,7 @@ Twice monthly dumps
 The twice monthly dumps are created by two independent cron jobs, both publishing into the :file:`fullexport` directory
 on the FTP server:
 
-* the **db** dump job creates the public and private postgres and timescale dumps into a
+* the **db** dump job creates the public and private PostgreSQL dumps and the public Timescale dump into a
   :file:`listenbrainz-dump-<id>-<timestamp>-db` directory.
 * the **full** dump job creates the listens, spark and statistics dumps into a
   :file:`listenbrainz-dump-<id>-<timestamp>-full` directory.

@@ -281,13 +281,30 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
                 archive_count += 1
         self.assertEqual(archive_count, 2)
 
-        # and a private postgres dump and a private timescale dump
+        # and one private postgres dump, including playlists
         self.assertEqual(os.listdir(self.tempdir_private), [dump_name])
         private_archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir_private, dump_name)):
             if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 private_archive_count += 1
-        self.assertEqual(private_archive_count, 2)
+        self.assertEqual(private_archive_count, 1)
+
+    def test_create_db_dump_no_postgres(self):
+        # only the timescale dump, which has no private data, so no private dump is created
+        result = self.runner.invoke(dump_manager.create_db_dump, [
+            '--location',
+            self.tempdir,
+            '--no-postgres'
+        ])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(len(os.listdir(self.tempdir)), 1)
+        dump_name = os.listdir(self.tempdir)[0]
+        archive_count = 0
+        for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
+                archive_count += 1
+        self.assertEqual(archive_count, 1)
+        self.assertEqual(len(os.listdir(self.tempdir_private)), 0)
 
     def test_create_full_dump_with_id(self):
 
@@ -377,12 +394,12 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
                 archive_count += 1
         self.assertEqual(archive_count, 2)
 
-        # the private dump should contain the postgres and timescale archives
+        # the private dump should contain only the postgres archive
         private_archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir_private, private_dump_name)):
             if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 private_archive_count += 1
-        self.assertEqual(private_archive_count, 2)
+        self.assertEqual(private_archive_count, 1)
 
     def test_db_dump_exits_private_location(self):
         result = self.runner.invoke(dump_manager.create_db_dump, [
@@ -390,7 +407,7 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
             self.tempdir
         ])
         self.assertEqual(result.exit_code, -1)
-        self.assertIn("No location specified for creating private database and timescale dumps", self._caplog.text)
+        self.assertIn("No location specified for creating private database dumps", self._caplog.text)
 
         self._caplog.clear()
         result = self.runner.invoke(dump_manager.create_db_dump, [

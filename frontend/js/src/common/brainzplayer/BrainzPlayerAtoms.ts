@@ -284,6 +284,8 @@ export const clearQueuesBeforeListenAndSetQueuesAtom = atom(
     if (listenIndexInQueue !== -1) {
       // If the track is in the regular queue, skip directly to it, clearing queue before that point
       set(queueAtom, queue.slice(listenIndexInQueue));
+      // The track is now at index 0, so reset the index for it to be the next one played
+      set(currentListenIndexAtom, RESET);
     } else {
       // If the track is not in the regular queue, add it to the top after currently playing.
       set(addListenToTopOfQueueAtom, listen);

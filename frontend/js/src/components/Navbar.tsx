@@ -1,16 +1,21 @@
 import React from "react";
 import { Link, NavLink, useNavigate } from "react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCircleHalfStroke,
+  faMagnifyingGlass,
+} from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Username from "../common/Username";
 import buildAuthUrl from "../utils/auth";
+import { useTheme } from "../utils/theme";
 
 function Navbar() {
   const { currentUser } = React.useContext(GlobalAppContext);
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [theme, toggleTheme] = useTheme();
 
   const toggleSidebarButton = React.useRef<HTMLButtonElement>(null);
 
@@ -37,6 +42,10 @@ function Navbar() {
     ? encodeURIComponent(currentUser.name)
     : undefined;
 
+  const handleThemeToggle = () => {
+    toggleTheme();
+  };
+
   return (
     <nav role="navigation">
       <div className="navbar navbar-light navbar-header">
@@ -45,6 +54,8 @@ function Navbar() {
           className="navbar-toggler"
           data-bs-toggle="collapse"
           data-bs-target="#side-nav,#side-nav-overlay"
+          aria-controls="side-nav"
+          aria-label="Toggle navigation"
           ref={toggleSidebarButton}
         >
           <span className="navbar-toggler-icon" />
@@ -75,7 +86,7 @@ function Navbar() {
             onChange={(e) => setSearchTerm(e.target.value)}
             required
           />
-          <button type="submit">
+          <button type="submit" aria-label="Search">
             <FontAwesomeIcon icon={faMagnifyingGlass} />
           </button>
         </form>
@@ -159,6 +170,19 @@ function Navbar() {
             >
               Community
             </a>
+            <button
+              type="button"
+              className="theme-toggle"
+              data-theme-toggle
+              onClick={handleThemeToggle}
+              aria-label={`Switch to ${
+                theme === "dark" ? "light" : "dark"
+              } mode`}
+              aria-pressed={theme === "dark"}
+              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            >
+              <FontAwesomeIcon icon={faCircleHalfStroke} />
+            </button>
           </div>
           <div className="mobile-nav-fix" />
         </div>

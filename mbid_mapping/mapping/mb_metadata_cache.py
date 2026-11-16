@@ -26,7 +26,7 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
         super().__init__("mapping.mb_metadata_cache", select_conn, insert_conn, batch_size, unlogged)
 
     def get_create_table_columns(self):
-        # this table is created in local development and tables using admin/timescale/create_tables.sql
+        # this table is created in local development and tables using admin/listens/create_tables.sql
         # remember to keep both in sync.
         return [("dirty ",                     "BOOLEAN DEFAULT FALSE"),
                 ("last_updated",               "TIMESTAMPTZ NOT NULL DEFAULT NOW()"),
@@ -709,7 +709,7 @@ def cleanup_mbid_mapping_table():
      because those have been merged (redirects) or deleted from MB and flag such msids
      to be re-mapped by the mbid mapping writer."""
     query = """
-        UPDATE mbid_mapping mm
+        UPDATE mapping.mbid_mapping mm
            SET last_updated = 'epoch'
          WHERE match_type != 'no_match'
            AND NOT EXISTS(
@@ -719,7 +719,7 @@ def cleanup_mbid_mapping_table():
                )
     """
     log("cleanup_mbid_mapping_table running")
-    with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as lb_conn, lb_conn.cursor() as lb_curs:
+    with psycopg2.connect(config.SQLALCHEMY_LISTENS_URI) as lb_conn, lb_conn.cursor() as lb_curs:
         lb_curs.execute(query)
         log(f"mbid mapping: invalidated {lb_curs.rowcount} rows")
         lb_conn.commit()

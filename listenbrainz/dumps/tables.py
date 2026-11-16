@@ -43,10 +43,12 @@ PUBLIC_TABLES_DUMP = DumpTablesCollection(
     ]
 )
 
+# all tables of the timescale dump are dumped from and imported into the listens database. the dump keeps
+# its name and the mapping tables keep their old file names, to keep the dump format unchanged.
 PUBLIC_TABLES_TIMESCALE_DUMP = DumpTablesCollection(
-    engine_name=DumpEngineName.ts,
+    engine_name=DumpEngineName.listens,
     tables=[
-        DumpTable(table_name="mbid_mapping_metadata", columns=(
+        DumpTable(table_name=Identifier("mapping", "mbid_mapping_metadata"), filename="mbid_mapping_metadata", columns=(
             "artist_credit_id",
             "recording_mbid",
             "release_mbid",
@@ -56,14 +58,14 @@ PUBLIC_TABLES_TIMESCALE_DUMP = DumpTablesCollection(
             "recording_name",
             "last_updated",
         )),
-        DumpTable(table_name="mbid_mapping", columns=(
+        DumpTable(table_name=Identifier("mapping", "mbid_mapping"), filename="mbid_mapping", columns=(
             "recording_msid",
             "recording_mbid",
             "match_type",
             "last_updated",
             "check_again",
         )),
-        DumpTable(table_name="mbid_manual_mapping", columns=(
+        DumpTable(table_name=Identifier("mapping", "mbid_manual_mapping"), filename="mbid_manual_mapping", columns=(
             "id",
             "recording_msid",
             "recording_mbid",
@@ -177,13 +179,7 @@ PRIVATE_TABLES = DumpTablesCollection(
             "sid",
             "api_key",
             "ts",
-        ))
-    ]
-)
-
-PRIVATE_TABLES_TIMESCALE = DumpTablesCollection(
-    engine_name=DumpEngineName.ts,
-    tables=[
+        )),
         DumpTable(table_name=Identifier("playlist", "playlist"), columns=(
             "id",
             "mbid",
@@ -203,7 +199,8 @@ PRIVATE_TABLES_TIMESCALE = DumpTablesCollection(
             "position",
             "mbid",
             "added_by_id",
-            "created"
+            "created",
+            "additional_metadata",
         )),
         DumpTable(table_name=Identifier("playlist", "playlist_collaborator"), columns=(
             "playlist_id",

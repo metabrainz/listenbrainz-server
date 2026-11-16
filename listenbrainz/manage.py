@@ -8,17 +8,20 @@ import sqlalchemy
 from listenbrainz import db
 from listenbrainz import webserver
 from listenbrainz.background import export
+from listenbrainz.background.listens_importer.storage import cleanup_import_files
+from listenbrainz.background.migrate_exports import migrate_exports
+from listenbrainz.background.migrate_imports import migrate_imports
 from listenbrainz.db import listens as listens_db, timescale as ts, do_not_recommend
 
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
-    update_user_listen_data as ts_update_user_listen_data, \
     add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata,\
-    delete_listens as ts_delete_listens, \
-    refresh_top_manual_mappings as ts_refresh_top_manual_mappings
+    refresh_top_manual_mappings as ts_refresh_top_manual_mappings, \
+    delete_listens as ts_delete_listens
 from listenbrainz.messybrainz import update_msids_from_mapping
 from listenbrainz.metadata_cache.seeder import submit_new_releases_to_cache
 from listenbrainz.troi.daily_jams import run_daily_jams_troi_bot
 from listenbrainz.webserver import create_app
+from listenbrainz.retry_rejected_listens import replay_rejected_listens
 
 
 @click.group()
@@ -28,6 +31,21 @@ def cli():
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'admin', 'sql')
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'admin', 'timescale')
+
+
+@cli.command(name="retry-rejected-listens")
+@click.option("--max-messages", type=click.IntRange(min=1),
+              help="Maximum number of message batches to replay; defaults to the initial ready count.")
+@click.option("--dry-run", is_flag=True, help="Show the replay count without consuming messages.")
+def retry_rejected_listens(max_messages, dry_run):
+    """Replay rejection messages after fixing the writer error.
+
+    Uses the configured RabbitMQ queues. Each message may contain multiple listens.
+    An interruption after publication but before acknowledgement can cause duplicates.
+    """
+    app = create_app()
+    with app.app_context():
+        replay_rejected_listens(max_messages, dry_run)
 
 
 @cli.command(name="init_db")
@@ -121,11 +139,11 @@ TEST_LISTENS_PARTITION_COUNT = 4
 def init_listens_db(force, create_db, partitions):
     """Initializes the user-partitioned listens database.
 
-    Creates the listen table, its hash partitions and its indexes.
+    Creates the listen table, its hash partitions, the mapping and MessyBrainz tables and their indexes.
     """
     import psycopg2
     from listenbrainz import config
-    from listenbrainz.listenstore.migrate_listens import PARTITION_COUNT, create_indexes, create_schema
+    from listenbrainz.db.listens_schema import PARTITION_COUNT, create_indexes, create_schema
 
     testing = "PYTHON_TESTS_RUNNING" in os.environ
     if testing:
@@ -284,18 +302,11 @@ def init_ts_db(force, create_db):
         print('TS: Creating tables...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
 
-        print('TS: Insert default rows...')
-        res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'insert_default_data.sql'))
-
-        print('TS: Creating views...')
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
-
         print('TS: Creating indexes...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
 
-        print('TS: Creating Primary and Foreign Keys...')
+        print('TS: Creating Primary Keys...')
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_primary_keys.sql'))
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_foreign_keys.sql'))
 
         print("Done!")
 
@@ -322,22 +333,13 @@ def set_rate_limits(per_token_limit, per_ip_limit, window_size):
 
 @cli.command(name="recalculate_all_user_data")
 def recalculate_all_user_data():
-    """ Recalculate all user timestamps and listen counts.
+    """ Recalculate all user listen counts in the listens database.
 
-    .. note::
-        **ONLY USE THIS WHEN YOU KNOW WHAT YOU ARE DOING!**
+    Safe to run while listens are being ingested or deleted, only stale users are locked while they are recounted.
     """
     application = webserver.create_app()
     with application.app_context():
         ts_recalculate_all_user_data()
-
-
-@cli.command(name="update_user_listen_data")
-def update_user_listen_data():
-    """ Scans listen table and update listen metadata for all users """
-    application = webserver.create_app()
-    with application.app_context():
-        ts_update_user_listen_data()
 
 
 @cli.command(name="delete_pending_listens")
@@ -350,8 +352,7 @@ def delete_pending_listens():
 
 @cli.command(name="delete_listens")
 def complete_delete_listens():
-    """ Complete all pending listen deletes and also run update script for
-    updating listen metadata since last cron run """
+    """Complete pending listens DB deletions and retain their history."""
     application = webserver.create_app()
     with application.app_context():
         ts_delete_listens()
@@ -395,7 +396,7 @@ def notify_yim_users(year: int):
     application = webserver.create_app()
     with application.app_context():
         from listenbrainz.db import year_in_music
-        year_in_music.notify_yim_users(webserver.db_conn, webserver.ts_conn, year)
+        year_in_music.notify_yim_users(webserver.db_conn, webserver.listens_conn, year)
 
 
 @cli.command(name="notify_spotify_refresh_token_expiry")
@@ -419,7 +420,7 @@ def run_daily_jams(create_all):
     method and not a core function of troi.
     """
     with create_app().app_context():
-        run_daily_jams_troi_bot(webserver.db_conn, webserver.ts_conn, create_all)
+        run_daily_jams_troi_bot(webserver.db_conn, create_all)
 
 
 @cli.command()
@@ -463,3 +464,47 @@ def delete_old_user_data_exports():
         app.logger.info("Deleting old and expired user data exports")
         export.cleanup_old_exports(webserver.db_conn)
         app.logger.info("Completed deleting old and expired user data exports")
+
+
+@cli.command()
+def delete_old_user_data_imports():
+    """ Delete the uploaded files of user data imports that are never going to run """
+    app = create_app()
+    with app.app_context():
+        app.logger.info("Deleting leftover user data import files")
+        cleanup_import_files(webserver.db_conn)
+        app.logger.info("Completed deleting leftover user data import files")
+
+
+@cli.command(name="migrate_user_data_exports")
+@click.option("--export-dir", required=True, help="Directory the user data export archives are currently stored in.")
+@click.option("--delete-source", is_flag=True, help="Delete the archives from the directory once they are migrated.")
+@click.option("--dry-run", is_flag=True, help="Log what would be migrated without uploading or updating anything.")
+@click.option("--mark-missing-failed", is_flag=True,
+              help="Mark completed exports whose archive cannot be found as failed even if the directory"
+                   " contained no archive of a completed export at all.")
+def migrate_user_data_exports(export_dir, delete_source, dry_run, mark_missing_failed):
+    """ Migrate user data exports from the given directory to garage """
+    app = create_app()
+    with app.app_context():
+        app.logger.info("Migrating user data exports from %s to garage", export_dir)
+        migrate_exports(webserver.db_conn, export_dir=export_dir, delete_source=delete_source, dry_run=dry_run,
+                        mark_missing_failed=mark_missing_failed)
+        app.logger.info("Completed migrating user data exports")
+
+
+@cli.command(name="migrate_user_data_imports")
+@click.option("--upload-dir", required=True, help="Directory the uploaded import files are currently stored in.")
+@click.option("--delete-source", is_flag=True, help="Delete the files from the directory once they are migrated.")
+@click.option("--dry-run", is_flag=True, help="Log what would be migrated without uploading or updating anything.")
+@click.option("--mark-missing-failed", is_flag=True,
+              help="Mark pending imports whose file cannot be found as failed even if the directory"
+                   " contained no file of a pending import at all.")
+def migrate_user_data_imports(upload_dir, delete_source, dry_run, mark_missing_failed):
+    """ Migrate the files uploaded for user data imports from the given directory to garage """
+    app = create_app()
+    with app.app_context():
+        app.logger.info("Migrating user data imports from %s to garage", upload_dir)
+        migrate_imports(webserver.db_conn, upload_dir, delete_source=delete_source, dry_run=dry_run,
+                        mark_missing_failed=mark_missing_failed)
+        app.logger.info("Completed migrating user data imports")

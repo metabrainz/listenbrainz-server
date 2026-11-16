@@ -6,9 +6,7 @@ from sqlalchemy.pool import NullPool
 import time
 import psycopg2
 
-# The schema version of the timescale database (tables created
-# from ./admin/timescale/create-tables.sql). This includes user playlists
-# and mbid mappings.
+# The public Timescale dump format version for mapping tables.
 # Listens are tracked with `listenstore.LISTENS_DUMP_SCHEMA_VERSION`
 # This value must be incremented after schema changes on tables that are included in the
 # public dump

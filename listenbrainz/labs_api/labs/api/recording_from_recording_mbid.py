@@ -8,7 +8,7 @@ from datasethoster import Query
 from flask import current_app
 from pydantic import BaseModel
 
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 
 
@@ -72,10 +72,10 @@ class RecordingFromRecordingMBIDQuery(Query):
         if not mbids:
             return []
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
-                closing(timescale.engine.raw_connection()) as ts_conn, \
+                closing(listens_db.engine.raw_connection()) as listens_conn, \
                 mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
-                ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
-            output = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids)
+                listens_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as listens_curs:
+            output = load_recordings_from_mbids_with_redirects(mb_curs, listens_curs, mbids)
 
             for item in output:
                 item.pop("caa_id", None)

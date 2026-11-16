@@ -31,8 +31,7 @@ function SimilarUsersModal(props: SimilarUsersModalProps) {
           <hr />
           <div className="similar-users-empty text-center text-muted">
             Users with similar music tastes to{" "}
-            {userName === currentUserName ? "you" : userName} will appear
-            here.
+            {userName === currentUserName ? "you" : userName} will appear here.
           </div>
         </>
       );

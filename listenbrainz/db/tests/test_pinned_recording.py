@@ -110,7 +110,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
             }
         ]
 
-        msids = msb_db.insert_all_in_transaction(self.ts_conn, recordings)
+        msids = msb_db.insert_all_in_transaction(self.listens_conn, recordings)
 
         query = """
                 INSERT INTO mapping.mb_metadata_cache
@@ -128,12 +128,12 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
                           , 'f'
                            )
         """
-        self.ts_conn.execute(sqlalchemy.text(query))
+        self.listens_conn.execute(sqlalchemy.text(query))
 
-        query = """INSERT INTO mbid_mapping
+        query = """INSERT INTO mapping.mbid_mapping
                                (recording_msid, recording_mbid, match_type, last_updated)
                         VALUES (:msid, '2f3d422f-8890-41a1-9762-fbe16f107c31', 'exact_match', now())"""
-        self.ts_conn.execute(sqlalchemy.text(query), {"msid": msids[0]})
+        self.listens_conn.execute(sqlalchemy.text(query), {"msid": msids[0]})
 
         pinned_recs = [
             {
@@ -160,7 +160,7 @@ class PinnedRecDatabaseTestCase(DatabaseTestCase, TimescaleTestCase):
             )
 
         pins = db_pinned_rec.get_pin_history_for_user(self.db_conn, self.user["id"], 5, 0)
-        pins_with_metadata = fetch_track_metadata_for_items(self.ts_conn, pins)
+        pins_with_metadata = fetch_track_metadata_for_items(self.listens_conn, pins)
 
         received = [x.dict() for x in pins_with_metadata]
         # pinned recs returned in reverse order of submitted because order newest to oldest

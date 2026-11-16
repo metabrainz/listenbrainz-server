@@ -1,9 +1,9 @@
 import * as React from "react";
 import { RouterProvider, createMemoryRouter } from "react-router";
 import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import PlaylistPage from "../../src/playlists/Playlist";
 import * as playlistPageProps from "../__mocks__/playlistPageProps.json";
-import { MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION } from "../../src/playlists/utils";
 import {
   renderWithProviders,
   textContentMatcher,
@@ -54,7 +54,8 @@ describe("PlaylistPage", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("shows exportPlaylistToSpotify button if playlist permissions are present", () => {
+  it("shows exportPlaylistToSpotify button if playlist permissions are present", async () => {
+    const user = userEvent.setup();
     const alternativeContextMock = {
       spotifyAuth: {
         access_token: "heyo",
@@ -74,6 +75,7 @@ describe("PlaylistPage", () => {
       },
       false
     );
+    await user.click(screen.getByRole("button", { name: /options/i }));
     screen.getByText("Export to Spotify", { exact: false });
   });
 });
