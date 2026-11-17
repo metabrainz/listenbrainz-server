@@ -1498,6 +1498,16 @@
       color: var(--lb-text);
     }
 
+    // The "Today" marker uses $blue, which disappears on the dark canvas
+    .releases-timeline .mark-label-today {
+      color: var(--lb-accent);
+    }
+
+    // LB Radio prompt examples use $gray-700, too dark on the dark canvas
+    #examples {
+      color: var(--lb-text-muted);
+    }
+
     .release-card-grid-title::before,
     .release-card-grid-title::after,
     .review .header-with-line::after {
