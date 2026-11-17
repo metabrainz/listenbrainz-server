@@ -14,8 +14,7 @@ from listenbrainz.dumps.exporter import zstd_dump, uncompressed_dump
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION
 
-# Listens are selected for dumps in pages of this many listens, each in its own query and transaction, so
-# that neither the memory used nor the transactions grow with the number of listens of a user or a time range.
+# Limit each query batch, not the output file size.
 DUMP_PAGE_SIZE = 100_000
 
 # Full dumps page through the partitions of the listen table in the order of their (user_id, listened_at)
@@ -50,7 +49,8 @@ class DumpListenStore:
         """ Yield one page iterator per output file: each partition for full dumps, one for incremental.
 
         select specifies columns from the listen table aliased l; wrap adds any mapping joins to the
-        page query. Full dumps also filter on created to leave later imports for incremental dumps.
+        page query. Full dumps leave later imports for incremental dumps. Incremental dumps exclude
+        the previous cutoff and include the current one to avoid repeating boundary listens.
         """
         args = {"start_time": start_time, "end_time": end_time}
         if full_dump:
@@ -96,9 +96,12 @@ class DumpListenStore:
         dump writes all listens to one file, in the order they were created.
 
         Args:
-            end_time_range (datetime): the range of time for the listens dump.
-            temp_dir (str): the dir to use to write files before adding to archive
-            full_dump (bool): the type of dump
+            temp_dir (str): the directory for temporary JSON lines files
+            tar_file: the open archive to add nonempty files to
+            archive_name (str): the top-level directory inside the archive
+            start_time_range (datetime): inclusive listened_at start for full dumps, exclusive created start otherwise
+            end_time_range (datetime): inclusive created cutoff, and listened_at end for full dumps
+            full_dump (bool): whether to dump each partition or one incremental time range
         """
         user_id_map = get_all_usernames()
         t0 = time.monotonic()
@@ -106,7 +109,7 @@ class DumpListenStore:
         os.makedirs(temp_dir, exist_ok=True)
 
         def write_file(file_id, pages):
-            """ Write the listens in pages to a numbered file and add it to the archive if there are any """
+            """ Write pages to a numbered file. Return whether any listens were added to the archive. """
             nonlocal listen_count
             filename = os.path.join(temp_dir, f"{file_id}.listens")
             rows_added = 0
@@ -148,7 +151,7 @@ class DumpListenStore:
         """ Dumps all listens in the ListenStore into a .tar.zst archive.
 
         Full dumps write one numbered file per nonempty partition. Incremental dumps write one file
-        containing listens created in (start_time, end_time]. dump_type selects full or incremental.
+        containing listens created after start_time and at or before end_time.
 
         Args:
             location: the directory where the listens dump archive should be created
@@ -184,6 +187,7 @@ class DumpListenStore:
         """ Wrap a page query selecting SPARK_PAGE_COLUMNS into the query to select the page's listens
             with their mapping for the spark dump, in the same order. by_created is whether the page query
             pages by created. """
+        # Preserve the page query's order: partition index order for full dumps, created order otherwise.
         key_columns = "l.key_user_id, l.key_listened_at, l.key_recording_msid"
         order_by = "ORDER BY l.key_user_id, l.key_listened_at DESC, l.key_recording_msid"
         if by_created:
@@ -193,7 +197,7 @@ class DumpListenStore:
                 WITH page AS (
                     {page_query}
                 ), listen_with_mbid AS (
-                     SELECT l.*
+                     SELECT p.*
                           -- converting jsonb array to text array is non-trivial, so return a jsonb array not text
                           -- here and let psycopg2 adapt it to a python list which is what we want anyway
                           , data->'additional_info'->'artist_mbids' AS l_artist_credit_mbids
@@ -204,14 +208,14 @@ class DumpListenStore:
                           , data->'additional_info'->>'recording_mbid' AS l_recording_mbid
                           -- prefer to use user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
                           , COALESCE(user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS m_recording_mbid
-                       FROM page l
+                       FROM page p
                   LEFT JOIN mapping.mbid_mapping mm
-                         ON l.recording_msid = mm.recording_msid
+                         ON p.recording_msid = mm.recording_msid
                   LEFT JOIN mapping.mbid_manual_mapping user_mm
-                         ON l.recording_msid = user_mm.recording_msid
-                        AND user_mm.user_id = l.user_id
+                         ON p.recording_msid = user_mm.recording_msid
+                        AND user_mm.user_id = p.user_id
                   LEFT JOIN mapping.mbid_manual_mapping_top other_mm
-                         ON l.recording_msid = other_mm.recording_msid
+                         ON p.recording_msid = other_mm.recording_msid
                 )    SELECT l.listened_at
                           , l.created
                           , l.user_id
@@ -237,7 +241,10 @@ class DumpListenStore:
         """
 
     def write_parquet_file(self, archive_dir, temp_dir, tar_file, file_id, pages):
-        """ Stream pages into one numbered parquet file, adding it to the archive if nonempty. """
+        """ Stream pages into one numbered parquet file, adding it to the archive if nonempty.
+
+        Return whether any listens were written and added to the archive.
+        """
         filename = os.path.join(temp_dir, f"{file_id}.parquet")
         listen_count = 0
         t0 = time.monotonic()
@@ -270,8 +277,7 @@ class DumpListenStore:
         """ Dumps all listens in the ListenStore into spark parquet files in a .tar archive.
 
         Full dumps write one numbered parquet file per nonempty partition, in user and newest-listen
-        order. Incremental dumps write one file in created order for (start_time, end_time]. Each query
-        page is written as a row group, keeping memory bounded regardless of file size.
+        order. Incremental dumps write one file in created order, excluding start_time and including end_time.
 
         Args:
             location: the directory where the listens dump archive should be created

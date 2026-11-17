@@ -353,7 +353,7 @@ def get_listen_partitions() -> list[str]:
         SELECT inhrelid::regclass::TEXT AS partition
           FROM pg_inherits
          WHERE inhparent = 'listen'::regclass
-      ORDER BY 1
+      ORDER BY partition
     """
     with engine.connect() as connection:
         return connection.execute(sqlalchemy.text(query)).scalars().all()
