@@ -15,7 +15,7 @@ import listenbrainz.db.user as db_user
 from listenbrainz.db import listens as listens_db
 from listenbrainz.dumps.exceptions import SchemaMismatchException
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION, LISTEN_MINIMUM_DATE
-from listenbrainz.listenstore.dump_listenstore import DumpListenStore
+from listenbrainz.listenstore.dump_listenstore import DumpListenStore, LISTEN_DUMP_COLUMNS, SPARK_PAGE_COLUMNS
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data, delete_listens
 from listenbrainz.tests.integration import NonAPIIntegrationTestCase
@@ -188,6 +188,41 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
 
         shutil.rmtree(temp_dir)
 
+    def _dump_recording_msids(self, start, end, full_dump, spark):
+        columns = SPARK_PAGE_COLUMNS if spark else LISTEN_DUMP_COLUMNS
+
+        def wrap(query):
+            if spark:
+                return self.dumpstore.spark_dump_query(query, by_created=not full_dump)
+            return query
+
+        return [
+            row["recording_msid"]
+            for pages in self.dumpstore.iter_dump_files(columns, wrap, start, end, full_dump)
+            for page in pages
+            for row in page
+        ]
+
+    def test_consecutive_dump_boundaries(self):
+        """ Full and adjacent incremental dumps include each cutoff once, including late imports. """
+        base = 1500000000
+        # All three listens have old listening dates; the last two are imported after the full cutoff.
+        listens = generate_data(self.testuser_id, self.testuser_name, base - 10, 3, base)
+        self._insert_with_created(listens)
+        self.dumpstore.page_size = 1
+
+        for spark in [False, True]:
+            dumped_msids = []
+            for index in range(3):
+                full_dump = index == 0
+                start = LISTEN_MINIMUM_DATE if full_dump else datetime.fromtimestamp(base + index - 1, timezone.utc)
+                end = datetime.fromtimestamp(base + index, timezone.utc)
+                msids = self._dump_recording_msids(start, end, full_dump, spark)
+                with self.subTest(spark=spark, interval=index):
+                    self.assertEqual(msids, [listens[index].recording_msid])
+                dumped_msids.extend(msids)
+            self.assertCountEqual(dumped_msids, [listen.recording_msid for listen in listens])
+
     def test_time_range_full_dumps(self):
         base = 1500000000
         listens = generate_data(self.testuser_id, self.testuser_name, base + 1, 5, base + 1)  # generate 5 listens with ts 1-5
@@ -237,6 +272,8 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         recalculate_all_user_data()
 
         listens = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.fromtimestamp(1400000300, timezone.utc))
+        self.assertEqual(len(listens), 4)
+        self.assertNotIn(1400000050, [listen.ts_since_epoch for listen in listens])
         self.assertEqual(
             [listen.ts_since_epoch for listen in listens],
             [1400000200, 1400000150, 1400000100, 1400000000]
@@ -249,6 +286,9 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         users = [self.testuser] + [db_user.get_or_create(self.db_conn, i, f"user_{i}") for i in range(2, 9)]
         for user in users:
             self._create_test_data(user["musicbrainz_id"], user["id"])
+
+        with listens_db.engine.connect() as connection:
+            expected_file_count = connection.execute(text("SELECT count(DISTINCT tableoid) FROM listen")).scalar_one()
 
         # 5 listens per user, so users are split across pages
         self.dumpstore.page_size = 3
@@ -267,7 +307,7 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
                     for member in tar if member.name.endswith(".listens")
                 ]
 
-        self.assertGreater(len(files), 1)
+        self.assertEqual(len(files), expected_file_count)
         user_files = {}
         for i, listens in enumerate(files):
             keys = [(listen["user_id"], -listen["timestamp"]) for listen in listens]
@@ -288,6 +328,9 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
             listens.extend(generate_data(user["id"], user["musicbrainz_id"], base, 5, base))
         self._insert_with_created(listens)
         self.dumpstore.page_size = 3
+
+        with listens_db.engine.connect() as connection:
+            expected_full_file_count = connection.execute(text("SELECT count(DISTINCT tableoid) FROM listen")).scalar_one()
 
         for dump_type in ["full", "incremental"]:
             with TemporaryDirectory() as temp_dir:
@@ -315,7 +358,7 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
                     for row in file_rows:
                         user_files.setdefault(row["user_id"], set()).add(filename)
                 if dump_type == "full":
-                    self.assertGreater(len(files), 1)
+                    self.assertEqual(len(files), expected_full_file_count)
                     self.assertTrue(all(len(names) == 1 for names in user_files.values()))
                 else:
                     self.assertEqual(len(files), 1)

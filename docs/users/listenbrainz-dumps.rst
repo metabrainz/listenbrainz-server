@@ -20,13 +20,13 @@ See the `ListenBrainz data page <https://listenbrainz.org/data>`_ for informatio
 File Descriptions
 =================
 
-A ListenBrainz data dump consists of three archives:
+The main data archives are listed below with their dump ids and timestamps omitted:
 
 #. ``listenbrainz-public-dump.tar.zst``
 
 #. ``listenbrainz-listens-dump.tar.zst``
 
-#. ``listenbrainz-listens-dump-spark.tar.zst``
+#. ``listenbrainz-spark-dump.tar``
 
 The database dumps and the listens dumps are created by separate jobs, so they are published in two directories per
 dump cycle. The ``listenbrainz-public-dump.tar.zst`` archive is in the directory whose name ends in ``-db`` and the
@@ -48,15 +48,17 @@ This is the core ListenBrainz data dump. This file contains all the listens
 submitted to ListenBrainz by its users.
 
 
-listenbrainz-listens-dump-spark.tar.zst
---------------------------------------
+listenbrainz-spark-dump.tar
+-------------------------
 
 This is also a dump of the core ListenBrainz listen data. These dumps are
 made for consumption by the ListenBrainz Apache Spark cluster, formatting
 all listens into parquet files that can easily be loaded into dataframes.
-Full dumps contain one numbered parquet file per nonempty database partition,
-keeping each user's listens together. Incremental dumps contain a single parquet
-file in submission order. Files are written in bounded row groups and may be large.
+Full dumps contain numbered Parquet files, keeping each user's listens together.
+Incremental dumps contain a single file in submission order. The archive is an
+uncompressed ``.tar`` containing Zstandard-compressed Parquet files, for example:
+
+``listenbrainz-spark-dump-183-20200727-001004-full/0.parquet``.
 
 
 Structure of the listens dump
