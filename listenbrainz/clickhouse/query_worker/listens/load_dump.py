@@ -46,6 +46,7 @@ STAGING_TABLE_PREFIX = "listens_staging_"
 _COLUMNS = ", ".join(LISTEN_COLUMN_NAMES)
 
 # Insert staging listens, excluding existing keys and duplicates within staging.
+# Restrict the existing-key set to staging candidates, rather than all stored listens.
 MERGE_STAGED_LISTENS = f"""
     INSERT INTO listens ({_COLUMNS})
     SELECT {_COLUMNS}
@@ -53,6 +54,10 @@ MERGE_STAGED_LISTENS = f"""
     WHERE (user_id, listened_at, recording_msid) NOT IN (
         SELECT user_id, listened_at, recording_msid
         FROM listens
+        WHERE (user_id, listened_at, recording_msid) IN (
+            SELECT user_id, listened_at, recording_msid
+            FROM {{table}}
+        )
     )
     LIMIT 1 BY user_id, listened_at, recording_msid
 """
@@ -165,6 +170,8 @@ def _load_parquet_file(
     the dump's columns (SPARK_LISTENS_SCHEMA) to those of the table on insert."""
     with pa.memory_map(str(source.archive)) as archive:
         parquet_file = pq.ParquetFile(pa.BufferReader(archive.read_at(source.size, source.offset)))
+        # insert_arrow needs a Table; wrap each batch separately to keep decoded
+        # data and each insert bounded instead of collecting the whole Parquet file.
         for batch in parquet_file.iter_batches(batch_size=batch_size, columns=LISTEN_COLUMN_NAMES):
             client.insert_arrow(table=table, arrow_table=pa.Table.from_batches([batch]))
         return parquet_file.metadata.num_rows

@@ -23,16 +23,15 @@ LISTEN_COLUMN_NAMES = [
 ]
 
 # One row per listen; (user_id, listened_at, recording_msid) identifies it in LB.
-LISTENS_TABLE = f"""
+CREATE_LISTENS_TABLE = f"""
     CREATE TABLE {{if_not_exists}} {{name}} (
         {LISTEN_COLUMNS}
     ) ENGINE = MergeTree()
     ORDER BY (user_id, listened_at, recording_msid)
-    SETTINGS index_granularity = 8192
 """
 
 CREATE_TABLES = [
-    LISTENS_TABLE.format(if_not_exists="IF NOT EXISTS", name="listens"),
+    CREATE_LISTENS_TABLE.format(if_not_exists="IF NOT EXISTS", name="listens"),
     # High-water marks of incremental imports (see import_state.py).
     """
     CREATE TABLE IF NOT EXISTS import_state (
@@ -47,7 +46,7 @@ CREATE_TABLES = [
 
 def create_listens_table(ch_client: Client, name: str) -> None:
     """Create an empty table with the schema of listens (not that of an existing listens)."""
-    ch_client.command(LISTENS_TABLE.format(if_not_exists="", name=name))
+    ch_client.command(CREATE_LISTENS_TABLE.format(if_not_exists="", name=name))
 
 
 def ensure_schema(ch_client: Client) -> None:

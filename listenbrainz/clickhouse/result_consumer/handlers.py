@@ -2,7 +2,7 @@ from flask import current_app
 
 
 def handle_dump_imported(message):
-    """Handle notification that a dump was successfully imported."""
+    """Handle the success or failure of a dump import."""
     dump_type = message.get("dump_type", "unknown")
     dump_id = message.get("dump_id")
     status = message.get("status", "unknown")
@@ -25,7 +25,7 @@ def handle_dump_imported(message):
 
 
 def handle_schema_initialized(message):
-    """Handle notification that the ClickHouse schema was initialized."""
+    """Handle the success or failure of ClickHouse schema initialization."""
     status = message.get("status", "unknown")
     if status == "success":
         current_app.logger.info("ClickHouse schema initialized")
@@ -34,8 +34,8 @@ def handle_schema_initialized(message):
 
 
 RESPONSE_HANDLERS = {
-    "clk_dump_imported": handle_dump_imported,
-    "clk_schema_initialized": handle_schema_initialized,
+    "clk_dump_import": handle_dump_imported,
+    "clk_schema_initialization": handle_schema_initialized,
 }
 
 

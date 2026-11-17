@@ -34,7 +34,7 @@ def _raise_on_load_errors(result: dict) -> None:
 
 def _dump_imported(dump_type: str, result: dict, **fields) -> dict:
     return {
-        'type': 'clk_dump_imported',
+        'type': 'clk_dump_import',
         'dump_type': dump_type,
         'status': 'success',
         'dump_id': result.get('dump_id'),
@@ -51,8 +51,8 @@ def init_schema() -> list[dict]:
         with _client() as ch_client:
             ensure_schema(ch_client)
     except Exception as e:
-        return _error('clk_schema_initialized', e)
-    return [{'type': 'clk_schema_initialized', 'status': 'success'}]
+        return _error('clk_schema_initialization', e)
+    return [{'type': 'clk_schema_initialization', 'status': 'success'}]
 
 
 def import_full_dump(workers: int = 4, dump_id: Optional[int] = None) -> list[dict]:
@@ -67,7 +67,7 @@ def import_full_dump(workers: int = 4, dump_id: Optional[int] = None) -> list[di
         )
         _raise_on_load_errors(result)
     except Exception as e:
-        return _error('clk_dump_imported', e, dump_type='full')
+        return _error('clk_dump_import', e, dump_type='full')
     return [_dump_imported('full', result)]
 
 
@@ -88,14 +88,14 @@ def import_incremental_dump(workers: int = 4, max_dumps: Optional[int] = None,
             download_dir=current_app.config["CLICKHOUSE_DUMP_DOWNLOAD_DIR"],
         )
     except Exception as e:
-        return _error('clk_dump_imported', e, dump_type='incremental')
+        return _error('clk_dump_import', e, dump_type='incremental')
 
     messages = [
         _dump_imported('incremental', dump, pending=dump['pending'])
         for dump in result['imported']
     ]
     messages.extend({
-        'type': 'clk_dump_imported',
+        'type': 'clk_dump_import',
         'dump_type': 'incremental',
         'status': 'error',
         'dump_id': dump_id,
