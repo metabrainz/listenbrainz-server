@@ -1,5 +1,5 @@
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from flask import Flask
 
@@ -18,7 +18,7 @@ class GenreEntityTest(TestCase):
         self.client = app.test_client()
 
         self.enterContext(patch.object(decorators.timescale_connection, "_ts", object()))
-        self.enterContext(patch.object(decorators.listens_db, "engine", object()))
+        self.enterContext(patch.object(decorators.listens_db, "engine", MagicMock()))
         self.connect = self.enterContext(patch.object(entity_pages.psycopg2, "connect"))
         self.resolve = self.enterContext(patch.object(
             entity_pages, "get_genre_by_name", return_value={"genre_gid": GENRE_MBID, "name": "rock"}
@@ -73,7 +73,6 @@ class GenreEntityTest(TestCase):
             "release_group": {"entities": [{"mbid": "album-id", "name": "Album", "tag_count": 2}]},
             "recording": {"entities": [{"mbid": "track-id", "name": "Track", "tag_count": 3}]},
         }
-        self.enterContext(patch.object(entity_pages, "listens_conn"))
         self.enterContext(patch.object(entity_pages.popularity, "get_counts", return_value=([], {})))
         self.enterContext(patch.object(entity_pages, "fetch_release_group_metadata", return_value={}))
         self.enterContext(patch.object(
