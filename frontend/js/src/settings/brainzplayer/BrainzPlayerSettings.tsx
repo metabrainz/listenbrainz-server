@@ -250,7 +250,7 @@ function BrainzPlayerSettings() {
                 !notificationsEnabled ? "text-muted" : ""
               }`}
             >
-              <span>Show a notification for each track played</span>
+              <span>Show playback notifications</span>
             </span>
           }
         />
