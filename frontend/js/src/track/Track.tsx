@@ -4,10 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faPauseCircle,
-  faPlayCircle,
-} from "@fortawesome/free-solid-svg-icons";
+import { faPauseCircle, faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { useAtomValue } from "jotai";
 import { chain, groupBy, isEqual, sortBy } from "lodash";
 import { Vibrant } from "node-vibrant/browser";
@@ -264,7 +261,6 @@ export default function TrackPage(): JSX.Element {
     artists
       ?.map((a) => `artist:(${a.artist_mbid ?? a.artist_credit_name})::nosim`)
       .join(" ") ?? `artist:(${encodeURIComponent(artist_credit_name)})::nosim`;
-
 
   return (
     <div id="entity-page" role="main" className="track-page">
