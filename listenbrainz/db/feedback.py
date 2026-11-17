@@ -24,6 +24,21 @@ INSERT_QUERIES = {
     """
 }
 
+INSERT_QUERIES_WITH_CREATED = {
+    "msid": """
+        INSERT INTO recording_feedback (user_id, recording_msid, score, created)
+             VALUES (:user_id, :recording_msid, :score, :created)
+    """,
+    "mbid": """
+        INSERT INTO recording_feedback (user_id, recording_mbid, score, created)
+             VALUES (:user_id, :recording_mbid, :score, :created)
+    """,
+    "both": """
+        INSERT INTO recording_feedback (user_id, recording_mbid, recording_msid, score, created)
+             VALUES (:user_id, :recording_mbid, :recording_msid, :score, :created)
+    """
+}
+
 DELETE_QUERIES = {
     "msid": "DELETE FROM recording_feedback WHERE user_id = :user_id AND recording_msid = :recording_msid",
     "mbid": "DELETE FROM recording_feedback WHERE user_id = :user_id AND recording_mbid = :recording_mbid",
@@ -58,19 +73,26 @@ def insert(db_conn, feedback: Feedback):
         params['recording_msid'] = feedback.recording_msid
         params['recording_mbid'] = feedback.recording_mbid
         delete_query = DELETE_QUERIES["both"]
-        insert_query = INSERT_QUERIES["both"]
+        insert_key = "both"
     elif feedback.recording_mbid is not None:  # only recording_mbid available
         params['recording_mbid'] = feedback.recording_mbid
         delete_query = DELETE_QUERIES["mbid"]
-        insert_query = INSERT_QUERIES["mbid"]
+        insert_key = "mbid"
     else:  # only recording_msid available
         params['recording_msid'] = feedback.recording_msid
         delete_query = DELETE_QUERIES["msid"]
-        insert_query = INSERT_QUERIES["msid"]
+        insert_key = "msid"
 
     # delete the existing feedback and then insert new feedback. we cannot use ON CONFLICT DO UPDATE
     # because it is possible for a user to submit the feedback using recording_msid only and then using
     # both recording_msid and recording_mbid at once in which case the ON CONFLICT doesn't work well.
+
+    insert_queries = INSERT_QUERIES_WITH_CREATED if feedback.created is not None else INSERT_QUERIES
+    insert_query = insert_queries[insert_key]
+
+    if feedback.created is not None:
+        params['created'] = feedback.created
+
     db_conn.execute(text(delete_query), params)
     db_conn.execute(text(insert_query), params)
     db_conn.commit()

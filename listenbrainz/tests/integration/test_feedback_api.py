@@ -118,6 +118,42 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
 
+    def test_recording_feedback_with_timestamp(self):
+        """ Test that feedback is stored with the supplied timestamp. """
+        timestamp = 1609459200  # 2021-01-01 00:00:00 UTC
+        recording_msid = "7babc9be-ca2b-4544-b932-7c9ab38770d6"
+
+        feedback = {
+            "recording_msid": recording_msid,
+            "score": 1,
+            "timestamp": timestamp,
+        }
+
+        response = self.client.post(
+            self.custom_url_for("feedback_api_v1.recording_feedback"),
+            data=json.dumps(feedback),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["status"], "ok")
+
+        response = self.client.get(
+            self.custom_url_for(
+                "feedback_api_v1.get_feedback_for_user",
+                user_name=self.user["musicbrainz_id"]
+            )
+        )
+        self.assert200(response)
+
+        feedback_items = response.json["feedback"]
+        stored_feedback = next(
+            item for item in feedback_items
+            if item["recording_msid"] == recording_msid
+        )
+
+        self.assertEqual(stored_feedback["created"], timestamp)
+
     def test_recording_feedback_unauthorised_submission(self):
         """ Test for checking that unauthorized submissions return 401 """
         feedback = {
@@ -212,7 +248,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual(
             response.json["error"],
-            "JSON document may only contain recording_msid, recording_mbid and score top level keys"
+            "JSON document may only contain recording_msid, recording_mbid, score and timestamp top level keys"
         )
 
     def test_recording_feedback_invalid_values(self):
