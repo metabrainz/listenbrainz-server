@@ -1037,6 +1037,11 @@ export default function BrainzPlayer() {
         return;
       }
     }
+    if (brainzplayer_event === "toggle-play") {
+      // Play/pause the current track without restarting it (unlike "force-play")
+      togglePlay();
+      return;
+    }
     if (
       !["play-listen", "force-play", "play-ambient-queue"].includes(
         brainzplayer_event

@@ -4,8 +4,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
-import { chain, groupBy, sortBy } from "lodash";
+import {
+  faPauseCircle,
+  faPlayCircle,
+} from "@fortawesome/free-solid-svg-icons";
+import { useAtomValue } from "jotai";
+import { chain, groupBy, isEqual, sortBy } from "lodash";
 import { Vibrant } from "node-vibrant/browser";
 import type { Palette } from "@vibrant/color";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -28,6 +32,7 @@ import {
 } from "../artist/ArtistPage";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import ListenCard from "../common/listens/ListenCard";
+import { playerPausedAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
 
 type Recording = {
   artist_credit_id: number;
@@ -167,6 +172,34 @@ export default function TrackPage(): JSX.Element {
 
   const recordingName = recording_name || "";
 
+  const playerPaused = useAtomValue(playerPausedAtom);
+  const [isCurrentTrack, setIsCurrentTrack] = React.useState(false);
+
+  const recordingAsListen = React.useMemo(
+    () => (track ? recordingToListen(track) : undefined),
+    [track]
+  );
+  React.useEffect(() => {
+    // Know whether this track is the one loaded in BrainzPlayer (like ListenCard)
+    const receiveBrainzPlayerMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+      const { brainzplayer_event, payload } = event.data;
+      if (brainzplayer_event === "current-listen-change") {
+        setIsCurrentTrack(
+          Boolean(recordingAsListen) && isEqual(payload, recordingAsListen)
+        );
+      }
+    };
+    window.addEventListener("message", receiveBrainzPlayerMessage);
+    return () => {
+      window.removeEventListener("message", receiveBrainzPlayerMessage);
+    };
+  }, [recordingAsListen]);
+
+  const isPlaying = isCurrentTrack && !playerPaused;
+
   if (!track) {
     return <div>Loading...</div>;
   }
@@ -232,7 +265,6 @@ export default function TrackPage(): JSX.Element {
       ?.map((a) => `artist:(${a.artist_mbid ?? a.artist_credit_name})::nosim`)
       .join(" ") ?? `artist:(${encodeURIComponent(artist_credit_name)})::nosim`;
 
-  const recordingAsListen = recordingToListen(track);
 
   return (
     <div id="entity-page" role="main" className="track-page">
@@ -276,19 +308,22 @@ export default function TrackPage(): JSX.Element {
           </div>
           <button
             className="btn btn-info btn-rounded align-self-baseline fs-3 mt-auto"
-            title="Play this track"
+            title={isPlaying ? "Pause this track" : "Play this track"}
             type="button"
             onClick={() => {
               window.postMessage(
-                {
-                  brainzplayer_event: "play-listen",
-                  payload: recordingAsListen,
-                },
+                isCurrentTrack
+                  ? { brainzplayer_event: "toggle-play" }
+                  : {
+                      brainzplayer_event: "play-listen",
+                      payload: recordingAsListen,
+                    },
                 window.location.origin
               );
             }}
           >
-            <FontAwesomeIcon icon={faPlayCircle} /> Play this track
+            <FontAwesomeIcon icon={isPlaying ? faPauseCircle : faPlayCircle} />{" "}
+            {isPlaying ? "Pause" : "Play this track"}
           </button>
         </div>
         <div className="right-side">
