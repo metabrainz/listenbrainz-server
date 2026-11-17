@@ -148,7 +148,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user3["auth_token"])}
         )
         self.assert400(response)
-        self.assertEqual(response.json["error"], "User non_existent_user does not exist.")
+        self.assertEqual(response.json["error"], "created_for user does not exist.")
 
         # Try to submit a playlist on a different users's behalf without the right perms
         # (a user must be part of config. APPROVED_PLAYLIST_BOTS to be able to create playlists
