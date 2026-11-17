@@ -13,6 +13,7 @@ from listenbrainz.webserver import db_conn
 import listenbrainz.db.feedback as db_feedback
 from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MBIDMapper, MATCH_TYPE_MED_QUALITY, MATCH_TYPE_HIGH_QUALITY, MATCH_TYPE_EXACT_MATCH
+from listenbrainz.mbid_mapping_writer.typesense_utils import TypesenseUnavailable
 
 NAVIDROME_API_RETRIES = 3
 
@@ -216,6 +217,8 @@ def import_starred_tracks(user_id, navidrome_url, auth_token, salt, username):
         else:
             try:
                 match = mapper.search(artist, title, album)
+            except TypesenseUnavailable:
+                raise
             except Exception:
                 current_app.logger.warning(f"MBIDMapper failed for '{artist} - {title}', skipping.")
                 continue

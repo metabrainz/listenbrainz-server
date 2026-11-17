@@ -10,9 +10,10 @@ from listenbrainz.domain.external_service import ExternalServiceError, ExternalS
 from listenbrainz.domain.lastfm import LastfmService
 from listenbrainz.domain.librefm import LibrefmService
 from listenbrainz.domain.navidrome import NavidromeService, import_starred_tracks
+from listenbrainz.mbid_mapping_writer.typesense_utils import TypesenseUnavailable, TYPESENSE_UNAVAILABLE_MESSAGE
 from listenbrainz.webserver import db_conn, listens_conn
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APINotFound, APIBadRequest
+from listenbrainz.webserver.errors import APINotFound, APIBadRequest, APIServiceUnavailable
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.views.api_tools import _parse_int_arg, log_raise_400, is_valid_uuid, \
     DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET, get_non_negative_param, parse_param_list, \
@@ -327,6 +328,8 @@ def import_feedback():
                 nav_user["salt"],
                 nav_user["username"]
             )
+        except TypesenseUnavailable as e:
+            raise APIServiceUnavailable(TYPESENSE_UNAVAILABLE_MESSAGE) from e
         except (ExternalServiceError, ExternalServiceAPIError) as e:
             raise APIBadRequest(str(e))
         return jsonify(counts)
