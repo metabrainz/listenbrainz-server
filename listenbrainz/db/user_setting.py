@@ -140,27 +140,48 @@ def get_brainzplayer_prefs(db_conn, user_id: int):
     return dict(row) if row else None
 
 
-def update_flair(db_conn, user_id: int, flair):
-    """ Update a user's flair """
+def update_flair(db_conn, user_id: int, flair=None, update_flair=True,
+                 display_preference=None, update_display_preference=False):
+    """ Update a user's flair and/or flair display preference """
+    current = get_flair(db_conn, user_id) or {}
+    flair_val = flair if update_flair else current.get("flair")
+    pref_val = display_preference if update_display_preference else current.get("display_preference", "all")
+    if pref_val is None:
+        pref_val = "all"
+
+    data = {
+        "flair": flair_val,
+        "display_preference": pref_val,
+    }
     db_conn.execute(sqlalchemy.text("""
          INSERT INTO user_setting (user_id, flair)
          VALUES (:user_id, :flair)
     ON CONFLICT (user_id)
       DO UPDATE
             SET flair = EXCLUDED.flair
-    """), {"flair": json.dumps(flair), "user_id": user_id})
+    """), {"flair": json.dumps(data), "user_id": user_id})
     db_conn.commit()
 
 
 def get_flair(db_conn, user_id: int):
-    """ Retrieve flair for the given user """
+    """ Retrieve flair settings for the given user """
     result = db_conn.execute(sqlalchemy.text("""
         SELECT flair
           FROM user_setting
          WHERE user_id = :user_id
     """), {"user_id": user_id})
     row = result.mappings().first()
-    return row.flair if row else None
+    if not row or row.flair is None:
+        return None
+    flair_data = row.flair
+    if isinstance(flair_data, str):
+        return {"flair": flair_data, "display_preference": "all"}
+    if isinstance(flair_data, dict):
+        return {
+            "flair": flair_data.get("flair"),
+            "display_preference": flair_data.get("display_preference", "all"),
+        }
+    return None
 
 
 def get_all_flairs(db_conn):
@@ -168,11 +189,18 @@ def get_all_flairs(db_conn):
     query = """
         SELECT musicbrainz_id
              , musicbrainz_row_id
-             , flair
+             , CASE
+                 WHEN jsonb_typeof(flair) = 'object' THEN flair->>'flair'
+                 ELSE flair #>> '{}'
+               END AS flair
           FROM user_setting us
           JOIN "user" u
             ON u.id = us.user_id
          WHERE flair IS NOT NULL
+           AND (
+             (jsonb_typeof(flair) = 'object' AND flair->>'flair' IS NOT NULL)
+             OR (jsonb_typeof(flair) = 'string')
+           )
     """
     result = db_conn.execute(sqlalchemy.text(query))
     return result.all()

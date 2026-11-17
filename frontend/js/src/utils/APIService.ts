@@ -4,7 +4,7 @@ import type { RequestInitWithRetry } from "fetch-retry";
 import { TagActionType } from "../tags/TagComponent";
 import type { SortOption } from "../explore/fresh-releases/FreshReleases";
 import APIError from "./APIError";
-import type { Flair } from "./constants";
+import type { Flair, FlairDisplayPreference } from "./constants";
 import { Modes } from "../explore/lb-radio/components/Prompt";
 
 export interface LBRadioResponse {
@@ -1929,16 +1929,27 @@ export default class APIService {
 
   submitFlairPreferences = async (
     userToken: string,
-    flair: Flair
+    flair?: Flair,
+    displayPreference?: FlairDisplayPreference
   ): Promise<any> => {
     const url = `${this.APIBaseURI}/settings/flair`;
+    const payload: {
+      flair?: Flair;
+      display_preference?: FlairDisplayPreference;
+    } = {};
+    if (flair !== undefined) {
+      payload.flair = flair;
+    }
+    if (displayPreference !== undefined) {
+      payload.display_preference = displayPreference;
+    }
     const response = await this.fetchWithRetry(url, {
       method: "POST",
       headers: {
         Authorization: `Token ${userToken}`,
         "Content-Type": "application/json;charset=UTF-8",
       },
-      body: JSON.stringify({ flair }),
+      body: JSON.stringify(payload),
     });
     await this.checkStatus(response);
     return response.status;

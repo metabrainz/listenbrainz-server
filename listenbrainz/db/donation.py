@@ -41,7 +41,10 @@ def get_flairs_for_donors(db_conn, donors):
     query = """
             SELECT u.musicbrainz_row_id
                  , u.musicbrainz_id
-                 , us.flair
+                 , CASE
+                     WHEN jsonb_typeof(us.flair) = 'object' THEN us.flair->>'flair'
+                     ELSE us.flair #>> '{}'
+                   END AS flair
               FROM "user" u
          LEFT JOIN user_setting us
                 ON us.user_id = u.id

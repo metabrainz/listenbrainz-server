@@ -30,29 +30,49 @@ FLAIR_CHOICES = [
     "sliced",
 ]
 
+FLAIR_DISPLAY_PREFERENCES = [
+    "all",
+    "no_animations",
+    "disabled",
+]
+
 
 @user_settings_api_bp.post("/flair")
 @crossdomain
 @ratelimit()
 def update_flair():
-    """ Update a given user's flair
+    """ Update a given user's flair and flair display preferences
 
     To remove a user's flair, pass {"flair": null}.
+    To update display preference, pass {"display_preference": "no_animations"}.
     """
     user = validate_auth_header()
-    if "flair" not in request.json:
-        raise APIBadRequest("Missing flair field")
+    req_json = request.json or {}
+    if "flair" not in req_json and "display_preference" not in req_json:
+        raise APIBadRequest("Missing flair or display_preference field")
 
-    flair = request.json["flair"]
-    if flair:
+    flair = req_json.get("flair")
+    if "flair" in req_json and flair is not None:
         if not isinstance(flair, str):
             raise APIBadRequest("Flair must be a string")
         if flair not in FLAIR_CHOICES:
             raise APIBadRequest(f"Invalid flair: {flair}")
-    else:
-        flair = None
 
-    db_usersetting.update_flair(db_conn, user["id"], flair)
+    display_preference = req_json.get("display_preference")
+    if "display_preference" in req_json and display_preference is not None:
+        if not isinstance(display_preference, str):
+            raise APIBadRequest("Display preference must be a string")
+        if display_preference not in FLAIR_DISPLAY_PREFERENCES:
+            raise APIBadRequest(f"Invalid display_preference: {display_preference}")
+
+    db_usersetting.update_flair(
+        db_conn,
+        user["id"],
+        flair=flair if "flair" in req_json else None,
+        update_flair="flair" in req_json,
+        display_preference=display_preference if "display_preference" in req_json else None,
+        update_display_preference="display_preference" in req_json,
+    )
     return jsonify({"success": True})
 
 

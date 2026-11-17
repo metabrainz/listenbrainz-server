@@ -14,7 +14,11 @@ import { GlobalAppContextT } from "./GlobalAppContext";
 import APIServiceClass from "./APIService";
 import { ToastMsg } from "../notifications/Notifications";
 import RecordingFeedbackManager from "./RecordingFeedbackManager";
-import { Flair } from "./constants";
+import {
+  Flair,
+  FlairDisplayPreference,
+  FlairDisplayPreferenceEnum,
+} from "./constants";
 import { getCoverArtCache, setCoverArtCache } from "./coverArtCache";
 
 const originalFetch = window.fetch;
@@ -837,6 +841,7 @@ type GlobalAppProps = {
   navidrome?: NavidromeUser;
   user_preferences?: UserPreferences;
   flair?: Flair;
+  flair_display_preference?: FlairDisplayPreference;
 };
 type GlobalProps = GlobalAppProps & SentryProps;
 export type ServerAlert = {
@@ -900,6 +905,7 @@ const getPageProps = async (): Promise<{
       sentry_dsn,
       user_preferences,
       flair,
+      flair_display_preference,
     } = globalReactProps;
 
     const userPreferences = {
@@ -953,6 +959,8 @@ const getPageProps = async (): Promise<{
         current_user
       ),
       flair,
+      flairDisplayPreference:
+        flair_display_preference ?? FlairDisplayPreferenceEnum.All,
     };
     sentryProps = {
       sentry_dsn,

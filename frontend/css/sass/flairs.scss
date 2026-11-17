@@ -49,6 +49,14 @@
     }
   }
 
+  &.flair-no-animation,
+  &.flair-no-animation::after,
+  &.flair-no-animation::before,
+  &.flair-no-animation > span {
+    animation: none !important;
+    transition: none !important;
+  }
+
   /* 
     Glitchy shaking animation
     Requires passing the parent element a data-text attribute with the username

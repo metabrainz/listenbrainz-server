@@ -108,6 +108,7 @@ def get_global_props():
         "funkwhale": get_current_funkwhale_user(),
         "navidrome": get_current_navidrome_user(),
         "sentry_traces_sample_rate": sentry_config.get("traces_sample_rate", 0.0),
+        "flair_display_preference": "all",
     }
 
     if current_user.is_authenticated:
@@ -117,7 +118,8 @@ def get_global_props():
 
         flair_props = db_usersetting.get_flair(db_conn, current_user.id)
         if flair_props is not None:
-            props["flair"] = flair_props
+            props["flair"] = flair_props.get("flair")
+            props["flair_display_preference"] = flair_props.get("display_preference", "all")
 
         if meb_conn:
             show_flair = db_donation.is_user_eligible_donor(meb_conn, current_user.musicbrainz_row_id)
