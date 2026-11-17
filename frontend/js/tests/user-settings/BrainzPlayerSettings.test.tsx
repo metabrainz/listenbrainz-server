@@ -23,7 +23,7 @@ describe("BrainzPlayerSettings", () => {
       },
     });
     const toggle = screen.getByRole<HTMLInputElement>("checkbox", {
-      name: /show a notification for each track played/i,
+      name: /show playback notifications/i,
     });
     expect(toggle.checked).toBe(false);
 
@@ -40,7 +40,7 @@ describe("BrainzPlayerSettings", () => {
       },
     });
     const toggle = screen.getByRole<HTMLInputElement>("checkbox", {
-      name: /show a notification for each track played/i,
+      name: /show playback notifications/i,
     });
     expect(toggle.checked).toBe(true);
 
