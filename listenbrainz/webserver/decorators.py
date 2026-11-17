@@ -58,8 +58,11 @@ def crossdomain(f):
 
 def api_listenstore_needed(func):
     """
-        This API decorator checks to see if the listenstore is online (the listens
-        DB has a DB URI and LISTENSTORE_UP is set) and if not, it raises APIServiceUnavailable.
+        Raise APIServiceUnavailable unless the listenstore and listens DB engine
+        are initialized. At application startup, init_timescale_connection checks
+        LISTENSTORE_UP and only creates timescale_connection._ts when it is True
+        and the listens DB engine exists. Despite its legacy name, _ts is the
+        listenstore instance backed by the listens DB, not a Timescale DB connection.
     """
     @wraps(func)
     def decorator(*args, **kwargs):
@@ -74,9 +77,11 @@ def api_listenstore_needed(func):
 
 def web_listenstore_needed(func):
     """
-        This web decorator checks to see if the listenstore is online (the listens
-        DB has a DB URI and LISTENSTORE_UP is set) and if not, it redirects to an error page telling the user
-        that the listenstore is offline.
+        Redirect to the listens-offline page unless the listenstore and listens
+        DB engine are initialized. At application startup, init_timescale_connection
+        checks LISTENSTORE_UP and only creates timescale_connection._ts when it is
+        True and the listens DB engine exists. Despite its legacy name, _ts is the
+        listenstore instance backed by the listens DB, not a Timescale DB connection.
     """
     @wraps(func)
     def decorator(*args, **kwargs):
