@@ -9,3 +9,4 @@ pytest-subtests==0.14.1
 python-socketio[client]
 lxml==6.1.0
 pytest-timeout==2.3.1
+pyftpdlib==2.1.0

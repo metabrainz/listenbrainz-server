@@ -4,6 +4,18 @@
 
 services:
 
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.3
+    environment:
+      CLICKHOUSE_USER: listenbrainz
+      CLICKHOUSE_PASSWORD: listenbrainz
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--user", "listenbrainz", "--password", "listenbrainz", "--query", "SELECT 1"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
   lb_db:
     image: timescale/timescaledb:latest-pg14
     command: postgres -F
@@ -53,6 +65,8 @@ services:
       PYTHON_TESTS_RUNNING: 1
     user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     depends_on:
+      clickhouse:
+        condition: service_healthy
       redis:
         condition: service_started
       lb_db:
