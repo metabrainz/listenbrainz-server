@@ -15,7 +15,10 @@ import {
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { LBRadioFeedback, Playlist } from "./components/Playlist";
 import Prompt, { Modes } from "./components/Prompt";
-import { setAmbientQueueAtom } from "../../common/brainzplayer/BrainzPlayerAtoms";
+import {
+  ambientQueueAtom,
+  setAmbientQueueAtom,
+} from "../../common/brainzplayer/BrainzPlayerAtoms";
 
 type LBRadioLoaderData = {
   mode: Modes;
@@ -118,11 +121,17 @@ export default function LBRadio() {
   }, []);
 
   const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
+  const replaceAmbientQueue = useSetAtom(ambientQueueAtom);
 
   React.useEffect(() => {
-    setAmbientQueue(
-      jspfPlaylist?.playlist?.track?.map(JSPFTrackToListen) ?? []
-    );
+    const tracks = jspfPlaylist?.playlist?.track;
+    if (tracks && tracks.length === 0) {
+      // setAmbientQueue ignores empty lists, which would leave the tracks
+      // of a now empty playlist playable (after removing the last one)
+      replaceAmbientQueue([]);
+      return;
+    }
+    setAmbientQueue(tracks?.map(JSPFTrackToListen) ?? []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jspfPlaylist?.playlist?.track]);
 
