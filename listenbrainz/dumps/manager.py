@@ -204,8 +204,8 @@ def create_full(location: str, threads: int, dump_id: int, do_listen_dump: bool,
               help="path to directory to use for creating necessary temporary files during private dumps.")
 def create_db_dump(location: str, location_private: str, threads: int, dump_id: int, do_db_dump: bool,
                    do_timescale_dump: bool, location_temp: str = None, location_private_temp: str = None):
-    """ Create a dump of the public and private data in the postgres database and the public timescale dump of the
-    mapping tables in the listens database.
+    """ Create public and private dumps of the main Postgres database, and a public dump of
+    mapping tables from the listens database. The mapping dump retains the legacy "timescale" name.
 
         The listens, spark and statistics dumps are created separately by the create_full command.
     """
