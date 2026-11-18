@@ -97,6 +97,12 @@ ClickHouse dump imports
 Run only one ClickHouse dump import at a time. Import preparation drops leftover
 staging tables, including those belonging to any other running import.
 
+Each import reads completed listen deletions and user-history cutoffs from the
+listens PostgreSQL database. Even when no incremental dumps are pending, running
+the incremental import applies those deletions to stored listens. ClickHouse
+retains the deletion records and applies them to staged dumps before publication,
+including when an operator replays an older dump.
+
 Before enabling concurrent imports or multiple query workers, add an import lock
 around preparation and loading. Recovery must also cancel ClickHouse queries left
 running by a killed importer before allowing the next import to start; a lock alone
