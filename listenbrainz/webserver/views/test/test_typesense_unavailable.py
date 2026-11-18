@@ -17,6 +17,7 @@ from listenbrainz.webserver.views import feedback_api, metadata_api
 
 OUTAGES = (
     requests.exceptions.ConnectionError,
+    requests.exceptions.Timeout,
     requests.exceptions.ConnectTimeout,
     requests.exceptions.ReadTimeout,
     typesense.exceptions.Timeout,
@@ -85,7 +86,9 @@ class TypesenseUnavailableTestCase(unittest.TestCase):
         for error in OUTAGES:
             with self.subTest(error=error):
                 search.side_effect = error('private backend details')
-                response = self.client.get('/1/metadata/lookup/?artist_name=Artist&recording_name=Track')
+                response = self.client.get('/1/metadata/lookup/', query_string={
+                    'artist_name': 'Rick Astley', 'recording_name': 'Never Gonna Give You Up',
+                })
                 self.assertEqual(response.status_code, 503)
                 self.assertEqual(response.json['code'], 503)
                 self.assertNotIn('private backend details', response.json['error'])
