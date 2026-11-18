@@ -13,6 +13,7 @@ from listenbrainz.clickhouse.query_worker.listens.load_dump import (
 )
 from listenbrainz.clickhouse.query_worker.listens.schema import ensure_schema
 from listenbrainz.clickhouse.query_worker.utils import describe_load_errors
+from listenbrainz.db import listens
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +62,7 @@ def import_full_dump(workers: int = 4, dump_id: Optional[int] = None) -> list[di
         result = load_full_dump(
             ClickHouseConnection.from_config(),
             get_ftp_downloader(current_app),
+            listens_engine=listens.engine,
             workers=workers,
             dump_id=dump_id,
             download_dir=current_app.config["CLICKHOUSE_DUMP_DOWNLOAD_DIR"],
@@ -82,6 +84,7 @@ def import_incremental_dump(workers: int = 4, max_dumps: Optional[int] = None,
         result = import_missing_incremental_dumps(
             ClickHouseConnection.from_config(),
             get_ftp_downloader(current_app),
+            listens_engine=listens.engine,
             workers=workers,
             max_dumps=max_dumps,
             dump_id=dump_id,

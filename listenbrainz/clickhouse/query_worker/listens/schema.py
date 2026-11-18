@@ -32,6 +32,16 @@ CREATE_LISTENS_TABLE = f"""
 
 CREATE_TABLES = [
     CREATE_LISTENS_TABLE.format(if_not_exists="IF NOT EXISTS", name="listens"),
+    """
+    CREATE TABLE IF NOT EXISTS deleted_listens (
+        user_id UInt32, listened_at DateTime64(3), recording_msid UUID, created DateTime64(3)
+    ) ENGINE = ReplacingMergeTree ORDER BY (user_id, listened_at, recording_msid, created)
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS deleted_user_history (
+        user_id UInt32, max_created DateTime64(6)
+    ) ENGINE = ReplacingMergeTree(max_created) ORDER BY user_id
+    """,
     # High-water marks of incremental imports (see import_state.py).
     """
     CREATE TABLE IF NOT EXISTS import_state (
