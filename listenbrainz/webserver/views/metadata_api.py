@@ -13,10 +13,11 @@ from listenbrainz.labs_api.labs.api.artist_credit_recording_release_lookup impor
     ArtistCreditRecordingReleaseLookupQuery, ArtistCreditRecordingReleaseLookupInput
 from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery, MBIDMappingInput
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MBIDMapper
+from listenbrainz.mbid_mapping_writer.typesense_utils import TypesenseUnavailable, TYPESENSE_UNAVAILABLE_MESSAGE
 from listenbrainz.webserver import db_conn, listens_conn
 from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 from listenbrainz.webserver.decorators import cache_public, crossdomain
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIServiceUnavailable
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.views.api_tools import is_valid_uuid, validate_auth_header, MAX_ITEMS_PER_GET
 
@@ -334,6 +335,8 @@ def get_mbid_mapping():
         if fuzzy_result:
             return process_results(fuzzy_result, metadata, incs)
 
+    except TypesenseUnavailable as e:
+        raise APIServiceUnavailable(TYPESENSE_UNAVAILABLE_MESSAGE) from e
     except Exception as e:
         current_app.logger.error("Server failed to lookup recording: {}".format(e), exc_info=True)
         raise APIInternalServerError("Server failed to lookup recording")
@@ -481,6 +484,8 @@ def get_mbid_mapping_post():
         all_results, _ = process_bulk_lookup_results(all_results, all_params, mapping_query, make_mapping_input)
 
         return jsonify(all_results)
+    except TypesenseUnavailable as e:
+        raise APIServiceUnavailable(TYPESENSE_UNAVAILABLE_MESSAGE) from e
     except Exception as e:
         current_app.logger.error("Server failed to lookup recording: {}".format(e), exc_info=True)
         raise APIInternalServerError("Server failed to lookup recording")

@@ -25,6 +25,7 @@ from listenbrainz.labs_api.labs.api.bulk_tag_lookup import BulkTagLookup
 from sqlalchemy.pool import QueuePool
 
 from listenbrainz.webserver import load_config
+from listenbrainz.labs_api.labs.errors import init_error_handlers
 from listenbrainz import db
 from listenbrainz.db import listens as listens_db
 
@@ -48,6 +49,7 @@ register_query(TagSimilarityQuery())
 register_query(BulkTagLookup())
 
 app = create_app()
+init_error_handlers(app)
 load_config(app)
 init_sentry(app, "DATASETS_SENTRY_DSN")
 # labs_api uwsgi runs single-threaded workers (no `threads = N`), so each
