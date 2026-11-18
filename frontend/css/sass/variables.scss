@@ -1,6 +1,14 @@
 @use 'sass:color';
 @use 'sass:map';
 @import "bootstrap/scss/functions";
+// In ListenBrainz, html font-size is 10px and $font-size-base is 1.4rem (14px).
+// Bootstrap defaults $rfs-base-value to 1.25rem (intended for 16px root -> 20px).
+// Setting $rfs-base-value to 1.75rem ensures body text ($font-size-base) is not subjected
+// to fluid fractional RFS font scaling (e.g. calc(1.265rem + 0.18vw)), preventing
+// font rendering artifacts on intermediate widths (LB-2053).
+$rfs-base-value: 1.75rem;
+$rfs-base-font-size: 1.75rem;
+
 @import "bootstrap/scss/variables";
 
 /* Colors */
