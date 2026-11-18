@@ -14,6 +14,9 @@ from uuid import uuid4
 
 import clickhouse_connect
 import pyarrow.parquet as pq
+from sqlalchemy import create_engine
+
+from listenbrainz.db import listens
 
 from listenbrainz.clickhouse.query_worker.client import ClickHouseConnection
 from listenbrainz.clickhouse.query_worker.listens.ftp import DumpType
@@ -81,10 +84,26 @@ class ClickHouseTestCase(unittest.TestCase):
             parameters={"prefix": STAGING_TABLE_PREFIX},
         ).result_rows]
 
+
+class DumpImportTestCase(ClickHouseTestCase):
+    def setUp(self):
+        super().setUp()
+        config = listens.create_test_listens_connect_strings()
+        self.listens_engine = create_engine(config["DB_CONNECT"])
+        self.addCleanup(self.listens_engine.dispose)
+        with self.listens_engine.connect() as conn:
+            self.assertEqual(conn.exec_driver_sql("SELECT current_database()").scalar_one(), config["DB_NAME"])
+        self.clear_deletion_records()
+        self.addCleanup(self.clear_deletion_records)
+
+    def clear_deletion_records(self):
+        with self.listens_engine.begin() as conn:
+            conn.exec_driver_sql("TRUNCATE listen_delete_metadata, deleted_user_listen_history")
+
     def load_archive(self, archive: Path, dump_type: DumpType):
         """Exercise the shared loader with a local test archive."""
         parquet_files, _ = read_archive(archive)
-        _prepare_import(self.connection)
+        _prepare_import(self.connection, self.listens_engine)
         return _load_parquet_files(parquet_files, self.connection, dump_type, workers=2)
 
     def load_fixture(self, name):
