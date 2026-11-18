@@ -910,6 +910,13 @@
       color: #6b665c;
     }
 
+    // The dark theme lightens listen-card durations, which makes them vanish
+    // on these light cards. Keep the Year in Music muted tone instead.
+    #year-in-music .listen-card .title-duration > .text-muted,
+    #legacy-year-in-music .listen-card .title-duration > .text-muted {
+      color: #6b665c !important;
+    }
+
     #year-in-music .listen-card .listen-controls > .love,
     #year-in-music .listen-card .listen-controls > .hate,
     #legacy-year-in-music .listen-card .listen-controls > .love,
