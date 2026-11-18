@@ -9,11 +9,11 @@ To open a psql session to the listenbrainz database, run:
 
     ./develop.sh psql
 
-To open a psql session to the timescale database containing user listens, run:
+To open a psql session to the listens database containing user listens, run:
 
 .. code-block:: bash
 
-    ./develop.sh timescale
+    ./develop.sh listens
 
 To open a bash shell in the webserver container, run:
 

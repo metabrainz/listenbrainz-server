@@ -37,11 +37,6 @@ def save_pg_table_to_hdfs(query, path, process_artists_column=False):
     _save_db_table_to_hdfs(config.PG_JDBC_URI, config.PG_USER, config.PG_PASSWORD, query, path, process_artists_column)
 
 
-def save_ts_table_to_hdfs(query, path):
-    """ Load data from Timescale using the given SQL query and save the dataframe to given path in HDFS """
-    _save_db_table_to_hdfs(config.TS_JDBC_URI, config.TS_USER, config.TS_PASSWORD, query, path)
-
-
 def save_lb_table_to_hdfs(query, path):
-    """ Load data from Timescale using the given SQL query and save the dataframe to given path in HDFS """
+    """ Load data from the ListenBrainz database using the given SQL query and save the dataframe to given path in HDFS """
     _save_db_table_to_hdfs(config.LB_JDBC_URI, config.LB_USER, config.LB_PASSWORD, query, path)

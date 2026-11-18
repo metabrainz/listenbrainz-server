@@ -2,7 +2,7 @@ from flask import current_app
 from psycopg2.sql import Literal, SQL
 from sqlalchemy import text
 
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 from listenbrainz.spark.spark_dataset import DatabaseDataset
 
 
@@ -61,7 +61,7 @@ def get(query, more_query, params):
     recordings = []
     count = params["count"]
 
-    with timescale.engine.connect() as connection:
+    with listens_db.engine.connect() as connection:
         result = connection.execute(text(query), params).first()
         if result is not None and result.recordings is not None:
             recordings.extend(result.recordings)

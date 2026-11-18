@@ -43,13 +43,12 @@ PUBLIC_TABLES_DUMP = DumpTablesCollection(
     ]
 )
 
-# the mapping tables live in the listens database but are still dumped in the timescale dump
-# under their old file names, to keep the dump format unchanged.
+# all tables of the timescale dump are dumped from and imported into the listens database. the dump keeps
+# its name and the mapping tables keep their old file names, to keep the dump format unchanged.
 PUBLIC_TABLES_TIMESCALE_DUMP = DumpTablesCollection(
-    engine_name=DumpEngineName.ts,
+    engine_name=DumpEngineName.listens,
     tables=[
-        DumpTable(table_name=Identifier("mapping", "mbid_mapping_metadata"), filename="mbid_mapping_metadata",
-                  engine_name=DumpEngineName.listens, columns=(
+        DumpTable(table_name=Identifier("mapping", "mbid_mapping_metadata"), filename="mbid_mapping_metadata", columns=(
             "artist_credit_id",
             "recording_mbid",
             "release_mbid",
@@ -59,16 +58,14 @@ PUBLIC_TABLES_TIMESCALE_DUMP = DumpTablesCollection(
             "recording_name",
             "last_updated",
         )),
-        DumpTable(table_name=Identifier("mapping", "mbid_mapping"), filename="mbid_mapping",
-                  engine_name=DumpEngineName.listens, columns=(
+        DumpTable(table_name=Identifier("mapping", "mbid_mapping"), filename="mbid_mapping", columns=(
             "recording_msid",
             "recording_mbid",
             "match_type",
             "last_updated",
             "check_again",
         )),
-        DumpTable(table_name=Identifier("mapping", "mbid_manual_mapping"), filename="mbid_manual_mapping",
-                  engine_name=DumpEngineName.listens, columns=(
+        DumpTable(table_name=Identifier("mapping", "mbid_manual_mapping"), filename="mbid_manual_mapping", columns=(
             "id",
             "recording_msid",
             "recording_mbid",

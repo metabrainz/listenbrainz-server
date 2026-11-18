@@ -83,6 +83,7 @@ declare type ListenBrainzUser = {
   id?: number;
   name: string;
   auth_token?: string;
+  created?: number;
 };
 
 declare type ImportService = "lastfm" | "librefm";
@@ -769,6 +770,7 @@ declare type BrainzPlayerSettings = {
   funkwhaleEnabled : boolean;
   navidromeEnabled : boolean;
   brainzplayerEnabled : boolean;
+  notificationsEnabled : boolean;
   dataSourcesPriority : Array<
     | "spotify"
     | "youtube"

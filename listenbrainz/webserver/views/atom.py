@@ -6,7 +6,7 @@ from listenbrainz.db.model.user_timeline_event import UserTimelineEventType
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed, api_listens_db_needed
 from brainzutils.ratelimit import ratelimit
 import listenbrainz.db.user as db_user
-from listenbrainz.webserver import db_conn, ts_conn, timescale_connection, API_PREFIX
+from listenbrainz.webserver import db_conn, listens_conn, timescale_connection, API_PREFIX
 from listenbrainz.webserver.views.api_tools import (
     _parse_int_arg,
     get_non_negative_param,
@@ -270,7 +270,7 @@ def get_fresh_releases():
     try:
         # Get past fresh releases sorted by release date
         db_releases, _ = get_sitewide_fresh_releases(
-            ts_conn, date.today(), days, "release_date", True, False
+            listens_conn, date.today(), days, "release_date", True, False
         )
     except Exception as e:
         current_app.logger.error(

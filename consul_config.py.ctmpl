@@ -71,59 +71,31 @@ MB_DATABASE_URI = ""
 {{end}}
 
 
-# Use a key 'listenstore_up' in consul (json boolean true or false) to decide if we connect to timescale.
-# If we set SQLALCHEMY_TIMESCALE_URI to an empty string, then the @api_listenstore_needed and @web_listenstore_needed
-# decorators will prevent the webserver from accessing the timescale database
-{{- /* This needs to use key/printf again here instead of our pre-defined template at the top of the file as you cannot
-     call a template in an if statement or variable declaration */}}
-{{- $listenstore_up := (key (printf "docker-server-configs/LB/config.%s.json/listenstore_up" (env "DEPLOY_ENV"))) }}
-{{- if $listenstore_up | parseBool}}
-    {{- if service "timescale-listenbrainz"}}
-    {{with index (service "timescale-listenbrainz") 0}}
-SQLALCHEMY_TIMESCALE_URI = """postgresql://{{template "KEY" "timescale_lb_user"}}:{{template "KEY" "timescale_lb_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "timescale_db_name"}}"""
-TIMESCALE_ADMIN_URI = """postgresql://postgres:{{template "KEY" "timescale_admin_password"}}@{{.Address}}:{{.Port}}/postgres"""
-TIMESCALE_ADMIN_LB_URI = """postgresql://postgres:{{template "KEY" "timescale_admin_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "timescale_db_name"}}"""
-    {{end}}
-    {{else}}
-SQLALCHEMY_TIMESCALE_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
-TIMESCALE_ADMIN_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
-TIMESCALE_ADMIN_LB_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
-    {{end}}
-    {{- if service "pgbouncer-listenbrainz"}}
-    {{with index (service "pgbouncer-listenbrainz") 0}}
-SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = """postgresql://{{template "KEY" "timescale_lb_user"}}:{{template "KEY" "timescale_lb_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "timescale_db_name"}}"""
-    {{end}}
-    {{else}}
-SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = "SERVICEDOESNOTEXIST_pgbouncer-listenbrainz"
-    {{end}}
-{{else}}
-SQLALCHEMY_TIMESCALE_URI = ""
-TIMESCALE_ADMIN_URI=""
-TIMESCALE_ADMIN_LB_URI=""
-SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = ""
-{{end}}
+# Use a key 'listenstore_up' in consul (json boolean true or false) to decide if the webserver reads and writes
+# listens. If false, the @api_listenstore_needed and @web_listenstore_needed decorators turn requests that need
+# the listenstore away, e.g. during listens database maintenance.
+LISTENSTORE_UP = {{template "KEY_JSON" "listenstore_up"}}
 
 
-# Listens database (plain postgres, listens partitioned by user_id). Writes go here first;
-# deletions and permanent deletion history live here only. Timescale retains its listens.
-{{if service "pgbouncer-listenbrainz-user-listenstore"}}
-{{with index (service "pgbouncer-listenbrainz-user-listenstore") 0}}
-SQLALCHEMY_LISTENS_URI = """postgresql://{{template "KEY" "listens_db_user"}}:{{template "KEY" "listens_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listens_db_name"}}"""
-{{end}}
-{{else if service "listenbrainz-user-listenstore"}}
-{{with index (service "listenbrainz-user-listenstore") 0}}
-SQLALCHEMY_LISTENS_URI = """postgresql://{{template "KEY" "listens_db_user"}}:{{template "KEY" "listens_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listens_db_name"}}"""
-{{end}}
-{{else}}
-SQLALCHEMY_LISTENS_URI = "SERVICEDOESNOTEXIST_listenbrainz-user-listenstore"
-{{end}}
-
+# Listens database (plain postgres, listens partitioned by user_id).
+# SQLALCHEMY_LISTENS_URI connects directly, for long running jobs like dumps (see bypass_pgbouncer
+# in create_app) and admin commands. Everything else uses SQLALCHEMY_LISTENS_PGBOUNCER_URI.
 {{if service "listenbrainz-user-listenstore"}}
 {{with index (service "listenbrainz-user-listenstore") 0}}
+SQLALCHEMY_LISTENS_URI = """postgresql://{{template "KEY" "listens_db_user"}}:{{template "KEY" "listens_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listens_db_name"}}"""
 LISTENS_ADMIN_URI = """postgresql://postgres:{{template "KEY" "listens_admin_password"}}@{{.Address}}:{{.Port}}/postgres"""
 {{end}}
 {{else}}
+SQLALCHEMY_LISTENS_URI = "SERVICEDOESNOTEXIST_listenbrainz-user-listenstore"
 LISTENS_ADMIN_URI = "SERVICEDOESNOTEXIST_listenbrainz-user-listenstore"
+{{end}}
+
+{{if service "pgbouncer-listenbrainz-user-listenstore"}}
+{{with index (service "pgbouncer-listenbrainz-user-listenstore") 0}}
+SQLALCHEMY_LISTENS_PGBOUNCER_URI = """postgresql://{{template "KEY" "listens_db_user"}}:{{template "KEY" "listens_db_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "listens_db_name"}}"""
+{{end}}
+{{else}}
+SQLALCHEMY_LISTENS_PGBOUNCER_URI = SQLALCHEMY_LISTENS_URI
 {{end}}
 
 
@@ -141,8 +113,8 @@ MBID_MAPPING_DATABASE_URI = ""
 # pgbouncer max_client_conn and postgres max_connections for the target host.
 DB_POOL_SIZE = {{template "KEY" "db_pool_size"}}
 DB_POOL_MAX_OVERFLOW = {{template "KEY" "db_pool_max_overflow"}}
-TIMESCALE_POOL_SIZE = {{template "KEY" "timescale_pool_size"}}
-TIMESCALE_POOL_MAX_OVERFLOW = {{template "KEY" "timescale_pool_max_overflow"}}
+LISTENS_POOL_SIZE = {{template "KEY" "listens_pool_size"}}
+LISTENS_POOL_MAX_OVERFLOW = {{template "KEY" "listens_pool_max_overflow"}}
 MEB_POOL_SIZE = {{template "KEY" "meb_pool_size"}}
 MEB_POOL_MAX_OVERFLOW = {{template "KEY" "meb_pool_max_overflow"}}
 
@@ -352,3 +324,23 @@ GARAGE_USER_DATA_IMPORT_BUCKET = '''{{template "KEY" "garage/user_data_import_bu
 NAVIDROME_ENCRYPTION_KEY = '''{{template "KEY" "navidrome/encryption_key"}}'''
 
 BACKGROUND_TASKS_SLEEP_TIME = 5
+
+# ClickHouse connection settings
+{{if service "clickhouse-listenbrainz"}}
+{{with index (service "clickhouse-listenbrainz") 0}}
+CLICKHOUSE_HOST = "{{.Address}}"
+CLICKHOUSE_PORT = {{.Port}}
+{{end}}
+{{else}}
+CLICKHOUSE_HOST = "SERVICEDOESNOTEXIST_clickhouse-listenbrainz"
+CLICKHOUSE_PORT = "SERVICEDOESNOTEXIST_clickhouse-listenbrainz"
+{{end}}
+CLICKHOUSE_DATABASE = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/clickhouse_database" (env "DEPLOY_ENV")) "default" }}'''
+CLICKHOUSE_USERNAME = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/clickhouse_username" (env "DEPLOY_ENV")) "default" }}'''
+CLICKHOUSE_PASSWORD = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/clickhouse_password" (env "DEPLOY_ENV")) "" }}'''
+
+# FTP settings for dump download
+FTP_SERVER_URI = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/ftp_server_uri" (env "DEPLOY_ENV")) "ftp.eu.metabrainz.org" }}'''
+FTP_LISTENS_DIR = '''{{ keyOrDefault (printf "docker-server-configs/LB/config.%s.json/ftp_listens_dir" (env "DEPLOY_ENV")) "/pub/musicbrainz/listenbrainz/" }}'''
+# A full listen dump is hundreds of GB: a volume with room for it, not the container's /tmp
+CLICKHOUSE_DUMP_DOWNLOAD_DIR = '''{{template "KEY" "clickhouse_dump_download_dir"}}'''

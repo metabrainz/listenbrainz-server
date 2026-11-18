@@ -4,6 +4,7 @@ import { BarTooltipProps, ResponsiveBar } from "@nivo/bar";
 import { useMediaQuery } from "react-responsive";
 import { BasicTooltip } from "@nivo/tooltip";
 import { COLOR_LB_BLUE, COLOR_LB_ORANGE } from "../../../utils/constants";
+import { useNivoTheme } from "../../../utils/nivoTheme";
 
 export type BarDualToneProps = {
   data: UserListeningActivityData;
@@ -21,6 +22,7 @@ export type BarDualToneProps = {
 
 export default function BarDualTone(props: BarDualToneProps) {
   const isMobile = useMediaQuery({ maxWidth: 767 });
+  const nivoTheme = useNivoTheme();
 
   const rangeMap = {
     week: {
@@ -139,7 +141,7 @@ export default function BarDualTone(props: BarDualToneProps) {
 
   const { data, range, lastRangePeriod, thisRangePeriod } = props;
   let { showLegend } = props;
-  showLegend = showLegend && !(isMobile && range === "month");
+  showLegend = showLegend && !(isMobile && range.includes("month"));
 
   const { dateFormat, keys, itemWidth } = rangeMap[range] || {};
 
@@ -203,7 +205,7 @@ export default function BarDualTone(props: BarDualToneProps) {
         }}
         axisBottom={{
           format:
-            (range === "all_time" || range === "month") && isMobile
+            (range === "all_time" || range.includes("month")) && isMobile
               ? tickFormatter
               : undefined,
         }}
@@ -216,6 +218,7 @@ export default function BarDualTone(props: BarDualToneProps) {
         innerPadding={2}
         enableLabel={false}
         tooltip={customTooltip}
+        theme={nivoTheme}
         margin={{
           left: 45,
           bottom: 40,

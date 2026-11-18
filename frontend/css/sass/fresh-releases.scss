@@ -35,6 +35,46 @@
   align-items: center;
 }
 
+.fresh-releases-select {
+  min-width: 150px;
+
+  .fresh-releases-select-toggle {
+    align-items: center;
+    background-color: var(--lb-surface-raised);
+    border: 1px solid var(--lb-border);
+    border-radius: 0.375rem;
+    color: var(--lb-text);
+    display: flex;
+    font: inherit;
+    justify-content: space-between;
+    line-height: 1.5;
+    padding: 0.375rem 0.75rem;
+    text-align: left;
+    width: 100%;
+
+    &::after {
+      margin-left: 0.75rem;
+    }
+
+    &:hover {
+      background-color: var(--lb-surface-muted);
+      color: var(--lb-text);
+    }
+
+    &:focus-visible {
+      box-shadow: 0 0 0 0.2rem rgb(175 166 223 / 45%);
+      outline: 0;
+    }
+  }
+
+  .dropdown-menu {
+    --bs-dropdown-link-active-bg: #ba478f;
+    --bs-dropdown-link-active-color: #fff;
+
+    min-width: 100%;
+  }
+}
+
 .releases-page {
   // FILTERS
   .filters-main {

@@ -18,11 +18,13 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import SpotifyPlayer from "../../common/brainzplayer/SpotifyPlayer";
 import SoundcloudPlayer from "../../common/brainzplayer/SoundcloudPlayer";
 import FunkwhalePlayer from "../../common/brainzplayer/FunkwhalePlayer";
+import { hasNotificationPermission } from "../../notifications/Notifications";
 import AppleMusicPlayer from "../../common/brainzplayer/AppleMusicPlayer";
 import Card from "../../components/Card";
 import faInternetArchive from "../../common/icons/faInternetArchive";
 import faFunkwhale from "../../common/icons/faFunkwhale";
 import { faNavidrome } from "../../common/icons/faNavidrome";
+import YouTubeLogo from "../../common/icons/YouTubeLogo";
 import useAutoSave from "../../hooks/useAutoSave";
 
 export const dataSourcesInfo = {
@@ -44,7 +46,7 @@ export const dataSourcesInfo = {
   appleMusic: {
     name: "Apple Music",
     icon: faApple,
-    color: "#000000",
+    color: "var(--lb-brand-apple)",
   },
   internetArchive: {
     name: "Internet Archive",
@@ -113,6 +115,8 @@ function BrainzPlayerSettings() {
       Boolean(navidromeAuth?.instance_url),
     brainzplayerEnabled:
       userPreferences?.brainzplayer?.brainzplayerEnabled ?? true,
+    notificationsEnabled:
+      userPreferences?.brainzplayer?.notificationsEnabled ?? true,
     dataSourcesPriority: union(
       userPreferences?.brainzplayer?.dataSourcesPriority ?? [],
       defaultDataSourcesPriority
@@ -127,6 +131,7 @@ function BrainzPlayerSettings() {
     funkwhaleEnabled,
     navidromeEnabled,
     brainzplayerEnabled,
+    notificationsEnabled,
     dataSourcesPriority,
   } = settings;
 
@@ -224,6 +229,31 @@ function BrainzPlayerSettings() {
             </p>
           )}
         </summary>
+        <Switch
+          id="enable-notifications"
+          value="notifications"
+          checked={notificationsEnabled}
+          onChange={() => {
+            // Prompt for OS/browser notification permission as soon as the
+            // user opts in, rather than waiting for the next track change.
+            if (!notificationsEnabled) {
+              hasNotificationPermission();
+            }
+            updateSettings((prev) => ({
+              ...prev,
+              notificationsEnabled: !prev.notificationsEnabled,
+            }));
+          }}
+          switchLabel={
+            <span
+              className={`text-brand ${
+                !notificationsEnabled ? "text-muted" : ""
+              }`}
+            >
+              <span>Show playback notifications</span>
+            </span>
+          }
+        />
         <h3 className="mt-4">Play music with...</h3>
         <p>Choose which music services to use for playback in ListenBrainz.</p>
 
@@ -512,9 +542,14 @@ function BrainzPlayerSettings() {
                 className={`text-brand ${!youtubeEnabled ? "text-muted" : ""}`}
               >
                 <span className={youtubeEnabled ? "text-success" : ""}>
-                  <FontAwesomeIcon
-                    icon={faYoutube}
-                    color={youtubeEnabled ? dataSourcesInfo.youtube.color : ""}
+                  <YouTubeLogo
+                    aria-hidden="true"
+                    style={{
+                      height: "1em",
+                      opacity: youtubeEnabled ? 1 : 0.5,
+                      verticalAlign: "-0.125em",
+                      width: "1.4em",
+                    }}
                   />
                 </span>
                 <span>&nbsp;YouTube</span>
@@ -615,10 +650,21 @@ function BrainzPlayerSettings() {
                   <FontAwesomeIcon icon={faGripLines} />
                 </span>
                 <span>
-                  <FontAwesomeIcon
-                    icon={item.info?.icon}
-                    color={item.info?.color}
-                  />
+                  {item.id === "youtube" ? (
+                    <YouTubeLogo
+                      aria-hidden="true"
+                      style={{
+                        height: "1em",
+                        verticalAlign: "-0.125em",
+                        width: "1.4em",
+                      }}
+                    />
+                  ) : (
+                    <FontAwesomeIcon
+                      icon={item.info?.icon}
+                      color={item.info?.color}
+                    />
+                  )}
                 </span>
                 <span>&nbsp;{item.info?.name}</span>
               </div>

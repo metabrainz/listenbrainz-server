@@ -7,7 +7,7 @@ import sqlalchemy.exc
 from psycopg2.extras import execute_values
 from sqlalchemy import text
 
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 from listenbrainz.messybrainz import exceptions
 
 
@@ -27,7 +27,7 @@ def submit_listens_and_sing_me_a_sweet_song(recordings):
     success = False
     while not success and attempts < 3:
         try:
-            with timescale.engine.connect() as connection:
+            with listens_db.engine.connect() as connection:
                 data = insert_all_in_transaction(connection, recordings)
                 success = True
         except (psycopg2.IntegrityError, sqlalchemy.exc.IntegrityError):
@@ -43,11 +43,11 @@ def submit_listens_and_sing_me_a_sweet_song(recordings):
         raise exceptions.ErrorAddingException("Failed to add data")
 
 
-def insert_all_in_transaction(ts_conn, submissions: list[dict]):
+def insert_all_in_transaction(listens_conn, submissions: list[dict]):
     """ Inserts a list of recordings into MessyBrainz.
 
     Args:
-        ts_conn: timescale database connection
+        listens_conn: listens database connection
         submissions: a list of recordings to be inserted
     Returns:
         A list of recording MSIDs in the same order as the given submissions
@@ -65,7 +65,7 @@ def insert_all_in_transaction(ts_conn, submissions: list[dict]):
             key_to_lookup_idx[key] = len(unique_submissions)
             unique_submissions.append(submission)
 
-    existing_msids = _get_msids_for_submissions(ts_conn, unique_submissions)
+    existing_msids = _get_msids_for_submissions(listens_conn, unique_submissions)
     key_to_msid = {}
     insert_rows = []
     for key, idx in key_to_lookup_idx.items():
@@ -88,10 +88,10 @@ def insert_all_in_transaction(ts_conn, submissions: list[dict]):
             INSERT INTO messybrainz.submissions (gid, recording, artist_credit, release, track_number, duration)
                  VALUES %s
         """
-        with ts_conn.connection.cursor() as curs:
+        with listens_conn.connection.cursor() as curs:
             execute_values(curs, query, insert_rows, page_size=len(insert_rows))
 
-    ts_conn.connection.commit()
+    listens_conn.connection.commit()
     return [key_to_msid[key] for key in keys]
 
 
@@ -118,7 +118,7 @@ def _int_optional(value):
     return int(value) if value is not None else None
 
 
-def _get_msids_for_submissions(ts_conn, submissions: list[dict]) -> dict[int, str]:
+def _get_msids_for_submissions(listens_conn, submissions: list[dict]) -> dict[int, str]:
     """Bulk lookup existing MSIDs for submissions, preserving earliest-submitted duplicates."""
     if not submissions:
         return {}
@@ -148,7 +148,7 @@ def _get_msids_for_submissions(ts_conn, submissions: list[dict]) -> dict[int, st
         )
         for idx, submission in enumerate(submissions)
     ]
-    with ts_conn.connection.cursor() as curs:
+    with listens_conn.connection.cursor() as curs:
         rows = execute_values(curs, query, values, fetch=True, page_size=len(values))
     return {row[0]: row[1] for row in rows}
 
@@ -219,7 +219,7 @@ def submit_recording(connection, recording, artist, release=None, track_number=N
     return str(msid)
 
 
-def load_recordings_from_msids(ts_curs, messybrainz_ids: Iterable[str]) -> dict[str, dict]:
+def load_recordings_from_msids(listens_curs, messybrainz_ids: Iterable[str]) -> dict[str, dict]:
     """ Returns data for a recordings corresponding to a given list of MessyBrainz IDs.
     msids not found in the database are omitted from the returned dict (usually indicates the msid
     is wrong because data is not deleted from MsB).
@@ -251,5 +251,5 @@ def load_recordings_from_msids(ts_curs, messybrainz_ids: Iterable[str]) -> dict[
               JOIN messybrainz.submissions
                 ON gid = recording_msid
     """
-    results = execute_values(ts_curs, query, [(msid,) for msid in messybrainz_ids], fetch=True)
+    results = execute_values(listens_curs, query, [(msid,) for msid in messybrainz_ids], fetch=True)
     return {row["msid"]: dict(row) for row in results}

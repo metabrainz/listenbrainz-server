@@ -1,5 +1,12 @@
 Connecting music services from another application
 ==================================================
+.. note::
+    In most cases you do not need this authorization flow. Instead, prefer explicit consent
+    from the user and ask them to copy their user token and use bearer token authentication
+    (see the :ref:`API documentation <users/api/index:Authentication>`).
+    
+    This authorization flow is restricted to commercial supporters. If you would like to
+    apply for this scope, please `get in contact with us`_
 
 ListenBrainz can import a user's listening history from music services such as Spotify. The
 connection to those services is made with OAuth, and one of the security measures in OAuth
@@ -25,6 +32,9 @@ is for, so it cannot be skipped. Everything after it is a plain redirect.
 Getting access
 --------------
 
+First, you will need to `get in contact with us`_ and become a commercial supporter before
+we approve your `OAuth application`_ for this restricted scope.
+
 There is nothing to register with ListenBrainz. The ``listenbrainz:connect-services``
 scope is only granted to applications MetaBrainz has approved for it, and an access token
 carrying that scope is the whole of the authorization — there is no separate ListenBrainz
@@ -36,6 +46,9 @@ registered under with MetaBrainz, so make sure it is a name they will recognise.
 Because there is no registered list of redirect uris to match against, ``redirect_uri`` is
 whatever you send, as long as it is an absolute ``https`` url (``http`` is accepted only
 for ``localhost``, for local development).
+
+.. _get in contact with us: mailto:support@listenbrainz.org
+.. _OAuth application: https://metabrainz.org/profile/applications
 
 Starting the flow
 -----------------

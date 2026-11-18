@@ -34,6 +34,7 @@ export default function YIMArtistEvolution(props: YIMArtistEvolutionProps) {
             rawData={artistEvolutionData}
             range="this_year"
             colorPalette={colorPalette}
+            theme="light"
           />
         </div>
       </div>

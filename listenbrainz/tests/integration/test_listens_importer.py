@@ -71,8 +71,8 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         expires = now + timedelta(days=365)
 
         from listenbrainz.metadata_cache.store import insert
-        insert(self.ts_conn.connection.cursor(), "spotify_cache", album, now, expires)
-        self.ts_conn.connection.commit()
+        insert(self.listens_conn.connection.cursor(), "spotify_cache", album, now, expires)
+        self.listens_conn.connection.commit()
 
     def create_empty_zip(self):
         return self.create_zip("empty.zip", [])

@@ -1,9 +1,7 @@
 import os
 from datetime import date
-from time import sleep
 
 import click
-import sqlalchemy
 
 from listenbrainz import db
 from listenbrainz import webserver
@@ -11,7 +9,7 @@ from listenbrainz.background import export
 from listenbrainz.background.listens_importer.storage import cleanup_import_files
 from listenbrainz.background.migrate_exports import migrate_exports
 from listenbrainz.background.migrate_imports import migrate_imports
-from listenbrainz.db import listens as listens_db, timescale as ts, do_not_recommend
+from listenbrainz.db import listens as listens_db, do_not_recommend
 
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
     add_missing_to_listen_users_metadata as ts_add_missing_to_listen_users_metadata,\
@@ -21,6 +19,7 @@ from listenbrainz.messybrainz import update_msids_from_mapping
 from listenbrainz.metadata_cache.seeder import submit_new_releases_to_cache
 from listenbrainz.troi.daily_jams import run_daily_jams_troi_bot
 from listenbrainz.webserver import create_app
+from listenbrainz.retry_rejected_listens import replay_rejected_listens
 
 
 @click.group()
@@ -29,7 +28,21 @@ def cli():
 
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'admin', 'sql')
-TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'admin', 'timescale')
+
+
+@cli.command(name="retry-rejected-listens")
+@click.option("--max-messages", type=click.IntRange(min=1),
+              help="Maximum number of message batches to replay; defaults to the initial ready count.")
+@click.option("--dry-run", is_flag=True, help="Show the replay count without consuming messages.")
+def retry_rejected_listens(max_messages, dry_run):
+    """Replay rejection messages after fixing the writer error.
+
+    Uses the configured RabbitMQ queues. Each message may contain multiple listens.
+    An interruption after publication but before acknowledgement can cause duplicates.
+    """
+    app = create_app()
+    with app.app_context():
+        replay_rejected_listens(max_messages, dry_run)
 
 
 @cli.command(name="init_db")
@@ -123,7 +136,7 @@ TEST_LISTENS_PARTITION_COUNT = 4
 def init_listens_db(force, create_db, partitions):
     """Initializes the user-partitioned listens database.
 
-    Creates the listen table, its hash partitions, the mapping tables and their indexes.
+    Creates the listen table, its hash partitions, the mapping and MessyBrainz tables and their indexes.
     """
     import psycopg2
     from listenbrainz import config
@@ -198,103 +211,6 @@ def update_db(filename):
     with application.app_context():
         print('PG: Running DB migration script %s...' % filename)
         db.run_sql_script(filename)
-
-        print("Done!")
-
-
-@cli.command(name="init_ts_db")
-@click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
-@click.option("--create-db", is_flag=True, help="Create the database and user.")
-def init_ts_db(force, create_db):
-    """Initializes database.
-
-    This process involves several steps:
-        1. Table structure is created.
-        2. Indexes are created.
-        3. Views are created
-    """
-    from listenbrainz import config
-    if "PYTHON_TESTS_RUNNING" in os.environ:
-        ts_connect = ts.create_test_timescale_connect_strings()
-        ts.init_db_connection(ts_connect["DB_CONNECT_ADMIN"])
-        config.PYTHON_TESTS_RUNNING = True
-    else:
-        ts_connect = {"DB_NAME": "listenbrainz_ts", "DB_USER": "listenbrainz_ts"}
-        ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
-    if force:
-        res = ts.run_sql_query_without_transaction(
-            [f"DROP DATABASE IF EXISTS {ts_connect['DB_NAME']}", f"DROP USER IF EXISTS {ts_connect['DB_USER']}"])
-        if not res:
-            raise Exception('Failed to drop existing database/user! Exit code: %i' % res)
-
-    if create_db or force:
-        print('TS: Creating user and a database...')
-        retries = 0
-        while True:
-            try:
-                if "PYTHON_TESTS_RUNNING" in os.environ:
-                    res = ts.run_sql_query_without_transaction([
-                        f"CREATE USER {ts_connect['DB_USER']} NOCREATEDB NOSUPERUSER",
-                        f"ALTER USER {ts_connect['DB_USER']} WITH PASSWORD 'listenbrainz_ts'",
-                        f"CREATE DATABASE {ts_connect['DB_NAME']} WITH OWNER = {ts_connect['DB_USER']} TEMPLATE template0 ENCODING = 'UNICODE'"
-                    ])
-                else:
-                    res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
-                break
-            except sqlalchemy.exc.OperationalError:
-                print("Trapped template1 access error, FFS! Sleeping, trying again.")
-                retries += 1
-                if retries == 5:
-                    raise
-                sleep(1)
-                continue
-
-        if not res:
-            raise Exception('Failed to create new database and user! Exit code: %i' % res)
-
-        if "PYTHON_TESTS_RUNNING" in os.environ:
-            ts.init_db_connection(ts_connect["DB_CONNECT_ADMIN_LB"])
-        else:
-            ts.init_db_connection(config.TIMESCALE_ADMIN_LB_URI)
-
-        print('TS: Creating database extensions...')
-        res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_extensions.sql'))
-        # Don't raise an exception if the extension already exists
-        # TODO fix this
-        if not res:
-            raise Exception('Failed to create ts extension! Exit code: %i' % res)
-
-        res = ts.run_sql_query_without_transaction(
-            [f"ALTER DATABASE {ts_connect['DB_NAME']} SET pg_trgm.word_similarity_threshold = 0.1"])
-        if not res:
-            raise Exception('Failed to create to set pg_trgm.word_similarity_threshold! Exit code: %i' % res)
-
-
-    if "PYTHON_TESTS_RUNNING" in os.environ:
-        ts.init_db_connection(ts_connect["DB_CONNECT"])
-    else:
-        ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
-
-    application = webserver.create_app()
-    with application.app_context():
-        print('TS: Creating Schemas...')
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_schemas.sql'))
-
-        print('TS: Creating Types...')
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_types.sql'))
-
-        print('TS: Creating tables...')
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
-
-        print('TS: Insert default rows...')
-        res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'insert_default_data.sql'))
-
-        print('TS: Creating indexes...')
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
-
-        print('TS: Creating Primary and Foreign Keys...')
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_primary_keys.sql'))
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_foreign_keys.sql'))
 
         print("Done!")
 
@@ -384,7 +300,7 @@ def notify_yim_users(year: int):
     application = webserver.create_app()
     with application.app_context():
         from listenbrainz.db import year_in_music
-        year_in_music.notify_yim_users(webserver.db_conn, webserver.ts_conn, year)
+        year_in_music.notify_yim_users(webserver.db_conn, webserver.listens_conn, year)
 
 
 @cli.command(name="notify_spotify_refresh_token_expiry")

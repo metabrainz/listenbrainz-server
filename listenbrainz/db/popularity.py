@@ -155,7 +155,7 @@ def to_entity_mbid(entity, per_artist):
     return f"{entity}_mbid"
 
 
-def get_top_entity_for_artist(ts_conn, entity, artist_mbid, count=None):
+def get_top_entity_for_artist(listens_conn, entity, artist_mbid, count=None):
     """ Get the top 'count' recordings, releases or release-groups for a given artist mbid
 
         By default running all recordings (entities) of the artist returned.
@@ -188,11 +188,11 @@ def get_top_entity_for_artist(ts_conn, entity, artist_mbid, count=None):
       GROUP BY """ + entity_mbid + """
       ORDER BY total_listen_count DESC
     """ + limit
-    results = ts_conn.execute(text(query), {"artist_mbid": artist_mbid, "count": count})
+    results = listens_conn.execute(text(query), {"artist_mbid": artist_mbid, "count": count})
     return results.mappings().all()
 
 
-def get_counts(ts_conn, entity, mbids):
+def get_counts(listens_conn, entity, mbids):
     """ Get the total listen and user counts for a given entity and list of mbids """
     entity_mbid = to_entity_mbid(entity, False)
 
@@ -224,8 +224,8 @@ def get_counts(ts_conn, entity, mbids):
         table=Identifier("popularity", entity),
         mlhd_table=Identifier("popularity", "mlhd_" + entity)
     )
-    ts_curs = ts_conn.connection.cursor()
-    results = execute_values(ts_curs, query, [(mbid, ) for mbid in mbids], fetch=True)
+    listens_curs = listens_conn.connection.cursor()
+    results = execute_values(listens_curs, query, [(mbid, ) for mbid in mbids], fetch=True)
     index = {row[0]: (row[1], row[2]) for row in results}
 
     entity_data = []
@@ -235,14 +235,14 @@ def get_counts(ts_conn, entity, mbids):
     return entity_data, index
 
 
-def get_top_recordings_for_artist(db_conn, ts_conn, listens_conn, artist_mbid, count=None):
+def get_top_recordings_for_artist(db_conn, listens_conn, artist_mbid, count=None):
     """ Get the top recordings for a given artist mbid """
     cache_key = POPULARITY_TOP_RECORDINGS_KEY % (artist_mbid, count)
     cached = cache.get(cache_key, namespace=POPULARITY_CACHE_NAMESPACE, decode=True)
     if cached is not None:
         return cached
 
-    recordings = get_top_entity_for_artist(ts_conn, "recording", artist_mbid, count)
+    recordings = get_top_entity_for_artist(listens_conn, "recording", artist_mbid, count)
     recording_mbids = [str(r["recording_mbid"]) for r in recordings]
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
             mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
@@ -272,14 +272,14 @@ def get_top_recordings_for_artist(db_conn, ts_conn, listens_conn, artist_mbid, c
         return results
 
 
-def get_top_release_groups_for_artist(db_conn, ts_conn, artist_mbid: str, count=None):
+def get_top_release_groups_for_artist(db_conn, listens_conn, artist_mbid: str, count=None):
     """ Get the top releases for a given artist mbid """
     cache_key = POPULARITY_TOP_RELEASE_GROUPS_KEY % (artist_mbid, count)
     cached = cache.get(cache_key, namespace=POPULARITY_CACHE_NAMESPACE, decode=True)
     if cached is not None:
         return cached
 
-    release_groups = get_top_entity_for_artist(ts_conn, "release_group", artist_mbid, count)
+    release_groups = get_top_entity_for_artist(listens_conn, "release_group", artist_mbid, count)
     release_group_mbids = [str(r["release_group_mbid"]) for r in release_groups]
 
     release_groups_data = []

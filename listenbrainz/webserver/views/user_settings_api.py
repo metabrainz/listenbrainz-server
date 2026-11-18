@@ -130,6 +130,7 @@ brainzplayer_preferences_schema = {
         "brainzplayerEnabled": {"type": "boolean"},
         "dataSourcesPriority": {"type": "array", "items": {"type": "string"}},
         "internetArchiveEnabled": {"type": "boolean"},
+        "notificationsEnabled": {"type": "boolean"},
     },
     "additionalProperties": False,
 }
