@@ -5,6 +5,7 @@ import { faCog } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import { Dropdown } from "react-bootstrap";
+import { ReactSortable } from "react-sortablejs";
 import PlaylistItemCard from "../../../playlists/components/PlaylistItemCard";
 import PlaylistMenu from "../../../playlists/components/PlaylistMenu";
 
@@ -15,6 +16,7 @@ type LBRadioFeedbackProps = {
 type PlaylistProps = {
   playlist?: JSPFPlaylist;
   onRemoveTrack?: (track: JSPFTrack) => void;
+  onReorderTracks?: (tracks: JSPFTrack[]) => void;
 };
 
 export function LBRadioFeedback(props: LBRadioFeedbackProps) {
@@ -37,7 +39,9 @@ export function LBRadioFeedback(props: LBRadioFeedbackProps) {
 }
 
 export function Playlist(props: PlaylistProps) {
-  const { playlist, onRemoveTrack } = props;
+  const { playlist, onRemoveTrack, onReorderTracks } = props;
+  // The generated playlist behaves like a playlist the user can edit locally
+  const canEdit = Boolean(onRemoveTrack && onReorderTracks);
 
   if (!playlist?.track?.length) {
     if (playlist !== undefined) {
@@ -62,20 +66,23 @@ export function Playlist(props: PlaylistProps) {
         <div id="title">{playlist?.title}</div>
         <div id="description">{playlist?.annotation}</div>
       </div>
-      <div>
+      <ReactSortable
+        handle=".drag-handle"
+        disabled={!canEdit}
+        list={playlist.track as (JSPFTrack & { id: string })[]}
+        setList={(newTracks) => onReorderTracks?.(newTracks)}
+      >
         {playlist.track.map((track: JSPFTrack, index) => {
           return (
             <PlaylistItemCard
               key={`${track.id}-${index.toString()}`}
-              canEdit={false}
-              canRemove={Boolean(onRemoveTrack)}
-              removeTrackText="Remove from radio"
+              canEdit={canEdit}
               removeTrackFromPlaylist={onRemoveTrack}
               track={track}
             />
           );
         })}
-      </div>
+      </ReactSortable>
     </div>
   );
 }

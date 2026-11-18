@@ -31,12 +31,16 @@ describe("LB Radio Playlist", () => {
   it("removes the right track through its card menu", async () => {
     const onRemoveTrack = jest.fn();
     renderPlaylist(
-      <Playlist playlist={playlist} onRemoveTrack={onRemoveTrack} />
+      <Playlist
+        playlist={playlist}
+        onRemoveTrack={onRemoveTrack}
+        onReorderTracks={jest.fn()}
+      />
     );
 
-    // One "Remove from radio" item per track card, in playlist order
+    // One "Remove from playlist" item per track card, in playlist order
     const removeButtons = screen.getAllByRole("menuitem", {
-      name: "Remove from radio",
+      name: "Remove from playlist",
     });
     expect(removeButtons).toHaveLength(2);
     await userEvent.click(removeButtons[1]);
@@ -48,12 +52,26 @@ describe("LB Radio Playlist", () => {
   it("does not offer removal when no handler is passed", () => {
     renderPlaylist(<Playlist playlist={playlist} />);
     expect(
-      screen.queryAllByRole("menuitem", { name: "Remove from radio" })
+      screen.queryAllByRole("menuitem", { name: "Remove from playlist" })
     ).toHaveLength(0);
   });
 
-  it("does not show drag handles, since radio tracks cannot be reordered", () => {
-    renderPlaylist(<Playlist playlist={playlist} onRemoveTrack={jest.fn()} />);
-    expect(screen.queryByTitle("Drag to reorder")).toBeNull();
+  it("shows drag handles so tracks can be reordered", () => {
+    const { container } = renderPlaylist(
+      <Playlist
+        playlist={playlist}
+        onRemoveTrack={jest.fn()}
+        onReorderTracks={jest.fn()}
+      />
+    );
+    // The drag handle icon is aria-hidden, so there is no accessible query for it
+    // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
+    expect(container.querySelectorAll(".drag-handle")).toHaveLength(2);
+  });
+
+  it("is read-only when no handlers are passed", () => {
+    const { container } = renderPlaylist(<Playlist playlist={playlist} />);
+    // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
+    expect(container.querySelectorAll(".drag-handle")).toHaveLength(0);
   });
 });

@@ -120,6 +120,18 @@ export default function LBRadio() {
     });
   }, []);
 
+  const reorderTracks = React.useCallback((reorderedTracks: JSPFTrack[]) => {
+    setJspfPlaylist((prevJspf) => {
+      if (!prevJspf?.playlist) {
+        return prevJspf;
+      }
+      return {
+        ...prevJspf,
+        playlist: { ...prevJspf.playlist, track: reorderedTracks },
+      };
+    });
+  }, []);
+
   const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
   const replaceAmbientQueue = useSetAtom(ambientQueueAtom);
 
@@ -157,6 +169,7 @@ export default function LBRadio() {
             <Playlist
               playlist={jspfPlaylist?.playlist}
               onRemoveTrack={removeTrack}
+              onReorderTracks={reorderTracks}
             />
           </Loader>
         </div>
