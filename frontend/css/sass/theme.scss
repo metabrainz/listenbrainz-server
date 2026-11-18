@@ -1097,10 +1097,11 @@
       box-shadow: none;
     }
 
+    // Still dimmer than the enabled links, but meets the 4.5:1 text minimum
     #navigation.pagination .page-item.disabled .page-link {
       background-color: var(--lb-surface-muted) !important;
       border-color: var(--lb-card-border) !important;
-      color: #827c90 !important;
+      color: var(--bs-tertiary-color) !important;
     }
 
     #navigation.pagination .page-link:hover,
@@ -1362,6 +1363,16 @@
       color: var(--lb-text-muted);
     }
 
+    // date-picker.scss uses $red and $gray-600, which are too dark here.
+    // Kept before the today/active rules so those still set white text.
+    .react-calendar__month-view__days__day--weekend {
+      color: #e06666;
+    }
+
+    .react-calendar__month-view__days__day--neighboringMonth {
+      color: var(--bs-tertiary-color);
+    }
+
     .react-calendar__tile--now {
       background-color: #615b3f;
       color: #fff;
@@ -1407,6 +1418,13 @@
       z-index: 1;
       color: var(--lb-text) !important;
       -webkit-text-fill-color: var(--lb-text);
+    }
+
+    // Clicking a date part selects its digits. The browser's default light
+    // selection colour leaves the light text unreadable, so use the same
+    // purple as the active calendar date.
+    .react-datetime-picker__inputGroup__input::selection {
+      background-color: #625c86;
     }
 
     .track-search-dropdown .selected,
