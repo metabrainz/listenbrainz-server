@@ -736,13 +736,19 @@
       color: #d4cfde !important;
     }
 
-    #dashboard
-      .listen-card
-      .listen-controls
-      > button:not(.love):not(.hate):hover,
-    #dashboard .listen-card .listen-controls > .btn:not(.love):not(.hate):hover,
-    #dashboard .listen-card .play-button:hover {
+    // Not limited to #dashboard: listen-cards.scss sets a dark $asphalt hover
+    // colour on every listen card, including the BrainzPlayer queue, where it
+    // made the hovered three-dot button almost disappear.
+    .listen-card .listen-controls > button:not(.love):not(.hate):hover,
+    .listen-card .listen-controls > .btn:not(.love):not(.hate):hover,
+    .listen-card .play-button:hover {
       color: var(--lb-accent-hover);
+    }
+
+    // While its menu is open, a transparent button otherwise falls back to
+    // Bootstrap's grey active colour, dimmer than its resting state.
+    .btn-transparent {
+      --bs-btn-active-color: var(--lb-text);
     }
 
     // Reactions are intentionally semantic rather than brand-blue: the old
