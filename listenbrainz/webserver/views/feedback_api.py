@@ -1,3 +1,4 @@
+from time import time
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, jsonify, request
 from pydantic import ValidationError
@@ -9,13 +10,14 @@ from listenbrainz.db.model.feedback import Feedback
 
 from listenbrainz.domain.lastfm import LastfmService
 from listenbrainz.domain.librefm import LibrefmService
-from listenbrainz.webserver import db_conn, ts_conn, listens_conn
+from listenbrainz.webserver import db_conn, ts_conn, listens_conn, API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APINotFound, APIBadRequest
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.views.api_tools import _parse_int_arg, log_raise_400, is_valid_uuid, \
     DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET, get_non_negative_param, parse_param_list, \
     validate_auth_header
+from listenbrainz.listenstore import LISTEN_MINIMUM_TS
 
 feedback_api_bp = Blueprint('feedback_api_v1', __name__)
 
@@ -58,11 +60,14 @@ def recording_feedback():
         if isinstance(timestamp, bool) or not isinstance(timestamp, int):
             log_raise_400("timestamp must be an integer Unix timestamp", data)
 
-        try:
-            created = datetime.fromtimestamp(timestamp, timezone.utc)
-        except (ValueError, OverflowError, OSError):
-            log_raise_400("timestamp is out of valid range", data)
+        if timestamp >= int(time()) + API_LISTENED_AT_ALLOWED_SKEW:
+            log_raise_400("timestamp is too high", data)
 
+        if timestamp < LISTEN_MINIMUM_TS:
+            log_raise_400("timestamp is too low", data)
+
+        created = datetime.fromtimestamp(timestamp, timezone.utc)
+    
     try:
         feedback = Feedback(
             user_id=user["id"],
