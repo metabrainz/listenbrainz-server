@@ -367,7 +367,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         recalculate_all_user_data()
 
         url = self.custom_url_for('api_v1.get_listens', user_name=self.lb_user['musicbrainz_id'])
-        response = self.wait_for_query_to_have_items(url, num_items=1, query_string={'from_ts': timestamp - 1})
+        response = self.wait_for_query_to_have_items(url, num_items=2, query_string={'from_ts': timestamp - 1})
         listens = json.loads(response.data)['payload']['listens']
         self.assertEqual(len(listens), 2)
 
