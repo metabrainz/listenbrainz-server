@@ -79,13 +79,41 @@ export default function Listen() {
     user,
     userPinnedRecording = undefined,
     playingNow = undefined,
-    latestListenTs = 0,
-    oldestListenTs = 0,
+    latestListenTs,
+    oldestListenTs,
     already_reported_user = false,
   } = data || {};
 
   const previousListenTs = listens[0]?.listened_at;
   const nextListenTs = listens[listens.length - 1]?.listened_at;
+
+  const pageKey = `${user?.name || ""}:${location.pathname}${location.search}`;
+  const lastPageTimestampsRef = React.useRef<{
+    pageKey?: string;
+    previousListenTs?: number;
+    nextListenTs?: number;
+  }>({});
+
+  // Record page boundaries whenever listens exist on the current page
+  React.useEffect(() => {
+    if (listens.length > 0) {
+      lastPageTimestampsRef.current = {
+        pageKey,
+        previousListenTs: listens[0].listened_at,
+        nextListenTs: listens[listens.length - 1].listened_at,
+      };
+    }
+  }, [listens, pageKey]);
+
+  const cachedTimestamps =
+    lastPageTimestampsRef.current.pageKey === pageKey
+      ? lastPageTimestampsRef.current
+      : undefined;
+
+  const effectivePreviousListenTs =
+    previousListenTs ?? cachedTimestamps?.previousListenTs;
+
+  const effectiveNextListenTs = nextListenTs ?? cachedTimestamps?.nextListenTs;
 
   const { currentUser, websocketsUrl, APIService } = React.useContext(
     GlobalAppContext
@@ -371,6 +399,9 @@ export default function Listen() {
           listens: _.without(oldData.listens, newlyDeletedListen),
         };
       });
+      setListenCount((prev) =>
+        typeof prev === "number" ? Math.max(0, prev - 1) : prev
+      );
     },
   });
 
@@ -451,13 +482,40 @@ export default function Listen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allListenables]);
 
-  const isNewestButtonDisabled = listens[0]?.listened_at >= latestListenTs;
+  const hasNoHistoryAtAll =
+    typeof latestListenTs === "number" && latestListenTs === 0;
+
+  const isAllHistoryDeletedOnFirstPage =
+    !isTimeNavigation &&
+    listens.length === 0 &&
+    typeof effectiveNextListenTs === "number" &&
+    typeof oldestListenTs === "number" &&
+    oldestListenTs > 0 &&
+    effectiveNextListenTs <= oldestListenTs;
+
+  const hasNoListensAtAll =
+    listens.length === 0 &&
+    (hasNoHistoryAtAll ||
+      isAllHistoryDeletedOnFirstPage ||
+      (listenCount === 0 && !isTimeNavigation));
+
+  const isNewestButtonDisabled =
+    !isTimeNavigation &&
+    (typeof effectivePreviousListenTs !== "number" ||
+      typeof latestListenTs !== "number" ||
+      effectivePreviousListenTs >= latestListenTs);
   const isNewerButtonDisabled =
-    !previousListenTs || previousListenTs >= latestListenTs;
-  const isOlderButtonDisabled = !nextListenTs || nextListenTs <= oldestListenTs;
+    typeof effectivePreviousListenTs !== "number" ||
+    typeof latestListenTs !== "number" ||
+    effectivePreviousListenTs >= latestListenTs;
+  const isOlderButtonDisabled =
+    typeof effectiveNextListenTs !== "number" ||
+    typeof oldestListenTs !== "number" ||
+    effectiveNextListenTs <= oldestListenTs;
   const isOldestButtonDisabled =
-    listens.length > 0 &&
-    listens[listens.length - 1]?.listened_at <= oldestListenTs;
+    typeof effectiveNextListenTs === "number" &&
+    typeof oldestListenTs === "number" &&
+    effectiveNextListenTs <= oldestListenTs;
   const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
   const isCurrentUsersPage = currentUser?.name === user?.name;
 
@@ -512,7 +570,7 @@ export default function Listen() {
           {user && <UserSocialNetwork userName={user.name} />}
         </div>
         <div className="col-lg-8 order-lg-1">
-          {!listens.length && (
+          {hasNoListensAtAll && (
             <div className="empty-listens">
               <FontAwesomeIcon icon={faCompactDisc as IconProp} size="10x" />
               {isCurrentUsersPage ? (
@@ -559,7 +617,7 @@ export default function Listen() {
             </div>
           )}
           <div className="listen-header">
-            {listens.length === 0 ? (
+            {hasNoListensAtAll ? (
               <div id="spacer" />
             ) : (
               <h3 className="header-with-line">Recent listens</h3>
@@ -667,19 +725,25 @@ export default function Listen() {
             </button>
           </div>
 
-          {listens.length > 0 && (
+          {!hasNoListensAtAll && (
             <div>
-              <div
-                id="listens"
-                data-testid="listens"
-                ref={listensTable}
-                style={{ opacity: "1" }}
-              >
-                {listens.map(getListenCard)}
-              </div>
-              {listens.length < expectedListensPerPage && (
-                <h5 className="text-center">No more listens to show</h5>
+              {listens.length > 0 && (
+                <div
+                  id="listens"
+                  data-testid="listens"
+                  ref={listensTable}
+                  style={{ opacity: "1" }}
+                >
+                  {listens.map(getListenCard)}
+                </div>
               )}
+              {listens.length === 0 && (
+                <h5 className="text-center">No listens to show</h5>
+              )}
+              {listens.length > 0 &&
+                listens.length < expectedListensPerPage && (
+                  <h5 className="text-center">No more listens to show</h5>
+                )}
               <ul className="pagination" id="navigation">
                 <li
                   className={`page-item ${
@@ -707,7 +771,11 @@ export default function Listen() {
                     aria-label="Navigate to more recent listens"
                     tabIndex={0}
                     aria-disabled={isNewerButtonDisabled}
-                    to={`?min_ts=${previousListenTs}`}
+                    to={
+                      typeof effectivePreviousListenTs === "number"
+                        ? `?min_ts=${effectivePreviousListenTs}`
+                        : location.pathname
+                    }
                     className="page-link"
                   >
                     &larr; Newer
@@ -742,7 +810,11 @@ export default function Listen() {
                     type="button"
                     aria-disabled={isOlderButtonDisabled}
                     tabIndex={0}
-                    to={`?max_ts=${nextListenTs}`}
+                    to={
+                      typeof effectiveNextListenTs === "number"
+                        ? `?max_ts=${effectiveNextListenTs}`
+                        : location.pathname
+                    }
                     className="page-link"
                   >
                     Older &rarr;
@@ -758,7 +830,11 @@ export default function Listen() {
                     role="button"
                     tabIndex={0}
                     aria-disabled={isOldestButtonDisabled}
-                    to={`?min_ts=${oldestListenTs - 1}`}
+                    to={
+                      typeof oldestListenTs === "number" && oldestListenTs > 0
+                        ? `?min_ts=${oldestListenTs - 1}`
+                        : location.pathname
+                    }
                     className="page-link"
                   >
                     &#x21E5;
