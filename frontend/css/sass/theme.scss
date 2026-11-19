@@ -2239,6 +2239,13 @@
         outline: 2px solid var(--lb-focus);
         outline-offset: 3px;
       }
+
+      // The player thins the ellipsis icon with a stroke in the bar's
+      // background colour. Use the dark bar colour so it doesn't show as a
+      // white ring around each dot.
+      .actions .fa-ellipsis-vertical {
+        stroke: var(--lb-surface-raised);
+      }
     }
 
     // The progress timestamp is mounted in a body-level overlay, outside the
