@@ -5,6 +5,7 @@ from sqlalchemy import text
 
 from data.model.external_service import ExternalServiceType
 import sqlalchemy
+from listenbrainz.db import transaction
 
 
 def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token: Optional[str], refresh_token: Optional[str],
@@ -35,7 +36,7 @@ def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token
     # be explicitly set to the default value (which would have been used if the row was
     # inserted instead).
     token_expires = datetime.fromtimestamp(token_expires_ts, timezone.utc) if token_expires_ts else None
-    with db_conn.engine.begin() as txn:
+    with transaction(db_conn) as txn:
         result = txn.execute(sqlalchemy.text("""
             INSERT INTO external_service_oauth AS eso
             (user_id, external_user_id, service, access_token, refresh_token, token_expires, refresh_token_expires,
@@ -97,7 +98,7 @@ def delete_token(db_conn, user_id: int, service: ExternalServiceType, remove_imp
         service: the service for which the token should be deleted
         remove_import_log: whether the (user, service) combination should be removed from the listens_importer table also
     """
-    with db_conn.engine.begin() as txn:
+    with transaction(db_conn) as txn:
         txn.execute(sqlalchemy.text("""
             DELETE FROM external_service_oauth
                   WHERE user_id = :user_id AND service = :service

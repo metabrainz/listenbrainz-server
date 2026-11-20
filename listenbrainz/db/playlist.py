@@ -14,6 +14,7 @@ from listenbrainz.db.exceptions import InvalidUser
 from listenbrainz.db.model.playlist import Playlist
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.db.year_in_music import LAST_FM_FOUNDING_YEAR, MAX_YEAR_IN_MUSIC_YEAR
+from listenbrainz.db import transaction
 
 TROI_BOT_USER_ID = 12939
 TROI_BOT_DEBUG_USER_ID = 19055
@@ -41,7 +42,7 @@ def _in_transaction(fn):
     # request connections are AUTOCOMMIT; multi-statement writes need their own transaction
     @functools.wraps(fn)
     def wrapper(db_conn, *args, **kwargs):
-        with db_conn.engine.begin() as txn:
+        with transaction(db_conn) as txn:
             return fn(txn, *args, **kwargs)
     return wrapper
 

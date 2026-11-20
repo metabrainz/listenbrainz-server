@@ -8,6 +8,7 @@ from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIBadRequest
 from listenbrainz.webserver.login import api_login_required
+from listenbrainz.db import transaction
 
 export_bp = Blueprint("export", __name__)
 
@@ -19,7 +20,7 @@ def create_export_task():
     """ Add a request to export the user data to an archive in background. """
     start_time, end_time = _parse_export_time_range()
     try:
-        with db_conn.engine.begin() as txn:
+        with transaction(db_conn) as txn:
             export_data = user_data_export.request_user_data_export(txn, current_user.id, start_time, end_time)
         if export_data is not None:
             return jsonify(export_data)
@@ -72,7 +73,7 @@ def download_export_archive(export_id):
 @web_listenstore_needed
 def delete_export_archive(export_id):
     """ Delete the specified export archive """
-    with db_conn.engine.begin() as txn:
+    with transaction(db_conn) as txn:
         result = user_data_export.delete_export_task(txn, current_user.id, export_id)
     if result is True:
         return jsonify({"success": True})

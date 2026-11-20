@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording
 from typing import List, Iterable
+from listenbrainz.db import transaction
 
 PINNED_REC_GET_COLUMNS = [
     "user_id",
@@ -35,7 +36,7 @@ def pin(db_conn, pinned_recording: WritablePinnedRecording):
         'created': pinned_recording.created
     }
 
-    with db_conn.engine.begin() as txn:
+    with transaction(db_conn) as txn:
         txn.execute(sqlalchemy.text("""
             UPDATE pinned_recording
                SET pinned_until = NOW()

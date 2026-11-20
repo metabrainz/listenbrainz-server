@@ -17,6 +17,7 @@ from listenbrainz.db import background
 from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIBadRequest, APIUnauthorized
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
 from listenbrainz.webserver.views.api_tools import validate_auth_header
+from listenbrainz.db import transaction
 
 import_api_bp = Blueprint("import_listens_api_v1", __name__)
 
@@ -113,7 +114,7 @@ def create_import_task():
             raise APIInternalServerError("Error while uploading the file, please try again later.")
 
         try:
-            with db_conn.engine.begin() as txn:
+            with transaction(db_conn) as txn:
                 result = background.create_import_task(
                     txn,
                     user_id=user["id"],
@@ -196,7 +197,7 @@ def list_import_tasks():
 def delete_import_task(import_id):
     """ Cancel the specified import in progress """
     user = validate_auth_header()
-    with db_conn.engine.begin() as txn:
+    with transaction(db_conn) as txn:
         result = txn.execute(
             text("DELETE FROM user_data_import WHERE user_id = :user_id AND id = :import_id AND metadata->>'status' IN ('waiting') RETURNING file_path"),
             {"user_id": user["id"], "import_id": import_id}
