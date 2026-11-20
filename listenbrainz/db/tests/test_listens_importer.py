@@ -6,6 +6,7 @@ import listenbrainz.db.external_service_oauth as db_oauth
 
 import sqlalchemy
 import time
+from datetime import timedelta
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import listens_importer
@@ -145,6 +146,33 @@ class ListensImporterDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(len(users), 1)
         self.assertEqual(users[0]['user_id'], self.user['id'])
         self.assertIsNotNone(self._get_claimed_at(self.user['id']))
+
+    def test_claim_timeout_is_per_call(self):
+        db_import.claim_users_to_process(
+            self.db_conn, ExternalServiceType.SPOTIFY, batch_size=1
+        )
+        self.db_conn.execute(sqlalchemy.text("""
+            UPDATE listens_importer
+               SET claimed_at = now() - interval '31 minutes'
+             WHERE user_id = :user_id
+               AND service = :service
+        """), {
+            "user_id": self.user['id'],
+            "service": ExternalServiceType.SPOTIFY.value,
+        })
+        self.db_conn.commit()
+
+        users = db_import.claim_users_to_process(
+            self.db_conn, ExternalServiceType.SPOTIFY, batch_size=1
+        )
+        self.assertEqual(users, [])
+
+        users = db_import.claim_users_to_process(
+            self.db_conn, ExternalServiceType.SPOTIFY, batch_size=1,
+            claim_timeout=timedelta(minutes=30)
+        )
+        self.assertEqual(len(users), 1)
+        self.assertEqual(users[0]['user_id'], self.user['id'])
 
     def test_update_status(self):
         db_import.update_status(

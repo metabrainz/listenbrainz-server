@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Union
 
 from sqlalchemy import text
@@ -105,19 +105,20 @@ def get_active_users_to_process(db_conn, service, exclude_error=False) -> list[d
     return users
 
 
-CLAIM_TIMEOUT_HOURS = 12
+DEFAULT_CLAIM_TIMEOUT = timedelta(hours=12)
 
-def claim_users_to_process(db_conn, service, batch_size=50, exclude_error=False) -> list[dict]:
+def claim_users_to_process(db_conn, service, batch_size=50, exclude_error=False,
+                           claim_timeout: timedelta = DEFAULT_CLAIM_TIMEOUT) -> list[dict]:
     """ Claim a batch of users for import processing using SKIP LOCKED.
 
     Uses FOR UPDATE SKIP LOCKED so multiple workers safely distribute users.
-    A claim expires after CLAIM_TIMEOUT_HOURS so crashed workers' users get
+    A claim expires after claim_timeout so crashed workers' users get
     auto-reclaimed.
     """
     filters = [
         "external_service_oauth.service = :service",
         "NOT is_paused",
-        f"(listens_importer.claimed_at IS NULL OR listens_importer.claimed_at < now() - interval '{CLAIM_TIMEOUT_HOURS} hours')"
+        "(listens_importer.claimed_at IS NULL OR listens_importer.claimed_at < now() - :claim_timeout)"
     ]
     if exclude_error:
         filters.append("error IS NULL")
@@ -147,6 +148,7 @@ def claim_users_to_process(db_conn, service, batch_size=50, exclude_error=False)
     """), {
         "service": service.value,
         "batch_size": batch_size,
+        "claim_timeout": claim_timeout,
     })
     claimed_ids = [row.id for row in result]
     db_conn.commit()
