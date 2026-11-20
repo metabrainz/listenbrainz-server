@@ -407,6 +407,18 @@ $youtube-expanded-width: 1280px;
   z-index: 5;
   overflow: visible;
   transition: height, 0.2s;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -12px;
+    bottom: -12px;
+  }
 
   .progress-bar {
     width: 100%;
