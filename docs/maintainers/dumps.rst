@@ -14,7 +14,7 @@ Twice monthly dumps
 The twice monthly dumps are created by two independent cron jobs, both publishing into the :file:`fullexport` directory
 on the FTP server:
 
-* the **db** dump job creates the public and private postgres and timescale dumps into a
+* the **db** dump job creates the public and private PostgreSQL dumps and the public Timescale dump into a
   :file:`listenbrainz-dump-<id>-<timestamp>-db` directory.
 * the **full** dump job creates the listens, spark and statistics dumps into a
   :file:`listenbrainz-dump-<id>-<timestamp>-full` directory.
@@ -91,3 +91,14 @@ and added the argument before redirecting):
     Full dumps take over 12 hours to complete. If you run the command directly and close the terminal before full dumps
     completion, the dumps will get interrupted and fail. So either run the command inside a :command:`tmux` session
     or use a combination of :command:`nohup` and :command:`&` with the dump command.
+
+ClickHouse dump imports
+^^^^^^^^^^^^^^^^^^^^^^
+Run only one ClickHouse dump import at a time. Import preparation drops leftover
+staging tables, including those belonging to any other running import.
+
+Before enabling concurrent imports or multiple query workers, add an import lock
+around preparation and loading. Recovery must also cancel ClickHouse queries left
+running by a killed importer before allowing the next import to start; a lock alone
+is insufficient. This follow-up is tracked in ``_prepare_import`` in
+``listenbrainz/clickhouse/query_worker/listens/load_dump.py``.

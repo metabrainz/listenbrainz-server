@@ -43,12 +43,13 @@ PG_JDBC_URI = ""
 PG_USER = ""
 PG_PASSWORD = ""
 
-TS_JDBC_URI = ""
-TS_USER = ""
-TS_PASSWORD = ""
-
 LB_JDBC_URI = ""
 LB_USER = ""
 LB_PASSWORD = ""
 
-LISTENBRAINZ_API_URL = "http://localhost:8100"
+LISTENBRAINZ_API_URL = "http://localhost:8103"
+
+# User-partitioned listens database (deletion records)
+LISTENS_JDBC_URI = ""
+LISTENS_USER = ""
+LISTENS_PASSWORD = ""

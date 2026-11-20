@@ -423,9 +423,9 @@ is not exhaustive, and you may include any other fields you would consider usefu
    * - ``duration_ms`` and ``duration``
      - integer
      - The duration of the track in milliseconds and seconds respectively. You should only include one of ``duration_ms`` or ``duration``.
-   * - ``duration_played``
+   * - ``duration_played`` and ``duration_played_ms``
      - integer
-     - The duration in seconds that the user actually listened to the track.
+     - The duration in seconds and milliseconds respectively that the user actually listened to the track. You should only include one of ``duration_played`` or ``duration_played_ms``.
    * - ``label``
      - string
      - The name of the record label that released the recording.

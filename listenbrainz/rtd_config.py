@@ -11,10 +11,6 @@ MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5
 
 POSTGRES_ADMIN_URI = "postgresql://postgres@db/postgres"
 
-SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_ts:listenbrainz_ts@db/listenbrainz_ts"
-TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@db/postgres"
-TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@db/listenbrainz_ts"
-
 # Redis
 REDIS_HOST = "redis"
 REDIS_PORT = 6379
@@ -64,10 +60,6 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 # MAX file size to be allowed for file uploads, default is infinite
 # Size is in bytes
 MAX_CONTENT_LENGTH = 25 * 1024 * 1024  # 25MB
-
-# Specify the upload folder where all the lastfm-backup will be stored
-# The path must be absolute path
-UPLOAD_FOLDER = "/mnt/user-data-imports"
 
 API_URL = 'https://api.listenbrainz.org'
 LASTFM_PROXY_URL = 'http://0.0.0.0:7080/'

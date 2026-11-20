@@ -20,13 +20,13 @@ See the `ListenBrainz data page <https://listenbrainz.org/data>`_ for informatio
 File Descriptions
 =================
 
-A ListenBrainz data dump consists of three archives:
+The main data archives are listed below with their dump ids and timestamps omitted:
 
 #. ``listenbrainz-public-dump.tar.zst``
 
 #. ``listenbrainz-listens-dump.tar.zst``
 
-#. ``listenbrainz-listens-dump-spark.tar.zst``
+#. ``listenbrainz-spark-dump.tar``
 
 The database dumps and the listens dumps are created by separate jobs, so they are published in two directories per
 dump cycle. The ``listenbrainz-public-dump.tar.zst`` archive is in the directory whose name ends in ``-db`` and the
@@ -48,26 +48,33 @@ This is the core ListenBrainz data dump. This file contains all the listens
 submitted to ListenBrainz by its users.
 
 
-listenbrainz-listens-dump-spark.tar.zst
---------------------------------------
+listenbrainz-spark-dump.tar
+-------------------------
 
 This is also a dump of the core ListenBrainz listen data. These dumps are
 made for consumption by the ListenBrainz Apache Spark cluster, formatting
-all listens into monthly JSON files that can easily be loaded into dataframes.
+all listens into parquet files that can easily be loaded into dataframes.
+Full dumps contain numbered Parquet files, keeping each user's listens together.
+Incremental dumps contain a single file in submission order. The archive is an
+uncompressed ``.tar`` containing Zstandard-compressed Parquet files, for example:
+
+``listenbrainz-spark-dump-183-20200727-001004-full/0.parquet``.
 
 
 Structure of the listens dump
 =============================
 
-The ListenBrainz listen dump consists of listens broken down by year and month.
-At the top level there are directories for each of the year for which we have
-data. Inside each year there are listens files with month number as its name:
+The ListenBrainz listen dump consists of numbered listens files in the ``listens``
+directory:
 
-#. ``listenbrainz-listens-dump-183-20200727-001004-full/listens/2005/1.listens``
-#. ``listenbrainz-listens-dump-183-20200727-001004-full/listens/2005/2.listens``
-#. ``listenbrainz-listens-dump-183-20200727-001004-full/listens/2005/3.listens``
-#. ``listenbrainz-listens-dump-183-20200727-001004-full/listens/2005/4.listens``
-#. ``listenbrainz-listens-dump-183-20200727-001004-full/listens/2005/5.listens``
+#. ``listenbrainz-listens-dump-183-20200727-001004-full/listens/0.listens``
+#. ``listenbrainz-listens-dump-183-20200727-001004-full/listens/1.listens``
+#. ``listenbrainz-listens-dump-183-20200727-001004-full/listens/2.listens``
+
+In a full dump, each file holds all the listens of a group of users, sorted by user id
+and then by listened_at, newest first. The listens of a user are never split across
+files. An incremental dump has a single file, ``0.listens``, with the listens submitted
+since the previous dump, sorted by the time they were submitted.
 
 Each of the .listens files contains one JSON document per line -- each
 of the JSON documents is one listen, formatted in the standard listens format.

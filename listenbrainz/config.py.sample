@@ -17,15 +17,12 @@ SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@lb_db:5432/lis
 POSTGRES_ADMIN_URI = "postgresql://postgres:postgres@lb_db/postgres"
 POSTGRES_ADMIN_LB_URI = "postgresql://postgres:postgres@lb_db/listenbrainz"
 
-# Timescale
-SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_ts:listenbrainz_ts@lb_db/listenbrainz_ts"
-SQLALCHEMY_TIMESCALE_PGBOUNCER_URI = SQLALCHEMY_TIMESCALE_URI
-TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@lb_db/postgres"
-TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@lb_db/listenbrainz_ts"
-
-# Listens (postgres, user_id partitioned) - migration target and dual-write store
+# Listens (postgres, user_id partitioned)
 SQLALCHEMY_LISTENS_URI = "postgresql://listenbrainz_listens:listenbrainz_listens@lb_db/listenbrainz_listens"
+SQLALCHEMY_LISTENS_PGBOUNCER_URI = SQLALCHEMY_LISTENS_URI
 LISTENS_ADMIN_URI = "postgresql://postgres:postgres@lb_db/postgres"
+# if set to False, the webserver doesn't read or write listens, e.g. during listens DB maintenance
+LISTENSTORE_UP = True
 
 # Server address
 # SERVER_NAME = "localhost:8100"
@@ -39,8 +36,8 @@ SQLALCHEMY_METABRAINZ_URI = ""
 # pgbouncer max_client_conn and postgres max_connections for the target host.
 DB_POOL_SIZE = 5
 DB_POOL_MAX_OVERFLOW = 2
-TIMESCALE_POOL_SIZE = 5
-TIMESCALE_POOL_MAX_OVERFLOW = 2
+LISTENS_POOL_SIZE = 5
+LISTENS_POOL_MAX_OVERFLOW = 2
 MEB_POOL_SIZE = 2
 MEB_POOL_MAX_OVERFLOW = 2
 
@@ -48,11 +45,6 @@ MEB_POOL_MAX_OVERFLOW = 2
 IS_MUSICBRAINZ_UP = True  # if set to False, login page will be blocked
 MBID_MAPPING_DATABASE_URI = ""
 MB_DATABASE_URI = ""
-
-# for use in playlists admin view
-SQLALCHEMY_BINDS = {
-   'timescale': SQLALCHEMY_TIMESCALE_PGBOUNCER_URI
-}
 
 # Redis
 REDIS_HOST = "redis"
@@ -80,6 +72,10 @@ SPARK_RESULT_EXCHANGE = "spark_result"
 SPARK_RESULT_QUEUE = "spark_result"
 SPARK_REQUEST_EXCHANGE = "spark_request"
 SPARK_REQUEST_QUEUE = "spark_request"
+
+# ClickHouse
+CLICKHOUSE_RESULT_EXCHANGE = "clickhouse_result"
+CLICKHOUSE_RESULT_QUEUE = "clickhouse_result"
 
 REJECTION_EXCHANGE = "rejection"
 REJECTION_QUEUE = "rejection"
@@ -158,13 +154,9 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 # Size is in bytes
 MAX_CONTENT_LENGTH = 200 * 1024 * 1024 + 10  # 200MB plus some buffer
 
-# Specify the upload folder where user uploaded files for import will be stored
-# The path must be absolute path
-UPLOAD_FOLDER = "/code/listenbrainz/uploads"
-
 # Set to "https://api.listenbrainz.org" if you want to work on frontend for user statistics
 # without going through the process of generating the stats in local environment. Otherwise,
-# set it to "http://localhost:8100"
+# set it to "http://localhost:8103"
 API_URL = 'https://api.listenbrainz.org'
 LASTFM_PROXY_URL = 'http://localhost:8101/'
 SERVER_ROOT_URL = 'http://localhost:8100'
@@ -240,8 +232,15 @@ REJECT_LISTENS_WITHOUT_USER_EMAIL = False
 # If set to True, do not allow new users without email to register
 REJECT_NEW_USERS_WITHOUT_EMAIL = False
 
-# base directory for user data exports
-USER_DATA_EXPORT_BASE_DIR = "/code/listenbrainz/exports/"
+# Garage object storage, user data exports are stored here.
+# The endpoint must not include a URL scheme.
+GARAGE_ENDPOINT = "garage:3900"
+GARAGE_ACCESS_KEY = "GK1e5b4c3a2d0f9e8b7a6c5d40"
+GARAGE_SECRET_KEY = "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0"
+GARAGE_SECURE = False
+GARAGE_REGION = "garage"
+GARAGE_USER_DATA_EXPORT_BUCKET = "listenbrainz-user-data-exports"
+GARAGE_USER_DATA_IMPORT_BUCKET = "listenbrainz-user-data-imports"
 
 # Service monitoring -- only needed for MetaBrainz production
 SERVICE_MONITOR_TELEGRAM_BOT_TOKEN = ""
@@ -257,3 +256,17 @@ FUNKWHALE_CALLBACK_URL = f'{SERVER_ROOT_URL}/settings/music-services/funkwhale/c
 NAVIDROME_ENCRYPTION_KEY = ""
 
 BACKGROUND_TASKS_SLEEP_TIME = 1
+
+# ClickHouse connection settings ("clickhouse" when using the docker compose clickhouse profile)
+CLICKHOUSE_HOST = "clickhouse"
+CLICKHOUSE_PORT = 8123
+CLICKHOUSE_DATABASE = "default"
+CLICKHOUSE_USERNAME = "listenbrainz"
+CLICKHOUSE_PASSWORD = "listenbrainz"
+
+# FTP settings for dump download
+FTP_SERVER_URI = "ftp.eu.metabrainz.org"
+FTP_LISTENS_DIR = "/pub/musicbrainz/listenbrainz/"
+# Where the ClickHouse query worker downloads listen dumps, None for the system temp dir.
+# A full dump is hundreds of GB: point this at a volume with room for it.
+CLICKHOUSE_DUMP_DOWNLOAD_DIR = None

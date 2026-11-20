@@ -4,13 +4,14 @@ from time import sleep
 import typesense
 import typesense.exceptions
 import requests.exceptions
-from flask import current_app
+from flask import current_app, has_request_context
 from markupsafe import Markup
 from unidecode import unidecode
 from Levenshtein import distance
 
 from listenbrainz import config
 from listenbrainz.mbid_mapping_writer.stop_words import ENGLISH_STOP_WORDS
+from listenbrainz.mbid_mapping_writer.typesense_utils import search, TypesenseUnavailable
 
 DEFAULT_TIMEOUT = 2
 COLLECTION_NAME_WITHOUT_RELEASE = "canonical_musicbrainz_data_latest"
@@ -268,15 +269,16 @@ class MBIDMapper:
 
         while True:
             try:
-                hits = self.client.collections[collection].documents.search(search_parameters)
+                hits = search(self.client, collection, search_parameters)
                 break
-            except requests.exceptions.ReadTimeout:
-                if self.retry_on_timeout:
+            except TypesenseUnavailable as exc:
+                if (self.retry_on_timeout and not has_request_context()
+                        and isinstance(exc.__cause__, requests.exceptions.ReadTimeout)):
                     current_app.logger.error("Got socket timeout, sleeping 5 seconds, trying again.", exc_info=True)
                     sleep(5)
                 else:
                     raise
-            except (typesense.exceptions.RequestMalformed, requests.exceptions.ReadTimeout):
+            except typesense.exceptions.RequestMalformed:
                 return None
 
         if len(hits["hits"]) == 0:

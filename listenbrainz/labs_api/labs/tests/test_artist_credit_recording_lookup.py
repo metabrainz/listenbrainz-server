@@ -70,7 +70,6 @@ class MainTestCase(flask_testing.TestCase):
     def create_app(self):
         app = create_app()
         app.config['MB_DATABASE_URI'] = 'yermom'
-        app.config['SQLALCHEMY_TIMESCALE_PGBOUNCER_URI'] = 'yermom'
         return app
 
     def setUp(self):
@@ -95,7 +94,7 @@ class MainTestCase(flask_testing.TestCase):
              'release_name', 'recording_name', 'artist_credit_id', 'artist_mbids',
              'release_mbid', 'recording_mbid'])
 
-    @patch('listenbrainz.db.timescale.engine')
+    @patch('listenbrainz.db.listens.engine')
     def test_fetch(self, mock_engine):
         mock_engine.raw_connection().cursor().__enter__().fetchone.side_effect = [
             db_response[0], db_response[1], None]

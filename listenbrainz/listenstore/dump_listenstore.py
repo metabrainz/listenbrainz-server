@@ -1,30 +1,27 @@
 import os
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 
 import orjson
-import pandas as pd
-import psycopg2
-import psycopg2.sql
 import pyarrow as pa
 import pyarrow.parquet as pq
-import sqlalchemy
-from psycopg2.extras import execute_values
 from sqlalchemy import text
 
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 from listenbrainz.db.user import get_all_usernames
 from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.dumps.exporter import zstd_dump, uncompressed_dump
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION
 
-# These values are defined to create spark parquet files that are at most 128MB in size.
-# This compression ration allows us to roughly estimate how full we can make files before starting a new one
-PARQUET_APPROX_COMPRESSION_RATIO = 0.25
+# Limit each query batch, not the output file size.
+DUMP_PAGE_SIZE = 100_000
 
-# This is the approximate amount of data to write to a parquet file in order to meet the max size
-PARQUET_TARGET_SIZE = 134217728 / PARQUET_APPROX_COMPRESSION_RATIO  # 128MB / compression ratio
+# Full dumps page through the partitions of the listen table in the order of their (user_id, listened_at)
+# index. Incremental dumps page through listens in the order they were created.
+LISTEN_DUMP_COLUMNS = "extract(epoch from l.listened_at) AS listened_at, l.user_id, l.created, l.recording_msid::TEXT, l.data"
+# reduce the created timestamp resolution to ms for spark
+SPARK_PAGE_COLUMNS = "l.listened_at, l.created::timestamp(3) with time zone AS created, l.user_id, l.recording_msid, l.data"
 
 
 SPARK_LISTENS_SCHEMA = pa.schema([
@@ -46,47 +43,31 @@ class DumpListenStore:
 
     def __init__(self, app):
         self.log = app.logger
+        self.page_size = DUMP_PAGE_SIZE
 
-    def get_listens_query_for_dump(self, start_time, end_time, max_created):
+    def iter_dump_files(self, select, wrap, start_time, end_time, full_dump):
+        """ Yield one page iterator per output file: each partition for full dumps, one for incremental.
+
+        select specifies columns from the listen table aliased l; wrap adds any mapping joins to the
+        page query. Full dumps leave later imports for incremental dumps. Incremental dumps exclude
+        the previous cutoff and include the current one to avoid repeating boundary listens.
         """
-            Get a query and its args dict to select a batch for listens for the full dump.
-            Use listened_at timestamp, since not all listens have the created timestamp.
-        """
-        # filter on created timestamp in addition to listened_at as well to avoid duplicates
-        # with incremental dumps in case of listens imported with past listened_at values
-        # use max created timestamp instead of end_time because regardless of which start-end
-        # range is being dumped the created limit should be the same and max desired.
-        query = """SELECT extract(epoch from listened_at) as listened_at, user_id, created, recording_msid::TEXT, data
-                      FROM listen
-                     WHERE listened_at >= :start_time
-                       AND listened_at <= :end_time
-                       AND created <= :max_created
-                  ORDER BY listened_at ASC"""
-        args = {
-            "start_time": start_time,
-            "end_time": end_time,
-            "max_created": max_created,
-        }
+        args = {"start_time": start_time, "end_time": end_time}
+        if full_dump:
+            where = "l.listened_at >= :start_time AND l.listened_at <= :end_time AND l.created <= :end_time"
+            partitions = listens_db.get_listen_partitions()
+        else:
+            where = "l.created > :start_time AND l.created <= :end_time"
+            partitions = ["listen"]
 
-        return query, args
-
-    def get_incremental_listens_query(self, start_time, end_time):
-        """
-            Get a query for a batch of listens for an incremental listen dump.
-            This uses the `created` column to fetch listens.
-        """
-
-        query = """SELECT extract(epoch from listened_at) as listened_at, user_id, created, recording_msid::TEXT, data
-                      FROM listen
-                     WHERE created > :start_ts
-                       AND created <= :end_ts
-                  ORDER BY created ASC"""
-
-        args = {
-            'start_ts': start_time,
-            'end_ts': end_time,
-        }
-        return query, args
+        for partition in partitions:
+            def page_query(after, _partition=partition):
+                if full_dump:
+                    query, page_args = listens_db.partition_page_query(_partition, select, where, after)
+                else:
+                    query, page_args = listens_db.created_page_query(select, where, after)
+                return wrap(query), page_args
+            yield listens_db.iter_listen_pages(self.page_size, page_query, args)
 
     def get_dump_metadata(self, start_time: datetime, end_time: datetime, full_dump):
         """ Get metadata to write into the dump archive.
@@ -110,93 +91,67 @@ class DumpListenStore:
                       start_time_range, end_time_range, full_dump):
         """ Dump listens in the format for the ListenBrainz dump.
 
+        A full dump writes the listens of each partition of the listen table to its own numbered file, sorted
+        by user and then listened_at, newest first, so all listens of a user are in one file. An incremental
+        dump writes all listens to one file, in the order they were created.
+
         Args:
-            end_time_range (datetime): the range of time for the listens dump.
-            temp_dir (str): the dir to use to write files before adding to archive
-            full_dump (bool): the type of dump
+            temp_dir (str): the directory for temporary JSON lines files
+            tar_file: the open archive to add nonempty files to
+            archive_name (str): the top-level directory inside the archive
+            start_time_range (datetime): inclusive listened_at start for full dumps, exclusive created start otherwise
+            end_time_range (datetime): inclusive created cutoff, and listened_at end for full dumps
+            full_dump (bool): whether to dump each partition or one incremental time range
         """
         user_id_map = get_all_usernames()
-        max_created = end_time_range
         t0 = time.monotonic()
         listen_count = 0
+        os.makedirs(temp_dir, exist_ok=True)
 
-        year = start_time_range.year
-        month = start_time_range.month
-        while True:
-            start_time = datetime(year, month, 1, tzinfo=timezone.utc)
-            start_time = max(start_time_range, start_time)
-            if start_time > end_time_range:
-                break
-
-            next_month = month + 1
-            next_year = year
-            if next_month > 12:
-                next_month = 1
-                next_year += 1
-
-            end_time = datetime(next_year, next_month, 1, tzinfo=timezone.utc)
-            end_time = end_time - timedelta(seconds=1)
-            if end_time > end_time_range:
-                end_time = end_time_range
-
-            filename = os.path.join(temp_dir, str(year), "%d.listens" % month)
-            try:
-                os.makedirs(os.path.join(temp_dir, str(year)))
-            except FileExistsError:
-                pass
-
-            if full_dump:
-                query, args = self.get_listens_query_for_dump(start_time, end_time, max_created)
-            else:
-                query, args = self.get_incremental_listens_query(start_time, end_time)
-
+        def write_file(file_id, pages):
+            """ Write pages to a numbered file. Return whether any listens were added to the archive. """
+            nonlocal listen_count
+            filename = os.path.join(temp_dir, f"{file_id}.listens")
             rows_added = 0
-            with timescale.engine.connect() as connection:
-                curs = connection.execute(sqlalchemy.text(query), args)
-                if curs.rowcount:
-                    with open(filename, "w") as out_file:
-                        while True:
-                            result = curs.fetchone()
-                            if not result:
-                                break
-                            # some listens have user id which is absent from user table
-                            # ignore those listens for now
-                            user_name = user_id_map.get(result.user_id)
-                            if not user_name:
-                                continue
-                            listen = Listen.from_timescale(
-                                listened_at=result.listened_at,
-                                recording_msid=result.recording_msid,
-                                user_id=result.user_id,
-                                created=result.created,
-                                track_metadata=result.data,
-                                user_name=user_name
-                            ).to_json()
-                            out_file.write(orjson.dumps(listen).decode("utf-8") + "\n")
-                            rows_added += 1
-                    tar_file.add(
-                        filename,
-                        arcname=os.path.join(archive_name, 'listens', str(year), f"{month}.listens")
-                    )
-                    os.unlink(filename)
-
-                    listen_count += rows_added
-                    self.log.info("%d listens dumped for %s at %.2f listens/s", listen_count,
-                                  start_time.strftime("%Y-%m-%d"),
+            with open(filename, "w") as out_file:
+                for page in pages:
+                    for result in page:
+                        # some listens have user id which is absent from user table
+                        # ignore those listens for now
+                        user_name = user_id_map.get(result["user_id"])
+                        if not user_name:
+                            continue
+                        listen = Listen.from_timescale(
+                            listened_at=result["listened_at"],
+                            recording_msid=result["recording_msid"],
+                            user_id=result["user_id"],
+                            created=result["created"],
+                            track_metadata=result["data"],
+                            user_name=user_name
+                        ).to_json()
+                        out_file.write(orjson.dumps(listen).decode("utf-8") + "\n")
+                        rows_added += 1
+                    listen_count += len(page)
+                    self.log.info("%d listens dumped at %.2f listens/s", listen_count,
                                   listen_count / (time.monotonic() - t0))
+            if rows_added:
+                tar_file.add(filename, arcname=os.path.join(archive_name, 'listens', f"{file_id}.listens"))
+            os.unlink(filename)
+            return rows_added > 0
 
-            month = next_month
-            year = next_year
+        file_id = 0
+        for pages in self.iter_dump_files(
+            LISTEN_DUMP_COLUMNS, lambda query: query, start_time_range, end_time_range, full_dump
+        ):
+            if write_file(file_id, pages):
+                file_id += 1
 
     def dump_listens(self, location, dump_id, start_time, end_time, dump_type,
                      threads=DUMP_DEFAULT_THREAD_COUNT, temp_location=None):
         """ Dumps all listens in the ListenStore into a .tar.zst archive.
 
-        Files are created with UUIDs as names. Each file can contain listens for a number of users.
-        An index.json file is used to save which file contains the listens of which users.
-
-        This creates an incremental dump if start_time is specified (with range start_time to end_time),
-        otherwise it creates a full dump with all listens.
+        Full dumps write one numbered file per nonempty partition. Incremental dumps write one file
+        containing listens created after start_time and at or before end_time.
 
         Args:
             location: the directory where the listens dump archive should be created
@@ -209,7 +164,7 @@ class DumpListenStore:
             the path to the dump archive
         """
         full_dump = dump_type == "full"
-        self.log.info('Beginning dump of listens from TimescaleDB...')
+        self.log.info('Beginning dump of listens from the listens DB...')
         archive_name = f'listenbrainz-listens-dump-{dump_id}-{end_time.strftime("%Y%m%d-%H%M%S")}'
         if full_dump:
             archive_name = '{}-full'.format(archive_name)
@@ -227,70 +182,22 @@ class DumpListenStore:
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
 
-    def write_parquet_files(self,
-                            archive_dir,
-                            temp_dir,
-                            tar_file,
-                            dump_type,
-                            start_time: datetime,
-                            end_time: datetime,
-                            max_created: datetime,
-                            parquet_file_id=0):
-        """
-            Carry out fetching listens from the DB, joining them to the MBID mapping table and
-            then writing them to parquet files.
-
-        Args:
-            archive_dir: the directory where the listens dump archive should be created
-            temp_dir: the directory where tmp files should be written
-            tar_file: the tarfile object that the dumps are being written to
-            dump_type: type of dump, full or incremental
-            start_time: the start of the time range for which listens should be dumped
-            end_time: the end of the time range for which listens should be dumped
-            max_created: the max timestamp listens created beyond which should not be dumped
-            parquet_file_id: the file id number to use for indexing parquet files
-
-        Returns:
-            the next parquet_file_id to use.
-
-        """
-        # the spark listens dump is sorted using this column. full dumps are sorted on
-        # listened_at because so during loading listens in spark for stats calculation
-        # we can load a subset of files. however, sorting on listened_at creates the
-        # issue that the data imported today with listened_at in the past won't show up
-        # in the stats until the next full dump. to solve this, we sort and dump incremental
-        # listens using the created column. all incremental listens are always loaded by spark
-        # , so we can get upto date stats sooner.
-        if dump_type == "full":
-            # filter on created timestamp in addition to listened_at as well to avoid duplicates
-            # with incremental dumps in case of listens imported with past listened_at values
-            # use max created timestamp instead of end_time because regardless of which start-end
-            # range is being dumped the created limit should be the same and max desired.
-            where_clause = psycopg2.sql.SQL("""
-                    l.listened_at > %(start)s
-                AND l.listened_at <= %(end)s
-                AND l.created <= %(max_created)s
-            """)
-            order_by = psycopg2.sql.SQL("l.listened_at")
-        else:  # incremental dump
-            where_clause = psycopg2.sql.SQL("l.created > %(start)s AND l.created <= %(end)s")
-            order_by = psycopg2.sql.SQL("l.created")
-        args = {
-            "start": start_time,
-            "end": end_time,
-            "max_created": max_created
-        }
-
-        query = psycopg2.sql.SQL("""
-        -- can't use coalesce here because we want all listen data or all mapping data to be used for a given
-        -- listen, coalesce mapping data with listen data can yield values from different sources for same listen.
-        -- an alternative is to use to CASE, but need to put case for each column because SQL CASE doesn't allow
-        -- setting multiple columns at once.
-                WITH listen_with_mbid AS (
-                     SELECT l.listened_at
-                          , l.created::timestamp(3) with time zone AS created -- reduce timestamp resolution to ms
-                          , l.user_id
-                          , l.recording_msid
+    @staticmethod
+    def spark_dump_query(page_query: str, by_created: bool = False) -> str:
+        """ Wrap a page query selecting SPARK_PAGE_COLUMNS into the query to select the page's listens
+            with their mapping for the spark dump, in the same order. by_created is whether the page query
+            pages by created. """
+        # Preserve the page query's order: partition index order for full dumps, created order otherwise.
+        key_columns = "l.key_user_id, l.key_listened_at, l.key_recording_msid"
+        order_by = "ORDER BY l.key_user_id, l.key_listened_at DESC, l.key_recording_msid"
+        if by_created:
+            key_columns += ", l.key_created"
+            order_by = "ORDER BY l.key_created, l.key_user_id, l.key_listened_at, l.key_recording_msid"
+        return f"""
+                WITH page AS (
+                    {page_query}
+                ), listen_with_mbid AS (
+                     SELECT p.*
                           -- converting jsonb array to text array is non-trivial, so return a jsonb array not text
                           -- here and let psycopg2 adapt it to a python list which is what we want anyway
                           , data->'additional_info'->'artist_mbids' AS l_artist_credit_mbids
@@ -301,19 +208,19 @@ class DumpListenStore:
                           , data->'additional_info'->>'recording_mbid' AS l_recording_mbid
                           -- prefer to use user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
                           , COALESCE(user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS m_recording_mbid
-                       FROM listen l
-                  LEFT JOIN mbid_mapping mm
-                         ON l.recording_msid = mm.recording_msid
-                  LEFT JOIN mbid_manual_mapping user_mm
-                         ON l.recording_msid = user_mm.recording_msid
-                        AND user_mm.user_id = l.user_id 
-                  LEFT JOIN mbid_manual_mapping_top other_mm
-                         ON l.recording_msid = other_mm.recording_msid
-                      WHERE {where_clause}
+                       FROM page p
+                  LEFT JOIN mapping.mbid_mapping mm
+                         ON p.recording_msid = mm.recording_msid
+                  LEFT JOIN mapping.mbid_manual_mapping user_mm
+                         ON p.recording_msid = user_mm.recording_msid
+                        AND user_mm.user_id = p.user_id
+                  LEFT JOIN mapping.mbid_manual_mapping_top other_mm
+                         ON p.recording_msid = other_mm.recording_msid
                 )    SELECT l.listened_at
                           , l.created
                           , l.user_id
                           , l.recording_msid::TEXT
+                          , {key_columns}
                           , l_artist_credit_mbids
                           , l_artist_name
                           , l_release_name
@@ -330,97 +237,37 @@ class DumpListenStore:
                        FROM listen_with_mbid l
                   LEFT JOIN mapping.mb_metadata_cache mbc
                          ON l.m_recording_mbid = mbc.recording_mbid
-                   ORDER BY {order_by}
-        """).format(where_clause=where_clause, order_by=order_by)
+                          {order_by}
+        """
 
+    def write_parquet_file(self, archive_dir, temp_dir, tar_file, file_id, pages):
+        """ Stream pages into one numbered parquet file, adding it to the archive if nonempty.
+
+        Return whether any listens were written and added to the archive.
+        """
+        filename = os.path.join(temp_dir, f"{file_id}.parquet")
         listen_count = 0
-        current_listened_at = None
-        conn = timescale.engine.raw_connection()
-        try:
-            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs:
-                curs.execute(query, args)
-                while True:
-                    t0 = time.monotonic()
-                    written = 0
-                    approx_size = 0
-                    data = {
-                        'listened_at': [],
-                        'created': [],
-                        'user_id': [],
-                        'recording_msid': [],
-                        'artist_name': [],
-                        'artist_credit_id': [],
-                        'release_name': [],
-                        'release_mbid': [],
-                        'recording_name': [],
-                        'recording_mbid': [],
-                        'artist_credit_mbids': []
-                    }
-                    while True:
-                        result = curs.fetchone()
-                        if not result:
-                            break
+        t0 = time.monotonic()
+        with pq.ParquetWriter(filename, SPARK_LISTENS_SCHEMA, flavor="spark", compression="zstd") as writer:
+            for page in pages:
+                data = {column: [] for column in SPARK_LISTENS_SCHEMA.names}
+                for result in page:
+                    # Use one metadata source for the whole listen, never a mixture of both.
+                    prefix = "l_" if result["artist_credit_id"] is None else "m_"
+                    for column in ("artist_name", "release_name", "recording_name", "artist_credit_mbids",
+                                   "release_mbid", "recording_mbid"):
+                        data[column].append(result[prefix + column])
+                    for column in ("artist_credit_id", "listened_at", "created", "user_id", "recording_msid"):
+                        data[column].append(result[column])
+                writer.write_table(pa.Table.from_pydict(data, schema=SPARK_LISTENS_SCHEMA))
+                listen_count += len(page)
+                self.log.info("%d listens dumped at %.2f listens/s", listen_count,
+                              listen_count / (time.monotonic() - t0))
 
-                        # Either take the original listen metadata or the mapping metadata
-                        if result["artist_credit_id"] is None:
-                            data["artist_name"].append(result["l_artist_name"])
-                            data["release_name"].append(result["l_release_name"])
-                            data["recording_name"].append(result["l_recording_name"])
-                            data["artist_credit_id"].append(None)
-                            data["artist_credit_mbids"].append(result["l_artist_credit_mbids"])
-                            data["release_mbid"].append(result["l_release_mbid"])
-                            data["recording_mbid"].append(result["l_recording_mbid"])
-                            approx_size += len(result["l_artist_name"]) + len(result["l_recording_name"]) \
-                                + len(result["l_release_name"] or "0") + len(result["l_recording_mbid"] or "0") \
-                                + len(result["l_release_mbid"] or "0") + len(str(result["l_artist_credit_mbids"] or 0))
-                        else:
-                            data["artist_name"].append(result["m_artist_name"])
-                            data["release_name"].append(result["m_release_name"])
-                            data["recording_name"].append(result["m_recording_name"])
-                            data["artist_credit_id"].append(result["artist_credit_id"])
-                            data["artist_credit_mbids"].append(result["m_artist_credit_mbids"])
-                            data["release_mbid"].append(result["m_release_mbid"])
-                            data["recording_mbid"].append(result["m_recording_mbid"])
-                            approx_size += len(result["m_artist_name"]) + len(result["m_recording_name"]) \
-                                + len(result["m_release_name"] or "0") + len(result["m_recording_mbid"] or "0") \
-                                + len(result["m_release_mbid"] or "0") + len(str(result["m_artist_credit_mbids"] or 0)) \
-                                + len(str(result["artist_credit_id"]))
-
-                        current_listened_at = result["listened_at"]
-                        data["listened_at"].append(current_listened_at)
-                        data["created"].append(result["created"])
-                        data["user_id"].append(result["user_id"])
-                        data["recording_msid"].append(result["recording_msid"])
-                        approx_size += len(str(result["listened_at"])) + len(str(result["created"])) \
-                                       + len(str(result["user_id"])) + len(result["recording_msid"])
-
-                        written += 1
-                        listen_count += 1
-                        if approx_size > PARQUET_TARGET_SIZE:
-                            break
-
-                    if written == 0:
-                        break
-
-                    filename = os.path.join(temp_dir, "%d.parquet" % parquet_file_id)
-
-                    # Create a pandas dataframe, then write that to a parquet files
-                    df = pd.DataFrame(data, dtype=object)
-                    table = pa.Table.from_pandas(df, schema=SPARK_LISTENS_SCHEMA, preserve_index=False)
-                    pq.write_table(table, filename, flavor="spark", compression="zstd")
-                    file_size = os.path.getsize(filename)
-                    tar_file.add(filename, arcname=os.path.join(archive_dir, "%d.parquet" % parquet_file_id))
-                    os.unlink(filename)
-                    parquet_file_id += 1
-
-                    self.log.info("%d listens dumped for %s at %.2f listens/s (%sMB)",
-                                  listen_count, current_listened_at.strftime("%Y-%m-%d"),
-                                  written / (time.monotonic() - t0),
-                                  str(round(file_size / (1024 * 1024), 3)))
-        finally:
-            conn.close()
-
-        return parquet_file_id
+        if listen_count:
+            tar_file.add(filename, arcname=os.path.join(archive_dir, f"{file_id}.parquet"))
+        os.unlink(filename)
+        return listen_count > 0
 
     def dump_listens_for_spark(
         self, location, dump_id: int, dump_type: str,
@@ -429,24 +276,20 @@ class DumpListenStore:
     ):
         """ Dumps all listens in the ListenStore into spark parquet files in a .tar archive.
 
-        Listens are dumped into files ideally no larger than 128MB, sorted from oldest to newest. Files
-        are named #####.parguet with monotonically increasing integers starting with 0.
-
-        This creates an incremental dump if start_time is specified (with range start_time to end_time),
-        otherwise it creates a full dump with all listens.
+        Full dumps write one numbered parquet file per nonempty partition, in user and newest-listen
+        order. Incremental dumps write one file in created order, excluding start_time and including end_time.
 
         Args:
             location: the directory where the listens dump archive should be created
             dump_id: the ID of the dump in the dump sequence
             dump_type: type of dump, full or incremental
-            start_time: the start of the time range for which listens should be dumped. defaults to
-                utc 0 (meaning a full dump)
-            end_time: the end of time range for which listens should be dumped. defaults to the current time
+            start_time: the start of the time range for which listens should be dumped
+            end_time: the end of the time range for which listens should be dumped
 
         Returns:
             the path to the dump archive
         """
-        self.log.info('Beginning spark dump of listens from TimescaleDB...')
+        self.log.info('Beginning spark dump of listens from the listens DB...')
         full_dump = dump_type == "full"
         archive_name = 'listenbrainz-spark-dump-{dump_id}-{time}'.format(dump_id=dump_id,
                                                                          time=end_time.strftime('%Y%m%d-%H%M%S'))
@@ -456,56 +299,26 @@ class DumpListenStore:
             archive_name = f'{archive_name}-incremental'
 
         metadata = self.get_dump_metadata(start_time, end_time, full_dump)
-        max_created = end_time
-        parquet_index = 0
         with uncompressed_dump(location, archive_name, metadata, temp_location=temp_location) as (tar, temp_dir, archive_path):
 
-            # iterate one month at a time (rather than one year) so that each write_parquet_files
-            # call buffers only a month of listens in memory and holds its database transaction
-            # open for only a month's worth of processing. dumping a full year at once buffers the
-            # entire year's joined result set client-side and OOMs the process.
-            start_year, start_month = start_time.year, start_time.month
-            end_year, end_month = end_time.year, end_time.month
-            year, month = start_year, start_month
-            while (year, month) <= (end_year, end_month):
-                if year == start_year and month == start_month:
-                    start = start_time
-                else:
-                    start = datetime(year=year, month=month, day=1)
-                if year == end_year and month == end_month:
-                    end = end_time
-                elif month == 12:
-                    end = datetime(year=year + 1, month=1, day=1)
-                else:
-                    end = datetime(year=year, month=month + 1, day=1)
-
-                self.log.info(
-                    "dump %s to %s" % (start.strftime("%Y-%m-%d %H:%M:%S"), end.strftime("%Y-%m-%d %H:%M:%S")))
-
-                # This try block is here in an effort to expose bugs that occur during testing
-                # Without it sometimes test pass and sometimes they give totally unrelated errors.
-                # Keeping this block should help with future testing...
-                try:
-                    parquet_index = self.write_parquet_files(archive_name, temp_dir, tar, dump_type,
-                                                             start, end, max_created, parquet_index)
-                except Exception as err:
-                    self.log.exception("likely test failure: " + str(err))
-                    raise
-
-                if month == 12:
-                    year, month = year + 1, 1
-                else:
-                    month += 1
+            file_id = 0
+            for pages in self.iter_dump_files(
+                SPARK_PAGE_COLUMNS, lambda query: self.spark_dump_query(query, by_created=not full_dump),
+                start_time, end_time, full_dump
+            ):
+                if self.write_parquet_file(archive_name, temp_dir, tar, file_id, pages):
+                    file_id += 1
 
         self.log.info('ListenBrainz spark listen dump done!')
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
 
     def cleanup_listen_delete_metadata(self):
-        """ Cleanup listen delete metadata after spark full dump is complete """
+        """Clean up deletion records in the listens DB after a Spark full dump."""
         self.log.info("Cleaning up listen_delete_metadata")
-        with timescale.engine.connect() as connection:
+        with listens_db.engine.begin() as connection:
+            # Invalid requests matched no listen and need no retry, so clean them up
+            # together with completed requests. Pending requests must still be processed.
             connection.execute(text("DELETE FROM listen_delete_metadata WHERE status != 'pending'"))
             connection.execute(text("DELETE FROM deleted_user_listen_history"))
-            connection.commit()
         self.log.info("Cleaning up listen_delete_metadata done!")

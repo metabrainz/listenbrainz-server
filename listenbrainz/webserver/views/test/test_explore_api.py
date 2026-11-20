@@ -1,6 +1,8 @@
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch, MagicMock
 
 from brainzutils.ratelimit import set_rate_limits
+from freezegun import freeze_time
 
 import listenbrainz.db.user as db_user
 from listenbrainz.tests.integration import IntegrationTestCase
@@ -97,6 +99,10 @@ class LBRadioRateLimitTest(IntegrationTestCase):
         # Global limit is effectively unlimited so only the lb-radio limit fires.
         set_rate_limits(100000, 100000, 10)
         self.user = db_user.get_or_create(self.db_conn, 1, 'testuser_lb_radio_rl')
+        # Keep requests in one window, with expiry in the future for Redis's real clock.
+        frozen_time = freeze_time(datetime.now(timezone.utc) + timedelta(minutes=1))
+        frozen_time.start()
+        self.addCleanup(frozen_time.stop)
 
     def _url(self):
         return self.custom_url_for('explore_api_v1.lb_radio', prompt='artist:(radiohead)', mode='easy')
@@ -128,8 +134,9 @@ class LBRadioRateLimitTest(IntegrationTestCase):
         mock_patch_cls.return_value = mock_patch
 
         url, headers = self._url(), self._auth()
-        for _ in range(5):
-            self.client.get(url, headers=headers)
+        for i in range(5):
+            resp = self.client.get(url, headers=headers)
+            self.assert200(resp, f"Request {i + 1} should succeed")
 
         resp = self.client.get(url, headers=headers)
         self.assertEqual(resp.status_code, 429, "6th request should be rate-limited")

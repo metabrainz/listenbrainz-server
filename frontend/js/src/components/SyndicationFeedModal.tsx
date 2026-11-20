@@ -7,7 +7,7 @@ import {
   faCircleQuestion,
   faRssSquare,
 } from "@fortawesome/free-solid-svg-icons";
-import Tooltip from "react-tooltip";
+import Tooltip from "./Tooltip";
 
 type BaseOptionProps = {
   label: string;
@@ -106,11 +106,15 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
               {option.tooltip && (
                 <>
                   &nbsp;
-                  <FontAwesomeIcon
-                    icon={faCircleQuestion}
-                    data-tip={option.tooltip}
-                  />
-                  <Tooltip place="right" type="dark" effect="solid" />
+                  <Tooltip
+                    id={`${option.key}-tooltip`}
+                    placement="right"
+                    tooltip={option.tooltip}
+                  >
+                    <span>
+                      <FontAwesomeIcon icon={faCircleQuestion} />
+                    </span>
+                  </Tooltip>
                 </>
               )}
             </label>

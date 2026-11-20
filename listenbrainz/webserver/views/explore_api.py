@@ -5,7 +5,7 @@ from flask import Blueprint, jsonify, request, current_app
 from brainzutils.ratelimit import ratelimit, RateLimit, get_rate_limit_data, on_over_limit
 from brainzutils import cache
 import listenbrainz.db.fresh_releases
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn, listens_conn
 from listenbrainz.webserver.decorators import cache_public, crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized
 from listenbrainz.webserver.views.api_tools import _parse_int_arg, _parse_bool_arg, ensure_user_token_for_expensive_endpoint
@@ -90,7 +90,7 @@ def get_fresh_releases():
 
     try:
         db_releases, total_count = listenbrainz.db.fresh_releases.get_sitewide_fresh_releases(
-            ts_conn, release_date, days, sort, past, future
+            listens_conn, release_date, days, sort, past, future
         )
     except Exception as e:
         current_app.logger.error("Server failed to get latest release: {}".format(e), exc_info=True)

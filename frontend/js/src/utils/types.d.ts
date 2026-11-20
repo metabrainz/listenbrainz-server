@@ -64,6 +64,7 @@ declare type MBIDMapping = {
 
 declare type BaseListenFormat = {
   listened_at: number;
+  recording_msid?: string | null;
   user_name?: string | null;
   track_metadata: TrackMetadata;
 };
@@ -82,6 +83,7 @@ declare type ListenBrainzUser = {
   id?: number;
   name: string;
   auth_token?: string;
+  created?: number;
 };
 
 declare type ImportService = "lastfm" | "librefm";
@@ -767,6 +769,7 @@ declare type BrainzPlayerSettings = {
   funkwhaleEnabled : boolean;
   navidromeEnabled : boolean;
   brainzplayerEnabled : boolean;
+  notificationsEnabled : boolean;
   dataSourcesPriority : Array<
     | "spotify"
     | "youtube"
