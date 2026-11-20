@@ -557,8 +557,6 @@ def search_playlist(db_conn, query: str, count: int = 0, offset: int = 0):
           FROM playlist.playlist AS pl
      LEFT JOIN playlist.playlist AS copy
             ON pl.copied_from_id = copy.id
-     LEFT JOIN playlist.playlist_collaborator
-            ON pl.id = playlist_collaborator.playlist_id
         WHERE pl.public = true
     )
     SELECT *
@@ -580,10 +578,6 @@ def search_playlist(db_conn, query: str, count: int = 0, offset: int = 0):
         SELECT similarity(pl.name, :query) AS name_similarity
              , similarity(pl.description, :query) AS description_similarity
           FROM playlist.playlist AS pl
-     LEFT JOIN playlist.playlist AS copy
-            ON pl.copied_from_id = copy.id
-     LEFT JOIN playlist.playlist_collaborator
-            ON pl.id = playlist_collaborator.playlist_id
         WHERE pl.public = true
     )
     SELECT COUNT(*)
