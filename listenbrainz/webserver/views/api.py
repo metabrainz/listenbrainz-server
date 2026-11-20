@@ -624,7 +624,7 @@ def serialize_playlists(playlists, playlist_count, count, offset):
             "count": count}
 
 
-@api_bp.get("/user/<playlist_user_name>/playlists")
+@api_bp.get("/user/<mb_username:playlist_user_name>/playlists")
 @crossdomain
 @ratelimit()
 def get_playlists_for_user(playlist_user_name):
@@ -659,7 +659,7 @@ def get_playlists_for_user(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-@api_bp.get("/user/<playlist_user_name>/playlists/createdfor")
+@api_bp.get("/user/<mb_username:playlist_user_name>/playlists/createdfor")
 @crossdomain
 @ratelimit()
 def get_playlists_created_for_user(playlist_user_name):
@@ -691,7 +691,7 @@ def get_playlists_created_for_user(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-@api_bp.get("/user/<playlist_user_name>/playlists/collaborator")
+@api_bp.get("/user/<mb_username:playlist_user_name>/playlists/collaborator")
 @crossdomain
 @ratelimit()
 def get_playlists_collaborated_on_for_user(playlist_user_name):
@@ -730,7 +730,7 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-@api_bp.get("/user/<playlist_user_name>/playlists/recommendations")
+@api_bp.get("/user/<mb_username:playlist_user_name>/playlists/recommendations")
 @crossdomain
 @ratelimit()
 def user_recommendations(playlist_user_name):
@@ -752,7 +752,7 @@ def user_recommendations(playlist_user_name):
     return jsonify(serialize_playlists(playlists, len(playlists), 0, 0))
 
 
-@api_bp.get("/user/<playlist_user_name>/playlists/search")
+@api_bp.get("/user/<mb_username:playlist_user_name>/playlists/search")
 @crossdomain
 @ratelimit()
 def search_user_playlist(playlist_user_name):
