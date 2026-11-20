@@ -332,7 +332,7 @@ def create_playlist():
     if user["musicbrainz_id"] in collaborators:
         collaborators.remove(user["musicbrainz_id"])
 
-    username_lookup = collaborators
+    username_lookup = list(collaborators)
     created_for = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI].get("created_for", None)
     if created_for:
         username_lookup.append(created_for)
