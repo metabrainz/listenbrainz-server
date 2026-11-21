@@ -241,31 +241,33 @@ const SearchTrackOrMBID = forwardRef<
     }
   };
 
+  const trimmedInputValue = inputValue.trim();
+
   useEffect(() => {
-    if (!inputValue) {
+    if (!trimmedInputValue) {
       return;
     }
     setLoading(true);
-    const isValidUUID = UUID_REGEXP.test(inputValue);
+    const isValidUUID = UUID_REGEXP.test(trimmedInputValue);
     const isValidRecordingUUID =
-      MB_RECORDING_MBID_REGEXP.test(inputValue) ||
-      LB_RECORDING_MBID_REGEXP.test(inputValue);
+      MB_RECORDING_MBID_REGEXP.test(trimmedInputValue) ||
+      LB_RECORDING_MBID_REGEXP.test(trimmedInputValue);
     const isValidAlbumUUID =
-      MB_RELEASE_MBID_REGEXP.test(inputValue) ||
-      LB_RELEASE_MBID_REGEXP.test(inputValue) ||
-      MB_RELEASE_GROUP_MBID_REGEXP.test(inputValue) ||
-      LB_ALBUM_MBID_REGEXP.test(inputValue);
+      MB_RELEASE_MBID_REGEXP.test(trimmedInputValue) ||
+      LB_RELEASE_MBID_REGEXP.test(trimmedInputValue) ||
+      MB_RELEASE_GROUP_MBID_REGEXP.test(trimmedInputValue) ||
+      LB_ALBUM_MBID_REGEXP.test(trimmedInputValue);
     if (isValidAlbumUUID && isFunction(switchMode)) {
-      switchMode(inputValue);
+      switchMode(trimmedInputValue);
       return;
     }
     if (isValidUUID || isValidRecordingUUID) {
-      throttledHandleValidMBID(inputValue);
+      throttledHandleValidMBID(trimmedInputValue);
     } else {
-      throttledSearchTrack(inputValue);
+      throttledSearchTrack(trimmedInputValue);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputValue]);
+  }, [trimmedInputValue]);
 
   return (
     <div>
