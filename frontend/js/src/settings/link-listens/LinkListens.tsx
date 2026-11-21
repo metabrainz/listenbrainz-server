@@ -26,6 +26,7 @@ import MBIDMappingModal from "../../common/listens/MBIDMappingModal";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import {
+  getListenCardKey,
   getObjectForURLSearchParams,
   getRecordingMSID,
 } from "../../utils/utils";
@@ -508,7 +509,7 @@ export default function LinkListensPage() {
               }
               return (
                 <ListenCard
-                  key={`${groupItem.recording_name}-${groupItem.artist_name}-${groupItem.listened_at}`}
+                  key={getListenCardKey(listen)}
                   showTimestamp
                   showUsername={false}
                   // eslint-disable-next-line react/jsx-no-useless-fragment
