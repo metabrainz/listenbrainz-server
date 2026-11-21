@@ -90,7 +90,12 @@ export default function LBRadio() {
         setJspfPlaylist(payload.jspf);
         setFeedback(payload.feedback);
       } catch (error) {
-        setErrorMessage(error);
+        const message =
+          typeof error === "string"
+            ? error
+            : (error as Error)?.message ||
+              "An error occurred while generating the playlist.";
+        setErrorMessage(message);
         setJspfPlaylist(undefined);
         setFeedback([]);
       }
