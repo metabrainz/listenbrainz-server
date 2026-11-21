@@ -70,7 +70,6 @@ describe("ImportListensPage", () => {
   let server: SetupServerApi;
   let router: ReturnType<typeof createMemoryRouter>;
   let submitAPICalled = false;
-  let cancelAPICalled = false;
   let refreshAPICalled = false;
 
   beforeAll(() => {
@@ -109,7 +108,6 @@ describe("ImportListensPage", () => {
 
   beforeEach(() => {
     submitAPICalled = false;
-    cancelAPICalled = false;
     refreshAPICalled = false;
   });
 
@@ -238,23 +236,24 @@ it("calls import endpoint when import listens clicked", async () => {
 });
 
 
-  it("calls cancel endpoint when cancel clicked", async () => {
-
+  it("cancels the selected import using the canonical URL", async () => {
+    let cancelRequest: Request | undefined;
     server.use(
       http.get("/1/import-listens/list/", () => {
-        return HttpResponse.json([
-          merge(mockImports[0], {
-            metadata: { status: "waiting", progress: "Your data import will start soon." },
-          }),
-        ]);
+        return HttpResponse.json(mockImports);
       }),
-      http.post("/1/import-listens/cancel/1", (req) => {
-        cancelAPICalled = true;
-        return HttpResponse.json({ success: true, id: 1 });
+      http.post("/1/import-listens/cancel/1/", ({ request }) => {
+        cancelRequest = request;
+        return HttpResponse.json({ success: true });
       })
     );
 
-    renderWithProviders(<RouterProvider router={router} />, {}, { wrapper: ReactQueryWrapper }, false);
+    renderWithProviders(
+      <RouterProvider router={router} />,
+      {},
+      { wrapper: ReactQueryWrapper },
+      false
+    );
 
     await waitFor(() => {
       expect(screen.getByText("spotify.zip")).toBeInTheDocument();
@@ -262,8 +261,56 @@ it("calls import endpoint when import listens clicked", async () => {
 
     const cancelBtn = screen.getByRole("button", { name: "Cancel import" });
     await user.click(cancelBtn);
-    expect(cancelAPICalled).toBe(true);
+    await waitFor(() => {
+      expect(cancelRequest?.url).toBe(
+        "http://localhost/1/import-listens/cancel/1/"
+      );
+    });
+    expect(cancelRequest?.method).toBe("POST");
+    expect(cancelRequest?.headers.get("Authorization")).toBe(
+      "Token never_gonna"
+    );
+    expect(
+      await screen.findByText("Your data import has been cancelled")
+    ).toBeInTheDocument();
     expect(screen.queryByText("spotify.zip")).not.toBeInTheDocument();
+    expect(screen.getByText("listenbrainz.zip")).toBeInTheDocument();
+  });
+
+  it("keeps the import visible when cancellation is rejected", async () => {
+    server.use(
+      http.get("/1/import-listens/list/", () => {
+        return HttpResponse.json(mockImports);
+      }),
+      http.post("/1/import-listens/cancel/1/", () => {
+        return HttpResponse.json(
+          { error: "Import not found or is already being processed." },
+          { status: 404 }
+        );
+      })
+    );
+
+    renderWithProviders(
+      <RouterProvider router={router} />,
+      {},
+      { wrapper: ReactQueryWrapper },
+      false
+    );
+
+    expect(await screen.findByText("spotify.zip")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Cancel import" }));
+
+    expect(
+      await screen.findByText("There was an error cancelling your import")
+    ).toBeInTheDocument();
+    expect(screen.getByText("spotify.zip")).toBeInTheDocument();
+    expect(screen.getByText("listenbrainz.zip")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Cancel import" })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Your data import has been cancelled")
+    ).not.toBeInTheDocument();
   });
 
   it("calls refresh endpoint when refresh clicked", async () => {

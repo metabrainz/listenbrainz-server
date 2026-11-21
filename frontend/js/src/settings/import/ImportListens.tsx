@@ -440,7 +440,7 @@ export default function ImportListens() {
       event.preventDefault();
       try {
         const response = await fetch(
-          `${APIService.APIBaseURI}/import-listens/cancel/${importToCancelId}`,
+          `${APIService.APIBaseURI}/import-listens/cancel/${importToCancelId}/`,
           {
             method: "POST",
             headers,
