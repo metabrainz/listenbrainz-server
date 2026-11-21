@@ -310,6 +310,40 @@ export default function Listen() {
 
     return followingList.includes(user.name);
   };
+  const cancelDeleteListen = React.useCallback(
+    async (listen: Listen) => {
+      const isCurrentUser =
+        Boolean(listen.user_name) && listen.user_name === currentUser?.name;
+      if (isCurrentUser && currentUser?.auth_token) {
+        const listenedAt = get(listen, "listened_at");
+        const recordingMsid = getRecordingMSID(listen);
+
+        try {
+          const status = await APIService.cancelDeleteListen(
+            currentUser.auth_token,
+            recordingMsid,
+            listenedAt
+          );
+          if (status === 200) {
+            toast.success(
+              `Listen ${listen.track_metadata.track_name} has been restored.`
+            );
+          }
+        } catch (error) {
+          toast.error(
+            <ToastMsg
+              title="Error while canceling listen deletion"
+              message={
+                typeof error === "object" ? error.message : error.toString()
+              }
+            />,
+            { toastId: "undo-delete-listen-error" }
+          );
+        }
+      }
+    },
+    [currentUser, APIService]
+  );
 
   const deleteListen = React.useCallback(
     async (listen: Listen) => {
@@ -331,11 +365,22 @@ export default function Listen() {
               <ToastMsg
                 title="Success"
                 message={
-                  "This listen has not been deleted yet, but is scheduled for deletion, " +
-                  "which usually happens shortly after the hour."
+                  <div>
+                    <p>
+                      This listen has not been deleted yet, but is scheduled for
+                      deletion, which usually happens shortly after the hour.
+                    </p>
+                    <button
+                      type="button"
+                      className="btn btn-primary add-listen"
+                      onClick={() => cancelDeleteListen(listen)}
+                    >
+                      Undo
+                    </button>
+                  </div>
                 }
               />,
-              { toastId: "delete-listen" }
+              { toastId: "delete-listen", autoClose: false }
             );
             // wait for the delete animation to finish
             await new Promise((resolve) => {
@@ -357,7 +402,7 @@ export default function Listen() {
       }
       return undefined;
     },
-    [APIService, currentUser]
+    [APIService, currentUser, cancelDeleteListen]
   );
   const { mutate: deleteListenMutation } = useMutation({
     mutationFn: deleteListen,
