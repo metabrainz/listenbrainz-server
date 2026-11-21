@@ -20,6 +20,7 @@ class LoginViewsTestCase(ServerTestCase):
 
         query = parse_qs(urlparse(response.location).query)
         self.assertIn("email", query["scope"][0].split())
+        self.assertIn("synapse:notifications:inbox", query["scope"][0].split())
 
     def test_login_musicbrainz_forwards_register_hint_to_oauth_domain(self):
         response = self.client.get(

@@ -258,3 +258,17 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
 
         # test that the refresh token isn't deleted on subsequent updates
         self.assertEqual('refresh_token', oauth_user['refresh_token'])
+
+    def test_update_token_scopes(self):
+        db_oauth.update_token(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY,
+                              'new_token', None, int(time.time()))
+        user = db_oauth.get_token(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY)
+        self.assertEqual(user['scopes'], ['user-read-recently-played'])
+
+        for refresh_token in [None, 'new_refresh_token']:
+            with self.subTest(refresh_token=refresh_token):
+                scopes = ['user-read-recently-played', refresh_token or 'no-refresh']
+                db_oauth.update_token(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY,
+                                      'new_token', refresh_token, int(time.time()), scopes=scopes)
+                user = db_oauth.get_token(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY)
+                self.assertEqual(user['scopes'], scopes)

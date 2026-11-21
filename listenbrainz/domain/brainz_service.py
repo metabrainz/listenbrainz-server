@@ -30,7 +30,7 @@ class BaseBrainzService(ExternalService):
             refresh_token=token.get("refresh_token"),
             token_expires_ts=expires_at,
             record_listens=False,
-            scopes=self.scopes
+            scopes=self._granted_scopes(token)
         )
         return True
 
@@ -42,9 +42,17 @@ class BaseBrainzService(ExternalService):
             service=self.service,
             access_token=token["access_token"],
             refresh_token=token.get("refresh_token"),
-            expires_at=expires_at
+            expires_at=expires_at,
+            scopes=self._granted_scopes(token)
         )
         return True
+
+    def _granted_scopes(self, token: dict) -> list[str]:
+        """ The scopes the server granted, which can differ from the ones requested. """
+        scope = token.get("scope")
+        if not scope:
+            return self.scopes
+        return scope.split() if isinstance(scope, str) else list(scope)
 
     def get_authorize_url(self, scopes: list, state: str = None, **kwargs):
         oauth = OAuth2Session(
@@ -87,7 +95,8 @@ class BaseBrainzService(ExternalService):
             service=self.service,
             access_token=token["access_token"],
             refresh_token=token["refresh_token"],
-            expires_at=expires_at
+            expires_at=expires_at,
+            scopes=self._granted_scopes(token)
         )
         return self.get_user(user_id)
 
