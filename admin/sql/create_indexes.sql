@@ -87,5 +87,7 @@ CREATE INDEX playlist_id_collaborator_id_playlist_collaborator
 CREATE INDEX public_playlist_idx ON playlist.playlist (creator_id, created_for_id) WHERE public = true;
 CREATE INDEX playlist_name_trgm_gin ON playlist.playlist USING GIN (name gin_trgm_ops);
 CREATE INDEX playlist_description_trgm_gin ON playlist.playlist USING GIN (description gin_trgm_ops);
+CREATE INDEX playlist_tag_playlist_id_idx ON playlist.playlist_tag (playlist_id);
+CREATE INDEX playlist_tag_tag_idx ON playlist.playlist_tag (tag);
 
 COMMIT;

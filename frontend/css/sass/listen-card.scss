@@ -1,5 +1,9 @@
 @use "sass:map";
 
+.collection-release-card-wrap {
+  cursor: pointer;
+}
+
 .listen-card {
   &.card {
     height: initial;

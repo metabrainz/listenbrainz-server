@@ -210,4 +210,10 @@ ALTER TABLE playlist.playlist_recording
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+ALTER TABLE playlist.playlist_tag
+    ADD CONSTRAINT playlist_tag_playlist_id_foreign_key
+    FOREIGN KEY (playlist_id)
+    REFERENCES "playlist".playlist (id)
+    ON DELETE CASCADE;
+
 COMMIT;

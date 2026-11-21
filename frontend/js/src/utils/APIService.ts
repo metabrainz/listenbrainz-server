@@ -3,6 +3,7 @@ import fetchBuilder from "fetch-retry";
 import type { RequestInitWithRetry } from "fetch-retry";
 import { TagActionType } from "../tags/TagComponent";
 import type { SortOption } from "../explore/fresh-releases/FreshReleases";
+import type { PlaylistTag } from "../playlists/utils";
 import APIError from "./APIError";
 import type { Flair } from "./constants";
 import { Modes } from "../explore/lb-radio/components/Prompt";
@@ -10,6 +11,56 @@ import { Modes } from "../explore/lb-radio/components/Prompt";
 export interface LBRadioResponse {
   payload: { jspf: JSPFObject; feedback: string[] };
 }
+
+export type MusicBrainzCollectionEntityType = "recording" | "release";
+
+export type MusicBrainzCollectionSummary = {
+  mbid: string;
+  name: string;
+  public: boolean;
+  entity_type: MusicBrainzCollectionEntityType;
+  item_count: number;
+};
+
+export type MusicBrainzCollectionTrack = {
+  recording_mbid: string;
+  title: string | null;
+  artist_credit_name: string | null;
+  length: number | null;
+  release_mbid?: string | null;
+  release_name?: string | null;
+  caa_id?: number | null;
+  caa_release_mbid?: string | null;
+  artist_mbids?: string[] | null;
+  artists?: Array<{
+    artist_mbid: string;
+    artist_credit_name: string;
+    join_phrase?: string;
+  }> | null;
+};
+
+export type MusicBrainzCollectionReleaseItem = {
+  release_mbid: string;
+  title: string | null;
+  artist_credit_name: string | null;
+  caa_id?: number | null;
+  caa_release_mbid?: string | null;
+};
+
+export type MusicBrainzCollectionDetailResponse = {
+  collection: {
+    mbid: string;
+    name: string;
+    public: boolean;
+    entity_type: MusicBrainzCollectionEntityType;
+  };
+  track_count: number;
+  count: number;
+  offset: number;
+  tracks: MusicBrainzCollectionTrack[];
+  items: MusicBrainzCollectionReleaseItem[];
+  cover_art?: string | null;
+};
 
 export default class APIService {
   APIBaseURI: string;
@@ -1053,6 +1104,51 @@ export default class APIService {
     return response.status;
   };
 
+  addPlaylistTags = async (
+    userToken: string,
+    playlistMBID: string,
+    tags: string[]
+  ): Promise<number> => {
+    if (!playlistMBID) {
+      throw new SyntaxError("Playlist MBID is missing");
+    }
+    const url = `${this.APIBaseURI}/playlist/${playlistMBID}/tags`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ tags }),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
+  removePlaylistTag = async (
+    userToken: string,
+    playlistMBID: string,
+    tag: string
+  ): Promise<number> => {
+    if (!playlistMBID) {
+      throw new SyntaxError("Playlist MBID is missing");
+    }
+    if (!tag) {
+      throw new SyntaxError("Tag is missing");
+    }
+    const url = `${
+      this.APIBaseURI
+    }/playlist/${playlistMBID}/tags/${encodeURIComponent(tag)}`;
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
   getUserPlaylists = async (
     userName: string,
     userToken?: string,
@@ -1087,6 +1183,32 @@ export default class APIService {
       headers,
     });
 
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getUserPlaylistTags = async (
+    userName: string,
+    userToken?: string,
+    collaborated: boolean = false
+  ): Promise<{ tags: PlaylistTag[] }> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    let headers;
+    if (userToken) {
+      headers = {
+        Authorization: `Token ${userToken}`,
+      };
+    }
+    const collaboratorParam = collaborated ? "?collaborator=true" : "";
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/playlists/tags${collaboratorParam}`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers,
+    });
     await this.checkStatus(response);
     return response.json();
   };
@@ -1590,6 +1712,24 @@ export default class APIService {
   ): Promise<any> => {
     const url = `${this.APIBaseURI}/playlist/soundcloud/${playlistID}/tracks`;
     const response = await this.fetchWithRetry(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getMusicBrainzCollections = async (
+    userToken: string
+  ): Promise<MusicBrainzCollectionSummary[]> => {
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    const url = `${this.APIBaseURI}/playlist/import/musicbrainz/collections`;
+    const response = await fetch(url, {
       method: "GET",
       headers: {
         Authorization: `Token ${userToken}`,
@@ -2315,18 +2455,22 @@ export default class APIService {
     return response.json();
   };
 
+  // User playlists page search uses the route loader (?search=), not this method.
   searchPlaylistsForUser = async (
     searchQuery: string,
     musicbrainzID: string,
     count: number = 25,
     offset: number = 0
   ): Promise<PlaylistTypeSearchResult> => {
-    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
-      musicbrainzID
-    )}/playlists/search?query=${encodeURIComponent(
-      searchQuery
-    )}&count=${count}&offset=${offset}`;
-    const response = await this.fetchWithRetry(url);
+    const url = new URL(
+      `${this.APIBaseURI}/user/${encodeURIComponent(
+        musicbrainzID
+      )}/playlists/search`
+    );
+    url.searchParams.set("query", searchQuery);
+    url.searchParams.set("count", count.toString());
+    url.searchParams.set("offset", offset.toString());
+    const response = await this.fetchWithRetry(url.toString());
     await this.checkStatus(response);
     return response.json();
   };
