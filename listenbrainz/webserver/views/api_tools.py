@@ -231,8 +231,8 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
         ):
             raise ListenValidationError("JSON document should not contain both duration_played and duration_played_ms.", listen)
         # check duration_played validity
-        validate_duration_field(listen, "duration_played", MAX_DURATION_LIMIT)
-        validate_duration_field(listen, "duration_played_ms", MAX_DURATION_MS_LIMIT)
+        validate_duration_field(listen, "duration_played", MAX_DURATION_LIMIT, allow_zero=True)
+        validate_duration_field(listen, "duration_played_ms", MAX_DURATION_MS_LIMIT, allow_zero=True)
 
         # MBIDs, both of the mbid validation methods mutate the listen payload if needed.
         single_mbid_keys = ['release_mbid', 'recording_mbid', 'release_group_mbid', 'track_mbid']
@@ -296,8 +296,10 @@ def log_raise_400(msg, data="") -> NoReturn:
     raise APIBadRequest(msg)
 
 
-def validate_duration_field(listen, key, max_value):
-    """ Check that the duration field is valid positive integer but less than the max permitted value """
+def validate_duration_field(listen, key, max_value, allow_zero=False):
+    """ Check that the duration field is valid integer but less than the max permitted value.
+    Pass allow_zero=True for played-duration fields where 0 is valid (e.g. a now-playing listen
+    that just started). """
     additional_info = listen["track_metadata"]["additional_info"]
     if key in additional_info:
         duration = additional_info[key]
@@ -306,8 +308,12 @@ def validate_duration_field(listen, key, max_value):
             # also allows strings if those are convertible to integers. we need this to work around api_compat quirks.
             # see commit message for details.
             value = int(float(duration))
-            if value <= 0:
-                raise ListenValidationError(f"Value for {key} is invalid, should be a positive integer.", listen)
+            if allow_zero:
+                if value < 0:
+                    raise ListenValidationError(f"Value for {key} is invalid, should be a non-negative integer.", listen)
+            else:
+                if value <= 0:
+                    raise ListenValidationError(f"Value for {key} is invalid, should be a positive integer.", listen)
             if value > max_value:
                 raise ListenValidationError(f"Value for {key} is too large, max permitted value is {max_value}", listen)
             additional_info[key] = value
