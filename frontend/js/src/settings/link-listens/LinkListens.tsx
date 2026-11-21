@@ -35,6 +35,8 @@ import MultiTrackMBIDMappingModal, {
 import Accordion from "../../common/Accordion";
 import { RouteQuery } from "../../utils/Loader";
 import Pagination from "../../common/Pagination";
+import { getMissingDataLinks } from "./utils";
+import PlatformLinks from "./PlatformLinks";
 import {
   removeTrackFromAmbientQueueAtom,
   setAmbientQueueAtom,
@@ -505,6 +507,12 @@ export default function LinkListensPage() {
                   );
                   additionalActions = linkWithMB;
                 }
+              }
+              const links = getMissingDataLinks(groupItem);
+              if (links.length) {
+                additionalMenuItems.push(
+                  <PlatformLinks key="platform-links" links={links} />
+                );
               }
               return (
                 <ListenCard
