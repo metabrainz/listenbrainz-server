@@ -7,7 +7,9 @@ from listenbrainz.db.testing import DatabaseTestCase
 import listenbrainz.db.user as db_user
 import listenbrainz.db.spotify as db_spotify
 import listenbrainz.db.external_service_oauth as db_oauth
+import listenbrainz.db.listens_importer as db_listens_importer
 
+from sqlalchemy import text
 
 class OAuthDatabaseTestCase(DatabaseTestCase):
 
@@ -67,6 +69,56 @@ class OAuthDatabaseTestCase(DatabaseTestCase):
         # the last updated in the db is still of 1st update and the 2nd update didn't update
         # last_updated column
         self.assertGreater(user['last_updated'], time_before_update)
+
+    def test_save_token_resets_import_status(self):
+        db_oauth.save_token(
+            self.db_conn,
+            user_id=self.user['id'],
+            service=ExternalServiceType.SPOTIFY,
+            access_token='first_token',
+            refresh_token='refresh_token',
+            token_expires_ts=int(time.time()),
+            record_listens=True,
+            scopes=['user-read-recently-played'],
+            external_user_id='external_user_idid',
+        )
+        db_listens_importer.update_status(
+            self.db_conn,
+            self.user['id'],
+            ExternalServiceType.SPOTIFY,
+            "Error",
+            1,
+            error={"message": "Previous import failed", "retry": False},
+        )
+
+        db_oauth.save_token(
+            self.db_conn,
+            user_id=self.user['id'],
+            service=ExternalServiceType.SPOTIFY,
+            access_token='reconnected_token',
+            refresh_token='refresh_token',
+            token_expires_ts=int(time.time()),
+            record_listens=True,
+            scopes=['user-read-recently-played'],
+            external_user_id='external_user_idid',
+        )
+        
+        status = db_listens_importer.get_import_status(
+            self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY
+        )
+        self.assertIsNone(status.get('status'))
+        self.assertIsNone(status.get('error'))
+
+        row_count = self.db_conn.execute(text("""
+            SELECT count(*)
+              FROM listens_importer
+             WHERE user_id = :user_id
+               AND service = :service
+        """), {
+            "user_id": self.user['id'],
+            "service": ExternalServiceType.SPOTIFY.value,
+        }).scalar_one()
+        self.assertEqual(row_count, 1)
 
     def test_update_token(self):
         db_oauth.update_token(

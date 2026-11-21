@@ -29,13 +29,19 @@ class ExternalService(ABC):
         """
         raise NotImplementedError()
 
-    def remove_user(self, user_id: int):
-        """ Delete user entry for user with specified ListenBrainz user ID.
+    def remove_user(self, user_id: int, remove_import_log: bool = True):
+        """Delete user entry for the specified ListenBrainz user ID.
 
         Args:
-            user_id (int): the ListenBrainz row ID of the user
+            user_id: The ListenBrainz row ID of the user.
+            remove_import_log: Whether to also remove the user's importer status.
         """
-        external_service_oauth.delete_token(db_conn, user_id=user_id, service=self.service, remove_import_log=True)
+        external_service_oauth.delete_token(
+            db_conn,
+            user_id=user_id,
+            service=self.service,
+            remove_import_log=remove_import_log,
+        )
 
     def get_user(self, user_id: int) -> Union[dict, None]:
         return external_service_oauth.get_token(db_conn, user_id=user_id, service=self.service)
