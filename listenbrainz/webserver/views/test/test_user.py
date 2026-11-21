@@ -37,7 +37,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
         abuser = db_user.get_or_create(self.db_conn, 3, 'abuser')
         self.abuser = User.from_dbrow(abuser)
-        self.listens_conn = listens_db.engine.connect()
+        self.listens_conn = listens_db.engine.connect().execution_options(isolation_level="AUTOCOMMIT")
 
     def tearDown(self):
         self.listens_conn.close()

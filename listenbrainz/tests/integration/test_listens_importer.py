@@ -368,6 +368,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             content_type="multipart/form-data"
         )
         self.assert200(response)
+        first_file_path = response.json["file_path"]
 
         user2 = db_user.get_or_create(self.db_conn, 1851, "listens-import2")
         data = {
@@ -383,8 +384,10 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             content_type="multipart/form-data"
         )
         self.assert200(response)
+        second_file_path = response.json["file_path"]
 
-        self.assertEqual(2, len(self.list_import_files()))
+        # Empty files may be removed by the worker before this assertion.
+        self.assertNotEqual(first_file_path, second_file_path)
 
     def test_import_task_auth(self):
         from_date = datetime(2024, 1, 1, tzinfo=timezone.utc)

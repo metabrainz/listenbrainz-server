@@ -1,5 +1,6 @@
 import collections
 import datetime
+import functools
 from typing import List, Optional
 from uuid import UUID
 
@@ -13,6 +14,7 @@ from listenbrainz.db.exceptions import InvalidUser
 from listenbrainz.db.model.playlist import Playlist
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.db.year_in_music import LAST_FM_FOUNDING_YEAR, MAX_YEAR_IN_MUSIC_YEAR
+from listenbrainz.db import transaction
 
 TROI_BOT_USER_ID = 12939
 TROI_BOT_DEBUG_USER_ID = 19055
@@ -34,6 +36,15 @@ RECOMMENDATION_PATCHES = (
         )
     ),
 )
+
+
+def _in_transaction(fn):
+    # request connections are AUTOCOMMIT; multi-statement writes need their own transaction
+    @functools.wraps(fn)
+    def wrapper(db_conn, *args, **kwargs):
+        with transaction(db_conn) as txn:
+            return fn(txn, *args, **kwargs)
+    return wrapper
 
 
 def get_by_mbid(db_conn, playlist_id: str, load_recordings: bool = True) -> Optional[model_playlist.Playlist]:
@@ -692,6 +703,7 @@ def _remove_old_collaborative_playlists(db_conn, creator_id: int, created_for_id
     })
 
 
+@_in_transaction
 def create(db_conn, playlist: model_playlist.WritablePlaylist) -> model_playlist.Playlist:
     """Create a playlist
 
@@ -804,6 +816,7 @@ def get_collaborators_names_from_ids(db_conn, collaborator_ids: List[int]):
     return collaborators
 
 
+@_in_transaction
 def update_playlist(db_conn, playlist: model_playlist.Playlist):
     """Update playlist metadata (Name, description, public flag)
 
@@ -864,6 +877,7 @@ def copy_playlist(db_conn, playlist: model_playlist.Playlist, creator_id: int):
     return create(db_conn, newplaylist)
 
 
+@_in_transaction
 def delete_playlist(db_conn, playlist: model_playlist.Playlist):
     """Delete a playlist.
 
@@ -957,6 +971,7 @@ def insert_recordings(db_conn, playlist_id: int, recordings: List[model_playlist
     return return_recordings
 
 
+@_in_transaction
 def delete_recordings_from_playlist(db_conn, playlist: model_playlist.Playlist, remove_from: int, remove_count: int):
     """Delete recordings from a playlist. If the remove_from + remove_count is more than the number
     of items in the playlist, silently remove as many as possible
@@ -1015,6 +1030,7 @@ def delete_recordings_from_playlist(db_conn, playlist: model_playlist.Playlist, 
     db_conn.commit()
 
 
+@_in_transaction
 def add_recordings_to_playlist(db_conn, playlist: model_playlist.Playlist,
                                recordings: List[model_playlist.WritablePlaylistRecording], position: int = None):
     """Add some recordings to a playlist at a given position

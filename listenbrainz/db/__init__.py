@@ -1,4 +1,5 @@
 import time
+from contextlib import contextmanager
 from typing import Optional
 
 import psycopg2
@@ -32,6 +33,30 @@ def init_db_connection(connect_str, poolclass=NullPool, **engine_kwargs):
             print("Couldn't establish connection to db: {}".format(str(e)))
             print("Sleeping 2 seconds and trying again...")
             time.sleep(2)
+
+
+@contextmanager
+def transaction(conn):
+    """ Run the block in a real transaction on conn itself, without checking out a second connection.
+
+    Request and background connections are AUTOCOMMIT, so the connection is switched to the engine's
+    default isolation level for the block and back afterwards. On a connection that is not in
+    AUTOCOMMIT mode (including inside another transaction() block), the block joins the caller's
+    transaction.
+    """
+    if conn.get_execution_options().get("isolation_level") != "AUTOCOMMIT":
+        yield conn
+        return
+
+    # under AUTOCOMMIT nothing is pending; this only ends SQLAlchemy's autobegun transaction
+    if conn.in_transaction():
+        conn.commit()
+    conn.execution_options(isolation_level=conn.default_isolation_level)
+    try:
+        with conn.begin():
+            yield conn
+    finally:
+        conn.execution_options(isolation_level="AUTOCOMMIT")
 
 
 def run_sql_script(sql_file_path):

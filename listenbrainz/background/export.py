@@ -14,6 +14,7 @@ from listenbrainz.garage import delete_objects, ensure_bucket, get_garage_client
     get_user_data_export_bucket, list_object_names
 from listenbrainz.listenstore.timescale_listenstore import LISTEN_COLUMNS_QUERY
 from listenbrainz.webserver import timescale_connection
+from listenbrainz.db import transaction
 
 BATCH_SIZE = 1000
 EXPORT_FAILED_PROGRESS = "Export failed, please try again."
@@ -90,6 +91,11 @@ def export_query_to_jsonl(conn, file_path, query, **kwargs):
         query: SQL query whose rows must have a text `line` column
         **kwargs: bind parameters forwarded to conn.execute
     """
+    # Server-side cursors need a transaction; AUTOCOMMIT connections do not have one.
+    if conn.get_execution_options().get("isolation_level") == "AUTOCOMMIT":
+        with transaction(conn) as txn:
+            return export_query_to_jsonl(txn, file_path, query, **kwargs)
+
     rowcount = 0
     with conn.execute(
         text(query).execution_options(yield_per=BATCH_SIZE),
