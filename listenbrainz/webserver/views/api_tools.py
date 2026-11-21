@@ -77,8 +77,7 @@ def insert_payload(payload, user: SubmitListenUserMetadata, listen_type=LISTEN_T
 
 
 def handle_playing_now(listen):
-    """ Check that the listen doesn't already exist in redis and put it in
-    there if it isn't.
+    """ Store the listen and refresh its expiry, suppressing duplicate events.
 
     Returns:
         listen if new playing now listen, None otherwise
@@ -86,11 +85,6 @@ def handle_playing_now(listen):
     old_playing_now = redis_connection._redis.get_playing_now(listen['user_id'])
 
     track_metadata = listen['track_metadata']
-    if old_playing_now and \
-            listen['track_metadata']['track_name'] == old_playing_now.data['track_name'] and \
-            listen['track_metadata']['artist_name'] == old_playing_now.data['artist_name']:
-        return None
-
     listen_timeout = None
     if 'additional_info' in track_metadata:
         additional_info = track_metadata['additional_info']
@@ -101,6 +95,13 @@ def handle_playing_now(listen):
     if listen_timeout is None:
         listen_timeout = current_app.config['PLAYING_NOW_MAX_DURATION']
     redis_connection._redis.put_playing_now(listen['user_id'], listen, listen_timeout)
+
+    # Repeated tracks can arrive before the previous entry expires. Refresh its
+    # lifetime even when there is no metadata change to broadcast.
+    if old_playing_now and \
+            track_metadata['track_name'] == old_playing_now.data['track_name'] and \
+            track_metadata['artist_name'] == old_playing_now.data['artist_name']:
+        return None
     return listen
 
 
