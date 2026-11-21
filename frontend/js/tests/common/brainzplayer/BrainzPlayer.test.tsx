@@ -323,6 +323,56 @@ describe("BrainzPlayer", () => {
     });
   });
 
+  test("toggle-play event pauses the current track without restarting it", async () => {
+    store.set(currentDataSourceNameAtom, "youtube");
+    store.set(playerPausedAtom, false);
+    renderWithProviders(
+      <BrainzPlayerWithWrapper
+        additionalContextValues={{
+          currentListen: listen,
+          currentListenIndex: 0,
+          queue: [listen, listen2],
+          isActivated: true,
+        }}
+      />,
+      {
+        ...GlobalContextMock.context,
+        userPreferences: {
+          brainzplayer: createBrainzPlayerSettings({
+            youtubeEnabled: true,
+            spotifyEnabled: false,
+            soundcloudEnabled: false,
+            internetArchiveEnabled: false,
+            funkwhaleEnabled: false,
+            navidromeEnabled: false,
+            appleMusicEnabled: false,
+          }),
+        },
+      },
+      {
+        wrapper: ReactQueryWrapper,
+      }
+    );
+
+    await act(() => {
+      mockYoutubeProps.onReady?.({ target: mockPlayer });
+    });
+    await act(async () => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { brainzplayer_event: "toggle-play" },
+          origin: window.location.origin,
+        })
+      );
+    });
+
+    await waitFor(() => {
+      expect(mockPlayer.pauseVideo).toHaveBeenCalledTimes(1);
+    });
+    // Unlike force-play, toggle-play must not pause and then play again
+    expect(mockPlayer.playVideo).not.toHaveBeenCalled();
+  });
+
   describe("Queue", () => {
     beforeEach(() => {
       // recreate the Jotai store to reset queue every time
