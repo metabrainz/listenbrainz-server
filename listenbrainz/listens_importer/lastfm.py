@@ -76,6 +76,19 @@ class BaseLastfmImporter(ListensImporter):
         return listen, listen_type
 
 
+    @staticmethod
+    def _unexpected_response_error(response) -> ExternalServiceAPIError:
+        """ Build the error for a response that is not a usable API reply.
+
+        The message is emailed to the user and shown on their import page, so an
+        HTML page (such as a Cloudflare challenge) is summarised instead of being
+        included in full.
+        """
+        body = response.text.strip()
+        if body.startswith("<") or "html" in response.headers.get("Content-Type", ""):
+            body = f"received an HTML page instead of an API response (HTTP {response.status_code})"
+        return ExternalServiceAPIError("Error from the API while getting listens: %s" % body)
+
     def get_user_recent_tracks(self, session, user, page):
         """ Get user's recently played tracks from last.fm api. """
         latest_listened_at = user["latest_listened_at"] or LISTEN_MINIMUM_DATE
@@ -94,7 +107,7 @@ class BaseLastfmImporter(ListensImporter):
                 try:
                     data = response.json()
                 except requests.exceptions.JSONDecodeError:
-                    raise ExternalServiceAPIError("Error from the API while getting listens: %s" % response.text)
+                    raise self._unexpected_response_error(response)
                 if "error" in data:
                     # Libre.fm: no scrobbles since the given timestamp
                     if isinstance(data["error"], dict) and str(data["error"].get("code")) == "7":
@@ -115,14 +128,14 @@ class BaseLastfmImporter(ListensImporter):
                 try:
                     data = response.json()
                 except requests.exceptions.JSONDecodeError:
-                    raise ExternalServiceAPIError("Error from the API while getting listens: %s" % response.text)
+                    raise self._unexpected_response_error(response)
                 if "error" in data and data.get("error") == 17:
                     raise LastfmUserNotRetryableException(
                         "Please disable privacy mode in the settings of your Last.fm account to allow importing listens."
                     )
-                raise ExternalServiceAPIError("Error from the API while getting listens: %s" % response.text)
+                raise self._unexpected_response_error(response)
             case _:
-                raise ExternalServiceAPIError("Error from the API while getting listens: %s" % response.text)
+                raise self._unexpected_response_error(response)
 
 
     def get_total_pages(self, session, user):
