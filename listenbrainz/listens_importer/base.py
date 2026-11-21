@@ -2,6 +2,7 @@ import abc
 import signal
 import time
 from abc import abstractmethod
+from datetime import datetime, timezone
 
 from brainzutils import metrics
 from flask import current_app, render_template
@@ -22,6 +23,7 @@ from listenbrainz.db import user as db_user
 import listenbrainz
 
 METRIC_UPDATE_INTERVAL = 60  # seconds
+BATCH_SIZE = 50
 
 
 class ListensImporter(abc.ABC):
@@ -57,6 +59,23 @@ class ListensImporter(abc.ABC):
             from_name='ListenBrainz',
             from_addr='noreply@' + current_app.config['MAIL_FROM_DOMAIN'],
         )
+
+    def notify_new_error(self, user: dict, error: str, retry: bool):
+        """ Email the user when their import fails, but not again on every retry.
+
+        Args:
+            user: the user as claimed, whose 'error' is the error stored before this attempt
+            error: a description of the new error
+            retry: whether the new error will be retried
+
+        The user is emailed if they had no error before, or if a retryable error has now
+        turned into one that needs them to act, e.g. turn off privacy mode on Last.fm.
+        """
+        if current_app.config['TESTING']:
+            return
+        previous = user.get('error')
+        if previous is None or (previous.get('retry', True) and not retry):
+            self.notify_error(user['musicbrainz_id'], error)
 
     def parse_and_validate_listen_items(self, converter, items):
         """ Converts and validates the listens received from the external service API.
@@ -131,7 +150,7 @@ class ListensImporter(abc.ABC):
                 failure: the number of users for whom we faced errors while importing.
         """
         try:
-            users = self.service.claim_users_to_process(exclude_error=self.exclude_error)
+            users = self.service.claim_users_to_process(batch_size=BATCH_SIZE, exclude_error=self.exclude_error)
         except DatabaseException as e:
             listenbrainz.webserver.db_conn.rollback()
             current_app.logger.error('Cannot get list of users due to error %s', str(e), exc_info=True)
@@ -139,6 +158,12 @@ class ListensImporter(abc.ABC):
 
         if not users:
             return 0, 0
+
+        # users are claimed oldest last_updated first, so this shows how far behind the importer is;
+        # batches with errored users are left out, their last_updated is as old as their first error
+        stalest = min((user['last_updated'] for user in users if user['last_updated']), default=None)
+        if stalest and self.exclude_error:
+            metrics.set(self.name, stalest_user_age=(datetime.now(timezone.utc) - stalest).total_seconds())
 
         current_app.logger.info('Process %d users...' % len(users))
         success = 0
@@ -226,4 +251,7 @@ class ListensImporter(abc.ABC):
                 current_app.logger.info('All %d users in batch have been processed.', total_users)
                 current_app.logger.info('Total time taken: %.2f s, average time per user: %.2f s.', total_time,
                                         avg_time)
-            time.sleep(10)
+            # every connected user is claimable, so with more users than a batch this never pauses and the
+            # provider's rate limit is the only throttle; the pause keeps a few users from being polled back to back
+            if total_users < BATCH_SIZE:
+                time.sleep(10)
