@@ -1,14 +1,16 @@
+from unittest.mock import patch
+
 from listenbrainz.clickhouse.query_worker.listens.ftp import DumpNotFoundException, DumpType
 from listenbrainz.clickhouse.query_worker.listens.import_state import INCREMENTAL_DUMP_STATE, get_import_state
 from listenbrainz.clickhouse.query_worker.listens.load_dump import (
     import_full_dump,
     import_missing_incremental_dumps,
 )
-from listenbrainz.clickhouse.query_worker.tests import ClickHouseTestCase, fixture_listens
+from listenbrainz.clickhouse.query_worker.tests import DumpImportTestCase, fixture_listens
 from listenbrainz.clickhouse.query_worker.tests.ftp_server import DumpFTPServer
 
 
-class ImportDumpsTestCase(ClickHouseTestCase):
+class ImportDumpsTestCase(DumpImportTestCase):
     """Imports from a real FTP server into a real ClickHouse database."""
 
     def setUp(self):
@@ -20,10 +22,10 @@ class ImportDumpsTestCase(ClickHouseTestCase):
         return get_import_state(self.client, INCREMENTAL_DUMP_STATE)
 
     def import_full(self, **kwargs):
-        return import_full_dump(self.connection, self.downloader, workers=2, **kwargs)
+        return import_full_dump(self.connection, self.downloader, listens_engine=self.listens_engine, workers=2, **kwargs)
 
     def catch_up(self, **kwargs):
-        return import_missing_incremental_dumps(self.connection, self.downloader, workers=2, **kwargs)
+        return import_missing_incremental_dumps(self.connection, self.downloader, listens_engine=self.listens_engine, workers=2, **kwargs)
 
     def test_catch_up_needs_a_full_dump(self):
         self.ftp.add_dump(2, DumpType.INCREMENTAL, "incremental-dump-2")
@@ -54,6 +56,28 @@ class ImportDumpsTestCase(ClickHouseTestCase):
         self.assertEqual(self.staging_tables(), [])
 
         self.assertEqual(self.catch_up()["imported"], [])
+
+    def test_catch_up_without_dumps_applies_history_deletions(self):
+        self.ftp.add_dump(1, DumpType.FULL, "full-dump-1")
+        self.ftp.add_dump(1, DumpType.INCREMENTAL, None)
+        self.import_full()
+        cutoffs = self.client.query(
+            "SELECT user_id, max(created) FROM listens GROUP BY user_id ORDER BY count() DESC LIMIT 2"
+        ).result_rows
+        self.assertEqual(len(cutoffs), 2)
+        cutoff_ms = {user: round(cutoff.timestamp() * 1000) for user, cutoff in cutoffs}
+        before = self.listens()
+        expected = [row for row in before if row[2] not in cutoff_ms or row[1] >= cutoff_ms[row[2]]]
+        self.assertLess(len(expected), len(before))
+        with self.listens_engine.begin() as conn:
+            conn.exec_driver_sql(
+                "INSERT INTO deleted_user_listen_history (user_id, max_created) VALUES (%s, %s)",
+                list(map(tuple, cutoffs)),
+            )
+        with patch("listenbrainz.clickhouse.query_worker.listens.deletions.HISTORY_BATCH_SIZE", 1):
+            self.assertEqual(self.catch_up(), {"imported": [], "pending": 0, "errors": []})
+        self.assertEqual(self.listens(), expected)
+        self.assertEqual(self.mark(), 1)
 
     def test_each_imported_dump_reports_the_dumps_pending_after_it(self):
         self.ftp.add_dump(1, DumpType.FULL, "full-dump-1")

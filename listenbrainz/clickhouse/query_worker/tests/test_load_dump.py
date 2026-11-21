@@ -15,14 +15,14 @@ from listenbrainz.clickhouse.query_worker.listens.load_dump import (
     merge_staged_listens,
 )
 from listenbrainz.clickhouse.query_worker.tests import (
-    ClickHouseTestCase, TEST_DATA_PATH, _normalized, archive_parquet_files, fixture_listens,
+    DumpImportTestCase, TEST_DATA_PATH, _normalized, archive_parquet_files, fixture_listens,
 )
 from listenbrainz.listenstore.dump_listenstore import SPARK_LISTENS_SCHEMA
 
 ALL_FIXTURES = ("full-dump-1", "incremental-dump-2", "incremental-dump-3")
 
 
-class DumpDataTestCase(ClickHouseTestCase):
+class DumpDataTestCase(DumpImportTestCase):
 
     def test_fixture_import_and_replay_are_idempotent(self):
         self.load_spark_listens()
@@ -68,19 +68,67 @@ class DumpDataTestCase(ClickHouseTestCase):
                     self.assertEqual((result["errors"], result["added"]), ([], 2))
                     self.assertEqual(set(self.listens()), expected)
 
+    def test_deletions_survive_dump_replay_and_preserve_resubmissions(self):
+        rows = pq.read_table(TEST_DATA_PATH / "full-dump-1" / "0.parquet").slice(0, 1)
+        first = rows.to_pylist()[0]
+        created = first["created"]
+        index = rows.schema.get_field_index("created")
+        later = rows.set_column(index, "created", pc.add(rows["created"], pa.scalar(timedelta(seconds=1))))
+        with TemporaryDirectory() as tmp:
+            pq.write_table(rows, Path(tmp) / "0.parquet")
+            archive = archive_parquet_files(Path(tmp), Path(tmp) / "dump.tar")
+            self.load_archive(archive, DumpType.FULL)
+            with self.listens_engine.begin() as conn:
+                conn.exec_driver_sql("""
+                    INSERT INTO listen_delete_metadata (id, user_id, listened_at, recording_msid, listen_created, status)
+                    VALUES (1, %s, %s, %s, %s, 'complete')
+                """, (first["user_id"], first["listened_at"], first["recording_msid"], created))
+            self.load_archive(archive, DumpType.INCREMENTAL)
+            self.assertEqual(self.listens(), [])
+            with self.listens_engine.begin() as conn:
+                conn.exec_driver_sql("DELETE FROM listen_delete_metadata")
+            pq.write_table(later, Path(tmp) / "1.parquet")
+            archive = archive_parquet_files(Path(tmp), Path(tmp) / "dump.tar")
+            for dump_type in (DumpType.INCREMENTAL, DumpType.FULL):
+                self.load_archive(archive, dump_type)
+                self.assertEqual(self.listens(), [_normalized(later.to_pylist()[0])])
+            with self.listens_engine.begin() as conn:
+                conn.exec_driver_sql("""
+                    INSERT INTO deleted_user_listen_history (user_id, max_created) VALUES (%s, %s)
+                """, (first["user_id"], created + timedelta(seconds=1, microseconds=1)))
+            self.load_archive(archive, DumpType.INCREMENTAL)
+            self.assertEqual(self.listens(), [])
+
     def test_resubmitted_listen_is_not_duplicated(self):
         # a listen deleted and submitted again comes back with a new `created`
         self.load_fixture("full-dump-1")
-        before = self.listens()
+        before = set(self.listens())
         listens = pq.read_table(TEST_DATA_PATH / "full-dump-1" / "0.parquet")
         created = listens.schema.get_field_index("created")
         resubmitted = listens.set_column(created, "created", pc.add(listens["created"], pa.scalar(timedelta(days=30))))
         with TemporaryDirectory() as tmp:
-            pq.write_table(resubmitted, Path(tmp) / "0.parquet")
+            pq.write_table(listens, Path(tmp) / "old.parquet")
+            pq.write_table(resubmitted, Path(tmp) / "new.parquet")
             archive = archive_parquet_files(Path(tmp), Path(tmp) / "dump.tar")
             result = self.load_archive(archive, DumpType.INCREMENTAL)
-        self.assertEqual((result["errors"], result["added"]), ([], 0))
-        self.assertEqual(self.listens(), before)
+            self.assertEqual((result["errors"], result["added"]), ([], 0))
+            expected = before.difference(map(_normalized, listens.to_pylist()))
+            expected.update(map(_normalized, resubmitted.to_pylist()))
+            self.assertEqual(self.listens(), sorted(expected))
+
+            # The deletion of the old submission reaches ClickHouse after the
+            # replacement. Even replaying just the old file must keep the newer one.
+            first = listens.to_pylist()[0]
+            with self.listens_engine.begin() as conn:
+                conn.exec_driver_sql("""
+                    INSERT INTO listen_delete_metadata (user_id, listened_at, recording_msid, listen_created, status)
+                    VALUES (%s, %s, %s, %s, 'complete')
+                """, (first["user_id"], first["listened_at"], first["recording_msid"], first["created"]))
+            (Path(tmp) / "new.parquet").unlink()
+            archive = archive_parquet_files(Path(tmp), Path(tmp) / "old.tar")
+            result = self.load_archive(archive, DumpType.INCREMENTAL)
+            self.assertEqual((result["errors"], result["added"]), ([], 0))
+            self.assertEqual(self.listens(), sorted(expected))
 
     def test_merge_skips_loaded_listens_and_isolates_loads(self):
         source = pq.read_table(TEST_DATA_PATH / "incremental-dump-2" / "0.parquet")
