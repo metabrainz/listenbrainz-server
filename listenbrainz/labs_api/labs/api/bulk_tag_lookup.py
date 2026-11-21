@@ -1,7 +1,7 @@
 from contextlib import closing
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from werkzeug.exceptions import BadRequest
 import psycopg2
 import psycopg2.extras
@@ -12,7 +12,20 @@ from listenbrainz.db import timescale
 
 
 class BulkTagLookupInput(BaseModel):
-    recording_mbid: UUID
+    recording_mbid: list[UUID]
+
+    @validator("recording_mbid", pre=True)
+    def parse_recording_mbids(cls, value):
+        if isinstance(value, (str, UUID)):
+            value = [value]
+        if isinstance(value, list):
+            return [
+                mbid.strip()
+                for entry in value
+                for mbid in str(entry).split(",")
+                if mbid.strip()
+            ]
+        return value
 
 
 class BulkTagLookupOutput(BaseModel):
@@ -48,7 +61,7 @@ class BulkTagLookup(Query):
         count: int = -1,
     ) -> list[BulkTagLookupOutput]:
 
-        mbids = tuple(p.recording_mbid for p in params)
+        mbids = tuple(mbid for param in params for mbid in param.recording_mbid)
         if len(mbids) > 1000:
             raise BadRequest("Cannot lookup more than 1,000 recordings at a time.")
 
@@ -67,7 +80,7 @@ class BulkTagLookup(Query):
                          FROM tags.lb_tag_radio
                         WHERE recording_mbid IN %s'''
 
-            curs.execute(query, (tuple(mbids),))
+            curs.execute(query, (mbids,))
             output = []
             while True:
                 row = curs.fetchone()
