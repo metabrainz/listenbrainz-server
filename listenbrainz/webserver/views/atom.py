@@ -14,6 +14,11 @@ from listenbrainz.webserver.views.api_tools import (
 )
 from listenbrainz.db.fresh_releases import get_sitewide_fresh_releases
 from listenbrainz.db.fresh_releases import get_fresh_releases as db_get_fresh_releases
+from listenbrainz.db.model.fresh_releases import (
+    ReleaseGroupPrimaryType,
+    ReleaseGroupSecondaryType,
+)
+from listenbrainz.webserver.errors import APIBadRequest
 from data.model.common_stat import StatisticsRange
 from listenbrainz.webserver.views.playlist_api import fetch_playlist_recording_metadata
 from listenbrainz.webserver.views.stats_api import _is_valid_range
@@ -37,6 +42,10 @@ from listenbrainz.art.cover_art_generator import (
 )
 
 DEFAULT_MINUTES_OF_LISTENS = 60
+FRESH_RELEASE_TYPES = {
+    t.value.lower(): t.value
+    for t in (*ReleaseGroupPrimaryType, *ReleaseGroupSecondaryType)
+}
 MAX_MINUTES_OF_LISTENS = 7 * 24 * 60  # a week
 DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS = 3
 MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 30
@@ -68,6 +77,45 @@ def _external_url_for(endpoint, **values):
     """
     return url_for(endpoint, _external=True, **values)
 
+def _parse_release_types_arg():
+    """
+    Parse the optional comma separated `types` query parameter of the fresh releases feeds.
+
+    Returns:
+        A set of lowercase release type names, or None if no filtering was requested.
+
+    Raises:
+        APIBadRequest: if any of the given types is not a known release type.
+    """
+    value = request.args.get("types")
+    if not value:
+        return None
+
+    requested = [t.strip() for t in value.split(",") if t.strip()]
+    if not requested:
+        return None
+
+    unknown = [t for t in requested if t.lower() not in FRESH_RELEASE_TYPES]
+    if unknown:
+        raise APIBadRequest(
+            f"Invalid types argument: {', '.join(unknown)}. "
+            f"Must be a comma separated list of: {', '.join(FRESH_RELEASE_TYPES.values())}."
+        )
+    return {t.lower() for t in requested}
+
+
+def _release_matches_types(primary_type, secondary_type, types) -> bool:
+    """
+    Check whether a release belongs to one of the requested release types.
+
+    This follows the same rule as the filter on the Fresh Releases page: a release's type is
+    its secondary type if it has one (e.g. Live, Soundtrack) and its primary type otherwise
+    (e.g. Album, Single, EP). So an "Album + Live" release matches `Live`, not `Album`.
+    """
+    if not types:
+        return True
+    release_type = secondary_type or primary_type
+    return release_type is not None and release_type.lower() in types
 
 def _is_daily_updated_stats(stats_range: str) -> bool:
     """
@@ -267,6 +315,7 @@ def get_fresh_releases():
     if days < 1 or days > MAX_NUMBER_OF_FRESH_RELEASE_DAYS:
         return BadRequest("Value of days is out of range")
 
+    types = _parse_release_types_arg()
     try:
         # Get past fresh releases sorted by release date
         db_releases, _ = get_sitewide_fresh_releases(
@@ -276,6 +325,16 @@ def get_fresh_releases():
         current_app.logger.error(
             "Server failed to get latest release: {}".format(e))
         return InternalServerError("Server failed to get latest release")
+
+    db_releases = [
+        r
+        for r in db_releases
+        if _release_matches_types(
+            r.release_group_primary_type.value if r.release_group_primary_type else None,
+            r.release_group_secondary_type.value if r.release_group_secondary_type else None,
+            types,
+        )
+    ]
 
     this_feed_url = _external_url_for(".get_fresh_releases")
 
@@ -344,6 +403,7 @@ def get_user_fresh_releases(user_name):
     if user is None:
         return NotFound("User not found")
 
+    types = _parse_release_types_arg()
     data = db_get_fresh_releases(user["id"])
     releases = []
     if data and "releases" in data:
@@ -354,6 +414,11 @@ def get_user_fresh_releases(user_name):
                 if "release_date" in r
                 and datetime.strptime(r["release_date"], "%Y-%m-%d").date()
                 <= date.today()  # only include past releases
+                and _release_matches_types(
+                    r.get("release_group_primary_type"),
+                    r.get("release_group_secondary_type"),
+                    types,
+                )
             ],
             key=lambda k: k.get("release_date", ""),  # sort by release date
         )
