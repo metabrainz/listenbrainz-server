@@ -90,7 +90,7 @@ export default function LBRadio() {
         setJspfPlaylist(payload.jspf);
         setFeedback(payload.feedback);
       } catch (error) {
-        setErrorMessage(error);
+        setErrorMessage(error.message);
         setJspfPlaylist(undefined);
         setFeedback([]);
       }

@@ -831,21 +831,24 @@ export default class APIService {
     if (response.status >= 200 && response.status < 300) {
       return;
     }
-    let message = `HTTP Error ${response.statusText}`;
+    let message = `HTTP Error ${response.statusText || response.status}`;
     try {
       const contentType = response.headers?.get("content-type");
       if (contentType && contentType.indexOf("application/json") !== -1) {
         const jsonError = await response.json();
-        message = jsonError.error;
+        message = jsonError?.error || jsonError?.message || message;
       } else if (typeof response.text === "function") {
-        message = await response.text();
+        const text = await response.text();
+        if (text) {
+          message = text;
+        }
       }
     } catch (err) {
       // eslint-disable-next-line no-console
       console.log("Error in parsing response in APIService checkStatus:", err);
     }
 
-    const error = new APIError(`HTTP Error ${response.statusText}`);
+    const error = new APIError(message);
     error.status = response.statusText;
     error.response = response;
     error.message = message;
