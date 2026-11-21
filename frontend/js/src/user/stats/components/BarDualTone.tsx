@@ -5,6 +5,10 @@ import { useMediaQuery } from "react-responsive";
 import { BasicTooltip } from "@nivo/tooltip";
 import { COLOR_LB_BLUE, COLOR_LB_ORANGE } from "../../../utils/constants";
 import { useNivoTheme } from "../../../utils/nivoTheme";
+import { useTheme } from "../../../utils/theme";
+
+// COLOR_LB_BLUE is too dark to see against the dark chart background
+const DARK_THEME_LAST_RANGE_COLOR = "#8f8ad6";
 
 export type BarDualToneProps = {
   data: UserListeningActivityData;
@@ -23,6 +27,9 @@ export type BarDualToneProps = {
 export default function BarDualTone(props: BarDualToneProps) {
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const nivoTheme = useNivoTheme();
+  const [theme] = useTheme();
+  const lastRangeColor =
+    theme === "dark" ? DARK_THEME_LAST_RANGE_COLOR : COLOR_LB_BLUE;
 
   const rangeMap = {
     week: {
@@ -201,7 +208,7 @@ export default function BarDualTone(props: BarDualToneProps) {
         keys={keys}
         groupMode="grouped"
         colors={({ id }) => {
-          return id === "thisRangeCount" ? COLOR_LB_ORANGE : COLOR_LB_BLUE;
+          return id === "thisRangeCount" ? COLOR_LB_ORANGE : lastRangeColor;
         }}
         axisBottom={{
           format:
@@ -238,7 +245,7 @@ export default function BarDualTone(props: BarDualToneProps) {
                         lastRangePeriod.start,
                         lastRangePeriod.end
                       ),
-                      color: COLOR_LB_BLUE,
+                      color: lastRangeColor,
                     },
                     {
                       id: "thisRangeName",
