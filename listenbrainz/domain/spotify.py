@@ -1,6 +1,6 @@
 import time
 import base64
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Sequence, Optional
 
 import requests
@@ -125,6 +125,9 @@ def _get_spotify_token(grant_type: str, token: str) -> requests.Response:
 
 
 class SpotifyService(ImporterService):
+
+    # a batch of 50 users takes about a minute; re-poll a crashed worker's users before Spotify's 50-play history drops plays
+    claim_timeout = timedelta(minutes=30)
 
     def __init__(self):
         super(SpotifyService, self).__init__(ExternalServiceType.SPOTIFY)

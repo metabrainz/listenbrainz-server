@@ -134,8 +134,21 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["extension"]
                          [PLAYLIST_EXTENSION_URI]["created_for"], self.user["musicbrainz_id"])
         self.assertEqual(response.json["playlist"]["extension"]
+                         [PLAYLIST_EXTENSION_URI].get("collaborators", []), [])
+        self.assertEqual(response.json["playlist"]["extension"]
                          [PLAYLIST_EXTENSION_URI]["additional_metadata"],
                          playlist["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["additional_metadata"])
+
+        # Try to submit a playlist on a different user's behalf where created_for user does not exist
+        playlist_bad = get_test_data()
+        playlist_bad["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["created_for"] = "non_existent_user"
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=playlist_bad,
+            headers={"Authorization": "Token {}".format(self.user3["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "created_for user does not exist.")
 
         # Try to submit a playlist on a different users's behalf without the right perms
         # (a user must be part of config. APPROVED_PLAYLIST_BOTS to be able to create playlists

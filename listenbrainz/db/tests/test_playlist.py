@@ -184,6 +184,26 @@ class PlaylistTestCase(IntegrationTestCase):
         self.assertEqual(count, 1)
         self.assertEqual(playlists[0].name, playlist_2.name)
 
+    def test_search_playlist_multiple_collaborators(self):
+        """ A public playlist with several collaborators must appear only once in search results """
+        user_3 = db_user.get_or_create(self.db_conn, 3, 'ansh_3')
+        playlist = WritablePlaylist(
+            name="playlist_with_collaborators",
+            creator_id=self.user_1['id'],
+            description="shared playlist",
+            collaborator_ids=[self.user_2['id'], user_3['id']],
+            collaborators=["ansh_2", "ansh_3"],
+            public=True,
+            additional_metadata={}
+        )
+        db_playlist.create(self.db_conn, playlist)
+
+        playlists, count = db_playlist.search_playlist(self.db_conn, "playlist")
+
+        self.assertEqual(len(playlists), 1)
+        self.assertEqual(count, 1)
+        self.assertEqual(playlists[0].name, playlist.name)
+
     def test_search_playlist_for_user(self):
         playlist_1 = WritablePlaylist(
             name="playlist_1",
