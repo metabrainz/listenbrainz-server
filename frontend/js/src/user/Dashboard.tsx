@@ -399,9 +399,11 @@ export default function Listen() {
           listens: _.without(oldData.listens, newlyDeletedListen),
         };
       });
-      setListenCount((prev) =>
-        typeof prev === "number" ? Math.max(0, prev - 1) : prev
-      );
+      if (newlyDeletedListen) {
+        setListenCount((prev) =>
+          typeof prev === "number" ? Math.max(0, prev - 1) : prev
+        );
+      }
     },
   });
 

@@ -1552,6 +1552,92 @@ describe("Dashboard page", () => {
         );
         expect(newerButton).toHaveAttribute("aria-disabled", "true");
       });
+
+      it("does not decrement listen count or show empty state when delete request fails", async () => {
+        const singleListen = [listens[0]];
+        server.use(
+          http.post("/", async () =>
+            HttpResponse.json({
+              ...props,
+              listens: singleListen,
+              latestListenTs: singleListen[0].listened_at,
+              oldestListenTs: singleListen[0].listened_at,
+            })
+          ),
+          http.get("/1/user/*/listen-count", async () =>
+            HttpResponse.json({ payload: { count: 1 } })
+          ),
+          http.post("/1/delete-listen", async () =>
+            HttpResponse.json(
+              { error: "Cannot delete listen" },
+              { status: 400 }
+            )
+          )
+        );
+
+        renderWithProviders(
+          <Listens />,
+          { currentUser },
+          { wrapper: reactQueryWrapper }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState([
+            "dashboard",
+            {},
+            mockSearchParam,
+          ]);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        const listensContainer = await screen.findByTestId("listens");
+        const listenCards = await within(listensContainer).findAllByTestId(
+          "listen"
+        );
+        expect(listenCards).toHaveLength(1);
+
+        const listenCountCard = await screen.findByTestId("listen-count-card");
+        const countContent = within(listenCountCard).getByTestId(
+          "listen-count-card-content"
+        );
+        expect(countContent).toHaveTextContent("1");
+        expect(countContent).toHaveTextContent("songs so far");
+
+        const deleteButton = within(listenCards[0]).getByRole("menuitem", {
+          name: "Delete Listen",
+        });
+        await userEvent.click(deleteButton);
+
+        expect(
+          await screen.findByText("Error while deleting listen")
+        ).toBeInTheDocument();
+
+        const remainingListens = await within(listensContainer).findAllByTestId(
+          "listen"
+        );
+        expect(remainingListens).toHaveLength(1);
+        expect(
+          within(remainingListens[0]).getByText(
+            singleListen[0].track_metadata.track_name
+          )
+        ).toBeInTheDocument();
+
+        const updatedCountContent = within(listenCountCard).getByTestId(
+          "listen-count-card-content"
+        );
+        expect(updatedCountContent).toHaveTextContent("1");
+        expect(updatedCountContent).toHaveTextContent("songs so far");
+        expect(
+          within(listenCountCard).queryByText(
+            "You haven't listened to any songs yet."
+          )
+        ).not.toBeInTheDocument();
+
+        expect(screen.queryByText("Get listening")).not.toBeInTheDocument();
+        expect(
+          screen.queryByText("No listens to show")
+        ).not.toBeInTheDocument();
+      });
     });
   });
 });
