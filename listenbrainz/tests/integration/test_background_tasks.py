@@ -3,9 +3,10 @@ from datetime import datetime, timezone
 from unittest import mock
 
 from sqlalchemy import text
+from sqlalchemy.exc import OperationalError
 
 import listenbrainz.db.user as db_user
-from listenbrainz.background.background_tasks import add_task, claim_task, defer_task, release_task, remove_task
+from listenbrainz.background.background_tasks import BackgroundTasks, MAX_CONSECUTIVE_ERRORS, add_task, claim_task, defer_task, release_task, remove_task
 from listenbrainz.background.registry import TASKS
 from listenbrainz.background.listens_importer.base import BaseListensImporter
 from listenbrainz.db import background, user_data_export
@@ -279,6 +280,24 @@ class BackgroundTasksTestCase(IntegrationTestCase):
             self.assertEqual(batches, [1])
             mock_delete_file.assert_called_once_with("spotify.zip")
 
+    @mock.patch("listenbrainz.background.background_tasks.ERROR_RETRY_SECONDS", 0)
+    def test_worker_survives_a_claim_error(self):
+        worker = BackgroundTasks()
+        calls = []
+
+        def claim(task_type):
+            calls.append(task_type.name)
+            if len(calls) == 1:
+                raise OperationalError("SELECT 1", {}, Exception("server closed the connection"))
+            worker._stop.set()
+            return None
+
+        with mock.patch("listenbrainz.background.background_tasks.claim_task", side_effect=claim):
+            worker.work(self.app, TASKS["delete_user"])
+
+        # the first error did not stop the worker, it claimed again
+        self.assertEqual(calls, ["delete_user", "delete_user"])
+
     def test_stale_worker_cannot_touch_a_reclaimed_task(self):
         user = db_user.get_or_create(self.db_conn, 1, "user_1")
         task_type = TASKS["delete_user"]
@@ -335,3 +354,27 @@ class BackgroundTasksTestCase(IntegrationTestCase):
             status = db_conn.execute(text("SELECT metadata->>'status' FROM user_data_import")).scalar()
             self.assertEqual(status, "failed")
             mock_delete_file.assert_called_once_with("spotify.zip")
+
+    @mock.patch("listenbrainz.background.background_tasks.ERROR_RETRY_SECONDS", 0)
+    def test_idle_thread_does_not_add_up_separate_errors(self):
+        worker = BackgroundTasks()
+        error = OperationalError("SELECT 1", {}, Exception("server closed the connection"))
+        # five database blips, each followed by a successful poll that found nothing to do
+        results = [error, None] * MAX_CONSECUTIVE_ERRORS
+        calls = []
+
+        def claim(task_type):
+            calls.append(task_type.name)
+            if not results:
+                worker._stop.set()
+                return None
+            result = results.pop(0)
+            if isinstance(result, Exception):
+                raise result
+            return result
+
+        with mock.patch("listenbrainz.background.background_tasks.claim_task", side_effect=claim), \
+                mock.patch.object(self.app.config, "get", return_value=0):
+            worker.work(self.app, TASKS["delete_user"])
+
+        self.assertEqual(len(calls), 2 * MAX_CONSECUTIVE_ERRORS + 1)

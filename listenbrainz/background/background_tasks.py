@@ -1,5 +1,6 @@
 import signal
-import time
+import sys
+import threading
 
 from flask import current_app
 from sqlalchemy import text
@@ -12,6 +13,8 @@ from listenbrainz.webserver import create_app, db_conn, listens_conn
 
 FAILED_TASK_RETRY_MINUTES = 10
 MAX_RETRY_DELAY_MINUTES = 60
+ERROR_RETRY_SECONDS = 5
+MAX_CONSECUTIVE_ERRORS = 5
 DELETE_TASKS = ("delete_user", "delete_listens")
 
 
@@ -207,7 +210,8 @@ def remove_task(task):
 class BackgroundTasks:
 
     def __init__(self):
-        self._current_task = None
+        self._current_tasks = {}
+        self._stop = threading.Event()
 
     def process_task(self, task):
         """ Perform the task """
@@ -218,55 +222,94 @@ class BackgroundTasks:
             return
         task_type.handler(db_conn, listens_conn, task)
 
-    def _release_on_shutdown(self, signum, frame):
-        """ Best-effort release of the current task on SIGTERM (docker stop, deploys). """
-        if self._current_task:
+    def _release_current_tasks(self):
+        for task in list(self._current_tasks.values()):
             try:
-                release_task(self._current_task)
-                current_app.logger.info("Released task %s on shutdown.", self._current_task.id)
+                release_task(task)
+                current_app.logger.info("Released task %s on shutdown.", task.id)
             except Exception:
-                current_app.logger.error("Failed to release task %s on shutdown:", self._current_task.id, exc_info=True)
+                current_app.logger.error("Failed to release task %s on shutdown:", task.id, exc_info=True)
+
+    def _release_on_shutdown(self, signum, frame):
+        """ Release the tasks the threads are running on SIGTERM (docker stop, deploys). """
+        self._stop.set()
+        self._release_current_tasks()
         raise SystemExit(0)
 
-    def start(self):
-        current_app.logger.info("Background tasks processor started.")
-        signal.signal(signal.SIGTERM, self._release_on_shutdown)
-        while True:
+    def _run(self, task_type, progress):
+        """ Claim and run tasks of one type until stopped.
+
+        Args:
+            task_type: the registered TaskType to run
+            progress: a dict whose "claimed" is set to True once a claim has reached the database
+        """
+        thread = threading.current_thread()
+        while not self._stop.is_set():
+            task = claim_task(task_type)
+            # a claim that reached the database, whether or not it found a task, ends a run of errors
+            progress["claimed"] = True
+            if task is not None and self._stop.is_set():
+                # claimed after shutdown released the claims, give it back before the process exits
+                release_task(task)
+                return
+            if task is None:
+                self._stop.wait(current_app.config.get("BACKGROUND_TASKS_SLEEP_TIME", 5))
+                continue
+            self._current_tasks[thread] = task
             try:
-                task = next(filter(None, (claim_task(task_type) for task_type in TASKS.values())), None)
-                if task is None:
-                    time.sleep(current_app.config.get("BACKGROUND_TASKS_SLEEP_TIME", 5))
-                    continue
-                self._current_task = task
-                try:
-                    self.process_task(task)
-                    remove_task(task)
-                except Exception as e:
-                    current_app.logger.error("Error processing task:", exc_info=True)
-                    db_conn.rollback()
-                    defer_task(task, TASKS[task.task], str(e))
-                finally:
-                    self._current_task = None
-            except KeyboardInterrupt:
-                current_app.logger.error("Keyboard interrupt!")
-                break
-            except Exception:
-                current_app.logger.error("Error in background tasks processor:", exc_info=True)
-                time.sleep(2)
-                current_app.logger.info("Exiting process, letting container restart.")
-                break
+                self.process_task(task)
+                remove_task(task)
+            except Exception as e:
+                current_app.logger.error("Error processing task:", exc_info=True)
+                db_conn.rollback()
+                defer_task(task, task_type, str(e))
             finally:
+                self._current_tasks.pop(thread, None)
                 # I suspect the following line is related to this failure:
                 # https://gist.github.com/mayhem/fbd21a146fd34f291cced7dee7e7fca7
                 # But, sadly it doesn't stop the failure -- there is some other connection
-                # that has a transaction open, making everything cranky. Until we find
-                # the root cause of this problem (tricky!) we can mitigate this better
-                # by simply exiting the container when this happens and start fresh.
+                # that has a transaction open, making everything cranky.
                 db_conn.rollback()
                 listens_conn.rollback()
 
+    def work(self, app, task_type):
+        """ Run tasks of one type on this thread until the worker stops.
+
+        An error outside a task, e.g. the database restarting, is retried with new connections.
+        After MAX_CONSECUTIVE_ERRORS in a row the whole process stops so the container restarts.
+        """
+        errors = 0
+        while not self._stop.is_set():
+            with app.app_context():
+                progress = {"claimed": False}
+                try:
+                    self._run(task_type, progress)
+                except Exception:
+                    current_app.logger.error("Error in background tasks processor:", exc_info=True)
+                    errors = 1 if progress["claimed"] else errors + 1
+                    if errors >= MAX_CONSECUTIVE_ERRORS:
+                        current_app.logger.info("Exiting process, letting container restart.")
+                        self._stop.set()
+                        return
+                    self._stop.wait(ERROR_RETRY_SECONDS)
+
+    def start(self, app):
+        current_app.logger.info("Background tasks processor started.")
+        signal.signal(signal.SIGTERM, self._release_on_shutdown)
+        for task_type in TASKS.values():
+            for i in range(task_type.threads):
+                threading.Thread(target=self.work, args=(app, task_type), name=f"{task_type.name}-{i}", daemon=True).start()
+        try:
+            # threads only stop the worker after repeated errors, then the container restarts
+            self._stop.wait()
+        except KeyboardInterrupt:
+            current_app.logger.error("Keyboard interrupt!")
+            self._stop.set()
+        self._release_current_tasks()
+        sys.exit(1)
+
 
 if __name__ == "__main__":
-    bt = BackgroundTasks()
-    with create_app().app_context():
-        bt.start()
+    app = create_app()
+    with app.app_context():
+        BackgroundTasks().start(app)
