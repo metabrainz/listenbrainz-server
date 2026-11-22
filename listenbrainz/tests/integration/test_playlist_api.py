@@ -668,6 +668,23 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["track"][1]["identifier"],
                          playlist["playlist"]["track"][0]["identifier"])
 
+        # Test count <= 0 returns 400 Bad Request
+        move_invalid_count = {"mbid": "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a", "from": 1, "to": 0, "count": 0}
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.move_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            json=move_invalid_count
+        )
+        self.assert400(response)
+
+        move_negative_count = {"mbid": "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a", "from": 1, "to": 0, "count": -1}
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.move_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            json=move_negative_count
+        )
+        self.assert400(response)
+
     def test_playlist_recording_delete(self):
         playlist = {
             "playlist": {
@@ -712,6 +729,23 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + playlist_mbid)
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][1]["identifier"])
+
+        # Test count <= 0 returns 400 Bad Request
+        delete_invalid_count = {"index": 0, "count": 0}
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.delete_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            json=delete_invalid_count
+        )
+        self.assert400(response)
+
+        delete_negative_count = {"index": 0, "count": -1}
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.delete_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            json=delete_negative_count
+        )
+        self.assert400(response)
 
     def test_playlist_delete_playlist(self):
 
