@@ -251,7 +251,11 @@ def export_info_for_user(export_id, db_conn, tmp_dir, user):
     return file_path
 
 
-@task("export_all_user_data", threads=2, max_attempts=3, timeout=timedelta(hours=6))
+def export_failed(db_conn, task_row):
+    mark_export_failed(db_conn, task_row.metadata["export_id"])
+
+
+@task("export_all_user_data", threads=2, max_attempts=3, timeout=timedelta(hours=6), on_failed=export_failed)
 def export_user_task(db_conn, listens_conn, task_row):
     export_user(db_conn, listens_conn, task_row.user_id, task_row.metadata)
 
@@ -274,73 +278,71 @@ def export_user(db_conn, listens_conn, user_id: int, metadata):
         return
 
     export_id = export.id
-    try:
-        client = get_garage_client()
-        bucket = get_user_data_export_bucket()
-        ensure_bucket(client, bucket)
+    # a failure is raised to the background task, which retries it; export_failed marks the export
+    # failed after the last attempt
+    client = get_garage_client()
+    bucket = get_user_data_export_bucket()
+    ensure_bucket(client, bucket)
 
-        archive_name = f"listenbrainz_{user.musicbrainz_id}_{int(datetime.now().timestamp())}.zip"
+    archive_name = f"listenbrainz_{user.musicbrainz_id}_{int(datetime.now().timestamp())}.zip"
 
-        db_conn.execute(text("""
-             UPDATE user_data_export
-                SET
-                    filename = :filename
-                  , status = 'in_progress'
-                  , progress = :progress
-              WHERE id = :export_id
-        """), {
-            "export_id": export_id,
-            "filename": archive_name,
-            "progress": "Starting export",
-        })
-        db_conn.commit()
+    db_conn.execute(text("""
+         UPDATE user_data_export
+            SET
+                filename = :filename
+              , status = 'in_progress'
+              , progress = :progress
+          WHERE id = :export_id
+    """), {
+        "export_id": export_id,
+        "filename": archive_name,
+        "progress": "Starting export",
+    })
+    db_conn.commit()
 
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            archive_path = os.path.join(tmp_dir, archive_name)
-            with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-                all_files = []
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        archive_path = os.path.join(tmp_dir, archive_name)
+        with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            all_files = []
 
-                user_file = export_info_for_user(export_id, db_conn, tmp_dir, user)
-                all_files.append(user_file)
+            user_file = export_info_for_user(export_id, db_conn, tmp_dir, user)
+            all_files.append(user_file)
 
-                start_time = metadata.get("start_time")
-                end_time = metadata.get("end_time")
-                listen_files = export_listens_for_user(
-                    export_id, db_conn, listens_conn, tmp_dir, user_id,
-                    start_time=datetime.fromtimestamp(start_time, timezone.utc) if start_time is not None else None,
-                    end_time=datetime.fromtimestamp(end_time, timezone.utc) if end_time is not None else None,
-                )
-                all_files.extend(listen_files)
+            start_time = metadata.get("start_time")
+            end_time = metadata.get("end_time")
+            listen_files = export_listens_for_user(
+                export_id, db_conn, listens_conn, tmp_dir, user_id,
+                start_time=datetime.fromtimestamp(start_time, timezone.utc) if start_time is not None else None,
+                end_time=datetime.fromtimestamp(end_time, timezone.utc) if end_time is not None else None,
+            )
+            all_files.extend(listen_files)
 
-                feedback_file = export_feedback_for_user(export_id, db_conn, tmp_dir, user_id)
-                if feedback_file:
-                    all_files.append(feedback_file)
+            feedback_file = export_feedback_for_user(export_id, db_conn, tmp_dir, user_id)
+            if feedback_file:
+                all_files.append(feedback_file)
 
-                pinned_recording_file = export_pinned_recordings_for_user(export_id, db_conn, tmp_dir, user_id)
-                if pinned_recording_file:
-                    all_files.append(pinned_recording_file)
+            pinned_recording_file = export_pinned_recordings_for_user(export_id, db_conn, tmp_dir, user_id)
+            if pinned_recording_file:
+                all_files.append(pinned_recording_file)
 
-                update_export_progress(db_conn, export_id, "Writing export files")
-                for file in all_files:
-                    archive.write(file, arcname=os.path.relpath(file, tmp_dir))
+            update_export_progress(db_conn, export_id, "Writing export files")
+            for file in all_files:
+                archive.write(file, arcname=os.path.relpath(file, tmp_dir))
 
-            update_export_progress(db_conn, export_id, "Finalizing user data export")
-            client.upload_file(archive_path, bucket, archive_name, ExtraArgs={"ContentType": "application/zip"})
+        update_export_progress(db_conn, export_id, "Finalizing user data export")
+        client.upload_file(archive_path, bucket, archive_name, ExtraArgs={"ContentType": "application/zip"})
 
-        created = datetime.now()
-        available_until = created + USER_DATA_EXPORT_AVAILABILITY
-        result = db_conn.execute(text("""
-            UPDATE user_data_export
-               SET progress = :progress
-                 , available_until = :available_until
-                 , status = 'completed'
-             WHERE id = :export_id
-         RETURNING id
-        """), {"export_id": export_id, "available_until": available_until, "progress": "Export completed"})
-        db_conn.commit()
-    except Exception:
-        mark_export_failed(db_conn, export_id)
-        raise
+    created = datetime.now()
+    available_until = created + USER_DATA_EXPORT_AVAILABILITY
+    result = db_conn.execute(text("""
+        UPDATE user_data_export
+           SET progress = :progress
+             , available_until = :available_until
+             , status = 'completed'
+         WHERE id = :export_id
+     RETURNING id
+    """), {"export_id": export_id, "available_until": available_until, "progress": "Export completed"})
+    db_conn.commit()
 
     if result.first() is None:
         return

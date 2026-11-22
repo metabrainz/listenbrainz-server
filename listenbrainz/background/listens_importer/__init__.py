@@ -5,6 +5,7 @@ from sqlalchemy import text
 
 from listenbrainz.background.registry import task
 from listenbrainz.background.listens_importer.base import update_import_task
+from listenbrainz.background.listens_importer.storage import delete_import_file
 from listenbrainz.background.listens_importer.librefm import LibrefmListensImporter
 from listenbrainz.background.listens_importer.listenbrainz import ListenBrainzListensImporter
 from listenbrainz.background.listens_importer.maloja import MalojaListensImporter
@@ -52,6 +53,16 @@ def import_listens(db_conn, listens_conn, user_id, bg_task_metadata):
     importer.import_listens(user_id, import_task)
 
 
-@task("import_listens", threads=2, max_attempts=3, timeout=timedelta(hours=6))
+def import_failed(db_conn, task_row):
+    import_id = task_row.metadata["import_id"]
+    file_path = db_conn.execute(
+        text("SELECT file_path FROM user_data_import WHERE id = :import_id"), {"import_id": import_id}
+    ).scalar()
+    update_import_task(db_conn, import_id, status="failed", progress="Import failed, please try again.")
+    if file_path:
+        delete_import_file(file_path)
+
+
+@task("import_listens", threads=2, max_attempts=3, timeout=timedelta(hours=6), on_failed=import_failed)
 def import_listens_task(db_conn, listens_conn, task_row):
     import_listens(db_conn, listens_conn, task_row.user_id, task_row.metadata)
