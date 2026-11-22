@@ -7,6 +7,7 @@ from sqlalchemy import text
 import listenbrainz.db.user as db_user
 from listenbrainz.background.background_tasks import add_task, claim_task, defer_task, release_task, remove_task
 from listenbrainz.background.registry import TASKS
+from listenbrainz.background.listens_importer.base import BaseListensImporter
 from listenbrainz.db import background, user_data_export
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver import db_conn
@@ -209,6 +210,74 @@ class BackgroundTasksTestCase(IntegrationTestCase):
             filename="spotify.zip",
         )
         db_conn.commit()
+
+    def _import_count(self, user_id):
+        return db_conn.execute(
+            text("SELECT count(*) FROM user_data_import WHERE user_id = :user_id"), {"user_id": user_id}
+        ).scalar()
+
+    @mock.patch("listenbrainz.background.background_tasks.delete_import_file")
+    def test_delete_cancels_waiting_imports_not_exports(self, mock_delete_file):
+        user = db_user.get_or_create(self.db_conn, 1, "user_1")
+
+        with self.app.app_context():
+            self._create_import(user["id"])
+            self._insert_task(user["id"], "export_all_user_data", {"export_id": 1})
+
+            add_task(user["id"], "delete_listens")
+
+            self.assertEqual(self._tasks(user["id"]), ["export_all_user_data", "delete_listens"])
+            self.assertEqual(self._import_count(user["id"]), 0)
+            mock_delete_file.assert_called_once_with("spotify.zip")
+
+    @mock.patch("listenbrainz.background.background_tasks.delete_import_file")
+    def test_delete_waits_for_running_import_to_stop(self, mock_delete_file):
+        user = db_user.get_or_create(self.db_conn, 1, "user_1")
+
+        with self.app.app_context():
+            self._create_import(user["id"])
+            running = claim_task(TASKS["import_listens"])
+            self._update("""UPDATE user_data_import SET metadata = metadata || '{"status": "in_progress"}'""")
+
+            add_task(user["id"], "delete_listens")
+
+            # the running import keeps its task row, and so the user's slot, until it stops
+            self.assertEqual(self._tasks(user["id"]), ["import_listens", "delete_listens"])
+            self.assertIsNone(claim_task(TASKS["delete_listens"]))
+            mock_delete_file.assert_not_called()
+
+            remove_task(running)
+            self.assertEqual(claim_task(TASKS["delete_listens"]).task, "delete_listens")
+
+    @mock.patch("listenbrainz.background.listens_importer.base.delete_import_file")
+    @mock.patch("listenbrainz.background.listens_importer.base.download_import_file", return_value="spotify.zip")
+    def test_running_import_stops_once_cancelled(self, mock_download, mock_delete_file):
+        user = db_user.get_or_create(self.db_conn, 1, "user_1")
+        batches = []
+
+        class CancelledDuringImport(BaseListensImporter):
+            def process_import_file(self, import_task):
+                batches.append(1)
+                # the user asks to delete their listens while the first batch is being read
+                self.db_conn.execute(text("DELETE FROM user_data_import"))
+                self.db_conn.commit()
+                yield [{}]
+                batches.append(2)
+                yield [{}]
+
+            def parse_listen_batch(self, batch):
+                return []
+
+        with self.app.app_context():
+            self._create_import(user["id"])
+            import_task = db_conn.execute(text("SELECT * FROM user_data_import")).mappings().first()
+            importer = CancelledDuringImport(db_conn, None)
+            with mock.patch.object(importer, "submit_listens") as mock_submit:
+                importer.import_listens(user["id"], dict(import_task))
+
+            mock_submit.assert_not_called()
+            self.assertEqual(batches, [1])
+            mock_delete_file.assert_called_once_with("spotify.zip")
 
     def test_stale_worker_cannot_touch_a_reclaimed_task(self):
         user = db_user.get_or_create(self.db_conn, 1, "user_1")

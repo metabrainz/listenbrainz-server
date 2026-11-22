@@ -6,11 +6,13 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
 from listenbrainz.background import delete, export, listens_importer
+from listenbrainz.background.listens_importer.storage import delete_import_file
 from listenbrainz.background.registry import TASKS
 from listenbrainz.webserver import create_app, db_conn, listens_conn
 
 FAILED_TASK_RETRY_MINUTES = 10
 MAX_RETRY_DELAY_MINUTES = 60
+DELETE_TASKS = ("delete_user", "delete_listens")
 
 
 def add_task(user_id, task):
@@ -24,6 +26,38 @@ def add_task(user_id, task):
     query = "INSERT INTO background_tasks (user_id, task) VALUES (:user_id, :task) ON CONFLICT DO NOTHING"
     db_conn.execute(text(query), {"user_id": user_id, "task": task})
     db_conn.commit()
+    # after the insert, so a failed insert never leaves the imports cancelled with nothing deleted
+    if task in DELETE_TASKS:
+        cancel_imports(user_id)
+
+
+def cancel_imports(user_id):
+    """ Cancel the user's unfinished imports so that a delete does not wait behind them.
+
+    Exports are left alone, so "export my data, then delete my listens" still leaves the user with
+    their export. A running import notices that its row is gone at its next batch and stops. Its
+    task row stays until then, so the delete cannot start while the import is still submitting listens.
+
+    Args:
+        user_id: the ListenBrainz row ID of the user
+    """
+    imports = db_conn.execute(text("""
+        DELETE FROM user_data_import
+              WHERE user_id = :user_id
+                AND metadata->>'status' IN ('waiting', 'in_progress')
+          RETURNING file_path, metadata->>'status' AS status
+    """), {"user_id": user_id}).all()
+    db_conn.execute(text("""
+        DELETE FROM background_tasks
+              WHERE user_id = :user_id
+                AND task = 'import_listens'
+                AND claimed_at IS NULL
+    """), {"user_id": user_id})
+    db_conn.commit()
+    for row in imports:
+        # a running import deletes its own file when it stops
+        if row.status == "waiting":
+            delete_import_file(row.file_path)
 
 
 def peek_task():
