@@ -270,9 +270,15 @@
   max-height: calc(100vh - 8em);
 
   &.horizontal {
+    // Each side margin of the centered [role="main"] (see new-navbar.scss),
+    // so the timeline lines up with the page content on very wide screens
+    $main-margin: max(
+      0px,
+      (100% - $sidenav-width - $grid-gutter-width - $max-content-width) / 2
+    );
     height: unset;
     position: fixed;
-    right: $tertiary-nav-vertical-width;
+    right: calc($tertiary-nav-vertical-width + $main-margin);
     bottom: 0;
     top: auto;
     z-index: 50;
@@ -280,7 +286,9 @@
     max-height: unset;
     padding: 3rem;
     padding-bottom: $brainzplayer-height;
-    width: calc(100% - $sidenav-width - $tertiary-nav-vertical-width);
+    width: calc(
+      100% - $sidenav-width - $tertiary-nav-vertical-width - 2 * $main-margin
+    );
   }
 
   @media (max-width: $offscreen-sidenav-breakpoint) {
@@ -565,11 +573,6 @@
 .releases-page-container {
   display: flex;
   gap: 1.5em;
-
-  @media screen and (min-width: map.get($grid-breakpoints, "lg")) {
-    // make the sidebar flush with the right-hand side on larger sizes
-    margin-right: -15px !important;
-  }
 
   .releases-page {
     flex: 1;
