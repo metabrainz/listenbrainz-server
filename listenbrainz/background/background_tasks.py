@@ -4,10 +4,9 @@ import time
 from flask import current_app
 from sqlalchemy import text
 
-from listenbrainz.background.delete import delete_listens_history, delete_user
-from listenbrainz.background.export import export_user
+from listenbrainz.background import delete, export, listens_importer
+from listenbrainz.background.registry import TASKS
 from listenbrainz.webserver import create_app, db_conn, listens_conn
-from listenbrainz.background.listens_importer import import_listens
 
 CLAIM_TIMEOUT_HOURS = 6
 FAILED_TASK_RETRY_MINUTES = 10
@@ -93,16 +92,11 @@ class BackgroundTasks:
     def process_task(self, task):
         """ Perform the task """
         current_app.logger.info(f"Processing task: {task.id}")
-        if task.task == "delete_listens":
-            delete_listens_history(db_conn, task.user_id, task.created)
-        elif task.task == "delete_user":
-            delete_user(db_conn, task.user_id, task.created)
-        elif task.task == "export_all_user_data":
-            export_user(db_conn, listens_conn, task.user_id, task.metadata)
-        elif task.task == "import_listens":
-            import_listens(db_conn, listens_conn, task.user_id, task.metadata)
-        else:
+        task_type = TASKS.get(task.task)
+        if task_type is None:
             current_app.logger.error(f"Unknown task type: {task}")
+            return
+        task_type.handler(db_conn, listens_conn, task)
 
     def _release_on_shutdown(self, signum, frame):
         """ Best-effort release of the current task on SIGTERM (docker stop, deploys). """

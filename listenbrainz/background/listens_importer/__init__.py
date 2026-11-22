@@ -1,6 +1,9 @@
+from datetime import timedelta
+
 from flask import current_app
 from sqlalchemy import text
 
+from listenbrainz.background.registry import task
 from listenbrainz.background.listens_importer.base import update_import_task
 from listenbrainz.background.listens_importer.librefm import LibrefmListensImporter
 from listenbrainz.background.listens_importer.listenbrainz import ListenBrainzListensImporter
@@ -47,3 +50,8 @@ def import_listens(db_conn, listens_conn, user_id, bg_task_metadata):
         update_import_task(db_conn, import_id, status="failed", progress=msg)
         raise ValueError(msg)
     importer.import_listens(user_id, import_task)
+
+
+@task("import_listens", threads=2, max_attempts=3, timeout=timedelta(hours=6))
+def import_listens_task(db_conn, listens_conn, task_row):
+    import_listens(db_conn, listens_conn, task_row.user_id, task_row.metadata)

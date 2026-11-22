@@ -10,6 +10,7 @@ from flask import current_app, render_template
 from sqlalchemy import text
 
 from listenbrainz.db import listens as listens_db, user as db_user
+from listenbrainz.background.registry import task
 from listenbrainz.garage import delete_objects, ensure_bucket, get_garage_client, \
     get_user_data_export_bucket, list_object_names
 from listenbrainz.listenstore.timescale_listenstore import LISTEN_COLUMNS_QUERY
@@ -248,6 +249,11 @@ def export_info_for_user(export_id, db_conn, tmp_dir, user):
         file.write(orjson.dumps({"user_id": user["id"], "username": user["musicbrainz_id"]}))
         file.write(b"\n")
     return file_path
+
+
+@task("export_all_user_data", threads=2, max_attempts=3, timeout=timedelta(hours=6))
+def export_user_task(db_conn, listens_conn, task_row):
+    export_user(db_conn, listens_conn, task_row.user_id, task_row.metadata)
 
 
 def export_user(db_conn, listens_conn, user_id: int, metadata):
