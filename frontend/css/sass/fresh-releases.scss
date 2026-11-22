@@ -254,6 +254,7 @@
 
 .release-cards-grid {
   display: grid;
+  justify-content: center;
   justify-items: center;
   gap: 2rem;
   grid-template-columns: repeat(auto-fit, minmax(190px, max-content));
@@ -270,15 +271,9 @@
   max-height: calc(100vh - 8em);
 
   &.horizontal {
-    // Each side margin of the centered [role="main"] (see new-navbar.scss),
-    // so the timeline lines up with the page content on very wide screens
-    $main-margin: max(
-      0px,
-      (100% - $sidenav-width - $grid-gutter-width - $max-content-width) / 2
-    );
     height: unset;
     position: fixed;
-    right: calc($tertiary-nav-vertical-width + $main-margin);
+    right: $tertiary-nav-vertical-width;
     bottom: 0;
     top: auto;
     z-index: 50;
@@ -286,9 +281,7 @@
     max-height: unset;
     padding: 3rem;
     padding-bottom: $brainzplayer-height;
-    width: calc(
-      100% - $sidenav-width - $tertiary-nav-vertical-width - 2 * $main-margin
-    );
+    width: calc(100% - $sidenav-width - $tertiary-nav-vertical-width);
   }
 
   @media (max-width: $offscreen-sidenav-breakpoint) {
@@ -573,9 +566,15 @@
 .releases-page-container {
   display: flex;
   gap: 1.5em;
+  max-width: 100%;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
 
   .releases-page {
-    flex: 1;
+    flex: 0 1 $max-content-width;
+    margin-left: auto;
+    margin-right: auto;
 
     @media screen and (max-width: map.get($grid-breakpoints, "lg")) {
       padding-right: 90px; // space for the right-docked timeline
@@ -583,8 +582,10 @@
   }
 
   .sidebar-fresh-releases {
+    flex: 0 0 $tertiary-nav-vertical-width;
     max-height: 85vh;
-    margin-right: -15px;
+    margin-left: 0;
+    margin-right: 0;
 
     @media screen and (max-width: map.get($grid-breakpoints, "lg")) {
       max-height: calc(100vh - $brainzplayer-height);
