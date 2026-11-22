@@ -2,18 +2,26 @@
 
 import time
 
+import requests
 import spotipy
 from dateutil import parser
 from flask import current_app
 from spotipy import SpotifyException
+from urllib3.util import Retry
 
 from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError, \
     ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_INVALID_GRANT_ERROR_MESSAGE
 
-from listenbrainz.listens_importer.base import ListensImporter
+from listenbrainz.listens_importer.base import ImportDeferred, ListensImporter
 from listenbrainz.webserver import create_app
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
+
+
+class SpotifyRetry(Retry):
+    def is_retry(self, method, status_code, has_retry_after=False):
+        # Return 429 to the importer even when Spotify sends Retry-After; preserve other HTTP retries.
+        return status_code != 429 and super().is_retry(method, status_code, has_retry_after)
 
 
 class SpotifyImporter(ListensImporter):
@@ -23,6 +31,21 @@ class SpotifyImporter(ListensImporter):
             name='spotify_reader',
             user_friendly_name="Spotify",
             service=SpotifyService(),
+        )
+        self.poll_interval = current_app.config.get('SPOTIFY_IMPORT_POLL_INTERVAL', self.poll_interval)
+        self._retry_at = {}
+
+    @staticmethod
+    def _spotify_retry():
+        return SpotifyRetry(
+            total=spotipy.Spotify.max_retries,
+            connect=None,
+            read=False,
+            allowed_methods=frozenset(['GET', 'POST', 'PUT', 'DELETE']),
+            status=spotipy.Spotify.max_retries,
+            backoff_factor=0.3,
+            status_forcelist=spotipy.Spotify.default_retry_codes,
+            raise_on_status=False,
         )
 
     @staticmethod
@@ -123,37 +146,33 @@ class SpotifyImporter(ListensImporter):
 
         Raises:
             ExternalServiceAPIError: if we encounter errors from the Spotify API.
-            ExternalServiceError: if we encounter a rate limit, even after retrying.
+            ImportDeferred: if Spotify rate-limits the request.
         """
         retries = 10
-        delay = 1
         tried_to_refresh_token = False
 
         while retries > 0:
             try:
-                spotipy_client = spotipy.Spotify(auth=user['access_token'])
-                spotipy_call = getattr(spotipy_client, endpoint)
-                recently_played = spotipy_call(**kwargs)
-                return recently_played
+                with requests.Session() as session:
+                    session.mount('https://', requests.adapters.HTTPAdapter(max_retries=self._spotify_retry()))
+                    spotipy_client = spotipy.Spotify(auth=user['access_token'], requests_session=session)
+                    return getattr(spotipy_client, endpoint)(**kwargs)
             except (AttributeError, TypeError):
                 current_app.logger.critical("Invalid spotipy endpoint or arguments:", exc_info=True)
                 return None
             except SpotifyException as e:
                 retries -= 1
                 if e.http_status == 429:
-                    # Rate Limit Problems -- the client handles these, but it can still give up
-                    # after a certain number of retries, so we look at the header and try the
-                    # request again, if the error is raised
+                    # Spotify can ask us to wait hours, longer than the token remains valid.
                     try:
-                        time_to_sleep = int(e.headers.get('Retry-After', delay))
-                    except ValueError:
-                        time_to_sleep = delay
-                    current_app.logger.warning('Encountered a rate limit, sleeping %d seconds and trying again...',
-                                               time_to_sleep)
-                    time.sleep(time_to_sleep)
-                    delay += 1
-                    if retries == 0:
-                        raise ExternalServiceError('Encountered a rate limit.')
+                        delay = int((e.headers or {}).get('Retry-After', self.poll_interval))
+                    except (TypeError, ValueError):
+                        delay = self.poll_interval
+                    if delay <= 0:
+                        delay = self.poll_interval
+                    self._retry_at[user['user_id']] = time.monotonic() + delay
+                    current_app.logger.warning('Spotify rate limit: deferring import for %d seconds.', delay)
+                    raise ImportDeferred from None
 
                 elif e.http_status in (400, 403):
                     current_app.logger.critical('Error from the Spotify API for user %s: %s', user['musicbrainz_id'],
@@ -209,11 +228,14 @@ class SpotifyImporter(ListensImporter):
 
         Raises:
             spotify.SpotifyAPIError: if we encounter errors from the Spotify API.
-            spotify.SpotifyListenBrainzError: if we encounter a rate limit, even after retrying.
-                                              or if we get errors while submitting the data to ListenBrainz
+            ImportDeferred: if Spotify has asked us to wait before trying this user again.
         Returns:
             the number of recently played listens imported for the user
         """
+        if time.monotonic() < self._retry_at.get(user['user_id'], 0):
+            raise ImportDeferred
+        self._retry_at.pop(user['user_id'], None)
+
         try:
             if self.service.user_oauth_token_has_expired(user):
                 user = self.service.refresh_access_token(user['user_id'], user['refresh_token'])

@@ -1,9 +1,12 @@
 import os
 import json
 import time
+from unittest import TestCase
 
 import listenbrainz.webserver
 from datetime import datetime, timedelta, timezone
+from flask import Flask
+from spotipy import SpotifyException
 
 import listenbrainz.db.user as db_user
 from data.model.external_service import ExternalServiceType
@@ -14,6 +17,56 @@ from listenbrainz.listens_importer.spotify import SpotifyImporter
 from unittest.mock import patch
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db import external_service_oauth as db_oauth, listens_importer as db_import
+
+
+class SpotifyQuotaTestCase(TestCase):
+
+    @patch('listenbrainz.listens_importer.base.time.sleep')
+    @patch('listenbrainz.listens_importer.spotify.time.monotonic')
+    @patch('spotipy.Spotify.current_user_recently_played')
+    @patch('spotipy.Spotify.current_user_playing_track', return_value=None)
+    def test_quota_defers_import_and_expired_token_refreshes_on_resume(self, now_playing, recently_played, clock, sleep):
+        clock.return_value = 100
+        app = Flask(__name__)
+        app.config.update(SPOTIFY_IMPORT_POLL_INTERVAL=237, SPOTIFY_CLIENT_ID='test',
+                          SPOTIFY_CLIENT_SECRET='test', SPOTIFY_CALLBACK_URL='http://localhost/callback')
+        user = dict(user_id=1, musicbrainz_id='spotify_user', is_paused=False, token_expires=None,
+                    access_token='old-token', refresh_token='refresh', latest_listened_at=None, status=None)
+        refreshed = dict(user, access_token='new-token')
+        recently_played.side_effect = [SpotifyException(429, -1, 'Quota exceeded',
+                                                        reason='QUOTA_EXCEEDED', headers={'Retry-After': '43200'}),
+                                       {'items': []}]
+        with app.app_context():
+            importer = SpotifyImporter()
+            retry = importer._spotify_retry()
+            self.assertFalse(retry.is_retry('GET', 429, has_retry_after=True))
+            self.assertTrue(retry.is_retry('GET', 503, has_retry_after=True))
+            with (patch.object(importer.service, 'claim_users_to_process', return_value=[user]),
+                  patch.object(importer.service, 'release_user_claims'),
+                  patch.object(importer.service, 'user_oauth_token_has_expired', side_effect=[False, True]),
+                  patch.object(importer.service, 'refresh_access_token', return_value=refreshed) as refresh,
+                  patch.object(importer.service, 'update_status') as update,
+                  patch.object(importer, 'notify_error') as notify,
+                  patch('listenbrainz.listens_importer.base.metrics.set')):
+                self.assertEqual(importer.process_all_users(), (0, 0))
+                clock.return_value = 43299
+                self.assertEqual(importer.process_all_users(), (0, 0))
+                recently_played.assert_called_once()
+                now_playing.assert_called_once()
+                sleep.assert_not_called()
+                update.assert_not_called()
+                notify.assert_not_called()
+                refresh.assert_not_called()
+
+                clock.return_value = 43300
+                sleep.side_effect = InterruptedError
+                with self.assertRaises(InterruptedError):
+                    importer.main()
+                refresh.assert_called_once_with(1, 'refresh')
+                self.assertEqual(recently_played.call_count, 2)
+                update.assert_called_once_with(1, 'Synced', 0)
+                notify.assert_not_called()
+                sleep.assert_called_once_with(237)
 
 
 class ConvertListensTestCase(DatabaseTestCase):

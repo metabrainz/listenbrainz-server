@@ -24,7 +24,13 @@ import listenbrainz
 METRIC_UPDATE_INTERVAL = 60  # seconds
 
 
+class ImportDeferred(Exception):
+    """The provider asked us to try this user again later."""
+
+
 class ListensImporter(abc.ABC):
+
+    poll_interval = 10
 
     def __init__(self, name, user_friendly_name, service):
         self.name = name
@@ -152,6 +158,8 @@ class ListensImporter(abc.ABC):
                 try:
                     self._listens_imported_since_last_update += self.process_one_user(user)
                     success += 1
+                except ImportDeferred:
+                    pass
                 except ListensImporterUserError:
                     current_app.logger.info(
                         f"{self.name} could not import listens for user %s:",
@@ -226,4 +234,4 @@ class ListensImporter(abc.ABC):
                 current_app.logger.info('All %d users in batch have been processed.', total_users)
                 current_app.logger.info('Total time taken: %.2f s, average time per user: %.2f s.', total_time,
                                         avg_time)
-            time.sleep(10)
+            time.sleep(self.poll_interval)
