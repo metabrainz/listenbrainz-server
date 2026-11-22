@@ -7,6 +7,7 @@ logged and never reaches the caller.
 import functools
 import logging
 import time
+from datetime import datetime, timezone
 
 import orjson
 from flask import current_app
@@ -67,8 +68,9 @@ def _best_effort(func):
 @_best_effort
 def publish_follow(follower: dict, followee: dict) -> None:
     payload: FollowEvent = {"actor": _actor(follower["musicbrainz_id"])}
-    # Keyed on the pair, so unfollowing and following again doesn't notify again.
-    _publish("follow", [followee["musicbrainz_row_id"]], payload, f"follow:{follower['id']}:{followee['id']}")
+    # Keyed on the pair and the day: following again after an unfollow notifies, but toggling can't notify more than once a day.
+    day = datetime.now(timezone.utc).date().isoformat()
+    _publish("follow", [followee["musicbrainz_row_id"]], payload, f"follow:{follower['id']}:{followee['id']}:{day}")
 
 
 @_best_effort

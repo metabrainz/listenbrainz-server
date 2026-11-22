@@ -5,6 +5,7 @@ from unittest import mock
 
 import orjson
 import requests_mock
+from freezegun import freeze_time
 
 import data.model.synapse_event as synapse_event
 import listenbrainz.db.pinned_recording as db_pinned_rec
@@ -111,6 +112,7 @@ class SynapsePublishTestCase(ListenAPIIntegrationTestCase):
         return self.post("pinned_rec_api_bp_v1.pin_recording_for_user", self.author,
                          {"recording_msid": str(uuid.uuid4()), "blurb_content": "on repeat"})
 
+    @freeze_time("2026-11-23 09:00:00")
     def test_follow(self):
         self.post("social_api_v1.follow_user", self.author, {}, user_name="pin_follower")
         self.assertEqual(self.published(), {
@@ -118,10 +120,25 @@ class SynapsePublishTestCase(ListenAPIIntegrationTestCase):
             "event_type": "follow",
             "recipients": [str(self.follower["musicbrainz_row_id"])],
             "payload": {"actor": self.actor(self.author)},
-            "idempotency_key": f"follow:{self.author['id']}:{self.follower['id']}",
+            "idempotency_key": f"follow:{self.author['id']}:{self.follower['id']}:2026-11-23",
         })
         self.assertEqual(self.producer.publish.call_args.kwargs["exchange"], "events.ingest")
         self.assertEqual(self.producer.publish.call_args.kwargs["confirm_timeout"], 2)
+
+    def test_follow_key_changes_with_the_day(self):
+        def follow_and_unfollow(when):
+            with freeze_time(when):
+                self.producer.reset_mock()
+                self.post("social_api_v1.follow_user", self.author, {}, user_name="pin_follower")
+                key = self.published()["idempotency_key"]
+                self.post("social_api_v1.unfollow_user", self.author, {}, user_name="pin_follower")
+            return key
+
+        morning = follow_and_unfollow("2026-11-23 09:00:00")
+        evening = follow_and_unfollow("2026-11-23 18:00:00")
+        next_day = follow_and_unfollow("2026-11-24 09:00:00")
+        self.assertEqual(morning, evening)
+        self.assertNotEqual(morning, next_day)
 
     def test_recording_pin(self):
         r = self.pin()
