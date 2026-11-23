@@ -169,6 +169,12 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://github.com/rufin-app/rufin">Rufin</a>
+          </em>
+          , a music player for local & remote files, Jellyfin, Emby, Navidrome, and Plex on desktop and Android
+        </li>
+        <li>
+          <em>
             <a href="https://www.strawberrymusicplayer.org/">Strawberry</a>
           </em>
           , a cross-platform music player
