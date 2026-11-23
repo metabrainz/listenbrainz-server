@@ -118,7 +118,8 @@ def delete_token(db_conn, user_id: int, service: ExternalServiceType, remove_imp
 
 
 def update_token(db_conn, user_id: int, service: ExternalServiceType, access_token: str,
-                 refresh_token: str | None, expires_at: int, refresh_token_expires: datetime | None = None):
+                 refresh_token: str | None, expires_at: int, refresh_token_expires: datetime | None = None,
+                 scopes: list[str] | None = None):
     """ Update the token for user with specified LB user ID and external service.
 
     Args:
@@ -129,13 +130,15 @@ def update_token(db_conn, user_id: int, service: ExternalServiceType, access_tok
         refresh_token: the new token used to refresh access tokens, if omitted the old token in the database remains unchanged
         expires_at: the unix timestamp at which the access token expires
         refresh_token_expires: timestamp at which the new refresh token expires, if the refresh token was rotated
+        scopes: the scopes the new token carries, if omitted the stored scopes remain unchanged
     """
     token_expires = datetime.fromtimestamp(expires_at, timezone.utc)
     params = {
         "access_token": access_token,
         "token_expires": token_expires,
         "user_id": user_id,
-        "service": service.value
+        "service": service.value,
+        "scopes": scopes,
     }
     if refresh_token:
         query = """
@@ -148,6 +151,7 @@ def update_token(db_conn, user_id: int, service: ExternalServiceType, access_tok
                        WHEN :refresh_token_expires IS NULL THEN refresh_token_expiry_last_notified
                        ELSE NULL
                    END
+                 , scopes = COALESCE(:scopes, scopes)
                  , last_updated = now()
              WHERE user_id = :user_id
                AND service = :service
@@ -159,6 +163,7 @@ def update_token(db_conn, user_id: int, service: ExternalServiceType, access_tok
             UPDATE external_service_oauth
                SET access_token = :access_token
                  , token_expires = :token_expires
+                 , scopes = COALESCE(:scopes, scopes)
                  , last_updated = now()
              WHERE user_id = :user_id
                AND service = :service

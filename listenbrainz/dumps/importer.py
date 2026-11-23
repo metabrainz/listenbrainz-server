@@ -6,8 +6,7 @@ from flask import current_app
 from psycopg2.sql import Identifier
 
 from listenbrainz import db
-from listenbrainz.db import timescale
-from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT, SCHEMA_VERSION_CORE
+from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT, SCHEMA_VERSION_CORE, SCHEMA_VERSION_TIMESCALE
 from listenbrainz.dumps.exceptions import SchemaMismatchException
 from listenbrainz.dumps.models import DumpTablesCollection, get_engine
 from listenbrainz.dumps.tables import PRIVATE_TABLES, PUBLIC_TABLES_IMPORT, \
@@ -160,7 +159,7 @@ def import_postgres_dump(private_dump_archive_path=None,
     if public_timescale_dump_archive_path:
         current_app.logger.info('Importing public timescale dump %s...', public_timescale_dump_archive_path)
         _import_dump(public_timescale_dump_archive_path, PUBLIC_TABLES_TIMESCALE_DUMP,
-                     timescale.SCHEMA_VERSION_TIMESCALE, threads)
+                     SCHEMA_VERSION_TIMESCALE, threads)
         current_app.logger.info('Import of Public timescale dump %s done!', public_timescale_dump_archive_path)
 
     try:

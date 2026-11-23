@@ -1,6 +1,8 @@
 import abc
+import signal
 import time
 from abc import abstractmethod
+from datetime import datetime, timezone
 
 from brainzutils import metrics
 from flask import current_app, render_template
@@ -21,6 +23,7 @@ from listenbrainz.db import user as db_user
 import listenbrainz
 
 METRIC_UPDATE_INTERVAL = 60  # seconds
+BATCH_SIZE = 50
 
 
 class ListensImporter(abc.ABC):
@@ -33,6 +36,8 @@ class ListensImporter(abc.ABC):
         self._listens_imported_since_last_update = 0
         self._metric_submission_time = time.monotonic() + METRIC_UPDATE_INTERVAL
         self.exclude_error = True
+        self._pending_claim_user_ids = set()
+        self._shutdown_requested = False
 
     def notify_error(self, musicbrainz_id: str, error: str):
         """ Notifies specified user via email about error during Spotify import.
@@ -54,6 +59,23 @@ class ListensImporter(abc.ABC):
             from_name='ListenBrainz',
             from_addr='noreply@' + current_app.config['MAIL_FROM_DOMAIN'],
         )
+
+    def notify_new_error(self, user: dict, error: str, retry: bool):
+        """ Email the user when their import fails, but not again on every retry.
+
+        Args:
+            user: the user as claimed, whose 'error' is the error stored before this attempt
+            error: a description of the new error
+            retry: whether the new error will be retried
+
+        The user is emailed if they had no error before, or if a retryable error has now
+        turned into one that needs them to act, e.g. turn off privacy mode on Last.fm.
+        """
+        if current_app.config['TESTING']:
+            return
+        previous = user.get('error')
+        if previous is None or (previous.get('retry', True) and not retry):
+            self.notify_error(user['musicbrainz_id'], error)
 
     def parse_and_validate_listen_items(self, converter, items):
         """ Converts and validates the listens received from the external service API.
@@ -117,7 +139,10 @@ class ListensImporter(abc.ABC):
         pass
 
     def process_all_users(self):
-        """ Get a batch of users to be processed and import their listens.
+        """ Claim a batch of users and import their listens.
+
+        Uses claim-based work distribution so multiple workers can run
+        safely in parallel without processing the same users.
 
         Returns:
             (success, failure) where
@@ -125,7 +150,7 @@ class ListensImporter(abc.ABC):
                 failure: the number of users for whom we faced errors while importing.
         """
         try:
-            users = self.service.get_active_users_to_process(self.exclude_error)
+            users = self.service.claim_users_to_process(batch_size=BATCH_SIZE, exclude_error=self.exclude_error)
         except DatabaseException as e:
             listenbrainz.webserver.db_conn.rollback()
             current_app.logger.error('Cannot get list of users due to error %s', str(e), exc_info=True)
@@ -134,45 +159,85 @@ class ListensImporter(abc.ABC):
         if not users:
             return 0, 0
 
+        # users are claimed oldest last_updated first, so this shows how far behind the importer is;
+        # batches with errored users are left out, their last_updated is as old as their first error
+        stalest = min((user['last_updated'] for user in users if user['last_updated']), default=None)
+        if stalest and self.exclude_error:
+            metrics.set(self.name, stalest_user_age=(datetime.now(timezone.utc) - stalest).total_seconds())
+
         current_app.logger.info('Process %d users...' % len(users))
         success = 0
         failure = 0
-        for user in users:
-            try:
-                if user["is_paused"]:
-                    continue
+        self._pending_claim_user_ids = {user['user_id'] for user in users}
+        try:
+            for user in users:
+                if self._shutdown_requested:
+                    break
 
-                self._listens_imported_since_last_update += self.process_one_user(user)
-                success += 1
-            except ListensImporterUserError:
-                current_app.logger.info(
-                    f"{self.name} could not import listens for user %s:",
-                    user['musicbrainz_id'],
-                    exc_info=True
-                )
-                failure += 1
-            except (DatabaseException, DatabaseError, SQLAlchemyError):
-                listenbrainz.webserver.db_conn.rollback()
-                current_app.logger.error(f'{self.name} could not import listens for user %s:',
-                                         user['musicbrainz_id'], exc_info=True)
-                failure += 1
-            except Exception:
-                current_app.logger.error(f'{self.name} could not import listens for user %s:',
-                                         user['musicbrainz_id'], exc_info=True)
-                failure += 1
+                try:
+                    self._listens_imported_since_last_update += self.process_one_user(user)
+                    success += 1
+                except ListensImporterUserError:
+                    current_app.logger.info(
+                        f"{self.name} could not import listens for user %s:",
+                        user['musicbrainz_id'],
+                        exc_info=True
+                    )
+                    failure += 1
+                except (DatabaseException, DatabaseError, SQLAlchemyError):
+                    listenbrainz.webserver.db_conn.rollback()
+                    current_app.logger.error(f'{self.name} could not import listens for user %s:',
+                                             user['musicbrainz_id'], exc_info=True)
+                    failure += 1
+                except Exception:
+                    current_app.logger.error(f'{self.name} could not import listens for user %s:',
+                                             user['musicbrainz_id'], exc_info=True)
+                    failure += 1
+                finally:
+                    # skip if the shutdown handler already released it, another worker may own it now
+                    if user['user_id'] in self._pending_claim_user_ids:
+                        self.service.release_user_claims([user['user_id']])
+                        self._pending_claim_user_ids.discard(user['user_id'])
 
-            if time.monotonic() > self._metric_submission_time:
-                self._metric_submission_time += METRIC_UPDATE_INTERVAL
-                metrics.set(self.name, imported_listens=self._listens_imported_since_last_update)
-                self._listens_imported_since_last_update = 0
+                if time.monotonic() > self._metric_submission_time:
+                    self._metric_submission_time += METRIC_UPDATE_INTERVAL
+                    metrics.set(self.name, imported_listens=self._listens_imported_since_last_update)
+                    self._listens_imported_since_last_update = 0
+        finally:
+            if self._pending_claim_user_ids:
+                self.service.release_user_claims(list(self._pending_claim_user_ids), touch_last_updated=False)
+                self._pending_claim_user_ids = set()
 
         current_app.logger.info('Processed %d users successfully!', success)
         current_app.logger.info('Encountered errors while processing %d users.', failure)
         return success, failure
 
+    def _release_on_shutdown(self, signum, frame):
+        """ Best-effort release of all claims in the current batch on SIGTERM.
+
+        The currently-processing user is released too: the supervisor will likely
+        SIGKILL us before a long import finishes, which would otherwise leave that
+        user claimed until the timeout. If another worker picks it up meanwhile,
+        the duplicate listens are dropped on insert (ON CONFLICT DO NOTHING).
+        """
+
+        ids_to_release = self._pending_claim_user_ids.copy()
+        if ids_to_release:
+            try:
+                self.service.release_user_claims(list(ids_to_release), touch_last_updated=False)
+                self._pending_claim_user_ids -= ids_to_release
+                current_app.logger.info(
+                    'Released %d pending user claims on shutdown.',
+                    len(ids_to_release),
+                )
+            except Exception:
+                current_app.logger.error('Failed to release claims on shutdown:', exc_info=True)
+        self._shutdown_requested = True
+
     def main(self):
         current_app.logger.info(f'{self.name} started...')
-        while True:
+        signal.signal(signal.SIGTERM, self._release_on_shutdown)
+        while not self._shutdown_requested:
             t = time.monotonic()
             success, failure = self.process_all_users()
             total_users = success + failure
@@ -186,4 +251,7 @@ class ListensImporter(abc.ABC):
                 current_app.logger.info('All %d users in batch have been processed.', total_users)
                 current_app.logger.info('Total time taken: %.2f s, average time per user: %.2f s.', total_time,
                                         avg_time)
-            time.sleep(10)
+            # every connected user is claimable, so with more users than a batch this never pauses and the
+            # provider's rate limit is the only throttle; the pause keeps a few users from being polled back to back
+            if total_users < BATCH_SIZE:
+                time.sleep(10)

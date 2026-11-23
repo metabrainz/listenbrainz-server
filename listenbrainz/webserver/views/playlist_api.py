@@ -241,7 +241,7 @@ def validate_move_data(data):
         from_value = int(data["from"])
         to_value = int(data["to"])
         count_value = int(data["count"])
-        if from_value < 0 or to_value < 0 or count_value < 0:
+        if from_value < 0 or to_value < 0 or count_value <= 0:
             raise ValueError
     except ValueError:
         log_raise_400("move instruction values for 'from', 'to' and 'count' must all be positive integers.")
@@ -259,10 +259,10 @@ def validate_delete_data(data):
     try:
         index_value = int(data["index"])
         count_value = int(data["count"])
-        if index_value < 0 or count_value < 0:
+        if index_value < 0 or count_value <= 0:
             raise ValueError
     except ValueError:
-        log_raise_400("move instruction values for 'index' and 'count' must all be positive integers.")
+        log_raise_400("delete instruction values for 'index' and 'count' must all be positive integers.")
 
 
 def fetch_playlist_recording_metadata(playlist: Playlist):
@@ -332,7 +332,7 @@ def create_playlist():
     if user["musicbrainz_id"] in collaborators:
         collaborators.remove(user["musicbrainz_id"])
 
-    username_lookup = collaborators
+    username_lookup = list(collaborators)
     created_for = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI].get("created_for", None)
     if created_for:
         username_lookup.append(created_for)
@@ -726,6 +726,8 @@ def move_playlist_item(playlist_mbid):
 
     try:
         db_playlist.move_recordings(db_conn, playlist, data['from'], data['to'], data['count'])
+    except ValueError as e:
+        log_raise_400(str(e))
     except Exception as e:
         current_app.logger.error("Error while moving recordings in the playlist: {}".format(e))
         raise APIInternalServerError("Failed to move recordings in the playlist. Please try again.")
@@ -775,9 +777,11 @@ def delete_playlist_item(playlist_mbid):
 
     try:
         db_playlist.delete_recordings_from_playlist(db_conn, playlist, data['index'], data['count'])
+    except ValueError as e:
+        log_raise_400(str(e))
     except Exception as e:
         current_app.logger.error("Error while deleting recordings from playlist: {}".format(e))
-        raise APIInternalServerError("Failed to deleting recordings from the playlist. Please try again.")
+        raise APIInternalServerError("Failed to delete recordings from the playlist. Please try again.")
 
     return jsonify({'status': 'ok'})
 

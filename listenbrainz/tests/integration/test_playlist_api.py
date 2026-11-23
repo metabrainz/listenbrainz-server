@@ -134,8 +134,21 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["extension"]
                          [PLAYLIST_EXTENSION_URI]["created_for"], self.user["musicbrainz_id"])
         self.assertEqual(response.json["playlist"]["extension"]
+                         [PLAYLIST_EXTENSION_URI].get("collaborators", []), [])
+        self.assertEqual(response.json["playlist"]["extension"]
                          [PLAYLIST_EXTENSION_URI]["additional_metadata"],
                          playlist["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["additional_metadata"])
+
+        # Try to submit a playlist on a different user's behalf where created_for user does not exist
+        playlist_bad = get_test_data()
+        playlist_bad["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["created_for"] = "non_existent_user"
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=playlist_bad,
+            headers={"Authorization": "Token {}".format(self.user3["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "created_for user does not exist.")
 
         # Try to submit a playlist on a different users's behalf without the right perms
         # (a user must be part of config. APPROVED_PLAYLIST_BOTS to be able to create playlists
@@ -655,6 +668,23 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["track"][1]["identifier"],
                          playlist["playlist"]["track"][0]["identifier"])
 
+        # Test count <= 0 returns 400 Bad Request
+        move_invalid_count = {"mbid": "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a", "from": 1, "to": 0, "count": 0}
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.move_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            json=move_invalid_count
+        )
+        self.assert400(response)
+
+        move_negative_count = {"mbid": "57ef4803-5181-4b3d-8dd6-8b9d9ca83e2a", "from": 1, "to": 0, "count": -1}
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.move_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            json=move_negative_count
+        )
+        self.assert400(response)
+
     def test_playlist_recording_delete(self):
         playlist = {
             "playlist": {
@@ -699,6 +729,23 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["identifier"], PLAYLIST_URI_PREFIX + playlist_mbid)
         self.assertEqual(response.json["playlist"]["track"][0]["identifier"],
                          playlist["playlist"]["track"][1]["identifier"])
+
+        # Test count <= 0 returns 400 Bad Request
+        delete_invalid_count = {"index": 0, "count": 0}
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.delete_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            json=delete_invalid_count
+        )
+        self.assert400(response)
+
+        delete_negative_count = {"index": 0, "count": -1}
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.delete_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            json=delete_negative_count
+        )
+        self.assert400(response)
 
     def test_playlist_delete_playlist(self):
 

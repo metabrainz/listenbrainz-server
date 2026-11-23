@@ -172,11 +172,17 @@ def get_biggest_donors(meb_conn, db_conn, count: int, offset: int):
     return get_donors(meb_conn, db_conn, query, BIGGEST_DONOR_CACHE_KEY, count, offset)
 
 
-def is_user_eligible_donor(meb_conn, musicbrainz_row_id: int):
+def is_user_eligible_donor(meb_conn, musicbrainz_row_id: int) -> Optional[bool]:
     """ Check if the user with the given musicbrainz row id is a donor and has enough recent
-     donations to be eligible for flair """
+     donations to be eligible for flair
+
+    Returns:
+        whether the user is eligible, or None if it is not cached and no MetaBrainz database is configured
+    """
     result = are_users_eligible_donors(meb_conn, [musicbrainz_row_id])
-    return result.get(musicbrainz_row_id, False)
+    if musicbrainz_row_id in result:
+        return result[musicbrainz_row_id]
+    return False if meb_conn else None
 
 
 def are_users_eligible_donors(meb_conn, musicbrainz_row_ids: list[int]):
@@ -193,7 +199,8 @@ def are_users_eligible_donors(meb_conn, musicbrainz_row_ids: list[int]):
         else:
             eligibility_map[musicbrainz_row_id] = is_eligible
 
-    if not pending_ids:
+    # meb_conn is a proxy that opens the MetaBrainz connection when first used, so only touch it on a cache miss
+    if not pending_ids or not meb_conn:
         return eligibility_map
 
     query = """

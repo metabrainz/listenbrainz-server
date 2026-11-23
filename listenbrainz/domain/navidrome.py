@@ -13,6 +13,7 @@ from listenbrainz.webserver import db_conn
 import listenbrainz.db.feedback as db_feedback
 from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MBIDMapper, MATCH_TYPE_MED_QUALITY, MATCH_TYPE_HIGH_QUALITY, MATCH_TYPE_EXACT_MATCH
+from listenbrainz.mbid_mapping_writer.typesense_utils import TypesenseUnavailable
 
 NAVIDROME_API_RETRIES = 3
 
@@ -114,11 +115,20 @@ class NavidromeService:
         """Retrieve navidrome connection details and generate fresh authentication parameters,
            if include_token is True, to make API requests.
         """
-        try:
-            connection = db_navidrome.get_user_token(db_conn, user_id)
-            if not connection:
-                return None
+        connection = db_navidrome.get_user_token(db_conn, user_id)
+        if not connection:
+            return None
+        return self.get_auth_params(user_id, connection, include_token)
 
+    def get_auth_params(self, user_id: int, connection: dict, include_token: bool = True) -> Optional[dict[str, str]]:
+        """Generate the authentication parameters for an already fetched Navidrome connection.
+
+        Args:
+            user_id: the ListenBrainz row ID of the user, for logging
+            connection: a dict with the connection's encrypted_password, username and host_url
+            include_token: whether to decrypt the password and generate a fresh token and salt
+        """
+        try:
             if include_token:
                 encrypted_password = connection["encrypted_password"]
                 password = self._decrypt_password(encrypted_password)
@@ -216,6 +226,8 @@ def import_starred_tracks(user_id, navidrome_url, auth_token, salt, username):
         else:
             try:
                 match = mapper.search(artist, title, album)
+            except TypesenseUnavailable:
+                raise
             except Exception:
                 current_app.logger.warning(f"MBIDMapper failed for '{artist} - {title}', skipping.")
                 continue

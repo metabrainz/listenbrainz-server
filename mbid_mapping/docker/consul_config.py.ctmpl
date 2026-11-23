@@ -43,22 +43,6 @@ MB_DATABASE_STANDBY_URI = "postgresql://mbid_mapper@{{.Address}}:{{.Port}}/music
 MB_DATABASE_STANDBY_URI = "SERVICEDOESNOTEXIST_pgbouncer-slave_pgbouncer-master"
 {{end}}
 
-SQLALCHEMY_TIMESCALE_URI = ""
-TIMESCALE_ADMIN_URI=""
-TIMESCALE_ADMIN_LB_URI=""
-
-{{if service "timescale-listenbrainz"}}
-{{with index (service "timescale-listenbrainz") 0}}
-SQLALCHEMY_TIMESCALE_URI = """postgresql://{{template "KEY" "timescale_lb_user"}}:{{template "KEY" "timescale_lb_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "timescale_db_name"}}"""
-TIMESCALE_ADMIN_URI = """postgresql://postgres:{{template "KEY" "timescale_admin_password"}}@{{.Address}}:{{.Port}}/postgres"""
-TIMESCALE_ADMIN_LB_URI = """postgresql://postgres:{{template "KEY" "timescale_admin_password"}}@{{.Address}}:{{.Port}}/{{template "KEY" "timescale_db_name"}}"""
-{{end}}
-{{else}}
-SQLALCHEMY_TIMESCALE_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
-TIMESCALE_ADMIN_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
-TIMESCALE_ADMIN_LB_URI = "SERVICEDOESNOTEXIST_timescale-listenbrainz"
-{{end}}
-
 # the mapping tables live in the listens database
 {{if service "listenbrainz-user-listenstore"}}
 {{with index (service "listenbrainz-user-listenstore") 0}}

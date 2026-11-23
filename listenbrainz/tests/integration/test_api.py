@@ -15,7 +15,7 @@ import listenbrainz.db.user_relationship as db_user_relationship
 from data.model.external_service import ExternalServiceType
 from listenbrainz.listenstore.timescale_utils import delete_listens
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
-from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver import redis_connection, timescale_connection
 from listenbrainz.webserver.listens_cache import _get_listens_cache_key
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 from listenbrainz.webserver.views.api_tools import is_valid_uuid, DEFAULT_ITEMS_PER_GET
@@ -1613,6 +1613,17 @@ class APITestCase(ListenAPIIntegrationTestCase):
 
 class ListenAPICachingTestCase(ListenAPIIntegrationTestCase):
 
+    def wait_for_writer(self):
+        # The writer updates recent listens after committing the insert and invalidating caches.
+        # Polling the API before then can cache an empty result after that invalidation.
+        for _ in range(20):
+            if any(listen.user_id == self.user["id"]
+                   and listen.ts_since_epoch == self.test_listen["listened_at"]
+                   for listen in redis_connection._redis.get_recent_listens()):
+                return
+            time.sleep(0.5)
+        self.fail("The writer did not finish processing the cache test listen within 10 seconds")
+
     def setUp(self):
         super(ListenAPICachingTestCase, self).setUp()
         patcher = patch.object(
@@ -1660,16 +1671,7 @@ class ListenAPICachingTestCase(ListenAPIIntegrationTestCase):
         )
         self.assert200(response)
 
-        attempts = 0
-        while attempts < 10:
-            result = self.ts_conn.execute(
-                text("select exists(select 1 from listen where user_id = :user_id)"),
-                {"user_id": self.user["id"]}
-            ).first()
-            if result[0]:
-                break
-            time.sleep(1)
-            attempts += 1
+        self.wait_for_writer()
 
         self.assertEqual(cache.smembers(user_cache_key), set())
         self.assertEqual(cache.get(listens_key), None)
@@ -1711,6 +1713,7 @@ class ListenAPICachingTestCase(ListenAPIIntegrationTestCase):
             content_type='application/json'
         )
         self.assert200(response)
+        self.wait_for_writer()
 
         url = self.custom_url_for('api_v1.get_listens', user_name=self.user["musicbrainz_id"])
         response = self.wait_for_query_to_have_items(url, num_items=1)
@@ -1758,6 +1761,7 @@ class ListenAPICachingTestCase(ListenAPIIntegrationTestCase):
             content_type='application/json'
         )
         self.assert200(response)
+        self.wait_for_writer()
 
         url = self.custom_url_for('api_v1.get_listens', user_name=self.user["musicbrainz_id"])
         response = self.wait_for_query_to_have_items(url, num_items=1)

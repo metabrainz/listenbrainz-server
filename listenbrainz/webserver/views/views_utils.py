@@ -1,30 +1,25 @@
 from flask import current_app
-from flask_login import current_user
 
+from data.model.external_service import ExternalServiceType
 from listenbrainz.domain.apple import AppleService
-from listenbrainz.domain.musicbrainz import MusicBrainzService
-from listenbrainz.domain.spotify import SpotifyService
-from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
-from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.domain.funkwhale import FunkwhaleService
-from listenbrainz.db import funkwhale as db_funkwhale
+from listenbrainz.domain.musicbrainz import get_musicbrainz_service_type
 from listenbrainz.domain.navidrome import NavidromeService
-import listenbrainz.db.navidrome as db_navidrome
-from listenbrainz.webserver import db_conn
+
+# Each function below builds the props of one music service for an HTML page. data is the result of
+# listenbrainz.db.global_props.get_global_props_data for the logged-in user, or None if nobody is logged in.
 
 
-def get_current_spotify_user():
+def get_current_spotify_user(data):
     """Returns the spotify access token and permissions for the current
     authenticated user. If the user is not authenticated or has not
     linked to a Spotify account, returns empty dict."""
-    if not current_user.is_authenticated:
-        return {}
-    user = SpotifyService().get_user(current_user.id)
-    if user is None:
+    token = data and data["oauth_tokens"].get(ExternalServiceType.SPOTIFY.value)
+    if not token:
         return {}
     return {
-        "access_token": user["access_token"],
-        "permission": user["scopes"]
+        "access_token": token["access_token"],
+        "permission": token["scopes"]
     }
 
 
@@ -37,83 +32,62 @@ def get_current_youtube_user():
     }
 
 
-def get_current_critiquebrainz_user():
-    """Returns the critiquebrainz access token for the current
-    authenticated user. If the user is unauthenticated or has not
-    linked their critiquebrainz account, returns empty dict."""
-    if not current_user.is_authenticated:
-        return {}
-    user = CritiqueBrainzService().get_user(current_user.id)
-    if user is None:
+def _access_token_only(data, service: ExternalServiceType):
+    token = data and data["oauth_tokens"].get(service.value)
+    if not token:
         return {}
     return {
-        "access_token": user["access_token"],
+        "access_token": token["access_token"],
     }
 
 
-def get_current_musicbrainz_user():
+def get_current_critiquebrainz_user(data):
+    """Returns the critiquebrainz access token for the current
+    authenticated user. If the user is unauthenticated or has not
+    linked their critiquebrainz account, returns empty dict."""
+    return _access_token_only(data, ExternalServiceType.CRITIQUEBRAINZ)
+
+
+def get_current_musicbrainz_user(data):
     """Returns the musicbrainz access token for the current
     authenticated user. If the user is unauthenticated or has not
     linked their musicbrainz account for submitting tags/ratings,
     returns empty dict."""
-    if not current_user.is_authenticated:
-        return {}
-    user = MusicBrainzService().get_user(current_user.id)
-    if user is None:
-        return {}
-    return {
-        "access_token": user["access_token"],
-    }
+    return _access_token_only(data, get_musicbrainz_service_type())
 
 
-def get_current_soundcloud_user():
+def get_current_soundcloud_user(data):
     """Returns the soundcloud access token for the current
     authenticated user. If the user is unauthenticated or has not
     linked their soundcloud, returns empty dict."""
-    if not current_user.is_authenticated:
-        return {}
-    user = SoundCloudService().get_user(current_user.id)
-    if user is None:
-        return {}
-    return {
-        "access_token": user["access_token"],
-    }
+    return _access_token_only(data, ExternalServiceType.SOUNDCLOUD)
 
 
-def get_current_apple_music_user():
+def get_current_apple_music_user(data):
     """Returns the apple music developer_token and the music_user_token for the
     current authenticated user. If the user is unauthenticated or has not
     linked their apple music account returns a dict with only the developer_token."""
     tokens = AppleService().fetch_access_token()
     developer_token = tokens["access_token"]
-    if not current_user.is_authenticated:
-        return {"developer_token": developer_token}
-    user = AppleService().get_user(current_user.id)
-    if user is None:
+    token = data and data["oauth_tokens"].get(ExternalServiceType.APPLE.value)
+    if not token:
         return {"developer_token": developer_token}
     return {
         "developer_token": developer_token,
-        "music_user_token": user["refresh_token"]
+        "music_user_token": token["refresh_token"]
     }
 
 
-def get_current_funkwhale_user():
+def get_current_funkwhale_user(data):
     """Returns the funkwhale access token and instance URL for the current user.
     If the user has not linked a Funkwhale account, returns empty dict.
     For Funkwhale, we return the first connected server if multiple exist.
     """
-    if not current_user.is_authenticated:
+    connection = data and data["funkwhale"]
+    if not connection:
         return {}
 
-    # Get all tokens for this user to find the first server
-    # Use the first server (consistent with frontend logic)
-    tokens = db_funkwhale.get_all_user_tokens(db_conn, current_user.id)
-    if not tokens:
-        return {}
-
-    first_token = tokens[0]
-    service = FunkwhaleService()
-    user = service.get_user(current_user.id, first_token["host_url"], refresh=True)
+    user = FunkwhaleService().get_user_from_connection(data["user_id"], connection, refresh=True)
     if not user:
         return {}
 
@@ -128,13 +102,11 @@ def get_current_funkwhale_user():
     }
 
 
-def get_current_navidrome_user():
+def get_current_navidrome_user(data):
     """Returns the navidrome access token and instance URL for the current user.
        If the user has not linked a Navidrome account, returns empty dict.
     """
-    if not current_user.is_authenticated:
+    connection = data and data["navidrome"]
+    if not connection:
         return {}
-
-    navidrome_service = NavidromeService()
-    details = navidrome_service.get_user(current_user.id)
-    return details or {}
+    return NavidromeService().get_auth_params(data["user_id"], connection) or {}

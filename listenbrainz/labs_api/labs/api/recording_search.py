@@ -4,10 +4,12 @@ from uuid import UUID
 import typesense
 import typesense.exceptions
 from datasethoster import Query
+from flask import g, has_request_context
 from pydantic import BaseModel
 
 from listenbrainz import config
 from listenbrainz.mbid_mapping_writer.mbid_mapper import prepare_query, COLLECTION_NAME_WITHOUT_RELEASE
+from listenbrainz.mbid_mapping_writer.typesense_utils import search, TypesenseUnavailable
 
 
 NUM_TYPOS = 5
@@ -70,7 +72,14 @@ class RecordingSearchQuery(Query):
         }
 
         try:
-            hits = self.client.collections[COLLECTION_NAME_WITHOUT_RELEASE].documents.search(search_parameters)
+            hits = search(self.client, COLLECTION_NAME_WITHOUT_RELEASE, search_parameters)
+        except TypesenseUnavailable:
+            if not has_request_context():
+                raise
+            # Dataset Hoster catches query exceptions and loses their HTTP status.
+            # Its response is replaced by the Labs response hook.
+            g.typesense_unavailable = True
+            return []
         except typesense.exceptions.TypesenseClientError:
             return []
 

@@ -769,6 +769,7 @@ declare type BrainzPlayerSettings = {
   funkwhaleEnabled : boolean;
   navidromeEnabled : boolean;
   brainzplayerEnabled : boolean;
+  notificationsEnabled : boolean;
   dataSourcesPriority : Array<
     | "spotify"
     | "youtube"
