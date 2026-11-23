@@ -271,9 +271,7 @@ class SpotifyImporter(ListensImporter):
                 user['user_id'],
                 "Error",
                 listens_count,
-                error_message=error_message,
-                retry=False,
-                error_reason="invalid_grant",
+                error={"message": error_message, "retry": False, "reason": "invalid_grant"},
             )
             if not current_app.config['TESTING']:
                 self.notify_error(user['musicbrainz_id'], error_message)
@@ -285,7 +283,7 @@ class SpotifyImporter(ListensImporter):
         except ExternalServiceAPIError as e:
             # if it is an error from the Spotify API, show the error message to the user
             listens_count = user["status"]["count"] if user["status"] else 0
-            self.service.update_status(user['user_id'], "Error", listens_count, error_message=str(e))
+            self.service.update_status(user['user_id'], "Error", listens_count, error={"message": str(e), "retry": True})
             if not current_app.config['TESTING']:
                 self.notify_error(user['musicbrainz_id'], str(e))
             raise ExternalServiceError("Could not refresh user token from spotify")

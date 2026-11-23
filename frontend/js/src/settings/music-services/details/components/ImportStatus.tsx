@@ -101,7 +101,11 @@ export default function ImportStatus({ serviceName }: ImportStatusProps) {
 
           {!loading && importData?.error && (
             <div className="mt-3">
-              <strong>Error:</strong>
+              <strong>
+                {importData.status?.state === ImportStatusT.inProgress
+                  ? "Retrying. Last error:"
+                  : "Error:"}
+              </strong>
               <p className="text-danger mb-0">
                 {importData.error?.message ?? "An unknown error occurred."}
               </p>

@@ -34,9 +34,7 @@ class ImporterService(ExternalService, ABC):
         user_id: int,
         state: str,
         listens_count: int,
-        error_message: str = None,
-        retry: bool = True,
-        error_reason: str = None,
+        error: dict | None = None,
     ):
         """ Update import status for the user.
 
@@ -44,18 +42,9 @@ class ImporterService(ExternalService, ABC):
             user_id: the ListenBrainz row ID of the user
             state: import state string (e.g. "Importing", "Synced", "Error")
             listens_count: number of listens imported so far
-            error_message: user-friendly error message; if set, stored alongside the status
-            retry: whether to retry the import on next run (only relevant when error is set)
-            error_reason: stable machine-readable reason for the error
+            error: error details to store (message, retry flag, and optional reason).
+                Pass the existing error during a retry and omit it after a successful sync.
         """
-        error = None
-        if error_message is not None or error_reason is not None:
-            error = {"retry": retry}
-            if error_message is not None:
-                error["message"] = error_message
-            if error_reason is not None:
-                error["reason"] = error_reason
-
         listens_importer.update_status(
             db_conn, user_id, self.service, state, listens_count,
             error=error

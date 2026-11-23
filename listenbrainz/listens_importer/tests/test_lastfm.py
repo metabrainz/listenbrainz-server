@@ -1,6 +1,6 @@
 import unittest
 from datetime import datetime, timezone
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import requests
 import requests_mock
@@ -81,7 +81,8 @@ class LastfmImporterTestCase(DatabaseTestCase):
             context.status_code = 500
             return {"error": "Unknown error"}
 
-    def test_non_retryable_errors_and_user_exclusion(self):
+    @patch.object(BaseLastfmImporter, "notify_error")
+    def test_non_retryable_errors_and_user_exclusion(self, notify_error):
         """Test that non-retryable errors are recorded with retry=false and users are excluded from subsequent runs"""
         with self.app.app_context(), requests_mock.Mocker() as m:
             m.get(
@@ -97,10 +98,16 @@ class LastfmImporterTestCase(DatabaseTestCase):
                 api_key=self.app.config["LASTFM_API_KEY"]
             )
 
+            self.app.config["TESTING"] = False
             success, failure = importer.process_all_users()
 
             self.assertEqual(success, 1)
             self.assertEqual(failure, 3)
+            self.assertCountEqual(
+                [call.args[0] for call in notify_error.call_args_list],
+                ["testuser2", "testuser3", "testuser4"],
+            )
+            notify_error.reset_mock()
 
             user1_status = listens_importer.get_import_status(
                 self.db_conn, self.user1["id"], ExternalServiceType.LASTFM
@@ -136,6 +143,25 @@ class LastfmImporterTestCase(DatabaseTestCase):
 
             self.assertEqual(success2, 1)
             self.assertEqual(failure2, 1)
+            notify_error.assert_not_called()
+
+            # Recover the retryable account, then make it fail again.
+            def recovered_response(request, context):
+                if request.qs["user"] == ["lastfm_user_internal_server"]:
+                    progress = listens_importer.get_import_status(
+                        self.db_conn, self.user4["id"], ExternalServiceType.LASTFM
+                    )
+                    self.assertEqual(progress["status"]["state"], "Importing")
+                    self.assertEqual(progress["error"], error4)
+                return {"recenttracks": {"@attr": {"totalPages": "2"}, "track": []}}
+
+            m.get(self.app.config["LASTFM_API_URL"], json=recovered_response)
+            importer.process_all_users()
+            self.assertEqual(importer.process_all_users(), (2, 0))
+            m.get(self.app.config["LASTFM_API_URL"], json=self._mock_lastfm_response)
+            self.assertEqual(importer.process_all_users(), (1, 1))
+            notify_error.assert_called_once()
+            self.assertEqual(notify_error.call_args.args[0], "testuser4")
 
 
 class LastfmRecentTracksTestCase(unittest.TestCase):

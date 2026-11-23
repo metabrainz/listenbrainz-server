@@ -56,8 +56,7 @@ class SpotifyServiceTestCase(NonAPIIntegrationTestCase):
         })
         self.service.update_status(
             user_id_3, "Error", 0,
-            error_message="add an error and check this user doesn't get selected",
-            retry=False
+            error={"message": "add an error and check this user doesn't get selected", "retry": False},
         )
 
         self.service.add_new_user(user_id_1, {
