@@ -204,7 +204,8 @@ CREATE TABLE user_setting (
     timezone_name          TEXT,
     troi                   JSONB, -- troi related prefs
     brainzplayer           JSONB, -- brainzplayer related prefs
-    flair                  JSONB
+    flair                  JSONB,
+    datetime_format        JSONB  -- date and time display prefs
 );
 
 ALTER TABLE user_setting
