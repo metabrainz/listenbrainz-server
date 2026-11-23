@@ -82,6 +82,12 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://icanhazapps.d7.wtf/music">iCanHazMusic</a>
+          </em>
+          , an old-school music player for macOS &ge; 15.4
+        </li>
+        <li>
+          <em>
             <a href="https://jellybox.app/">JellyBox</a>
           </em>
           , a music player for Jellyfin, Emby and Navidrome on desktop and
