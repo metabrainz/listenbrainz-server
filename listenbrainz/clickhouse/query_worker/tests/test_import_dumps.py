@@ -77,6 +77,7 @@ class ImportDumpsTestCase(DumpImportTestCase):
         with patch("listenbrainz.clickhouse.query_worker.listens.deletions.HISTORY_BATCH_SIZE", 1):
             self.assertEqual(self.catch_up(), {"imported": [], "pending": 0, "errors": []})
         self.assertEqual(self.listens(), expected)
+        self.assert_hourly_counts_match_listens()
         self.assertEqual(self.mark(), 1)
 
     def test_each_imported_dump_reports_the_dumps_pending_after_it(self):
@@ -160,6 +161,7 @@ class ImportDumpsTestCase(DumpImportTestCase):
         self.assertEqual(self.mark(), 0)
         self.import_full(dump_id=2)
         self.assertEqual(self.mark(), 2)
+        self.assert_hourly_counts_match_listens()
 
     def test_nonconsecutive_ids_with_continuous_coverage(self):
         self.ftp.add_dump(1, DumpType.FULL, "full-dump-1")

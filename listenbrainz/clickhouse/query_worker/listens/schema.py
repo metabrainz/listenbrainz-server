@@ -2,6 +2,8 @@
 
 from clickhouse_connect.driver import Client
 
+from listenbrainz.clickhouse.query_worker.listens.aggregates import ensure_aggregates
+
 # The columns of a listen, as in the Spark listen dumps (SPARK_LISTENS_SCHEMA).
 LISTEN_COLUMNS = """
         listened_at DateTime64(3),
@@ -63,3 +65,4 @@ def ensure_schema(ch_client: Client) -> None:
     """Create the schema; idempotent, so safe to call from every job."""
     for statement in CREATE_TABLES:
         ch_client.command(statement)
+    ensure_aggregates(ch_client)

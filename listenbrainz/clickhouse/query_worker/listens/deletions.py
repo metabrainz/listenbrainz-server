@@ -4,6 +4,8 @@ from clickhouse_connect.driver import Client
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
+from listenbrainz.clickhouse.query_worker.listens.aggregates import send_changes
+
 
 DELETION_IMPORT_BATCH_SIZE = 50_000
 HISTORY_BATCH_SIZE = 1024
@@ -28,18 +30,21 @@ def sync_deletions(client: Client, listens_engine: Engine) -> None:
                 client.insert(table, batch)
 
 
-def delete_matching_listens(client, table, where, parameters=None):
+def delete_matching_listens(client, table, where, change_stream=None, parameters=None):
+    if change_stream:
+        # Send the values that still exist to every aggregate before removing them.
+        send_changes(client, change_stream, table, -1, where, parameters)
     client.command(f"DELETE FROM {table} WHERE {where}", parameters=parameters, settings={"lightweight_deletes_sync": 2})
 
 
-def apply_deletions(client, table):
+def apply_deletions(client, table, change_stream=None):
     """Remove matching versions before a full swap or incremental deduplication."""
     if client.query("SELECT 1 FROM deleted_listens LIMIT 1").result_rows:
         delete_matching_listens(client, table, """
             (user_id, listened_at, recording_msid, created) IN (
                 SELECT user_id, listened_at, recording_msid, created FROM deleted_listens
             )
-        """)
+        """, change_stream)
     # Page over cutoff records in primary-key order. The mutation needs only
     # one cutoff per user, even for a user with millions of distinct listens.
     after_user = -1
@@ -56,5 +61,5 @@ def apply_deletions(client, table):
             user_id IN {users:Array(UInt32)}
               AND toUnixTimestamp64Micro(created) < transform(
                   user_id, {users:Array(UInt32)}, {cutoffs:Array(Int64)}, toInt64(0))
-        """, {"users": list(users), "cutoffs": list(cutoffs)})
+        """, change_stream, {"users": list(users), "cutoffs": list(cutoffs)})
         after_user = users[-1]
