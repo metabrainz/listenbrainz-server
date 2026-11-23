@@ -2,13 +2,12 @@
 import time
 
 import orjson
-import sentry_sdk
 from flask import current_app
 from kombu import Consumer
 from kombu.mixins import ConsumerMixin
 
 from listenbrainz.clickhouse import queues
-from listenbrainz.clickhouse.result_consumer.handlers import get_handler
+from listenbrainz.clickhouse.result_consumer.handlers import RetryClickHouseResult, get_handler
 from listenbrainz.rabbitmq import create_rabbitmq_connection
 from listenbrainz.webserver import create_app
 
@@ -48,6 +47,10 @@ class ClickHouseResultConsumer(ConsumerMixin):
 
         try:
             handler(response)
+        except RetryClickHouseResult as exc:
+            current_app.logger.warning("Requeuing %s: %s", response_type, exc)
+            message.requeue()
+            return
         except Exception as e:
             current_app.logger.error(
                 "Error in ClickHouse handler for '%s': %s",

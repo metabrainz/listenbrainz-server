@@ -78,6 +78,19 @@ class ClickHouseTestCase(unittest.TestCase):
         result = self.client.query(f"SELECT {', '.join(LISTEN_COLUMN_NAMES)} FROM listens")
         return sorted(_normalized(dict(zip(result.column_names, row))) for row in result.result_rows)
 
+    def assert_hourly_counts_match_listens(self):
+        expected = self.client.query("""
+            SELECT user_id, toDate(listened_at, 'UTC') AS day, toHour(listened_at, 'UTC') AS hour,
+                   count()
+              FROM listens GROUP BY user_id, day, hour ORDER BY user_id, day, hour
+        """).result_rows
+        actual = self.client.query("""
+            SELECT user_id, day, hour, sum(listen_count) AS total
+              FROM hourly_listen_counts GROUP BY user_id, day, hour HAVING total != 0
+             ORDER BY user_id, day, hour
+        """).result_rows
+        self.assertEqual(actual, expected)
+
     def staging_tables(self) -> list[str]:
         return [name for (name,) in self.client.query(
             "SELECT name FROM system.tables WHERE database = currentDatabase() AND startsWith(name, {prefix:String})",
@@ -104,7 +117,9 @@ class DumpImportTestCase(ClickHouseTestCase):
         """Exercise the shared loader with a local test archive."""
         parquet_files, _ = read_archive(archive)
         _prepare_import(self.connection, self.listens_engine)
-        return _load_parquet_files(parquet_files, self.connection, dump_type, workers=2)
+        result = _load_parquet_files(parquet_files, self.connection, dump_type, workers=2)
+        self.assert_hourly_counts_match_listens()
+        return result
 
     def load_fixture(self, name):
         dump_type = DumpType.FULL if name.startswith("full") else DumpType.INCREMENTAL
