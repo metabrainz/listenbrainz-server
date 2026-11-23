@@ -1,0 +1,31 @@
+digraph clickhouse_activity {
+    graph [bgcolor="transparent", nodesep=0.3, ranksep=0.38, pad=0.12];
+    node [shape=box, style="rounded,filled", color="#536577", fillcolor="#edf3f7",
+          fontname="DejaVu Sans", fontsize=12, margin="0.15,0.09"];
+    edge [color="#536577", fontcolor="#384959", fontname="DejaVu Sans", fontsize=10];
+
+    dumps [label="FTP listen dumps\nFull or incremental Parquet"];
+    deletions [label="PostgreSQL\nCompleted deletions and history cutoffs"];
+    staging [label="Import worker\nStage rows and apply deletions"];
+    listens [label="ClickHouse · listens", shape=cylinder];
+    stream [label="Listen changes · Null engine\n+1 accepted row, −1 deleted row"];
+    mv [label="Hourly materialized view\nSum signed changes by user, UTC date and hour"];
+    hourly [label="hourly_listen_counts\nCounts by user, UTC date and hour", shape=cylinder];
+    snapshot [label="Job-local stats_snapshot\nPin hourly counts for all ranges"];
+    ranges [label="Daily activity for each range\nSum counts by user, weekday and hour"];
+    queue [label="RabbitMQ result queue\nStart → batches of 25 users → end"];
+    couch [label="CouchDB · one database per range and run\nWrite user documents and verify their count", shape=cylinder];
+
+    {rank=same; dumps; deletions;}
+    dumps -> staging;
+    deletions -> staging;
+    staging -> listens [label=" full swap or incremental merge"];
+    listens -> stream [label=" incremental writes"];
+    staging -> stream [label=" full load"];
+    stream -> mv [label=" each registered view receives the block"];
+    mv -> hourly [label=" update on each change"];
+    hourly -> snapshot [label=" clone data parts"];
+    snapshot -> ranges;
+    ranges -> queue [label=" query worker"];
+    queue -> couch [label=" result consumer"];
+}

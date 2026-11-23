@@ -36,6 +36,9 @@ from sqlalchemy.engine import Engine
 from listenbrainz.clickhouse.query_worker.client import ClickHouseConnection
 from listenbrainz.clickhouse.query_worker.listens.deletions import apply_deletions, delete_matching_listens, sync_deletions
 from listenbrainz.clickhouse.query_worker.listens.ftp import DumpNotFoundException, DumpType, FTPDumpDownloader
+from listenbrainz.clickhouse.query_worker.listens.aggregates import (
+    LIVE_STREAM, attach_source, full_dump_aggregates, replace_live_aggregates, staged_source,
+)
 from listenbrainz.clickhouse.query_worker.listens.import_state import INCREMENTAL_DUMP_STATE, get_import_state, set_import_state
 from listenbrainz.clickhouse.query_worker.listens.schema import LISTEN_COLUMN_NAMES, create_listens_table, ensure_schema
 from listenbrainz.clickhouse.query_worker.utils import describe_load_errors
@@ -127,8 +130,10 @@ def merge_staged_listens(client: Client, table: str) -> None:
     clone = f"{STAGING_TABLE_PREFIX}{uuid4().hex}"
     client.command(f"CREATE TABLE {clone} CLONE AS listens")
     try:
-        delete_matching_listens(client, clone, f"(user_id, listened_at, recording_msid, created) IN ({superseded})")
-        client.command(MERGE_STAGED_LISTENS.format(table=table, destination=clone))
+        delete_matching_listens(client, clone, f"(user_id, listened_at, recording_msid, created) IN ({superseded})",
+                                LIVE_STREAM)
+        with staged_source(client, clone, LIVE_STREAM):
+            client.command(MERGE_STAGED_LISTENS.format(table=table, destination=clone))
         swap_in_staged_listens(client, clone)
     finally:
         drop_staging_table(client, clone)
@@ -159,7 +164,8 @@ def drop_import_leftovers(client: Client) -> None:
     Only call it when no other import runs: it drops their staging tables too.
     """
     leftovers = client.query(
-        "SELECT name FROM system.tables WHERE database = currentDatabase() AND startsWith(name, {prefix:String})",
+        "SELECT name FROM system.tables WHERE database = currentDatabase() AND startsWith(name, {prefix:String})"
+        " ORDER BY engine = 'MaterializedView' DESC",
         parameters={"prefix": STAGING_TABLE_PREFIX},
     ).result_rows
     for (table,) in leftovers:
@@ -168,7 +174,9 @@ def drop_import_leftovers(client: Client) -> None:
 
 
 def swap_in_staged_listens(client: Client, table: str) -> None:
+    client.command("DROP VIEW listens_to_changes")
     client.command(f"EXCHANGE TABLES {table} AND {LISTENS_TABLE}")
+    attach_source(client, LISTENS_TABLE, LIVE_STREAM)
 
 
 def count_listens(client: Client) -> int:
@@ -265,17 +273,16 @@ def _insert_parquet_files(
 
 
 def _load_full_dump(parquet_files, connection, workers, client) -> dict:
-    # on success the dropped staging table holds the previous listens
-    with staging_table(client) as table:
-        result = _insert_parquet_files(parquet_files, table, connection, workers)
+    with staging_table(client) as table, full_dump_aggregates(client, table) as stream:
+        with staged_source(client, table, stream):
+            result = _insert_parquet_files(parquet_files, table, connection, workers)
         if not result["errors"]:
-            apply_deletions(client, table)
-            # Persist this before EXCHANGE: even an ambiguous swap/cleanup failure
-            # must not leave an older dataset paired with the previous watermark.
+            apply_deletions(client, table, stream)
             set_import_state(client, INCREMENTAL_DUMP_STATE, 0)
+            replace_live_aggregates(client, stream)
             swap_in_staged_listens(client, table)
             result["added"] = count_listens(client)
-    return result
+        return result
 
 
 def _load_incremental_dump(parquet_files, connection, workers, client) -> dict:
@@ -325,10 +332,10 @@ def _prepare_import(connection: ClickHouseConnection, listens_engine: Engine) ->
       the lock must also kill those before letting another import start.
     """
     with closing(create_client(connection, send_receive_timeout=PROCESS_SEND_RECEIVE_TIMEOUT)) as client:
-        ensure_schema(client)
         drop_import_leftovers(client)
+        ensure_schema(client)
         sync_deletions(client, listens_engine)
-        apply_deletions(client, LISTENS_TABLE)
+        apply_deletions(client, LISTENS_TABLE, LIVE_STREAM)
 
 
 def _import_dump(

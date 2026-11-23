@@ -43,6 +43,7 @@ Contents
    developers/spark-devel-env
    developers/architecture
    developers/spark-architecture
+   developers/clickhouse-architecture
    developers/mapping
    developers/docs
    developers/commands
