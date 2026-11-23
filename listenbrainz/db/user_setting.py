@@ -6,7 +6,8 @@ from listenbrainz.db.exceptions import DatabaseException
 
 
 DEFAULT_TIMEZONE = "UTC"
-
+# "auto" means follow the browser's locale, which is how dates and times are displayed without this setting.
+DEFAULT_DATETIME_FORMAT = {"dateFormat": "auto", "timeFormat": "auto"}
 
 def get_pg_timezone(db_conn):
     """ Get list of time zones PostgreSQL supports.
@@ -139,6 +140,41 @@ def get_brainzplayer_prefs(db_conn, user_id: int):
     row = result.mappings().first()
     return dict(row) if row else None
 
+def update_datetime_format_prefs(db_conn, user_id: int, datetime_format: str):
+    """ Update date and time display preferences for the given user
+
+    Args:
+        db_conn: database connection
+        user_id: the row ID of the user in the DB
+        datetime_format: JSON encoded string of the preferences
+    """
+    db_conn.execute(sqlalchemy.text("""
+        INSERT INTO user_setting (user_id, datetime_format)
+             VALUES (:user_id, :datetime_format)
+        ON CONFLICT (user_id)
+          DO UPDATE
+                SET datetime_format = EXCLUDED.datetime_format
+    """), {"user_id": user_id, "datetime_format": datetime_format})
+    db_conn.commit()
+
+
+def get_datetime_format_prefs(db_conn, user_id: int):
+    """ Retrieve date and time display preferences for the given user
+
+    Anything the user has not set is filled in from DEFAULT_DATETIME_FORMAT, so the result is always complete,
+    including for users who have never saved any preferences.
+
+    Returns:
+        a dict like {"datetime_format": {"dateFormat": "auto", "timeFormat": "auto"}}
+    """
+    result = db_conn.execute(sqlalchemy.text("""
+        SELECT datetime_format
+          FROM user_setting
+         WHERE user_id = :user_id
+    """), {"user_id": user_id})
+    row = result.mappings().first()
+    saved = (row["datetime_format"] if row else None) or {}
+    return {"datetime_format": {**DEFAULT_DATETIME_FORMAT, **saved}}
 
 def update_flair(db_conn, user_id: int, flair):
     """ Update a user's flair """

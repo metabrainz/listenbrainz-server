@@ -111,9 +111,15 @@ def get_global_props():
     }
 
     if current_user.is_authenticated:
+        user_preferences = {}
         brainzplayer_props = db_usersetting.get_brainzplayer_prefs(db_conn, current_user.id)
         if brainzplayer_props is not None:
-            props["user_preferences"] = brainzplayer_props
+            user_preferences.update(brainzplayer_props)
+
+        # always complete: defaults are filled in for users who have not configured this
+        user_preferences.update(db_usersetting.get_datetime_format_prefs(db_conn, current_user.id))
+
+        props["user_preferences"] = user_preferences
 
         flair_props = db_usersetting.get_flair(db_conn, current_user.id)
         if flair_props is not None:

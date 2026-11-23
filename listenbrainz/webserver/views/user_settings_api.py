@@ -162,3 +162,47 @@ def update_brainzplayer_prefs():
 
     db_usersetting.update_brainzplayer_prefs(db_conn, user["id"], orjson.dumps(new_preferences).decode())
     return jsonify({"status": "ok"})
+
+# "auto" means: follow the browser's locale, which is how dates and times are displayed today.
+datetime_format_preferences_schema = {
+    "type": "object",
+    "properties": {
+        "dateFormat": {"type": "string", "enum": ["auto", "MDY", "DMY", "YMD"]},
+        "timeFormat": {"type": "string", "enum": ["auto", "12h", "24h"]},
+    },
+    "additionalProperties": False,
+}
+
+
+@user_settings_api_bp.post('/datetime-format')
+@crossdomain
+@ratelimit()
+def update_datetime_format_prefs():
+    """
+    Update how dates and times are displayed to the user. A user token (found on
+    https://listenbrainz.org/settings/) must be provided in the Authorization header!
+
+    Both keys are optional and default to ``auto``, which follows the browser's locale.
+
+    - ``dateFormat``: order of month, day and year. One of ``auto``, ``MDY`` (month, day, year),
+      ``DMY`` (day, month, year), ``YMD`` (year, month, day)
+    - ``timeFormat``: one of ``auto``, ``12h``, ``24h``
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: datetime format preferences updated.
+    :statuscode 400: Bad request. See error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
+    user = validate_auth_header()
+    try:
+        new_preferences = orjson.loads(request.get_data())
+    except (ValueError, KeyError) as e:
+        raise APIBadRequest(f"Invalid JSON: {str(e)}")
+    try:
+        validate(instance=new_preferences, schema=datetime_format_preferences_schema)
+    except exceptions.ValidationError as err:
+        raise APIBadRequest(f"Invalid preferences in the JSON: {err.message}")
+
+    db_usersetting.update_datetime_format_prefs(db_conn, user["id"], orjson.dumps(new_preferences).decode())
+    return jsonify({"status": "ok"})
