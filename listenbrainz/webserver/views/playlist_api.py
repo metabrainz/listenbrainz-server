@@ -90,13 +90,17 @@ def validate_playlist(jspf):
         if not isinstance(public, bool):
             log_raise_400("JSPF playlist public field must contain a boolean.")
 
-    try:
+    if "collaborators" in jspf["playlist"].get("extension", {}).get(PLAYLIST_EXTENSION_URI, {}):
+        collaborators = jspf["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["collaborators"]
+        if not isinstance(collaborators, (list, tuple)):
+            log_raise_400("Collaborators must be a list.")
+
         # Collaborators are not required, so only validate if they are set
-        for collaborator in jspf["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["collaborators"]:
+        for collaborator in collaborators:
+            if not isinstance(collaborator, str):
+                log_raise_400("Collaborator names must be strings.")
             if not collaborator:
                 log_raise_400("The collaborators field contains an empty value.")
-    except KeyError:
-        pass
 
     if "track" not in jspf["playlist"]:
         return
