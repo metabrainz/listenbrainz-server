@@ -2,6 +2,7 @@ import logging
 import os
 import pprint
 import sys
+from contextlib import nullcontext
 from time import sleep
 
 import sentry_sdk
@@ -34,6 +35,12 @@ def _get_db_conn():
     if _db_conn is None:
         _db_conn = g._db_conn = db.engine.connect()
     return _db_conn
+
+
+def auth_db_connection():
+    """Borrow an existing request connection or check one out just for the lookup."""
+    conn = getattr(g, "_db_conn", None)
+    return nullcontext(conn) if conn is not None else db.engine.connect()
 
 
 def _get_listens_conn():
