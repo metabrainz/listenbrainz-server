@@ -1,17 +1,20 @@
 import hashlib
 import time
 from datetime import datetime, timedelta, timezone
+from unittest import mock
 
 import orjson
+from brainzutils import cache
 from cryptography.fernet import Fernet
 from flask_login import login_user
 from sqlalchemy import event
+from sqlalchemy.exc import OperationalError
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_setting as db_usersetting
 from data.model.external_service import ExternalServiceType
 from listenbrainz import db
-from listenbrainz.db import external_service_oauth as db_oauth, funkwhale as db_funkwhale, navidrome as db_navidrome, \
+from listenbrainz.db import donation as db_donation, external_service_oauth as db_oauth, funkwhale as db_funkwhale, navidrome as db_navidrome, \
     listens_importer as db_listens_importer
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.navidrome import NavidromeService
@@ -124,3 +127,24 @@ class GlobalPropsTestCase(IntegrationTestCase):
         self._global_props()
 
         self.assertIn("spotify-reconnect-required", [alert["id"] for alert in self.alerts])
+
+    def test_cached_donor_flair_does_not_connect_to_metabrainz(self):
+        cache.set(db_donation.ELIGIBLE_DONOR_CACHE_KEY % self.user["musicbrainz_row_id"], True, expirein=60)
+        engine = mock.MagicMock()
+        try:
+            with mock.patch.object(db_donation, "engine", engine):
+                props, _ = self._global_props()
+        finally:
+            cache.delete(db_donation.ELIGIBLE_DONOR_CACHE_KEY % self.user["musicbrainz_row_id"])
+
+        self.assertIs(props["show_flair"], True)
+        engine.connect.assert_not_called()
+
+    def test_metabrainz_down_leaves_flair_out(self):
+        engine = mock.MagicMock()
+        engine.connect.side_effect = OperationalError("SELECT 1", {}, Exception("could not connect to server"))
+        with mock.patch.object(db_donation, "engine", engine):
+            props, _ = self._global_props()
+
+        engine.connect.assert_called_once()
+        self.assertNotIn("show_flair", props)

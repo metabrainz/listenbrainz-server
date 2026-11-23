@@ -129,10 +129,14 @@ def get_global_props():
             if user_setting["flair"] is not None:
                 props["flair"] = user_setting["flair"]
 
-        if meb_conn:
+        # the flair is cosmetic, the page must not fail because the MetaBrainz database is unavailable
+        try:
             show_flair = db_donation.is_user_eligible_donor(meb_conn, current_user.musicbrainz_row_id)
-            if show_flair is not None:
-                props["show_flair"] = show_flair
+        except Exception:
+            current_app.logger.error("Could not check donor flair for user %s", current_user.id, exc_info=True)
+            show_flair = None
+        if show_flair is not None:
+            props["show_flair"] = show_flair
 
     return orjson.dumps(props).decode("utf-8")
 
