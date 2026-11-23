@@ -6,13 +6,14 @@ import { Helmet } from "react-helmet";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPauseCircle, faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { useAtomValue } from "jotai";
-import { chain, groupBy, isEqual, sortBy } from "lodash";
+import { chain, groupBy, sortBy } from "lodash";
 import { Vibrant } from "node-vibrant/browser";
 import type { Palette } from "@vibrant/color";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { RouteQuery } from "../utils/Loader";
 import {
   generateAlbumArtThumbnailLink,
+  getRecordingMBID,
   getReviewEventContent,
 } from "../utils/utils";
 import EntityCoverArtPlaceholder from "../components/EntityCoverArtPlaceholder";
@@ -29,7 +30,10 @@ import {
 } from "../artist/ArtistPage";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import ListenCard from "../common/listens/ListenCard";
-import { playerPausedAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
+import {
+  currentListenAtom,
+  playerPausedAtom,
+} from "../common/brainzplayer/BrainzPlayerAtoms";
 
 type Recording = {
   artist_credit_id: number;
@@ -170,30 +174,18 @@ export default function TrackPage(): JSX.Element {
   const recordingName = recording_name || "";
 
   const playerPaused = useAtomValue(playerPausedAtom);
-  const [isCurrentTrack, setIsCurrentTrack] = React.useState(false);
+  const currentListen = useAtomValue(currentListenAtom);
+  // Derive from the player state so it stays correct when navigating
+  // between track pages and when the track was already playing on mount
+  const isCurrentTrack =
+    Boolean(recording_mbid) &&
+    Boolean(currentListen) &&
+    getRecordingMBID(currentListen as Listen) === recording_mbid;
 
   const recordingAsListen = React.useMemo(
     () => (track ? recordingToListen(track) : undefined),
     [track]
   );
-  React.useEffect(() => {
-    // Know whether this track is the one loaded in BrainzPlayer (like ListenCard)
-    const receiveBrainzPlayerMessage = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) {
-        return;
-      }
-      const { brainzplayer_event, payload } = event.data;
-      if (brainzplayer_event === "current-listen-change") {
-        setIsCurrentTrack(
-          Boolean(recordingAsListen) && isEqual(payload, recordingAsListen)
-        );
-      }
-    };
-    window.addEventListener("message", receiveBrainzPlayerMessage);
-    return () => {
-      window.removeEventListener("message", receiveBrainzPlayerMessage);
-    };
-  }, [recordingAsListen]);
 
   const isPlaying = isCurrentTrack && !playerPaused;
 
