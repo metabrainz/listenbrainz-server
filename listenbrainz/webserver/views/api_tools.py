@@ -21,7 +21,7 @@ from typing import NoReturn
 from flask import current_app, jsonify, request
 
 from listenbrainz.listenstore import LISTEN_MINIMUM_TS
-from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW, db_conn
+from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW, auth_db_connection
 from listenbrainz.webserver.errors import APIServiceUnavailable, APIBadRequest, APIUnauthorized, \
     ListenValidationError
 
@@ -583,9 +583,11 @@ def validate_auth_header(*, optional: bool = False, fetch_email: bool = False, s
         username = token.get("username")
         if not username:
             raise APIUnauthorized("Invalid authorization token.")
-        user = db_user.get_by_mb_id(db_conn, username, fetch_email=fetch_email)
+        with auth_db_connection() as conn:
+            user = db_user.get_by_mb_id(conn, username, fetch_email=fetch_email)
     else:
-        user = db_user.get_by_token(db_conn, auth_token, fetch_email=fetch_email)
+        with auth_db_connection() as conn:
+            user = db_user.get_by_token(conn, auth_token, fetch_email=fetch_email)
 
     if user is None:
         raise APIUnauthorized("Invalid authorization token.")
