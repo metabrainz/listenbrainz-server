@@ -149,6 +149,46 @@ def lookup_using_metadata(params: list[dict], service, model: type[BaseModel], t
     return [model(**row) for row in metadata.values()]
 
 
+def lookup_spotify_track_ids_from_mb_url_rels(mbids: list[str]) -> dict[str, list[str]]:
+    """Look up Spotify track ids for the given recording MBIDs via MusicBrainz URL relationships.
+
+    Queries curated recording -> Spotify URL links maintained by MusicBrainz editors,
+    bypassing text-normalization failure modes of the metadata index.
+
+    Args:
+        mbids: Recording MBIDs to look up.
+
+    Returns:
+        Dict mapping recording_mbid to a list of Spotify track ids. Only MBIDs
+        with at least one matching URL relationship are present.
+    """
+    if not mbids:
+        return {}
+
+    query = """
+        WITH input_mbids (gid) AS (VALUES %s)
+        SELECT input_mbids.gid::text AS recording_mbid,
+               array_agg(DISTINCT substring(u.url FROM 'open\\.spotify\\.com/track/([A-Za-z0-9]+)')) AS track_ids
+          FROM input_mbids
+          JOIN musicbrainz.recording       r   ON r.gid = input_mbids.gid::uuid
+          JOIN musicbrainz.l_recording_url lru ON lru.entity0 = r.id
+          JOIN musicbrainz.url             u   ON u.id = lru.entity1
+          JOIN musicbrainz.link            l   ON l.id = lru.link
+          JOIN musicbrainz.link_type       lt  ON lt.id = l.link_type
+         WHERE lt.name IN ('free streaming', 'streaming')
+           AND u.url ~ '^https?://open\\.spotify\\.com/track/[A-Za-z0-9]+'
+      GROUP BY input_mbids.gid
+    """
+
+    with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn, conn.cursor() as curs:
+        execute_values(curs, query, [(mbid,) for mbid in mbids], page_size=len(mbids))
+        return {
+            row[0]: [tid for tid in row[1] if tid]
+            for row in curs.fetchall()
+            if row[1] and any(tid for tid in row[1])
+        }
+
+
 def lookup_recording_canonical_metadata(mbids: list[str]):
     """ Retrieve metadata from canonical tables for given mbids. All mbids are first looked up in MB redirects
     and then resolved to canonical mbids. Finally, the metadata for canonical mbids is retrieved. """
