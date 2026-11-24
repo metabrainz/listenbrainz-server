@@ -141,6 +141,7 @@ COUCHDB_PORT = 5984
 COUCHDB_USER = "listenbrainz"
 COUCHDB_ADMIN_KEY = '''{{template "KEY" "couchdb_admin_key"}}'''
 COUCHDB_DATABASE_PREFIX = '''{{template "KEY_OPTIONAL" "couchdb_database_prefix"}}'''
+PREFER_CLICKHOUSE_STATS = '''{{template "KEY_OPTIONAL" "prefer_clickhouse_stats"}}'''.strip().lower() == "yes"
 
 {{if service "listenbrainz-redis"}}
 {{with index (service "listenbrainz-redis") 0}}

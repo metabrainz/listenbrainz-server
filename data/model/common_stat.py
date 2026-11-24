@@ -1,9 +1,10 @@
 # This file contains models for db -> api for statistics.
 
 from datetime import datetime
-from typing import TypeVar, Generic, Optional, List
+from typing import TypeVar, Generic, Optional, List, Literal
 
 from enum import Enum
+from pydantic import Field
 from pydantic.generics import GenericModel
 
 
@@ -47,3 +48,4 @@ class StatApi(GenericModel, Generic[StatT]):
     stats_range: str
     data: StatRecordList[StatT]
     last_updated: int
+    source: Literal["spark", "clickhouse"] = Field(default="spark", exclude=True)

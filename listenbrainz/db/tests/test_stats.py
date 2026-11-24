@@ -1,4 +1,5 @@
 import listenbrainz.db.stats as db_stats
+from listenbrainz.db import couchdb
 from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
@@ -83,3 +84,23 @@ class StatsDatabaseTestCase(DatabaseTestCase):
                         UserArtistMapRecord,
                         exclude_count=True
                     )
+
+    def test_prefer_clickhouse_activity(self):
+        app = create_app()
+        with app.app_context():
+            for activity, model in (("daily_activity", DailyActivityRecord),
+                                    ("listening_activity", ListeningActivityRecord)):
+                with self.subTest(activity=activity):
+                    original, spark_start_2, _, spark_start_1, _ = insert_test_stats(
+                        activity, "week", f"user_{activity}_db_data_for_api_test_week.json"
+                    )
+                    database = f"clickhouse_{activity}_week_20260101000000000000"
+                    couchdb.create_database(database)
+                    db_stats.insert(database, 100, 200, original[:1])
+
+                    app.config["PREFER_CLICKHOUSE_STATS"] = False
+                    self.assertEqual(db_stats.get(1, activity, "week", model).from_ts, spark_start_1)
+                    app.config["PREFER_CLICKHOUSE_STATS"] = True
+                    self.assertEqual(db_stats.get(1, activity, "week", model).from_ts, 100)
+                    self.assertEqual(db_stats.get(2, activity, "week", model).from_ts, spark_start_2)
+                    self.assertIsNone(db_stats.get(3, activity, "week", model))
