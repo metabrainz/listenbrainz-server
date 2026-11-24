@@ -22,6 +22,12 @@ def init_schema():
     send_request_to_clickhouse("clickhouse.schema.init")
 
 
+@cli.command(name="update_metadata_cache")
+def update_metadata_cache():
+    """Refresh the MusicBrainz and ListenBrainz metadata tables in ClickHouse."""
+    send_request_to_clickhouse("clickhouse.update_metadata_cache")
+
+
 @cli.command(name="import_full_dump")
 @click.option("--dump-id", type=click.IntRange(min=1), default=None, help="Import this full dump; defaults to the latest.")
 @click.option("--workers", type=int, default=4, help="Number of parallel workers for loading")

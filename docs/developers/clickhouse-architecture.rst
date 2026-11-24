@@ -12,6 +12,34 @@ through RabbitMQ to a separate consumer that writes them to CouchDB.
    clickhouse-imports
    clickhouse-stats
 
+Metadata caches
+---------------
+
+Run ``python manage.py clickhouse update_metadata_cache`` to queue the
+ClickHouse equivalent of Spark's ``import.pg_metadata_tables`` job.
+The worker reads MusicBrainz PostgreSQL through ``MB_DATABASE_URI`` and
+refreshes these ClickHouse tables using the same source queries as Spark.
+
+* ``artist_country_cache`` contains three-letter ISO country codes.
+  ``artist_credit_cache`` preserves credit positions and join phrases.
+* ``recording_length_cache`` includes recording redirects.
+  ``recording_artist_cache``, ``release_metadata_cache``, and
+  ``release_group_metadata_cache`` preserve the order of artist credits.
+* The recording, artist, and release-group tag and genre caches are all keyed
+  by recording MBID. For example, ``artist_genre_cache`` contains genre counts
+  contributed by the recording's credited artists.
+
+The job also builds ``artist_metadata_cache`` with the MusicBrainz integer
+artist ID, MBID, and canonical name for every artist, including those without
+a country match. It refreshes ``recording_feedback_cache`` from ListenBrainz
+PostgreSQL. With MusicBrainz unconfigured, only the feedback cache refreshes.
+
+For each cache, the worker streams rows into a session-local ClickHouse
+table, then replaces the live table's single partition atomically. Readers
+keep the previous contents if loading fails. ClickHouse discards temporary
+tables when the session expires. Retrying the job refreshes all caches.
+If jobs overlap, the last successful publication wins for each table.
+
 Listen changes and aggregates
 -----------------------------
 
