@@ -115,11 +115,20 @@ class NavidromeService:
         """Retrieve navidrome connection details and generate fresh authentication parameters,
            if include_token is True, to make API requests.
         """
-        try:
-            connection = db_navidrome.get_user_token(db_conn, user_id)
-            if not connection:
-                return None
+        connection = db_navidrome.get_user_token(db_conn, user_id)
+        if not connection:
+            return None
+        return self.get_auth_params(user_id, connection, include_token)
 
+    def get_auth_params(self, user_id: int, connection: dict, include_token: bool = True) -> Optional[dict[str, str]]:
+        """Generate the authentication parameters for an already fetched Navidrome connection.
+
+        Args:
+            user_id: the ListenBrainz row ID of the user, for logging
+            connection: a dict with the connection's encrypted_password, username and host_url
+            include_token: whether to decrypt the password and generate a fresh token and salt
+        """
+        try:
             if include_token:
                 encrypted_password = connection["encrypted_password"]
                 password = self._decrypt_password(encrypted_password)

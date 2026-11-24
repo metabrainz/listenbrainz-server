@@ -2,16 +2,15 @@ import string
 import random
 
 import orjson
-from flask import current_app, request
+from flask import current_app, g, request
 from flask_login import current_user
 
 from listenbrainz.webserver import db_conn, meb_conn
 from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user, \
     get_current_critiquebrainz_user, get_current_musicbrainz_user, get_current_soundcloud_user, get_current_apple_music_user, \
     get_current_funkwhale_user, get_current_navidrome_user
-import listenbrainz.db.user_setting as db_usersetting
 import listenbrainz.db.donation as db_donation
-import listenbrainz.db.spotify as db_spotify
+from listenbrainz.db.global_props import get_global_props_data
 
 METABRAINZ_PROFILE_URL = "https://metabrainz.org/profile"
 EMAIL_REQUIRED_BLOG_URL = "https://blog.metabrainz.org/?p=8915"
@@ -73,6 +72,18 @@ def reformat_datetime(value, fmt="%b %d, %Y, %H:%M %Z"):
     return value.strftime(fmt)
 
 
+def get_current_user_page_data():
+    """ The logged-in user's data for an HTML page, fetched once per request, or None if nobody is logged in.
+
+    get_global_props and get_initial_alerts both run on every rendered page and share this.
+    """
+    if not current_user.is_authenticated:
+        return None
+    if "global_props_data" not in g:
+        g.global_props_data = get_global_props_data(db_conn, current_user.id)
+    return g.global_props_data
+
+
 def get_global_props():
     """Generate React props that should be available on all html pages.
     These are passed into the template context on website blueprints as
@@ -85,6 +96,7 @@ def get_global_props():
      - user preferences
     """
     current_user_data = {}
+    data = get_current_user_page_data()
     if current_user.is_authenticated:
         current_user_data = {
             "id": current_user.id,
@@ -99,30 +111,32 @@ def get_global_props():
         "websockets_url": current_app.config["WEBSOCKETS_SERVER_URL"],
         "sentry_dsn": sentry_config.get("dsn"),
         "current_user": current_user_data,
-        "spotify": get_current_spotify_user(),
+        "spotify": get_current_spotify_user(data),
         "youtube": get_current_youtube_user(),
-        "critiquebrainz": get_current_critiquebrainz_user(),
-        "musicbrainz": get_current_musicbrainz_user(),
-        "soundcloud": get_current_soundcloud_user(),
-        "appleMusic": get_current_apple_music_user(),
-        "funkwhale": get_current_funkwhale_user(),
-        "navidrome": get_current_navidrome_user(),
+        "critiquebrainz": get_current_critiquebrainz_user(data),
+        "musicbrainz": get_current_musicbrainz_user(data),
+        "soundcloud": get_current_soundcloud_user(data),
+        "appleMusic": get_current_apple_music_user(data),
+        "funkwhale": get_current_funkwhale_user(data),
+        "navidrome": get_current_navidrome_user(data),
         "sentry_traces_sample_rate": sentry_config.get("traces_sample_rate", 0.0),
     }
 
     if current_user.is_authenticated:
-        brainzplayer_props = db_usersetting.get_brainzplayer_prefs(db_conn, current_user.id)
-        if brainzplayer_props is not None:
-            props["user_preferences"] = brainzplayer_props
+        user_setting = data["user_setting"]
+        if user_setting is not None:
+            props["user_preferences"] = {"brainzplayer": user_setting["brainzplayer"]}
+            if user_setting["flair"] is not None:
+                props["flair"] = user_setting["flair"]
 
-        flair_props = db_usersetting.get_flair(db_conn, current_user.id)
-        if flair_props is not None:
-            props["flair"] = flair_props
-
-        if meb_conn:
+        # the flair is cosmetic, the page must not fail because the MetaBrainz database is unavailable
+        try:
             show_flair = db_donation.is_user_eligible_donor(meb_conn, current_user.musicbrainz_row_id)
-            if show_flair is not None:
-                props["show_flair"] = show_flair
+        except Exception:
+            current_app.logger.error("Could not check donor flair for user %s", current_user.id, exc_info=True)
+            show_flair = None
+        if show_flair is not None:
+            props["show_flair"] = show_flair
 
     return orjson.dumps(props).decode("utf-8")
 
@@ -145,22 +159,18 @@ def get_initial_alerts():
             "message": message["message"],
         })
 
-    if current_user.is_authenticated:
-        try:
-            spotify_details = db_spotify.get_user_import_details(db_conn, current_user.id)
-        except Exception:
-            current_app.logger.error("Could not load Spotify import status for initial alerts", exc_info=True)
-        else:
-            error = spotify_details.get("error") if spotify_details else None
-            if error and error.get("reason") == "invalid_grant":
-                alerts.append({
-                    "id": "spotify-reconnect-required",
-                    "level": "error",
-                    "message": (
-                        'Your Spotify connection has expired or been revoked, so imports have stopped. '
-                        '<a href="/settings/music-services/details/">Reconnect Spotify</a> to resume imports.'
-                    ),
-                })
+    data = get_current_user_page_data()
+    if data is not None:
+        error = data["spotify_import_error"]
+        if error and error.get("reason") == "invalid_grant":
+            alerts.append({
+                "id": "spotify-reconnect-required",
+                "level": "error",
+                "message": (
+                    'Your Spotify connection has expired or been revoked, so imports have stopped. '
+                    '<a href="/settings/music-services/details/">Reconnect Spotify</a> to resume imports.'
+                ),
+            })
 
     return orjson.dumps(alerts).decode("utf-8")
 

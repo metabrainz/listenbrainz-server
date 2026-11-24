@@ -8,11 +8,27 @@ from flask import session
 import listenbrainz.db.user as db_user
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.tests.integration import IntegrationTestCase
-from listenbrainz.webserver.login import provider
+from listenbrainz.webserver import db_conn
+from listenbrainz.webserver.login import load_user, provider
 from listenbrainz.webserver.testing import ServerTestCase
 
 
 class LoginViewsTestCase(ServerTestCase):
+
+    def test_load_user_releases_connection_before_request_ends(self):
+        with self.app.test_request_context(), mock.patch.object(
+            db_user, "get_by_login_id", wraps=db_user.get_by_login_id
+        ) as lookup:
+            self.assertIsNone(load_user("00000000-0000-0000-0000-000000000000"))
+            self.assertTrue(lookup.call_args.args[0].closed)
+
+    def test_load_user_reuses_request_transaction(self):
+        with self.app.test_request_context(), db_conn.begin() as transaction, mock.patch.object(
+            db_user, "get_by_login_id", wraps=db_user.get_by_login_id
+        ) as lookup:
+            self.assertIsNone(load_user("00000000-0000-0000-0000-000000000000"))
+            self.assertIs(lookup.call_args.args[0], transaction.connection)
+            self.assertTrue(transaction.is_active)
 
     def test_login_musicbrainz_redirects(self):
         response = self.client.get(self.custom_url_for('login.musicbrainz'))

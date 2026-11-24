@@ -3,7 +3,7 @@ from flask_login import LoginManager, UserMixin, current_user
 from functools import wraps
 import listenbrainz.db.user as db_user
 
-from listenbrainz.webserver import db_conn
+from listenbrainz.webserver import auth_db_connection
 from listenbrainz.webserver.errors import APIUnauthorized
 
 login_manager = LoginManager()
@@ -49,10 +49,13 @@ class User(UserMixin):
 
 @login_manager.user_loader
 def load_user(user_login_id):
+    conn = None
     try:
-        user = db_user.get_by_login_id(db_conn, user_login_id)
+        with auth_db_connection() as conn:
+            user = db_user.get_by_login_id(conn, user_login_id)
     except Exception as e:
-        db_conn.rollback()
+        if conn is not None and not conn.closed:
+            conn.rollback()
         current_app.logger.error("Error while getting user by login ID: %s", str(e), exc_info=True)
         return None
     if user:

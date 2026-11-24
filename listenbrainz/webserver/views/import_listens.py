@@ -140,7 +140,7 @@ def create_import_task():
 
         if result is None:
             delete_import_file(saved_filename)
-            raise APIBadRequest(message="Data import already requested.")
+            raise APIBadRequest(message="Another of your imports is still queued, please try again once it has finished.")
 
         return jsonify(result)
 

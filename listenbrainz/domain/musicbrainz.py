@@ -7,19 +7,22 @@ from listenbrainz.domain.brainz_service import BaseBrainzService
 MUSICBRAINZ_SCOPES = ["musicbrainz:tag", "musicbrainz:rating", "profile", "email", "synapse:notifications:inbox"]
 
 
+def get_musicbrainz_service_type() -> ExternalServiceType:
+    """ The service type MusicBrainz tokens of this ListenBrainz deployment are stored under. """
+    # these are not MB deployments but LB deployments
+    from listenbrainz.webserver import deploy_env
+    if deploy_env == "test":
+        return ExternalServiceType.MUSICBRAINZ_TEST
+    elif deploy_env == "beta":
+        return ExternalServiceType.MUSICBRAINZ_BETA
+    return ExternalServiceType.MUSICBRAINZ_PROD
+
+
 class MusicBrainzService(BaseBrainzService):
 
     def __init__(self):
-        # these are not MB deployments but LB deployments
-        from listenbrainz.webserver import deploy_env
-        if deploy_env == "test":
-            service = ExternalServiceType.MUSICBRAINZ_TEST
-        elif deploy_env == "beta":
-            service = ExternalServiceType.MUSICBRAINZ_BETA
-        else:
-            service = ExternalServiceType.MUSICBRAINZ_PROD
         super(MusicBrainzService, self).__init__(
-            service=service,
+            service=get_musicbrainz_service_type(),
             client_id=current_app.config["OAUTH_CLIENT_ID"],
             client_secret=current_app.config["OAUTH_CLIENT_SECRET"],
             redirect_uri=url_for("login.musicbrainz_post", _external=True),

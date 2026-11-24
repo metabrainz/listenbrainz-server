@@ -275,8 +275,7 @@ class SpotifyImporter(ListensImporter):
                 retry=False,
                 error_reason="invalid_grant",
             )
-            if not current_app.config['TESTING']:
-                self.notify_error(user['musicbrainz_id'], error_message)
+            self.notify_new_error(user, error_message, retry=False)
             # Since July 20th 2026, Spotify expires refresh tokens after 6 months
             # and returns invalid_grant when it has expired or been revoked.
             # See https://developer.spotify.com/blog/2026-06-18-refresh-token-expiration
@@ -286,8 +285,7 @@ class SpotifyImporter(ListensImporter):
             # if it is an error from the Spotify API, show the error message to the user
             listens_count = user["status"]["count"] if user["status"] else 0
             self.service.update_status(user['user_id'], "Error", listens_count, error_message=str(e))
-            if not current_app.config['TESTING']:
-                self.notify_error(user['musicbrainz_id'], str(e))
+            self.notify_new_error(user, str(e), retry=True)
             raise ExternalServiceError("Could not refresh user token from spotify")
 
 

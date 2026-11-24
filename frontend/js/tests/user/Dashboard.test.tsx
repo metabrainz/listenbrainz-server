@@ -14,6 +14,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { SetupServerApi, setupServer } from "msw/node";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MemoryRouter } from "react-router";
 
 import * as recentListensProps from "../__mocks__/recentListensProps.json";
 import Listens, { ListensProps } from "../../src/user/Dashboard";
@@ -74,25 +75,34 @@ let mockSearchParam = {};
 jest.mock("react-router", () => ({
   ...jest.requireActual("react-router"),
   useSearchParams: () => {
-    const [params, setParams] = React.useState(
-      new URLSearchParams(mockSearchParam)
-    );
+    const [params, setParams] = jest
+      .requireActual("react-router")
+      .useSearchParams(mockSearchParam);
     return [
       params,
       (newParams: typeof mockSearchParam) => {
         mockSearchParam = newParams;
-        setParams(new URLSearchParams(newParams));
+        setParams(newParams);
       },
     ];
   },
 }));
 
-jest.mock("react-datetime-picker/dist/entry.nostyle", () => (props: any) => (
-  <input
-    data-testid="mock-date-picker"
-    onChange={(e) => props.onChange(new Date(e.target.value))}
-  />
-));
+jest.mock("react-datetime-picker/dist/entry.nostyle", () => {
+  function MockDateTimePicker({
+    onChange,
+  }: {
+    onChange: (date: Date) => void;
+  }) {
+    return (
+      <input
+        data-testid="mock-date-picker"
+        onChange={(e) => onChange(new Date(e.target.value))}
+      />
+    );
+  }
+  return MockDateTimePicker;
+});
 
 describe("Dashboard page", () => {
   jest.setTimeout(10000);
@@ -127,6 +137,9 @@ describe("Dashboard page", () => {
     mockSearchParam = {};
     await queryClient.cancelQueries();
     queryClient.clear();
+    server.resetHandlers();
+    mockSearchParam = {};
+    window.history.replaceState({}, "", "/");
   });
   afterAll(() => {
     server.close();
@@ -168,7 +181,7 @@ describe("Dashboard page", () => {
       const state = queryClient.getQueryState(queryKey);
       expect(state?.status === "success").toBeTruthy();
     });
-    
+
     // Ensure we show a listen count card component, but don't test the contents
     // Tests for it are in ListenCountCard.test.tsx
     screen.getByTestId("listen-count-card");
@@ -532,6 +545,194 @@ describe("Dashboard page", () => {
   describe("Pagination", () => {
     afterEach(() => {
       jest.clearAllMocks();
+    });
+
+    const deleteListenCard = async (listenCard: HTMLElement) => {
+      await userEvent.click(
+        within(listenCard).getByRole("menuitem", { name: "Delete Listen" })
+      );
+      await waitForElementToBeRemoved(listenCard, { timeout: 2500 });
+    };
+
+    it.each(["newest", "oldest"])(
+      "keeps page navigation after deleting every visible listen (%s first)",
+      async (firstDeleted) => {
+        server.use(
+          http.post("/", () =>
+            HttpResponse.json({
+              ...props,
+              listens: [listens[0], listens[listens.length - 1]],
+              latestListenTs: 1586524000,
+              userPinnedRecording: undefined,
+            })
+          )
+        );
+
+        renderWithProviders(
+          <Listens />,
+          { currentUser },
+          { wrapper: reactQueryWrapper }
+        );
+
+        const listensContainer = await screen.findByTestId("listens");
+        const listenCards = within(listensContainer).getAllByTestId("listen");
+        if (firstDeleted === "oldest") {
+          listenCards.reverse();
+        }
+        await deleteListenCard(listenCards[0]);
+        expect(
+          screen.getByLabelText("Navigate to more recent listens")
+        ).toHaveAttribute("href", "/?min_ts=1586523524");
+        expect(
+          screen.getByLabelText("Navigate to older listens")
+        ).toHaveAttribute("href", "/?max_ts=1586440536");
+        await deleteListenCard(listenCards[1]);
+
+        const newerButton = screen.getByLabelText(
+          "Navigate to more recent listens"
+        );
+        expect(newerButton).toHaveAttribute("aria-disabled", "false");
+        expect(newerButton).toHaveAttribute("href", "/?min_ts=1586523524");
+        const olderButton = screen.getByLabelText("Navigate to older listens");
+        expect(olderButton).toHaveAttribute("aria-disabled", "false");
+        expect(olderButton).toHaveAttribute("href", "/?max_ts=1586440536");
+        expect(screen.getByText("No more listens to show")).toBeInTheDocument();
+        expect(screen.queryByText("Get listening")).not.toBeInTheDocument();
+      }
+    );
+
+    it("loads the older page after deleting every visible listen", async () => {
+      server.use(
+        http.post("/", () =>
+          HttpResponse.json({
+            ...props,
+            listens: [listens[0]],
+            userPinnedRecording: undefined,
+          })
+        )
+      );
+
+      renderWithProviders(
+        <MemoryRouter>
+          <Listens />
+        </MemoryRouter>,
+        { currentUser },
+        { wrapper: reactQueryWrapper },
+        false
+      );
+
+      const listenCard = await screen.findByTestId("listen");
+      await deleteListenCard(listenCard);
+
+      server.use(
+        http.post("/", () =>
+          HttpResponse.json({
+            ...props,
+            listens: [
+              {
+                ...listens[0],
+                listened_at: 1586400000,
+                track_metadata: {
+                  ...listens[0].track_metadata,
+                  track_name: "Older page track",
+                },
+              },
+            ],
+            oldestListenTs: 1586300000,
+            userPinnedRecording: undefined,
+          })
+        )
+      );
+
+      await userEvent.click(screen.getByLabelText("Navigate to older listens"));
+
+      expect(await screen.findByTitle("Older page track")).toBeInTheDocument();
+      expect(
+        queryClient.getQueryState(["dashboard", {}, { max_ts: "1586523524" }])
+          ?.status
+      ).toBe("success");
+      expect(
+        screen.getByLabelText("Navigate to more recent listens")
+      ).toHaveAttribute("href", "/?min_ts=1586400000");
+      expect(
+        screen.getByLabelText("Navigate to older listens")
+      ).toHaveAttribute("href", "/?max_ts=1586400000");
+    });
+
+    it.each([
+      ["newest", 1586523524, 1586440000, "true", "false"],
+      ["oldest", 1586524000, 1586523524, "false", "true"],
+    ])(
+      "preserves navigation limits after deleting the last listen on the %s page",
+      async (
+        _page,
+        newestTimestamp,
+        oldestTimestamp,
+        newerDisabled,
+        olderDisabled
+      ) => {
+        server.use(
+          http.post("/", () =>
+            HttpResponse.json({
+              ...props,
+              listens: [listens[0]],
+              latestListenTs: newestTimestamp,
+              oldestListenTs: oldestTimestamp,
+              userPinnedRecording: undefined,
+            })
+          )
+        );
+
+        renderWithProviders(
+          <Listens />,
+          { currentUser },
+          { wrapper: reactQueryWrapper }
+        );
+
+        const listenCard = await screen.findByTestId("listen");
+        await deleteListenCard(listenCard);
+
+        expect(
+          screen.getByLabelText("Navigate to more recent listens")
+        ).toHaveAttribute("aria-disabled", newerDisabled);
+        expect(
+          screen.getByLabelText("Navigate to most recent listens")
+        ).toHaveAttribute("aria-disabled", newerDisabled);
+        expect(
+          screen.getByLabelText("Navigate to older listens")
+        ).toHaveAttribute("aria-disabled", olderDisabled);
+        expect(
+          screen.getByLabelText("Navigate to oldest listens")
+        ).toHaveAttribute("aria-disabled", olderDisabled);
+      }
+    );
+
+    it("does not show pagination for an account with no listens", async () => {
+      server.use(
+        http.post("/", () =>
+          HttpResponse.json({
+            ...props,
+            listens: [],
+            latestListenTs: 0,
+            oldestListenTs: 0,
+            userPinnedRecording: undefined,
+          })
+        )
+      );
+
+      renderWithProviders(
+        <Listens />,
+        { currentUser },
+        { wrapper: reactQueryWrapper }
+      );
+
+      await waitFor(() => {
+        expect(queryClient.getQueryState(queryKey)?.status).toBe("success");
+      });
+      expect(screen.getByText("Get listening")).toBeInTheDocument();
+      expect(
+        screen.queryByLabelText("Navigate to older listens")
+      ).not.toBeInTheDocument();
     });
 
     describe("handleClickOlder", () => {

@@ -124,6 +124,21 @@ class ConvertListensTestCase(DatabaseTestCase):
             mock_notify_error.assert_called_once_with(self.user['musicbrainz_id'], 'api borked')
             mock_update.assert_called_once()
 
+    @patch.object(SpotifyImporter, 'notify_error')
+    @patch.object(SpotifyImporter, 'make_api_request')
+    def test_no_notification_while_already_in_error(self, mock_make_api_request, mock_notify_error):
+        db_import.update_status(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY, "Error", 0,
+                                error={"message": "api borked", "retry": True})
+        mock_make_api_request.side_effect = ExternalServiceAPIError('api borked')
+        app = listenbrainz.webserver.create_app()
+        app.config['TESTING'] = False
+        with app.app_context():
+            importer = SpotifyImporter()
+            importer.exclude_error = False
+            success, failure = importer.process_all_users()
+        self.assertEqual(failure, 1)
+        mock_notify_error.assert_not_called()
+
     @patch('listenbrainz.domain.spotify.SpotifyService.refresh_access_token')
     @patch.object(SpotifyImporter, 'notify_error')
     def test_notification_on_invalid_grant(self, mock_notify_error, mock_refresh_access_token):

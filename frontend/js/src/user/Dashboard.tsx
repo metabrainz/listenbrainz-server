@@ -53,7 +53,12 @@ export type ListensProps = {
   already_reported_user: boolean;
 };
 
-type ListenLoaderData = ListensProps;
+type ListenLoaderData = ListensProps & {
+  pageTimestamps?: {
+    newest: number;
+    oldest: number;
+  };
+};
 
 export default function Listen() {
   const location = useLocation();
@@ -82,10 +87,13 @@ export default function Listen() {
     latestListenTs,
     oldestListenTs,
     already_reported_user = false,
+    pageTimestamps,
   } = data || {};
 
-  const previousListenTs = listens[0]?.listened_at;
-  const nextListenTs = listens[listens.length - 1]?.listened_at;
+  const previousListenTs = pageTimestamps?.newest ?? listens[0]?.listened_at;
+  const nextListenTs =
+    pageTimestamps?.oldest ?? listens[listens.length - 1]?.listened_at;
+  const hasListenHistory = previousListenTs !== undefined;
 
   const pageKey = `${user?.name || ""}:${location.pathname}${location.search}`;
   const lastPageTimestampsRef = React.useRef<{
@@ -391,11 +399,16 @@ export default function Listen() {
     mutationFn: deleteListen,
     onSuccess: (newlyDeletedListen) => {
       queryClient.setQueryData<ListenLoaderData>(queryKey, (oldData) => {
-        if (!oldData?.listens || !newlyDeletedListen) {
+        if (!oldData?.listens?.length || !newlyDeletedListen) {
           return oldData;
         }
         return {
           ...oldData,
+          // Keep this page's boundaries when deleting its first or last listen.
+          pageTimestamps: oldData.pageTimestamps ?? {
+            newest: oldData.listens[0].listened_at,
+            oldest: oldData.listens[oldData.listens.length - 1].listened_at,
+          },
           listens: _.without(oldData.listens, newlyDeletedListen),
         };
       });
