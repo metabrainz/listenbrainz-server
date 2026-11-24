@@ -73,6 +73,15 @@ def get(user_id, stats_type, stats_range, stats_model) -> Optional[StatApi]:
             stats_model: the pydantic model for the stats
     """
     prefix = f"{stats_type}_{stats_range}"
+    if stats_type in ("daily_activity", "listening_activity") and current_app.config.get("PREFER_CLICKHOUSE_STATS"):
+        stats = _get_user_stat(f"clickhouse_{prefix}_", user_id, stats_range, stats_model)
+        if stats is not None:
+            stats.source = "clickhouse"
+            return stats
+    return _get_user_stat(prefix, user_id, stats_range, stats_model)
+
+
+def _get_user_stat(prefix, user_id, stats_range, stats_model) -> Optional[StatApi]:
     try:
         data = couchdb.fetch_data(prefix, user_id)
         if data is not None:
@@ -85,14 +94,8 @@ def get(user_id, stats_type, stats_range, stats_model) -> Optional[StatApi]:
                 data=data["data"],
                 last_updated=data["last_updated"]
             )
-    except HTTPError as e:
-        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
-    except (ValidationError, KeyError) as e:
-        current_app.logger.error(
-            f"{e}. Occurred while processing {stats_range} {stats_type} for user_id: {user_id}"
-            f" and data: {orjson.dumps(data, option=orjson.OPT_INDENT_2).decode('utf-8')}", exc_info=True)
-    except Exception as e:
-        current_app.logger.error(f"Error connecting to CouchDB: {e}")
+    except Exception:
+        current_app.logger.exception("Error reading CouchDB stats for prefix %s and user %s", prefix, user_id)
 
     return None
 
