@@ -25,8 +25,8 @@ jest.mock("react-router", () => ({
   useLoaderData: () => ({ mode: "easy", prompt: "artist:(Moondog)" }),
 }));
 
+// Like the LB Radio API response, tracks don't come with an id
 const makeTrack = (id: string, title: string): JSPFTrack => ({
-  id,
   identifier: [`https://musicbrainz.org/recording/${id}`],
   title,
   creator: "Moondog",
@@ -122,5 +122,19 @@ describe("LB Radio page", () => {
     await waitFor(() => {
       expect(getQueueTitles()).toEqual(["Stamping Ground", "Bird's Lament"]);
     });
+  });
+
+  it("gives each track its recording MBID as id for the sortable list", async () => {
+    renderLBRadio([
+      makeTrack("aaaaaaaa-0000-0000-0000-000000000001", "Bird's Lament"),
+      makeTrack("aaaaaaaa-0000-0000-0000-000000000002", "Stamping Ground"),
+    ]);
+    await getRemoveButtons();
+    expect(
+      (sortableProps as any).list.map((track: JSPFTrack) => track.id)
+    ).toEqual([
+      "aaaaaaaa-0000-0000-0000-000000000001",
+      "aaaaaaaa-0000-0000-0000-000000000002",
+    ]);
   });
 });
