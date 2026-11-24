@@ -1,38 +1,17 @@
 from unittest.mock import patch
-from uuid import uuid4
 
 from freezegun import freeze_time
-import requests
 
-from listenbrainz import config
 from listenbrainz.clickhouse.query_worker.listens.aggregates import LIVE_STREAM
 from listenbrainz.clickhouse.query_worker.listens.deletions import delete_matching_listens
 from listenbrainz.clickhouse.query_worker.query_map import functions
-from listenbrainz.clickhouse.query_worker.tests import ClickHouseTestCase
+from listenbrainz.clickhouse.query_worker.tests import ActivityTestCase
 from listenbrainz.clickhouse.result_consumer.handlers import get_handler
 from listenbrainz.db import couchdb
 
 
-class DailyActivityTestCase(ClickHouseTestCase):
-    def setUp(self):
-        super().setUp()
-        couchdb.init(config.COUCHDB_USER, config.COUCHDB_ADMIN_KEY, config.COUCHDB_HOST,
-                     config.COUCHDB_PORT, config.COUCHDB_DATABASE_PREFIX)
-        prefix = patch.object(couchdb, "_database_prefix", f"test_{uuid4().hex}_")
-        prefix.start()
-        self.addCleanup(prefix.stop)
-        self.addCleanup(self.clean_databases)
-
-    def clean_databases(self):
-        for database in couchdb.list_databases(""):
-            requests.delete(couchdb._get_database_url(database)).raise_for_status()
-
-    def refresh(self, ranges):
-        with patch.object(type(self.connection), "from_config", return_value=self.connection):
-            messages = list(functions["clickhouse.daily_activity"](ranges))
-        for message in messages:
-            get_handler(message["type"])(message)
-        return messages
+class DailyActivityTestCase(ActivityTestCase):
+    query_name = "clickhouse.daily_activity"
 
     def test_rollup_batches_and_replacement(self):
         self.client.command("""

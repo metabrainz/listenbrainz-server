@@ -51,5 +51,13 @@ def daily_activity(stats_ranges):
     send_request_to_clickhouse("clickhouse.daily_activity", stats_ranges=stats_ranges or ALLOWED_STATISTICS_RANGE)
 
 
+@cli.command(name="listening_activity")
+@click.option("--range", "stats_ranges", type=click.Choice(ALLOWED_STATISTICS_RANGE), multiple=True,
+              help="Stats range to refresh. Repeat to select several. Defaults to all ranges.")
+def listening_activity(stats_ranges):
+    """Compute user listening activity and store it in CouchDB."""
+    send_request_to_clickhouse("clickhouse.listening_activity", stats_ranges=stats_ranges or ALLOWED_STATISTICS_RANGE)
+
+
 if __name__ == '__main__':
     cli()

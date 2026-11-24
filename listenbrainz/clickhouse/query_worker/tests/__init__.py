@@ -10,20 +10,24 @@ import tarfile
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 from uuid import uuid4
 
 import clickhouse_connect
 import pyarrow.parquet as pq
+import requests
 from sqlalchemy import create_engine
 
-from listenbrainz.db import listens
-
+from listenbrainz import config
 from listenbrainz.clickhouse.query_worker.client import ClickHouseConnection
 from listenbrainz.clickhouse.query_worker.listens.ftp import DumpType
 from listenbrainz.clickhouse.query_worker.listens.load_dump import (
     STAGING_TABLE_PREFIX, _load_parquet_files, _prepare_import, read_archive,
 )
 from listenbrainz.clickhouse.query_worker.listens.schema import LISTEN_COLUMN_NAMES, ensure_schema
+from listenbrainz.clickhouse.query_worker.query_map import functions
+from listenbrainz.clickhouse.result_consumer.handlers import get_handler
+from listenbrainz.db import couchdb, listens
 
 TEST_DATA_PATH = Path(__file__).resolve().parents[4] / "listenbrainz_spark" / "testdata"
 
@@ -133,3 +137,25 @@ class DumpImportTestCase(ClickHouseTestCase):
     def load_spark_listens(self):
         for name in ("full-dump-1", "incremental-dump-2", "incremental-dump-3"):
             self.load_fixture(name)
+
+
+class ActivityTestCase(ClickHouseTestCase):
+    def setUp(self):
+        super().setUp()
+        couchdb.init(config.COUCHDB_USER, config.COUCHDB_ADMIN_KEY, config.COUCHDB_HOST,
+                     config.COUCHDB_PORT, config.COUCHDB_DATABASE_PREFIX)
+        prefix = patch.object(couchdb, "_database_prefix", f"test_{uuid4().hex}_")
+        prefix.start()
+        self.addCleanup(prefix.stop)
+        self.addCleanup(self.clean_databases)
+
+    def clean_databases(self):
+        for database in couchdb.list_databases(""):
+            requests.delete(couchdb._get_database_url(database)).raise_for_status()
+
+    def refresh(self, ranges):
+        with patch.object(type(self.connection), "from_config", return_value=self.connection):
+            messages = list(functions[self.query_name](ranges))
+        for message in messages:
+            get_handler(message["type"])(message)
+        return messages
