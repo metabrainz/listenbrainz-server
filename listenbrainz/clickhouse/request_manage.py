@@ -49,6 +49,14 @@ def import_incremental_dump(workers: int, max_dumps: int | None, dump_id: int | 
     send_request_to_clickhouse("clickhouse.import_incremental_dump", workers=workers, max_dumps=max_dumps, dump_id=dump_id)
 
 
+@cli.command(name="artists")
+@click.option("--range", "stats_ranges", type=click.Choice(ALLOWED_STATISTICS_RANGE), multiple=True,
+              help="Stats range to refresh. Repeat to select several. Defaults to all ranges.")
+def artists(stats_ranges):
+    """Compute per-user top artists and store the results in CouchDB."""
+    send_request_to_clickhouse("clickhouse.artists", stats_ranges=stats_ranges or ALLOWED_STATISTICS_RANGE)
+
+
 @cli.command(name="daily_activity")
 @click.option("--range", "stats_ranges", type=click.Choice(ALLOWED_STATISTICS_RANGE), multiple=True,
               help="Stats range to refresh. Repeat to select several. Defaults to all ranges.")

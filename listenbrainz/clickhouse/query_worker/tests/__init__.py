@@ -25,6 +25,7 @@ from listenbrainz.clickhouse.query_worker.listens.load_dump import (
     STAGING_TABLE_PREFIX, _load_parquet_files, _prepare_import, read_archive,
 )
 from listenbrainz.clickhouse.query_worker.listens.schema import LISTEN_COLUMN_NAMES, ensure_schema
+from listenbrainz.clickhouse.query_worker.metadata_tables import ARTIST_METADATA_CACHE
 from listenbrainz.clickhouse.query_worker.query_map import functions
 from listenbrainz.clickhouse.result_consumer.handlers import get_handler
 from listenbrainz.db import couchdb, listens
@@ -60,6 +61,8 @@ def archive_parquet_files(directory: Path, destination: Path) -> Path:
 
 
 class ClickHouseTestCase(unittest.TestCase):
+    mb_artists = ()
+
     def setUp(self):
         server = {
             "host": os.environ.get("CLICKHOUSE_TEST_HOST", "clickhouse"),
@@ -75,7 +78,15 @@ class ClickHouseTestCase(unittest.TestCase):
         self.connection = ClickHouseConnection(**server, database=database)
         self.client = self.connection.connect()
         self.addCleanup(self.client.close)
+        if self.mb_artists:
+            self.set_artist_cache(self.mb_artists)
         ensure_schema(self.client)
+
+    def set_artist_cache(self, artists):
+        table = ARTIST_METADATA_CACHE
+        self.client.command(f"CREATE OR REPLACE TABLE {table.name} ({table.columns}) "
+                            f"ENGINE = MergeTree ORDER BY {table.order_by}")
+        self.client.insert(table.name, artists)
 
     def listens(self) -> list[tuple]:
         """All columns of the listens in ClickHouse, sorted."""
@@ -120,7 +131,7 @@ class DumpImportTestCase(ClickHouseTestCase):
     def load_archive(self, archive: Path, dump_type: DumpType):
         """Exercise the shared loader with a local test archive."""
         parquet_files, _ = read_archive(archive)
-        _prepare_import(self.connection, self.listens_engine)
+        _prepare_import(self.connection, self.listens_engine, full_replacement=dump_type == DumpType.FULL)
         result = _load_parquet_files(parquet_files, self.connection, dump_type, workers=2)
         self.assert_hourly_counts_match_listens()
         return result

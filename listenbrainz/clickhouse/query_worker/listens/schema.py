@@ -61,8 +61,9 @@ def create_listens_table(ch_client: Client, name: str) -> None:
     ch_client.command(CREATE_LISTENS_TABLE.format(if_not_exists="", name=name))
 
 
-def ensure_schema(ch_client: Client) -> None:
+def ensure_schema(ch_client: Client, *, full_replacement: bool = False) -> None:
     """Create the schema; idempotent, so safe to call from every job."""
     for statement in CREATE_TABLES:
         ch_client.command(statement)
-    ensure_aggregates(ch_client)
+    if not full_replacement:
+        ensure_aggregates(ch_client)

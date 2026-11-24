@@ -37,7 +37,7 @@ from listenbrainz.clickhouse.query_worker.client import ClickHouseConnection
 from listenbrainz.clickhouse.query_worker.listens.deletions import apply_deletions, delete_matching_listens, sync_deletions
 from listenbrainz.clickhouse.query_worker.listens.ftp import DumpNotFoundException, DumpType, FTPDumpDownloader
 from listenbrainz.clickhouse.query_worker.listens.aggregates import (
-    LIVE_STREAM, attach_source, full_dump_aggregates, replace_live_aggregates, staged_source,
+    LIVE_STREAM, attach_source, full_dump_aggregates, recover_publication, replace_live_aggregates, staged_source,
 )
 from listenbrainz.clickhouse.query_worker.listens.import_state import INCREMENTAL_DUMP_STATE, get_import_state, set_import_state
 from listenbrainz.clickhouse.query_worker.listens.schema import LISTEN_COLUMN_NAMES, create_listens_table, ensure_schema
@@ -174,7 +174,7 @@ def drop_import_leftovers(client: Client) -> None:
 
 
 def swap_in_staged_listens(client: Client, table: str) -> None:
-    client.command("DROP VIEW listens_to_changes")
+    client.command("DROP VIEW IF EXISTS listens_to_changes")
     client.command(f"EXCHANGE TABLES {table} AND {LISTENS_TABLE}")
     attach_source(client, LISTENS_TABLE, LIVE_STREAM)
 
@@ -279,8 +279,14 @@ def _load_full_dump(parquet_files, connection, workers, client) -> dict:
         if not result["errors"]:
             apply_deletions(client, table, stream)
             set_import_state(client, INCREMENTAL_DUMP_STATE, 0)
-            replace_live_aggregates(client, stream)
-            swap_in_staged_listens(client, table)
+            try:
+                replace_live_aggregates(client, stream, table)
+                swap_in_staged_listens(client, table)
+            except Exception:
+                # Repair before staging is discarded. A killed worker leaves the
+                # source detached, so the next reader or incremental import repairs it.
+                recover_publication(client)
+                raise
             result["added"] = count_listens(client)
         return result
 
@@ -324,7 +330,7 @@ def _load_parquet_files(
     return result
 
 
-def _prepare_import(connection: ClickHouseConnection, listens_engine: Engine) -> None:
+def _prepare_import(connection: ClickHouseConnection, listens_engine: Engine, *, full_replacement: bool = False) -> None:
     """Prepare staging and reconcile stored listens with PostgreSQL deletion records.
 
     TODO: take an import lock here once imports can run concurrently, e.g. more than
@@ -333,9 +339,10 @@ def _prepare_import(connection: ClickHouseConnection, listens_engine: Engine) ->
     """
     with closing(create_client(connection, send_receive_timeout=PROCESS_SEND_RECEIVE_TIMEOUT)) as client:
         drop_import_leftovers(client)
-        ensure_schema(client)
+        ensure_schema(client, full_replacement=full_replacement)
         sync_deletions(client, listens_engine)
-        apply_deletions(client, LISTENS_TABLE, LIVE_STREAM)
+        stream = LIVE_STREAM if client.command("EXISTS TABLE listens_to_changes") else None
+        apply_deletions(client, LISTENS_TABLE, stream)
 
 
 def _import_dump(
@@ -390,7 +397,7 @@ def import_full_dump(
 
     The incremental dumps are caught up from it.
     """
-    _prepare_import(connection, listens_engine)
+    _prepare_import(connection, listens_engine, full_replacement=True)
     with downloader:
         dump_dir_name, dump_id = downloader.get_dump_name(DumpType.FULL, dump_id)
     logger.info("Loading full dump %d (%s)", dump_id, dump_dir_name)

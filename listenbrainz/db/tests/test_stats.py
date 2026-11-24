@@ -85,14 +85,15 @@ class StatsDatabaseTestCase(DatabaseTestCase):
                         exclude_count=True
                     )
 
-    def test_prefer_clickhouse_activity(self):
+    def test_prefer_clickhouse_stats(self):
         app = create_app()
         with app.app_context():
             for activity, model in (("daily_activity", DailyActivityRecord),
-                                    ("listening_activity", ListeningActivityRecord)):
+                                    ("listening_activity", ListeningActivityRecord), ("artists", EntityRecord)):
                 with self.subTest(activity=activity):
+                    fixture = "top_artists" if activity == "artists" else activity
                     original, spark_start_2, _, spark_start_1, _ = insert_test_stats(
-                        activity, "week", f"user_{activity}_db_data_for_api_test_week.json"
+                        activity, "week", f"user_{fixture}_db_data_for_api_test_week.json"
                     )
                     database = f"clickhouse_{activity}_week_20260101000000000000"
                     couchdb.create_database(database)

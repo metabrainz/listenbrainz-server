@@ -387,6 +387,21 @@ class StatsAPITestCase(IntegrationTestCase):
                                                query_string={'range': range_})
                     self.assertUserStatEqual(payload, response, entity, range_, total_count_key, payload[0]['count'])
 
+    def test_prefer_clickhouse_top_artists(self):
+        self.enterContext(patch.dict(self.app.config, PREFER_CLICKHOUSE_STATS=True))
+        url = self.custom_url_for("stats_api_v1.get_artist", user_name=self.user["musicbrainz_id"])
+        self.assertEqual(self.client.get(url).json["payload"]["from_ts"], 0)
+        database = "clickhouse_artists_all_time_20260101000000000000"
+        couchdb.create_database(database)
+        db_stats.insert(database, 100, 200, [
+            {"user_id": self.user["id"], "count": 1,
+             "data": [{"artist_name": "Unmapped", "artist_mbid": None, "listen_count": 5}]}
+        ])
+        payload = self.client.get(url).json["payload"]
+        self.assertEqual(payload["from_ts"], 100)
+        self.assertEqual(payload["total_artist_count"], 1)
+        self.assertEqual(payload["artists"][0]["artist_name"], "Unmapped")
+
     def test_activity_source(self):
         self.enterContext(patch.dict(self.app.config, PREFER_CLICKHOUSE_STATS=True))
         for activity in ("daily_activity", "listening_activity"):
