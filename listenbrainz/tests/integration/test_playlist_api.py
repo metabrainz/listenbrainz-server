@@ -396,6 +396,40 @@ class PlaylistAPITestCase(IntegrationTestCase):
             " recording_mbid. (e.g. https://musicbrainz.org/recording/8f3471b5-7e6a-48da-86a9-c1c07a0f47ae)"
         )
 
+        # submit a playlist with non-list track field
+        playlist = {
+            "playlist": {
+                "title": "no, you're a douche!",
+                "track": 123,
+            }
+        }
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "JSPF playlist 'track' field must be a list.")
+
+        # submit a playlist with non-dict track item
+        playlist = {
+            "playlist": {
+                "title": "no, you're a douche!",
+                "track": [123],
+            }
+        }
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(
+            response.json["error"],
+            "JSPF playlist track 0 must contain a identifier field having a fully qualified URI to a"
+            " recording_mbid. (e.g. https://musicbrainz.org/recording/8f3471b5-7e6a-48da-86a9-c1c07a0f47ae)"
+        )
+
     def test_playlist_create_with_collaborators(self):
         """ Test to ensure creating a playlist with collaborators works """
 
@@ -562,6 +596,46 @@ class PlaylistAPITestCase(IntegrationTestCase):
             json=add_recording
         )
         self.assert400(response)
+
+        # Missing track field in playlist add
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            json={"playlist": {"title": "some title"}}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "JSPF playlist must contain a non-empty 'track' list.")
+
+        # Empty track list in playlist add
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            json={"playlist": {"track": []}}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "JSPF playlist must contain a non-empty 'track' list.")
+
+        # Non-list track field in playlist add
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            json={"playlist": {"track": 123}}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "JSPF playlist 'track' field must be a list.")
+
+        # Non-dict track items in playlist add
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.add_playlist_item", playlist_mbid=playlist_mbid),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            json={"playlist": {"track": [123]}}
+        )
+        self.assert400(response)
+        self.assertEqual(
+            response.json["error"],
+            "JSPF playlist track 0 must contain a identifier field having a fully qualified URI to a"
+            " recording_mbid. (e.g. https://musicbrainz.org/recording/8f3471b5-7e6a-48da-86a9-c1c07a0f47ae)"
+        )
 
     def test_playlist_recording_add_multiple(self):
         """Test adding multiple recordings in one API call"""
