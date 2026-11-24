@@ -2,12 +2,8 @@
 import calendar
 from datetime import datetime, time, timedelta, timezone
 
-from more_itertools import chunked
-
-from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from data.stats_range import dates_for_stats_range
-from listenbrainz.clickhouse.query_worker.listens.aggregate_tables import HOURLY_COUNTS
-from listenbrainz.clickhouse.query_worker.listens.aggregates import aggregate_snapshot
+from listenbrainz.clickhouse.query_worker.activity import refresh_activity
 
 
 def daily_activity_rows(client, start_day, end_day):
@@ -35,25 +31,14 @@ def daily_activity_rows(client, start_day, end_day):
             }
 
 
+def _daily_activity_range(client, stats_range, as_of):
+    start, end = dates_for_stats_range(stats_range, as_of)
+    if stats_range == "all_time":
+        end = datetime.combine(as_of.date(), time.max, timezone.utc)
+    tomorrow = as_of.date() + timedelta(days=1)
+    end_day = tomorrow if stats_range == "all_time" else min(end.date(), tomorrow)
+    return start, end, daily_activity_rows(client, start.date(), end_day)
+
+
 def daily_activity(stats_ranges=None):
-    ranges = ALLOWED_STATISTICS_RANGE if stats_ranges is None else stats_ranges
-    if not ranges or any(r not in ALLOWED_STATISTICS_RANGE for r in ranges):
-        raise ValueError(f"Invalid daily activity ranges: {ranges}")
-    as_of = datetime.now(timezone.utc)
-    generation = as_of.strftime("%Y%m%d%H%M%S%f")
-    with aggregate_snapshot(HOURLY_COUNTS) as client:
-        for stats_range in dict.fromkeys(ranges):
-            database = f"clickhouse_daily_activity_{stats_range}_{generation}"
-            yield {"type": "clk_daily_activity_start", "database": database}
-            count = 0
-            start, end = dates_for_stats_range(stats_range, as_of)
-            if stats_range == "all_time":
-                end = datetime.combine(as_of.date(), time.max, timezone.utc)
-            tomorrow = as_of.date() + timedelta(days=1)
-            end_day = tomorrow if stats_range == "all_time" else min(end.date(), tomorrow)
-            rows = daily_activity_rows(client, start.date(), end_day)
-            for batch in chunked(rows, 25):
-                count += len(batch)
-                yield {"type": "clk_daily_activity", "database": database, "stats_range": stats_range,
-                       "from_ts": int(start.timestamp()), "to_ts": int(end.timestamp()), "data": batch}
-            yield {"type": "clk_daily_activity_end", "database": database, "user_count": count}
+    yield from refresh_activity("daily_activity", stats_ranges, _daily_activity_range)
