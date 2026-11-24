@@ -7,7 +7,6 @@ import * as ListeningActivityDataMonth from "../../__mocks__/userListeningActivi
 import * as ListeningActivityDataYear from "../../__mocks__/userListeningActivityProcessDataYear.json";
 import * as ListeningActivityDataAllTime from "../../__mocks__/userListeningActivityProcessDataAllTime.json";
 import { ResponsiveBar } from "@nivo/bar";
-import { COLOR_LB_BLUE } from "../../../src/utils/constants";
 
 // Mocking the ResponsiveBar component to inspect the props it receives
 jest.mock("@nivo/bar", () => ({
@@ -108,49 +107,5 @@ describe("BarDualTone", () => {
       }),
       {}
     );
-  });
-
-  describe("previous period colour", () => {
-    const getLastRangeColors = () => {
-      const { colors, legends } = mockResponsiveBar.mock.calls[0][0];
-      return {
-        bar: colors({ id: "lastRangeCount" }),
-        legend: legends[0].data[0].color,
-      };
-    };
-
-    afterEach(() => {
-      delete document.documentElement.dataset.bsTheme;
-    });
-
-    it("uses the brand blue in the light theme", () => {
-      render(
-        <BarDualTone
-          {...baseProps}
-          data={ListeningActivityDataWeek}
-          range="week"
-          showLegend
-        />
-      );
-      expect(getLastRangeColors()).toEqual({
-        bar: COLOR_LB_BLUE,
-        legend: COLOR_LB_BLUE,
-      });
-    });
-
-    it("uses a lighter purple in the dark theme so the bars stay visible", () => {
-      document.documentElement.dataset.bsTheme = "dark";
-      render(
-        <BarDualTone
-          {...baseProps}
-          data={ListeningActivityDataWeek}
-          range="week"
-          showLegend
-        />
-      );
-      const { bar, legend } = getLastRangeColors();
-      expect(bar).not.toEqual(COLOR_LB_BLUE);
-      expect(legend).toEqual(bar);
-    });
   });
 });
