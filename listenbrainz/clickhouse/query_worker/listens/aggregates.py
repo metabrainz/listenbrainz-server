@@ -4,19 +4,24 @@ from uuid import uuid4
 
 from listenbrainz.clickhouse.query_worker.client import ClickHouseConnection
 from listenbrainz.clickhouse.query_worker.listens.aggregate_tables import (
-    ARTIST_METADATA, DAILY_ARTIST_COUNTS, HOURLY_COUNTS, LISTEN_AGGREGATES, ListenAggregate,
+    ARTIST_METADATA, DAILY_ARTIST_COUNTS, DAILY_RELEASE_GROUP_COUNTS, HOURLY_COUNTS, LISTEN_AGGREGATES,
+    RELEASE_GROUP_METADATA, ListenAggregate,
 )
 
 
 LIVE_STREAM = "listen_changes"
+LOOKUP_AGGREGATES = {
+    "artist_lookup": (DAILY_ARTIST_COUNTS, ARTIST_METADATA),
+    "release_group_lookup": (DAILY_RELEASE_GROUP_COUNTS, RELEASE_GROUP_METADATA),
+}
 
 
 def _source_columns():
     return ", ".join(dict.fromkeys(col for table in LISTEN_AGGREGATES for col in table.source_columns))
 
 
-def _target(stream, table):
-    return table.name if stream == LIVE_STREAM else f"{stream}_{table.name}"
+def _target(stream, name):
+    return name if stream == LIVE_STREAM else f"{stream}_{name}"
 
 
 def _drop(client, name):
@@ -43,10 +48,6 @@ def staged_source(client, source, stream):
         _drop(client, source + "_to_changes")
 
 
-def _artist_lookup(stream):
-    return "artist_lookup" if stream == LIVE_STREAM else stream + "_artist_lookup"
-
-
 def _snapshot_artist_lookup(client, name):
     """Keep the same artist IDs for inserts and deletions until the next full build."""
     client.command(f"""
@@ -58,14 +59,46 @@ def _snapshot_artist_lookup(client, name):
                        "FROM artist_metadata_cache")
 
 
+def _snapshot_release_groups(client, stream):
+    """Store group metadata once, with a compact release-to-group lookup for incoming changes."""
+    lookup = _target(stream, "release_group_lookup")
+    metadata = _target(stream, RELEASE_GROUP_METADATA.name)
+    client.command(f"""
+        CREATE TABLE {lookup} (release_mbid UUID, group_mbid Nullable(UUID), has_title Bool)
+        ENGINE = Join(ANY, LEFT, release_mbid)
+    """)
+    if not (client.command("EXISTS TABLE release_metadata_cache")
+            and client.command("EXISTS TABLE release_group_metadata_cache")):
+        return
+    client.command(f"""
+        INSERT INTO {metadata}
+        SELECT (true, release_group_mbid), title, artist_credit_name, artist_credit_mbids, artists, caa_id,
+               caa_release_mbid
+          FROM release_group_metadata_cache
+    """)
+    client.command(f"""
+        INSERT INTO {lookup}
+        SELECT rel.release_mbid, rg.release_group_id.2, notEmpty(rg.release_group_name)
+          FROM release_metadata_cache AS rel
+         INNER JOIN {metadata} AS rg ON rel.release_group_mbid = rg.release_group_id.2
+    """)
+
+
 def _attach_aggregate(client, stream, table):
-    target = _target(stream, table)
-    select = table.select.format(source=stream, artist_lookup=_artist_lookup(stream))
+    target = _target(stream, table.name)
+    select = table.select.format(source=stream, **{name: _target(stream, name) for name in LOOKUP_AGGREGATES})
     client.command(f"CREATE MATERIALIZED VIEW {target}_mv TO {target} AS {select}")
 
 
-def _create_target(client, stream, table):
-    client.command(f"CREATE TABLE {_target(stream, table)} ({table.columns}) ENGINE = {table.engine}")
+def _build_aggregates(client, stream, tables):
+    for table in tables:
+        client.command(f"CREATE TABLE {_target(stream, table.name)} ({table.columns}) ENGINE = {table.engine}")
+    if DAILY_ARTIST_COUNTS in tables:
+        _snapshot_artist_lookup(client, _target(stream, "artist_lookup"))
+    if DAILY_RELEASE_GROUP_COUNTS in tables:
+        _snapshot_release_groups(client, stream)
+    for table in tables:
+        _attach_aggregate(client, stream, table)
 
 
 def send_changes(client, stream, source, sign, where="1", parameters=None):
@@ -88,8 +121,9 @@ def ensure_aggregates(client):
     missing = {table for table in LISTEN_AGGREGATES
                if missing_stream or not {table.name, table.name + "_mv"} <= objects}
     # The counts and their labels must use the same MusicBrainz lookup generation.
-    if missing.intersection((DAILY_ARTIST_COUNTS, ARTIST_METADATA)) or _artist_lookup(LIVE_STREAM) not in objects:
-        missing.update((DAILY_ARTIST_COUNTS, ARTIST_METADATA))
+    for lookup, tables in LOOKUP_AGGREGATES.items():
+        if missing.intersection(tables) or lookup not in objects:
+            missing.update(tables)
     if HOURLY_COUNTS not in missing and client.command("""
         SELECT count() FROM system.columns WHERE database = currentDatabase()
           AND table = 'hourly_listen_counts' AND name = 'midnight_listen_count'
@@ -112,14 +146,12 @@ def ensure_aggregates(client):
             _drop(client, legacy)
     _drop(client, LIVE_STREAM)
     _create_stream(client, LIVE_STREAM, "listens")
-    if DAILY_ARTIST_COUNTS in missing:
-        lookup = _artist_lookup(LIVE_STREAM)
-        _drop(client, lookup)
-        _snapshot_artist_lookup(client, lookup)
+    for lookup, tables in LOOKUP_AGGREGATES.items():
+        if missing.intersection(tables):
+            _drop(client, lookup)
     for table in missing:
         _drop(client, table.name)
-        _create_target(client, LIVE_STREAM, table)
-        _attach_aggregate(client, LIVE_STREAM, table)
+    _build_aggregates(client, LIVE_STREAM, missing)
     send_changes(client, LIVE_STREAM, "listens", 1)
     for table in LISTEN_AGGREGATES:
         if table not in missing:
@@ -133,16 +165,14 @@ def full_dump_aggregates(client, source):
     stream = source + "_changes"
     _create_stream(client, stream, source)
     try:
-        _snapshot_artist_lookup(client, _artist_lookup(stream))
-        for table in LISTEN_AGGREGATES:
-            _create_target(client, stream, table)
-            _attach_aggregate(client, stream, table)
+        _build_aggregates(client, stream, LISTEN_AGGREGATES)
         yield stream
     finally:
         for table in LISTEN_AGGREGATES:
-            _drop(client, _target(stream, table) + "_mv")
-            _drop(client, _target(stream, table))
-        _drop(client, _artist_lookup(stream))
+            _drop(client, _target(stream, table.name) + "_mv")
+            _drop(client, _target(stream, table.name))
+        for lookup in LOOKUP_AGGREGATES:
+            _drop(client, _target(stream, lookup))
         _drop(client, stream)
 
 
@@ -161,9 +191,8 @@ def replace_live_aggregates(client, staged_stream, staged_listens):
     _drop(client, LIVE_STREAM)
     _create_stream(client, LIVE_STREAM, staged_listens)
 
-    targets = [(_artist_lookup(staged_stream), _artist_lookup(LIVE_STREAM))]
-    targets.extend((_target(staged_stream, table), table.name) for table in LISTEN_AGGREGATES)
-    for staged, live in targets:
+    for live in [*LOOKUP_AGGREGATES, *(table.name for table in LISTEN_AGGREGATES)]:
+        staged = _target(staged_stream, live)
         if live in objects:
             client.command(f"EXCHANGE TABLES {staged} AND {live}")
         else:
