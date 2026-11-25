@@ -24,13 +24,11 @@ class BackgroundTestCase(DatabaseTestCase):
             filename=f"{service}.zip",
         )
 
-    def test_second_import_while_one_is_queued(self):
+    def test_imports_for_several_services_are_queued(self):
         self.assertIsNotNone(self._create_import("spotify"))
         self.db_conn.commit()
+        self.assertIsNotNone(self._create_import("librefm"))
+        self.db_conn.commit()
 
-        # an import for a different service passes the API's per-service check but gets no task row
-        self.assertIsNone(self._create_import("librefm"))
-        self.db_conn.rollback()
-
-        count = self.db_conn.execute(text("SELECT count(*) FROM user_data_import")).scalar()
-        self.assertEqual(count, 1)
+        count = self.db_conn.execute(text("SELECT count(*) FROM background_tasks WHERE task = 'import_listens'")).scalar()
+        self.assertEqual(count, 2)
