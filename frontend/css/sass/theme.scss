@@ -30,10 +30,17 @@
       color: #fff !important;
     }
     // Toasts always render with react-toastify's "light" class (see
-    // layout/index.tsx); point its light colours at its dark palette here so
-    // open toasts change with the page.
-    --toastify-color-light: var(--toastify-color-dark);
-    --toastify-text-color-light: var(--toastify-text-color-dark);
+    // layout/index.tsx); point its light colours at the dark tokens here so
+    // open toasts change with the page. A raised surface with the same
+    // two-layer shadow as light-mode toasts, darkened so it shows on a dark
+    // page; toasts then sit above the page instead of looking like a hole.
+    --toastify-color-light: var(--lb-surface-raised);
+    --toastify-text-color-light: var(--lb-text);
+    .Toastify__toast-theme--light {
+      box-shadow:
+        0 1px 10px 0 rgb(0 0 0 / 60%),
+        0 2px 15px 0 rgb(0 0 0 / 40%);
+    }
     // Bootstrap colours cover all standard controls, tables, cards, modals and
     // dropdowns. Keep their contrast relationships close to the light theme.
     --lb-surface: #171717;
