@@ -2,7 +2,7 @@
   Apply the saved preference before the stylesheet is painted. This is kept
   deliberately small because React is not available on legacy pages; the
   React app (utils/theme.ts) takes over from here, including the animated
-  transition. Preferences: "light", "dark" or "system" (the default).
+  transition. Preferences: "light" (the default), "dark" or "system" (Auto).
 #}
 <script>
   (() => {
@@ -12,9 +12,9 @@
     const readPreference = () => {
       try {
         const stored = localStorage.getItem(storageKey);
-        return stored === "light" || stored === "dark" ? stored : "system";
+        return stored === "dark" || stored === "system" ? stored : "light";
       } catch (_) {
-        return "system";
+        return "light";
       }
     };
     const apply = (preference) => {
@@ -24,18 +24,19 @@
       root.dataset.bsTheme = theme;
       root.style.colorScheme = theme;
     };
-    const updateLegacyMenu = () => {
+    const preferences = ["light", "dark", "system"];
+    const labels = { light: "Light", dark: "Dark", system: "Auto" };
+    const nextPreference = (preference) =>
+      preferences[(preferences.indexOf(preference) + 1) % preferences.length];
+    const updateLegacyToggle = () => {
       const preference = readPreference();
-      document.querySelectorAll("[data-theme-option]").forEach((item) => {
-        const active = item.dataset.themeOption === preference;
-        item.classList.toggle("active", active);
-        if (active) item.setAttribute("aria-current", "true");
-        else item.removeAttribute("aria-current");
-      });
-      document.querySelectorAll("[data-theme-toggle-label]").forEach((toggle) => {
-        const label = `Theme: ${preference[0].toUpperCase()}${preference.slice(1)}`;
-        toggle.setAttribute("aria-label", label);
-        toggle.setAttribute("title", label);
+      const hint = `Click to switch to ${labels[nextPreference(preference)]} mode`;
+      document.querySelectorAll("[data-legacy-theme-toggle]").forEach((toggle) => {
+        toggle.setAttribute("aria-label", `Theme: ${labels[preference]}. ${hint}`);
+        toggle.setAttribute("title", hint);
+        toggle.querySelectorAll("[data-theme-icon]").forEach((icon) => {
+          icon.toggleAttribute("hidden", icon.dataset.themeIcon !== preference);
+        });
       });
     };
 
@@ -44,18 +45,19 @@
     // Used by the legacy (Jinja) navigation only.
     window.ListenBrainzTheme = {
       set: (preference) => {
-        const next = ["light", "dark", "system"].includes(preference) ? preference : "system";
+        const next = preferences.includes(preference) ? preference : "light";
         try { localStorage.setItem(storageKey, next); } catch (_) {}
         apply(next);
-        updateLegacyMenu();
+        updateLegacyToggle();
         window.dispatchEvent(new Event("listenbrainzthemechange"));
       },
+      cycle: () => window.ListenBrainzTheme.set(nextPreference(readPreference())),
     };
 
     document.addEventListener("DOMContentLoaded", () => {
       // React pages follow OS changes themselves (with the reveal animation).
-      if (!document.querySelector("[data-legacy-theme-menu]")) return;
-      updateLegacyMenu();
+      if (!document.querySelector("[data-legacy-theme-toggle]")) return;
+      updateLegacyToggle();
       if (darkQuery) {
         darkQuery.addEventListener("change", () => {
           if (readPreference() === "system") window.ListenBrainzTheme.set("system");

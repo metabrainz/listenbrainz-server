@@ -42,20 +42,19 @@
       {%- endif -%}
       <a {{ 'class=active' if active_about_section is defined }} href="/about/">About</a>
       <a href="https://community.metabrainz.org/c/listenbrainz" target="_blank" rel="noopener noreferrer">Community</a>
-      <div class="dropup theme-menu" data-legacy-theme-menu>
-        <button type="button" class="theme-toggle" data-bs-toggle="dropdown" aria-expanded="false" data-theme-toggle data-theme-toggle-label aria-label="Theme" title="Theme">
-          <svg class="system-theme-icon" viewBox="0 0 30 30" width="1em" height="1em" aria-hidden="true" focusable="false">
-            <polygon points="15,2.5 3.2,9.3 3.2,20.7 15,27.5" fill="currentColor"/>
-            <polygon points="15,2.5 26.8,9.3 26.8,20.7 15,27.5" fill="currentColor" fill-opacity="0.25"/>
-            <polygon points="15,1.5 27.7,8.8 27.7,21.2 15,28.5 2.3,21.2 2.3,8.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <div class="dropdown-menu dropdown-menu-end theme-menu-list">
-          <button type="button" class="dropdown-item" data-theme-option="light" onclick="window.ListenBrainzTheme.set('light')">Light</button>
-          <button type="button" class="dropdown-item" data-theme-option="dark" onclick="window.ListenBrainzTheme.set('dark')">Dark</button>
-          <button type="button" class="dropdown-item" data-theme-option="system" onclick="window.ListenBrainzTheme.set('system')">System</button>
-        </div>
-      </div>
+      <button type="button" class="theme-toggle" onclick="window.ListenBrainzTheme.cycle()" data-theme-toggle data-legacy-theme-toggle aria-label="Theme" title="Theme">
+        <svg data-theme-icon="light" viewBox="1.5 1.5 21 21" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>
+        </svg>
+        <svg data-theme-icon="dark" hidden viewBox="1.5 1.5 21 21" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7Z"/>
+        </svg>
+        <svg data-theme-icon="system" hidden viewBox="0 0 30 30" width="1em" height="1em" aria-hidden="true" focusable="false">
+          <polygon points="15,2.5 3.2,9.3 3.2,20.7 15,27.5" fill="currentColor"/>
+          <polygon points="15,1.5 27.7,8.8 27.7,21.2 15,28.5 2.3,21.2 2.3,8.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+      </button>
       <form class="search-bar" role="search" method="GET" action="/search">
           <input type="text" name="search_term" class="form-control input-sm" placeholder="Search users" required>
         <button type="submit"></button>

@@ -5,7 +5,7 @@ import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Username from "../common/Username";
 import buildAuthUrl from "../utils/auth";
-import ThemeMenu from "./ThemeMenu";
+import ThemeToggle from "./ThemeToggle";
 
 function Navbar() {
   const { currentUser } = React.useContext(GlobalAppContext);
@@ -162,7 +162,7 @@ function Navbar() {
             >
               Community
             </a>
-            <ThemeMenu />
+            <ThemeToggle />
           </div>
           <div className="mobile-nav-fix" />
         </div>

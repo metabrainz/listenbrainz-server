@@ -29,6 +29,11 @@
     .btn-icon.brand-tidal {
       color: #fff !important;
     }
+    // Toasts always render with react-toastify's "light" class (see
+    // layout/index.tsx); point its light colours at its dark palette here so
+    // open toasts change with the page.
+    --toastify-color-light: var(--toastify-color-dark);
+    --toastify-text-color-light: var(--toastify-text-color-dark);
     // Bootstrap colours cover all standard controls, tables, cards, modals and
     // dropdowns. Keep their contrast relationships close to the light theme.
     --lb-surface: #171717;
@@ -624,9 +629,7 @@
         color: var(--lb-accent);
       }
 
-      #side-nav .theme-toggle:hover,
-      #side-nav .theme-toggle.show {
-        background-color: #35323d;
+      #side-nav .theme-toggle:hover {
         color: #fff;
       }
 
