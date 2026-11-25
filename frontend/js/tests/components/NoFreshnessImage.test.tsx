@@ -2,7 +2,7 @@ import * as React from "react";
 import { act, render, screen } from "@testing-library/react";
 
 import NoFreshnessImage from "../../src/components/NoFreshnessImage";
-import { setTheme } from "../../src/utils/theme";
+import { setThemePreference } from "../../src/utils/theme";
 
 describe("NoFreshnessImage", () => {
   beforeEach(() => {
@@ -22,7 +22,7 @@ describe("NoFreshnessImage", () => {
       "/static/img/recommendations/no-freshness.png"
     );
 
-    act(() => setTheme("dark"));
+    act(() => setThemePreference("dark"));
 
     expect(image).toHaveAttribute(
       "src",

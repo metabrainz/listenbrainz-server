@@ -42,9 +42,20 @@
       {%- endif -%}
       <a {{ 'class=active' if active_about_section is defined }} href="/about/">About</a>
       <a href="https://community.metabrainz.org/c/listenbrainz" target="_blank" rel="noopener noreferrer">Community</a>
-      <button type="button" class="theme-toggle" onclick="window.ListenBrainzTheme.toggle()" data-theme-toggle aria-label="Switch to dark mode" title="Switch to dark mode" aria-pressed="false">
-        <span aria-hidden="true">◐</span>
-      </button>
+      <div class="dropup theme-menu" data-legacy-theme-menu>
+        <button type="button" class="theme-toggle" data-bs-toggle="dropdown" aria-expanded="false" data-theme-toggle data-theme-toggle-label aria-label="Theme" title="Theme">
+          <svg class="system-theme-icon" viewBox="0 0 30 30" width="1em" height="1em" aria-hidden="true" focusable="false">
+            <polygon points="15,2.5 3.2,9.3 3.2,20.7 15,27.5" fill="currentColor"/>
+            <polygon points="15,2.5 26.8,9.3 26.8,20.7 15,27.5" fill="currentColor" fill-opacity="0.25"/>
+            <polygon points="15,1.5 27.7,8.8 27.7,21.2 15,28.5 2.3,21.2 2.3,8.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="dropdown-menu dropdown-menu-end theme-menu-list">
+          <button type="button" class="dropdown-item" data-theme-option="light" onclick="window.ListenBrainzTheme.set('light')">Light</button>
+          <button type="button" class="dropdown-item" data-theme-option="dark" onclick="window.ListenBrainzTheme.set('dark')">Dark</button>
+          <button type="button" class="dropdown-item" data-theme-option="system" onclick="window.ListenBrainzTheme.set('system')">System</button>
+        </div>
+      </div>
       <form class="search-bar" role="search" method="GET" action="/search">
           <input type="text" name="search_term" class="form-control input-sm" placeholder="Search users" required>
         <button type="submit"></button>
