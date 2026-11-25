@@ -143,6 +143,24 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert400(r)
 
+        # missing metadata key should 400
+        r = self.client.post(
+            self.custom_url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
+            data=json.dumps({}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert400(r)
+
+        # non-dict metadata should 400
+        r = self.client.post(
+            self.custom_url_for('user_timeline_event_api_bp.create_user_recording_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
+            data=json.dumps({'metadata': 123}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert400(r)
+
     @mock.patch('listenbrainz.db.user_timeline_event.create_user_track_recommendation_event',
                 side_effect=DatabaseException)
     def test_recommendation_handles_database_exceptions(self, mock_create_event):
@@ -704,6 +722,24 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert400(r)
 
+        # missing metadata key should 400
+        r = self.client.post(
+            self.custom_url_for('user_timeline_event_api_bp.create_user_cb_review_event',
+                                user_name=self.user['musicbrainz_id']),
+            data=json.dumps({}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert400(r)
+
+        # non-dict metadata should 400
+        r = self.client.post(
+            self.custom_url_for('user_timeline_event_api_bp.create_user_cb_review_event',
+                                user_name=self.user['musicbrainz_id']),
+            data=json.dumps({'metadata': 123}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert400(r)
+
     @requests_mock.Mocker()
     @mock.patch('listenbrainz.db.user_timeline_event.create_user_cb_review_event', side_effect=DatabaseException)
     def test_critiquebrainz_handles_database_exceptions(self, mock_requests, mock_create_event):
@@ -926,10 +962,29 @@ class UserTimelineAPITestCase(ListenAPIIntegrationTestCase):
         db_user_relationship.insert(self.db_conn, user_two['id'], self.user['id'], 'follow')
         metadata = {}
 
+        # empty metadata should 400
         r = self.client.post(
             self.custom_url_for('user_timeline_event_api_bp.create_personal_recommendation_event',
                                 user_name=self.user['musicbrainz_id']),
             data=json.dumps({"metadata": metadata}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert400(r)
+
+        # missing metadata key should 400
+        r = self.client.post(
+            self.custom_url_for('user_timeline_event_api_bp.create_personal_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
+            data=json.dumps({}),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+        )
+        self.assert400(r)
+
+        # non-dict metadata should 400
+        r = self.client.post(
+            self.custom_url_for('user_timeline_event_api_bp.create_personal_recommendation_event',
+                                user_name=self.user['musicbrainz_id']),
+            data=json.dumps({"metadata": 123}),
             headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
         )
         self.assert400(r)
