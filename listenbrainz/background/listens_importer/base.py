@@ -82,6 +82,9 @@ class BaseListensImporter(ABC):
                 validation_stats = self._initialize_validation_stats()
                 self.persist_validation_stats(import_id, validation_stats)
                 for batch in self.process_import_file(local_task):
+                    if self.is_cancelled(import_id):
+                        current_app.logger.info("Import %s was cancelled, stopping.", import_id)
+                        return
                     validated_listens, validation_stats = self.parse_and_validate_listen_items(
                         batch,
                         validation_stats,
@@ -180,6 +183,14 @@ class BaseListensImporter(ABC):
 
         return validated_listens, validation_stats
 
+
+    def is_cancelled(self, import_id: int) -> bool:
+        """ Whether the import was cancelled, e.g. because the user asked to delete their listens.
+
+        Cancelling an import deletes its user_data_import row.
+        """
+        result = self.db_conn.execute(text("SELECT 1 FROM user_data_import WHERE id = :import_id"), {"import_id": import_id})
+        return result.first() is None
 
     def persist_validation_stats(self, import_id: int, validation_stats: dict[str, Any]) -> None:
         """Persist the current validation counters and message on the import task metadata."""

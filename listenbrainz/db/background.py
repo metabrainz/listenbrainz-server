@@ -39,16 +39,12 @@ def create_import_task(db_conn, user_id, service, from_date, to_date, file_path,
     import_task = result.first()
 
     if import_task is not None:
-        query = "INSERT INTO background_tasks (user_id, task, metadata) VALUES (:user_id, :task, :metadata) ON CONFLICT DO NOTHING RETURNING id"
-        background_task = db_conn.execute(text(query), {
+        query = "INSERT INTO background_tasks (user_id, task, metadata) VALUES (:user_id, :task, :metadata)"
+        db_conn.execute(text(query), {
             "user_id": user_id,
             "task": "import_listens",
             "metadata": json.dumps({"import_id": import_task.id})
-        }).first()
-        # background_tasks is unique on (user_id, task): if another import for this user is already
-        # queued (e.g. for a different service), no row is inserted and this import would never start
-        if background_task is None:
-            return None
+        })
 
         return {
             "import_id": import_task.id,
