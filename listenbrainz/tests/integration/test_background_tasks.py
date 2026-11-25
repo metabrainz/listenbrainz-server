@@ -2,10 +2,11 @@ import json
 from datetime import datetime, timezone
 from unittest import mock
 
-from sqlalchemy import text
+from sqlalchemy import event, text
 from sqlalchemy.exc import OperationalError
 
 import listenbrainz.db.user as db_user
+from listenbrainz import db
 from listenbrainz.background.background_tasks import BackgroundTasks, MAX_CONSECUTIVE_ERRORS, add_task, claim_task, defer_task, release_task, remove_task
 from listenbrainz.background.registry import TASKS
 from listenbrainz.background.listens_importer.base import BaseListensImporter
@@ -14,7 +15,54 @@ from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver import db_conn
 
 
+# The test environment runs a background_tasks worker against the same database, which would claim and run the
+# tasks these tests set up before the tests claim them. These tests use their own copies of the task tables instead,
+# in a schema the worker does not look at. "user" and every other table still resolve to public.
+ISOLATED_SCHEMA = "background_tasks_test"
+ISOLATED_TABLES = ["background_tasks", "user_data_import"]
+
+
+def _use_isolated_schema(dbapi_connection, connection_record):
+    with dbapi_connection.cursor() as cursor:
+        cursor.execute(f"SET search_path TO {ISOLATED_SCHEMA}, public")
+
+
 class BackgroundTasksTestCase(IntegrationTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        with db.engine.begin() as connection:
+            connection.execute(text(f"DROP SCHEMA IF EXISTS {ISOLATED_SCHEMA} CASCADE"))
+            connection.execute(text(f"CREATE SCHEMA {ISOLATED_SCHEMA}"))
+            for table in ISOLATED_TABLES:
+                connection.execute(text(
+                    f"CREATE TABLE {ISOLATED_SCHEMA}.{table} (LIKE public.{table} INCLUDING ALL)"
+                ))
+
+    @classmethod
+    def tearDownClass(cls):
+        with db.engine.begin() as connection:
+            connection.execute(text(f"DROP SCHEMA IF EXISTS {ISOLATED_SCHEMA} CASCADE"))
+        super().tearDownClass()
+
+    def setUp(self):
+        super().setUp()
+        # the base classes set up a new engine, the listener goes on the one the test uses
+        self._engine = db.engine
+        event.listen(self._engine, "connect", _use_isolated_schema)
+
+    def tearDown(self):
+        # the base tear down clears the tables, which must still be the isolated copies
+        super().tearDown()
+        event.remove(self._engine, "connect", _use_isolated_schema)
+
+    def test_tables_are_isolated_from_the_worker(self):
+        with self.app.app_context():
+            schema = db_conn.execute(text(
+                "SELECT schemaname FROM pg_tables WHERE tablename = 'background_tasks' AND schemaname = current_schema()"
+            )).scalar()
+        self.assertEqual(schema, ISOLATED_SCHEMA)
 
     def _insert_task(self, user_id, task, metadata=None, **columns):
         names = ", ".join(["user_id", "task", "metadata", *columns])
