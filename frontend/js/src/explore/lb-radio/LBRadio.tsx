@@ -90,10 +90,11 @@ export default function LBRadio() {
             });
           }
         }
-        // The sortable list needs an id on each track, like on the playlist page
-        payload.jspf?.playlist?.track?.forEach((track: JSPFTrack) => {
+        // The sortable list needs a unique id on each track, and the same
+        // recording can appear more than once so the MBID is not enough
+        payload.jspf?.playlist?.track?.forEach((track: JSPFTrack, index) => {
           // eslint-disable-next-line no-param-reassign
-          track.id = getRecordingMBIDFromJSPFTrack(track);
+          track.id = `${getRecordingMBIDFromJSPFTrack(track)}-${index}`;
         });
         setJspfPlaylist(payload.jspf);
         setFeedback(payload.feedback);

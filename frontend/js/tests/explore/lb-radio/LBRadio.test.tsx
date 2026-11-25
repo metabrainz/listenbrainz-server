@@ -124,17 +124,15 @@ describe("LB Radio page", () => {
     });
   });
 
-  it("gives each track its recording MBID as id for the sortable list", async () => {
+  it("gives each track a unique id, even when a recording is repeated", async () => {
+    const mbid = "aaaaaaaa-0000-0000-0000-000000000001";
     renderLBRadio([
-      makeTrack("aaaaaaaa-0000-0000-0000-000000000001", "Bird's Lament"),
-      makeTrack("aaaaaaaa-0000-0000-0000-000000000002", "Stamping Ground"),
+      makeTrack(mbid, "Bird's Lament"),
+      makeTrack(mbid, "Bird's Lament"),
     ]);
     await getRemoveButtons();
     expect(
       (sortableProps as any).list.map((track: JSPFTrack) => track.id)
-    ).toEqual([
-      "aaaaaaaa-0000-0000-0000-000000000001",
-      "aaaaaaaa-0000-0000-0000-000000000002",
-    ]);
+    ).toEqual([`${mbid}-0`, `${mbid}-1`]);
   });
 });
