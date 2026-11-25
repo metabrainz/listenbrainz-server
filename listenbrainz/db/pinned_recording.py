@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording
 from typing import List, Iterable
+from listenbrainz.db import transaction
 
 PINNED_REC_GET_COLUMNS = [
     "user_id",
@@ -35,19 +36,19 @@ def pin(db_conn, pinned_recording: WritablePinnedRecording):
         'created': pinned_recording.created
     }
 
-    db_conn.execute(sqlalchemy.text("""
-        UPDATE pinned_recording
-           SET pinned_until = NOW()
-         WHERE (user_id = :user_id AND pinned_until >= NOW())
-    """), {"user_id": pinned_recording.user_id})
+    with transaction(db_conn) as txn:
+        txn.execute(sqlalchemy.text("""
+            UPDATE pinned_recording
+               SET pinned_until = NOW()
+             WHERE (user_id = :user_id AND pinned_until >= NOW())
+        """), {"user_id": pinned_recording.user_id})
 
-    result = db_conn.execute(sqlalchemy.text("""
-        INSERT INTO pinned_recording (user_id, recording_msid, recording_mbid, blurb_content, pinned_until, created)
-             VALUES (:user_id, :recording_msid, :recording_mbid, :blurb_content, :pinned_until, :created)
-          RETURNING (id)
-        """), args)
-    row_id = result.fetchone().id
-    db_conn.commit()
+        result = txn.execute(sqlalchemy.text("""
+            INSERT INTO pinned_recording (user_id, recording_msid, recording_mbid, blurb_content, pinned_until, created)
+                 VALUES (:user_id, :recording_msid, :recording_mbid, :blurb_content, :pinned_until, :created)
+              RETURNING (id)
+            """), args)
+        row_id = result.fetchone().id
 
     pinned_recording.row_id = row_id
     return PinnedRecording.parse_obj(pinned_recording.dict())

@@ -17,6 +17,7 @@ from listenbrainz.db import background
 from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIBadRequest, APIUnauthorized
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
 from listenbrainz.webserver.views.api_tools import validate_auth_header
+from listenbrainz.db import transaction
 
 import_api_bp = Blueprint("import_listens_api_v1", __name__)
 
@@ -106,10 +107,6 @@ def create_import_task():
         check_existing = result.first()
         if check_existing is not None:
             raise APIBadRequest("An import task is already in progress!")
-        # the file can be a few hundred megabytes, uploading it must not hold a transaction
-        # (and the pooled connection it is checked out on) open for the entire transfer
-        db_conn.rollback()
-
         try:
             upload_import_file(saved_filename, uploaded_file)
         except Exception:
@@ -117,24 +114,22 @@ def create_import_task():
             raise APIInternalServerError("Error while uploading the file, please try again later.")
 
         try:
-            result = background.create_import_task(
-                db_conn,
-                user_id=user["id"],
-                service=service,
-                from_date=from_date,
-                to_date=to_date,
-                file_path=saved_filename,
-                user_timezone=user_timezone,
-                filename=filename
-            )
-            if result is None:
-                # task already exists in queue, rollback new entry
-                db_conn.rollback()
-            else:
-                db_conn.commit()
+            with transaction(db_conn) as txn:
+                result = background.create_import_task(
+                    txn,
+                    user_id=user["id"],
+                    service=service,
+                    from_date=from_date,
+                    to_date=to_date,
+                    file_path=saved_filename,
+                    user_timezone=user_timezone,
+                    filename=filename
+                )
+                if result is None:
+                    # task already exists in queue, rollback new entry
+                    txn.rollback()
         except Exception:
             # the uploaded file belongs to no import, do not leave it behind in the bucket
-            db_conn.rollback()
             delete_import_file(saved_filename)
             raise
 
@@ -202,18 +197,18 @@ def list_import_tasks():
 def delete_import_task(import_id):
     """ Cancel the specified import in progress """
     user = validate_auth_header()
-    result = db_conn.execute(
-        text("DELETE FROM user_data_import WHERE user_id = :user_id AND id = :import_id AND metadata->>'status' IN ('waiting') RETURNING file_path"),
-        {"user_id": user["id"], "import_id": import_id}
-    )
-    row = result.first()
-    if row is not None:
-        db_conn.execute(
-            text("DELETE FROM background_tasks WHERE user_id = :user_id AND (metadata->>'import_id')::int = :import_id"),
+    with transaction(db_conn) as txn:
+        result = txn.execute(
+            text("DELETE FROM user_data_import WHERE user_id = :user_id AND id = :import_id AND metadata->>'status' IN ('waiting') RETURNING file_path"),
             {"user_id": user["id"], "import_id": import_id}
         )
-        delete_import_file(row.file_path)
-        db_conn.commit()
-        return jsonify({"success": True})
-    else:
+        row = result.first()
+        if row is not None:
+            txn.execute(
+                text("DELETE FROM background_tasks WHERE user_id = :user_id AND (metadata->>'import_id')::int = :import_id"),
+                {"user_id": user["id"], "import_id": import_id}
+            )
+    if row is None:
         raise APINotFound("Import not found or is already being processed.")
+    delete_import_file(row.file_path)
+    return jsonify({"success": True})

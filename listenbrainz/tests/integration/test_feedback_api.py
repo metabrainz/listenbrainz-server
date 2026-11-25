@@ -16,7 +16,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         super(FeedbackAPITestCase, self).setUp()
         self.user = db_user.get_or_create(self.db_conn, 1, "testuserpleaseignore")
         self.user2 = db_user.get_or_create(self.db_conn, 2, "anothertestuserpleaseignore")
-        self.listens_conn = listens_db.engine.connect()
+        self.listens_conn = listens_db.engine.connect().execution_options(isolation_level="AUTOCOMMIT")
 
     def tearDown(self):
         self.listens_conn.close()

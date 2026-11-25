@@ -19,7 +19,7 @@ class DatabaseTestCase(unittest.TestCase):
     def setUp(self):
         db_connect = create_test_database_connect_strings()
         db.init_db_connection(db_connect["DB_CONNECT"])
-        self.db_conn = db.engine.connect()
+        self.db_conn = db.engine.connect().execution_options(isolation_level="AUTOCOMMIT")
 
     def tearDown(self):
         self.db_conn.close()
@@ -60,7 +60,7 @@ class TimescaleTestCase(unittest.TestCase):
         listens_connect = create_test_listens_connect_strings()
         listens_db.init_db_connection(listens_connect["DB_CONNECT"])
         self.reset_listens_db()
-        self.listens_conn = listens_db.engine.connect()
+        self.listens_conn = listens_db.engine.connect().execution_options(isolation_level="AUTOCOMMIT")
 
     def tearDown(self):
         self.listens_conn.close()
