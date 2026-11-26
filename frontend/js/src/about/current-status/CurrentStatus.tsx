@@ -7,7 +7,10 @@ import {
   formatSecondsDuration,
 } from "../../utils/utils";
 
-import UserEvolutionChart, { UserEvolutionData } from "./UserEvolutionChart";
+import CountEvolutionChart, {
+  UserEvolutionData,
+  ListenEvolutionData,
+} from "./CountEvolutionChart";
 
 type CurrentStatusLoaderData = {
   listenCount: number;
@@ -25,6 +28,7 @@ type CurrentStatusLoaderData = {
     incoming_listen_count: number;
   };
   userCountEvolution: UserEvolutionData[];
+  listenCountEvolution: ListenEvolutionData[];
 };
 
 export default function CurrentStatus() {
@@ -41,9 +45,10 @@ export default function CurrentStatus() {
       <div className="row">
         <div className="col">
           <h3>ListenBrainz Stats</h3>
-          <h4>User count</h4>
-          <UserEvolutionChart
+          <h4>Users and listens over time</h4>
+          <CountEvolutionChart
             userCountEvolution={data?.userCountEvolution || []}
+            listenCountEvolution={data?.listenCountEvolution || []}
           />
           <table className="table table-border table-sm table-striped">
             <thead>
