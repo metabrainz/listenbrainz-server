@@ -25,13 +25,14 @@ class MetadataTable:
 
 ARTISTS = "Array(Tuple(artist_credit_name String, join_phrase String, artist_mbid UUID))"
 
+# The country query can omit artists whose area has no ISO country.
+ARTIST_METADATA_CACHE = MetadataTable(
+    "artist_metadata_cache", "artist_id Int32, artist_mbid UUID, artist_name String", "artist_mbid",
+    "SELECT id AS artist_id, gid AS artist_mbid, name AS artist_name FROM musicbrainz.artist",
+)
+
 MUSICBRAINZ_TABLES = (
-    # The country query can omit artists whose area has no ISO country.
-    # Keep the full MusicBrainz identity lookup available to consumers.
-    MetadataTable(
-        "artist_metadata_cache", "artist_id Int32, artist_mbid UUID, artist_name String", "artist_mbid",
-        "SELECT id AS artist_id, gid AS artist_mbid, name AS artist_name FROM musicbrainz.artist",
-    ),
+    ARTIST_METADATA_CACHE,
     MetadataTable(
         "artist_country_cache", "artist_mbid UUID, artist_name String, country_code Nullable(String)", "artist_mbid",
         f"""

@@ -22,9 +22,14 @@ completed staging table into ``listens``. For an incremental dump it merges
 new listen keys and keeps the newest submission for each key. When replacing
 existing submissions, it applies the changes to a clone before swapping it in.
 
-A full import builds a private change stream, views and targets while loading
-the Parquet files, then replaces the live data. Incremental imports feed the
-live stream described in :doc:`clickhouse-architecture`.
+A full import builds its change stream, views and aggregates from the staged
+Parquet files, including aggregates newly introduced on an existing installation.
+Once the replacement is ready, the worker detaches the live source view,
+publishes the lookup, aggregates and listens, and reattaches the view last.
+If publication fails, the worker rebuilds the aggregates from the published
+listens. If the worker stops before it can repair them, the detached view
+triggers recovery before the next stats read or incremental import.
+Incremental imports feed the live stream described in :doc:`clickhouse-architecture`.
 
 Applying deletions
 ------------------

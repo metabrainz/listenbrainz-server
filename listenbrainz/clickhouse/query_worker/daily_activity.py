@@ -3,7 +3,7 @@ import calendar
 from datetime import datetime, time, timedelta, timezone
 
 from data.stats_range import dates_for_stats_range
-from listenbrainz.clickhouse.query_worker.activity import refresh_activity
+from listenbrainz.clickhouse.query_worker.stats import refresh_activity
 
 
 def daily_activity_rows(client, start_day, end_day):

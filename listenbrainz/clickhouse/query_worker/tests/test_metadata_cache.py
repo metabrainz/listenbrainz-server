@@ -8,6 +8,7 @@ from sqlalchemy.exc import DataError
 
 from listenbrainz import db
 from listenbrainz.clickhouse.query_worker import metadata_cache
+from listenbrainz.clickhouse.query_worker.listens.schema import ensure_schema
 from listenbrainz.clickhouse.query_worker.query_map import functions
 from listenbrainz.clickhouse.query_worker.tests import ClickHouseTestCase
 
@@ -84,6 +85,21 @@ class MetadataCacheTestCase(ClickHouseTestCase):
         self.refresh()  # Unconfigured MusicBrainz leaves its published caches available.
         self.assertEqual(self.rows("SELECT artist_name FROM artist_metadata_cache WHERE artist_id = 1"), [("First",)])
         self.assertEqual(self.rows("SELECT * FROM recording_feedback_cache"), [])
+
+    def test_artist_backfill_uses_published_musicbrainz_ids_and_names(self):
+        self.client.command("""
+            INSERT INTO listens (user_id, listened_at, artist_name, artist_credit_mbids) VALUES
+            (1, '2024-01-01', 'submitted', ['00000000-0000-0000-0000-000000000001',
+                                            '00000000-0000-0000-0000-000000000003'])
+        """)
+        self.refresh(self.musicbrainz_fixture())
+        self.client.command("DROP VIEW user_artist_stats_daily_mv")
+        ensure_schema(self.client)
+        self.assertEqual(self.rows("""
+            SELECT artist_id, display_name, sum(listen_count) FROM user_artist_stats_daily
+              JOIN artist_metadata USING (artist_id)
+             GROUP BY artist_id, display_name ORDER BY artist_id
+        """), [(1, "First", 1), (3, "", 1)])
 
     def test_failed_refresh_preserves_previous_cache_and_can_retry(self):
         self.refresh()

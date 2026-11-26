@@ -4,7 +4,7 @@ from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 
 from data.stats_range import dates_for_stats_range
-from listenbrainz.clickhouse.query_worker.activity import refresh_activity
+from listenbrainz.clickhouse.query_worker.stats import refresh_activity
 
 
 def _listening_activity_rows(client, start, end_day, step, label, bucket):

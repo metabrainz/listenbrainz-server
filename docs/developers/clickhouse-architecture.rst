@@ -71,7 +71,8 @@ stored counts per key because SummingMergeTree can still be merging parts.
 
 Run ``python manage.py clickhouse init_schema`` with the importer idle.
 Initialization reads the existing listens once to populate all newly registered
-tables and preserves existing aggregates. Imports also run initialization.
+tables and preserves existing aggregates. Incremental imports also run
+initialization. Full imports build their replacements from the dump in staging.
 Each subsequent insert or deletion feeds the registered views through the
 same stream. Adding another range or stat that can already use an existing
 table only needs a reader.
