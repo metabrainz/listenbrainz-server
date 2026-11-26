@@ -1,6 +1,4 @@
 import * as React from "react";
-import { toast } from "react-toastify";
-import { ToastMsg } from "../notifications/Notifications";
 import {
   setThemePreference,
   themePreferences,
@@ -86,77 +84,6 @@ function ThemeIcon({ preference }: { preference: ThemePreference }) {
   return preference === "dark" ? <MoonIcon /> : <SunIcon />;
 }
 
-const wittyLinesLight = [
-  "Same listens, more photons.",
-  "Good for reading track listings in a sunny room.",
-  "Back to the original ListenBrainz look.",
-  "If you were in a dark room, sorry about your eyes.",
-  "Easy to read in daylight, rough at 3 a.m.",
-  "White background, purple links, same old ListenBrainz.",
-  "Daytime listening, daytime colours.",
-  "Squint responsibly.",
-  "Rise and shine.",
-  "Let there be light.",
-];
-
-const wittyLinesDark = [
-  "Easier on the eyes for late-night scrobbling.",
-  "OLED screens say thanks.",
-  "Cover art stands out more on a dark background.",
-  "No more squinting at the feed.",
-  "For listening with the lights off.",
-  "Kinder to your eyes at 2 a.m.",
-  "The screen's a bit quieter now.",
-  "Fewer photons at bedtime.",
-  "The brightness has been turned down for you.",
-  "You're welcome.",
-];
-
-const wittyLinesAuto = [
-  "We'll match whatever your OS is doing.",
-  "Your system decides now. We follow.",
-  "If your system switches at sunset, so do we.",
-  "Monkey see, monkey do.",
-  "Light by day, dark by night.",
-  "Change your system theme and we'll copy it.",
-  "The OS is in charge of the lights now.",
-  "Same theme as the rest of your screen.",
-  "Set it once, then forget this button exists.",
-  "Copying your system's homework.",
-];
-
-const wittyLines: Record<ThemePreference, string[]> = {
-  light: wittyLinesLight,
-  dark: wittyLinesDark,
-  system: wittyLinesAuto,
-};
-
-function randomWittyLine(preference: ThemePreference): string {
-  const lines = wittyLines[preference];
-  return lines[Math.floor(Math.random() * lines.length)];
-}
-
-const themeToastId = "theme-change";
-
-/** One toast for theme changes: rapid clicks update it instead of stacking. */
-function announceTheme(preference: ThemePreference) {
-  const content = (
-    <ToastMsg
-      title={`${labels[preference]} mode`}
-      message={randomWittyLine(preference)}
-    />
-  );
-  const options = {
-    icon: <ThemeIcon preference={preference} />,
-    autoClose: 3000,
-  };
-  if (toast.isActive(themeToastId)) {
-    toast.update(themeToastId, { render: content, ...options });
-  } else {
-    toast(content, { toastId: themeToastId, ...options });
-  }
-}
-
 export default function ThemeToggle() {
   const [, preference] = useTheme();
   // Only animate the icon after a click, not when the page first loads.
@@ -175,7 +102,6 @@ export default function ThemeToggle() {
       onClick={() => {
         setAnimateIcon(true);
         setThemePreference(next);
-        announceTheme(next);
       }}
       aria-label={`Theme: ${labels[preference]}. ${hint}`}
       title={hint}
