@@ -700,7 +700,7 @@ def music_services_connect(service_name: str):
     })
 
     total_listens = 0
-    if service == ExternalServiceType.LASTFM:
+    if service.service == ExternalServiceType.LASTFM:
         try:
             total_listens = int(response_data["recenttracks"]["@attr"]["total"])
         except Exception:
