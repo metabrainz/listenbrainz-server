@@ -55,11 +55,11 @@ describe("theme utilities", () => {
     delete (document as Partial<Document>).startViewTransition;
   });
 
-  it("defaults to Light and ignores unknown stored values", () => {
-    media.dark = true; // even on a dark OS
-    expect(getThemePreference()).toBe("light");
+  it("defaults to Auto and ignores unknown stored values", () => {
+    media.dark = true;
+    expect(getThemePreference()).toBe("system");
     window.localStorage.setItem(themeStorageKey, "sepia");
-    expect(getThemePreference()).toBe("light");
+    expect(getThemePreference()).toBe("system");
     window.localStorage.setItem(themeStorageKey, "system");
     expect(getThemePreference()).toBe("system");
   });

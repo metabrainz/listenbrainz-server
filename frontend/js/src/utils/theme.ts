@@ -24,10 +24,9 @@ function isThemePreference(value: unknown): value is ThemePreference {
 export function getThemePreference(): ThemePreference {
   try {
     const stored = window.localStorage.getItem(themeStorageKey);
-    // New visitors start on Light so the familiar sun/moon icons come first.
-    return isThemePreference(stored) ? stored : "light";
+    return isThemePreference(stored) ? stored : "system";
   } catch {
-    return "light";
+    return "system";
   }
 }
 

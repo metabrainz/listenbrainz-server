@@ -2,7 +2,7 @@
   Apply the saved preference before the stylesheet is painted. This is kept
   deliberately small because React is not available on legacy pages; the
   React app (utils/theme.ts) takes over from here, including the animated
-  transition. Preferences: "light" (the default), "dark" or "system" (Auto).
+  transition. Preferences: "light", "dark" or "system" (the default).
 #}
 <script>
   (() => {
@@ -12,9 +12,9 @@
     const readPreference = () => {
       try {
         const stored = localStorage.getItem(storageKey);
-        return stored === "dark" || stored === "system" ? stored : "light";
+        return stored === "light" || stored === "dark" ? stored : "system";
       } catch (_) {
-        return "light";
+        return "system";
       }
     };
     const apply = (preference) => {
@@ -45,7 +45,7 @@
     // Used by the legacy (Jinja) navigation only.
     window.ListenBrainzTheme = {
       set: (preference) => {
-        const next = preferences.includes(preference) ? preference : "light";
+        const next = preferences.includes(preference) ? preference : "system";
         try { localStorage.setItem(storageKey, next); } catch (_) {}
         apply(next);
         updateLegacyToggle();
