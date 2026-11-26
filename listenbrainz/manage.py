@@ -250,7 +250,7 @@ def recalculate_all_user_data():
 @click.option("--full", is_flag=True, help="Recount all history, including older deletions (scans all listens).")
 def refresh_listen_count_evolution(full):
     """Refresh recent months in the cached listen growth graph; retain older counts."""
-    application = webserver.create_app()
+    application = webserver.create_app(bypass_pgbouncer=True)
     from listenbrainz.webserver.timescale_connection import _ts
     with application.app_context():
         _ts.refresh_listen_count_evolution(full=full)

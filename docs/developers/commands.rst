@@ -24,10 +24,18 @@ rollover also finalizes the previous month once. If refreshes have been missed,
 recounting starts at the last cached month to catch up. Finalized months are reused.
 Page requests only read the cached result, and failed refreshes leave it intact.
 
-The initial build (or rebuilding after cache eviction) scans the full Timescale
+The initial build (or rebuilding after cache eviction) scans the full PostgreSQL
 listen table. To reconcile older deletions, explicitly run
 :code:`./develop.sh manage refresh_listen_count_evolution --full`, which also scans
-all listens. Both operations run offline.
+all listens. Both operations run offline. Counts are grouped by submission time
+(:code:`created`), not listening time, and historical totals may exceed the live
+listen count until a full rebuild reconciles deletions.
+The refresh command uses :code:`SQLALCHEMY_LISTENS_URI` directly, bypassing
+PgBouncer for potentially long scans. Web requests use
+:code:`SQLALCHEMY_LISTENS_PGBOUNCER_URI` and only read Redis for this graph.
+These settings point to the PostgreSQL listens database, separate from the main
+:code:`SQLALCHEMY_DATABASE_URI`.
+
 
 .. click:: listenbrainz.manage:cli
    :prog: ./develop.sh manage
