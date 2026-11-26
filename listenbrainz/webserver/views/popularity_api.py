@@ -128,15 +128,18 @@ def fetch_entity_popularity_counts(entity):
     except (KeyError, TypeError):
         raise APIBadRequest(f"{entity_mbid_key} JSON element must be present and contain a list of {entity_mbid_key}")
 
-    for mbid in entity_mbids:
-        if not is_valid_uuid(mbid):
-            raise APIBadRequest(f"{entity}_mbid {mbid} is not valid.")
+    if not isinstance(entity_mbids, list):
+        raise APIBadRequest(f"{entity_mbid_key} JSON element must be present and contain a list of {entity_mbid_key}")
 
     if len(entity_mbids) == 0:
         raise APIBadRequest(f"At least one valid {entity}_mbid must be present.")
 
     if len(entity_mbids) > MAX_ITEMS_PER_GET:
         raise APIBadRequest(f"Maximum number of {entity_mbid_key} that can be fetched at once is %s" % MAX_ITEMS_PER_GET)
+
+    for mbid in entity_mbids:
+        if not is_valid_uuid(mbid):
+            raise APIBadRequest(f"{entity}_mbid {mbid} is not valid.")
 
     popularity_data, _ = popularity.get_counts(listens_conn, entity, entity_mbids)
     return popularity_data
