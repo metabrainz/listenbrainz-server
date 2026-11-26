@@ -73,7 +73,8 @@ def get(user_id, stats_type, stats_range, stats_model) -> Optional[StatApi]:
             stats_model: the pydantic model for the stats
     """
     prefix = f"{stats_type}_{stats_range}"
-    if stats_type in ("artists", "daily_activity", "listening_activity") and current_app.config.get("PREFER_CLICKHOUSE_STATS"):
+    if (stats_type in ("artists", "release_groups", "daily_activity", "listening_activity")
+            and current_app.config.get("PREFER_CLICKHOUSE_STATS")):
         stats = _get_user_stat(f"clickhouse_{prefix}_", user_id, stats_range, stats_model)
         if stats is not None:
             stats.source = "clickhouse"

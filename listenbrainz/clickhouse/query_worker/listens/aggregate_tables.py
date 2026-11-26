@@ -1,6 +1,8 @@
 """ClickHouse tables maintained from signed listen changes."""
 from dataclasses import dataclass
 
+from listenbrainz.clickhouse.query_worker.metadata_tables import ARTISTS
+
 
 @dataclass(frozen=True)
 class ListenAggregate:
@@ -68,4 +70,47 @@ ARTIST_METADATA = ListenAggregate(
     """,
 )
 
-LISTEN_AGGREGATES = (HOURLY_COUNTS, DAILY_ARTIST_COUNTS, ARTIST_METADATA)
+RELEASE_GROUP_SOURCE_COLUMNS = ("user_id", "listened_at", "release_mbid", "release_name", "artist_name",
+                                "artist_credit_mbids")
+# The flag keeps real MusicBrainz UUIDs separate from hashes of submitted credits.
+RESOLVED_RELEASE_GROUPS = """
+    WITH resolved AS (
+        SELECT user_id, listened_at, delta, release_name, artist_name, artist_credit_mbids,
+               (isNotNull(group_mbid), coalesce(group_mbid, reinterpretAsUUID(sipHash128(
+                    lowerUTF8(ifNull(release_name, '')), lowerUTF8(artist_name), artist_credit_mbids
+               )))) AS release_group_id
+          FROM {source} ANY LEFT JOIN {release_group_lookup} USING (release_mbid)
+         WHERE if(isNull(group_mbid), notEmpty(release_name), has_title)
+    )
+"""
+
+DAILY_RELEASE_GROUP_COUNTS = ListenAggregate(
+    name="user_release_group_stats_daily",
+    source_columns=RELEASE_GROUP_SOURCE_COLUMNS,
+    columns="user_id UInt32, day Date, release_group_id Tuple(Bool, UUID), listen_count Int64",
+    engine="SummingMergeTree PARTITION BY toYear(day) ORDER BY (user_id, day, release_group_id)",
+    select=RESOLVED_RELEASE_GROUPS + """
+        SELECT user_id, toDate(listened_at, 'UTC') AS day, release_group_id, sum(delta) AS listen_count
+          FROM resolved GROUP BY user_id, day, release_group_id
+    """,
+)
+
+# Canonical metadata is seeded once from MusicBrainz. Only unmapped groups need
+# labels from the listen stream. The ordered artist MBIDs are part of their key.
+RELEASE_GROUP_METADATA = ListenAggregate(
+    name="release_group_metadata",
+    source_columns=RELEASE_GROUP_SOURCE_COLUMNS,
+    columns=f"""release_group_id Tuple(Bool, UUID), release_group_name SimpleAggregateFunction(min, String),
+                artist_name SimpleAggregateFunction(min, String), artist_mbids Array(UUID), artists {ARTISTS},
+                caa_id Nullable(Int64), caa_release_mbid Nullable(UUID)""",
+    engine="AggregatingMergeTree ORDER BY release_group_id",
+    select=RESOLVED_RELEASE_GROUPS + """
+        SELECT release_group_id, min(assumeNotNull(release_name)) AS release_group_name,
+               min(resolved.artist_name) AS artist_name, any(artist_credit_mbids) AS artist_mbids
+          FROM resolved WHERE delta > 0 AND NOT release_group_id.1
+         GROUP BY release_group_id
+    """,
+)
+
+LISTEN_AGGREGATES = (HOURLY_COUNTS, DAILY_ARTIST_COUNTS, ARTIST_METADATA,
+                     DAILY_RELEASE_GROUP_COUNTS, RELEASE_GROUP_METADATA)

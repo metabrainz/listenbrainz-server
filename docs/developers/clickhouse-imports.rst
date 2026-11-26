@@ -25,7 +25,7 @@ existing submissions, it applies the changes to a clone before swapping it in.
 A full import builds its change stream, views and aggregates from the staged
 Parquet files, including aggregates newly introduced on an existing installation.
 Once the replacement is ready, the worker detaches the live source view,
-publishes the lookup, aggregates and listens, and reattaches the view last.
+publishes the lookups, aggregates and listens, and reattaches the view last.
 If publication fails, the worker rebuilds the aggregates from the published
 listens. If the worker stops before it can repair them, the detached view
 triggers recovery before the next stats read or incremental import.

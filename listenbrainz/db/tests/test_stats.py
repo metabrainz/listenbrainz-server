@@ -89,9 +89,10 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         app = create_app()
         with app.app_context():
             for activity, model in (("daily_activity", DailyActivityRecord),
-                                    ("listening_activity", ListeningActivityRecord), ("artists", EntityRecord)):
+                                    ("listening_activity", ListeningActivityRecord), ("artists", EntityRecord),
+                                    ("release_groups", EntityRecord)):
                 with self.subTest(activity=activity):
-                    fixture = "top_artists" if activity == "artists" else activity
+                    fixture = f"top_{activity}" if model is EntityRecord else activity
                     original, spark_start_2, _, spark_start_1, _ = insert_test_stats(
                         activity, "week", f"user_{fixture}_db_data_for_api_test_week.json"
                     )

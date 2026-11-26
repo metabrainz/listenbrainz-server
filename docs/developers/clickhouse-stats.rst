@@ -7,6 +7,7 @@ ClickHouse stats
    clickhouse-activity
    clickhouse-listening-activity
    clickhouse-artists
+   clickhouse-release-groups
 
 Refreshing stats
 ----------------
