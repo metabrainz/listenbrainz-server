@@ -7,13 +7,11 @@ import uuid
 
 from listenbrainz import config
 from listenbrainz import db
-from listenbrainz.db import listens as listens_db, timescale as ts, create_test_database_connect_strings
+from listenbrainz.db import listens as listens_db, create_test_database_connect_strings
 from listenbrainz.db.listens import create_test_listens_connect_strings
-from listenbrainz.db.timescale import create_test_timescale_connect_strings
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'sql')
 TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'testdata')
-TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'timescale')
 
 
 class DatabaseTestCase(unittest.TestCase):
@@ -59,21 +57,13 @@ class TimescaleTestCase(unittest.TestCase):
     def setUp(self):
         # Reset the database in setUp, this way if there is a test failure and you want
         # to inspect data, it won't have been cleared away
-        ts_connect = create_test_timescale_connect_strings()
-        ts.init_db_connection(ts_connect["DB_CONNECT"])
-        self.reset_timescale_db()
-        self.ts_conn = ts.engine.connect()
-
-        # listens are dual written, so reset the partitioned database alongside timescale
         listens_connect = create_test_listens_connect_strings()
         listens_db.init_db_connection(listens_connect["DB_CONNECT"])
         self.reset_listens_db()
+        self.listens_conn = listens_db.engine.connect()
 
     def tearDown(self):
-        self.ts_conn.close()
-
-    def reset_timescale_db(self):
-        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'reset_tables.sql'))
+        self.listens_conn.close()
 
     def reset_listens_db(self):
         expected_db_name = create_test_listens_connect_strings()["DB_NAME"]
@@ -89,5 +79,20 @@ class TimescaleTestCase(unittest.TestCase):
                     f"Refusing to reset listens database {actual_db_name!r}; "
                     f"expected {expected_db_name!r}"
                 )
-            connection.execute(sqlalchemy.text("TRUNCATE TABLE listen"))
+            connection.execute(sqlalchemy.text(
+                "TRUNCATE TABLE listen, listen_user_metadata, listen_delete_metadata, deleted_user_listen_history"
+            ))
+            # request scoped connections of earlier tests can still hold read locks on the mapping
+            # tables, DELETE does not wait for those unlike TRUNCATE
+            connection.execute(sqlalchemy.text("DELETE FROM messybrainz.submissions_redirect"))
+            connection.execute(sqlalchemy.text("DELETE FROM messybrainz.submissions"))
+            connection.execute(sqlalchemy.text("DELETE FROM mapping.mbid_mapping"))
+            connection.execute(sqlalchemy.text("DELETE FROM mapping.mbid_manual_mapping"))
+            connection.execute(sqlalchemy.text("DELETE FROM mapping.mb_metadata_cache"))
+            connection.execute(sqlalchemy.text("DELETE FROM spotify_cache.rel_album_artist"))
+            connection.execute(sqlalchemy.text("DELETE FROM spotify_cache.rel_track_artist"))
+            connection.execute(sqlalchemy.text("DELETE FROM spotify_cache.artist"))
+            connection.execute(sqlalchemy.text("DELETE FROM spotify_cache.track"))
+            connection.execute(sqlalchemy.text("DELETE FROM spotify_cache.album"))
+            connection.execute(sqlalchemy.text("DELETE FROM internetarchive_cache.track"))
             connection.commit()

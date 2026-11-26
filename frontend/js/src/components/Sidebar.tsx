@@ -28,6 +28,7 @@ function Sidebar(
         className={`toggle-sidebar-button ${isSidebarOpen ? "open" : ""}`}
         onClick={toggleSidebar}
         type="button"
+        aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
       >
         <FontAwesomeIcon
           icon={isSidebarOpen ? faXmark : toggleIcon ?? faGear}
@@ -39,6 +40,7 @@ function Sidebar(
           className="sidebar-overlay"
           onClick={toggleSidebar}
           type="button"
+          aria-label="Close sidebar"
         >
           {}
         </button>

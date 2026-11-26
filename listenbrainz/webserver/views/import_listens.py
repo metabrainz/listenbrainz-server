@@ -127,20 +127,12 @@ def create_import_task():
                 user_timezone=user_timezone,
                 filename=filename
             )
-            if result is None:
-                # task already exists in queue, rollback new entry
-                db_conn.rollback()
-            else:
-                db_conn.commit()
+            db_conn.commit()
         except Exception:
             # the uploaded file belongs to no import, do not leave it behind in the bucket
             db_conn.rollback()
             delete_import_file(saved_filename)
             raise
-
-        if result is None:
-            delete_import_file(saved_filename)
-            raise APIBadRequest(message="Data import already requested.")
 
         return jsonify(result)
 

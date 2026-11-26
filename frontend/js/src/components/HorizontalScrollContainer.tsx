@@ -122,6 +122,7 @@ export default function HorizontalScrollContainer({
         type="button"
         onClick={onManualScroll}
         tabIndex={0}
+        aria-label="Scroll backward"
       >
         <FontAwesomeIcon icon={faChevronLeft} />
       </button>
@@ -143,6 +144,7 @@ export default function HorizontalScrollContainer({
         type="button"
         onClick={onManualScroll}
         tabIndex={0}
+        aria-label="Scroll forward"
       >
         <FontAwesomeIcon icon={faChevronRight} />
       </button>

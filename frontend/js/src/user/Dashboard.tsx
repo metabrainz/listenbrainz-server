@@ -53,7 +53,12 @@ export type ListensProps = {
   already_reported_user: boolean;
 };
 
-type ListenLoaderData = ListensProps;
+type ListenLoaderData = ListensProps & {
+  pageTimestamps?: {
+    newest: number;
+    oldest: number;
+  };
+};
 
 export default function Listen() {
   const location = useLocation();
@@ -82,10 +87,13 @@ export default function Listen() {
     latestListenTs = 0,
     oldestListenTs = 0,
     already_reported_user = false,
+    pageTimestamps,
   } = data || {};
 
-  const previousListenTs = listens[0]?.listened_at;
-  const nextListenTs = listens[listens.length - 1]?.listened_at;
+  const previousListenTs = pageTimestamps?.newest ?? listens[0]?.listened_at;
+  const nextListenTs =
+    pageTimestamps?.oldest ?? listens[listens.length - 1]?.listened_at;
+  const hasListenHistory = previousListenTs !== undefined;
 
   const { currentUser, websocketsUrl, APIService } = React.useContext(
     GlobalAppContext
@@ -363,11 +371,16 @@ export default function Listen() {
     mutationFn: deleteListen,
     onSuccess: (newlyDeletedListen) => {
       queryClient.setQueryData<ListenLoaderData>(queryKey, (oldData) => {
-        if (!oldData?.listens || !newlyDeletedListen) {
+        if (!oldData?.listens?.length || !newlyDeletedListen) {
           return oldData;
         }
         return {
           ...oldData,
+          // Keep this page's boundaries when deleting its first or last listen.
+          pageTimestamps: oldData.pageTimestamps ?? {
+            newest: oldData.listens[0].listened_at,
+            oldest: oldData.listens[oldData.listens.length - 1].listened_at,
+          },
           listens: _.without(oldData.listens, newlyDeletedListen),
         };
       });
@@ -451,13 +464,13 @@ export default function Listen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allListenables]);
 
-  const isNewestButtonDisabled = listens[0]?.listened_at >= latestListenTs;
+  const isNewestButtonDisabled =
+    !previousListenTs || previousListenTs >= latestListenTs;
   const isNewerButtonDisabled =
     !previousListenTs || previousListenTs >= latestListenTs;
   const isOlderButtonDisabled = !nextListenTs || nextListenTs <= oldestListenTs;
   const isOldestButtonDisabled =
-    listens.length > 0 &&
-    listens[listens.length - 1]?.listened_at <= oldestListenTs;
+    !nextListenTs || nextListenTs <= oldestListenTs;
   const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
   const isCurrentUsersPage = currentUser?.name === user?.name;
 
@@ -512,7 +525,7 @@ export default function Listen() {
           {user && <UserSocialNetwork userName={user.name} />}
         </div>
         <div className="col-lg-8 order-lg-1">
-          {!listens.length && (
+          {!hasListenHistory && (
             <div className="empty-listens">
               <FontAwesomeIcon icon={faCompactDisc as IconProp} size="10x" />
               {isCurrentUsersPage ? (
@@ -667,7 +680,7 @@ export default function Listen() {
             </button>
           </div>
 
-          {listens.length > 0 && (
+          {hasListenHistory && (
             <div>
               <div
                 id="listens"

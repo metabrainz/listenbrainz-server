@@ -11,7 +11,7 @@ from psycopg2.extras import execute_values
 from psycopg2.sql import Identifier, SQL, Literal, Composable
 from sentry_sdk import start_transaction
 
-from listenbrainz.db import couchdb, timescale
+from listenbrainz.db import couchdb, listens as listens_db
 import listenbrainz.db.stats as db_stats
 
 
@@ -190,7 +190,7 @@ EntityListenerStatsDataset = _EntityListenerStatsDataset()
 
 class DatabaseDataset(SparkDataset, ABC):
     """ A base class that makes it simple to setup swap tables workflow for datasets generated
-    in spark and stored in timescale db.
+    in spark and stored in the listens db.
 
     When we start receiving the dataset, we create a temporary table to store the data. Once
     the dataset has been received completely, we switch the temporary table with the production tables.
@@ -206,10 +206,10 @@ class DatabaseDataset(SparkDataset, ABC):
     def get_engine(self):
         """ Return the SQLAlchemy engine to use for this dataset.
 
-        Defaults to the timescale engine. Override this to store the dataset in a different database
+        Defaults to the listens database engine. Override this to store the dataset in a different database
         (for instance the main ListenBrainz database).
         """
-        return timescale.engine
+        return listens_db.engine
 
     def _get_table_name(self, suffix=None, exclude_schema=False):
         if suffix is None:

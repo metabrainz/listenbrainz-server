@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRss } from "@fortawesome/free-solid-svg-icons";
 import NiceModal from "@ebay/nice-modal-react";
+import { Dropdown } from "react-bootstrap";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import buildAuthUrl from "../../utils/auth";
@@ -14,6 +15,7 @@ import ReleaseFilters from "./components/ReleaseFilters";
 import ReleaseTimeline from "./components/ReleaseTimeline";
 import Pill from "../../components/Pill";
 import ReleaseCardsGrid from "./components/ReleaseCardsGrid";
+import NoFreshnessImage from "../../components/NoFreshnessImage";
 import { COLOR_LB_ORANGE } from "../../utils/constants";
 import SyndicationFeedModal from "../../components/SyndicationFeedModal";
 import { getBaseUrl } from "../../utils/utils";
@@ -107,6 +109,58 @@ type FreshReleasesData = {
   releaseTypes: Array<string>;
   releaseTags: Array<string>;
 };
+
+type DropdownOption<T extends string> = {
+  value: T;
+  label: string;
+};
+
+type FreshReleasesDropdownProps<T extends string> = {
+  id: string;
+  label: string;
+  options: Array<DropdownOption<T>>;
+  value: T;
+  onChange: (value: T) => void;
+};
+
+function FreshReleasesDropdown<T extends string>({
+  id,
+  label,
+  options,
+  value,
+  onChange,
+}: FreshReleasesDropdownProps<T>) {
+  const selectedOption = options.find((option) => option.value === value);
+
+  return (
+    <div>
+      <label className="text-nowrap" htmlFor={id}>
+        {label}
+      </label>
+      <Dropdown className="fresh-releases-select">
+        <Dropdown.Toggle
+          id={id}
+          className="fresh-releases-select-toggle"
+          aria-label={`${label} ${selectedOption?.label ?? ""}`}
+        >
+          {selectedOption?.label}
+        </Dropdown.Toggle>
+        <Dropdown.Menu>
+          {options.map((option) => (
+            <Dropdown.Item
+              active={option.value === value}
+              eventKey={option.value}
+              key={option.value}
+              onClick={() => onChange(option.value)}
+            >
+              {option.label}
+            </Dropdown.Item>
+          ))}
+        </Dropdown.Menu>
+      </Dropdown>
+    </div>
+  );
+}
 
 export default function FreshReleases() {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
@@ -337,53 +391,28 @@ export default function FreshReleases() {
               </Pill>
             </div>
             <div className="fresh-releases-row align-items-end">
-              <div>
-                <label
-                  className="text-nowrap"
-                  htmlFor="fresh-releases-sort-select"
-                >
-                  Sort By:
-                </label>
-                <select
-                  id="fresh-releases-sort-select"
-                  className="form-select"
-                  value={sort}
-                  onChange={(event) => {
-                    setSort(event.target.value as SortOption);
-                    if (!hasSelectedSortDirection) {
-                      setSortDirection(
-                        DefaultSortDirections[event.target.value as SortOption]
-                      );
-                    }
-                  }}
-                >
-                  {availableSortOptions.map((option) => (
-                    <option value={option.value} key={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="fresh-releases-sort-direction-select">
-                  Direction:
-                </label>
-                <select
-                  id="fresh-releases-sort-direction-select"
-                  className="form-select"
-                  value={sortDirection}
-                  onChange={(event) => {
-                    setSortDirection(event.target.value as SortDirection);
-                    setHasSelectedSortDirection(true);
-                  }}
-                >
-                  {Object.entries(SortDirections).map(([_, direction]) => (
-                    <option value={direction.value} key={direction.value}>
-                      {direction.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <FreshReleasesDropdown
+                id="fresh-releases-sort-select"
+                label="Sort By:"
+                options={availableSortOptions}
+                value={sort}
+                onChange={(nextSort) => {
+                  setSort(nextSort);
+                  if (!hasSelectedSortDirection) {
+                    setSortDirection(DefaultSortDirections[nextSort]);
+                  }
+                }}
+              />
+              <FreshReleasesDropdown
+                id="fresh-releases-sort-direction-select"
+                label="Direction:"
+                options={Object.values(SortDirections)}
+                value={sortDirection}
+                onChange={(nextDirection) => {
+                  setSortDirection(nextDirection);
+                  setHasSelectedSortDirection(true);
+                }}
+              />
               <button
                 type="button"
                 className="btn btn-icon btn-info atom-button ms-auto"
@@ -445,10 +474,7 @@ export default function FreshReleases() {
             >
               {filteredList.length === 0 ? (
                 <div className="no-release">
-                  <img
-                    src="/static/img/recommendations/no-freshness.png"
-                    alt={alt}
-                  />
+                  <NoFreshnessImage alt={alt} />
                   <div className="text-muted">{message}</div>
                 </div>
               ) : (

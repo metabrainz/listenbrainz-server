@@ -25,7 +25,7 @@ def run_post_recommendation_troi_bot():
         make_playlist_from_recommendations(user)
 
 
-def run_daily_jams_troi_bot(db_conn, ts_conn, create_all):
+def run_daily_jams_troi_bot(db_conn, create_all):
     """ Top level function called hourly to generate daily jams playlists for users
 
     Args:
@@ -35,7 +35,7 @@ def run_daily_jams_troi_bot(db_conn, ts_conn, create_all):
     """
     # Now generate daily jams (and other in the future) for users who follow troi bot
     users = get_users_for_daily_jams(db_conn, create_all)
-    existing_urls = get_existing_playlist_urls(ts_conn, [x["id"] for x in users], "daily-jams")
+    existing_urls = get_existing_playlist_urls(db_conn, [x["id"] for x in users], "daily-jams")
     service = SpotifyService()
     for user in users:
         try:

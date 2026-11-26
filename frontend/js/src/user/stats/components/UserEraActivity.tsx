@@ -14,6 +14,7 @@ import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
+import { useNivoTheme } from "../../../utils/nivoTheme";
 
 // Constants
 const MIN_BAR_WIDTH_PX = 60;
@@ -114,6 +115,7 @@ const getExpandedDecadeData = (
 
 export default function UserEraActivity({ user, range }: UserEraActivityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
+  const nivoTheme = useNivoTheme();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [selectedDecade, setSelectedDecade] = useState<number | null>(null);
@@ -369,18 +371,23 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
                     gridYValues={5}
                     colors={() => COLOR_LB_ORANGE}
                     theme={{
+                      ...nivoTheme,
                       grid: {
                         line: {
-                          stroke: "#e0e0e0",
+                          stroke: nivoTheme.grid?.line?.stroke,
                           strokeWidth: 1,
                         },
                       },
                       axis: {
                         ticks: {
-                          text: { fontSize: 11 },
+                          text: {
+                            fill: nivoTheme.axis?.ticks?.text?.fill,
+                            fontSize: 11,
+                          },
                         },
                         legend: {
                           text: {
+                            fill: nivoTheme.axis?.legend?.text?.fill,
                             fontSize: 12,
                             fontWeight: "bold",
                           },

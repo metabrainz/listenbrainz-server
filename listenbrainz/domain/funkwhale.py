@@ -30,17 +30,43 @@ class FunkwhaleService:
         token = db_funkwhale.get_token(db_conn, user_id, server["id"])
         if not token:
             return None
-        user = {
-            "user_id": user_id,
-            "host_url": host_url,
-            "client_id": server["client_id"],
-            "client_secret": server["client_secret"],
+        connection = {
             "access_token": token["access_token"],
             "refresh_token": token["refresh_token"],
             "token_expiry": token["token_expiry"],
-            "funkwhale_server_id": server["id"]
+            "server_id": server["id"],
+            "host_url": host_url,
+            "client_id": server["client_id"],
+            "client_secret": server["client_secret"],
+        }
+        return self.get_user_from_connection(user_id, connection, refresh)
+
+    def get_user_from_connection(self, user_id: int, connection: dict, refresh: bool = False) -> Optional[dict]:
+        """ Build the user dict from an already fetched token and server, refreshing an expired token if asked.
+
+        Args:
+            user_id: the ListenBrainz row ID of the user
+            connection: a dict with the token's access_token, refresh_token and token_expiry, and the
+                server's server_id, host_url, client_id and client_secret
+            refresh: whether to refresh the access token if it has expired
+        """
+        user = {
+            "user_id": user_id,
+            "host_url": connection["host_url"],
+            "client_id": connection["client_id"],
+            "client_secret": connection["client_secret"],
+            "access_token": connection["access_token"],
+            "refresh_token": connection["refresh_token"],
+            "token_expiry": connection["token_expiry"],
+            "funkwhale_server_id": connection["server_id"]
         }
         if refresh and self.user_oauth_token_has_expired(user):
+            server = {
+                "id": connection["server_id"],
+                "host_url": connection["host_url"],
+                "client_id": connection["client_id"],
+                "client_secret": connection["client_secret"],
+            }
             try:
                 user = self.refresh_access_token(user_id, server, user["refresh_token"])
             except:

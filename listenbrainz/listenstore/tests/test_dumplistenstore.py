@@ -1,3 +1,4 @@
+import io
 import os
 import shutil
 import subprocess
@@ -6,15 +7,17 @@ import tempfile
 from datetime import datetime, timezone, timedelta
 from tempfile import TemporaryDirectory
 
-from psycopg2.extras import execute_values
+import orjson
+import pyarrow.parquet as pq
+from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 from listenbrainz.dumps.exceptions import SchemaMismatchException
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION, LISTEN_MINIMUM_DATE
-from listenbrainz.listenstore.dump_listenstore import DumpListenStore
+from listenbrainz.listenstore.dump_listenstore import DumpListenStore, LISTEN_DUMP_COLUMNS, SPARK_PAGE_COLUMNS
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
-from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
+from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data, delete_listens
 from listenbrainz.tests.integration import NonAPIIntegrationTestCase
 from listenbrainz.webserver import timescale_connection, redis_connection
 
@@ -40,19 +43,9 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         """
         submit = []
         for listen in listens:
-            submit.append((*listen.to_timescale(), listen.inserted_timestamp))
-
-        query = """INSERT INTO listen (listened_at, user_id, recording_msid, data, created)
-                        VALUES %s
-                   ON CONFLICT (listened_at, user_id, recording_msid)
-                    DO NOTHING
-                """
-
-        conn = timescale.engine.raw_connection()
-        with conn.cursor() as curs:
-            execute_values(curs, query, submit, template=None)
-
-        conn.commit()
+            listened_at, user_id, recording_msid, data = listen.to_timescale()
+            submit.append((listened_at, listen.inserted_timestamp, user_id, recording_msid, data))
+        listens_db.insert(submit)
 
     def test_dump_listens(self):
         self._create_test_data(self.testuser_name, self.testuser_id)
@@ -66,6 +59,102 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         )
         self.assertTrue(os.path.isfile(dump))
         shutil.rmtree(temp_dir)
+
+    def test_spark_dump_with_mapping(self):
+        """ Test that the spark dump uses the mapping from the listens db, preferring the user's manual mapping """
+        base = 1500000000
+        listens = generate_data(self.testuser_id, self.testuser_name, base, 3, base)
+        self._insert_with_created(listens)
+
+        mapped_mbid = "2f3d422f-8890-41a1-9762-fbe16f107c31"
+        manual_mbid = "2cfad207-3f55-4aec-8120-86cf66e34d59"
+        with listens_db.engine.begin() as connection:
+            for recording_id, (mbid, name) in enumerate([(mapped_mbid, "Strangers"), (manual_mbid, "Immigrant Song")]):
+                connection.execute(text("""
+                    INSERT INTO mapping.mb_metadata_cache
+                               (recording_mbid, recording_id, artist_mbids, artist_ids, release_mbid, release_id,
+                                recording_data, artist_data, tag_data, release_data, dirty)
+                        VALUES (:mbid, :id, '{8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11}'::UUID[], '{1}'::INTEGER[],
+                                '76df3287-6cda-33eb-8e9a-044b5e15ffdd', 1, :recording_data,
+                                '{"name": "Portishead", "artist_credit_id": 204, "artists": []}',
+                                '{"artist": [], "recording": [], "release_group": []}',
+                                '{"mbid": "76df3287-6cda-33eb-8e9a-044b5e15ffdd", "name": "Dummy"}', 'f')
+                """), {"mbid": mbid, "id": recording_id, "recording_data": f'{{"name": "{name}"}}'})
+            connection.execute(text("""
+                INSERT INTO mapping.mbid_mapping (recording_msid, recording_mbid, match_type)
+                     VALUES (:msid_0, :mapped_mbid, 'exact_match'), (:msid_1, :mapped_mbid, 'exact_match')
+            """), {"msid_0": listens[0].recording_msid, "msid_1": listens[1].recording_msid, "mapped_mbid": mapped_mbid})
+            connection.execute(text("""
+                INSERT INTO mapping.mbid_manual_mapping (recording_msid, recording_mbid, user_id)
+                     VALUES (:msid, :mbid, :user_id)
+            """), {"msid": listens[1].recording_msid, "mbid": manual_mbid, "user_id": self.testuser_id})
+
+        with TemporaryDirectory() as temp_dir:
+            archive_path = self.dumpstore.dump_listens_for_spark(
+                location=temp_dir,
+                dump_id=1,
+                dump_type="full",
+                start_time=datetime.fromtimestamp(base - 1, timezone.utc),
+                end_time=datetime.fromtimestamp(base + 10, timezone.utc),
+            )
+            with tarfile.open(archive_path) as tar:
+                tar.extractall(temp_dir, filter="data")
+            parquet_files = [
+                os.path.join(root, name)
+                for root, _, names in os.walk(temp_dir)
+                for name in names if name.endswith(".parquet")
+            ]
+            rows = [row for file in sorted(parquet_files) for row in pq.read_table(file).to_pylist()]
+
+        rows = {row["recording_msid"]: row for row in rows}
+        self.assertEqual(len(rows), 3)
+
+        mapped = rows[listens[0].recording_msid]
+        self.assertEqual(mapped["recording_mbid"], mapped_mbid)
+        self.assertEqual(mapped["recording_name"], "Strangers")
+        self.assertEqual(mapped["artist_name"], "Portishead")
+        self.assertEqual(mapped["artist_credit_id"], 204)
+        self.assertEqual(mapped["release_name"], "Dummy")
+        self.assertEqual(mapped["artist_credit_mbids"], ["8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"])
+
+        manual = rows[listens[1].recording_msid]
+        self.assertEqual(manual["recording_mbid"], manual_mbid)
+        self.assertEqual(manual["recording_name"], "Immigrant Song")
+
+        unmapped = rows[listens[2].recording_msid]
+        self.assertIsNone(unmapped["recording_mbid"])
+        self.assertIsNone(unmapped["artist_credit_id"])
+        self.assertEqual(unmapped["recording_name"], "Crack Rock")
+        self.assertEqual(unmapped["artist_name"], "Frank Ocean")
+
+    def test_spark_full_dump_includes_start_time(self):
+        """ Test that a spark full dump includes listens listened at exactly the start time, which the API accepts """
+        start = int(LISTEN_MINIMUM_DATE.timestamp())
+        listens = generate_data(self.testuser_id, self.testuser_name, start, 2, start + 10)
+        self._insert_with_created(listens)
+
+        with TemporaryDirectory() as temp_dir:
+            archive_path = self.dumpstore.dump_listens_for_spark(
+                location=temp_dir,
+                dump_id=1,
+                dump_type="full",
+                start_time=LISTEN_MINIMUM_DATE,
+                end_time=datetime.fromtimestamp(start + 20, timezone.utc),
+            )
+            with tarfile.open(archive_path) as tar:
+                tar.extractall(temp_dir, filter="data")
+            rows = [
+                row
+                for root, _, names in os.walk(temp_dir)
+                for name in names if name.endswith(".parquet")
+                for row in pq.read_table(os.path.join(root, name)).to_pylist()
+            ]
+
+        # parquet timestamps are read back without a timezone, in UTC
+        self.assertCountEqual(
+            [int(row["listened_at"].replace(tzinfo=timezone.utc).timestamp()) for row in rows],
+            [start, start + 1]
+        )
 
     def test_incremental_dump(self):
         base = 1500000000
@@ -85,12 +174,12 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         )
         self.assertTrue(os.path.isfile(dump_location))
 
-        self.reset_timescale_db()
+        self.reset_listens_db()
         self.ls.import_listens_dump(dump_location)
         recalculate_all_user_data()
 
         to_ts = datetime.fromtimestamp(base + 11, timezone.utc)
-        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=to_ts)
+        listens = self.ls.fetch_listens(user=self.testuser, to_ts=to_ts)
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, base + 5)
         self.assertEqual(listens[1].ts_since_epoch, base + 4)
@@ -98,6 +187,41 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         self.assertEqual(listens[3].ts_since_epoch, base + 2)
 
         shutil.rmtree(temp_dir)
+
+    def _dump_recording_msids(self, start, end, full_dump, spark):
+        columns = SPARK_PAGE_COLUMNS if spark else LISTEN_DUMP_COLUMNS
+
+        def wrap(query):
+            if spark:
+                return self.dumpstore.spark_dump_query(query, by_created=not full_dump)
+            return query
+
+        return [
+            row["recording_msid"]
+            for pages in self.dumpstore.iter_dump_files(columns, wrap, start, end, full_dump)
+            for page in pages
+            for row in page
+        ]
+
+    def test_consecutive_dump_boundaries(self):
+        """ Full and adjacent incremental dumps include each cutoff once, including late imports. """
+        base = 1500000000
+        # All three listens have old listening dates; the last two are imported after the full cutoff.
+        listens = generate_data(self.testuser_id, self.testuser_name, base - 10, 3, base)
+        self._insert_with_created(listens)
+        self.dumpstore.page_size = 1
+
+        for spark in [False, True]:
+            dumped_msids = []
+            for index in range(3):
+                full_dump = index == 0
+                start = LISTEN_MINIMUM_DATE if full_dump else datetime.fromtimestamp(base + index - 1, timezone.utc)
+                end = datetime.fromtimestamp(base + index, timezone.utc)
+                msids = self._dump_recording_msids(start, end, full_dump, spark)
+                with self.subTest(spark=spark, interval=index):
+                    self.assertEqual(msids, [listens[index].recording_msid])
+                dumped_msids.extend(msids)
+            self.assertCountEqual(dumped_msids, [listen.recording_msid for listen in listens])
 
     def test_time_range_full_dumps(self):
         base = 1500000000
@@ -115,17 +239,135 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         )
         self.assertTrue(os.path.isfile(dump_location))
 
-        self.reset_timescale_db()
+        self.reset_listens_db()
         self.ls.import_listens_dump(dump_location)
         recalculate_all_user_data()
 
-        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.fromtimestamp(base + 11, timezone.utc))
+        listens = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.fromtimestamp(base + 11, timezone.utc))
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, base + 5)
         self.assertEqual(listens[1].ts_since_epoch, base + 4)
         self.assertEqual(listens[2].ts_since_epoch, base + 3)
         self.assertEqual(listens[3].ts_since_epoch, base + 2)
         self.assertEqual(listens[4].ts_since_epoch, base + 1)
+
+    def test_dump_excludes_deleted_listens(self):
+        """ Test that listens deleted from the listens DB are not dumped """
+        self._create_test_data(self.testuser_name, self.testuser_id)
+        self.ls.delete_listen(
+            datetime.fromtimestamp(1400000050, timezone.utc), self.testuser_id, "c7a41965-9f1e-456c-8b1d-27c0f0dde280"
+        )
+        delete_listens()
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.dumpstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            start_time=LISTEN_MINIMUM_DATE,
+            end_time=datetime.now(timezone.utc) + timedelta(seconds=60),
+            dump_type="full"
+        )
+
+        self.reset_listens_db()
+        self.ls.import_listens_dump(dump_location)
+        recalculate_all_user_data()
+
+        listens = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.fromtimestamp(1400000300, timezone.utc))
+        self.assertEqual(len(listens), 4)
+        self.assertNotIn(1400000050, [listen.ts_since_epoch for listen in listens])
+        self.assertEqual(
+            [listen.ts_since_epoch for listen in listens],
+            [1400000200, 1400000150, 1400000100, 1400000000]
+        )
+        shutil.rmtree(temp_dir)
+
+    def test_full_dump_by_partition(self):
+        """ Test that a full dump pages through the listens of each partition and writes them to its own file,
+            sorted by user and listened_at, newest first """
+        users = [self.testuser] + [db_user.get_or_create(self.db_conn, i, f"user_{i}") for i in range(2, 9)]
+        for user in users:
+            self._create_test_data(user["musicbrainz_id"], user["id"])
+
+        with listens_db.engine.connect() as connection:
+            expected_file_count = connection.execute(text("SELECT count(DISTINCT tableoid) FROM listen")).scalar_one()
+
+        # 5 listens per user, so users are split across pages
+        self.dumpstore.page_size = 3
+        with TemporaryDirectory() as temp_dir:
+            dump_location = self.dumpstore.dump_listens(
+                location=temp_dir,
+                dump_id=1,
+                start_time=LISTEN_MINIMUM_DATE,
+                end_time=datetime.now(timezone.utc) + timedelta(seconds=60),
+                dump_type="full"
+            )
+            zstd = subprocess.run(["zstd", "--decompress", "--stdout", dump_location], capture_output=True, check=True)
+            with tarfile.open(fileobj=io.BytesIO(zstd.stdout)) as tar:
+                files = [
+                    [orjson.loads(line) for line in tar.extractfile(member)]
+                    for member in tar if member.name.endswith(".listens")
+                ]
+
+        self.assertEqual(len(files), expected_file_count)
+        user_files = {}
+        for i, listens in enumerate(files):
+            keys = [(listen["user_id"], -listen["timestamp"]) for listen in listens]
+            self.assertEqual(keys, sorted(keys))
+            for listen in listens:
+                user_files.setdefault(listen["user_name"], set()).add(i)
+        # every user is dumped, all their listens in one file
+        self.assertEqual(set(user_files), {user["musicbrainz_id"] for user in users})
+        self.assertTrue(all(len(file_ids) == 1 for file_ids in user_files.values()))
+        self.assertEqual(sum(len(listens) for listens in files), 5 * len(users))
+
+    def test_spark_dumps_page_through_listens(self):
+        """ Test that the full and incremental spark dumps include every listen once when paging """
+        users = [self.testuser] + [db_user.get_or_create(self.db_conn, i, f"user_{i}") for i in range(2, 5)]
+        base = 1500000000
+        listens = []
+        for user in users:
+            listens.extend(generate_data(user["id"], user["musicbrainz_id"], base, 5, base))
+        self._insert_with_created(listens)
+        self.dumpstore.page_size = 3
+
+        with listens_db.engine.connect() as connection:
+            expected_full_file_count = connection.execute(text("SELECT count(DISTINCT tableoid) FROM listen")).scalar_one()
+
+        for dump_type in ["full", "incremental"]:
+            with TemporaryDirectory() as temp_dir:
+                archive_path = self.dumpstore.dump_listens_for_spark(
+                    location=temp_dir,
+                    dump_id=1,
+                    dump_type=dump_type,
+                    start_time=datetime.fromtimestamp(base - 1, timezone.utc),
+                    end_time=datetime.fromtimestamp(base + 10, timezone.utc),
+                )
+                with tarfile.open(archive_path) as tar:
+                    tar.extractall(temp_dir, filter="data")
+                files = [
+                    os.path.join(root, name)
+                    for root, _, names in os.walk(temp_dir)
+                    for name in names if name.endswith(".parquet")
+                ]
+                rows = []
+                user_files = {}
+                for filename in files:
+                    parquet = pq.ParquetFile(filename)
+                    self.assertGreater(parquet.metadata.num_row_groups, 1)
+                    file_rows = parquet.read().to_pylist()
+                    rows.extend(file_rows)
+                    for row in file_rows:
+                        user_files.setdefault(row["user_id"], set()).add(filename)
+                if dump_type == "full":
+                    self.assertEqual(len(files), expected_full_file_count)
+                    self.assertTrue(all(len(names) == 1 for names in user_files.values()))
+                else:
+                    self.assertEqual(len(files), 1)
+                    self.assertEqual(os.path.basename(files[0]), "0.parquet")
+            self.assertCountEqual(
+                [(row["user_id"], row["recording_msid"]) for row in rows],
+                [(listen.user_id, listen.recording_msid) for listen in listens],
+                dump_type
+            )
 
     # tests test_full_dump_listen_with_no_created
     # and test_incremental_dumps_listen_with_no_created have been removed because
@@ -145,12 +387,12 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         )
         self.assertTrue(os.path.isfile(dump_location))
 
-        self.reset_timescale_db()
+        self.reset_listens_db()
         self.ls.import_listens_dump(dump_location)
         recalculate_all_user_data()
 
         to_ts = datetime.fromtimestamp(1400000300, timezone.utc)
-        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=to_ts)
+        listens = self.ls.fetch_listens(user=self.testuser, to_ts=to_ts)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -175,11 +417,11 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         )
         self.assertTrue(os.path.isfile(dump_location))
 
-        self.reset_timescale_db()
+        self.reset_listens_db()
         self.ls.import_listens_dump(dump_location)
         recalculate_all_user_data()
 
-        listens, min_ts, max_ts = self.ls.fetch_listens(user=user, to_ts=datetime.fromtimestamp(1400000300, timezone.utc))
+        listens = self.ls.fetch_listens(user=user, to_ts=datetime.fromtimestamp(1400000300, timezone.utc))
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -187,7 +429,7 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
-        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.fromtimestamp(1400000300, timezone.utc))
+        listens = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.fromtimestamp(1400000300, timezone.utc))
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)

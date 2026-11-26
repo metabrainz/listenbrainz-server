@@ -1,5 +1,4 @@
 import json
-import os
 import time
 
 import listenbrainz.db.user as db_user
@@ -7,11 +6,8 @@ from flask import current_app, url_for
 
 from redis import Redis
 
-from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.webserver.testing import ServerTestCase, APICompatServerTestCase
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
-
-TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
 
 
 class IntegrationTestCase(ServerTestCase, DatabaseTestCase):
@@ -96,12 +92,13 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
             response = self.client.get(url, **kwargs)
             data = json.loads(response.data)['payload']
             if data['count'] == num_items:
-                break
+                return response
             time.sleep(0.5)
 
-        return response
+        self.fail(f"Expected {num_items} listens from {url} after {attempts} attempts; "
+                  f"last response: {response.get_data(as_text=True)}")
 
-    def send_data(self, payload, user=None, recalculate=False, url_params={}):
+    def send_data(self, payload, user=None, wait_for_writer=False, url_params={}):
         """ Sends payload to api.submit_listen and return the response
         """
         if not user:
@@ -112,12 +109,12 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
             headers={'Authorization': 'Token {}'.format(user['auth_token'])},
             content_type='application/json'
         )
-        if recalculate:
-            # recalculate only if asked because there are many tests for invalid
+        if wait_for_writer:
+            # wait only if asked because there are many tests for invalid
             # submissions or where we don't fetch listens. in those cases, this
-            # sleep will add unnecessary slowness.
+            # sleep will add unnecessary slowness. listen counts are updated at
+            # ingest, so no recalculation is needed.
             time.sleep(0.5)  # wait for listens to be picked up by timescale writer
-            recalculate_all_user_data()
         return response
 
 

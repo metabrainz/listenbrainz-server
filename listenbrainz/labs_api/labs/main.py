@@ -25,8 +25,9 @@ from listenbrainz.labs_api.labs.api.bulk_tag_lookup import BulkTagLookup
 from sqlalchemy.pool import QueuePool
 
 from listenbrainz.webserver import load_config
+from listenbrainz.labs_api.labs.errors import init_error_handlers
 from listenbrainz import db
-from listenbrainz.db import timescale as ts
+from listenbrainz.db import listens as listens_db
 
 register_query(ArtistCountryFromArtistMBIDQuery())
 register_query(ArtistCreditIdFromArtistMBIDQuery())
@@ -48,6 +49,7 @@ register_query(TagSimilarityQuery())
 register_query(BulkTagLookup())
 
 app = create_app()
+init_error_handlers(app)
 load_config(app)
 init_sentry(app, "DATASETS_SENTRY_DSN")
 # labs_api uwsgi runs single-threaded workers (no `threads = N`), so each
@@ -60,8 +62,8 @@ db.init_db_connection(
     max_overflow=2,
     pool_pre_ping=True,
 )
-ts.init_db_connection(
-    app.config["SQLALCHEMY_TIMESCALE_PGBOUNCER_URI"],
+listens_db.init_db_connection(
+    app.config.get("SQLALCHEMY_LISTENS_PGBOUNCER_URI"),
     poolclass=QueuePool,
     pool_size=2,
     max_overflow=2,

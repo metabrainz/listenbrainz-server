@@ -39,7 +39,7 @@ def create_import_task(db_conn, user_id, service, from_date, to_date, file_path,
     import_task = result.first()
 
     if import_task is not None:
-        query = "INSERT INTO background_tasks (user_id, task, metadata) VALUES (:user_id, :task, :metadata) ON CONFLICT DO NOTHING RETURNING id"
+        query = "INSERT INTO background_tasks (user_id, task, metadata) VALUES (:user_id, :task, :metadata)"
         db_conn.execute(text(query), {
             "user_id": user_id,
             "task": "import_listens",

@@ -47,7 +47,7 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         self.assert200(r)
 
         to_ts = datetime.now(timezone.utc)
-        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
+        listens = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
         recent = self.rs.get_recent_listens(4)
@@ -80,7 +80,7 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
         to_ts = datetime.now(timezone.utc)
-        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
+        listens = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
     def test_dedup_same_batch(self):
@@ -90,7 +90,7 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         self.assert200(r)
 
         to_ts = datetime.now(timezone.utc)
-        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
+        listens = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
     def test_dedup_different_users(self):
@@ -108,10 +108,10 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         self.assert200(r)
 
         to_ts = datetime.now(timezone.utc)
-        listens, _, _ = self.ls.fetch_listens(user1, to_ts=to_ts)
+        listens = self.ls.fetch_listens(user1, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
-        listens, _, _ = self.ls.fetch_listens(user2, to_ts=to_ts)
+        listens = self.ls.fetch_listens(user2, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
     def test_dedup_same_timestamp_different_tracks(self):
@@ -135,7 +135,7 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         self.assert200(r)
 
         to_ts = datetime.now(timezone.utc)
-        listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
+        listens = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 4)
 
     def test_rejection_queue_on_error(self):
@@ -186,10 +186,10 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
 
             self.assertEqual(body[0]['user_id'], user["id"])
             self.assertEqual(body[0]['listened_at'], ts)
-            listens, _, _ = self.ls.fetch_listens(user, to_ts=datetime.now(timezone.utc))
+            listens = self.ls.fetch_listens(user, to_ts=datetime.now(timezone.utc))
             self.assertEqual(len(listens), 0)
             # test timescale writer is still working and processing listens
             r = self.send_listen(user, "valid_single.json")
             self.assert200(r)
-            listens, _, _ = self.ls.fetch_listens(user, to_ts=datetime.now(timezone.utc))
+            listens = self.ls.fetch_listens(user, to_ts=datetime.now(timezone.utc))
             self.assertEqual(len(listens), 1)

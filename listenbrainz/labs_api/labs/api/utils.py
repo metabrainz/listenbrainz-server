@@ -10,7 +10,7 @@ from unidecode import unidecode
 from psycopg2.extras import execute_values
 from psycopg2.sql import SQL, Identifier
 
-from listenbrainz.db import timescale
+from listenbrainz.db import listens as listens_db
 from listenbrainz.db.recording import resolve_redirect_mbids, resolve_canonical_mbids
 
 
@@ -48,7 +48,7 @@ def query_combined_lookup(column: LookupType, lookups: list[tuple], service):
       GROUP BY {column}, idx      
     """).format(column=Identifier(column.value), table=SQL(table))
 
-    with closing(timescale.engine.raw_connection()) as conn, conn.cursor() as curs:
+    with closing(listens_db.engine.raw_connection()) as conn, conn.cursor() as curs:
         execute_values(curs, query, lookups, page_size=len(lookups))
         result = curs.fetchall()
         return {row[0]: row[1] for row in result}
@@ -155,7 +155,7 @@ def lookup_recording_canonical_metadata(mbids: list[str]):
     with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as conn, conn.cursor() as curs:
         redirected_mbids, redirect_index, _ = resolve_redirect_mbids(curs, "recording", mbids)
 
-    with closing(timescale.engine.raw_connection()) as ts_conn, ts_conn.cursor() as curs:
+    with closing(listens_db.engine.raw_connection()) as listens_conn, listens_conn.cursor() as curs:
         canonical_mbids, canonical_index, _ = resolve_canonical_mbids(curs, redirected_mbids)
         query = """
               WITH mbids(gid) AS (VALUES %s)

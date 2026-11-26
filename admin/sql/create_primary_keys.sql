@@ -29,6 +29,8 @@ ALTER TABLE user_setting ADD CONSTRAINT user_setting_pkey PRIMARY KEY (id);
 
 ALTER TABLE recommendation.do_not_recommend ADD CONSTRAINT rec_do_not_recommend_pkey PRIMARY KEY (id);
 
+ALTER TABLE clickhouse_query_jobs ADD CONSTRAINT clickhouse_query_jobs_id_pkey PRIMARY KEY (id);
+
 ALTER TABLE background_tasks ADD CONSTRAINT background_tasks_id_pkey PRIMARY KEY (id);
 
 ALTER TABLE user_data_export ADD CONSTRAINT user_data_export_id_pkey PRIMARY KEY (id);
@@ -42,5 +44,8 @@ ALTER TABLE funkwhale_tokens ADD CONSTRAINT funkwhale_tokens_id_pkey PRIMARY KEY
 ALTER TABLE navidrome_servers ADD CONSTRAINT navidrome_servers_id_pkey PRIMARY KEY (id);
 
 ALTER TABLE navidrome_tokens ADD CONSTRAINT navidrome_tokens_id_pkey PRIMARY KEY (id);
+
+ALTER TABLE playlist.playlist ADD CONSTRAINT playlist_pkey PRIMARY KEY (id);
+ALTER TABLE playlist.playlist_recording ADD CONSTRAINT playlist_recording_pkey PRIMARY KEY (id);
 
 COMMIT;

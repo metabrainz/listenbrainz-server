@@ -53,7 +53,8 @@ CREATE UNIQUE INDEX caa_id_release_mbid_ndx_release_color ON release_color (caa_
 
 CREATE UNIQUE INDEX user_id_ndx_user_setting ON user_setting (user_id);
 
-CREATE UNIQUE INDEX background_tasks_user_id_task_type_uniq_idx ON background_tasks (user_id, task);
+CREATE UNIQUE INDEX background_tasks_user_id_delete_task_uniq_idx ON background_tasks (user_id, task) WHERE task IN ('delete_user', 'delete_listens') AND failed_at IS NULL;
+CREATE UNIQUE INDEX background_tasks_user_id_running_uniq_idx ON background_tasks (user_id) WHERE claimed_at IS NOT NULL;
 
 CREATE INDEX user_data_export_user_id_idx ON user_data_export (user_id);
 
@@ -72,5 +73,20 @@ CREATE INDEX host_url_ndx_navidrome_servers ON navidrome_servers (host_url);
 CREATE INDEX user_id_ndx_navidrome_tokens ON navidrome_tokens (user_id);
 CREATE INDEX server_id_ndx_navidrome_tokens ON navidrome_tokens (navidrome_server_id);
 CREATE UNIQUE INDEX unique_user_server_navidrome_tokens ON navidrome_tokens (user_id, navidrome_server_id);
+
+CREATE UNIQUE INDEX mbid_playlist ON playlist.playlist (mbid);
+CREATE INDEX creator_id_playlist ON playlist.playlist (creator_id);
+CREATE INDEX copied_from_id_playlist ON playlist.playlist (copied_from_id);
+CREATE INDEX created_for_id_playlist ON playlist.playlist (created_for_id);
+CREATE INDEX playlist_id_playlist_recording ON playlist.playlist_recording (playlist_id);
+CREATE INDEX mbid_playlist_recording ON playlist.playlist_recording (mbid);
+CREATE INDEX added_by_id_playlist_recording ON playlist.playlist_recording (added_by_id);
+CREATE INDEX playlist_id_playlist_collaborator ON playlist.playlist_collaborator (playlist_id);
+CREATE INDEX collaborator_id_playlist_collaborator ON playlist.playlist_collaborator (collaborator_id);
+CREATE INDEX playlist_id_collaborator_id_playlist_collaborator
+    ON playlist.playlist_collaborator (playlist_id, collaborator_id);
+CREATE INDEX public_playlist_idx ON playlist.playlist (creator_id, created_for_id) WHERE public = true;
+CREATE INDEX playlist_name_trgm_gin ON playlist.playlist USING GIN (name gin_trgm_ops);
+CREATE INDEX playlist_description_trgm_gin ON playlist.playlist USING GIN (description gin_trgm_ops);
 
 COMMIT;

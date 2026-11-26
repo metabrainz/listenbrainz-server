@@ -45,11 +45,11 @@ class TopRecordingsCacheTest(unittest.TestCase):
         mock_get_top.return_value = []
         mock_load.return_value = []
         mock_color.return_value = {}
-        mock_ts_conn = MagicMock()
+        mock_listens_conn = MagicMock()
 
         from listenbrainz.db.popularity import get_top_recordings_for_artist
 
-        result = get_top_recordings_for_artist(MagicMock(), mock_ts_conn, ARTIST_MBID)
+        result = get_top_recordings_for_artist(MagicMock(), mock_listens_conn, ARTIST_MBID)
 
         self.assertEqual(result, [])
         mock_cache.get.assert_called_once()

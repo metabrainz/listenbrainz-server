@@ -305,6 +305,7 @@ export default function BrainzPlayer() {
     youtubeEnabled = true,
     internetArchiveEnabled = true,
     brainzplayerEnabled = true,
+    notificationsEnabled = true,
     dataSourcesPriority = defaultDataSourcesPriority,
   } = userPreferences?.brainzplayer ?? {};
 
@@ -944,33 +945,35 @@ export default function BrainzPlayer() {
     }
     // Send a notification. If user allowed browser/OS notifications use that,
     // otherwise show a toast notification on the page
-    hasNotificationPermission().then((permissionGranted) => {
-      if (permissionGranted) {
-        createNotification(title, artist, album, artwork?.[0]?.src);
-      } else {
-        const message = (
-          <div className="alert brainzplayer-alert">
-            {artwork?.length ? (
-              <img
-                className="alert-thumbnail"
-                src={artwork[0].src}
-                alt={album || title}
-                // eslint-disable-next-line no-console
-                onError={console.error}
-              />
-            ) : (
-              <FontAwesomeIcon icon={faPlayCircle as IconProp} />
-            )}
-            <div>
-              {title}
-              {artist && ` — ${artist}`}
-              {album && ` — ${album}`}
+    if (notificationsEnabled) {
+      hasNotificationPermission().then((permissionGranted) => {
+        if (permissionGranted) {
+          createNotification(title, artist, album, artwork?.[0]?.src);
+        } else {
+          const message = (
+            <div className="alert brainzplayer-alert">
+              {artwork?.length ? (
+                <img
+                  className="alert-thumbnail"
+                  src={artwork[0].src}
+                  alt={album || title}
+                  // eslint-disable-next-line no-console
+                  onError={console.error}
+                />
+              ) : (
+                <FontAwesomeIcon icon={faPlayCircle as IconProp} />
+              )}
+              <div>
+                {title}
+                {artist && ` — ${artist}`}
+                {album && ` — ${album}`}
+              </div>
             </div>
-          </div>
-        );
-        handleInfoMessage(message, `Playing a track`);
-      }
-    });
+          );
+          handleInfoMessage(message, `Playing a track`);
+        }
+      });
+    }
   };
 
   const clearQueue = async (): Promise<void> => {

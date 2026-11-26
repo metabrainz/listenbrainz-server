@@ -1,5 +1,12 @@
 Connecting music services from another application
 ==================================================
+.. note::
+    In most cases you do not need this authorization flow. Instead, prefer explicit consent
+    from the user and ask them to copy their user token and use bearer token authentication
+    (see the :ref:`API documentation <users/api/index:Authentication>`).
+    
+    This authorization flow is restricted to commercial supporters. If you would like to
+    apply for this scope, please `get in contact with us`_
 
 ListenBrainz can import a user's listening history from music services such as Spotify. The
 connection to those services is made with OAuth, and one of the security measures in OAuth
@@ -25,6 +32,9 @@ is for, so it cannot be skipped. Everything after it is a plain redirect.
 Getting access
 --------------
 
+First, you will need to `get in contact with us`_ and become a commercial supporter before
+we approve your `OAuth application`_ for this restricted scope.
+
 There is nothing to register with ListenBrainz. The ``listenbrainz:connect-services``
 scope is only granted to applications MetaBrainz has approved for it, and an access token
 carrying that scope is the whole of the authorization — there is no separate ListenBrainz
@@ -36,6 +46,9 @@ registered under with MetaBrainz, so make sure it is a name they will recognise.
 Because there is no registered list of redirect uris to match against, ``redirect_uri`` is
 whatever you send, as long as it is an absolute ``https`` url (``http`` is accepted only
 for ``localhost``, for local development).
+
+.. _get in contact with us: mailto:support@listenbrainz.org
+.. _OAuth application: https://metabrainz.org/profile/applications
 
 Starting the flow
 -----------------
@@ -89,8 +102,16 @@ Redirect the user's browser to that url within ``expires_in`` seconds. ListenBra
 them the confirmation page there; once they confirm, it sends them on to the music service
 and returns them to your ``redirect_uri`` as described below. The url can only be used once
 — it is spent when the user answers the confirmation, either way — and it does **not** log
-the user in to ListenBrainz. A url that has expired or has already been used results in a
-``400 Bad Request``.
+the user in to ListenBrainz.
+
+For 40 minutes after you created it, opening a used or expired url sends the browser back
+to your ``redirect_uri``: with the result you were already sent if the flow finished,
+``error=expired_request`` otherwise. After that, or for an unknown url, ListenBrainz shows a
+``400 Bad Request`` HTML page explaining how to request a new link.
+
+So your ``redirect_uri`` can receive the same result more than once, and from any browser
+holding the url. Handle repeats, and only act on a ``state`` that belongs to the browser's
+session with your application.
 
 Errors from the POST are returned as JSON with a ``4xx``/``5xx`` status: ``401`` if the
 access token is missing, invalid, expired or lacks the scope, ``400`` if the request itself
@@ -119,7 +140,7 @@ parameters added:
         ListenBrainz requires before connecting a music service. The user has to verify
         their email on their MetaBrainz profile and start the flow again.
     ``expired_request``
-        The user took too long to authorize ListenBrainz.
+        The user took too long to authorize ListenBrainz, or opened a used or expired url.
     ``server_error``
         Something went wrong on the ListenBrainz side, or the music service refused the
         authorization for a reason other than the user declining. ``error_description``

@@ -8,6 +8,8 @@ import { scaleLinear } from "d3-scale";
 import { COLOR_LB_BLUE, COLOR_LB_ORANGE } from "../../utils/constants";
 import { useMediaQuery } from "../../explore/fresh-releases/utils";
 
+import { useNivoTheme } from "../../utils/nivoTheme";
+
 export type UserEvolutionData = {
   period: string;
   new_users: number;
@@ -60,14 +62,7 @@ const tooltipNumber = new Intl.NumberFormat("en", {
 
 function GrowthTooltip({ slice }: SliceTooltipProps) {
   return (
-    <div
-      style={{
-        background: "white",
-        padding: "9px 12px",
-        border: "1px solid #ccc",
-        borderRadius: 4,
-      }}
-    >
+    <div className="nivo-theme-tooltip" style={{ padding: "9px 12px" }}>
       <strong>{monthLabel(String(slice.points[0].data.x))}</strong>
       {slice.points.map((point) => {
         const data = point.data as typeof point.data & {
@@ -95,6 +90,7 @@ export default function CountEvolutionChart({
   userCountEvolution: UserEvolutionData[];
   listenCountEvolution: ListenEvolutionData[];
 }) {
+  const nivoTheme = useNivoTheme();
   const isMobile = useMediaQuery("(max-width: 767px)");
   const available = [...userCountEvolution, ...listenCountEvolution]
     .map(({ period }) => period.slice(0, 7))
@@ -209,6 +205,7 @@ export default function CountEvolutionChart({
       </div>
       <div style={{ height: "400px", width: "100%" }}>
         <ResponsiveLine
+          theme={nivoTheme}
           data={series.map((s) => ({
             id: s.id,
             fill: s.color,

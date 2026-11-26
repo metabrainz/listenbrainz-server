@@ -185,13 +185,11 @@ class BaseLastfmImporter(ListensImporter):
             return imported_listen_count
         except LastfmUserNotRetryableException as e:
             self.service.update_status(user["user_id"], "Error", initial_imported_listens, error_message=str(e), retry=False)
-            if not current_app.config["TESTING"]:
-                self.notify_error(user["musicbrainz_id"], str(e))
+            self.notify_new_error(user, str(e), retry=False)
             raise e
         except ExternalServiceAPIError as e:
             self.service.update_status(user["user_id"], "Error", initial_imported_listens, error_message=str(e), retry=True)
-            if not current_app.config["TESTING"]:
-                self.notify_error(user["musicbrainz_id"], str(e))
+            self.notify_new_error(user, str(e), retry=True)
             raise e
 
     def process_all_users(self):
