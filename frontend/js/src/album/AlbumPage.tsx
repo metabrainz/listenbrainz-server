@@ -174,6 +174,7 @@ export default function AlbumPage(): JSX.Element {
   }, [APIService, release_group_mbid, caa_id, caa_release_mbid]);
 
   const artistName = artist?.name ?? "";
+  const linkedArtist = artist?.artists?.[0];
 
   const listensFromAlbumRecordings =
     mediums?.map(
@@ -346,15 +347,27 @@ export default function AlbumPage(): JSX.Element {
         </div>
 
         <div className="right-side gap-1">
-          <div className="entity-rels">
-            {!isEmpty(artist?.artists?.[0]?.rels) &&
-              Object.entries(
-                artist?.artists?.[0]?.rels ?? {}
-              ).map(([relName, relValue]) => getRelIconLink(relName, relValue))}
-            <OpenInMusicBrainzButton
-              entityType="release-group"
-              entityMBID={release_group_mbid}
-            />
+          <div>
+            {!isEmpty(linkedArtist?.rels) && (
+              <section aria-labelledby="artist-links-heading">
+                <h2 id="artist-links-heading" className="h5 text-end">
+                  Artist links: {linkedArtist.name}
+                </h2>
+                <div className="entity-rels">
+                  {Object.entries(
+                    linkedArtist.rels ?? {}
+                  ).map(([relName, relValue]) =>
+                    getRelIconLink(relName, relValue)
+                  )}
+                </div>
+              </section>
+            )}
+            <div className="entity-rels">
+              <OpenInMusicBrainzButton
+                entityType="release-group"
+                entityMBID={release_group_mbid}
+              />
+            </div>
           </div>
           <div className="btn-group lb-radio-button">
             <Link
