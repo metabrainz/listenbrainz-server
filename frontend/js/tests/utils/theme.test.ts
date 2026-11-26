@@ -116,21 +116,31 @@ describe("theme utilities", () => {
       document.documentElement.animate = jest.fn();
     });
 
-    it("reveals the new theme with a circle covering the viewport", async () => {
+    it("configures a CSS reveal circle covering the viewport", async () => {
+      const setProperty = jest.spyOn(
+        document.documentElement.style,
+        "setProperty"
+      );
       setThemePreference("dark");
       await Promise.resolve();
 
       expect(startViewTransition).toHaveBeenCalledTimes(1);
       expect(getTheme()).toBe("dark");
-      const [keyframes, options] = (document.documentElement
-        .animate as jest.Mock).mock.calls[0];
-      expect(options.pseudoElement).toBe("::view-transition-new(root)");
       const x = window.innerWidth / 2;
       const y = window.innerHeight / 2;
-      expect(keyframes.clipPath).toEqual([
-        `circle(0px at ${x}px ${y}px)`,
-        `circle(${Math.hypot(x, y)}px at ${x}px ${y}px)`,
-      ]);
+      expect(setProperty).toHaveBeenCalledWith(
+        "--lb-theme-transition-x",
+        `${x}px`
+      );
+      expect(setProperty).toHaveBeenCalledWith(
+        "--lb-theme-transition-y",
+        `${y}px`
+      );
+      expect(setProperty).toHaveBeenCalledWith(
+        "--lb-theme-transition-radius",
+        `${Math.hypot(x, y)}px`
+      );
+      expect(document.documentElement.animate).not.toHaveBeenCalled();
     });
 
     it("does not animate when the effective theme stays the same", () => {

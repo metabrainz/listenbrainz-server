@@ -16,7 +16,6 @@ const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
 // Class on <html> that scopes the reveal CSS to theme changes only, so any
 // other view transition keeps the browser's default cross-fade.
 const transitionClass = "lb-theme-transition";
-const transitionDurationMs = 500;
 
 function isThemePreference(value: unknown): value is ThemePreference {
   return themePreferences.includes(value as ThemePreference);
@@ -117,6 +116,12 @@ function transitionTo(theme: Theme): void {
   );
 
   const root = document.documentElement;
+  // Set the initial mask before the browser creates the transition
+  // pseudo-elements. Without this, a complex page can briefly paint the new
+  // snapshot at full size before the Web Animation starts.
+  root.style.setProperty("--lb-theme-transition-x", `${x}px`);
+  root.style.setProperty("--lb-theme-transition-y", `${y}px`);
+  root.style.setProperty("--lb-theme-transition-radius", `${radius}px`);
   root.classList.add(transitionClass);
   targetTheme = theme;
 
@@ -125,29 +130,13 @@ function transitionTo(theme: Theme): void {
     notifyThemeChange();
   });
 
-  transition.ready
-    .then(() => {
-      root.animate(
-        {
-          clipPath: [
-            `circle(0px at ${x}px ${y}px)`,
-            `circle(${radius}px at ${x}px ${y}px)`,
-          ],
-        },
-        {
-          duration: transitionDurationMs,
-          easing: "cubic-bezier(0.4, 0, 0.2, 1)",
-          pseudoElement: "::view-transition-new(root)",
-        }
-      );
-    })
-    // A skipped transition still applies the update; only the animation is lost.
-    .catch(() => {});
-
   transition.finished.finally(() => {
     if (targetTheme === theme) {
       targetTheme = undefined;
       root.classList.remove(transitionClass);
+      root.style.removeProperty("--lb-theme-transition-x");
+      root.style.removeProperty("--lb-theme-transition-y");
+      root.style.removeProperty("--lb-theme-transition-radius");
     }
   });
 }
