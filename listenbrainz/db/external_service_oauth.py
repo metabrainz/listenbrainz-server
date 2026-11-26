@@ -77,6 +77,7 @@ def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token
                 user_id = EXCLUDED.user_id,
                 service = EXCLUDED.service,
                 last_updated = NULL,
+                status = NULL,
                 latest_listened_at = EXCLUDED.latest_listened_at,
                 error = NULL
             """), {

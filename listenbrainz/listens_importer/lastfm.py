@@ -96,9 +96,10 @@ class BaseLastfmImporter(ListensImporter):
                 except requests.exceptions.JSONDecodeError:
                     raise ExternalServiceAPIError("Error from the API while getting listens: %s" % response.text)
                 if "error" in data:
-                    # Libre.fm: no scrobbles since the given timestamp
+                    # Libre.fm uses code 7 for both empty ranges and missing users; delegate
+                    # interpretation so the service-specific importer can distinguish them.
                     if isinstance(data["error"], dict) and str(data["error"].get("code")) == "7":
-                        return {"recenttracks": {"@attr": {"totalPages": "0"}, "track": []}}
+                        return self.handle_no_tracks_error(session, user)
                     raise ExternalServiceAPIError("Error from the API while getting listens: %s" % data.get("message", data["error"]))
                 # Libre.fm returns a single dict instead of a list when there is
                 # only one track; normalize to always be a list.
@@ -124,6 +125,11 @@ class BaseLastfmImporter(ListensImporter):
             case _:
                 raise ExternalServiceAPIError("Error from the API while getting listens: %s" % response.text)
 
+    def handle_no_tracks_error(self, session, user):
+        """ Called when the API returns error code 7 for recent tracks. By default this is
+        treated as an empty range; subclasses can override it to tell an empty range apart
+        from other causes, such as a missing user. """
+        return {"recenttracks": {"@attr": {"totalPages": "0"}, "track": []}}
 
     def get_total_pages(self, session, user):
         response = self.get_user_recent_tracks(session, user, page=1)
