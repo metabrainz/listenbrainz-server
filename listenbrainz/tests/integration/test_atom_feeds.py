@@ -307,6 +307,60 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
             self.fail("No id element found in feed")
         self.assertEqual(len(entryIds), release_count - 1)
 
+    def _insert_typed_user_fresh_releases(self):
+        """ Insert past releases of varying types for the test user and return them. """
+        with open(self.path_to_data_file("user_fresh_releases.json")) as f:
+            releases = json.load(f)
+
+        types = [("Album", None), ("Album", "Live"), ("EP", "Soundtrack")]
+        for release, (primary, secondary) in zip(releases, types):
+            release["release_date"] = "2023-01-01"
+            release["release_group_primary_type"] = primary
+            release["release_group_secondary_type"] = secondary
+
+        db_fresh.insert_fresh_releases(
+            self.fresh_releases_database,
+            [{"user_id": self.user["id"], "releases": releases}],
+        )
+        return releases
+
+    def _get_user_fresh_release_titles(self, **query_string):
+        url = self.custom_url_for(
+            "atom.get_user_fresh_releases", user_name=self.user["musicbrainz_id"]
+        )
+        response = self.client.get(url, query_string=query_string)
+        self.assert200(response)
+        xml_tree = etree.fromstring(response.data)
+        return [e.text for e in xml_tree.findall(f"{self.nsAtom}entry/{self.nsAtom}title")]
+
+    def test_get_user_fresh_releases_filter_by_type(self):
+        releases = self._insert_typed_user_fresh_releases()
+
+        def title(r):
+            return f"{r['release_name']} by {r['artist_credit_name']}"
+
+        self.assertEqual(len(self._get_user_fresh_release_titles()), 3)
+        self.assertEqual(self._get_user_fresh_release_titles(types="Album"), [title(releases[0])])
+        self.assertEqual(self._get_user_fresh_release_titles(types="Live"), [title(releases[1])])
+        self.assertCountEqual(
+            self._get_user_fresh_release_titles(types="album, SOUNDTRACK"),
+            [title(releases[0]), title(releases[2])],
+        )
+        self.assertEqual(self._get_user_fresh_release_titles(types="Broadcast"), [])
+        self.assertEqual(len(self._get_user_fresh_release_titles(types="")), 3)
+
+    def test_get_user_fresh_releases_filter_by_type_invalid(self):
+        self._insert_typed_user_fresh_releases()
+        url = self.custom_url_for(
+            "atom.get_user_fresh_releases", user_name=self.user["musicbrainz_id"]
+        )
+        self.assert400(self.client.get(url, query_string={"types": "Album,NotAType"}))
+        self.assert400(self.client.get(url, query_string={"types": "NotAType"}))
+
+    def test_get_fresh_releases_filter_by_type_invalid(self):
+        url = self.custom_url_for("atom.get_fresh_releases")
+        self.assert400(self.client.get(url, query_string={"types": "NotAType"}))
+
     def test_get_stats_elements(self):
         """
         Check server sends valid stats feed.
