@@ -392,6 +392,7 @@ class StatsAPITestCase(IntegrationTestCase):
         rows = {
             "artists": {"artist_name": "Unmapped", "artist_mbid": None, "listen_count": 5},
             "release_groups": self.user_release_group_payload[0]["data"][0] | {"listen_count": 5},
+            "recordings": self.recording_payload[0]["data"][0] | {"listen_count": 5},
         }
         for entity, row in rows.items():
             with self.subTest(entity=entity):

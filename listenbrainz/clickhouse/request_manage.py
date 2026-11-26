@@ -65,6 +65,14 @@ def release_groups(stats_ranges):
     send_request_to_clickhouse("clickhouse.release_groups", stats_ranges=stats_ranges or ALLOWED_STATISTICS_RANGE)
 
 
+@cli.command(name="recordings")
+@click.option("--range", "stats_ranges", type=click.Choice(ALLOWED_STATISTICS_RANGE), multiple=True,
+              help="Stats range to refresh. Repeat to select several. Defaults to all ranges.")
+def recordings(stats_ranges):
+    """Compute per-user top recordings and store the results in CouchDB."""
+    send_request_to_clickhouse("clickhouse.recordings", stats_ranges=stats_ranges or ALLOWED_STATISTICS_RANGE)
+
+
 @cli.command(name="daily_activity")
 @click.option("--range", "stats_ranges", type=click.Choice(ALLOWED_STATISTICS_RANGE), multiple=True,
               help="Stats range to refresh. Repeat to select several. Defaults to all ranges.")

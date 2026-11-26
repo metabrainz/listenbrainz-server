@@ -73,13 +73,14 @@ ARTIST_METADATA = ListenAggregate(
 RELEASE_GROUP_SOURCE_COLUMNS = ("user_id", "listened_at", "release_mbid", "release_name", "artist_name",
                                 "artist_credit_mbids")
 # The flag keeps real MusicBrainz UUIDs separate from hashes of submitted credits.
-RESOLVED_RELEASE_GROUPS = """
+RELEASE_GROUP_ID = """(isNotNull(group_mbid), coalesce(group_mbid, reinterpretAsUUID(sipHash128(
+    lowerUTF8(ifNull(release_name, '')), lowerUTF8(artist_name), artist_credit_mbids
+))))"""
+RESOLVED_RELEASE_GROUPS = f"""
     WITH resolved AS (
         SELECT user_id, listened_at, delta, release_name, artist_name, artist_credit_mbids,
-               (isNotNull(group_mbid), coalesce(group_mbid, reinterpretAsUUID(sipHash128(
-                    lowerUTF8(ifNull(release_name, '')), lowerUTF8(artist_name), artist_credit_mbids
-               )))) AS release_group_id
-          FROM {source} ANY LEFT JOIN {release_group_lookup} USING (release_mbid)
+               {RELEASE_GROUP_ID} AS release_group_id
+          FROM {{source}} ANY LEFT JOIN {{release_group_lookup}} USING (release_mbid)
          WHERE if(isNull(group_mbid), notEmpty(release_name), has_title)
     )
 """
@@ -112,5 +113,42 @@ RELEASE_GROUP_METADATA = ListenAggregate(
     """,
 )
 
+RECORDING_SOURCE_COLUMNS = ("user_id", "listened_at", "recording_name", "recording_mbid", "artist_name",
+                            "artist_credit_mbids", "release_name", "release_mbid")
+# The API distinguishes submitted editions even when both map to the same group.
+# Hash the exact spelling so a deletion retracts the label that was submitted.
+RECORDING_ID = """reinterpretAsUInt128(sipHash128(
+    recording_name, ifNull(toString(recording_mbid), ''), artist_name, artist_credit_mbids,
+    ifNull(release_name, ''), ifNull(toString(release_mbid), '')
+))"""
+
+DAILY_RECORDING_COUNTS = ListenAggregate(
+    name="user_recording_stats_daily",
+    source_columns=RECORDING_SOURCE_COLUMNS,
+    columns="user_id UInt32, day Date, recording_id UInt128, release_group_id Tuple(Bool, UUID), listen_count Int64",
+    engine="""SummingMergeTree(listen_count) PARTITION BY toYear(day) PRIMARY KEY (user_id, day)
+              ORDER BY (user_id, day, recording_id, release_group_id)""",
+    select=f"""
+        SELECT user_id, toDate(listened_at, 'UTC') AS day, {RECORDING_ID} AS recording_id,
+               {RELEASE_GROUP_ID} AS release_group_id, sum(delta) AS listen_count
+          FROM {{source}} ANY LEFT JOIN {{release_group_lookup}} USING (release_mbid)
+         GROUP BY user_id, day, recording_id, release_group_id
+    """,
+)
+
+RECORDING_METADATA = ListenAggregate(
+    name="recording_metadata",
+    source_columns=RECORDING_SOURCE_COLUMNS,
+    columns="""recording_id UInt128, track_name String, recording_mbid Nullable(UUID), artist_name String,
+               artist_mbids Array(UUID), release_name String, release_mbid Nullable(UUID)""",
+    engine="ReplacingMergeTree ORDER BY recording_id",
+    select=f"""
+        SELECT DISTINCT {RECORDING_ID} AS recording_id, recording_name AS track_name, recording_mbid,
+               artist_name, artist_credit_mbids AS artist_mbids, ifNull(changes.release_name, '') AS release_name,
+               release_mbid
+          FROM {{source}} AS changes WHERE delta > 0
+    """,
+)
+
 LISTEN_AGGREGATES = (HOURLY_COUNTS, DAILY_ARTIST_COUNTS, ARTIST_METADATA,
-                     DAILY_RELEASE_GROUP_COUNTS, RELEASE_GROUP_METADATA)
+                     DAILY_RELEASE_GROUP_COUNTS, RELEASE_GROUP_METADATA, DAILY_RECORDING_COUNTS, RECORDING_METADATA)

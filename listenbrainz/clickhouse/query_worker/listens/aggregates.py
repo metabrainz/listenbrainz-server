@@ -4,8 +4,8 @@ from uuid import uuid4
 
 from listenbrainz.clickhouse.query_worker.client import ClickHouseConnection
 from listenbrainz.clickhouse.query_worker.listens.aggregate_tables import (
-    ARTIST_METADATA, DAILY_ARTIST_COUNTS, DAILY_RELEASE_GROUP_COUNTS, HOURLY_COUNTS, LISTEN_AGGREGATES,
-    RELEASE_GROUP_METADATA, ListenAggregate,
+    ARTIST_METADATA, DAILY_ARTIST_COUNTS, DAILY_RECORDING_COUNTS, DAILY_RELEASE_GROUP_COUNTS, HOURLY_COUNTS,
+    LISTEN_AGGREGATES, RELEASE_GROUP_METADATA, ListenAggregate,
 )
 
 
@@ -124,6 +124,9 @@ def ensure_aggregates(client):
     for lookup, tables in LOOKUP_AGGREGATES.items():
         if missing.intersection(tables) or lookup not in objects:
             missing.update(tables)
+    # Rebuilding the release-group lookup also changes the group IDs used by recording counts.
+    if DAILY_RELEASE_GROUP_COUNTS in missing:
+        missing.add(DAILY_RECORDING_COUNTS)
     if HOURLY_COUNTS not in missing and client.command("""
         SELECT count() FROM system.columns WHERE database = currentDatabase()
           AND table = 'hourly_listen_counts' AND name = 'midnight_listen_count'
@@ -217,4 +220,4 @@ def aggregate_snapshot(table: ListenAggregate):
         try:
             yield client
         finally:
-            client.command("DROP TEMPORARY TABLE IF EXISTS stats_snapshot")
+            client.command("DROP TEMPORARY TABLE IF EXISTS stats_snapshot SETTINGS max_table_size_to_drop = 0")
