@@ -1,0 +1,38 @@
+// Regenerate from docs/: dot -Tsvg images/connect-music-services.dot -o images/connect-music-services.svg
+digraph connect_music_services {
+    graph [rankdir=TB, bgcolor="white", pad=0.25, nodesep=0.35, ranksep=0.45,
+           fontname="sans-serif", fontsize=14];
+    node [shape=box, style="rounded,filled", fillcolor="#f1f5f9", color="#64748b",
+          fontname="sans-serif", fontsize=14, margin="0.18,0.12"];
+    edge [color="#475569", fontname="sans-serif", fontsize=12, arrowsize=0.8];
+
+    request [label="Your application's backend\nPOST /connect/spotify/\nMetaBrainz OAuth token\nScope: listenbrainz:connect-services\nredirect_uri, state, permissions, force",
+             fillcolor="#dbeafe"];
+    validate [label="ListenBrainz validates the request\nIntrospects token with MetaBrainz; checks scope\nand resolves the ListenBrainz account"];
+    post_error [label="Return JSON error to backend\n401: token or scope\n400: malformed request\n503: introspection unavailable", fillcolor="#fee2e2"];
+    ticket [label="ListenBrainz returns single-use URL\nYour app redirects the user's browser\nOpen within 600 seconds"];
+    confirm [label="ListenBrainz: mandatory confirmation\nShows application, return host and account\nConfirm or decline consumes the URL\nDoes not log the user into ListenBrainz", fillcolor="#fef3c7"];
+    granted [shape=diamond, style=filled, label="Requested permissions\nalready granted\nand force is false?", fillcolor="#fef3c7"];
+    authorize [label="ListenBrainz creates OAuth session state\nBrowser redirects to Spotify\nUser approves or declines permissions", fillcolor="#dcfce7"];
+    callback [label="Browser returns to ListenBrainz callback\nListenBrainz validates OAuth state\nand processes the authorization result"];
+    store [label="ListenBrainz exchanges authorization for tokens\nStores Spotify tokens and connects the service"];
+    success [label="Redirect browser to your app\nstatus=connected", fillcolor="#dcfce7"];
+    failure [label="Redirect browser to your app\nstatus=error + error details", fillcolor="#fee2e2"];
+    returned [label="Your app receives service=spotify and original state\nValidate state against the browser's session\nHandle repeated results safely", fillcolor="#dbeafe"];
+
+    request -> validate;
+    validate -> post_error [label="Invalid / unavailable"];
+    validate -> ticket [label="Valid"];
+    ticket -> confirm;
+    confirm -> failure [label="Decline: access_denied"];
+    confirm -> granted [label="Confirm"];
+    granted -> success [label="Yes"];
+    granted -> authorize [label="No"];
+    authorize -> callback;
+    callback -> failure [label="Denied / invalid / failed"];
+    callback -> store [label="Valid authorization"];
+    store -> success [label="Success"];
+    store -> failure [label="Token exchange fails"];
+    success -> returned;
+    failure -> returned;
+}

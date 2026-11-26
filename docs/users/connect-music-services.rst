@@ -21,6 +21,12 @@ tokens and then sends the user back to the application that started the flow::
     your app  ──▶  listenbrainz.org/connect/spotify/  ──▶  accounts.spotify.com
                        (confirmation page)                          │
     your app  ◀──  listenbrainz.org/settings/…/callback/  ◀─────────┘
+.. figure:: ../images/connect-music-services.svg
+    :alt: Your backend requests a single-use ListenBrainz URL using a MetaBrainz OAuth token. The user confirms the connection on ListenBrainz, authorizes Spotify if needed, and returns to your application with the result.
+    :width: 100%
+
+    Music service connection flow. The application state is returned unchanged;
+    ListenBrainz creates a separate OAuth session state for Spotify authorization.
 
 The user is never logged in to ListenBrainz along the way — you tell us who they are in
 advance with a MetaBrainz OAuth access token. Because of that, ListenBrainz shows them one
