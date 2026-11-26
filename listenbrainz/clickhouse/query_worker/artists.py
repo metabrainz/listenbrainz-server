@@ -1,13 +1,14 @@
 """Per-user top artists from daily materialized listen counts."""
 from listenbrainz.clickhouse.query_worker.listens.aggregate_tables import DAILY_ARTIST_COUNTS
-from listenbrainz.clickhouse.query_worker.top_entities import ranked_entities, refresh_top_entities
+from listenbrainz.clickhouse.query_worker.top_entities import ranked_entities, refresh_top_entities, temporary_table
 
 
-ARTIST_LABELS = """
-    CREATE TEMPORARY TABLE stats_labels ENGINE = Join(ANY, LEFT, artist_id) AS
-    SELECT artist_id, toNullable(min(display_name)) AS artist_name, min(artist_mbid) AS mbid
-      FROM artist_metadata GROUP BY artist_id
-"""
+def _artist_labels(client):
+    return temporary_table(client, "stats_labels", """
+        ENGINE = Join(ANY, LEFT, artist_id) AS
+        SELECT artist_id, toNullable(min(display_name)) AS artist_name, min(artist_mbid) AS mbid
+          FROM artist_metadata GROUP BY artist_id
+    """)
 
 
 def _artist_rows(client, users, start, end):
@@ -27,4 +28,4 @@ def _artist_rows(client, users, start, end):
 
 
 def artists(stats_ranges=None):
-    yield from refresh_top_entities("artists", stats_ranges, DAILY_ARTIST_COUNTS, ARTIST_LABELS, _artist_rows)
+    yield from refresh_top_entities("artists", stats_ranges, DAILY_ARTIST_COUNTS, _artist_labels, _artist_rows)

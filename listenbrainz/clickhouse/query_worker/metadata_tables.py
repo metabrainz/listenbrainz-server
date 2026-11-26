@@ -31,6 +31,18 @@ ARTIST_METADATA_CACHE = MetadataTable(
     "SELECT id AS artist_id, gid AS artist_mbid, name AS artist_name FROM musicbrainz.artist",
 )
 
+RECORDING_ARTIST_CACHE = MetadataTable(
+    "recording_artist_cache", f"recording_mbid UUID, artist_mbids Array(UUID), artists {ARTISTS}",
+    "recording_mbid", get_recording_artist_cache_query(),
+)
+RELEASE_METADATA_CACHE = MetadataTable(
+    "release_metadata_cache",
+    "release_mbid UUID, release_group_mbid UUID, first_release_date_year Nullable(Int16), "
+    "release_name String, album_artist_name String, caa_id Nullable(Int64), caa_release_mbid Nullable(UUID), "
+    f"artist_credit_mbids Array(UUID), artists {ARTISTS}",
+    "release_mbid", get_release_metadata_cache_query(),
+)
+
 MUSICBRAINZ_TABLES = (
     ARTIST_METADATA_CACHE,
     MetadataTable(
@@ -51,17 +63,8 @@ MUSICBRAINZ_TABLES = (
         "recording_length_cache", "recording_mbid UUID, length Nullable(Int32), recording_id Int32, is_redirect Bool",
         "recording_mbid", get_recording_length_cache_query(),
     ),
-    MetadataTable(
-        "recording_artist_cache", f"recording_mbid UUID, artist_mbids Array(UUID), artists {ARTISTS}",
-        "recording_mbid", get_recording_artist_cache_query(),
-    ),
-    MetadataTable(
-        "release_metadata_cache",
-        "release_mbid UUID, release_group_mbid UUID, first_release_date_year Nullable(Int16), "
-        "release_name String, album_artist_name String, caa_id Nullable(Int64), caa_release_mbid Nullable(UUID), "
-        f"artist_credit_mbids Array(UUID), artists {ARTISTS}",
-        "release_mbid", get_release_metadata_cache_query(),
-    ),
+    RECORDING_ARTIST_CACHE,
+    RELEASE_METADATA_CACHE,
     MetadataTable(
         "release_group_metadata_cache",
         "release_group_mbid UUID, title String, artist_credit_name String, "

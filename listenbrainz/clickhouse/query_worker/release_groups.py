@@ -1,15 +1,16 @@
 """Per-user top release groups from daily materialized listen counts."""
 from listenbrainz.clickhouse.query_worker.listens.aggregate_tables import DAILY_RELEASE_GROUP_COUNTS, HOURLY_COUNTS
-from listenbrainz.clickhouse.query_worker.top_entities import ranked_entities, refresh_top_entities
+from listenbrainz.clickhouse.query_worker.top_entities import ranked_entities, refresh_top_entities, temporary_table
 
 
-RELEASE_GROUP_LABELS = """
-    CREATE TEMPORARY TABLE stats_labels ENGINE = Join(ANY, LEFT, release_group_id) AS
-    SELECT release_group_id, toNullable(min(release_group_name)) AS title, min(artist_name) AS credit,
-           any(artist_mbids) AS mbids, any(artists) AS credits, any(caa_id) AS cover_id,
-           any(caa_release_mbid) AS cover_mbid
-      FROM release_group_metadata GROUP BY release_group_id
-"""
+def _release_group_labels(client):
+    return temporary_table(client, "stats_labels", """
+        ENGINE = Join(ANY, LEFT, release_group_id) AS
+        SELECT release_group_id, toNullable(min(release_group_name)) AS title, min(artist_name) AS credit,
+               any(artist_mbids) AS mbids, any(artists) AS credits, any(caa_id) AS cover_id,
+               any(caa_release_mbid) AS cover_mbid
+          FROM release_group_metadata GROUP BY release_group_id
+    """)
 
 
 def _release_group_rows(client, users, start, end):
@@ -29,5 +30,5 @@ def _release_group_rows(client, users, start, end):
 
 def release_groups(stats_ranges=None):
     # A day containing only untitled releases still advances the listen range.
-    yield from refresh_top_entities("release_groups", stats_ranges, DAILY_RELEASE_GROUP_COUNTS, RELEASE_GROUP_LABELS,
-                                    _release_group_rows, day_table=HOURLY_COUNTS.name)
+    yield from refresh_top_entities("release_groups", stats_ranges, DAILY_RELEASE_GROUP_COUNTS,
+                                    _release_group_labels, _release_group_rows, day_table=HOURLY_COUNTS.name)

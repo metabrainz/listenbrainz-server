@@ -11,7 +11,16 @@ from listenbrainz.clickhouse.query_worker.listens.aggregates import aggregate_sn
 from listenbrainz.clickhouse.query_worker.stats import refresh_stats
 
 
-def refresh_top_entities(stat, stats_ranges, counts, labels_query, rows, day_table="stats_snapshot"):
+@contextmanager
+def temporary_table(client, name, definition, parameters=None):
+    client.command(f"CREATE TEMPORARY TABLE {name} {definition}", parameters=parameters)
+    try:
+        yield
+    finally:
+        client.command(f"DROP TEMPORARY TABLE {name} SETTINGS max_table_size_to_drop = 0")
+
+
+def refresh_top_entities(stat, stats_ranges, counts, metadata, rows, day_table="stats_snapshot"):
     @contextmanager
     def snapshot():
         with aggregate_snapshot(counts) as client:
@@ -22,11 +31,8 @@ def refresh_top_entities(stat, stats_ranges, counts, labels_query, rows, day_tab
                     SELECT day FROM {day_table} GROUP BY day HAVING sum(listen_count) > 0
                 )
             """).first_row[0]
-            client.command(labels_query)
-            try:
+            with metadata(client):
                 yield client, users, latest_day
-            finally:
-                client.command("DROP TEMPORARY TABLE stats_labels")
 
     def query_range(source, stats_range, as_of):
         client, users, latest_day = source
