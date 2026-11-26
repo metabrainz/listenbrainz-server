@@ -501,8 +501,8 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
         self.assertIsNotNone(self.get_export_row(live_id))
         self.assertEqual([live_name], self.list_archives())
 
-    def test_export_is_marked_failed_when_the_archive_cannot_be_uploaded(self):
-        """ An export left in progress would block the user from ever requesting another one. """
+    def test_failed_export_attempt_is_retried_not_marked_failed(self):
+        """ The background task retries a failed attempt, the export is only marked failed after the last one. """
         export_id = self.create_export_row(None, status="waiting")
 
         with self.app.app_context():
@@ -510,14 +510,12 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
                             side_effect=RuntimeError("garage is unavailable")):
                 with self.assertRaises(RuntimeError):
                     export_user(db_conn, listens_conn, self.user["id"], {"export_id": export_id})
+            db_conn.rollback()
 
         export = self.get_export_row(export_id)
-        self.assertEqual("failed", export.status)
-        self.assertEqual(EXPORT_FAILED_PROGRESS, export.progress)
+        self.assertNotEqual("failed", export.status)
+        self.assertNotEqual(EXPORT_FAILED_PROGRESS, export.progress)
         self.assertEqual([], self.list_archives())
-
-        # the user can request a new export, the failed one no longer conflicts with it
-        self.create_export_row(None, status="waiting")
 
     def test_download_export_archive_with_non_ascii_filename(self):
         """ Archive names contain the musicbrainz id which may not be ascii encodable. """

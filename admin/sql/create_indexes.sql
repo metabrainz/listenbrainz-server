@@ -53,7 +53,8 @@ CREATE UNIQUE INDEX caa_id_release_mbid_ndx_release_color ON release_color (caa_
 
 CREATE UNIQUE INDEX user_id_ndx_user_setting ON user_setting (user_id);
 
-CREATE UNIQUE INDEX background_tasks_user_id_task_type_uniq_idx ON background_tasks (user_id, task);
+CREATE UNIQUE INDEX background_tasks_user_id_delete_task_uniq_idx ON background_tasks (user_id, task) WHERE task IN ('delete_user', 'delete_listens') AND failed_at IS NULL;
+CREATE UNIQUE INDEX background_tasks_user_id_running_uniq_idx ON background_tasks (user_id) WHERE claimed_at IS NOT NULL;
 
 CREATE INDEX user_data_export_user_id_idx ON user_data_export (user_id);
 
