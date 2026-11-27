@@ -98,6 +98,7 @@ COUCHDB_USER = "listenbrainz"
 COUCHDB_ADMIN_KEY = "listenbrainz"
 # Prefix is used verbatim; include the trailing separator, e.g. "test_".
 COUCHDB_DATABASE_PREFIX = ""
+PREFER_CLICKHOUSE_STATS = False
 
 # MetaBrainz OAuth
 OAUTH_BASE_URL = "https://metabrainz.org"

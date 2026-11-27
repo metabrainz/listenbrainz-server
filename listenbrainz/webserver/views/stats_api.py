@@ -399,6 +399,7 @@ def get_listening_activity(user_name: str):
     return jsonify({"payload": {
         "user_id": user_name,
         "listening_activity": listening_activity,
+        "source": stats.source,
         "from_ts": stats.from_ts,
         "to_ts": stats.to_ts,
         "range": stats_range,
@@ -853,6 +854,7 @@ def get_daily_activity(user_name: str):
     return jsonify({"payload": {
         "user_id": user_name,
         "daily_activity": daily_activity,
+        "source": stats.source,
         "from_ts": stats.from_ts,
         "to_ts": stats.to_ts,
         "range": stats_range,

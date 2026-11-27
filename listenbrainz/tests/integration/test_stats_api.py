@@ -1,4 +1,5 @@
 import json
+from unittest.mock import patch
 
 import orjson
 import requests
@@ -385,6 +386,19 @@ class StatsAPITestCase(IntegrationTestCase):
                     response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                                query_string={'range': range_})
                     self.assertUserStatEqual(payload, response, entity, range_, total_count_key, payload[0]['count'])
+
+    def test_activity_source(self):
+        self.enterContext(patch.dict(self.app.config, PREFER_CLICKHOUSE_STATS=True))
+        for activity in ("daily_activity", "listening_activity"):
+            with self.subTest(activity=activity):
+                stat = self.non_entity_endpoints[activity]
+                url = self.custom_url_for(stat["endpoint"], user_name=self.user["musicbrainz_id"])
+                self.assertEqual(self.client.get(url).json["payload"]["source"], "spark")
+
+                database = f"clickhouse_{activity}_all_time_20260101000000000000"
+                couchdb.create_database(database)
+                db_stats.insert(database, 0, 5, stat["payload"])
+                self.assertEqual(self.client.get(url).json["payload"]["source"], "clickhouse")
 
     def test_listening_activity_stat(self):
         endpoint = self.non_entity_endpoints["listening_activity"]["endpoint"]
