@@ -29,7 +29,12 @@ jest.unmock("react-toastify");
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
-jest.spyOn(global.Math, "random").mockImplementation(() => 0);
+// Use deterministic pseudo-random generator so quicksort in source-map does not degenerate into recursion
+let seed = 1;
+jest.spyOn(global.Math, "random").mockImplementation(() => {
+  seed = (seed * 9301 + 49297) % 233280;
+  return seed / 233280;
+});
 
 const userClickEvent = userEvent.setup();
 
@@ -129,6 +134,7 @@ describe("Dashboard page", () => {
     server.listen();
   });
   afterEach(async () => {
+    mockSearchParam = {};
     await queryClient.cancelQueries();
     queryClient.clear();
     server.resetHandlers();
@@ -1013,7 +1019,11 @@ describe("Dashboard page", () => {
         );
 
         await waitFor(() => {
-          const state = queryClient.getQueryState(queryKey);
+          const state = queryClient.getQueryState([
+            "dashboard",
+            {},
+            mockSearchParam,
+          ]);
           expect(state?.status === "success").toBeTruthy();
         });
 
@@ -1025,6 +1035,809 @@ describe("Dashboard page", () => {
         await waitFor(() => {
           expect(mockSearchParam).toEqual({ max_ts: "1710460800" });
         });
+      });
+    });
+
+    describe("LB-1140: Empty-page handling and listen pagination after deletion", () => {
+      it("displays 'No listens to show' and keeps pagination when current page is empty but user has history", async () => {
+        server.use(
+          http.post("/", async () =>
+            HttpResponse.json({
+              ...props,
+              listens: [],
+              latestListenTs: 1700000000,
+              oldestListenTs: 1600000000,
+            })
+          ),
+          http.get("/1/user/*/listen-count", async () =>
+            HttpResponse.json({ payload: { count: 50 } })
+          )
+        );
+
+        renderWithProviders(
+          <Listens />,
+          { currentUser },
+          { wrapper: reactQueryWrapper }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState([
+            "dashboard",
+            {},
+            mockSearchParam,
+          ]);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        expect(screen.getByText("No listens to show")).toBeInTheDocument();
+        expect(screen.queryByText("Get listening")).not.toBeInTheDocument();
+        expect(
+          screen.queryByText(/hasn't listened to any songs yet/i)
+        ).not.toBeInTheDocument();
+
+        expect(
+          screen.getByLabelText("Navigate to older listens")
+        ).toBeInTheDocument();
+      });
+
+      it("displays onboarding empty state when user genuinely has no listening history", async () => {
+        server.use(
+          http.post("/", async () =>
+            HttpResponse.json({
+              ...props,
+              listens: [],
+              latestListenTs: 0,
+              oldestListenTs: 0,
+            })
+          ),
+          http.get("/1/user/*/listen-count", async () =>
+            HttpResponse.json({ payload: { count: 0 } })
+          )
+        );
+
+        renderWithProviders(
+          <Listens />,
+          { currentUser },
+          { wrapper: reactQueryWrapper }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState([
+            "dashboard",
+            {},
+            mockSearchParam,
+          ]);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        expect(screen.getByText("Get listening")).toBeInTheDocument();
+        expect(
+          screen.queryByText("No listens to show")
+        ).not.toBeInTheDocument();
+        expect(
+          screen.queryByLabelText("Navigate to older listens")
+        ).not.toBeInTheDocument();
+      });
+
+      it("preserves pagination and shows 'No listens to show' after deleting the last listen on a page with older history", async () => {
+        const singleListen = [listens[0]];
+        server.use(
+          http.post("/", async () =>
+            HttpResponse.json({
+              ...props,
+              listens: singleListen,
+              latestListenTs: singleListen[0].listened_at,
+              oldestListenTs: 1000,
+            })
+          ),
+          http.get("/1/user/*/listen-count", async () =>
+            HttpResponse.json({ payload: { count: 10 } })
+          ),
+          http.post("/1/delete-listen", async () => HttpResponse.json({}))
+        );
+
+        renderWithProviders(
+          <Listens />,
+          { currentUser },
+          { wrapper: reactQueryWrapper }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState([
+            "dashboard",
+            {},
+            mockSearchParam,
+          ]);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        const listensContainer = await screen.findByTestId("listens");
+        const listenCards = await within(listensContainer).findAllByTestId(
+          "listen"
+        );
+        expect(listenCards).toHaveLength(1);
+
+        const deleteButton = within(listenCards[0]).getByRole("menuitem", {
+          name: "Delete Listen",
+        });
+        await userEvent.click(deleteButton);
+
+        await waitForElementToBeRemoved(
+          within(listenCards[0]).queryByRole("menuitem", {
+            name: "Delete Listen",
+          })
+        );
+
+        expect(
+          await screen.findByText("No listens to show")
+        ).toBeInTheDocument();
+        expect(screen.queryByText("Get listening")).not.toBeInTheDocument();
+
+        const olderButton = await screen.findByLabelText(
+          "Navigate to older listens"
+        );
+        expect(olderButton).toBeInTheDocument();
+        expect(olderButton).toHaveAttribute("aria-disabled", "false");
+        expect(olderButton).toHaveAttribute(
+          "href",
+          `/?max_ts=${singleListen[0].listened_at}`
+        );
+
+        const newestButton = await screen.findByLabelText(
+          "Navigate to most recent listens"
+        );
+        expect(newestButton).toHaveAttribute("aria-disabled", "true");
+        expect(newestButton).toHaveAttribute("href", "/");
+
+        const newerButton = await screen.findByLabelText(
+          "Navigate to more recent listens"
+        );
+        expect(newerButton).toHaveAttribute("aria-disabled", "true");
+        expect(newerButton.getAttribute("href")).not.toContain("undefined");
+      });
+
+      it("renders onboarding empty state after deleting the only listen in an account", async () => {
+        const singleListen = [listens[0]];
+        server.use(
+          http.post("/", async () =>
+            HttpResponse.json({
+              ...props,
+              listens: singleListen,
+              latestListenTs: singleListen[0].listened_at,
+              oldestListenTs: singleListen[0].listened_at,
+            })
+          ),
+          http.get("/1/user/*/listen-count", async () =>
+            HttpResponse.json({ payload: { count: 1 } })
+          ),
+          http.post("/1/delete-listen", async () => HttpResponse.json({}))
+        );
+
+        renderWithProviders(
+          <Listens />,
+          { currentUser },
+          { wrapper: reactQueryWrapper }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState([
+            "dashboard",
+            {},
+            mockSearchParam,
+          ]);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        const listensContainer = await screen.findByTestId("listens");
+        const listenCards = await within(listensContainer).findAllByTestId(
+          "listen"
+        );
+        expect(listenCards).toHaveLength(1);
+
+        const deleteButton = within(listenCards[0]).getByRole("menuitem", {
+          name: "Delete Listen",
+        });
+        await userEvent.click(deleteButton);
+
+        await waitForElementToBeRemoved(
+          within(listenCards[0]).queryByRole("menuitem", {
+            name: "Delete Listen",
+          })
+        );
+
+        expect(await screen.findByText("Get listening")).toBeInTheDocument();
+        expect(
+          screen.queryByText("No listens to show")
+        ).not.toBeInTheDocument();
+        expect(
+          screen.queryByLabelText("Navigate to older listens")
+        ).not.toBeInTheDocument();
+      });
+
+      it("preserves both Newer and Older pagination after deleting the final listen on a middle page", async () => {
+        mockSearchParam = { max_ts: "1600000000" };
+        const middleListen = [
+          {
+            ...listens[0],
+            listened_at: 1550000000,
+          },
+        ];
+
+        server.use(
+          http.post("/", async () =>
+            HttpResponse.json({
+              ...props,
+              listens: middleListen,
+              latestListenTs: 1700000000,
+              oldestListenTs: 1400000000,
+            })
+          ),
+          http.get("/1/user/*/listen-count", async () =>
+            HttpResponse.json({ payload: { count: 100 } })
+          ),
+          http.post("/1/delete-listen", async () => HttpResponse.json({}))
+        );
+
+        renderWithProviders(
+          <Listens />,
+          { currentUser },
+          { wrapper: reactQueryWrapper }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState([
+            "dashboard",
+            {},
+            mockSearchParam,
+          ]);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        const listensContainer = await screen.findByTestId("listens");
+        const listenCards = await within(listensContainer).findAllByTestId(
+          "listen"
+        );
+        expect(listenCards).toHaveLength(1);
+
+        const deleteButton = within(listenCards[0]).getByRole("menuitem", {
+          name: "Delete Listen",
+        });
+        await userEvent.click(deleteButton);
+
+        await waitForElementToBeRemoved(
+          within(listenCards[0]).queryByRole("menuitem", {
+            name: "Delete Listen",
+          })
+        );
+
+        expect(
+          await screen.findByText("No listens to show")
+        ).toBeInTheDocument();
+        expect(screen.queryByText("Get listening")).not.toBeInTheDocument();
+
+        const newerButton = await screen.findByLabelText(
+          "Navigate to more recent listens"
+        );
+        expect(newerButton).toHaveAttribute("aria-disabled", "false");
+        expect(newerButton).toHaveAttribute("href", "/?min_ts=1550000000");
+
+        const olderButton = await screen.findByLabelText(
+          "Navigate to older listens"
+        );
+        expect(olderButton).toHaveAttribute("aria-disabled", "false");
+        expect(olderButton).toHaveAttribute("href", "/?max_ts=1550000000");
+
+        const newestButton = await screen.findByLabelText(
+          "Navigate to most recent listens"
+        );
+        expect(newestButton).toHaveAttribute("aria-disabled", "false");
+        expect(newestButton).toHaveAttribute("href", "/");
+
+        mockSearchParam = {};
+      });
+
+      it("disables Newer and Older on directly accessed empty page using max_ts while keeping Newest enabled", async () => {
+        mockSearchParam = { max_ts: "1600000000" };
+
+        server.use(
+          http.post("/", async () =>
+            HttpResponse.json({
+              ...props,
+              listens: [],
+              latestListenTs: 1700000000,
+              oldestListenTs: 1400000000,
+            })
+          ),
+          http.get("/1/user/*/listen-count", async () =>
+            HttpResponse.json({ payload: { count: 20 } })
+          )
+        );
+
+        renderWithProviders(
+          <Listens />,
+          { currentUser },
+          { wrapper: reactQueryWrapper }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState([
+            "dashboard",
+            {},
+            mockSearchParam,
+          ]);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        expect(screen.getByText("No listens to show")).toBeInTheDocument();
+
+        const newerButton = await screen.findByLabelText(
+          "Navigate to more recent listens"
+        );
+        expect(newerButton).toHaveAttribute("aria-disabled", "true");
+
+        const olderButton = await screen.findByLabelText(
+          "Navigate to older listens"
+        );
+        expect(olderButton).toHaveAttribute("aria-disabled", "true");
+
+        const newestButton = await screen.findByLabelText(
+          "Navigate to most recent listens"
+        );
+        expect(newestButton).toHaveAttribute("aria-disabled", "false");
+        expect(newestButton).toHaveAttribute("href", "/");
+
+        mockSearchParam = {};
+      });
+
+      it("disables Newer and Older on directly accessed empty page using min_ts while keeping Newest enabled", async () => {
+        mockSearchParam = { min_ts: "1500000000" };
+
+        server.use(
+          http.post("/", async () =>
+            HttpResponse.json({
+              ...props,
+              listens: [],
+              latestListenTs: 1700000000,
+              oldestListenTs: 1400000000,
+            })
+          ),
+          http.get("/1/user/*/listen-count", async () =>
+            HttpResponse.json({ payload: { count: 20 } })
+          )
+        );
+
+        renderWithProviders(
+          <Listens />,
+          { currentUser },
+          { wrapper: reactQueryWrapper }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState([
+            "dashboard",
+            {},
+            mockSearchParam,
+          ]);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        expect(screen.getByText("No listens to show")).toBeInTheDocument();
+
+        const newerButton = await screen.findByLabelText(
+          "Navigate to more recent listens"
+        );
+        expect(newerButton).toHaveAttribute("aria-disabled", "true");
+
+        const olderButton = await screen.findByLabelText(
+          "Navigate to older listens"
+        );
+        expect(olderButton).toHaveAttribute("aria-disabled", "true");
+
+        const newestButton = await screen.findByLabelText(
+          "Navigate to most recent listens"
+        );
+        expect(newestButton).toHaveAttribute("aria-disabled", "false");
+        expect(newestButton).toHaveAttribute("href", "/");
+
+        mockSearchParam = {};
+      });
+
+      it("does not carry over cached timestamps when switching between users", async () => {
+        const userAListen = [
+          { ...listens[0], user_name: "userA", listened_at: 1600000000 },
+        ];
+
+        server.use(
+          http.post("/", async () =>
+            HttpResponse.json({
+              ...props,
+              user: { ...user, name: "userA" },
+              listens: userAListen,
+              latestListenTs: 1700000000,
+              oldestListenTs: 1400000000,
+            })
+          ),
+          http.get("/1/user/*/listen-count", async () =>
+            HttpResponse.json({ payload: { count: 10 } })
+          ),
+          http.post("/1/delete-listen", async () => HttpResponse.json({}))
+        );
+
+        const { unmount } = renderWithProviders(
+          <Listens />,
+          { currentUser: { ...currentUser, name: "userA" } },
+          { wrapper: reactQueryWrapper }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState([
+            "dashboard",
+            {},
+            mockSearchParam,
+          ]);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        const deleteButton = screen.getByRole("menuitem", {
+          name: "Delete Listen",
+        });
+        await userEvent.click(deleteButton);
+        await waitForElementToBeRemoved(
+          screen.queryByRole("menuitem", { name: "Delete Listen" })
+        );
+
+        expect(
+          await screen.findByText("No listens to show")
+        ).toBeInTheDocument();
+        unmount();
+        await queryClient.cancelQueries();
+        queryClient.clear();
+
+        // Now render user B who has an empty page
+        server.use(
+          http.post("/", async () =>
+            HttpResponse.json({
+              ...props,
+              user: { ...user, name: "userB" },
+              listens: [],
+              latestListenTs: 1700000000,
+              oldestListenTs: 1400000000,
+            })
+          )
+        );
+
+        renderWithProviders(
+          <Listens />,
+          { currentUser: { ...currentUser, name: "userB" } },
+          { wrapper: reactQueryWrapper }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState([
+            "dashboard",
+            {},
+            mockSearchParam,
+          ]);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        const olderButton = await screen.findByLabelText(
+          "Navigate to older listens"
+        );
+        expect(olderButton).toHaveAttribute("aria-disabled", "true");
+
+        const newerButton = await screen.findByLabelText(
+          "Navigate to more recent listens"
+        );
+        expect(newerButton).toHaveAttribute("aria-disabled", "true");
+      });
+
+      it("does not leak cached timestamps when switching displayed user while component remains mounted", async () => {
+        const userAListen = [
+          { ...listens[0], user_name: "userA", listened_at: 1600000000 },
+        ];
+
+        server.use(
+          http.post("/", async () =>
+            HttpResponse.json({
+              ...props,
+              user: { ...user, name: "userA" },
+              listens: userAListen,
+              latestListenTs: 1700000000,
+              oldestListenTs: 1400000000,
+            })
+          ),
+          http.get("/1/user/*/listen-count", async () =>
+            HttpResponse.json({ payload: { count: 10 } })
+          ),
+          http.post("/1/delete-listen", async () => HttpResponse.json({}))
+        );
+
+        renderWithProviders(
+          <Listens />,
+          { currentUser: { ...currentUser, name: "userA" } },
+          { wrapper: reactQueryWrapper }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState([
+            "dashboard",
+            {},
+            mockSearchParam,
+          ]);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        const deleteButton = screen.getByRole("menuitem", {
+          name: "Delete Listen",
+        });
+        await userEvent.click(deleteButton);
+        await waitForElementToBeRemoved(
+          screen.queryByRole("menuitem", { name: "Delete Listen" })
+        );
+
+        expect(
+          await screen.findByText("No listens to show")
+        ).toBeInTheDocument();
+
+        // While keeping the component mounted (preserving React refs), switch displayed user to userB
+        server.use(
+          http.post("/", async () =>
+            HttpResponse.json({
+              ...props,
+              user: { ...user, name: "userB" },
+              listens: [],
+              latestListenTs: 1700000000,
+              oldestListenTs: 1400000000,
+            })
+          )
+        );
+
+        await act(async () => {
+          queryClient.setQueryData(["dashboard", {}, {}], {
+            ...props,
+            user: { ...user, name: "userB" },
+            listens: [],
+            latestListenTs: 1700000000,
+            oldestListenTs: 1400000000,
+          });
+        });
+
+        // Verify userB data is rendered on the same mounted instance
+        await waitFor(() => {
+          expect(
+            screen.getByRole("link", { name: /MusicBrainz/i })
+          ).toHaveAttribute("href", "https://musicbrainz.org/user/userB");
+        });
+
+        // Ensure userB did not inherit userA's cached timestamps
+        const olderButton = await screen.findByLabelText(
+          "Navigate to older listens"
+        );
+        expect(olderButton).toHaveAttribute("aria-disabled", "true");
+        expect(olderButton.getAttribute("href")).not.toContain("1600000000");
+
+        const newerButton = await screen.findByLabelText(
+          "Navigate to more recent listens"
+        );
+        expect(newerButton).toHaveAttribute("aria-disabled", "true");
+        expect(newerButton.getAttribute("href")).not.toContain("1600000000");
+
+        const newestButton = await screen.findByLabelText(
+          "Navigate to most recent listens"
+        );
+        expect(newestButton).toHaveAttribute("aria-disabled", "true");
+      });
+
+      it("deleting all listens from the first page when older listens still exist keeps Older navigation enabled", async () => {
+        const firstPageListen = [{ ...listens[0], listened_at: 1700000000 }];
+
+        server.use(
+          http.post("/", async () =>
+            HttpResponse.json({
+              ...props,
+              listens: firstPageListen,
+              latestListenTs: 1700000000,
+              oldestListenTs: 1000000000,
+            })
+          ),
+          http.get("/1/user/*/listen-count", async () =>
+            HttpResponse.json({ payload: { count: 30 } })
+          ),
+          http.post("/1/delete-listen", async () => HttpResponse.json({}))
+        );
+
+        renderWithProviders(
+          <Listens />,
+          { currentUser },
+          { wrapper: reactQueryWrapper }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState([
+            "dashboard",
+            {},
+            mockSearchParam,
+          ]);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        const deleteButton = screen.getByRole("menuitem", {
+          name: "Delete Listen",
+        });
+        await userEvent.click(deleteButton);
+        await waitForElementToBeRemoved(
+          screen.queryByRole("menuitem", { name: "Delete Listen" })
+        );
+
+        expect(
+          await screen.findByText("No listens to show")
+        ).toBeInTheDocument();
+        expect(screen.queryByText("Get listening")).not.toBeInTheDocument();
+
+        const olderButton = await screen.findByLabelText(
+          "Navigate to older listens"
+        );
+        expect(olderButton).toHaveAttribute("aria-disabled", "false");
+        expect(olderButton).toHaveAttribute("href", "/?max_ts=1700000000");
+
+        const newerButton = await screen.findByLabelText(
+          "Navigate to more recent listens"
+        );
+        expect(newerButton).toHaveAttribute("aria-disabled", "true");
+      });
+
+      it("displays 'No listens to show' and keeps pagination when deleting the last listen while listen-count is still pending", async () => {
+        const firstPageListen = [{ ...listens[0], listened_at: 1700000000 }];
+
+        server.use(
+          http.post("/", async () =>
+            HttpResponse.json({
+              ...props,
+              listens: firstPageListen,
+              latestListenTs: 1700000000,
+              oldestListenTs: 1000000000,
+            })
+          ),
+          // Listen count request has not completed (pending promise)
+          http.get("/1/user/*/listen-count", () => new Promise(() => {})),
+          http.post("/1/delete-listen", async () => HttpResponse.json({}))
+        );
+
+        renderWithProviders(
+          <Listens />,
+          { currentUser },
+          { wrapper: reactQueryWrapper }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState([
+            "dashboard",
+            {},
+            mockSearchParam,
+          ]);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        const listensContainer = await screen.findByTestId("listens");
+        const listenCards = await within(listensContainer).findAllByTestId(
+          "listen"
+        );
+        expect(listenCards).toHaveLength(1);
+
+        const deleteButton = within(listenCards[0]).getByRole("menuitem", {
+          name: "Delete Listen",
+        });
+        await userEvent.click(deleteButton);
+
+        await waitForElementToBeRemoved(
+          within(listenCards[0]).queryByRole("menuitem", {
+            name: "Delete Listen",
+          })
+        );
+
+        expect(
+          await screen.findByText("No listens to show")
+        ).toBeInTheDocument();
+        expect(screen.queryByText("Get listening")).not.toBeInTheDocument();
+
+        const olderButton = await screen.findByLabelText(
+          "Navigate to older listens"
+        );
+        expect(olderButton).toBeInTheDocument();
+        expect(olderButton).toHaveAttribute("aria-disabled", "false");
+        expect(olderButton).toHaveAttribute("href", "/?max_ts=1700000000");
+
+        const newerButton = await screen.findByLabelText(
+          "Navigate to more recent listens"
+        );
+        expect(newerButton).toHaveAttribute("aria-disabled", "true");
+      });
+
+      it("does not decrement listen count or show empty state when delete request fails", async () => {
+        const singleListen = [listens[0]];
+        server.use(
+          http.post("/", async () =>
+            HttpResponse.json({
+              ...props,
+              listens: singleListen,
+              latestListenTs: singleListen[0].listened_at,
+              oldestListenTs: singleListen[0].listened_at,
+            })
+          ),
+          http.get("/1/user/*/listen-count", async () =>
+            HttpResponse.json({ payload: { count: 1 } })
+          ),
+          http.post("/1/delete-listen", async () =>
+            HttpResponse.json(
+              { error: "Cannot delete listen" },
+              { status: 400 }
+            )
+          )
+        );
+
+        renderWithProviders(
+          <Listens />,
+          { currentUser },
+          { wrapper: reactQueryWrapper }
+        );
+
+        await waitFor(() => {
+          const state = queryClient.getQueryState([
+            "dashboard",
+            {},
+            mockSearchParam,
+          ]);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        const listensContainer = await screen.findByTestId("listens");
+        const listenCards = await within(listensContainer).findAllByTestId(
+          "listen"
+        );
+        expect(listenCards).toHaveLength(1);
+
+        const listenCountCard = await screen.findByTestId("listen-count-card");
+        const countContent = within(listenCountCard).getByTestId(
+          "listen-count-card-content"
+        );
+        expect(countContent).toHaveTextContent("1");
+        expect(countContent).toHaveTextContent("songs so far");
+
+        const deleteButton = within(listenCards[0]).getByRole("menuitem", {
+          name: "Delete Listen",
+        });
+        await userEvent.click(deleteButton);
+
+        expect(
+          await screen.findByText("Error while deleting listen")
+        ).toBeInTheDocument();
+
+        const remainingListens = await within(listensContainer).findAllByTestId(
+          "listen"
+        );
+        expect(remainingListens).toHaveLength(1);
+        expect(
+          within(remainingListens[0]).getByText(
+            singleListen[0].track_metadata.track_name
+          )
+        ).toBeInTheDocument();
+
+        const updatedCountContent = within(listenCountCard).getByTestId(
+          "listen-count-card-content"
+        );
+        expect(updatedCountContent).toHaveTextContent("1");
+        expect(updatedCountContent).toHaveTextContent("songs so far");
+        expect(
+          within(listenCountCard).queryByText(
+            "You haven't listened to any songs yet."
+          )
+        ).not.toBeInTheDocument();
+
+        expect(screen.queryByText("Get listening")).not.toBeInTheDocument();
+        expect(
+          screen.queryByText("No listens to show")
+        ).not.toBeInTheDocument();
       });
     });
   });
