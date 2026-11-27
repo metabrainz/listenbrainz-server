@@ -15,7 +15,10 @@ import {
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { LBRadioFeedback, Playlist } from "./components/Playlist";
 import Prompt, { Modes } from "./components/Prompt";
-import { setAmbientQueueAtom } from "../../common/brainzplayer/BrainzPlayerAtoms";
+import {
+  ambientQueueAtom,
+  setAmbientQueueAtom,
+} from "../../common/brainzplayer/BrainzPlayerAtoms";
 
 type LBRadioLoaderData = {
   mode: Modes;
@@ -87,6 +90,12 @@ export default function LBRadio() {
             });
           }
         }
+        // The sortable list needs a unique id on each track, and the same
+        // recording can appear more than once so the MBID is not enough
+        payload.jspf?.playlist?.track?.forEach((track: JSPFTrack, index) => {
+          // eslint-disable-next-line no-param-reassign
+          track.id = `${getRecordingMBIDFromJSPFTrack(track)}-${index}`;
+        });
         setJspfPlaylist(payload.jspf);
         setFeedback(payload.feedback);
       } catch (error) {
@@ -99,12 +108,48 @@ export default function LBRadio() {
     [setJspfPlaylist, setFeedback, APIService, currentUser]
   );
 
+  const removeTrack = React.useCallback((trackToRemove: JSPFTrack) => {
+    setJspfPlaylist((prevJspf) => {
+      if (!prevJspf?.playlist?.track) {
+        return prevJspf;
+      }
+      return {
+        ...prevJspf,
+        playlist: {
+          ...prevJspf.playlist,
+          // Compare by reference: the same recording can appear more than once
+          track: prevJspf.playlist.track.filter(
+            (track) => track !== trackToRemove
+          ),
+        },
+      };
+    });
+  }, []);
+
+  const reorderTracks = React.useCallback((reorderedTracks: JSPFTrack[]) => {
+    setJspfPlaylist((prevJspf) => {
+      if (!prevJspf?.playlist) {
+        return prevJspf;
+      }
+      return {
+        ...prevJspf,
+        playlist: { ...prevJspf.playlist, track: reorderedTracks },
+      };
+    });
+  }, []);
+
   const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
+  const replaceAmbientQueue = useSetAtom(ambientQueueAtom);
 
   React.useEffect(() => {
-    setAmbientQueue(
-      jspfPlaylist?.playlist?.track?.map(JSPFTrackToListen) ?? []
-    );
+    const tracks = jspfPlaylist?.playlist?.track;
+    if (tracks && tracks.length === 0) {
+      // setAmbientQueue ignores empty lists, which would leave the tracks
+      // of a now empty playlist playable (after removing the last one)
+      replaceAmbientQueue([]);
+      return;
+    }
+    setAmbientQueue(tracks?.map(JSPFTrackToListen) ?? []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jspfPlaylist?.playlist?.track]);
 
@@ -127,7 +172,11 @@ export default function LBRadio() {
             className="playlist-loader"
           >
             <LBRadioFeedback feedback={feedback} />
-            <Playlist playlist={jspfPlaylist?.playlist} />
+            <Playlist
+              playlist={jspfPlaylist?.playlist}
+              onRemoveTrack={removeTrack}
+              onReorderTracks={reorderTracks}
+            />
           </Loader>
         </div>
       </div>
