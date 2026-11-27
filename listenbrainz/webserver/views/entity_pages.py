@@ -1,6 +1,9 @@
 from datetime import datetime
+from uuid import UUID
 
-from flask import Blueprint, render_template, current_app, jsonify
+from brainzutils import cache
+from brainzutils.ratelimit import RateLimit, get_rate_limit_data, on_over_limit
+from flask import Blueprint, render_template, current_app, g, jsonify, redirect, request
 from werkzeug.exceptions import BadRequest
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
@@ -15,6 +18,7 @@ from listenbrainz.webserver.views.api_tools import is_valid_uuid
 from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata, fetch_metadata
 import psycopg2
 from psycopg2.extras import DictCursor
+from listenbrainz.db.genre import find_tagged_entities, get_genre_by_name, load_genres_from_mbids
 
 artist_bp = Blueprint("artist", __name__)
 album_bp = Blueprint("album", __name__)
@@ -22,6 +26,11 @@ release_bp = Blueprint("release", __name__)
 release_group_bp = Blueprint("release-group", __name__)
 track_bp = Blueprint("track", __name__)
 recording_bp = Blueprint("recording", __name__)
+genre_bp = Blueprint("genre", __name__)
+
+GENRE_PAGE_CACHE_NAMESPACE = "genre_page_v2"
+GENRE_PAGE_CACHE_TTL = 60 * 60
+GENRE_PAGE_RATE_LIMIT = 10  # Per configured rate-limit window, per caller.
 
 
 def get_release_group_sort_key(release_group):
@@ -42,8 +51,8 @@ def get_release_group_sort_key(release_group):
     return release_group["total_listen_count"] or 0, release_date
 
 
-def get_cover_art_for_artist(release_groups):
-    """ Get the cover art for an artist using a list of their release groups """
+def get_cover_art_from_release_groups(release_groups):
+    """ Get the cover art from a list of release groups """
     covers = []
     for release_group in release_groups:
         if release_group.get("caa_id") is not None:
@@ -219,7 +228,7 @@ def artist_entity(artist_mbid: str):
         }
 
     try:
-        cover_art = get_cover_art_for_artist(release_groups)
+        cover_art = get_cover_art_from_release_groups(release_groups)
     except Exception:
         current_app.logger.error("Error generating cover art for artist:", exc_info=True)
         cover_art = None
@@ -449,4 +458,143 @@ def recording_entity(recording_mbid: str):
         "releaseGroups": release_groups,
     }
 
+    return jsonify(data)
+
+
+@genre_bp.get('/<genre>/')
+def genre_page(genre: str):
+    return render_template("index.html")
+
+
+# This endpoint supports both genre name and genre mbid in the URL.
+@genre_bp.post("/<genre_slug>/")
+@web_listenstore_needed
+def genre_entity(genre_slug: str):
+    """Genre slug in URL can be a name (e.g. 'rock') or a MusicBrainz UUID."""
+    limits = get_rate_limit_data(request)
+    rate_limit = RateLimit(
+        f"genre_page:{limits['key']}", min(GENRE_PAGE_RATE_LIMIT, limits["limit"]), limits["window"]
+    )
+    g._view_rate_limit = rate_limit
+    if rate_limit.over_limit:
+        return on_over_limit(rate_limit)
+
+    try:
+        requested_mbid = str(UUID(genre_slug))
+    except ValueError:
+        requested_mbid = None
+
+    name_key = f"name:{genre_slug.strip().lower()}"
+    genre_mbid = requested_mbid or cache.get(name_key, namespace=GENRE_PAGE_CACHE_NAMESPACE)
+    if genre_mbid:
+        cached = cache.get(genre_mbid, namespace=GENRE_PAGE_CACHE_NAMESPACE)
+        if cached is not None:
+            return jsonify(cached)
+
+    with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+            mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
+        if requested_mbid:
+            genre = load_genres_from_mbids(mb_curs, [requested_mbid]).get(requested_mbid)
+        else:
+            genre = get_genre_by_name(mb_curs, genre_slug)
+        if not genre:
+            return jsonify({"error": f"Genre not found: {genre_slug}"}), 404
+
+        genre_mbid = genre["genre_gid"]
+        genre_name = genre["name"]
+        tagged_entities = find_tagged_entities(mb_curs, genre_name)
+
+    # Add listen counts to artist entities
+    artist_entities = tagged_entities.get("artist", {}).get("entities", [])
+    if artist_entities:
+        artist_mbids = [e["mbid"] for e in artist_entities]
+        popularity_data, _ = popularity.get_counts(listens_conn, "artist", artist_mbids)
+        enriched_artists = []
+        for i, entity in enumerate(artist_entities):
+            pop = popularity_data[i] if i < len(popularity_data) else {}
+            enriched_artists.append({
+                "mbid": entity["mbid"],
+                "name": entity.get("name"),
+                "tag_count": entity.get("tag_count"),
+                "total_listen_count": pop.get("total_listen_count"),
+                "total_user_count": pop.get("total_user_count"),
+            })
+        tagged_entities["artist"]["entities"] = enriched_artists
+
+    # Fetch release group entities with listen counts
+    rg_entities = tagged_entities.get("release_group", {}).get("entities", [])
+    if rg_entities:
+        release_group_mbids = [e["mbid"] for e in rg_entities]
+        rg_metadata = fetch_release_group_metadata(release_group_mbids, ["artist"])
+        popularity_data, _ = popularity.get_counts(
+            listens_conn, "release_group", release_group_mbids
+        )
+        pop_by_mbid = {pop["release_group_mbid"]: pop for pop in popularity_data}
+        enriched_rg = []
+        for entity in rg_entities:
+            mbid = entity["mbid"]
+            meta = rg_metadata.get(mbid, {})
+            pop = pop_by_mbid.get(mbid, {})
+            rg = meta.get("release_group") or {}
+            artist = meta.get("artist") or {}
+            enriched_rg.append({
+                "mbid": mbid,
+                "name": rg.get("name") or entity["name"],
+                "has_metadata": bool(rg),
+                "date": rg.get("date"),
+                "type": rg.get("type"),
+                "caa_id": rg.get("caa_id"),
+                "caa_release_mbid": rg.get("caa_release_mbid"),
+                "artist_credit_name": artist.get("name"),
+                "artists": artist.get("artists", []),
+                "tag_count": entity.get("tag_count"),
+                "total_listen_count": pop.get("total_listen_count"),
+                "total_user_count": pop.get("total_user_count"),
+            })
+        tagged_entities["release_group"]["entities"] = enriched_rg
+
+    # Fetch recording entities with listen counts
+    rec_entities = tagged_entities.get("recording", {}).get("entities", [])
+    if rec_entities:
+        recording_mbids = [e["mbid"] for e in rec_entities]
+        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+                mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
+                listens_conn.connection.cursor(cursor_factory=DictCursor) as listens_curs:
+            recordings_data = load_recordings_from_mbids_with_redirects(
+                mb_curs, listens_curs, recording_mbids
+            )
+        popularity_data, _ = popularity.get_counts(
+            listens_conn, "recording", recording_mbids
+        )
+        enriched_rec = []
+        for i, (entity, rec) in enumerate(zip(rec_entities, recordings_data)):
+            pop = popularity_data[i] if i < len(popularity_data) else {}
+            enriched_rec.append({
+                **(rec if rec.get("recording_mbid") else {}),
+                "recording_mbid": rec.get("recording_mbid") or entity["mbid"],
+                "recording_name": rec.get("recording_name") or entity["name"],
+                "tag_count": entity.get("tag_count"),
+                "total_listen_count": pop.get("total_listen_count"),
+                "total_user_count": pop.get("total_user_count"),
+            })
+        tagged_entities["recording"]["entities"] = enriched_rec
+
+    release_group_entities = tagged_entities.get("release_group", {}).get("entities", [])
+    try:
+        cover_art = get_cover_art_from_release_groups(release_group_entities) if release_group_entities else None
+    except Exception:
+        current_app.logger.error("Error generating cover art for genre:", exc_info=True)
+        cover_art = None
+
+    data = {
+        "genre": genre,
+        "genre_mbid": genre_mbid,
+        "entities": tagged_entities,
+        "coverArt": cover_art,
+    }
+    cache.set_many(
+        {genre_mbid: data, f"name:{genre_name.lower()}": genre_mbid},
+        expirein=GENRE_PAGE_CACHE_TTL,
+        namespace=GENRE_PAGE_CACHE_NAMESPACE,
+    )
     return jsonify(data)
