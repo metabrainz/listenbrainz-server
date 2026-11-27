@@ -2,7 +2,7 @@ import * as React from "react";
 import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Navbar from "../../src/components/Navbar";
-import { setTheme, themeStorageKey } from "../../src/utils/theme";
+import { setThemePreference, themeStorageKey } from "../../src/utils/theme";
 import { renderWithProviders } from "../test-utils/rtl-test-utils";
 
 jest.mock("../../src/common/Username", () => {
@@ -20,32 +20,45 @@ describe("Navbar theme toggle", () => {
     window.localStorage.clear();
   });
 
-  it("switches the theme and keeps its accessible state in sync", async () => {
+  it("starts new visitors on System and cycles System -> Light -> Dark", async () => {
     const user = userEvent.setup();
     renderWithProviders(<Navbar />);
 
     const toggle = screen.getByRole("button", {
-      name: "Switch to dark mode",
+      name: "Theme: System. Click to switch to Light mode",
     });
-    expect(toggle).toHaveAttribute("data-theme-toggle");
-    expect(toggle).toHaveAttribute("aria-pressed", "false");
+    expect(toggle).toHaveClass("theme-toggle");
+    expect(toggle).toHaveAttribute("title", "Click to switch to Light mode");
 
     await user.click(toggle);
+    expect(window.localStorage.getItem(themeStorageKey)).toBe("light");
+    expect(toggle).toHaveAccessibleName(
+      "Theme: Light. Click to switch to Dark mode"
+    );
 
+    await user.click(toggle);
     expect(document.documentElement.dataset.bsTheme).toBe("dark");
     expect(window.localStorage.getItem(themeStorageKey)).toBe("dark");
-    expect(
-      screen.getByRole("button", { name: "Switch to light mode" })
-    ).toHaveAttribute("aria-pressed", "true");
+    expect(toggle).toHaveAccessibleName(
+      "Theme: Dark. Click to switch to System mode"
+    );
+
+    await user.click(toggle);
+    expect(window.localStorage.getItem(themeStorageKey)).toBe("system");
+    expect(toggle).toHaveAccessibleName(
+      "Theme: System. Click to switch to Light mode"
+    );
   });
 
-  it("updates when the legacy navigation changes the theme", () => {
+  it("updates when the theme is changed elsewhere", () => {
     renderWithProviders(<Navbar />);
 
-    act(() => setTheme("dark"));
+    act(() => setThemePreference("dark"));
 
     expect(
-      screen.getByRole("button", { name: "Switch to light mode" })
-    ).toHaveAttribute("aria-pressed", "true");
+      screen.getByRole("button", {
+        name: "Theme: Dark. Click to switch to System mode",
+      })
+    ).toBeInTheDocument();
   });
 });
