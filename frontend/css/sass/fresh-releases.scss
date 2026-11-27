@@ -254,6 +254,7 @@
 
 .release-cards-grid {
   display: grid;
+  justify-content: center;
   justify-items: center;
   gap: 2rem;
   grid-template-columns: repeat(auto-fit, minmax(190px, max-content));
@@ -565,14 +566,15 @@
 .releases-page-container {
   display: flex;
   gap: 1.5em;
-
-  @media screen and (min-width: map.get($grid-breakpoints, "lg")) {
-    // make the sidebar flush with the right-hand side on larger sizes
-    margin-right: -15px !important;
-  }
+  max-width: 100%;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
 
   .releases-page {
-    flex: 1;
+    flex: 0 1 $max-content-width;
+    margin-left: auto;
+    margin-right: auto;
 
     @media screen and (max-width: map.get($grid-breakpoints, "lg")) {
       padding-right: 90px; // space for the right-docked timeline
@@ -580,8 +582,10 @@
   }
 
   .sidebar-fresh-releases {
+    flex: 0 0 $tertiary-nav-vertical-width;
     max-height: 85vh;
-    margin-right: -15px;
+    margin-left: 0;
+    margin-right: 0;
 
     @media screen and (max-width: map.get($grid-breakpoints, "lg")) {
       max-height: calc(100vh - $brainzplayer-height);
