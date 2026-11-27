@@ -367,6 +367,42 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["error"],
                          "The collaborators field contains an empty value.")
 
+        # submit a playlist with non-list collaborator
+        playlist = {
+            "playlist": {
+                "title": "no, you're a douche!",
+                "track": [
+                    {
+                        "identifier": "https://musicbrainz.org/recording/e8f9b188-f819-4e43-ab0f-4bd26ce9ff56"
+                    }
+                ],
+                "extension": {
+                    PLAYLIST_EXTENSION_URI: {
+                        "public": True,
+                        "collaborators": 123
+                    }
+                },
+            }
+        }
+
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Collaborators must be a list.")
+
+        # submit a playlist with non-string collaborator item
+        playlist["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["collaborators"] = [123]
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Collaborator names must be strings.")
+
         # submit a playlist with invalid track identifier
         playlist = {
             "playlist": {
@@ -499,6 +535,23 @@ class PlaylistAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["playlist"]["extension"]
                          [PLAYLIST_EXTENSION_URI]["public"], False)
         self.assertNotIn("collaborators", response.json["playlist"]["extension"][PLAYLIST_EXTENSION_URI])
+
+        # Edit with invalid collaborator types
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.edit_playlist", playlist_mbid=playlist_mbid),
+            json={"playlist": {"extension": {PLAYLIST_EXTENSION_URI: {"collaborators": 123}}}},
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Collaborators must be a list.")
+
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.edit_playlist", playlist_mbid=playlist_mbid),
+            json={"playlist": {"extension": {PLAYLIST_EXTENSION_URI: {"collaborators": [123]}}}},
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Collaborator names must be strings.")
 
     def test_playlist_recording_add(self):
         """ Test adding a recording to a playlist works """
