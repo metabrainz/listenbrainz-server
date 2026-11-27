@@ -1,9 +1,11 @@
+import os
 import unittest
 from datetime import datetime, timezone
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import requests
 import requests_mock
+from flask import Flask
 import listenbrainz.webserver
 import listenbrainz.db.user as db_user
 from data.model.external_service import ExternalServiceType
@@ -176,3 +178,38 @@ class LastfmRecentTracksTestCase(unittest.TestCase):
         data = self._get(json={"recenttracks": {"@attr": {"totalPages": "1"}, "track": tracks}}, status_code=200)
         self.assertIsInstance(data["recenttracks"]["track"], list)
         self.assertEqual(len(data["recenttracks"]["track"]), 2)
+
+    def test_html_error_page_is_summarised(self):
+        """An HTML page, such as a Cloudflare challenge, is not passed on to the user in full."""
+        page = "<!DOCTYPE html>\n<html><head><title>Attention Required! | Cloudflare</title></head></html>"
+        for status_code in (200, 403, 503):
+            with self.subTest(status_code=status_code):
+                with self.assertRaises(ExternalServiceAPIError) as cm:
+                    self._get(text=page, status_code=status_code, headers={"Content-Type": "text/html; charset=UTF-8"})
+                message = str(cm.exception)
+                self.assertNotIn("<", message)
+                self.assertIn("HTML page", message)
+                self.assertIn(f"HTTP {status_code}", message)
+
+    def test_plain_text_error_is_kept(self):
+        with self.assertRaises(ExternalServiceAPIError) as cm:
+            self._get(text="Service temporarily unavailable", status_code=503)
+        self.assertIn("Service temporarily unavailable", str(cm.exception))
+
+
+class ImporterErrorEmailTestCase(unittest.TestCase):
+
+    def test_email_names_the_service(self):
+        app = Flask(__name__, template_folder=os.path.join(os.path.dirname(listenbrainz.webserver.__file__), "templates"))
+        app.config["SERVER_ROOT_URL"] = "https://listenbrainz.org"
+        app.config["MAIL_FROM_DOMAIN"] = "listenbrainz.org"
+        importer = BaseLastfmImporter("LibreFmImporter", "Libre.fm", MagicMock(), "https://libre.fm/2.0/", "k")
+
+        with app.app_context(), \
+                patch("listenbrainz.listens_importer.base.db_user.get_by_mb_id", return_value={"email": "user@example.com"}), \
+                patch("listenbrainz.listens_importer.base.send_mail") as send_mail:
+            importer.notify_error("user", "some error")
+
+        text = send_mail.call_args.kwargs["text"]
+        self.assertIn("importing your listens from Libre.fm.", text)
+        self.assertIn("your Libre.fm import page", text)
