@@ -51,6 +51,9 @@ describe("LinkListensPage", () => {
       http.post("/settings/link-listens/", () => {
         return HttpResponse.json(pageData);
       }),
+      http.post("/1/delete-listen", () => {
+        return new HttpResponse(null, { status: 200 });
+      }),
     ];
     server = setupServer(...handlers);
     server.listen();
@@ -119,4 +122,43 @@ describe("LinkListensPage", () => {
       ).toBeNull();
     });
   });
+
+  it("does not duplicate listens when a row with a colliding key is deleted", async () => {
+    const consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    renderLinkListensPage();
+
+    await screen.findByText(textContentMatcher("Link with MusicBrainz"));
+    await waitFor(() => {
+      expect(screen.getAllByTestId("listen")).toHaveLength(60);
+    });
+
+    // The two "Luminosity" listens share a name, artist and timestamp, so the
+    // old key based on those fields was not unique.
+    const cardToDelete = screen
+      .getAllByTestId("listen")
+      .find((card) => card.textContent?.includes("Euphrosyne"));
+    expect(cardToDelete).toBeDefined();
+    await user.click(
+      within(cardToDelete!).getByRole("menuitem", { name: "Delete Listen" })
+    );
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId("listen")).toHaveLength(59);
+    });
+    const remainingCards = screen.getAllByTestId("listen");
+    expect(
+      remainingCards.filter((card) => card.textContent?.includes("Luminosity"))
+    ).toHaveLength(2);
+    expect(
+      remainingCards.filter((card) => card.textContent?.includes("Euphrosyne"))
+    ).toHaveLength(0);
+
+    const duplicateKeyWarnings = consoleErrorSpy.mock.calls.filter((call) =>
+      String(call[0]).includes("same key")
+    );
+    expect(duplicateKeyWarnings).toHaveLength(0);
+    consoleErrorSpy.mockRestore();
+  }, 20000);
 });
