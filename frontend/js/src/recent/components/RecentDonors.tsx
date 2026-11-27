@@ -1,4 +1,8 @@
-import { faThumbtack } from "@fortawesome/free-solid-svg-icons";
+import {
+  faListAlt,
+  faMusic,
+  faThumbtack,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { Link } from "react-router";
@@ -8,6 +12,7 @@ import {
   pinnedRecordingToListen,
 } from "../../utils/utils";
 import Username from "../../common/Username";
+import { formatListenCount } from "../../explore/fresh-releases/utils";
 
 type RecentDonorsCardProps = {
   donors: DonationInfoWithPinnedRecording[];
@@ -61,6 +66,34 @@ function RecentDonorsCard(props: RecentDonorsCardProps) {
                     {donor.donation}
                     {donor.currency === "eur" && "€"}
                   </p>
+                  {donor.musicbrainz_id &&
+                  donor.is_listenbrainz_user &&
+                  (donor.listenCount || donor.playlistCount) ? (
+                    <div className="donor-listen-stats">
+                      {donor.listenCount ? (
+                        <Link
+                          to={`/user/${encodeURIComponent(
+                            donor.musicbrainz_id
+                          )}/stats/?range=all_time`}
+                          title={`${donor.listenCount.toLocaleString()} listens`}
+                        >
+                          <FontAwesomeIcon icon={faMusic} />{" "}
+                          {formatListenCount(donor.listenCount)} listens
+                        </Link>
+                      ) : null}
+                      {donor.playlistCount ? (
+                        <Link
+                          to={`/user/${encodeURIComponent(
+                            donor.musicbrainz_id
+                          )}/playlists/`}
+                          title={`${donor.playlistCount.toLocaleString()} playlists`}
+                        >
+                          <FontAwesomeIcon icon={faListAlt} />{" "}
+                          {formatListenCount(donor.playlistCount)} playlists
+                        </Link>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
                 {pinnedRecordingListen && (
                   <Link

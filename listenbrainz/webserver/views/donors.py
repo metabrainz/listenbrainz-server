@@ -12,6 +12,30 @@ DEFAULT_DONOR_COUNT = 25
 donors_bp = Blueprint("donors", __name__)
 
 
+def add_listen_and_playlist_counts(donors, donors_info):
+    """ Add each donor's ListenBrainz listen count and playlist count, in place.
+
+    Args:
+        donors: list of donor dicts from get_recent_donors or get_biggest_donors
+        donors_info: dict from db_user.get_many_users_by_mb_id, which maps lowercased
+            MusicBrainz usernames to ListenBrainz users
+
+    Donors who aren't ListenBrainz users get None for both counts.
+    """
+    donor_ids = [donor_info.id for donor_info in donors_info.values()]
+    user_listen_count = timescale_connection._ts.get_listen_count_for_users(donor_ids) if donor_ids else {}
+    user_playlist_count = db_playlist.get_playlist_count(db_conn, donor_ids) if donor_ids else {}
+
+    for donor in donors:
+        donor_info = donors_info.get((donor["musicbrainz_id"] or "").lower())
+        if not donor_info:
+            donor["listenCount"] = None
+            donor["playlistCount"] = None
+        else:
+            donor["listenCount"] = user_listen_count.get(donor_info.id, 0)
+            donor["playlistCount"] = user_playlist_count.get(donor_info.id, 0)
+
+
 @donors_bp.get("/",  defaults={"path": ""})
 @donors_bp.get("/<path:path>/")
 def donors(path):
@@ -33,19 +57,7 @@ def donors_post():
 
     musicbrainz_ids = [donor["musicbrainz_id"] for donor in donors if donor["is_listenbrainz_user"]]
     donors_info = db_user.get_many_users_by_mb_id(db_conn, musicbrainz_ids) if musicbrainz_ids else {}
-    donor_ids = [donor_info.id for _, donor_info in donors_info.items()]
-
-    user_listen_count = timescale_connection._ts.get_listen_count_for_users(donor_ids) if donor_ids else {}
-    user_playlist_count = db_playlist.get_playlist_count(db_conn, donor_ids) if donor_ids else {}
-
-    for donor in donors:
-        donor_info = donors_info.get(donor["musicbrainz_id"].lower())
-        if not donor_info:
-            donor["listenCount"] = None
-            donor["playlistCount"] = None
-        else:
-            donor["listenCount"] = user_listen_count.get(donor_info.id, 0)
-            donor["playlistCount"] = user_playlist_count.get(donor_info.id, 0)
+    add_listen_and_playlist_counts(donors, donors_info)
 
     return jsonify({
         "data": donors,

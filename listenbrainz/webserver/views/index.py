@@ -25,6 +25,7 @@ from listenbrainz.webserver import flash, db_conn, meb_conn, listens_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.timescale_connection import _ts
+from listenbrainz.webserver.views.donors import add_listen_and_playlist_counts
 from listenbrainz.webserver.views.status_api import get_service_status
 from listenbrainz.webserver.views.user_timeline_event_api import get_feed_events_for_user
 
@@ -192,10 +193,13 @@ def recent_listens():
             # Map recordings by user_id for quick lookup
             pinned_recordings_data = {recording.user_id: dict(recording) for recording in pinned_recordings_metadata}
 
-    # Add pinned recordings to recent donors
+    # Add pinned recordings to recent donors. donors_info is keyed by lowercased username.
     for donor in recent_donors:
-        donor_info = donors_info.get(donor["musicbrainz_id"])
+        donor_info = donors_info.get((donor["musicbrainz_id"] or "").lower())
         donor["pinnedRecording"] = pinned_recordings_data.get(donor_info.id) if donor_info else None
+
+    # Listen and playlist counts, shown in the Recent Donors widget (LB-2082)
+    add_listen_and_playlist_counts(recent_donors, donors_info)
 
     props = {
         "listens": recent,

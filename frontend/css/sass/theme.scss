@@ -2392,6 +2392,16 @@
           color: var(--lb-accent);
         }
       }
+
+      .recent-donor-card .donor-listen-stats {
+        a {
+          color: var(--lb-text-muted);
+        }
+
+        svg {
+          color: var(--lb-accent);
+        }
+      }
     }
 
     #homepage-container {
