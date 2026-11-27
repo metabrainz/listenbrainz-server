@@ -20,7 +20,11 @@ import Card from "../../../components/Card";
 import { ToastMsg } from "../../../notifications/Notifications";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import PlaylistMenu from "../../../playlists/components/PlaylistMenu";
-import { getPlaylistExtension, getPlaylistId } from "../../../playlists/utils";
+import {
+  getPlaylistExtension,
+  getPlaylistId,
+  getPlaylistTags,
+} from "../../../playlists/utils";
 import PlaylistView from "../playlistView.d";
 
 export type PlaylistCardProps = {
@@ -50,6 +54,12 @@ export default function PlaylistCard({
   const playlistId = getPlaylistId(playlist);
   const dropdownToggleId = React.useId();
   const customFields = getPlaylistExtension(playlist);
+  const playlistTags = getPlaylistTags(playlist);
+  const visibleTags = playlistTags.slice(0, 3);
+  const remainingTagsCount =
+    playlistTags.length > visibleTags.length
+      ? playlistTags.length - visibleTags.length
+      : 0;
 
   const onCopyPlaylist = React.useCallback(async (): Promise<void> => {
     if (!currentUser?.auth_token) {
@@ -131,6 +141,20 @@ export default function PlaylistCard({
                   {playlist.title}
                 </Link>
               </div>
+              {playlistTags.length > 0 && (
+                <div className="playlist-tags-row">
+                  {visibleTags.map((tag) => (
+                    <span key={tag} className="playlist-tag-badge">
+                      {tag}
+                    </span>
+                  ))}
+                  {remainingTagsCount > 0 && (
+                    <span className="playlist-tag-more">
+                      +{remainingTagsCount} more
+                    </span>
+                  )}
+                </div>
+              )}
               {playlist.annotation && (
                 <div
                   className="description text-summary"
@@ -228,6 +252,20 @@ export default function PlaylistCard({
         to={`/playlist/${DOMPurify.sanitize(playlistId)}/`}
       >
         <h4>{playlist.title}</h4>
+        {playlistTags.length > 0 && (
+          <div className="playlist-tags-row">
+            {visibleTags.map((tag) => (
+              <span key={tag} className="playlist-tag-badge">
+                {tag}
+              </span>
+            ))}
+            {remainingTagsCount > 0 && (
+              <span className="playlist-tag-more">
+                +{remainingTagsCount} more
+              </span>
+            )}
+          </div>
+        )}
         {playlist.annotation && (
           <div
             className="description text-summary"

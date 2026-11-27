@@ -2,15 +2,7 @@ type PlaylistTypeSearchResult = {
   count: number;
   offset: number;
   playlist_count: number;
-  playlists: {
-    playlist: {
-      annotation?: string;
-      creator: string;
-      date: string;
-      identifier: string;
-      title: string;
-    };
-  }[];
+  playlists: JSPFObject[];
 };
 
 type TrackTypeSearchResult = {
