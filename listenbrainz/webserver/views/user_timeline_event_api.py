@@ -98,6 +98,9 @@ def create_user_recording_recommendation_event(user_name):
     except ValueError as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
+    if not isinstance(data, dict) or "metadata" not in data or not isinstance(data["metadata"], dict):
+        raise APIBadRequest("JSON document must contain metadata", data)
+
     try:
         metadata = RecordingRecommendationMetadata(**data['metadata'])
     except pydantic.ValidationError as e:
@@ -149,16 +152,20 @@ def create_user_notification_event(user_name):
         raise APINotFound(f"Cannot find user: {user_name}")
 
     try:
-        data = orjson.loads(request.get_data())['metadata']
-    except (ValueError, KeyError) as e:
+        data = orjson.loads(request.get_data())
+    except ValueError as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
-    if "message" not in data:
+    if not isinstance(data, dict) or "metadata" not in data or not isinstance(data["metadata"], dict):
+        raise APIBadRequest("JSON document must contain metadata", data)
+
+    metadata_dict = data["metadata"]
+    if "message" not in metadata_dict:
         raise APIBadRequest("Invalid metadata: message is missing")
 
     # Not filtering html in the message because only approved users can use this endpoint.
     # if this changes in the future, add back html cleanup here.
-    message = data["message"]
+    message = metadata_dict["message"]
     metadata = NotificationMetadata(
         creator=creator['musicbrainz_id'], message=message)
 
@@ -215,6 +222,9 @@ def create_user_cb_review_event(user_name):
     except ValueError as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
+    if not isinstance(data, dict) or "metadata" not in data or not isinstance(data["metadata"], dict):
+        raise APIBadRequest("JSON document must contain metadata", data)
+
     try:
         metadata = data["metadata"]
         review = CBReviewMetadata(
@@ -225,7 +235,7 @@ def create_user_cb_review_event(user_name):
             language=metadata["language"],
             rating=metadata.get("rating")
         )
-    except (pydantic.ValidationError, KeyError):
+    except (pydantic.ValidationError, KeyError, TypeError):
         raise APIBadRequest(f"Invalid metadata: {str(data)}")
 
     review_id = CritiqueBrainzService().submit_review(user["id"], review)
@@ -689,6 +699,9 @@ def create_personal_recommendation_event(user_name):
     except ValueError as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
+    if not isinstance(data, dict) or "metadata" not in data or not isinstance(data["metadata"], dict):
+        raise APIBadRequest("JSON document must contain metadata", data)
+
     metadata = data['metadata']
 
     try:
@@ -747,7 +760,7 @@ def create_thanks_event(user_name):
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
-    if 'metadata' not in data:
+    if not isinstance(data, dict) or "metadata" not in data or not isinstance(data["metadata"], dict):
         raise APIBadRequest("JSON document must contain metadata", data)
 
     metadata = data["metadata"]
