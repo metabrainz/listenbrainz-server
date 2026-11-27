@@ -115,6 +115,38 @@ body {
             animation: theme-icon-in 300ms cubic-bezier(0.4, 0, 0.2, 1);
           }
         }
+
+        .theme-icon-image {
+          background-color: currentcolor;
+          display: inline-block;
+          mask-position: center;
+          mask-repeat: no-repeat;
+          mask-size: contain;
+
+          &.sun-theme-icon,
+          &.system-theme-icon {
+            height: 1.2em;
+            width: 1.2em;
+          }
+
+          &.sun-theme-icon {
+            mask-image: url("/static/img/theme/sun.svg");
+          }
+
+          &.moon-theme-icon {
+            height: 0.93em;
+            mask-image: url("/static/img/theme/moon.svg");
+            width: 0.93em;
+          }
+
+          &.system-theme-icon {
+            mask-image: url("/static/img/theme/system.svg");
+          }
+
+          &[hidden] {
+            display: none;
+          }
+        }
       }
       .navbar-logo {
         z-index: 102; // just above the toggle hamburger button
