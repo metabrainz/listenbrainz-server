@@ -55,7 +55,7 @@ describe("theme utilities", () => {
     delete (document as Partial<Document>).startViewTransition;
   });
 
-  it("defaults to Auto and ignores unknown stored values", () => {
+  it("defaults to System and ignores unknown stored values", () => {
     media.dark = true;
     expect(getThemePreference()).toBe("system");
     window.localStorage.setItem(themeStorageKey, "sepia");

@@ -1,16 +1,11 @@
 import * as React from "react";
+import { capitalize } from "lodash";
 import {
   setThemePreference,
   themePreferences,
   ThemePreference,
   useTheme,
 } from "../utils/theme";
-
-const labels: Record<ThemePreference, string> = {
-  light: "Light",
-  dark: "Dark",
-  system: "Auto",
-};
 
 // Outline icons, drawn so the three modes look like a set. (Font Awesome's
 // regular sun reads as a gear at navbar size.)
@@ -45,7 +40,7 @@ export function SunIcon() {
   );
 }
 
-// Lucide's moon (ISC licence): the same rounded moon as in the Auto icon.
+// Lucide's moon (ISC licence): the same rounded moon as in the System icon.
 export function MoonIcon() {
   return (
     <svg
@@ -92,7 +87,7 @@ export default function ThemeToggle() {
     themePreferences[
       (themePreferences.indexOf(preference) + 1) % themePreferences.length
     ];
-  const hint = `Click to switch to ${labels[next]} mode`;
+  const hint = `Click to switch to ${capitalize(next)} mode`;
 
   return (
     <button
@@ -103,7 +98,7 @@ export default function ThemeToggle() {
         setAnimateIcon(true);
         setThemePreference(next);
       }}
-      aria-label={`Theme: ${labels[preference]}. ${hint}`}
+      aria-label={`Theme: ${capitalize(preference)}. ${hint}`}
       title={hint}
     >
       {/* Re-keyed so the swap-in animation replays when the choice changes */}

@@ -20,12 +20,12 @@ describe("Navbar theme toggle", () => {
     window.localStorage.clear();
   });
 
-  it("starts new visitors on Auto and cycles Auto -> Light -> Dark", async () => {
+  it("starts new visitors on System and cycles System -> Light -> Dark", async () => {
     const user = userEvent.setup();
     renderWithProviders(<Navbar />);
 
     const toggle = screen.getByRole("button", {
-      name: "Theme: Auto. Click to switch to Light mode",
+      name: "Theme: System. Click to switch to Light mode",
     });
     expect(toggle).toHaveAttribute("data-theme-toggle");
     expect(toggle).toHaveAttribute("title", "Click to switch to Light mode");
@@ -40,13 +40,13 @@ describe("Navbar theme toggle", () => {
     expect(document.documentElement.dataset.bsTheme).toBe("dark");
     expect(window.localStorage.getItem(themeStorageKey)).toBe("dark");
     expect(toggle).toHaveAccessibleName(
-      "Theme: Dark. Click to switch to Auto mode"
+      "Theme: Dark. Click to switch to System mode"
     );
 
     await user.click(toggle);
     expect(window.localStorage.getItem(themeStorageKey)).toBe("system");
     expect(toggle).toHaveAccessibleName(
-      "Theme: Auto. Click to switch to Light mode"
+      "Theme: System. Click to switch to Light mode"
     );
   });
 
@@ -57,7 +57,7 @@ describe("Navbar theme toggle", () => {
 
     expect(
       screen.getByRole("button", {
-        name: "Theme: Dark. Click to switch to Auto mode",
+        name: "Theme: Dark. Click to switch to System mode",
       })
     ).toBeInTheDocument();
   });

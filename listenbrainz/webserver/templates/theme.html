@@ -25,14 +25,15 @@
       root.style.colorScheme = theme;
     };
     const preferences = ["light", "dark", "system"];
-    const labels = { light: "Light", dark: "Dark", system: "Auto" };
+    const capitalize = (preference) =>
+      preference.charAt(0).toUpperCase() + preference.slice(1);
     const nextPreference = (preference) =>
       preferences[(preferences.indexOf(preference) + 1) % preferences.length];
     const updateLegacyToggle = () => {
       const preference = readPreference();
-      const hint = `Click to switch to ${labels[nextPreference(preference)]} mode`;
+      const hint = `Click to switch to ${capitalize(nextPreference(preference))} mode`;
       document.querySelectorAll("[data-legacy-theme-toggle]").forEach((toggle) => {
-        toggle.setAttribute("aria-label", `Theme: ${labels[preference]}. ${hint}`);
+        toggle.setAttribute("aria-label", `Theme: ${capitalize(preference)}. ${hint}`);
         toggle.setAttribute("title", hint);
         toggle.querySelectorAll("[data-theme-icon]").forEach((icon) => {
           icon.toggleAttribute("hidden", icon.dataset.themeIcon !== preference);
