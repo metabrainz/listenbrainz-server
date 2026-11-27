@@ -114,6 +114,19 @@
   .user-link {
     word-wrap: break-word;
   }
+  .donor-listen-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.75rem;
+    font-size: 0.85em;
+    a {
+      color: #6b7280;
+      white-space: nowrap;
+    }
+    svg {
+      color: #353070;
+    }
+  }
   .donor-pinned-recording {
     display: flex;
     align-items: center;
