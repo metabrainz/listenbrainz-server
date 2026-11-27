@@ -1,5 +1,6 @@
 import click
 
+from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.clickhouse.jobs import add_job
 from listenbrainz.webserver import create_app
 
@@ -40,6 +41,22 @@ def import_incremental_dump(workers: int, max_dumps: int | None, dump_id: int | 
     if dump_id is not None and max_dumps is not None:
         raise click.UsageError("--dump-id and --max-dumps cannot be used together")
     send_request_to_clickhouse("clickhouse.import_incremental_dump", workers=workers, max_dumps=max_dumps, dump_id=dump_id)
+
+
+@cli.command(name="daily_activity")
+@click.option("--range", "stats_ranges", type=click.Choice(ALLOWED_STATISTICS_RANGE), multiple=True,
+              help="Stats range to refresh. Repeat to select several. Defaults to all ranges.")
+def daily_activity(stats_ranges):
+    """Compute user daily activity and store it in CouchDB."""
+    send_request_to_clickhouse("clickhouse.daily_activity", stats_ranges=stats_ranges or ALLOWED_STATISTICS_RANGE)
+
+
+@cli.command(name="listening_activity")
+@click.option("--range", "stats_ranges", type=click.Choice(ALLOWED_STATISTICS_RANGE), multiple=True,
+              help="Stats range to refresh. Repeat to select several. Defaults to all ranges.")
+def listening_activity(stats_ranges):
+    """Compute user listening activity and store it in CouchDB."""
+    send_request_to_clickhouse("clickhouse.listening_activity", stats_ranges=stats_ranges or ALLOWED_STATISTICS_RANGE)
 
 
 if __name__ == '__main__':

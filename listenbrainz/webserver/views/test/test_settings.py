@@ -46,8 +46,8 @@ class SettingsViewsTestCase(IntegrationTestCase):
                     "user": "lucifer",
                     "page": "1",
                     "perPage": "2",
-                    "totalPages": "0",
-                    "total": "0"
+                    "totalPages": "21",
+                    "total": "42"
                 }
             }
         })
@@ -56,6 +56,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
             json={"external_user_id": "lucifer"}
         )
         self.assert200(response)
+        self.assertEqual(response.json["totalLfmListens"], 42)
         users = listens_importer.get_active_users_to_process(self.db_conn, ExternalServiceType.LASTFM)
         self.assertEqual(len(users), 1)
         self.assertEqual(users[0]["external_user_id"], "lucifer")

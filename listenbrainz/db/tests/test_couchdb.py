@@ -4,6 +4,7 @@ from io import BytesIO
 from unittest.mock import patch
 
 import requests
+import requests_mock
 
 from listenbrainz import config
 from listenbrainz.db import couchdb
@@ -74,6 +75,17 @@ class CouchdbTestCase(unittest.TestCase):
 
         mock_lock.assert_called_with(database)
         mock_unlock.assert_called_with(database)
+
+    @requests_mock.Mocker()
+    def test_bulk_request_reports_document_timeout(self, mock):
+        database = "test_bulk_timeout"
+        mock.post(
+            f"{couchdb._get_database_url(database)}/_bulk_docs",
+            status_code=201,
+            json=[{"id": "1", "ok": True}, {"id": "2", "error": "timeout"}],
+        )
+        with self.assertRaises(couchdb.RetryableDocumentError):
+            couchdb.insert_data(database, [{"_id": "1"}, {"_id": "2"}])
 
     def test_insert_new_data_overwrites_conflicts(self):
         database = "couchdb_dump_test_db_20240204"

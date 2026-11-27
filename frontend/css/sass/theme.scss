@@ -745,13 +745,19 @@
       color: #d4cfde !important;
     }
 
-    #dashboard
-      .listen-card
-      .listen-controls
-      > button:not(.love):not(.hate):hover,
-    #dashboard .listen-card .listen-controls > .btn:not(.love):not(.hate):hover,
-    #dashboard .listen-card .play-button:hover {
+    // Not limited to #dashboard: listen-cards.scss sets a dark $asphalt hover
+    // colour on every listen card, including the BrainzPlayer queue, where it
+    // made the hovered three-dot button almost disappear.
+    .listen-card .listen-controls > button:not(.love):not(.hate):hover,
+    .listen-card .listen-controls > .btn:not(.love):not(.hate):hover,
+    .listen-card .play-button:hover {
       color: var(--lb-accent-hover);
+    }
+
+    // While its menu is open, a transparent button otherwise falls back to
+    // Bootstrap's grey active colour, dimmer than its resting state.
+    .btn-transparent {
+      --bs-btn-active-color: var(--lb-text);
     }
 
     // Reactions are intentionally semantic rather than brand-blue: the old
@@ -917,6 +923,13 @@
     #legacy-year-in-music .listen-card .listen-controls > .icon-only,
     #legacy-year-in-music .listen-card .play-button {
       color: #6b665c;
+    }
+
+    // The dark theme lightens listen-card durations, which makes them vanish
+    // on these light cards. Keep the Year in Music muted tone instead.
+    #year-in-music .listen-card .title-duration > .text-muted,
+    #legacy-year-in-music .listen-card .title-duration > .text-muted {
+      color: #6b665c !important;
     }
 
     #year-in-music .listen-card .listen-controls > .love,
@@ -1099,10 +1112,11 @@
       box-shadow: none;
     }
 
+    // Still dimmer than the enabled links, but meets the 4.5:1 text minimum
     #navigation.pagination .page-item.disabled .page-link {
       background-color: var(--lb-surface-muted) !important;
       border-color: var(--lb-card-border) !important;
-      color: #827c90 !important;
+      color: var(--bs-tertiary-color) !important;
     }
 
     #navigation.pagination .page-link:hover,
@@ -1364,6 +1378,16 @@
       color: var(--lb-text-muted);
     }
 
+    // date-picker.scss uses $red and $gray-600, which are too dark here.
+    // Kept before the today/active rules so those still set white text.
+    .react-calendar__month-view__days__day--weekend {
+      color: #e06666;
+    }
+
+    .react-calendar__month-view__days__day--neighboringMonth {
+      color: var(--bs-tertiary-color);
+    }
+
     .react-calendar__tile--now {
       background-color: #615b3f;
       color: #fff;
@@ -1409,6 +1433,13 @@
       z-index: 1;
       color: var(--lb-text) !important;
       -webkit-text-fill-color: var(--lb-text);
+    }
+
+    // Clicking a date part selects its digits. The browser's default light
+    // selection colour leaves the light text unreadable, so use the same
+    // purple as the active calendar date.
+    .react-datetime-picker__inputGroup__input::selection {
+      background-color: #625c86;
     }
 
     .track-search-dropdown .selected,
@@ -1505,6 +1536,16 @@
 
     .releases-timeline .timeline-mark:hover .mark-label {
       color: var(--lb-text);
+    }
+
+    // The "Today" marker uses $blue, which disappears on the dark canvas
+    .releases-timeline .mark-label-today {
+      color: var(--lb-accent);
+    }
+
+    // LB Radio prompt examples use $gray-700, too dark on the dark canvas
+    #examples {
+      color: var(--lb-text-muted);
     }
 
     .release-card-grid-title::before,
@@ -2206,6 +2247,13 @@
       .progress:focus-visible {
         outline: 2px solid var(--lb-focus);
         outline-offset: 3px;
+      }
+
+      // The player thins the ellipsis icon with a stroke in the bar's
+      // background colour. Use the dark bar colour so it doesn't show as a
+      // white ring around each dot.
+      .actions .fa-ellipsis-vertical {
+        stroke: var(--lb-surface-raised);
       }
     }
 

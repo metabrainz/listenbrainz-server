@@ -5,9 +5,9 @@ listens untouched, then publishes it:
 
 A full dump's staging table is swapped in for listens.
 
-An incremental dump's staging table is copied into listens without the listens
-already there, which makes reloading a dump safe and covers its overlap with the full
-dump before it.
+An incremental dump adds new listen keys and keeps the newest submission for
+each key. When a submission replaces an existing version, the import applies
+the changes to a clone and swaps it into place.
 
 A dump is read from its uncompressed .tar archive in place: full dumps are hundreds
 of GB, too big to extract.
@@ -31,9 +31,14 @@ from uuid import uuid4
 from clickhouse_connect.driver import Client
 import pyarrow as pa
 import pyarrow.parquet as pq
+from sqlalchemy.engine import Engine
 
 from listenbrainz.clickhouse.query_worker.client import ClickHouseConnection
+from listenbrainz.clickhouse.query_worker.listens.deletions import apply_deletions, delete_matching_listens, sync_deletions
 from listenbrainz.clickhouse.query_worker.listens.ftp import DumpNotFoundException, DumpType, FTPDumpDownloader
+from listenbrainz.clickhouse.query_worker.listens.aggregates import (
+    LIVE_STREAM, attach_source, full_dump_aggregates, replace_live_aggregates, staged_source,
+)
 from listenbrainz.clickhouse.query_worker.listens.import_state import INCREMENTAL_DUMP_STATE, get_import_state, set_import_state
 from listenbrainz.clickhouse.query_worker.listens.schema import LISTEN_COLUMN_NAMES, create_listens_table, ensure_schema
 from listenbrainz.clickhouse.query_worker.utils import describe_load_errors
@@ -48,17 +53,18 @@ _COLUMNS = ", ".join(LISTEN_COLUMN_NAMES)
 # Insert staging listens, excluding existing keys and duplicates within staging.
 # Restrict the existing-key set to staging candidates, rather than all stored listens.
 MERGE_STAGED_LISTENS = f"""
-    INSERT INTO listens ({_COLUMNS})
+    INSERT INTO {{destination}} ({_COLUMNS})
     SELECT {_COLUMNS}
     FROM {{table}}
     WHERE (user_id, listened_at, recording_msid) NOT IN (
         SELECT user_id, listened_at, recording_msid
-        FROM listens
+        FROM {{destination}}
         WHERE (user_id, listened_at, recording_msid) IN (
             SELECT user_id, listened_at, recording_msid
             FROM {{table}}
         )
     )
+    ORDER BY user_id, listened_at, recording_msid, created DESC
     LIMIT 1 BY user_id, listened_at, recording_msid
 """
 
@@ -103,8 +109,34 @@ def create_client(connection: ClickHouseConnection, send_receive_timeout: int = 
 
 
 def merge_staged_listens(client: Client, table: str) -> None:
-    """Copy a staging table into listens, skipping the listens already there."""
-    client.command(MERGE_STAGED_LISTENS.format(table=table))
+    """Publish the newest submission of each staged listen key."""
+    superseded = f"""
+        SELECT l.user_id, l.listened_at, l.recording_msid, l.created
+        FROM listens AS l
+        INNER JOIN (
+            SELECT user_id, listened_at, recording_msid, max(created) AS newest
+            FROM {table} GROUP BY user_id, listened_at, recording_msid
+        ) AS s USING (user_id, listened_at, recording_msid)
+        WHERE (l.user_id, l.listened_at, l.recording_msid) IN (
+            SELECT user_id, listened_at, recording_msid FROM {table}
+        ) AND l.created < s.newest
+    """
+    if not client.query(f"{superseded} LIMIT 1").result_rows:
+        client.command(MERGE_STAGED_LISTENS.format(table=table, destination=LISTENS_TABLE))
+        return
+
+    # CLONE shares existing parts. Publish replacements together so a failed
+    # insert cannot leave a listen missing or expose two versions to readers.
+    clone = f"{STAGING_TABLE_PREFIX}{uuid4().hex}"
+    client.command(f"CREATE TABLE {clone} CLONE AS listens")
+    try:
+        delete_matching_listens(client, clone, f"(user_id, listened_at, recording_msid, created) IN ({superseded})",
+                                LIVE_STREAM)
+        with staged_source(client, clone, LIVE_STREAM):
+            client.command(MERGE_STAGED_LISTENS.format(table=table, destination=clone))
+        swap_in_staged_listens(client, clone)
+    finally:
+        drop_staging_table(client, clone)
 
 
 def create_staging_table(client: Client) -> str:
@@ -132,7 +164,8 @@ def drop_import_leftovers(client: Client) -> None:
     Only call it when no other import runs: it drops their staging tables too.
     """
     leftovers = client.query(
-        "SELECT name FROM system.tables WHERE database = currentDatabase() AND startsWith(name, {prefix:String})",
+        "SELECT name FROM system.tables WHERE database = currentDatabase() AND startsWith(name, {prefix:String})"
+        " ORDER BY engine = 'MaterializedView' DESC",
         parameters={"prefix": STAGING_TABLE_PREFIX},
     ).result_rows
     for (table,) in leftovers:
@@ -141,7 +174,9 @@ def drop_import_leftovers(client: Client) -> None:
 
 
 def swap_in_staged_listens(client: Client, table: str) -> None:
+    client.command("DROP VIEW listens_to_changes")
     client.command(f"EXCHANGE TABLES {table} AND {LISTENS_TABLE}")
+    attach_source(client, LISTENS_TABLE, LIVE_STREAM)
 
 
 def count_listens(client: Client) -> int:
@@ -238,16 +273,16 @@ def _insert_parquet_files(
 
 
 def _load_full_dump(parquet_files, connection, workers, client) -> dict:
-    # on success the dropped staging table holds the previous listens
-    with staging_table(client) as table:
-        result = _insert_parquet_files(parquet_files, table, connection, workers)
+    with staging_table(client) as table, full_dump_aggregates(client, table) as stream:
+        with staged_source(client, table, stream):
+            result = _insert_parquet_files(parquet_files, table, connection, workers)
         if not result["errors"]:
-            # Persist this before EXCHANGE: even an ambiguous swap/cleanup failure
-            # must not leave an older dataset paired with the previous watermark.
+            apply_deletions(client, table, stream)
             set_import_state(client, INCREMENTAL_DUMP_STATE, 0)
+            replace_live_aggregates(client, stream)
             swap_in_staged_listens(client, table)
             result["added"] = count_listens(client)
-    return result
+        return result
 
 
 def _load_incremental_dump(parquet_files, connection, workers, client) -> dict:
@@ -256,6 +291,7 @@ def _load_incremental_dump(parquet_files, connection, workers, client) -> dict:
         if result["errors"]:
             return result
 
+        apply_deletions(client, table)
         before = count_listens(client)
         merge_staged_listens(client, table)
         result["added"] = count_listens(client) - before
@@ -288,16 +324,18 @@ def _load_parquet_files(
     return result
 
 
-def _prepare_import(connection: ClickHouseConnection) -> None:
-    """Create the schema and drop the leftovers of failed imports.
+def _prepare_import(connection: ClickHouseConnection, listens_engine: Engine) -> None:
+    """Prepare staging and reconcile stored listens with PostgreSQL deletion records.
 
     TODO: take an import lock here once imports can run concurrently, e.g. more than
       one query worker. Note ClickHouse keeps running the queries of a killed import, so
       the lock must also kill those before letting another import start.
     """
-    with closing(create_client(connection)) as client:
-        ensure_schema(client)
+    with closing(create_client(connection, send_receive_timeout=PROCESS_SEND_RECEIVE_TIMEOUT)) as client:
         drop_import_leftovers(client)
+        ensure_schema(client)
+        sync_deletions(client, listens_engine)
+        apply_deletions(client, LISTENS_TABLE, LIVE_STREAM)
 
 
 def _import_dump(
@@ -343,6 +381,7 @@ def import_full_dump(
     connection: ClickHouseConnection,
     downloader: FTPDumpDownloader,
     *,
+    listens_engine: Engine,
     dump_id: int | None = None,
     workers: int = 4,
     download_dir: str | None = None,
@@ -351,7 +390,7 @@ def import_full_dump(
 
     The incremental dumps are caught up from it.
     """
-    _prepare_import(connection)
+    _prepare_import(connection, listens_engine)
     with downloader:
         dump_dir_name, dump_id = downloader.get_dump_name(DumpType.FULL, dump_id)
     logger.info("Loading full dump %d (%s)", dump_id, dump_dir_name)
@@ -362,6 +401,7 @@ def import_missing_incremental_dumps(
     connection: ClickHouseConnection,
     downloader: FTPDumpDownloader,
     *,
+    listens_engine: Engine,
     workers: int = 4,
     max_dumps: int | None = None,
     dump_id: int | None = None,
@@ -380,7 +420,7 @@ def import_missing_incremental_dumps(
     if dump_id is not None and max_dumps is not None:
         raise ValueError("dump_id and max_dumps cannot be used together")
 
-    _prepare_import(connection)
+    _prepare_import(connection, listens_engine)
     with closing(create_client(connection)) as client:
         last_id = get_import_state(client, INCREMENTAL_DUMP_STATE)
     if not last_id:

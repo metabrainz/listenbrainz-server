@@ -2,6 +2,8 @@
 
 from clickhouse_connect.driver import Client
 
+from listenbrainz.clickhouse.query_worker.listens.aggregates import ensure_aggregates
+
 # The columns of a listen, as in the Spark listen dumps (SPARK_LISTENS_SCHEMA).
 LISTEN_COLUMNS = """
         listened_at DateTime64(3),
@@ -32,6 +34,16 @@ CREATE_LISTENS_TABLE = f"""
 
 CREATE_TABLES = [
     CREATE_LISTENS_TABLE.format(if_not_exists="IF NOT EXISTS", name="listens"),
+    """
+    CREATE TABLE IF NOT EXISTS deleted_listens (
+        user_id UInt32, listened_at DateTime64(3), recording_msid UUID, created DateTime64(3)
+    ) ENGINE = ReplacingMergeTree ORDER BY (user_id, listened_at, recording_msid, created)
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS deleted_user_history (
+        user_id UInt32, max_created DateTime64(6)
+    ) ENGINE = ReplacingMergeTree(max_created) ORDER BY user_id
+    """,
     # High-water marks of incremental imports (see import_state.py).
     """
     CREATE TABLE IF NOT EXISTS import_state (
@@ -53,3 +65,4 @@ def ensure_schema(ch_client: Client) -> None:
     """Create the schema; idempotent, so safe to call from every job."""
     for statement in CREATE_TABLES:
         ch_client.command(statement)
+    ensure_aggregates(ch_client)

@@ -72,6 +72,12 @@ def create_database(database: str):
     response.raise_for_status()
 
 
+def get_document_count(database: str) -> int:
+    response = requests.get(_get_database_url(database))
+    response.raise_for_status()
+    return response.json()["doc_count"]
+
+
 def list_databases(stat_prefix: str) -> list[str]:
     """ List all couchdb database whose name starts with the given stat prefix
     sorted in the descending order of creation.
@@ -97,7 +103,7 @@ def list_databases(stat_prefix: str) -> list[str]:
     return databases
 
 
-def delete_database(prefix: str):
+def delete_database(prefix: str, *, older_than: str | None = None):
     """ Delete all but the latest database whose name starts with the given prefix.
 
     Before deleting, the existence of a LOCK file is checked. If a file named LOCK,
@@ -105,6 +111,7 @@ def delete_database(prefix: str):
 
     Args:
          prefix: the string to match database names with
+         older_than: an already completed generation to keep along with any newer ones
 
     Returns:
         tuple of name of databases that were deleted and which matched the prefix
@@ -112,7 +119,10 @@ def delete_database(prefix: str):
     """
     databases = list_databases(prefix)
     # remove the latest database from the list then delete the databases remaining in the list.
-    databases.pop(0)
+    if older_than is None:
+        databases = databases[1:]
+    else:
+        databases = [database for database in databases if database < older_than]
 
     deleted, retained = [], []
 
@@ -164,6 +174,19 @@ def fetch_exact_data(database: str, document_id: str):
     return response.json()
 
 
+class RetryableDocumentError(RuntimeError):
+    """CouchDB temporarily failed an individual operation inside a bulk request."""
+
+
+def _check_document_result(result):
+    error = result.get("error")
+    if error:
+        message = f"CouchDB document {result.get('id')} failed: {error}"
+        if error in {"timeout", "internal_server_error", "service_unavailable", "too_many_requests", "conflict"}:
+            raise RetryableDocumentError(message)
+        raise ValueError(message)
+
+
 def insert_data(database: str, data: list[dict]):
     """ Insert the given data into the specified database. """
     with start_span(op="serializing", name="serialize data to json"):
@@ -179,6 +202,8 @@ def insert_data(database: str, data: list[dict]):
         for doc_status in response.json():
             if doc_status.get("error") == "conflict":
                 conflict_doc_ids.append(doc_status["id"])
+            else:
+                _check_document_result(doc_status)
 
         if not conflict_doc_ids:
             return
@@ -196,14 +221,17 @@ def insert_data(database: str, data: list[dict]):
     with start_span(op="deserializing", name="processing conflicting revisions"):
         revs_map = {}
         for result in response.json()["results"]:
-            existing_doc = result["docs"][0]["ok"]
+            item = result["docs"][0]
+            if "error" in item:
+                _check_document_result(item["error"])
+            existing_doc = item["ok"]
             revs_map[existing_doc["_id"]] = existing_doc["_rev"]
 
         docs_to_update = []
         for doc in data:
             if doc["_id"] in revs_map:
                 doc["_rev"] = revs_map[doc["_id"]]
-            docs_to_update.append(doc)
+                docs_to_update.append(doc)
 
     with start_span(op="serializing", name="serialize conflicting docs to update"):
         docs_to_update = orjson.dumps({"docs": docs_to_update})
@@ -211,6 +239,8 @@ def insert_data(database: str, data: list[dict]):
     with start_span(op="http", name="retry updating conflicts in database"):
         response = requests.post(couchdb_url, data=docs_to_update, headers={"Content-Type": "application/json"})
         response.raise_for_status()
+        for doc_status in response.json():
+            _check_document_result(doc_status)
 
 
 def try_insert_data(database: str, data: list[dict]):
@@ -248,7 +278,10 @@ def check_database_lock(database: str):
     """
     url = f"{_get_database_url(database)}/{DATABASE_LOCK_FILE}"
     response = requests.get(url)
-    return response.status_code == 200
+    if response.status_code == 404:
+        return False
+    response.raise_for_status()
+    return True
 
 
 def lock_database(database: str):

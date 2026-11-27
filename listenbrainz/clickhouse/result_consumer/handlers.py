@@ -1,4 +1,11 @@
+import re
+from functools import wraps
+
+import requests
 from flask import current_app
+from requests import HTTPError
+
+from listenbrainz.db import couchdb, stats
 
 
 def handle_dump_imported(message):
@@ -33,7 +40,61 @@ def handle_schema_initialized(message):
         current_app.logger.error("ClickHouse schema initialization failed: %s", message.get("error"))
 
 
+class RetryClickHouseResult(RuntimeError):
+    """Ask the consumer to requeue this delivery."""
+
+
+def _handle_couchdb_errors(handler):
+    @wraps(handler)
+    def wrapped(message):
+        try:
+            return handler(message)
+        except (couchdb.RetryableDocumentError, requests.ConnectionError, requests.Timeout,
+                requests.exceptions.ChunkedEncodingError) as exc:
+            raise RetryClickHouseResult(f"Retrying {message['type']} after a CouchDB failure") from exc
+        except requests.RequestException as exc:
+            status = exc.response.status_code if exc.response is not None else None
+            if status in (408, 429) or (status is not None and status >= 500):
+                raise RetryClickHouseResult(f"Retrying {message['type']} after CouchDB returned {status}") from exc
+            current_app.logger.exception("Permanent HTTP failure in ClickHouse handler for '%s'", message["type"])
+
+    return wrapped
+
+
+@_handle_couchdb_errors
+def handle_activity_start(message):
+    try:
+        couchdb.create_database(message["database"])
+    except HTTPError as exc:
+        if exc.response.status_code != 412:  # Replay of a start message.
+            raise
+
+
+@_handle_couchdb_errors
+def handle_activity(message):
+    stats.insert(message["database"], message["from_ts"], message["to_ts"], message["data"])
+
+
+@_handle_couchdb_errors
+def handle_activity_end(message):
+    database = message["database"]
+    activity = message["type"].removeprefix("clk_").removesuffix("_end")
+    if not re.fullmatch(rf"clickhouse_{activity}_[a-z_]+_[0-9]{{20}}", database):
+        raise ValueError(f"Invalid {activity} database {database}")
+    # Keep the previous generation if a batch failed to reach CouchDB.
+    if couchdb.get_document_count(database) != message["user_count"]:
+        raise ValueError(f"Incomplete {activity} database {database}")
+    prefix = database.rsplit("_", 1)[0] + "_"
+    couchdb.delete_database(prefix, older_than=database)
+
+
 RESPONSE_HANDLERS = {
+    "clk_daily_activity_start": handle_activity_start,
+    "clk_daily_activity": handle_activity,
+    "clk_daily_activity_end": handle_activity_end,
+    "clk_listening_activity_start": handle_activity_start,
+    "clk_listening_activity": handle_activity,
+    "clk_listening_activity_end": handle_activity_end,
     "clk_dump_import": handle_dump_imported,
     "clk_schema_initialization": handle_schema_initialized,
 }
