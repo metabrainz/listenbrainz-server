@@ -17,7 +17,7 @@
         return "system";
       }
     };
-    const apply = (preference) => {
+    const applyPreference = (preference) => {
       const theme = preference === "system"
         ? (darkQuery && darkQuery.matches ? "dark" : "light")
         : preference;
@@ -32,23 +32,24 @@
     const updateLegacyToggle = () => {
       const preference = readPreference();
       const hint = `Click to switch to ${capitalize(nextPreference(preference))} mode`;
-      document.querySelectorAll("[data-legacy-theme-toggle]").forEach((toggle) => {
-        toggle.setAttribute("aria-label", `Theme: ${capitalize(preference)}. ${hint}`);
-        toggle.setAttribute("title", hint);
-        toggle.querySelectorAll("[data-theme-icon]").forEach((icon) => {
-          icon.toggleAttribute("hidden", icon.dataset.themeIcon !== preference);
-        });
+      // This marker distinguishes the server-rendered toggle from the React one.
+      const toggle = document.querySelector("[data-legacy-theme-toggle]");
+      if (!toggle) return;
+      toggle.setAttribute("aria-label", `Theme: ${capitalize(preference)}. ${hint}`);
+      toggle.setAttribute("title", hint);
+      toggle.querySelectorAll("[data-theme-icon]").forEach((icon) => {
+        icon.toggleAttribute("hidden", icon.dataset.themeIcon !== preference);
       });
     };
 
-    apply(readPreference());
+    applyPreference(readPreference());
 
     // Used by the legacy (Jinja) navigation only.
     window.ListenBrainzTheme = {
       set: (preference) => {
         const next = preferences.includes(preference) ? preference : "system";
         try { localStorage.setItem(storageKey, next); } catch (_) {}
-        apply(next);
+        applyPreference(next);
         updateLegacyToggle();
         window.dispatchEvent(new Event("listenbrainzthemechange"));
       },

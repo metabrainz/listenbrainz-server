@@ -27,7 +27,7 @@ describe("Navbar theme toggle", () => {
     const toggle = screen.getByRole("button", {
       name: "Theme: System. Click to switch to Light mode",
     });
-    expect(toggle).toHaveAttribute("data-theme-toggle");
+    expect(toggle).toHaveClass("theme-toggle");
     expect(toggle).toHaveAttribute("title", "Click to switch to Light mode");
 
     await user.click(toggle);

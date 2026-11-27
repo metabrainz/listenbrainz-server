@@ -58,23 +58,20 @@ function notifyThemeChange(): void {
 
 /** Centre of the visible navbar theme button, the origin of the reveal. */
 function getRevealOrigin(): { x: number; y: number } {
-  const visibleRect = Array.from(
-    document.querySelectorAll<HTMLElement>("[data-theme-toggle]")
-  )
-    .map((toggle) => toggle.getBoundingClientRect())
-    .find(
-      (rect) =>
-        rect.width > 0 &&
-        rect.height > 0 &&
-        rect.right > 0 &&
-        rect.bottom > 0 &&
-        rect.left < window.innerWidth &&
-        rect.top < window.innerHeight
-    );
-  if (visibleRect) {
+  const toggle = document.querySelector<HTMLElement>(".theme-toggle");
+  const rect = toggle?.getBoundingClientRect();
+  if (
+    rect &&
+    rect.width > 0 &&
+    rect.height > 0 &&
+    rect.right > 0 &&
+    rect.bottom > 0 &&
+    rect.left < window.innerWidth &&
+    rect.top < window.innerHeight
+  ) {
     return {
-      x: visibleRect.left + visibleRect.width / 2,
-      y: visibleRect.top + visibleRect.height / 2,
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
     };
   }
   // e.g. collapsed mobile navigation: reveal from the middle of the screen.

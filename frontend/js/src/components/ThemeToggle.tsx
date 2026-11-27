@@ -36,7 +36,6 @@ export default function ThemeToggle() {
     <button
       type="button"
       className="theme-toggle"
-      data-theme-toggle
       onClick={() => {
         setAnimateIcon(true);
         setThemePreference(next);
