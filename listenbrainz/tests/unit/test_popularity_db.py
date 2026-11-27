@@ -61,6 +61,48 @@ class TopRecordingsCacheTest(unittest.TestCase):
             encode=True,
         )
 
+    @patch("listenbrainz.db.popularity.color.fetch_color_for_releases")
+    @patch("listenbrainz.db.popularity.load_recordings_from_mbids_with_redirects")
+    @patch("listenbrainz.db.popularity.get_top_entity_for_artist")
+    @patch("listenbrainz.db.popularity.psycopg2")
+    @patch("listenbrainz.db.popularity.current_app", new=MagicMock())
+    @patch("listenbrainz.db.popularity.cache")
+    def test_merged_mbids_are_deduplicated(
+        self, mock_cache, mock_psycopg2, mock_get_top, mock_load, mock_color
+    ):
+        """When two old recording MBIDs redirect to the same canonical MBID after a MusicBrainz
+        merge, the results should contain one entry with combined listen counts."""
+        mock_cache.get.return_value = None
+        mock_get_top.return_value = [
+            {"recording_mbid": "old-1", "total_listen_count": 60, "total_user_count": 10},
+            {"recording_mbid": "old-2", "total_listen_count": 40, "total_user_count": 8},
+        ]
+        canonical_mbid = "canonical-mbid-abc"
+        mock_load.return_value = [
+            {
+                "recording_mbid": canonical_mbid, "artist_credit_name": "Artist A",
+                "artist_credit_mbids": ["artist-mbid"], "artist_credit_id": 1,
+                "canonical_recording_mbid": None, "original_recording_mbid": "old-1",
+                "release_mbid": None,
+            },
+            {
+                "recording_mbid": canonical_mbid, "artist_credit_name": "Artist A",
+                "artist_credit_mbids": ["artist-mbid"], "artist_credit_id": 1,
+                "canonical_recording_mbid": None, "original_recording_mbid": "old-2",
+                "release_mbid": None,
+            },
+        ]
+        mock_color.return_value = {}
+
+        from listenbrainz.db.popularity import get_top_recordings_for_artist
+
+        result = get_top_recordings_for_artist(MagicMock(), MagicMock(), ARTIST_MBID)
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["recording_mbid"], canonical_mbid)
+        self.assertEqual(result[0]["total_listen_count"], 100)
+        self.assertEqual(result[0]["total_user_count"], 10)
+
     @patch("listenbrainz.db.popularity.cache")
     def test_count_produces_independent_cache_key(self, mock_cache):
         mock_cache.get.return_value = RECORDINGS
