@@ -56,13 +56,20 @@ def validate_create_playlist_required_items(jspf):
 
 
 def get_track_recording_mbid(track):
+    if not isinstance(track, dict):
+        return None
+
     recording_uris = track.get("identifier", [])
     # This allows identifier to be a list, tuple or string. The string support is a leftover and should
     # be removed after 2025-06, which marks a year or backward compatibility.
     if isinstance(recording_uris, str):
         recording_uris = [recording_uris]
+    elif not isinstance(recording_uris, (list, tuple)):
+        return None
 
     for recording_uri in recording_uris:
+        if not isinstance(recording_uri, str):
+            continue
         if recording_uri.startswith(PLAYLIST_TRACK_URI_PREFIX):
             recording_mbid = recording_uri[len(PLAYLIST_TRACK_URI_PREFIX):]
             if is_valid_uuid(recording_mbid):
@@ -101,12 +108,15 @@ def validate_playlist(jspf):
     if "track" not in jspf["playlist"]:
         return
 
+    if not isinstance(jspf["playlist"]["track"], (list, tuple)):
+        log_raise_400("JSPF playlist 'track' field must be a list.")
+
     recording_uri_error = (
         "JSPF playlist track %d must contain a identifier field having a fully qualified URI to a recording_mbid. "
         "(e.g. https://musicbrainz.org/recording/8f3471b5-7e6a-48da-86a9-c1c07a0f47ae)"
     )
 
-    for i, track in enumerate(jspf["playlist"].get("track", [])):
+    for i, track in enumerate(jspf["playlist"]["track"]):
         recording_mbid = get_track_recording_mbid(track)
         if not recording_mbid:
             log_raise_400(recording_uri_error % i)
@@ -662,16 +672,19 @@ def add_playlist_item(playlist_mbid, offset):
     data = request.json
     validate_playlist(data)
 
-    if len(data["playlist"]["track"]) > MAX_RECORDINGS_PER_ADD:
+    if "track" not in data.get("playlist", {}) or not data["playlist"]["track"]:
+        log_raise_400("JSPF playlist must contain a non-empty 'track' list.")
+
+    tracks = data["playlist"]["track"]
+    if len(tracks) > MAX_RECORDINGS_PER_ADD:
         log_raise_400("You may only add max %d recordings per call." % MAX_RECORDINGS_PER_ADD)
 
     precordings = []
-    if "track" in data["playlist"]:
-        for track in data["playlist"]["track"]:
-            recording_mbid = get_track_recording_mbid(track)
-            if not recording_mbid:
-                log_raise_400("Track %d has an invalid identifier field, it must be a complete URI.")
-            precordings.append(WritablePlaylistRecording(mbid=UUID(recording_mbid), added_by_id=user["id"]))
+    for i, track in enumerate(tracks):
+        recording_mbid = get_track_recording_mbid(track)
+        if not recording_mbid:
+            log_raise_400("Track %d has an invalid identifier field, it must be a complete URI." % i)
+        precordings.append(WritablePlaylistRecording(mbid=UUID(recording_mbid), added_by_id=user["id"]))
 
     try:
         db_playlist.add_recordings_to_playlist(db_conn, playlist, precordings, offset)
